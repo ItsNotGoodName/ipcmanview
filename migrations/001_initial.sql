@@ -1,6 +1,9 @@
 -- Write your migrate up statements here
 
-CREATE TABLE placeholder ();
+CREATE TABLE placeholder (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL DEFAULT ''
+);
 
 ---- create above / drop below ----
 

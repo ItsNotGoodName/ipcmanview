@@ -16,7 +16,7 @@ func notifyStart(ctx context.Context, pool *pgxpool.Pool) {
 	}
 	defer conn.Release()
 
-	for _ = range []int{2, 3, 4} {
+	for range []int{2, 3, 4} {
 		_, err := conn.Exec(ctx, "select pg_notify('order_progress_event', 'Hello world!');")
 		if err != nil {
 			log.Err(err).Msg("Failed to notify")

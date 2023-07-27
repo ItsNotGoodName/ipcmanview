@@ -2,14 +2,12 @@ package main
 
 import (
 	"os"
-	"time"
 
 	"github.com/ItsNotGoodName/ipcmango/internal/build"
+	"github.com/ItsNotGoodName/ipcmango/internal/db"
 	"github.com/ItsNotGoodName/ipcmango/migrations"
 	"github.com/ItsNotGoodName/ipcmango/pkg/interrupt"
-	pgxzerolog "github.com/jackc/pgx-zerolog"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jackc/pgx/v5/tracelog"
+	"github.com/ItsNotGoodName/ipcmango/sandbox"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -18,23 +16,18 @@ func main() {
 	ctx := interrupt.Context()
 
 	// Database
-	config, err := pgxpool.ParseConfig(os.Getenv("DATABASE_URL"))
+	pool, err := db.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to parse pgx config")
-	}
-	config.ConnConfig.Tracer = &tracelog.TraceLog{
-		Logger:   pgxzerolog.NewLogger(log.Logger),
-		LogLevel: tracelog.LogLevelDebug,
-	}
-	config.ConnConfig.ConnectTimeout = 5 * time.Second
-	pool, err := pgxpool.NewWithConfig(ctx, config)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to create connection pool")
+		log.Fatal().Err(err).Msg("Failed to create database connection pool")
 	}
 	defer pool.Close()
+
+	// Database migrate
 	if err := migrations.Migrate(ctx, pool); err != nil {
-		log.Err(err).Msg("Failed to migrate database")
+		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
+
+	sandbox.Jet(ctx, pool)
 }
 
 var (
