@@ -9,9 +9,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@macaron-css/core": "^1.2.0",
+    "@macaron-css/solid": "^1.4.1",
+    "modern-normalize": "^2.0.0",
+    "solid-icons": "^1.0.11",
     "solid-js": "^1.7.8"
   },
   "devDependencies": {
+    "@macaron-css/vite": "^1.4.3",
     "@types/node": "^20.4.5",
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
