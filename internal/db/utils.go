@@ -30,7 +30,12 @@ func Exec(ctx context.Context, qe QueryExecutor, stmt postgres.Statement) (pgcon
 	return qe.Exec(ctx, sql, args...)
 }
 
-func Scan(ctx context.Context, qe QueryExecutor, dst any, stmt postgres.Statement) error {
+func ScanMany(ctx context.Context, qe QueryExecutor, dst any, stmt postgres.Statement) error {
 	sql, args := stmt.Sql()
 	return pgxscan.Select(ctx, qe, dst, sql, args...)
+}
+
+func ScanOne(ctx context.Context, qe QueryExecutor, dst any, stmt postgres.Statement) error {
+	sql, args := stmt.Sql()
+	return pgxscan.Get(ctx, qe, dst, sql, args...)
 }

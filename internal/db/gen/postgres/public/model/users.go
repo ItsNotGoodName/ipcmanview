@@ -7,7 +7,14 @@
 
 package model
 
-type Placeholder struct {
-	ID    int32 `sql:"primary_key"`
-	Title string
+import (
+	"time"
+)
+
+type Users struct {
+	ID        int32 `sql:"primary_key"`
+	Email     string
+	Username  string
+	Password  string
+	CreatedAt time.Time
 }

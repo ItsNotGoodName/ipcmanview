@@ -3,10 +3,22 @@ webrpc = v1
 name = api
 version = v1.0.0
 
+struct UserRegister
+  - email: string
+  - username: string
+  - password: string
+  - passwordConfirm: string
 
-struct Message
-  - body: string
-  - time: timestamp
+service AuthService
+  - Register(user: UserRegister) => ()
+  - Login(usernameOrEmail: string, password: string) => (token: string)
 
-service ExampleService
-  - Message() => (message: Message)
+struct User
+  - id: int64
+  - email: string
+  - username: string
+
+service UserService
+  - Me() => (user: User)
+
+error 100 InvalidToken    "invalid token"   HTTP 401

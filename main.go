@@ -16,6 +16,7 @@ import (
 
 func main() {
 	ctx, shutdown := context.WithCancel(interrupt.Context())
+	defer shutdown()
 
 	// Database
 	pool, err := db.New(ctx, os.Getenv("DATABASE_URL"))
@@ -30,7 +31,8 @@ func main() {
 	}
 
 	// sandbox.Jet(ctx, pool)
-	<-background.Run(ctx, sandbox.Chi(ctx, shutdown))
+	<-background.Run(ctx, sandbox.Chi(ctx, shutdown, pool))
+	// sandbox.User(ctx, pool)
 }
 
 var (

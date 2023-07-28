@@ -5,6 +5,7 @@ import (
 	"time"
 
 	pgxzerolog "github.com/jackc/pgx-zerolog"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/tracelog"
 	"github.com/rs/zerolog/log"
@@ -23,4 +24,9 @@ func New(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	config.ConnConfig.ConnectTimeout = 5 * time.Second
 
 	return pgxpool.NewWithConfig(ctx, config)
+}
+
+type Context struct {
+	context.Context
+	Conn *pgx.Conn
 }
