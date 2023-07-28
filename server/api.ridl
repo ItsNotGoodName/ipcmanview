@@ -1,0 +1,12 @@
+webrpc = v1
+
+name = api
+version = v1.0.0
+
+
+struct Message
+  - body: string
+  - time: timestamp
+
+service ExampleService
+  - Message() => (message: Message)

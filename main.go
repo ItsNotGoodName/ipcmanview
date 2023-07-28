@@ -27,7 +27,8 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
 
-	sandbox.Jet(ctx, pool)
+	// sandbox.Jet(ctx, pool)
+	sandbox.Chi()
 }
 
 var (

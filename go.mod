@@ -4,6 +4,8 @@ go 1.20
 
 require (
 	github.com/georgysavva/scany/v2 v2.0.0
+	github.com/go-chi/chi/v5 v5.0.10
+	github.com/go-chi/cors v1.2.1
 	github.com/go-jet/jet/v2 v2.10.1
 	github.com/jackc/pgx-zerolog v0.0.0-20230315001418-f978528409eb
 	github.com/jackc/pgx/v5 v5.4.2
