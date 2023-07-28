@@ -1,8 +1,8 @@
 import { styled } from "@macaron-css/solid";
 import { theme } from './ui/theme';
 import { themeModeClass } from './ui/theme-mode';
-import { Application } from './views/Application';
 import { globalStyle } from '@macaron-css/core';
+import { Login } from "./views/Login";
 
 globalStyle("a", {
   textDecoration: "none",
@@ -22,7 +22,7 @@ const Root = styled("div", {
 function App() {
   return (
     <Root class={themeModeClass()}>
-      <Application />
+      <Login />
     </Root>
   )
 }

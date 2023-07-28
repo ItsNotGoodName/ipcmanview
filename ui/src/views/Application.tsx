@@ -26,8 +26,6 @@ const Root = styled("div", {
 
 const Header = styled("div", {
   base: {
-    overflowX: "auto",
-    overflowY: "hidden",
     display: "flex",
     height: theme.space[11],
     gap: theme.space[2],
