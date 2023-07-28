@@ -1,6 +1,5 @@
 import { CSSProperties } from "@macaron-css/core";
 import { styled } from "@macaron-css/solid";
-
 import { theme } from "./theme";
 import { utility } from "./utility";
 

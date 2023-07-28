@@ -11,6 +11,7 @@
   "dependencies": {
     "@macaron-css/core": "^1.2.0",
     "@macaron-css/solid": "^1.4.1",
+    "@solidjs/router": "^0.8.2",
     "modern-normalize": "^2.0.0",
     "solid-icons": "^1.0.11",
     "solid-js": "^1.7.8"

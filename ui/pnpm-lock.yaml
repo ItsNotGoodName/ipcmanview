@@ -11,6 +11,9 @@ dependencies:
   '@macaron-css/solid':
     specifier: ^1.4.1
     version: 1.4.1(@vanilla-extract/recipes@0.2.5)(solid-js@1.7.8)
+  '@solidjs/router':
+    specifier: ^0.8.2
+    version: 0.8.2(solid-js@1.7.8)
   modern-normalize:
     specifier: ^2.0.0
     version: 2.0.0
@@ -890,6 +893,14 @@ packages:
       - ts-node
       - vite
     dev: true
+
+  /@solidjs/router@0.8.2(solid-js@1.7.8):
+    resolution: {integrity: sha512-gUKW+LZqxtX6y/Aw6JKyy4gQ9E7dLqp513oB9pSYJR1HM5c56Pf7eijzyXX+b3WuXig18Cxqah4tMtF0YGu80w==}
+    peerDependencies:
+      solid-js: ^1.5.3
+    dependencies:
+      solid-js: 1.7.8
+    dev: false
 
   /@types/babel__core@7.20.1:
     resolution: {integrity: sha512-aACu/U/omhdk15O4Nfb+fHgH/z3QsfQzpnvRZhYhThms83ZnAOZz7zZAWO7mn2yyNQaA4xTO8GLK3uqFU4bYYw==}

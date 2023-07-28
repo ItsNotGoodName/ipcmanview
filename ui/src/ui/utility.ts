@@ -1,5 +1,4 @@
 import { CSSProperties, keyframes } from "@macaron-css/core";
-
 import { theme } from "./theme";
 
 const rotate = keyframes({
