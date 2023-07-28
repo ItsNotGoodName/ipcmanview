@@ -11,19 +11,13 @@ import { theme } from "~/ui/theme";
 import { utility } from "~/ui/utility";
 import { useAuthStore } from "~/providers/auth";
 import { ErrorText } from "~/ui/ErrorText";
-import { A } from "@solidjs/router";
+import { UserRegister } from "~/core/client.gen";
+import { A, useNavigate } from "@solidjs/router";
 
 const Center = styled("div", {
   base: {
     display: "flex",
     justifyContent: "center",
-  },
-});
-
-const Right = styled("div", {
-  base: {
-    display: "flex",
-    justifyContent: "end",
   },
 });
 
@@ -42,24 +36,26 @@ const themeSwitcherClass = style({
   },
 });
 
-type LoginMutation = {
-  usernameOrEmail: string;
-  password: string;
+type RegisterMutation = {
+  [Property in keyof UserRegister]: Property;
 };
 
-export const Login: Component = () => {
-  const [form, { Form, Field }] = createForm<LoginMutation, ResponseData>({});
+export const Register: Component = () => {
+  const [form, { Form, Field }] = createForm<RegisterMutation, ResponseData>({});
+  const navigate = useNavigate();
   const auth = useAuthStore()
 
-  const submit: SubmitHandler<LoginMutation> = (values) => auth.login(values).catch((e: Error) => {
-    throw new FormError<LoginMutation>(e.message);
+  const submit: SubmitHandler<RegisterMutation> = (values) => auth.register({ user: values }).then(() => {
+    navigate("/login")
+  }).catch((e: Error) => {
+    throw new FormError<RegisterMutation>(e.message);
   });
 
   return (
     <LayoutCenter>
       <Card>
         <CardHeader>
-          <CardHeaderTitle>Login</CardHeaderTitle>
+          <CardHeaderTitle>Register</CardHeaderTitle>
           <ThemeSwitcher class={themeSwitcherClass}>
             <ThemeSwitcherIcon class={style({ ...utility.size("6") })} />
           </ThemeSwitcher>
@@ -68,15 +64,29 @@ export const Login: Component = () => {
           <Form onSubmit={submit}>
             <Stack>
               <Field
-                name="usernameOrEmail"
-                validate={[required("Please enter your username or email.")]}
+                name="email"
+                validate={[required("Please enter your email.")]}
               >
                 {(field, props) => (
                   <InputText
                     {...props}
-                    label="Username or Email"
-                    placeholder="Username or Email"
-                    autocomplete="username"
+                    label="Email"
+                    placeholder="Email"
+                    disabled={form.submitting}
+                    error={field.error}
+                  />
+                )}
+              </Field>
+
+              <Field
+                name="username"
+                validate={[required("Please enter a username.")]}
+              >
+                {(field, props) => (
+                  <InputText
+                    {...props}
+                    label="Username"
+                    placeholder="Username"
                     disabled={form.submitting}
                     error={field.error}
                   />
@@ -85,7 +95,7 @@ export const Login: Component = () => {
 
               <Field
                 name="password"
-                validate={[required("Please enter your password.")]}
+                validate={[required("Please enter a password.")]}
               >
                 {(field, props) => (
                   <InputText
@@ -93,19 +103,30 @@ export const Login: Component = () => {
                     label="Password"
                     type="password"
                     placeholder="Password"
-                    autocomplete="current-password"
                     disabled={form.submitting}
                     error={field.error}
                   />
                 )}
               </Field>
 
-              <Right>
-                <a href="#">Forgot Password?</a>
-              </Right>
+              <Field
+                name="passwordConfirm"
+                validate={[required("Please confirm password.")]}
+              >
+                {(field, props) => (
+                  <InputText
+                    {...props}
+                    label="Password confirm"
+                    type="password"
+                    placeholder="Password confirm"
+                    disabled={form.submitting}
+                    error={field.error}
+                  />
+                )}
+              </Field>
 
               <Button type="submit" disabled={form.submitting}>
-                Log in
+                Register
               </Button>
 
               <ErrorText>{form.response.message}</ErrorText>
@@ -114,7 +135,7 @@ export const Login: Component = () => {
         </CardBody>
       </Card>
       <Center>
-        <A href="/register">Register</A>
+        <A href="/login">Login</A>
       </Center>
     </LayoutCenter>
   );

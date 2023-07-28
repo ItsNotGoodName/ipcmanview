@@ -1,11 +1,11 @@
 import { makePersisted } from "@solid-primitives/storage";
 import {
   batch,
+  Component,
   createContext,
   createEffect,
   createSignal,
   JSX,
-  ParentComponent,
   Show,
   useContext
 } from "solid-js";
@@ -16,6 +16,7 @@ import { BACKEND_URL } from "~/env";
 
 type AuthContextType = {
   fetch: typeof fetch
+  register: AuthService["register"]
   login: (args: LoginArgs) => Promise<void>
   logout: () => void
 };
@@ -23,10 +24,11 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>();
 
 type AuthContextProps = {
-  login: JSX.Element;
+  authenticated: JSX.Element;
+  anonymous: JSX.Element;
 };
 
-export const AuthProvider: ParentComponent<AuthContextProps> = (props) => {
+export const AuthProvider: Component<AuthContextProps> = (props) => {
   // Persist JWT token to storage
   const [storage, setStorage] = makePersisted(createStore<{ token: string }>({ token: "" }), { name: "auth" })
 
@@ -65,6 +67,7 @@ export const AuthProvider: ParentComponent<AuthContextProps> = (props) => {
 
   const store: AuthContextType = {
     fetch: authFetch,
+    register: authService.register,
     login: async (args) => {
       const res = await authService.login(args);
       batch(() => {
@@ -79,9 +82,9 @@ export const AuthProvider: ParentComponent<AuthContextProps> = (props) => {
 
   return (
     <AuthContext.Provider value={store}>
-      <Show when={storage.token != ""} fallback={props.login}>
+      <Show when={storage.token != ""} fallback={props.anonymous}>
         <UserProvider initialUser={initialUser()}>
-          {props.children}
+          {props.authenticated}
         </UserProvider>
       </Show>
     </AuthContext.Provider>)

@@ -2,10 +2,11 @@ import { styled } from "@macaron-css/solid";
 import { theme } from '~/ui/theme';
 import { themeModeClass } from '~/ui/theme-mode';
 import { globalStyle } from '@macaron-css/core';
-import { Login } from "~/views/Login";
 import { AuthProvider } from "./providers/auth";
 import { Application } from "./views/Application";
-import "./scripts/create-user"
+import { Register } from "./views/Register";
+import { Route, Routes } from "@solidjs/router";
+import { Login } from "./views/Login";
 
 globalStyle("a", {
   textDecoration: "none",
@@ -21,13 +22,18 @@ const Root = styled("div", {
   },
 });
 
-
 function App() {
   return (
     <Root class={themeModeClass()}>
-      <AuthProvider login={<Login />}>
-        <Application />
-      </AuthProvider>
+      <AuthProvider
+        anonymous={(
+          <Routes >
+            <Route path="/register" component={Register} />
+            <Route path="/*" component={Login} />
+          </Routes>
+        )}
+        authenticated={<Application />}
+      />
     </Root>
   )
 }

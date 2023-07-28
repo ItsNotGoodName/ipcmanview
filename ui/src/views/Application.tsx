@@ -12,9 +12,14 @@ import {
 } from "solid-icons/ri";
 import { styled } from "@macaron-css/solid";
 import { CSSProperties, style } from "@macaron-css/core";
-
 import { minScreen, theme } from "~/ui/theme";
 import { Menu, menuChildClass } from "~/ui/Menu";
+import { Dropdown, DropdownSummary, DropdownContent } from "~/ui/Dropdown";
+import { ThemeSwitcher, ThemeSwitcherIcon } from "~/ui/ThemeSwitcher";
+import { utility } from "~/ui/utility";
+import { Home } from "~/pages/Home.tsx"
+import { useAuthStore } from "~/providers/auth";
+
 
 const Root = styled("div", {
   base: {
@@ -149,13 +154,6 @@ const avatarClass = style({
   alignItems: "center",
   userSelect: "none",
 });
-
-import { Dropdown, DropdownSummary, DropdownContent } from "~/ui/Dropdown";
-import { ThemeSwitcher, ThemeSwitcherIcon } from "~/ui/ThemeSwitcher";
-import { utility } from "~/ui/utility";
-
-import { Home } from "~/pages/Home.tsx"
-import { useAuthStore } from "~/providers/auth";
 
 export const Application: Component = () => {
   const auth = useAuthStore()
