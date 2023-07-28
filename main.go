@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/ItsNotGoodName/ipcmango/internal/build"
 	"github.com/ItsNotGoodName/ipcmango/internal/db"
 	"github.com/ItsNotGoodName/ipcmango/migrations"
+	"github.com/ItsNotGoodName/ipcmango/pkg/background"
 	"github.com/ItsNotGoodName/ipcmango/pkg/interrupt"
 	"github.com/ItsNotGoodName/ipcmango/sandbox"
 	"github.com/rs/zerolog"
@@ -13,7 +15,7 @@ import (
 )
 
 func main() {
-	ctx := interrupt.Context()
+	ctx, shutdown := context.WithCancel(interrupt.Context())
 
 	// Database
 	pool, err := db.New(ctx, os.Getenv("DATABASE_URL"))
@@ -28,7 +30,7 @@ func main() {
 	}
 
 	// sandbox.Jet(ctx, pool)
-	sandbox.Chi(ctx)
+	<-background.Run(ctx, sandbox.Chi(ctx, shutdown))
 }
 
 var (
