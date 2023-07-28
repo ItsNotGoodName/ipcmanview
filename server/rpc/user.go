@@ -15,23 +15,40 @@ type UserService struct {
 	pool *pgxpool.Pool
 }
 
-func (u UserService) Login(ctx context.Context, usernameOrEmail string, password string) (string, error) {
+func NewUserService(pool *pgxpool.Pool) UserService {
+	return UserService{
+		pool: pool,
+	}
+}
+
+func (u UserService) context(ctx context.Context) (db.Context, func(), error) {
+	conn, err := u.pool.Acquire(ctx)
+	if err != nil {
+		return db.Context{}, nil, service.ErrorWithCause(service.ErrWebrpcServerPanic, err)
+	}
+	return db.Context{
+		Context: ctx,
+		Conn:    conn.Conn(),
+	}, conn.Release, nil
+}
+
+func (u UserService) Login(ctx context.Context, usernameOrEmail string, password string) (*service.User, string, error) {
 	context, release, err := u.context(ctx)
 	if err != nil {
-		return "", err
+		return nil, "", err
 	}
 	defer release()
 
 	user, err := db.UserGetByUsernameOrEmail(context, strings.ToLower(usernameOrEmail))
 	if err != nil {
-		return "", service.ErrWebrpcRequestFailed
+		return nil, "", service.ErrWebrpcBadRequest
 	}
 
 	if err := core.UserCheckPassword(user, password); err != nil {
-		return "", service.ErrWebrpcRequestFailed
+		return nil, "", service.ErrWebrpcBadRequest
 	}
 
-	return jwt.EncodeUserID(user.ID), nil
+	return newUser(user), jwt.EncodeUserID(user.ID), nil
 }
 
 func (u UserService) Me(ctx context.Context) (*service.User, error) {
@@ -44,35 +61,14 @@ func (u UserService) Me(ctx context.Context) (*service.User, error) {
 	id := jwt.DecodeUserID(ctx)
 	user, err := db.UserGet(context, id)
 	if err != nil {
-		return nil, service.ErrorWithCause(service.ErrWebrpcRequestFailed, err)
+		return nil, service.ErrorWithCause(service.ErrWebrpcBadResponse, err)
 	}
 
-	return &service.User{
-		Id:       user.ID,
-		Email:    user.Email,
-		Username: user.Username,
-	}, nil
+	return newUser(user), nil
 }
 
-func NewUserService(pool *pgxpool.Pool) UserService {
-	return UserService{
-		pool: pool,
-	}
-}
-
-func (e UserService) context(ctx context.Context) (db.Context, func(), error) {
-	conn, err := e.pool.Acquire(ctx)
-	if err != nil {
-		return db.Context{}, nil, service.ErrorWithCause(service.ErrWebrpcServerPanic, err)
-	}
-	return db.Context{
-		Context: ctx,
-		Conn:    conn.Conn(),
-	}, conn.Release, nil
-}
-
-func (e UserService) Register(ctx context.Context, r *service.UserRegister) error {
-	context, release, err := e.context(ctx)
+func (u UserService) Register(ctx context.Context, r *service.UserRegister) error {
+	context, release, err := u.context(ctx)
 	if err != nil {
 		return err
 	}

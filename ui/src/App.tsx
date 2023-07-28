@@ -3,7 +3,9 @@ import { theme } from '~/ui/theme';
 import { themeModeClass } from '~/ui/theme-mode';
 import { globalStyle } from '@macaron-css/core';
 import { Login } from "~/views/Login";
-import { AuthService, UserService } from "~/core/client.gen";
+import { AuthProvider } from "./providers/auth";
+import { Loading } from "./views/Loading";
+import { Application } from "./views/Application";
 
 globalStyle("a", {
   textDecoration: "none",
@@ -21,26 +23,11 @@ const Root = styled("div", {
 
 
 function App() {
-  const auth = new AuthService(import.meta.env.VITE_BACKEND_URL, fetch)
-  auth.register({
-    user: {
-      username: "fancy",
-      email: "admin123@example.com",
-      password: "12345678",
-      passwordConfirm: "12345678",
-    }
-  })
-  auth.login({
-    usernameOrEmail: "fancy",
-    password: "12345678"
-  }).then((res) => {
-    const user = new UserService(import.meta.env.VITE_BACKEND_URL, fetch)
-    user.me({ "Authorization": `BEARER ${res.token}` })
-  })
-
   return (
     <Root class={themeModeClass()}>
-      <Login />
+      <AuthProvider login={<Login />} loading={<Loading />}>
+        <Application />
+      </AuthProvider>
     </Root>
   )
 }

@@ -2,8 +2,10 @@ package jwt
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmango/server/service"
@@ -14,7 +16,13 @@ import (
 var TokenAuth *jwtauth.JWTAuth
 
 func init() {
-	TokenAuth = jwtauth.New("HS256", []byte("secret"), nil)
+	secret := []byte(os.Getenv("JWT_SECRET"))
+	if len(secret) == 0 {
+		b := make([]byte, 64)
+		rand.Read(b)
+		secret = b
+	}
+	TokenAuth = jwtauth.New("HS256", secret, nil)
 }
 
 func Authenticator(next http.Handler) http.Handler {

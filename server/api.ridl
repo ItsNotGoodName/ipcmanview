@@ -9,14 +9,16 @@ struct UserRegister
   - password: string
   - passwordConfirm: string
 
-service AuthService
-  - Register(user: UserRegister) => ()
-  - Login(usernameOrEmail: string, password: string) => (token: string)
-
 struct User
   - id: int64
   - email: string
   - username: string
+  - created_at: timestamp
+    + go.field.name = CreatedAt
+
+service AuthService
+  - Register(user: UserRegister) => ()
+  - Login(usernameOrEmail: string, password: string) => (user: User, token: string)
 
 service UserService
   - Me() => (user: User)

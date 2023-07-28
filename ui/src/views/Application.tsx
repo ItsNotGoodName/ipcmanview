@@ -155,8 +155,11 @@ import { ThemeSwitcher, ThemeSwitcherIcon } from "~/ui/ThemeSwitcher";
 import { utility } from "~/ui/utility";
 
 import { Home } from "~/pages/Home.tsx"
+import { useAuth } from "~/providers/auth";
 
 export const Application: Component = () => {
+  const auth = useAuth()
+
   return (
     <Root>
       <div>
@@ -194,7 +197,7 @@ export const Application: Component = () => {
                         >
                           Profile
                         </A>
-                        <button class={menuChildClass}>
+                        <button class={menuChildClass} onClick={auth.logout}>
                           Log out
                         </button>
                       </Menu>

@@ -1,5 +1,5 @@
 import { Component } from "solid-js";
-import { createForm, required, ResponseData } from "@modular-forms/solid";
+import { createForm, FormError, required, ResponseData } from "@modular-forms/solid";
 import { styled } from "@macaron-css/solid";
 import { style } from "@macaron-css/core";
 import { Button } from "~/ui/Button";
@@ -9,6 +9,8 @@ import { LayoutCenter } from "~/ui/Layout";
 import { ThemeSwitcher, ThemeSwitcherIcon } from "~/ui/ThemeSwitcher";
 import { theme } from "~/ui/theme";
 import { utility } from "~/ui/utility";
+import { AuthService } from "~/core/client.gen";
+import { useAuth } from "~/providers/auth";
 
 const Center = styled("div", {
   base: {
@@ -46,6 +48,17 @@ type LoginMutation = {
 
 export const Login: Component = () => {
   const [form, { Form, Field }] = createForm<LoginMutation, ResponseData>({});
+  const auth = useAuth()
+
+  // const auth = new AuthService(import.meta.env.VITE_BACKEND_URL, fetch)
+  // auth.register({
+  //   user: {
+  //     username: "fancy",
+  //     email: "admin123@example.com",
+  //     password: "12345678",
+  //     passwordConfirm: "12345678",
+  //   }
+  // })
 
   return (
     <LayoutCenter>
@@ -57,7 +70,7 @@ export const Login: Component = () => {
           </ThemeSwitcher>
         </CardHeader>
         <CardBody>
-          <Form onSubmit={() => alert("Submitted")}>
+          <Form onSubmit={auth.login}>
             <Stack>
               <Field
                 name="usernameOrEmail"
