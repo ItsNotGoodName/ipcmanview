@@ -155,10 +155,10 @@ import { ThemeSwitcher, ThemeSwitcherIcon } from "~/ui/ThemeSwitcher";
 import { utility } from "~/ui/utility";
 
 import { Home } from "~/pages/Home.tsx"
-import { useAuth } from "~/providers/auth";
+import { useAuthStore } from "~/providers/auth";
 
 export const Application: Component = () => {
-  const auth = useAuth()
+  const auth = useAuthStore()
 
   return (
     <Root>

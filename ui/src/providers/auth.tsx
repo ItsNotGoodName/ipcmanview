@@ -3,19 +3,18 @@ import {
   batch,
   createContext,
   createEffect,
-  createResource,
+  createSignal,
   JSX,
-  Match,
   ParentComponent,
-  Resource,
-  Switch,
+  Show,
   useContext
 } from "solid-js";
 import { createStore } from "solid-js/store";
-import { AuthService, LoginArgs, User, UserService } from "~/core/client.gen";
+import { AuthService, LoginArgs, User } from "~/core/client.gen";
+import { UserProvider } from "./user";
+import { BACKEND_URL } from "~/env";
 
 type AuthContextType = {
-  user: Resource<User>
   fetch: typeof fetch
   login: (args: LoginArgs) => Promise<void>
   logout: () => void
@@ -24,7 +23,6 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType>();
 
 type AuthContextProps = {
-  loading: JSX.Element;
   login: JSX.Element;
 };
 
@@ -32,12 +30,12 @@ export const AuthProvider: ParentComponent<AuthContextProps> = (props) => {
   // Persist JWT token to storage
   const [storage, setStorage] = makePersisted(createStore<{ token: string }>({ token: "" }), { name: "auth" })
 
-  // Update cookie when JWT token changes
+  // Update cookie when JWT token changes, cookie is used to fetch protected HTTP resources (e.g. images)
   createEffect(() => {
     document.cookie =
       "auth_token=" +
       storage.token +
-      `;Path=/file/` +
+      `;Path=/file/` + // TODO: set correct path for images
       import.meta.env.VITE_COOKIE_ATTRIBUTES;
   })
 
@@ -50,54 +48,49 @@ export const AuthProvider: ParentComponent<AuthContextProps> = (props) => {
   }).then((res) => {
     if (res.status == 401 && storage.token != "") {
       console.log("No longer authenticated.");
-      batch(() => {
-        setUser();
-        setStorage({ token: "" });
-      });
+      setStorage({ token: "" });
     }
 
     return res;
   })
 
-  const authService = new AuthService(import.meta.env.VITE_BACKEND_URL, authFetch);
-  const userService = new UserService(import.meta.env.VITE_BACKEND_URL, authFetch);
+  const authService = new AuthService(BACKEND_URL, authFetch);
 
-  // Resources
-  const [user, { mutate: setUser }] = createResource(() => storage.token != "", () => userService.me().then((res) => res.user));
-  createEffect(() => {
-    console.log(user.state)
+  const [initialUser, setInitialUser] = createSignal<User>({
+    id: 0,
+    email: "",
+    username: "",
+    created_at: ""
   })
 
   const store: AuthContextType = {
-    user: user,
     fetch: authFetch,
     login: async (args) => {
       const res = await authService.login(args);
       batch(() => {
-        setUser(res.user);
         setStorage({ token: res.token });
-      });
+        setInitialUser(res.user);
+      })
     },
     logout: () => {
-      batch(() => {
-        setUser();
-        setStorage({ token: "" });
-      });
+      setStorage({ token: "" });
     }
   };
 
   return (
     <AuthContext.Provider value={store}>
-      <Switch fallback={props.login}>
-        <Match when={user.loading}>{props.loading}</Match>
-        <Match when={storage.token != "" && user.state == "ready"}>{props.children}</Match>
-      </Switch>
+      <Show when={storage.token != ""} fallback={props.login}>
+        <UserProvider initialUser={initialUser()}>
+          {props.children}
+        </UserProvider>
+      </Show>
     </AuthContext.Provider>)
 };
 
-export function useAuth(): AuthContextType {
+
+export function useAuthStore(): AuthContextType {
   const result = useContext(AuthContext);
-  if (!result) throw new Error("useAuth must be used within a AuthProvider");
+  if (!result) throw new Error("useAuthStore must be used within a AuthProvider");
   return result;
 }
 

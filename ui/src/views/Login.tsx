@@ -10,7 +10,7 @@ import { ThemeSwitcher, ThemeSwitcherIcon } from "~/ui/ThemeSwitcher";
 import { theme } from "~/ui/theme";
 import { utility } from "~/ui/utility";
 import { AuthService } from "~/core/client.gen";
-import { useAuth } from "~/providers/auth";
+import { useAuthStore } from "~/providers/auth";
 
 const Center = styled("div", {
   base: {
@@ -48,7 +48,7 @@ type LoginMutation = {
 
 export const Login: Component = () => {
   const [form, { Form, Field }] = createForm<LoginMutation, ResponseData>({});
-  const auth = useAuth()
+  const auth = useAuthStore()
 
   // const auth = new AuthService(import.meta.env.VITE_BACKEND_URL, fetch)
   // auth.register({

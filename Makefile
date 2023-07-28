@@ -33,5 +33,5 @@ dep-air:
 dep-webrpc-gen:
 		go install -ldflags="-s -w -X github.com/webrpc/webrpc.VERSION=v0.12.0" github.com/webrpc/webrpc/cmd/webrpc-gen@v0.12.0
 
-dep-pnpm:
+dep-ui:
 	cd ui && pnpm install

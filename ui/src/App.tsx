@@ -4,8 +4,8 @@ import { themeModeClass } from '~/ui/theme-mode';
 import { globalStyle } from '@macaron-css/core';
 import { Login } from "~/views/Login";
 import { AuthProvider } from "./providers/auth";
-import { Loading } from "./views/Loading";
 import { Application } from "./views/Application";
+import "./scripts/create-user"
 
 globalStyle("a", {
   textDecoration: "none",
@@ -25,7 +25,7 @@ const Root = styled("div", {
 function App() {
   return (
     <Root class={themeModeClass()}>
-      <AuthProvider login={<Login />} loading={<Loading />}>
+      <AuthProvider login={<Login />}>
         <Application />
       </AuthProvider>
     </Root>
