@@ -2,6 +2,7 @@ import { styled } from "@macaron-css/solid";
 import { Component, JSX, mergeProps, Show, splitProps } from "solid-js";
 import { theme } from "./theme";
 import { utility } from "./utility";
+import { ErrorText } from "./ErrorText";
 
 const Control = styled("div", {
   base: {
@@ -49,11 +50,6 @@ const Required = styled("span", {
   },
 });
 
-const ErrorText = styled("div", {
-  base: {
-    color: theme.color.Red,
-  }
-})
 
 type InputTextProps = {
   error?: string;
