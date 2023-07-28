@@ -5,32 +5,43 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmango/server"
 	"github.com/ItsNotGoodName/ipcmango/server/service"
+	"github.com/ItsNotGoodName/ipcmango/ui"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
+	"github.com/rs/zerolog/log"
 )
 
-func Chi() {
+func Chi(ctx context.Context) {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(cors.Handler(cors.Options{
-		// AllowedOrigins: []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"*"},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
-		AllowedMethods:   []string{"POST", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	}))
+	server.CORS(r)
+	server.MountFS(r, ui.FS)
 
 	r.Handle("/*", service.NewExampleServiceServer(ExampleServiceRPC{}))
 
-	http.ListenAndServe(":3000", r)
+	s := http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	go func() {
+		err := s.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatal().Err(err).Msg("Failed to start server")
+		}
+	}()
+
+	<-ctx.Done()
+
+	err := s.Shutdown(context.Background())
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to shutdown server")
+	}
 }
 
 type ExampleServiceRPC struct{}

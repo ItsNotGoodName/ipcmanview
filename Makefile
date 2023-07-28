@@ -3,6 +3,9 @@ gen:
 	webrpc-gen -schema=./server/api.ridl -target=golang -pkg=service -server -out=./server/service/proto.gen.go
 	webrpc-gen -schema=./server/api.ridl -target=typescript -client -out=./ui/src/core/client.ts
 
+preview:
+	cd ui && pnpm run build && cd .. && DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run .
+
 dev:
 	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" air
 

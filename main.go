@@ -28,7 +28,7 @@ func main() {
 	}
 
 	// sandbox.Jet(ctx, pool)
-	sandbox.Chi()
+	sandbox.Chi(ctx)
 }
 
 var (
