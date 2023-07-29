@@ -5,8 +5,16 @@ CREATE TABLE users (
   email TEXT NOT NULL UNIQUE,
   username TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE dahua_cameras (
+  id SERIAL PRIMARY KEY,
+  address TEXT NOT NULL UNIQUE,
+  username TEXT NOT NULL,
+  password TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
 
 ---- create above / drop below ----
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/tern/v2/migrate"
 )
@@ -18,7 +19,11 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 	defer conn.Release()
 
-	migrator, err := migrate.NewMigrator(ctx, conn.Conn(), "public.schema_version")
+	return MigrateConn(ctx, conn.Conn())
+}
+
+func MigrateConn(ctx context.Context, conn *pgx.Conn) error {
+	migrator, err := migrate.NewMigrator(ctx, conn, "public.schema_version")
 	if err != nil {
 		return err
 	}

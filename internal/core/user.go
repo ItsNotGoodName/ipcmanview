@@ -40,11 +40,10 @@ func UserNew(r UserCreate) (User, error) {
 	email := strings.ToLower(r.Email)
 
 	return User{
-		ID:        0,
-		Email:     email,
-		Username:  r.Username,
-		Password:  string(password),
-		CreatedAt: time.Now(),
+		ID:       0,
+		Email:    email,
+		Username: r.Username,
+		Password: string(password),
 	}, nil
 }
 

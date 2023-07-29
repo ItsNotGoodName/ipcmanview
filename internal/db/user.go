@@ -18,12 +18,11 @@ var pUsers ProjectionList = []Projection{
 func UserCreate(ctx Context, r core.User) (core.User, error) {
 	var user core.User
 	err := ScanOne(ctx.Context, ctx.Conn, &user, Users.
-		INSERT(Users.Email, Users.Username, Users.Password, Users.CreatedAt).
+		INSERT(Users.Email, Users.Username, Users.Password).
 		MODEL(model.Users{
-			Email:     r.Email,
-			Username:  r.Username,
-			Password:  r.Password,
-			CreatedAt: r.CreatedAt,
+			Email:    r.Email,
+			Username: r.Username,
+			Password: r.Password,
 		}).
 		RETURNING(pUsers),
 	)
