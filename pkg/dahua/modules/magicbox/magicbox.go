@@ -57,6 +57,17 @@ func GetDeviceType(ctx context.Context, gen dahua.GenRPC) (string, error) {
 	return res.Params.Type, err
 }
 
+func GetMemoryInfo(ctx context.Context, gen dahua.GenRPC) (GetMemoryInfoResult, error) {
+	rpc, err := gen.RPC(ctx)
+	if err != nil {
+		return GetMemoryInfoResult{}, err
+	}
+
+	res, err := dahua.Send[GetMemoryInfoResult](ctx, rpc.Method("magicBox.getMemoryInfo"))
+
+	return res.Params, err
+}
+
 type GetMemoryInfoResult struct {
 	Free  int64 `json:"free"`
 	Total int64 `json:"total"`
@@ -75,17 +86,6 @@ func (g *GetMemoryInfoResult) UnmarshalJSON(data []byte) error {
 	g.Total = int64(res.Total)
 
 	return nil
-}
-
-func GetMemoryInfo(ctx context.Context, gen dahua.GenRPC) (GetMemoryInfoResult, error) {
-	rpc, err := gen.RPC(ctx)
-	if err != nil {
-		return GetMemoryInfoResult{}, err
-	}
-
-	res, err := dahua.Send[GetMemoryInfoResult](ctx, rpc.Method("magicBox.getMemoryInfo"))
-
-	return res.Params, err
 }
 
 func GetCPUUsage(ctx context.Context, gen dahua.GenRPC) (int, error) {
@@ -153,14 +153,6 @@ func GetVendor(ctx context.Context, gen dahua.GenRPC) (string, error) {
 	return res.Params.Vendor, err
 }
 
-type GetSoftwareVersionResult struct {
-	Build                   string `json:"Build"`
-	BuildDate               string `json:"BuildDate"`
-	SecurityBaseLineVersion string `json:"SecurityBaseLineVersion"`
-	Version                 string `json:"Version"`
-	WebVersion              string `json:"WebVersion"`
-}
-
 func GetSoftwareVersion(ctx context.Context, gen dahua.GenRPC) (GetSoftwareVersionResult, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
@@ -171,6 +163,14 @@ func GetSoftwareVersion(ctx context.Context, gen dahua.GenRPC) (GetSoftwareVersi
 		Version GetSoftwareVersionResult `json:"version"`
 	}](ctx, rpc.Method("magicBox.getSoftwareVersion"))
 	return res.Params.Version, err
+}
+
+type GetSoftwareVersionResult struct {
+	Build                   string `json:"Build"`
+	BuildDate               string `json:"BuildDate"`
+	SecurityBaseLineVersion string `json:"SecurityBaseLineVersion"`
+	Version                 string `json:"Version"`
+	WebVersion              string `json:"WebVersion"`
 }
 
 func GetMarketArea(ctx context.Context, gen dahua.GenRPC) (string, error) {
@@ -186,20 +186,20 @@ func GetMarketArea(ctx context.Context, gen dahua.GenRPC) (string, error) {
 	return res.Params.AbroadInfo, err
 }
 
-type GetUptimeResult struct {
-	Last  int64 `json:"last"`
-	Total int64 `json:"total"`
-}
-
-func GetUpTime(ctx context.Context, gen dahua.GenRPC) (GetMemoryInfoResult, error) {
+func GetUpTime(ctx context.Context, gen dahua.GenRPC) (GetUpTimeResult, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
-		return GetMemoryInfoResult{}, err
+		return GetUpTimeResult{}, err
 	}
 
 	res, err := dahua.Send[struct {
-		Info GetMemoryInfoResult `json:"info"`
+		Info GetUpTimeResult `json:"info"`
 	}](ctx, rpc.Method("magicBox.getUpTime"))
 
 	return res.Params.Info, err
+}
+
+type GetUpTimeResult struct {
+	Last  int64 `json:"last"`
+	Total int64 `json:"total"`
 }

@@ -54,7 +54,6 @@ func (c CameraActor) Close(ctx context.Context) error {
 		return ctx.Err()
 	case conn, ok := <-c.closeC:
 		if ok && conn.State == dahua.StateLogin {
-			fmt.Println("LOGGING OUT")
 			auth.Logout(ctx, conn)
 		}
 
