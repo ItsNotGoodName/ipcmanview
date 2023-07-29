@@ -19,11 +19,11 @@ type Generator interface {
 	RPCLogin() RequestBuilder
 }
 
-type ResponseValue struct {
+type ResponseSession struct {
 	Value string
 }
 
-func (s *ResponseValue) UnmarshalJSON(data []byte) error {
+func (s *ResponseSession) UnmarshalJSON(data []byte) error {
 	// string -> string
 	if err := json.Unmarshal(data, &s.Value); err == nil {
 		return nil
@@ -32,21 +32,47 @@ func (s *ResponseValue) UnmarshalJSON(data []byte) error {
 	// int64 -> string
 	var num int64
 	if err := json.Unmarshal(data, &num); err == nil {
+		s.Value = strconv.FormatInt(num, 10)
 		return nil
 	}
-	s.Value = strconv.FormatInt(num, 10)
 
-	return nil
+	return fmt.Errorf("session is not a string or number")
+}
+
+type ResponseResult struct {
+	Number int64
+}
+
+func (s *ResponseResult) UnmarshalJSON(data []byte) error {
+	// int64 -> int64
+	if err := json.Unmarshal(data, &s.Number); err == nil {
+		return nil
+	}
+
+	// bool -> int64
+	var b bool
+	if err := json.Unmarshal(data, &b); err == nil {
+		if b {
+			s.Number = 1
+		}
+		return nil
+	}
+
+	return fmt.Errorf("result is not a number or boolean")
+}
+
+func (s *ResponseResult) Bool() bool {
+	return s.Number == 1
 }
 
 // Response from the camera.
 // T should always be as pointer type, this will prevent null being defaulted to T.
 type Response[T any] struct {
-	ID      int            `json:"id"`
-	Session ResponseValue  `json:"session"` // Session can be a string or a int64
-	Error   *ResponseError `json:"error"`
-	Params  T              `json:"params"`
-	Result  ResponseValue  `json:"result"` // Result can be a string or a int64
+	ID      int             `json:"id"`
+	Session ResponseSession `json:"session"` // Session can be a string or an int64
+	Error   *ResponseError  `json:"error"`
+	Params  T               `json:"params"`
+	Result  ResponseResult  `json:"result"` // Result can be a bool or an int64
 }
 
 type ResponseError struct {

@@ -5,7 +5,7 @@ import (
 )
 
 func FirstLogin(gen dahua.Generator, username string) (dahua.Response[dahua.AuthParam], error) {
-	a := gen.
+	return dahua.SendRaw[dahua.AuthParam](gen.
 		RPCLogin().
 		Method("global.login").
 		Params(dahua.JSON{
@@ -13,13 +13,11 @@ func FirstLogin(gen dahua.Generator, username string) (dahua.Response[dahua.Auth
 			"password":   "",
 			"loginType":  "Direct",
 			"clientType": "Web3.0",
-		})
-
-	return dahua.SendRaw[dahua.AuthParam](a)
+		}))
 }
 
 func SecondLogin(gen dahua.Generator, username, password, loginType, authorityType string) error {
-	a := gen.
+	_, err := dahua.Send[any](gen.
 		RPCLogin().
 		Method("global.login").
 		Params(dahua.JSON{
@@ -28,9 +26,7 @@ func SecondLogin(gen dahua.Generator, username, password, loginType, authorityTy
 			"clientType":    "Web3.0",
 			"loginType":     loginType,
 			"authorityType": authorityType,
-		})
-
-	_, err := dahua.Send[any](a)
+		}))
 
 	return err
 }
@@ -41,13 +37,11 @@ func GetCurrentTime(gen dahua.Generator) (string, error) {
 		return "", err
 	}
 
-	a := rpc.Method("global.getCurrentTime")
-
-	b, err := dahua.Send[struct {
+	res, err := dahua.Send[struct {
 		Time string `json:"time"`
-	}](a)
+	}](rpc.Method("global.getCurrentTime"))
 
-	return b.Params.Time, err
+	return res.Params.Time, err
 }
 
 func KeepAlive(gen dahua.Generator) (int, error) {
@@ -56,13 +50,11 @@ func KeepAlive(gen dahua.Generator) (int, error) {
 		return 0, err
 	}
 
-	a := rpc.Method("global.keepAlive")
-
-	b, err := dahua.Send[struct {
+	res, err := dahua.Send[struct {
 		Timeout int `json:"timeout"`
-	}](a)
+	}](rpc.Method("global.keepAlive"))
 
-	return b.Params.Timeout, err
+	return res.Params.Timeout, err
 }
 
 func Logout(gen dahua.Generator) (bool, error) {
@@ -71,9 +63,7 @@ func Logout(gen dahua.Generator) (bool, error) {
 		return false, err
 	}
 
-	a := rpc.Method("global.logout")
+	res, err := dahua.Send[bool](rpc.Method("global.logout"))
 
-	b, err := dahua.Send[bool](a)
-
-	return b.Params, err
+	return res.Params, err
 }
