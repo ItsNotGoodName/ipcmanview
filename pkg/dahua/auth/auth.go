@@ -20,30 +20,29 @@ func Logout(ctx context.Context, conn *dahua.Conn) {
 	conn.Set(dahua.StateLogout)
 }
 
-func KeepAlive(ctx context.Context, conn *dahua.Conn) (bool, error) {
+func KeepAlive(ctx context.Context, conn *dahua.Conn) error {
 	if time.Now().Sub(conn.LastLogin) > TimeOut {
 		_, err := global.KeepAlive(ctx, conn)
 		if err != nil {
 			if !errors.Is(err, dahua.ErrRequestFailed) {
 				conn.Set(dahua.StateLogout)
-				return false, nil
 			}
 
-			return true, err
+			return err
 		}
 
 		conn.Set(dahua.StateLogin)
 	}
 
-	return true, nil
+	return nil
 }
 
 func Login(ctx context.Context, conn *dahua.Conn, username, password string) error {
-	if conn.State == dahua.StateLogin {
-		Logout(ctx, conn)
-	} else if conn.State == dahua.StateError {
-		return conn.Error
-	}
+	// if conn.State == dahua.StateLogin {
+	// 	Logout(ctx, conn)
+	// } else if conn.State == dahua.StateError {
+	// 	return conn.Error
+	// }
 
 	err := login(ctx, conn, username, password)
 	if err != nil {
