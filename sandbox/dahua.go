@@ -6,38 +6,41 @@ import (
 	"os"
 
 	"github.com/ItsNotGoodName/pkg/dahua"
-	"github.com/ItsNotGoodName/pkg/dahua/client"
+	"github.com/ItsNotGoodName/pkg/dahua/auth"
 	"github.com/ItsNotGoodName/pkg/dahua/modules/global"
 )
+
+func dahuaPrint(c *dahua.Conn) {
+	fmt.Println("-", c.LastLogin)
+}
 
 func Dahua() {
 	username, _ := os.LookupEnv("IPC_USERNAME")
 	password, _ := os.LookupEnv("IPC_PASSWORD")
 	ip, _ := os.LookupEnv("IPC_IP")
 
-	c := client.Client{
-		Username: username,
-		Password: password,
-		Camera:   dahua.NewCamera(ip),
-		Conn:     dahua.NewConn(http.DefaultClient),
-	}
+	c := dahua.NewConn(http.DefaultClient, ip)
 
-	err := client.Login(c.Conn, c, c.Username, c.Password)
+	dahuaPrint(c)
+	err := auth.Login(c, username, password)
 	if err != nil {
 		panic(err)
 	}
 
+	dahuaPrint(c)
 	time, err := global.GetCurrentTime(c)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(time)
 
+	dahuaPrint(c)
 	keep, err := global.KeepAlive(c)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(keep)
 
-	client.Logout(c.Conn, c)
+	dahuaPrint(c)
+	auth.Logout(c)
 }

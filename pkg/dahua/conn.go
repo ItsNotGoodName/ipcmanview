@@ -1,32 +1,57 @@
 package dahua
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
 
-type State = int
-
 type Conn struct {
-	State     State
 	client    *http.Client
+	Camera    Camera
+	State     State
 	lastID    int
 	Session   string
 	Error     error
 	LastLogin time.Time
 }
 
-func NewConn(client *http.Client) *Conn {
+func NewConn(client *http.Client, ip string) *Conn {
 	return &Conn{
 		client: client,
+		Camera: newCamera(ip),
 		State:  StateLogout,
 	}
 }
 
-func (c *Conn) NextID() int {
+func (c *Conn) RPC() (RequestBuilder, error) {
+	if c.Session == "" {
+		return RequestBuilder{}, ErrInvalidSession
+	}
+
+	return NewRequestBuilder(
+		c.client,
+		c.nextID(),
+		c.Camera.rpc,
+		c.Session,
+	), nil
+}
+
+func (c *Conn) RPCLogin() RequestBuilder {
+	return NewRequestBuilder(
+		c.client,
+		c.nextID(),
+		c.Camera.rpcLogin,
+		c.Session,
+	)
+}
+
+func (c *Conn) nextID() int {
 	c.lastID += 1
 	return c.lastID
 }
+
+type State = int
 
 const (
 	StateLogout State = iota
@@ -34,12 +59,17 @@ const (
 	StateError
 )
 
-func (c *Conn) SetSession(session string) error {
+func (c *Conn) UpdateSession(session string) error {
 	if c.State != StateLogout {
-		panic("cannot set session on logout")
+		return fmt.Errorf("cannot set session when not logged out")
 	}
 	c.Session = session
 	return nil
+}
+
+func (c *Conn) SetError(err error) {
+	c.Set(StateError)
+	c.Error = err
 }
 
 func (c *Conn) Set(newState State) {
@@ -55,4 +85,18 @@ func (c *Conn) Set(newState State) {
 	}
 
 	c.State = newState
+}
+
+type Camera struct {
+	ip       string
+	rpc      string
+	rpcLogin string
+}
+
+func newCamera(ip string) Camera {
+	return Camera{
+		ip:       ip,
+		rpc:      fmt.Sprintf("http://%s/RPC2", ip),
+		rpcLogin: fmt.Sprintf("http://%s/RPC2_Login", ip),
+	}
 }

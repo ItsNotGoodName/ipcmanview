@@ -1,6 +1,8 @@
 package global
 
-import "github.com/ItsNotGoodName/pkg/dahua"
+import (
+	"github.com/ItsNotGoodName/pkg/dahua"
+)
 
 func FirstLogin(gen dahua.Generator, username string) (dahua.Response[dahua.AuthParam], error) {
 	a := gen.
@@ -34,9 +36,12 @@ func SecondLogin(gen dahua.Generator, username, password, loginType, authorityTy
 }
 
 func GetCurrentTime(gen dahua.Generator) (string, error) {
-	a := gen.
-		RPC().
-		Method("global.getCurrentTime")
+	rpc, err := gen.RPC()
+	if err != nil {
+		return "", err
+	}
+
+	a := rpc.Method("global.getCurrentTime")
 
 	b, err := dahua.Send[struct {
 		Time string `json:"time"`
@@ -46,9 +51,12 @@ func GetCurrentTime(gen dahua.Generator) (string, error) {
 }
 
 func KeepAlive(gen dahua.Generator) (int, error) {
-	a := gen.
-		RPC().
-		Method("global.keepAlive")
+	rpc, err := gen.RPC()
+	if err != nil {
+		return 0, err
+	}
+
+	a := rpc.Method("global.keepAlive")
 
 	b, err := dahua.Send[struct {
 		Timeout int `json:"timeout"`
@@ -58,9 +66,12 @@ func KeepAlive(gen dahua.Generator) (int, error) {
 }
 
 func Logout(gen dahua.Generator) (bool, error) {
-	a := gen.
-		RPC().
-		Method("global.logout")
+	rpc, err := gen.RPC()
+	if err != nil {
+		return false, err
+	}
+
+	a := rpc.Method("global.logout")
 
 	b, err := dahua.Send[bool](a)
 
