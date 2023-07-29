@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"golang.org/x/net/context"
 )
 
 var (
@@ -14,8 +16,11 @@ var (
 	ErrRequestFailed  = fmt.Errorf("request failed")
 )
 
-type Generator interface {
-	RPC() (RequestBuilder, error)
+type GenRPC interface {
+	RPC(ctx context.Context) (RequestBuilder, error)
+}
+
+type GenRPCLogin interface {
 	RPCLogin() RequestBuilder
 }
 
@@ -164,7 +169,7 @@ func (r RequestBuilder) Method(method string) RequestBuilder {
 }
 
 // TODO: I want this attached to the RequestBuilder
-func SendRaw[T any](r RequestBuilder) (Response[T], error) {
+func SendRaw[T any](ctx context.Context, r RequestBuilder) (Response[T], error) {
 	var res Response[T]
 
 	b, err := json.Marshal(r.req)
@@ -172,7 +177,14 @@ func SendRaw[T any](r RequestBuilder) (Response[T], error) {
 		return res, err
 	}
 
-	resp, err := r.client.Post(r.url, "application/json", bytes.NewBuffer(b))
+	req, err := http.NewRequest("POST", r.url, bytes.NewBuffer(b))
+	if err != nil {
+		return res, err
+	}
+
+	req = req.WithContext(ctx)
+
+	resp, err := r.client.Do(req)
 	if err != nil {
 		return res, errors.Join(ErrRequestFailed, err)
 	}
@@ -185,8 +197,8 @@ func SendRaw[T any](r RequestBuilder) (Response[T], error) {
 }
 
 // TODO: I want this attached to the RequestBuilder
-func Send[T any](r RequestBuilder) (Response[T], error) {
-	res, err := SendRaw[T](r)
+func Send[T any](ctx context.Context, r RequestBuilder) (Response[T], error) {
+	res, err := SendRaw[T](ctx, r)
 	if err != nil {
 		return res, err
 	}

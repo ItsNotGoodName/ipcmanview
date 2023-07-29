@@ -1,11 +1,13 @@
 package global
 
 import (
+	"context"
+
 	"github.com/ItsNotGoodName/pkg/dahua"
 )
 
-func FirstLogin(gen dahua.Generator, username string) (dahua.Response[dahua.AuthParam], error) {
-	return dahua.SendRaw[dahua.AuthParam](gen.
+func FirstLogin(ctx context.Context, gen dahua.GenRPCLogin, username string) (dahua.Response[dahua.AuthParam], error) {
+	return dahua.SendRaw[dahua.AuthParam](ctx, gen.
 		RPCLogin().
 		Method("global.login").
 		Params(dahua.JSON{
@@ -16,8 +18,8 @@ func FirstLogin(gen dahua.Generator, username string) (dahua.Response[dahua.Auth
 		}))
 }
 
-func SecondLogin(gen dahua.Generator, username, password, loginType, authorityType string) error {
-	_, err := dahua.Send[any](gen.
+func SecondLogin(ctx context.Context, gen dahua.GenRPCLogin, username, password, loginType, authorityType string) error {
+	_, err := dahua.Send[any](ctx, gen.
 		RPCLogin().
 		Method("global.login").
 		Params(dahua.JSON{
@@ -31,39 +33,39 @@ func SecondLogin(gen dahua.Generator, username, password, loginType, authorityTy
 	return err
 }
 
-func GetCurrentTime(gen dahua.Generator) (string, error) {
-	rpc, err := gen.RPC()
+func GetCurrentTime(ctx context.Context, gen dahua.GenRPC) (string, error) {
+	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return "", err
 	}
 
 	res, err := dahua.Send[struct {
 		Time string `json:"time"`
-	}](rpc.Method("global.getCurrentTime"))
+	}](ctx, rpc.Method("global.getCurrentTime"))
 
 	return res.Params.Time, err
 }
 
-func KeepAlive(gen dahua.Generator) (int, error) {
-	rpc, err := gen.RPC()
+func KeepAlive(ctx context.Context, gen dahua.GenRPC) (int, error) {
+	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return 0, err
 	}
 
 	res, err := dahua.Send[struct {
 		Timeout int `json:"timeout"`
-	}](rpc.Method("global.keepAlive"))
+	}](ctx, rpc.Method("global.keepAlive"))
 
 	return res.Params.Timeout, err
 }
 
-func Logout(gen dahua.Generator) (bool, error) {
-	rpc, err := gen.RPC()
+func Logout(ctx context.Context, gen dahua.GenRPC) (bool, error) {
+	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	res, err := dahua.Send[bool](rpc.Method("global.logout"))
+	res, err := dahua.Send[bool](ctx, rpc.Method("global.logout"))
 
 	return res.Params, err
 }

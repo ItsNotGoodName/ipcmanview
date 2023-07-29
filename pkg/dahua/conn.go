@@ -1,6 +1,7 @@
 package dahua
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -24,7 +25,7 @@ func NewConn(client *http.Client, camera Camera) *Conn {
 	}
 }
 
-func (c *Conn) RPC() (RequestBuilder, error) {
+func (c *Conn) RPC(ctx context.Context) (RequestBuilder, error) {
 	if c.Session == "" {
 		return RequestBuilder{}, ErrInvalidSession
 	}

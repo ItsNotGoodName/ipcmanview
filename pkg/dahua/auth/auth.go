@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -14,14 +15,14 @@ const (
 	TimeOut  = 60 * time.Second
 )
 
-func Logout(conn *dahua.Conn) {
-	global.Logout(conn)
+func Logout(ctx context.Context, conn *dahua.Conn) {
+	global.Logout(ctx, conn)
 	conn.Set(dahua.StateLogout)
 }
 
-func KeepAlive(conn *dahua.Conn) (bool, error) {
+func KeepAlive(ctx context.Context, conn *dahua.Conn) (bool, error) {
 	if time.Now().Sub(conn.LastLogin) > TimeOut {
-		_, err := global.KeepAlive(conn)
+		_, err := global.KeepAlive(ctx, conn)
 		if err != nil {
 			if !errors.Is(err, dahua.ErrRequestFailed) {
 				conn.Set(dahua.StateLogout)
@@ -37,14 +38,14 @@ func KeepAlive(conn *dahua.Conn) (bool, error) {
 	return true, nil
 }
 
-func Login(conn *dahua.Conn, username, password string) error {
+func Login(ctx context.Context, conn *dahua.Conn, username, password string) error {
 	if conn.State == dahua.StateLogin {
-		Logout(conn)
+		Logout(ctx, conn)
 	} else if conn.State == dahua.StateError {
 		return conn.Error
 	}
 
-	err := login(conn, username, password)
+	err := login(ctx, conn, username, password)
 	if err != nil {
 		var e *LoginError
 		if errors.As(err, &e) {
@@ -61,9 +62,9 @@ func Login(conn *dahua.Conn, username, password string) error {
 	return nil
 }
 
-func login(conn *dahua.Conn, username, password string) error {
+func login(ctx context.Context, conn *dahua.Conn, username, password string) error {
 	// Do a first login
-	firstLogin, err := global.FirstLogin(conn, username)
+	firstLogin, err := global.FirstLogin(ctx, conn, username)
 	if err != nil {
 		return err
 	}
@@ -87,7 +88,7 @@ func login(conn *dahua.Conn, username, password string) error {
 
 	// Encrypt password based on the first login and then do a second login
 	passwordHash := firstLogin.Params.HashPassword(username, password)
-	err = global.SecondLogin(conn, username, passwordHash, loginType, firstLogin.Params.Encryption)
+	err = global.SecondLogin(ctx, conn, username, passwordHash, loginType, firstLogin.Params.Encryption)
 	if err != nil {
 		var responseErr *dahua.ResponseError
 		if errors.As(err, &responseErr) {

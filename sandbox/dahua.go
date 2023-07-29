@@ -1,6 +1,7 @@
 package sandbox
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -15,16 +16,16 @@ func dahuaPrint(c *dahua.Conn) {
 	fmt.Println("-", c.LastLogin)
 }
 
-func Dahua() {
+func Dahua(ctx context.Context) {
 	username, _ := os.LookupEnv("IPC_USERNAME")
 	password, _ := os.LookupEnv("IPC_PASSWORD")
 	ip, _ := os.LookupEnv("IPC_IP")
 
 	c := dahua.NewConn(http.DefaultClient, dahua.NewCamera(ip))
-	defer auth.Logout(c)
+	defer auth.Logout(context.Background(), c)
 
 	dahuaPrint(c)
-	err := auth.Login(c, username, password)
+	err := auth.Login(ctx, c, username, password)
 	if err != nil {
 		panic(err)
 	}
@@ -38,20 +39,20 @@ func Dahua() {
 	// }
 	// fmt.Println("KeepAlive:", ok)
 
-	fmt.Println(global.GetCurrentTime(c))
+	fmt.Println(global.GetCurrentTime(ctx, c))
 
-	fmt.Println(magicbox.NeedReboot(c))
-	fmt.Println(magicbox.GetCPUUsage(c))
-	fmt.Println(magicbox.GetDeviceClass(c))
-	fmt.Println(magicbox.GetDeviceType(c))
-	fmt.Println(magicbox.GetHardwareVersion(c))
-	fmt.Println(magicbox.GetMarketArea(c))
-	fmt.Println(magicbox.GetMemoryInfo(c))
-	fmt.Println(magicbox.GetProcessInfo(c))
-	fmt.Println(magicbox.GetSerialNo(c))
-	fmt.Println(magicbox.GetSoftwareVersion(c))
-	fmt.Println(magicbox.GetUpTime(c))
-	fmt.Println(magicbox.GetVendor(c))
+	fmt.Println(magicbox.NeedReboot(ctx, c))
+	fmt.Println(magicbox.GetCPUUsage(ctx, c))
+	fmt.Println(magicbox.GetDeviceClass(ctx, c))
+	fmt.Println(magicbox.GetDeviceType(ctx, c))
+	fmt.Println(magicbox.GetHardwareVersion(ctx, c))
+	fmt.Println(magicbox.GetMarketArea(ctx, c))
+	fmt.Println(magicbox.GetMemoryInfo(ctx, c))
+	fmt.Println(magicbox.GetProcessInfo(ctx, c))
+	fmt.Println(magicbox.GetSerialNo(ctx, c))
+	fmt.Println(magicbox.GetSoftwareVersion(ctx, c))
+	fmt.Println(magicbox.GetUpTime(ctx, c))
+	fmt.Println(magicbox.GetVendor(ctx, c))
 
 	dahuaPrint(c)
 }
