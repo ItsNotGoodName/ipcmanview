@@ -8,7 +8,7 @@ import (
 )
 
 func Test_AuthParam(t *testing.T) {
-	hash := (_AuthParam{
+	hash := (AuthParam{
 		Realm:      "Login to a0c50bcd05b2f03d067e530d9bf069af",
 		Random:     "1172275829",
 		Encryption: "Default",

@@ -15,6 +15,9 @@ import (
 )
 
 func main() {
+	sandbox.Dahua()
+	return
+
 	ctx, shutdown := context.WithCancel(interrupt.Context())
 	defer shutdown()
 

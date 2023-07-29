@@ -8,14 +8,16 @@ import (
 	"time"
 )
 
-type _AuthParam struct {
+type JSON = map[string]any
+
+type AuthParam struct {
 	Encryption string `json:"encryption,omitempty"`
 	Random     string `json:"random,omitempty"`
 	Realm      string `json:"realm,omitempty"`
 }
 
 // HashPassword runs the bespoke hashing algorithm for the password.
-func (a _AuthParam) HashPassword(username, password string) string {
+func (a AuthParam) HashPassword(username, password string) string {
 	switch a.Encryption {
 	case "Basic":
 		return base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, password)))
