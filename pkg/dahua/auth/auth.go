@@ -48,7 +48,7 @@ func Login(conn *dahua.Conn, username, password string) error {
 	if err != nil {
 		var e *LoginError
 		if errors.As(err, &e) {
-			conn.SetError(err)
+			conn.Set(dahua.StateError, err)
 		} else {
 			conn.Set(dahua.StateLogout)
 		}
@@ -75,9 +75,7 @@ func login(conn *dahua.Conn, username, password string) error {
 	}
 
 	// Update session
-	if err := conn.UpdateSession(firstLogin.Session.Value); err != nil {
-		return err
-	}
+	conn.UpdateSession(firstLogin.Session.Value)
 
 	// Magic
 	loginType := func() string {

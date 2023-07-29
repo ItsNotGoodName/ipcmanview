@@ -59,20 +59,14 @@ const (
 	StateError
 )
 
-func (c *Conn) UpdateSession(session string) error {
+func (c *Conn) UpdateSession(session string) {
 	if c.State != StateLogout {
-		return fmt.Errorf("cannot set session when not logged out")
+		panic("cannot set session when not logged out")
 	}
 	c.Session = session
-	return nil
 }
 
-func (c *Conn) SetError(err error) {
-	c.Set(StateError)
-	c.Error = err
-}
-
-func (c *Conn) Set(newState State) {
+func (c *Conn) Set(newState State, err ...error) {
 	if c.State == StateLogout && newState == StateLogin {
 		c.LastLogin = time.Now()
 	} else if c.State == StateLogin && newState == StateLogin {
@@ -82,6 +76,13 @@ func (c *Conn) Set(newState State) {
 		c.Session = ""
 		c.Error = nil
 		c.LastLogin = time.Time{}
+	}
+
+	if newState == StateError {
+		if len(err) == 0 {
+			panic("no error was supplied")
+		}
+		c.Error = err[0]
 	}
 
 	c.State = newState
