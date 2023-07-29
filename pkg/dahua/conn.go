@@ -16,10 +16,10 @@ type Conn struct {
 	LastLogin time.Time
 }
 
-func NewConn(client *http.Client, ip string) *Conn {
+func NewConn(client *http.Client, camera Camera) *Conn {
 	return &Conn{
 		client: client,
-		Camera: newCamera(ip),
+		Camera: camera,
 		State:  StateLogout,
 	}
 }
@@ -93,7 +93,7 @@ type Camera struct {
 	rpcLogin string
 }
 
-func newCamera(ip string) Camera {
+func NewCamera(ip string) Camera {
 	return Camera{
 		ip:       ip,
 		rpc:      fmt.Sprintf("http://%s/RPC2", ip),

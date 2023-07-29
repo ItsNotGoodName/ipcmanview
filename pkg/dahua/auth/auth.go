@@ -3,16 +3,38 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/ItsNotGoodName/pkg/dahua"
 	"github.com/ItsNotGoodName/pkg/dahua/modules/global"
 )
 
-const WatchNet = "WatchNet"
+const (
+	WatchNet = "WatchNet"
+	TimeOut  = 60 * time.Second
+)
 
 func Logout(conn *dahua.Conn) {
 	global.Logout(conn)
 	conn.Set(dahua.StateLogout)
+}
+
+func KeepAlive(conn *dahua.Conn) (bool, error) {
+	if time.Now().Sub(conn.LastLogin) > TimeOut {
+		_, err := global.KeepAlive(conn)
+		if err != nil {
+			if !errors.Is(err, dahua.ErrRequestFailed) {
+				conn.Set(dahua.StateLogout)
+				return false, nil
+			}
+
+			return true, err
+		}
+
+		conn.Set(dahua.StateLogin)
+	}
+
+	return true, nil
 }
 
 func Login(conn *dahua.Conn, username, password string) error {
