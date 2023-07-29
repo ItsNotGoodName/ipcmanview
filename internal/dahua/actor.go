@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/ItsNotGoodName/ipcmango/internal/core"
-	"github.com/ItsNotGoodName/pkg/dahua"
-	"github.com/ItsNotGoodName/pkg/dahua/auth"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/auth"
 )
 
 type CameraActor struct {

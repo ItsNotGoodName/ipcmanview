@@ -14,7 +14,9 @@ require (
 	github.com/jackc/tern/v2 v2.1.1
 	github.com/lestrrat-go/jwx/v2 v2.0.11
 	github.com/rs/zerolog v1.29.1
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.10.0
+	golang.org/x/net v0.10.0
 )
 
 require (
@@ -47,8 +49,6 @@ require (
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
-	golang.org/x/net v0.10.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/text v0.10.0 // indirect

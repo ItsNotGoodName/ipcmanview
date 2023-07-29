@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/ItsNotGoodName/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
 )
 
 func Reboot(ctx context.Context, gen dahua.GenRPC) (bool, error) {

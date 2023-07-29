@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ItsNotGoodName/pkg/dahua"
-	"github.com/ItsNotGoodName/pkg/dahua/modules/global"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/global"
 )
 
 const (

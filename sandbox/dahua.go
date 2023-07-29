@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/ItsNotGoodName/ipcmango/internal/core"
 	"github.com/ItsNotGoodName/ipcmango/internal/dahua"
-	"github.com/ItsNotGoodName/pkg/dahua/modules/global"
-	"github.com/ItsNotGoodName/pkg/dahua/modules/magicbox"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/global"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/magicbox"
 )
 
 func Dahua(ctx context.Context) {
