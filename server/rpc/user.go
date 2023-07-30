@@ -74,7 +74,7 @@ func (u UserService) Register(ctx context.Context, r *service.UserRegister) erro
 	}
 	defer release()
 
-	user, err := core.UserNew(core.UserCreate{
+	user, err := core.NewUser(core.UserCreate{
 		Email:           r.Email,
 		Username:        r.Username,
 		Password:        r.Password,

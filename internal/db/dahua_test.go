@@ -9,47 +9,51 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDahuaCameraCreate(t *testing.T) {
+func TestDahuaCamera(t *testing.T) {
 	context, close := Connect(context.Background())
 	defer close()
 
-	coreCam, err := core.DahuaCameraNew(core.DahuaCameraCreate{
+	// Create
+	coreCam, err := core.NewDahuaCamera(core.DahuaCameraCreate{
 		Address:  "localhost",
 		Username: "Username",
 		Password: "Password",
 	})
 	assert.NoError(t, err)
 
-	dbCam, err := DahuaCameraCreate(context, coreCam)
+	createCam, err := DahuaCameraCreate(context, coreCam)
 	assert.NoError(t, err)
 
-	assert.NotEqual(t, coreCam.ID, dbCam.ID, "should have new id")
-	coreCam.ID = dbCam.ID
+	assert.NotEqual(t, coreCam.ID, createCam.ID, "should have new id")
+	coreCam.ID = createCam.ID
 
-	assert.NotEqual(t, time.Time{}, dbCam.CreatedAt, "should not have default CreatedAt")
-	coreCam.CreatedAt = dbCam.CreatedAt
+	assert.NotEqual(t, time.Time{}, createCam.CreatedAt, "should not have default CreatedAt")
+	coreCam.CreatedAt = createCam.CreatedAt
 
-	assert.Equal(t, coreCam, dbCam)
-}
+	assert.Equal(t, coreCam, createCam)
 
-func TestDahuaCameraUpdate(t *testing.T) {
-	context, close := Connect(context.Background())
-	defer close()
+	// Update
+	updateAddress := "user"
 
-	// Seed
-	coreCam, _ := core.DahuaCameraNew(core.DahuaCameraCreate{
-		Address:  "localhost",
-		Username: "Username",
-		Password: "Password",
-	})
-	dbCam, _ := DahuaCameraCreate(context, coreCam)
+	update := core.NewDahuaCameraUpdate(createCam.ID)
+	update.UpdateAddress(updateAddress)
 
-	address := "user"
-
-	update := core.DahuaCameraUpdateNew(dbCam.ID)
-	update.UpdateAddress(address)
-
-	dbCam, err := DahuaCameraUpdate(context, update)
+	updateCam, err := DahuaCameraUpdate(context, update)
 	assert.NoError(t, err)
-	assert.Equal(t, address, dbCam.Address)
+	assert.Equal(t, updateAddress, updateCam.Address)
+
+	// Get
+	{
+		getCam, err := DahuaCameraGet(context, updateCam.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, updateCam, getCam)
+	}
+
+	// Delete
+	{
+		err := DahuaCameraDelete(context, update.ID)
+		assert.NoError(t, err)
+		err = DahuaCameraDelete(context, update.ID)
+		assert.Error(t, err)
+	}
 }

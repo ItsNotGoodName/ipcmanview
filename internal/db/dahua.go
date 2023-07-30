@@ -54,3 +54,16 @@ func DahuaCameraUpdate(ctx Context, r core.DahuaCameraUpdate) (core.DahuaCamera,
 	)
 	return camera, err
 }
+
+func DahuaCameraGet(ctx Context, id int64) (core.DahuaCamera, error) {
+	var camera core.DahuaCamera
+	err := ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
+		SELECT(pDahuaCamera).
+		WHERE(DahuaCameras.ID.EQ(Int64(id))))
+	return camera, err
+}
+
+func DahuaCameraDelete(ctx Context, id int64) error {
+	_, err := ExecOne(ctx.Context, ctx.Conn, DahuaCameras.DELETE().WHERE(DahuaCameras.ID.EQ(Int64(id))).RETURNING(DahuaCameras.ID))
+	return err
+}

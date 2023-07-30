@@ -17,7 +17,7 @@ func User(ctx context.Context, pool *pgxpool.Pool) {
 	}
 	defer conn.Release()
 
-	user, err := core.UserNew(core.UserCreate{
+	user, err := core.NewUser(core.UserCreate{
 		Email:           "admin@example.com",
 		Username:        "admin",
 		Password:        "password",

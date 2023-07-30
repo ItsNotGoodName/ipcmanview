@@ -7,11 +7,10 @@ var validate *validator.Validate
 
 func init() {
 	validate = validator.New()
-	validate.RegisterValidation("address", validateAddr)
+	validate.RegisterValidation("address", validateAddress)
 }
 
-// Structure
-func validateAddr(fl validator.FieldLevel) bool {
+func validateAddress(fl validator.FieldLevel) bool {
 	err := validate.Var(fl.Field().String(), "hostname")
 	if err == nil {
 		return true

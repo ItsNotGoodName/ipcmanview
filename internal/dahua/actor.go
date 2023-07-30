@@ -10,84 +10,79 @@ import (
 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/auth"
 )
 
+var ErrCameraActorClosed = fmt.Errorf("camera actor closed")
+
 type CameraActor struct {
-	rpcCC  chan chan rpcPayload
+	ID     int64
+	rpcC   chan rpcRequest
 	closeC chan *dahua.Conn
+	doneC  chan struct{}
 }
 
-func CameraActorNew(ctx context.Context, cam core.DahuaCamera) CameraActor {
-	rpcCC := make(chan chan rpcPayload)
+func NewCameraActor(cam core.DahuaCamera) CameraActor {
+	rpcC := make(chan rpcRequest)
 	closeC := make(chan *dahua.Conn)
+	doneC := make(chan struct{})
 
-	go CameraActorStart(ctx, cam, rpcCC, closeC)
+	go CameraActorStart(cam, rpcC, closeC, doneC)
 
 	return CameraActor{
-		rpcCC:  rpcCC,
+		ID:     cam.ID,
+		rpcC:   rpcC,
 		closeC: closeC,
+		doneC:  doneC,
 	}
 }
 
 func (c CameraActor) RPC(ctx context.Context) (dahua.RequestBuilder, error) {
+	res := make(chan rpcResponse)
 	select {
 	case <-ctx.Done():
 		return dahua.RequestBuilder{}, ctx.Err()
-	case rpcC, ok := <-c.rpcCC:
-		if !ok {
-			return dahua.RequestBuilder{}, fmt.Errorf("camera actor closed")
-		}
-
-		select {
-		case <-ctx.Done():
-			return dahua.RequestBuilder{}, ctx.Err()
-		case rpc, ok := <-rpcC:
-			if !ok {
-				return dahua.RequestBuilder{}, fmt.Errorf("camera actor did not reply")
-			}
-			return rpc.rpc, rpc.err
-		}
+	case <-c.doneC:
+		return dahua.RequestBuilder{}, ErrCameraActorClosed
+	case c.rpcC <- rpcRequest{ctx: ctx, res: res}:
+		rpc := <-res
+		return rpc.rpc, rpc.err
 	}
 }
 
-func (c CameraActor) Close(ctx context.Context) error {
+func (c CameraActor) Close(ctx context.Context) {
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
-	case conn, ok := <-c.closeC:
-		if ok && conn.State == dahua.StateLogin {
+	case <-c.doneC:
+	case conn := <-c.closeC:
+		if conn.State == dahua.StateLogin {
 			auth.Logout(ctx, conn)
 		}
-
-		return nil
 	}
 }
 
-type rpcPayload struct {
+type rpcRequest struct {
+	ctx context.Context
+	res chan<- rpcResponse
+}
+
+type rpcResponse struct {
 	rpc dahua.RequestBuilder
 	err error
 }
 
-func CameraActorStart(ctx context.Context, cam core.DahuaCamera, rpcC chan chan rpcPayload, closeC chan *dahua.Conn) {
-	defer close(rpcC)
-	defer close(closeC)
+func CameraActorStart(cam core.DahuaCamera, rpcC <-chan rpcRequest, stopC chan<- *dahua.Conn, doneC chan<- struct{}) {
+	defer close(doneC)
 
 	conn := dahua.NewConn(http.DefaultClient, dahua.NewCamera(cam.Address))
 
 	for {
-		rpcClientC := make(chan rpcPayload)
-
 		select {
-		case <-ctx.Done():
+		case stopC <- conn:
 			return
-		case closeC <- conn:
-			return
-		case rpcC <- rpcClientC:
-			rpc, err := rpc(ctx, conn, &cam)
+		case req := <-rpcC:
+			rpc, err := rpc(req.ctx, conn, &cam)
+
 			select {
-			case <-ctx.Done():
-				close(rpcClientC)
-				return
-			case rpcClientC <- rpcPayload{rpc: rpc, err: err}:
-				close(rpcClientC)
+			case <-req.ctx.Done():
+			case req.res <- rpcResponse{rpc: rpc, err: err}:
 			}
 		}
 	}

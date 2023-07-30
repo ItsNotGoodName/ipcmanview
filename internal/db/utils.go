@@ -30,6 +30,20 @@ func Exec(ctx context.Context, qe QueryExecutor, stmt postgres.Statement) (pgcon
 	return qe.Exec(ctx, sql, args...)
 }
 
+func ExecOne(ctx context.Context, qe QueryExecutor, stmt postgres.Statement) (pgconn.CommandTag, error) {
+	sql, args := stmt.Sql()
+	res, err := qe.Exec(ctx, sql, args...)
+	if err != nil {
+		return res, err
+	}
+
+	if res.RowsAffected() == 0 {
+		return res, pgx.ErrNoRows
+	}
+
+	return res, nil
+}
+
 func ScanMany(ctx context.Context, qe QueryExecutor, dst any, stmt postgres.Statement) error {
 	sql, args := stmt.Sql()
 	return pgxscan.Select(ctx, qe, dst, sql, args...)

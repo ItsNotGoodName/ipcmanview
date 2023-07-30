@@ -18,7 +18,7 @@ type DahuaCameraCreate struct {
 	Password string
 }
 
-func DahuaCameraNew(r DahuaCameraCreate) (DahuaCamera, error) {
+func NewDahuaCamera(r DahuaCameraCreate) (DahuaCamera, error) {
 	res := DahuaCamera{
 		Address:  r.Address,
 		Username: r.Username,
@@ -37,7 +37,7 @@ type DahuaCameraUpdate struct {
 	Password bool
 }
 
-func DahuaCameraUpdateNew(id int64) DahuaCameraUpdate {
+func NewDahuaCameraUpdate(id int64) DahuaCameraUpdate {
 	return DahuaCameraUpdate{DahuaCamera: DahuaCamera{ID: id}}
 }
 

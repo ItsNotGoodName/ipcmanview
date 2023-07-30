@@ -23,7 +23,7 @@ type UserCreate struct {
 	PasswordConfirm string
 }
 
-func UserNew(r UserCreate) (User, error) {
+func NewUser(r UserCreate) (User, error) {
 	if r.Password != r.PasswordConfirm {
 		return User{}, fmt.Errorf("passwords do not match")
 	}

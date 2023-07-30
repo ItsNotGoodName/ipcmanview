@@ -22,7 +22,7 @@ func Dahua(ctx context.Context) {
 		Password: password,
 	}
 
-	c := dahua.CameraActorNew(ctx, cam)
+	c := dahua.NewCameraActor(cam)
 	defer c.Close(ctx)
 
 	fmt.Println(global.GetCurrentTime(ctx, c))
