@@ -2,7 +2,6 @@ package magicbox
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
 )
@@ -69,23 +68,8 @@ func GetMemoryInfo(ctx context.Context, gen dahua.GenRPC) (GetMemoryInfoResult, 
 }
 
 type GetMemoryInfoResult struct {
-	Free  int64 `json:"free"`
-	Total int64 `json:"total"`
-}
-
-func (g *GetMemoryInfoResult) UnmarshalJSON(data []byte) error {
-	var res struct {
-		Free  float64 `json:"free"`
-		Total float64 `json:"total"`
-	}
-	if err := json.Unmarshal(data, &res); err != nil {
-		return err
-	}
-
-	g.Free = int64(res.Free)
-	g.Total = int64(res.Total)
-
-	return nil
+	Free  float64 `json:"free"`
+	Total float64 `json:"total"`
 }
 
 func GetCPUUsage(ctx context.Context, gen dahua.GenRPC) (int, error) {

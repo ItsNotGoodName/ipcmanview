@@ -8,7 +8,9 @@ import (
 	"github.com/ItsNotGoodName/ipcmango/internal/core"
 	"github.com/ItsNotGoodName/ipcmango/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/global"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/license"
 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/magicbox"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/storage"
 )
 
 func Dahua(ctx context.Context) {
@@ -38,4 +40,7 @@ func Dahua(ctx context.Context) {
 	fmt.Println(magicbox.GetSoftwareVersion(ctx, c))
 	fmt.Println(magicbox.GetUpTime(ctx, c))
 	fmt.Println(magicbox.GetVendor(ctx, c))
+	fmt.Println(license.GetLicenseInfo(ctx, c))
+	fmt.Println(storage.GetDeviceAllInfo(ctx, c))
+
 }
