@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/ItsNotGoodName/ipcmango/internal/core"
 	"github.com/ItsNotGoodName/ipcmango/internal/db"
 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
 )
@@ -13,6 +14,10 @@ type StoreActor Actor
 
 func (c StoreActor) RPC(ctx context.Context) (dahua.RequestBuilder, error) {
 	return Actor(c).RPC(ctx)
+}
+
+func (c StoreActor) Get(ctx context.Context) (core.DahuaCamera, error) {
+	return Actor(c).Get(ctx)
 }
 
 type Store struct {

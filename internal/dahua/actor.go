@@ -17,6 +17,7 @@ const logoutTimeout = 15 * time.Second
 
 type Actor struct {
 	ID      int64
+	camC    <-chan core.DahuaCamera
 	rpcC    chan<- rpcRequest
 	closeC  <-chan *dahua.Conn
 	updateC chan<- core.DahuaCamera
@@ -24,15 +25,17 @@ type Actor struct {
 }
 
 func StartActor(cam core.DahuaCamera) Actor {
+	camC := make(chan core.DahuaCamera)
 	rpcC := make(chan rpcRequest)
 	closeC := make(chan *dahua.Conn)
 	updateC := make(chan core.DahuaCamera)
 	doneC := make(chan struct{})
 
-	go startActor(cam, rpcC, closeC, updateC, doneC)
+	go startActor(cam, camC, rpcC, closeC, updateC, doneC)
 
 	return Actor{
 		ID:      cam.ID,
+		camC:    camC,
 		rpcC:    rpcC,
 		closeC:  closeC,
 		updateC: updateC,
@@ -40,7 +43,7 @@ func StartActor(cam core.DahuaCamera) Actor {
 	}
 }
 
-func startActor(cam core.DahuaCamera, rpcC <-chan rpcRequest, closeC chan<- *dahua.Conn, updateC <-chan core.DahuaCamera, doneC chan<- struct{}) {
+func startActor(cam core.DahuaCamera, camC chan<- core.DahuaCamera, rpcC <-chan rpcRequest, closeC chan<- *dahua.Conn, updateC <-chan core.DahuaCamera, doneC chan<- struct{}) {
 	defer close(doneC)
 
 	conn := newConn(cam)
@@ -49,6 +52,7 @@ func startActor(cam core.DahuaCamera, rpcC <-chan rpcRequest, closeC chan<- *dah
 		select {
 		case closeC <- conn:
 			return
+		case camC <- cam:
 		case newCam := <-updateC:
 			if newCam.Equal(cam) {
 				continue
@@ -111,6 +115,17 @@ func newRPC(ctx context.Context, conn *dahua.Conn, cam *core.DahuaCamera) (dahua
 	}
 
 	panic("unhandled connection state")
+}
+
+func (c Actor) Get(ctx context.Context) (core.DahuaCamera, error) {
+	select {
+	case <-ctx.Done():
+		return core.DahuaCamera{}, ctx.Err()
+	case <-c.doneC:
+		return core.DahuaCamera{}, ErrActorClosed
+	case cam := <-c.camC:
+		return cam, nil
+	}
 }
 
 func (c Actor) Update(ctx context.Context, cam core.DahuaCamera) error {

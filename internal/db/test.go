@@ -8,13 +8,13 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func Connect(ctx context.Context) (Context, func()) {
+// TestConnect is only used for testing.
+func TestConnect(ctx context.Context) (Context, func()) {
 	url := "postgres://postgres:postgres@localhost:5432"
 	database := "postgres_test"
 
 	conn, err := pgx.Connect(ctx, url)
 	if err != nil {
-		conn.Close(ctx)
 		panic(err)
 	}
 
@@ -25,15 +25,13 @@ func Connect(ctx context.Context) (Context, func()) {
 	}
 
 	_, err = conn.Exec(ctx, fmt.Sprintf(`CREATE DATABASE %s`, database))
+	conn.Close(ctx)
 	if err != nil {
-		conn.Close(ctx)
 		panic(err)
 	}
-	conn.Close(ctx)
 
 	conn, err = pgx.Connect(ctx, url+"/"+database)
 	if err != nil {
-		conn.Close(ctx)
 		panic(err)
 	}
 

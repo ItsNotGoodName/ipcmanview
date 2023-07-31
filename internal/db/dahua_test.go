@@ -10,7 +10,7 @@ import (
 )
 
 func TestDahuaCamera(t *testing.T) {
-	context, close := Connect(context.Background())
+	context, close := TestConnect(context.Background())
 	defer close()
 
 	// Create
