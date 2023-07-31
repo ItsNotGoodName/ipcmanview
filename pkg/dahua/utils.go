@@ -35,9 +35,11 @@ func (a AuthParam) HashPassword(username, password string) string {
 	}
 }
 
-// fromTimestamp returns the UTC time for the given timestamp and location.
-func fromTimestamp(timestamp string, loc *time.Location) (time.Time, error) {
-	date, err := time.ParseInLocation("2006-01-02 15:04:05", timestamp, loc)
+type Timestamp string
+
+// Parse returns the UTC time for the given timestamp and location.
+func (t Timestamp) Parse(cameraLocation *time.Location) (time.Time, error) {
+	date, err := time.ParseInLocation("2006-01-02 15:04:05", string(t), cameraLocation)
 	if err != nil {
 		return date, err
 	}
@@ -45,13 +47,13 @@ func fromTimestamp(timestamp string, loc *time.Location) (time.Time, error) {
 	return date.UTC(), nil
 }
 
-// toTimestamp converts the given UTC time to the given location and returns the timestamp.
-func toTimestamp(date time.Time, loc *time.Location) string {
-	return date.In(loc).Format("2006-01-02 15:04:05")
+// NewTimestamp converts the given UTC time to the given location and returns the timestamp.
+func NewTimestamp(date time.Time, cameraLocation *time.Location) Timestamp {
+	return Timestamp(date.In(cameraLocation).Format("2006-01-02 15:04:05"))
 }
 
-// extractFilePathTags extracts tags that are surrounded by brackets from the given file path.
-func extractFilePathTags(filePath string) []string {
+// ExtractFilePathTags extracts tags that are surrounded by brackets from the given file path.
+func ExtractFilePathTags(filePath string) []string {
 	search := filePath
 	idx := strings.LastIndex(filePath, "/")
 	if idx != -1 {

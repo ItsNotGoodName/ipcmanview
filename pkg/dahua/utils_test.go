@@ -18,16 +18,16 @@ func Test_AuthParam(t *testing.T) {
 }
 
 func Test_Timestamp(t *testing.T) {
-	data := []string{
+	data := []Timestamp{
 		"2023-02-06 00:00:00",
 		"2023-02-06 03:09:09",
 		"2023-02-06 23:59:59",
 	}
 
 	for _, date := range data {
-		from, err := fromTimestamp(date, time.Local)
+		from, err := date.Parse(time.Local)
 		assert.Nil(t, err, nil)
-		assert.Equal(t, date, toTimestamp(from, time.Local))
+		assert.Equal(t, date, NewTimestamp(from, time.Local))
 	}
 }
 
@@ -62,7 +62,7 @@ func Test_extractFilePathTags(t *testing.T) {
 	}
 
 	for _, d := range data {
-		tags := extractFilePathTags(d.Path)
+		tags := ExtractFilePathTags(d.Path)
 		assert.Equal(t, d.Tags, tags)
 	}
 }
