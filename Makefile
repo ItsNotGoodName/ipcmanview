@@ -13,7 +13,7 @@ dev:
 	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" air
 
 dev-db:
-	podman run --rm -e POSTGRES_PASSWORD=postgres -p 5432:5432 docker.io/postgres:15
+	podman run --rm -e POSTGRES_PASSWORD=postgres -p 5432:5432 -c client_min_messages=DEBUG1 docker.io/postgres:15 -c log_statement=all
 
 dev-ui:
 	cd ui && pnpm run dev
