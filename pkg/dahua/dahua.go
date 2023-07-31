@@ -24,33 +24,37 @@ type GenRPCLogin interface {
 	RPCLogin() RequestBuilder
 }
 
-type ResponseSession struct {
-	Value string
-}
+type ResponseSession string
 
 func (s *ResponseSession) UnmarshalJSON(data []byte) error {
 	// string -> string
-	if err := json.Unmarshal(data, &s.Value); err == nil {
+	var str string
+	if err := json.Unmarshal(data, &str); err == nil {
+		*s = ResponseSession(str)
 		return nil
 	}
 
 	// int64 -> string
 	var num int64
 	if err := json.Unmarshal(data, &num); err == nil {
-		s.Value = strconv.FormatInt(num, 10)
+		*s = ResponseSession(strconv.FormatInt(num, 10))
 		return nil
 	}
 
 	return fmt.Errorf("session is not a string or number")
 }
 
-type ResponseResult struct {
-	Number int64
+func (s ResponseSession) String() string {
+	return string(s)
 }
+
+type ResponseResult int64
 
 func (s *ResponseResult) UnmarshalJSON(data []byte) error {
 	// int64 -> int64
-	if err := json.Unmarshal(data, &s.Number); err == nil {
+	var num int64
+	if err := json.Unmarshal(data, &num); err == nil {
+		*s = ResponseResult(num)
 		return nil
 	}
 
@@ -58,7 +62,7 @@ func (s *ResponseResult) UnmarshalJSON(data []byte) error {
 	var b bool
 	if err := json.Unmarshal(data, &b); err == nil {
 		if b {
-			s.Number = 1
+			*s = 1
 		}
 		return nil
 	}
@@ -66,8 +70,12 @@ func (s *ResponseResult) UnmarshalJSON(data []byte) error {
 	return fmt.Errorf("result is not a number or boolean")
 }
 
-func (s *ResponseResult) Bool() bool {
-	return s.Number == 1
+func (s ResponseResult) Integer() int64 {
+	return int64(s)
+}
+
+func (s ResponseResult) Bool() bool {
+	return s == 1
 }
 
 // Response from the camera.
@@ -83,7 +91,7 @@ type Response[T any] struct {
 type ResponseError struct {
 	Code    int
 	Message string
-	Kind    ErrResponseKind
+	Type    ResponseErrorType
 }
 
 func (r *ResponseError) UnmarshalJSON(data []byte) error {
@@ -100,32 +108,32 @@ func (r *ResponseError) UnmarshalJSON(data []byte) error {
 
 	switch res.Code {
 	case 268894209:
-		r.Kind = ErrResponseKindInvalidRequest
+		r.Type = ErrResponseInvalidRequest
 	case 268894210:
-		r.Kind = ErrResponseMethodNotFound
+		r.Type = ErrResponseMethodNotFound
 	case 268632064:
-		r.Kind = ErrResponseInterfaceNotFound
+		r.Type = ErrResponseInterfaceNotFound
 	case 285409284:
-		r.Kind = ErrResponseNoData
+		r.Type = ErrResponseNoData
 	default:
-		r.Kind = ErrResponseKindUnknown
+		r.Type = ErrResponseUnknown
 	}
 
 	return nil
 }
 
-func (r *ResponseError) Error() string {
+func (r ResponseError) Error() string {
 	return r.Message
 }
 
-type ErrResponseKind = string
+type ResponseErrorType string
 
 var (
-	ErrResponseKindInvalidRequest ErrResponseKind = "InvalidRequest"
-	ErrResponseMethodNotFound     ErrResponseKind = "MethodNotFound"
-	ErrResponseInterfaceNotFound  ErrResponseKind = "InterfaceNotFound"
-	ErrResponseNoData             ErrResponseKind = "NoData"
-	ErrResponseKindUnknown        ErrResponseKind = "Unknown"
+	ErrResponseInvalidRequest    ResponseErrorType = "InvalidRequest"
+	ErrResponseMethodNotFound    ResponseErrorType = "MethodNotFound"
+	ErrResponseInterfaceNotFound ResponseErrorType = "InterfaceNotFound"
+	ErrResponseNoData            ResponseErrorType = "NoData"
+	ErrResponseUnknown           ResponseErrorType = "Unknown"
 )
 
 type Request struct {

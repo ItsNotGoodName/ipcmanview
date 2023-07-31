@@ -68,8 +68,8 @@ func GetMemoryInfo(ctx context.Context, gen dahua.GenRPC) (GetMemoryInfoResult, 
 }
 
 type GetMemoryInfoResult struct {
-	Free  float64 `json:"free"`
-	Total float64 `json:"total"`
+	Free  dahua.Integer `json:"free"`
+	Total dahua.Integer `json:"total"`
 }
 
 func GetCPUUsage(ctx context.Context, gen dahua.GenRPC) (int, error) {

@@ -16,7 +16,7 @@ func Create(ctx context.Context, gen dahua.GenRPC) (int64, error) {
 
 	res, err := dahua.Send[any](ctx, rpc.Method("mediaFileFind.factory.create"))
 
-	return res.Result.Number, err
+	return res.Result.Integer(), err
 }
 
 func FindFile(ctx context.Context, gen dahua.GenRPC, object int64, condition Condition) (bool, error) {

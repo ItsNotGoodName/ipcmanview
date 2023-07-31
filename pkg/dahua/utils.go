@@ -3,6 +3,7 @@ package dahua
 import (
 	"crypto/md5"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -69,4 +70,21 @@ func ExtractFilePathTags(filePath string) []string {
 	}
 
 	return tags
+}
+
+type Integer int64
+
+func (s *Integer) UnmarshalJSON(data []byte) error {
+	var number float64
+	if err := json.Unmarshal(data, &number); err != nil {
+		return err
+	}
+
+	*s = Integer(number)
+
+	return nil
+}
+
+func (s Integer) Integer() int64 {
+	return int64(s)
 }

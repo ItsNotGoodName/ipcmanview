@@ -20,7 +20,7 @@ func GetDeviceAllInfo(ctx context.Context, gen dahua.GenRPC) ([]Storage, error) 
 			return []Storage{}, err
 		}
 
-		object = res.Result.Number
+		object = res.Result.Integer()
 	}
 
 	rpc, err := gen.RPC(ctx)
@@ -43,11 +43,11 @@ type Storage struct {
 }
 
 type StorageDetail struct {
-	Path       string  `json:"Path"`
-	Type       string  `json:"Type"`
-	TotalBytes float64 `json:"TotalBytes"`
-	UsedBytes  float64 `json:"UsedBytes"`
-	IsError    bool    `json:"IsError"`
+	Path       string        `json:"Path"`
+	Type       string        `json:"Type"`
+	TotalBytes dahua.Integer `json:"TotalBytes"`
+	UsedBytes  dahua.Integer `json:"UsedBytes"`
+	IsError    bool          `json:"IsError"`
 }
 
 type GetDeviceAllInfoResult struct {

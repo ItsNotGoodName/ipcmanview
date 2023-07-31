@@ -75,7 +75,7 @@ func login(ctx context.Context, conn *dahua.Conn, username, password string) err
 	}
 
 	// Update session
-	conn.UpdateSession(firstLogin.Session.Value)
+	conn.UpdateSession(firstLogin.Session.String())
 
 	// Magic
 	loginType := func() string {
