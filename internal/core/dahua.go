@@ -12,6 +12,12 @@ type DahuaCamera struct {
 	CreatedAt time.Time
 }
 
+func (dc DahuaCamera) Equal(cam DahuaCamera) bool {
+	return dc.Address == cam.Address &&
+		dc.Username == cam.Username &&
+		dc.Password == cam.Username
+}
+
 type DahuaCameraCreate struct {
 	Address  string
 	Username string
