@@ -35,8 +35,9 @@ func TestDahuaCamera(t *testing.T) {
 	// Update
 	updateAddress := "user"
 
-	update := core.NewDahuaCameraUpdate(createCam.ID)
-	update.UpdateAddress(updateAddress)
+	update := core.
+		NewDahuaCameraUpdate(createCam.ID).
+		UpdateAddress(updateAddress)
 
 	updateCam, err := DahuaCameraUpdate(context, update)
 	assert.NoError(t, err)
@@ -51,9 +52,11 @@ func TestDahuaCamera(t *testing.T) {
 
 	// Delete
 	{
-		err := DahuaCameraDelete(context, update.ID)
+		value, err := update.Value()
 		assert.NoError(t, err)
-		err = DahuaCameraDelete(context, update.ID)
+		err = DahuaCameraDelete(context, value.ID)
+		assert.NoError(t, err)
+		err = DahuaCameraDelete(context, value.ID)
 		assert.Error(t, err)
 	}
 }

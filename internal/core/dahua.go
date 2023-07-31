@@ -37,30 +37,38 @@ func NewDahuaCamera(r DahuaCameraCreate) (DahuaCamera, error) {
 }
 
 type DahuaCameraUpdate struct {
-	DahuaCamera
+	value    DahuaCamera
 	Address  bool
 	Username bool
 	Password bool
 }
 
-func NewDahuaCameraUpdate(id int64) DahuaCameraUpdate {
-	return DahuaCameraUpdate{DahuaCamera: DahuaCamera{ID: id}}
+func NewDahuaCameraUpdate(id int64) *DahuaCameraUpdate {
+	return &DahuaCameraUpdate{value: DahuaCamera{ID: id}}
 }
 
-func (d *DahuaCameraUpdate) UpdateAddress(addresss string) error {
-	d.DahuaCamera.Address = addresss
+func (d *DahuaCameraUpdate) UpdateAddress(addresss string) *DahuaCameraUpdate {
+	d.value.Address = addresss
 	d.Address = true
-	return validate.StructPartial(d.DahuaCamera, "Address")
+	return d
 }
 
-func (d *DahuaCameraUpdate) UpdateUsername(username string) error {
-	d.DahuaCamera.Username = username
+func (d *DahuaCameraUpdate) UpdateUsername(username string) *DahuaCameraUpdate {
+	d.value.Username = username
 	d.Username = true
-	return validate.StructPartial(d.DahuaCamera, "Username")
+	return d
 }
 
-func (d *DahuaCameraUpdate) UpdatePassword(password string) error {
-	d.DahuaCamera.Password = password
+func (d *DahuaCameraUpdate) UpdatePassword(password string) *DahuaCameraUpdate {
+	d.value.Password = password
 	d.Password = true
-	return validate.StructPartial(d.DahuaCamera, "Password")
+	return d
+}
+
+func (d *DahuaCameraUpdate) Value() (DahuaCamera, error) {
+	if err := validate.Struct(&d.value); err != nil {
+		return DahuaCamera{}, err
+	}
+
+	return d.value, nil
 }

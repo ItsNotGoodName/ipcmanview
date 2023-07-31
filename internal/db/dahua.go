@@ -29,7 +29,12 @@ func DahuaCameraCreate(ctx Context, r core.DahuaCamera) (core.DahuaCamera, error
 	return camera, err
 }
 
-func DahuaCameraUpdate(ctx Context, r core.DahuaCameraUpdate) (core.DahuaCamera, error) {
+func DahuaCameraUpdate(ctx Context, r *core.DahuaCameraUpdate) (core.DahuaCamera, error) {
+	value, err := r.Value()
+	if err != nil {
+		return value, err
+	}
+
 	var cols ColumnList
 	if r.Address {
 		cols = append(cols, DahuaCameras.Address)
@@ -42,14 +47,14 @@ func DahuaCameraUpdate(ctx Context, r core.DahuaCameraUpdate) (core.DahuaCamera,
 	}
 
 	var camera core.DahuaCamera
-	err := ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
+	err = ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
 		UPDATE(cols).
 		MODEL(model.DahuaCameras{
-			Address:  r.DahuaCamera.Address,
-			Username: r.DahuaCamera.Username,
-			Password: r.DahuaCamera.Password,
+			Address:  value.Address,
+			Username: value.Username,
+			Password: value.Password,
 		}).
-		WHERE(DahuaCameras.ID.EQ(Int64(r.ID))).
+		WHERE(DahuaCameras.ID.EQ(Int64(value.ID))).
 		RETURNING(pDahuaCamera),
 	)
 	return camera, err

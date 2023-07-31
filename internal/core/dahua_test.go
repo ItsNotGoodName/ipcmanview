@@ -2,6 +2,8 @@ package core
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDahuaCameraNew(t *testing.T) {
@@ -36,4 +38,11 @@ func TestDahuaCameraNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDahuaCameraUpdate(t *testing.T) {
+	update := NewDahuaCameraUpdate(0).UpdateAddress("test")
+	value, err := update.Value()
+	assert.NoError(t, err)
+	assert.Equal(t, DahuaCamera{ID: 0, Address: "test"}, value)
 }

@@ -59,8 +59,7 @@ func TestStore(t *testing.T) {
 		assert.True(t, cam1.Equal(actorCam1))
 
 		// Update database
-		update := core.NewDahuaCameraUpdate(cam1.ID)
-		err = update.UpdateAddress("hi")
+		update := core.NewDahuaCameraUpdate(cam1.ID).UpdateAddress("hi")
 		assert.NoError(t, err)
 
 		cam1Updated, err := db.DahuaCameraUpdate(context, update)
