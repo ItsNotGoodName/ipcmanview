@@ -55,7 +55,7 @@ const (
 func NewCondtion(startTime dahua.Timestamp, endTime dahua.Timestamp) Condition {
 	return Condition{
 		Channel:   0,
-		Dirs:      []string{},
+		Dirs:      nil,
 		Types:     []string{"dav", "jpg"},
 		Order:     ConditionOrderAscent,
 		Redundant: "Exclusion",
