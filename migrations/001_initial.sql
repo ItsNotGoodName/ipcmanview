@@ -14,7 +14,19 @@ CREATE TABLE dahua_cameras (
   username TEXT NOT NULL,
   password TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-)
+);
+
+CREATE FUNCTION notify_dahua_cameras_deleted() RETURNS trigger as $$
+  BEGIN
+    perform pg_notify('dahua_cameras:deleted', cast(OLD.id AS text));
+    RETURN NEW;
+  END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER dahua_cameras_deleted
+AFTER DELETE ON dahua_cameras
+FOR EACH ROW
+EXECUTE FUNCTION notify_dahua_cameras_deleted();
 
 ---- create above / drop below ----
 

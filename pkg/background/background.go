@@ -36,14 +36,34 @@ func Run(ctx context.Context, backgrounds ...Background) <-chan struct{} {
 type BackgroundFunction func(ctx context.Context)
 
 type Function struct {
-	fn BackgroundFunction
+	fn       BackgroundFunction
+	blocking Blocking
 }
 
-func NewFunction(fn BackgroundFunction) Function {
-	return Function{fn}
+type Blocking int
+
+const (
+	BlockingForever Blocking = iota // BlockingForever blocks forever.
+	BlockingContext                 // BlockingContext blocks until context is done.
+)
+
+// NewFunction create an adhoc function that implements the Background interface.
+func NewFunction(blocking Blocking, fn BackgroundFunction) Function {
+	return Function{
+		fn:       fn,
+		blocking: blocking,
+	}
 }
 
 func (f Function) Background(ctx context.Context, doneC chan<- struct{}) {
-	doneC <- struct{}{}
-	f.fn(ctx)
+	switch f.blocking {
+	case BlockingForever:
+		doneC <- struct{}{}
+		f.fn(ctx)
+	case BlockingContext:
+		f.fn(ctx)
+		doneC <- struct{}{}
+	default:
+		panic("unhandled case")
+	}
 }

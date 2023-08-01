@@ -21,5 +21,10 @@ func validateAddress(fl validator.FieldLevel) bool {
 		return true
 	}
 
+	err = validate.Var(fl.Field().String(), "ip")
+	if err == nil {
+		return true
+	}
+
 	return false
 }

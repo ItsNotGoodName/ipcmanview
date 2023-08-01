@@ -24,6 +24,11 @@ func NewHTTP(r chi.Router, addr string, shutdown context.CancelFunc) HTTP {
 }
 
 func (r HTTP) Background(ctx context.Context, doneC chan<- struct{}) {
+	r.Start(ctx)
+	doneC <- struct{}{}
+}
+
+func (r HTTP) Start(ctx context.Context) {
 	server := &http.Server{Addr: r.addr, Handler: r.r}
 
 	go func() {
@@ -52,6 +57,4 @@ func (r HTTP) Background(ctx context.Context, doneC chan<- struct{}) {
 		log.Err(err).Msg("Failed to start HTTP server")
 		r.shutdown()
 	}
-
-	doneC <- struct{}{}
 }

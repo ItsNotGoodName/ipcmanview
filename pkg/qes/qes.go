@@ -1,4 +1,4 @@
-package q
+package qes
 
 import (
 	"context"

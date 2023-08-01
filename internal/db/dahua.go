@@ -4,7 +4,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmango/internal/core"
 	"github.com/ItsNotGoodName/ipcmango/internal/db/gen/postgres/public/model"
 	. "github.com/ItsNotGoodName/ipcmango/internal/db/gen/postgres/public/table"
-	"github.com/ItsNotGoodName/ipcmango/internal/db/q"
+	"github.com/ItsNotGoodName/ipcmango/pkg/qes"
 	. "github.com/go-jet/jet/v2/postgres"
 )
 
@@ -18,7 +18,7 @@ var pDahuaCamera ProjectionList = []Projection{
 
 func DahuaCameraCreate(ctx Context, r core.DahuaCamera) (core.DahuaCamera, error) {
 	var camera core.DahuaCamera
-	err := q.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
+	err := qes.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
 		INSERT(DahuaCameras.Address, DahuaCameras.Username, DahuaCameras.Password).
 		MODEL(model.DahuaCameras{
 			Address:  r.Address,
@@ -48,7 +48,7 @@ func DahuaCameraUpdate(ctx Context, r *core.DahuaCameraUpdate) (core.DahuaCamera
 	}
 
 	var camera core.DahuaCamera
-	err = q.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
+	err = qes.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
 		UPDATE(cols).
 		MODEL(model.DahuaCameras{
 			Address:  value.Address,
@@ -63,13 +63,21 @@ func DahuaCameraUpdate(ctx Context, r *core.DahuaCameraUpdate) (core.DahuaCamera
 
 func DahuaCameraGet(ctx Context, id int64) (core.DahuaCamera, error) {
 	var camera core.DahuaCamera
-	err := q.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
+	err := qes.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
 		SELECT(pDahuaCamera).
 		WHERE(DahuaCameras.ID.EQ(Int64(id))))
 	return camera, err
 }
 
+func DahuaCameraGetByAddress(ctx Context, address string) (core.DahuaCamera, error) {
+	var camera core.DahuaCamera
+	err := qes.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
+		SELECT(pDahuaCamera).
+		WHERE(DahuaCameras.Address.EQ(String(address))))
+	return camera, err
+}
+
 func DahuaCameraDelete(ctx Context, id int64) error {
-	_, err := q.ExecOne(ctx.Context, ctx.Conn, DahuaCameras.DELETE().WHERE(DahuaCameras.ID.EQ(Int64(id))).RETURNING(DahuaCameras.ID))
+	_, err := qes.ExecOne(ctx.Context, ctx.Conn, DahuaCameras.DELETE().WHERE(DahuaCameras.ID.EQ(Int64(id))).RETURNING(DahuaCameras.ID))
 	return err
 }

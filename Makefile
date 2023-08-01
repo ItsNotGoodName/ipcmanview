@@ -3,22 +3,24 @@ gen:
 	webrpc-gen -schema=./server/api.ridl -target=golang -pkg=service -server -out=./server/service/proto.gen.go
 	webrpc-gen -schema=./server/api.ridl -target=typescript -client -out=./ui/src/core/client.gen.ts
 
+preview: build-ui run
+
 run:
 	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run .
 
-preview:
-	cd ui && pnpm run build && cd .. && DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run .
+build-ui:
+	cd ui && pnpm run build && cd ..
 
 dev:
 	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" air
 
 dev-db:
-	podman run --rm -e POSTGRES_PASSWORD=postgres -p 5432:5432 -c client_min_messages=DEBUG1 docker.io/postgres:15 -c log_statement=all
+	podman run --rm -e POSTGRES_PASSWORD=postgres -p 5432:5432 docker.io/postgres:15 -c log_statement=all
 
 dev-ui:
 	cd ui && pnpm run dev
 
-dep: dep-tern dep-jet dep-air dep-webrpc-gen
+dep: dep-tern dep-jet dep-air dep-webrpc-gen dep-ui
 
 dep-tern:
 	go install github.com/jackc/tern/v2@latest

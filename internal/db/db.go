@@ -26,6 +26,10 @@ func New(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	return pgxpool.NewWithConfig(ctx, config)
 }
 
+func NewConn(ctx context.Context, pool *pgxpool.Pool) (*pgx.Conn, error) {
+	return pgx.ConnectConfig(ctx, pool.Config().ConnConfig)
+}
+
 type Context struct {
 	context.Context
 	Conn *pgx.Conn
