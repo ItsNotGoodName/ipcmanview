@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -11,7 +12,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmango/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmango/internal/db"
 	"github.com/ItsNotGoodName/ipcmango/internal/event"
-	"github.com/ItsNotGoodName/ipcmango/internal/procs"
+	"github.com/ItsNotGoodName/ipcmango/internal/hookup"
 	"github.com/ItsNotGoodName/ipcmango/migrations"
 	"github.com/ItsNotGoodName/ipcmango/pkg/background"
 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/magicbox"
@@ -23,8 +24,8 @@ import (
 )
 
 func main() {
-	// sandbox.Dahua(interrupt.Context())
-	// return
+	sandbox.Dahua(interrupt.Context())
+	return
 
 	ctx, shutdown := context.WithCancel(interrupt.Context())
 	defer shutdown()
@@ -46,7 +47,7 @@ func main() {
 
 	// Dahua
 	store := dahua.NewStore()
-	procs.HookBusToDahuaStore(bus, store)
+	hookup.DahuaStore(bus, store)
 
 	// sandbox.Jet(ctx, pool)
 	<-background.Run(ctx,
@@ -67,6 +68,9 @@ func main() {
 						Password: password,
 					})
 					if err != nil {
+						if errors.Is(err, context.Canceled) {
+							return nil
+						}
 						panic(err)
 					}
 
@@ -85,12 +89,18 @@ func main() {
 
 					actor, err := store.GetOrCreate(dbCtx, cam.ID)
 					if err != nil {
+						if errors.Is(err, context.Canceled) {
+							return nil
+						}
 						log.Err(err).Msg("Failed to get actor")
 						continue
 					}
 
 					sn, err := magicbox.GetSerialNo(ctx, actor)
 					if err != nil {
+						if errors.Is(err, context.Canceled) {
+							return nil
+						}
 						log.Err(err).Msg("Failed to get sn")
 						continue
 					}

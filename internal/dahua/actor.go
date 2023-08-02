@@ -13,86 +13,97 @@ import (
 
 var ErrActorClosed = fmt.Errorf("dahua actor is closed")
 
-const logoutTimeout = 15 * time.Second
+const actorLogoutTimeout = 15 * time.Second
 
-type Actor struct {
-	ID      int64
-	camC    <-chan core.DahuaCamera
-	rpcC    chan<- rpcRequest
-	closeC  <-chan *dahua.Conn
-	updateC chan<- core.DahuaCamera
-	doneC   <-chan struct{}
+type ActorHandle struct {
+	Camera core.DahuaCamera
+	rpcC   chan<- actorRPCRequest
+	stopC  <-chan *dahua.Conn
+	doneC  <-chan struct{}
 }
 
-func StartActor(cam core.DahuaCamera) Actor {
-	camC := make(chan core.DahuaCamera)
-	rpcC := make(chan rpcRequest)
-	closeC := make(chan *dahua.Conn)
-	updateC := make(chan core.DahuaCamera)
+func NewActorHandle(cam core.DahuaCamera) ActorHandle {
+	rpcC := make(chan actorRPCRequest)
+	stopC := make(chan *dahua.Conn)
 	doneC := make(chan struct{})
 
-	go startActor(cam, camC, rpcC, closeC, updateC, doneC)
+	go actorStart(cam, rpcC, stopC, doneC)
 
-	return Actor{
-		ID:      cam.ID,
-		camC:    camC,
-		rpcC:    rpcC,
-		closeC:  closeC,
-		updateC: updateC,
-		doneC:   doneC,
+	return ActorHandle{
+		Camera: cam,
+		rpcC:   rpcC,
+		stopC:  stopC,
+		doneC:  doneC,
 	}
 }
 
-func startActor(cam core.DahuaCamera, camC chan<- core.DahuaCamera, rpcC <-chan rpcRequest, closeC chan<- *dahua.Conn, updateC <-chan core.DahuaCamera, doneC chan<- struct{}) {
+func actorStart(cam core.DahuaCamera, rpcC <-chan actorRPCRequest, stopC chan<- *dahua.Conn, doneC chan<- struct{}) {
 	defer close(doneC)
 
-	conn := newConn(cam)
+	conn := actorNewConn(cam)
 
 	for {
 		select {
-		case closeC <- conn:
+		case stopC <- conn:
 			return
-		case camC <- cam:
-		case newCam := <-updateC:
-			if newCam.Equal(cam) {
-				continue
-			}
-			cam = newCam
-
-			if conn.State == dahua.StateLogin {
-				ctx, cancel := context.WithTimeout(context.Background(), logoutTimeout)
-				auth.Logout(ctx, conn)
-				cancel()
-			}
-
-			conn = newConn(cam)
 		case req := <-rpcC:
-			rpc, err := newRPC(req.ctx, conn, &cam)
+			rpc, err := actorNewRPC(req.ctx, conn, &cam)
 
 			select {
 			case <-req.ctx.Done():
-			case req.res <- rpcResponse{rpc: rpc, err: err}:
+			case req.res <- actorRPCResponse{rpc: rpc, err: err}:
 			}
 		}
 	}
 }
 
-type rpcRequest struct {
-	ctx context.Context
-	res chan<- rpcResponse
+// Close stops the actor and cleans up any resources.
+func (c ActorHandle) Close(ctx context.Context) {
+	select {
+	case <-ctx.Done():
+	case <-c.doneC:
+	case conn := <-c.stopC:
+		if conn.State() == dahua.StateLogin {
+			ctx, cancel := context.WithTimeout(ctx, actorLogoutTimeout)
+			auth.Logout(ctx, conn)
+			cancel()
+		}
+	}
 }
 
-type rpcResponse struct {
+func (c ActorHandle) RPC(ctx context.Context) (dahua.RequestBuilder, error) {
+	res := make(chan actorRPCResponse)
+	select {
+	case <-ctx.Done():
+		return dahua.RequestBuilder{}, ctx.Err()
+	case <-c.doneC:
+		return dahua.RequestBuilder{}, ErrActorClosed
+	case c.rpcC <- actorRPCRequest{ctx: ctx, res: res}:
+		rpc := <-res
+		if rpc.err != nil {
+			return dahua.RequestBuilder{}, rpc.err
+		}
+
+		return rpc.rpc, nil
+	}
+}
+
+type actorRPCRequest struct {
+	ctx context.Context
+	res chan<- actorRPCResponse
+}
+
+type actorRPCResponse struct {
 	rpc dahua.RequestBuilder
 	err error
 }
 
-func newConn(cam core.DahuaCamera) *dahua.Conn {
-	return dahua.NewConn(http.DefaultClient, dahua.NewCamera(cam.Address))
+func actorNewConn(cam core.DahuaCamera) *dahua.Conn {
+	return dahua.NewConn(http.DefaultClient, cam.Address)
 }
 
-func newRPC(ctx context.Context, conn *dahua.Conn, cam *core.DahuaCamera) (dahua.RequestBuilder, error) {
-	switch conn.State {
+func actorNewRPC(ctx context.Context, conn *dahua.Conn, cam *core.DahuaCamera) (dahua.RequestBuilder, error) {
+	switch conn.State() {
 	case dahua.StateLogout:
 		err := auth.Login(ctx, conn, cam.Username, cam.Password)
 		if err != nil {
@@ -102,8 +113,8 @@ func newRPC(ctx context.Context, conn *dahua.Conn, cam *core.DahuaCamera) (dahua
 		return conn.RPC(ctx)
 	case dahua.StateLogin:
 		if err := auth.KeepAlive(ctx, conn); err != nil {
-			if conn.State == dahua.StateLogout {
-				return newRPC(ctx, conn, cam)
+			if conn.State() == dahua.StateLogout {
+				return actorNewRPC(ctx, conn, cam)
 			}
 
 			return dahua.RequestBuilder{}, err
@@ -115,52 +126,4 @@ func newRPC(ctx context.Context, conn *dahua.Conn, cam *core.DahuaCamera) (dahua
 	}
 
 	panic("unhandled connection state")
-}
-
-func (c Actor) Get(ctx context.Context) (core.DahuaCamera, error) {
-	select {
-	case <-ctx.Done():
-		return core.DahuaCamera{}, ctx.Err()
-	case <-c.doneC:
-		return core.DahuaCamera{}, ErrActorClosed
-	case cam := <-c.camC:
-		return cam, nil
-	}
-}
-
-func (c Actor) Update(ctx context.Context, cam core.DahuaCamera) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-c.doneC:
-		return ErrActorClosed
-	case c.updateC <- cam:
-		return nil
-	}
-}
-
-func (c Actor) RPC(ctx context.Context) (dahua.RequestBuilder, error) {
-	res := make(chan rpcResponse)
-	select {
-	case <-ctx.Done():
-		return dahua.RequestBuilder{}, ctx.Err()
-	case <-c.doneC:
-		return dahua.RequestBuilder{}, ErrActorClosed
-	case c.rpcC <- rpcRequest{ctx: ctx, res: res}:
-		rpc := <-res
-		return rpc.rpc, rpc.err
-	}
-}
-
-func (c Actor) Close(ctx context.Context) {
-	select {
-	case <-ctx.Done():
-	case <-c.doneC:
-	case conn := <-c.closeC:
-		if conn.State == dahua.StateLogin {
-			ctx, cancel := context.WithTimeout(ctx, logoutTimeout)
-			auth.Logout(ctx, conn)
-			cancel()
-		}
-	}
 }

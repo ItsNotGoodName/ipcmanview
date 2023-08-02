@@ -10,6 +10,7 @@ import (
 )
 
 type Bus struct {
+	Connect            []func(context db.Context)
 	DahuaCameraUpdated []func(context db.Context, evt DahuaCameraUpdated)
 	DahuaCameraDeleted []func(context db.Context, evt DahuaCameraDeleted)
 }
@@ -23,8 +24,8 @@ type DahuaCameraDeleted struct {
 }
 
 var (
-	dahuaCamerasUpdated = "dahua_cameras:updated"
-	dahuaCamerasDeleted = "dahua_cameras:deleted"
+	dahuaCamerasUpdated = "dahua.cameras:updated"
+	dahuaCamerasDeleted = "dahua.cameras:deleted"
 )
 
 var channels = []string{
@@ -32,7 +33,7 @@ var channels = []string{
 	dahuaCamerasDeleted,
 }
 
-func (b *Bus) Handle(dbCtx db.Context, notification *pgconn.Notification) {
+func (b *Bus) handle(dbCtx db.Context, notification *pgconn.Notification) {
 	switch notification.Channel {
 	case dahuaCamerasDeleted:
 		id, err := strconv.ParseInt(notification.Payload, 10, 64)
@@ -60,6 +61,12 @@ func (b *Bus) Handle(dbCtx db.Context, notification *pgconn.Notification) {
 		for _, v := range b.DahuaCameraUpdated {
 			v(dbCtx, evt)
 		}
+	}
+}
+
+func (b *Bus) handleConnect(dbCtx db.Context) {
+	for _, v := range b.Connect {
+		v(dbCtx)
 	}
 }
 

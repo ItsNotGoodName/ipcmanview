@@ -10,7 +10,7 @@ import (
 )
 
 func TestDahuaCamera(t *testing.T) {
-	context, close := TestConnect(context.Background())
+	dbCtx, close := TestConnect(context.Background())
 	defer close()
 
 	// Create
@@ -21,7 +21,7 @@ func TestDahuaCamera(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	createCam, err := DahuaCameraCreate(context, coreCam)
+	createCam, err := DahuaCameraCreate(dbCtx, coreCam)
 	assert.NoError(t, err)
 
 	assert.NotEqual(t, coreCam.ID, createCam.ID, "should have new id")
@@ -37,15 +37,15 @@ func TestDahuaCamera(t *testing.T) {
 
 	update := core.
 		NewDahuaCameraUpdate(createCam.ID).
-		UpdateAddress(updateAddress)
+		AddressUpdate(updateAddress)
 
-	updateCam, err := DahuaCameraUpdate(context, update)
+	updateCam, err := DahuaCameraUpdate(dbCtx, update)
 	assert.NoError(t, err)
 	assert.Equal(t, updateAddress, updateCam.Address)
 
 	// Get
 	{
-		getCam, err := DahuaCameraGet(context, updateCam.ID)
+		getCam, err := DahuaCameraGet(dbCtx, updateCam.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, updateCam, getCam)
 	}
@@ -54,9 +54,9 @@ func TestDahuaCamera(t *testing.T) {
 	{
 		value, err := update.Value()
 		assert.NoError(t, err)
-		err = DahuaCameraDelete(context, value.ID)
+		err = DahuaCameraDelete(dbCtx, value.ID)
 		assert.NoError(t, err)
-		err = DahuaCameraDelete(context, value.ID)
+		err = DahuaCameraDelete(dbCtx, value.ID)
 		assert.Error(t, err)
 	}
 }

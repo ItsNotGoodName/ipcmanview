@@ -8,20 +8,22 @@ import (
 )
 
 type Conn struct {
-	client    *http.Client
-	Camera    Camera
-	State     State
-	lastID    int
-	Session   string
-	Error     error
-	LastLogin time.Time
+	state       State
+	client      *http.Client
+	rpcURL      string
+	rpcLoginURL string
+	lastID      int
+	Session     string
+	Error       error
+	LastLogin   time.Time
 }
 
-func NewConn(client *http.Client, camera Camera) *Conn {
+func NewConn(client *http.Client, ip string) *Conn {
 	return &Conn{
-		client: client,
-		Camera: camera,
-		State:  StateLogout,
+		state:       StateLogout,
+		client:      client,
+		rpcURL:      fmt.Sprintf("http://%s/RPC2", ip),
+		rpcLoginURL: fmt.Sprintf("http://%s/RPC2_Login", ip),
 	}
 }
 
@@ -33,7 +35,7 @@ func (c *Conn) RPC(ctx context.Context) (RequestBuilder, error) {
 	return NewRequestBuilder(
 		c.client,
 		c.nextID(),
-		c.Camera.rpc,
+		c.rpcURL,
 		c.Session,
 	), nil
 }
@@ -42,7 +44,7 @@ func (c *Conn) RPCLogin() RequestBuilder {
 	return NewRequestBuilder(
 		c.client,
 		c.nextID(),
-		c.Camera.rpcLogin,
+		c.rpcLoginURL,
 		c.Session,
 	)
 }
@@ -61,16 +63,20 @@ const (
 )
 
 func (c *Conn) UpdateSession(session string) {
-	if c.State != StateLogout {
+	if c.state != StateLogout {
 		panic("cannot set session when not logged out")
 	}
 	c.Session = session
 }
 
+func (c *Conn) State() State {
+	return c.state
+}
+
 func (c *Conn) Set(newState State, err ...error) {
-	if c.State == StateLogout && newState == StateLogin {
+	if c.state == StateLogout && newState == StateLogin {
 		c.LastLogin = time.Now()
-	} else if c.State == StateLogin && newState == StateLogin {
+	} else if c.state == StateLogin && newState == StateLogin {
 		c.LastLogin = time.Now()
 	} else {
 		c.lastID = 0
@@ -86,19 +92,5 @@ func (c *Conn) Set(newState State, err ...error) {
 		c.Error = err[0]
 	}
 
-	c.State = newState
-}
-
-type Camera struct {
-	ip       string
-	rpc      string
-	rpcLogin string
-}
-
-func NewCamera(ip string) Camera {
-	return Camera{
-		ip:       ip,
-		rpc:      fmt.Sprintf("http://%s/RPC2", ip),
-		rpcLogin: fmt.Sprintf("http://%s/RPC2_Login", ip),
-	}
+	c.state = newState
 }

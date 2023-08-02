@@ -21,17 +21,20 @@ type LicenseInfo struct {
 func GetLicenseInfo(ctx context.Context, gen dahua.GenRPC) ([]LicenseInfo, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
-		return []LicenseInfo{}, err
+		return nil, err
 	}
 
 	res, err := dahua.Send[[]struct {
 		Info LicenseInfo `json:"Info"`
 	}](ctx, rpc.Method("License.getLicenseInfo"))
+	if err != nil {
+		return nil, err
+	}
 
 	params := make([]LicenseInfo, len(res.Params))
 	for i := range res.Params {
 		params[i] = res.Params[i].Info
 	}
 
-	return params, err
+	return params, nil
 }

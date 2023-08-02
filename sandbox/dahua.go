@@ -2,6 +2,7 @@ package sandbox
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
@@ -9,8 +10,26 @@ import (
 	"github.com/ItsNotGoodName/ipcmango/internal/core"
 	"github.com/ItsNotGoodName/ipcmango/internal/dahua"
 	dh "github.com/ItsNotGoodName/ipcmango/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/global"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/license"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/magicbox"
 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/mediafilefind"
+	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/storage"
 )
+
+func print(data ...any) {
+	if len(data) > 1 && data[1] != nil {
+		fmt.Println("ERROR:", data[1])
+		return
+	}
+
+	json, err := json.MarshalIndent(data[0], "", "\t")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(json))
+}
 
 func Dahua(ctx context.Context) {
 	username, _ := os.LookupEnv("IPC_USERNAME")
@@ -23,24 +42,32 @@ func Dahua(ctx context.Context) {
 		Password: password,
 	}
 
-	c := dahua.StartActor(cam)
+	c := dahua.NewActorHandle(cam)
 	defer c.Close(ctx)
 
-	// fmt.Println(global.GetCurrentTime(ctx, c))
-	// fmt.Println(magicbox.NeedReboot(ctx, c))
-	// fmt.Println(magicbox.GetCPUUsage(ctx, c))
-	// fmt.Println(magicbox.GetDeviceClass(ctx, c))
-	// fmt.Println(magicbox.GetDeviceType(ctx, c))
-	// fmt.Println(magicbox.GetHardwareVersion(ctx, c))
-	// fmt.Println(magicbox.GetMarketArea(ctx, c))
-	// fmt.Println(magicbox.GetMemoryInfo(ctx, c))
-	// fmt.Println(magicbox.GetProcessInfo(ctx, c))
-	// fmt.Println(magicbox.GetSerialNo(ctx, c))
-	// fmt.Println(magicbox.GetSoftwareVersion(ctx, c))
-	// fmt.Println(magicbox.GetUpTime(ctx, c))
-	// fmt.Println(magicbox.GetVendor(ctx, c))
-	// fmt.Println(license.GetLicenseInfo(ctx, c))
-	// fmt.Println(storage.GetDeviceAllInfo(ctx, c))
+	print(dahua.CameraDetailGet(ctx, c))
+	print(dahua.CameraSoftwareVersionGet(ctx, c))
+	print(dahua.LicensesList(ctx, c))
+
+	return
+
+	fmt.Println(global.GetCurrentTime(ctx, c))
+	fmt.Println(magicbox.NeedReboot(ctx, c))
+	fmt.Println(magicbox.GetCPUUsage(ctx, c))
+	fmt.Println(magicbox.GetDeviceClass(ctx, c))
+	fmt.Println(magicbox.GetDeviceType(ctx, c))
+	fmt.Println(magicbox.GetHardwareVersion(ctx, c))
+	fmt.Println(magicbox.GetMarketArea(ctx, c))
+	fmt.Println(magicbox.GetMemoryInfo(ctx, c))
+	fmt.Println(magicbox.GetProcessInfo(ctx, c))
+	fmt.Println(magicbox.GetSerialNo(ctx, c))
+	fmt.Println(magicbox.GetSoftwareVersion(ctx, c))
+	fmt.Println(magicbox.GetUpTime(ctx, c))
+	fmt.Println(magicbox.GetVendor(ctx, c))
+	fmt.Println(license.GetLicenseInfo(ctx, c))
+	fmt.Println(storage.GetDeviceAllInfo(ctx, c))
+
+	return
 
 	{
 		stream, err := mediafilefind.NewStream(

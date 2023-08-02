@@ -36,6 +36,6 @@ func User(ctx context.Context, pool *pgxpool.Pool) {
 		log.Err(err).Msg("Failed to persist user")
 	}
 
-	err = core.UserCheckPassword(user, "password")
+	err = user.CheckPassword("password")
 	fmt.Println(err)
 }

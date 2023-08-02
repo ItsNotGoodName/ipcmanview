@@ -44,7 +44,7 @@ func (u UserService) Login(ctx context.Context, usernameOrEmail string, password
 		return nil, "", service.ErrWebrpcBadRequest
 	}
 
-	if err := core.UserCheckPassword(user, password); err != nil {
+	if err := user.CheckPassword(password); err != nil {
 		return nil, "", service.ErrWebrpcBadRequest
 	}
 

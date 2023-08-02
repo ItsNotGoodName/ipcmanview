@@ -18,6 +18,15 @@ func (dc DahuaCamera) Equal(cam DahuaCamera) bool {
 		dc.Password == cam.Username
 }
 
+func (dc DahuaCamera) Validate() (DahuaCamera, error) {
+	err := validate.Struct(&dc)
+	if err != nil {
+		return DahuaCamera{}, err
+	}
+
+	return dc, nil
+}
+
 type DahuaCameraCreate struct {
 	Address  string
 	Username string
@@ -25,15 +34,12 @@ type DahuaCameraCreate struct {
 }
 
 func NewDahuaCamera(r DahuaCameraCreate) (DahuaCamera, error) {
-	res := DahuaCamera{
+	dc := DahuaCamera{
 		Address:  r.Address,
 		Username: r.Username,
 		Password: r.Password,
 	}
-
-	err := validate.Struct(&res)
-
-	return res, err
+	return dc, validate.Struct(&dc)
 }
 
 type DahuaCameraUpdate struct {
@@ -47,28 +53,57 @@ func NewDahuaCameraUpdate(id int64) *DahuaCameraUpdate {
 	return &DahuaCameraUpdate{value: DahuaCamera{ID: id}}
 }
 
-func (d *DahuaCameraUpdate) UpdateAddress(addresss string) *DahuaCameraUpdate {
+func (d *DahuaCameraUpdate) AddressUpdate(addresss string) *DahuaCameraUpdate {
 	d.value.Address = addresss
 	d.Address = true
 	return d
 }
 
-func (d *DahuaCameraUpdate) UpdateUsername(username string) *DahuaCameraUpdate {
+func (d *DahuaCameraUpdate) UsernameUpdate(username string) *DahuaCameraUpdate {
 	d.value.Username = username
 	d.Username = true
 	return d
 }
 
-func (d *DahuaCameraUpdate) UpdatePassword(password string) *DahuaCameraUpdate {
+func (d *DahuaCameraUpdate) PasswordUpdate(password string) *DahuaCameraUpdate {
 	d.value.Password = password
 	d.Password = true
 	return d
 }
 
 func (d *DahuaCameraUpdate) Value() (DahuaCamera, error) {
-	if err := validate.Struct(&d.value); err != nil {
-		return DahuaCamera{}, err
-	}
+	return d.value.Validate()
+}
 
-	return d.value, nil
+type DahuaCameraDetail struct {
+	ID              int64
+	SN              string
+	DeviceClass     string
+	DeviceType      string
+	HardwareVersion string
+	MarketArea      string
+	ProcessInfo     string
+	Vendor          string
+}
+
+type DahuaSoftwareVersion struct {
+	ID                      int64
+	Build                   string
+	BuildDate               string
+	SecurityBaseLineVersion string
+	Version                 string
+	WebVersion              string
+}
+
+type DahuaCameraLicense struct {
+	ID            int64
+	AbroadInfo    string
+	AllType       bool
+	DigitChannel  int
+	EffectiveDays int
+	EffectiveTime int
+	LicenseID     int
+	ProductType   string
+	Status        int
+	Username      string
 }

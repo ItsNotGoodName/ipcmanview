@@ -11,10 +11,11 @@ import (
 	"time"
 )
 
-type DahuaCameras struct {
-	ID        int32 `sql:"primary_key"`
-	Address   string
-	Username  string
-	Password  string
-	CreatedAt time.Time
+type Scanner struct {
+	ID           *int32
+	Lock         *bool
+	LockPid      string
+	FullComplete *bool
+	FullCursor   time.Time
+	QuickCursor  time.Time
 }

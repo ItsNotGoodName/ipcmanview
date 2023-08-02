@@ -16,6 +16,10 @@ type User struct {
 	CreatedAt time.Time
 }
 
+func (u User) CheckPassword(password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+}
+
 type UserCreate struct {
 	Username        string `validate:"gte=3,lte=64"`
 	Email           string `validate:"required,email"`
@@ -45,8 +49,4 @@ func NewUser(r UserCreate) (User, error) {
 		Username: r.Username,
 		Password: string(password),
 	}, nil
-}
-
-func UserCheckPassword(user User, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 }

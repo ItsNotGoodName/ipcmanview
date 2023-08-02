@@ -16,9 +16,9 @@ var pUsers ProjectionList = []Projection{
 	Users.CreatedAt.AS("created_at"),
 }
 
-func UserCreate(ctx Context, r core.User) (core.User, error) {
+func UserCreate(dbCtx Context, r core.User) (core.User, error) {
 	var user core.User
-	err := qes.ScanOne(ctx.Context, ctx.Conn, &user, Users.
+	err := qes.ScanOne(dbCtx.Context, dbCtx.Conn, &user, Users.
 		INSERT(Users.Email, Users.Username, Users.Password).
 		MODEL(model.Users{
 			Email:    r.Email,
@@ -30,9 +30,9 @@ func UserCreate(ctx Context, r core.User) (core.User, error) {
 	return user, err
 }
 
-func UserGetByUsernameOrEmail(ctx Context, usernameOrEmail string) (core.User, error) {
+func UserGetByUsernameOrEmail(dbCtx Context, usernameOrEmail string) (core.User, error) {
 	var user core.User
-	err := qes.ScanOne(ctx.Context, ctx.Conn, &user, Users.
+	err := qes.ScanOne(dbCtx.Context, dbCtx.Conn, &user, Users.
 		SELECT(pUsers).
 		WHERE(
 			Users.Email.EQ(String(usernameOrEmail)).OR(Users.Username.EQ(String(usernameOrEmail))),
@@ -40,9 +40,9 @@ func UserGetByUsernameOrEmail(ctx Context, usernameOrEmail string) (core.User, e
 	return user, err
 }
 
-func UserGet(ctx Context, id int64) (core.User, error) {
+func UserGet(dbCtx Context, id int64) (core.User, error) {
 	var user core.User
-	err := qes.ScanOne(ctx.Context, ctx.Conn, &user, Users.
+	err := qes.ScanOne(dbCtx.Context, dbCtx.Conn, &user, Users.
 		SELECT(pUsers).
 		WHERE(
 			Users.ID.EQ(Int64(id)),

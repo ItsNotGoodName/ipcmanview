@@ -2,25 +2,25 @@ package db
 
 import (
 	"github.com/ItsNotGoodName/ipcmango/internal/core"
-	"github.com/ItsNotGoodName/ipcmango/internal/db/gen/postgres/public/model"
-	. "github.com/ItsNotGoodName/ipcmango/internal/db/gen/postgres/public/table"
+	"github.com/ItsNotGoodName/ipcmango/internal/db/gen/postgres/dahua/model"
+	dahua "github.com/ItsNotGoodName/ipcmango/internal/db/gen/postgres/dahua/table"
 	"github.com/ItsNotGoodName/ipcmango/pkg/qes"
 	. "github.com/go-jet/jet/v2/postgres"
 )
 
 var pDahuaCamera ProjectionList = []Projection{
-	DahuaCameras.ID.AS("id"),
-	DahuaCameras.Address.AS("address"),
-	DahuaCameras.Username.AS("username"),
-	DahuaCameras.Password.AS("password"),
-	DahuaCameras.CreatedAt.AS("created_at"),
+	dahua.Cameras.ID.AS("id"),
+	dahua.Cameras.Address.AS("address"),
+	dahua.Cameras.Username.AS("username"),
+	dahua.Cameras.Password.AS("password"),
+	dahua.Cameras.CreatedAt.AS("created_at"),
 }
 
-func DahuaCameraCreate(ctx Context, r core.DahuaCamera) (core.DahuaCamera, error) {
+func DahuaCameraCreate(dbCtx Context, r core.DahuaCamera) (core.DahuaCamera, error) {
 	var camera core.DahuaCamera
-	err := qes.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
-		INSERT(DahuaCameras.Address, DahuaCameras.Username, DahuaCameras.Password).
-		MODEL(model.DahuaCameras{
+	err := qes.ScanOne(dbCtx.Context, dbCtx.Conn, &camera, dahua.Cameras.
+		INSERT(dahua.Cameras.Address, dahua.Cameras.Username, dahua.Cameras.Password).
+		MODEL(model.Cameras{
 			Address:  r.Address,
 			Username: r.Username,
 			Password: r.Password,
@@ -30,7 +30,7 @@ func DahuaCameraCreate(ctx Context, r core.DahuaCamera) (core.DahuaCamera, error
 	return camera, err
 }
 
-func DahuaCameraUpdate(ctx Context, r *core.DahuaCameraUpdate) (core.DahuaCamera, error) {
+func DahuaCameraUpdate(dbCtx Context, r *core.DahuaCameraUpdate) (core.DahuaCamera, error) {
 	value, err := r.Value()
 	if err != nil {
 		return value, err
@@ -38,46 +38,46 @@ func DahuaCameraUpdate(ctx Context, r *core.DahuaCameraUpdate) (core.DahuaCamera
 
 	var cols ColumnList
 	if r.Address {
-		cols = append(cols, DahuaCameras.Address)
+		cols = append(cols, dahua.Cameras.Address)
 	}
 	if r.Username {
-		cols = append(cols, DahuaCameras.Username)
+		cols = append(cols, dahua.Cameras.Username)
 	}
 	if r.Password {
-		cols = append(cols, DahuaCameras.Password)
+		cols = append(cols, dahua.Cameras.Password)
 	}
 
 	var camera core.DahuaCamera
-	err = qes.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
+	err = qes.ScanOne(dbCtx.Context, dbCtx.Conn, &camera, dahua.Cameras.
 		UPDATE(cols).
-		MODEL(model.DahuaCameras{
+		MODEL(model.Cameras{
 			Address:  value.Address,
 			Username: value.Username,
 			Password: value.Password,
 		}).
-		WHERE(DahuaCameras.ID.EQ(Int64(value.ID))).
+		WHERE(dahua.Cameras.ID.EQ(Int64(value.ID))).
 		RETURNING(pDahuaCamera),
 	)
 	return camera, err
 }
 
-func DahuaCameraGet(ctx Context, id int64) (core.DahuaCamera, error) {
+func DahuaCameraGet(dbCtx Context, id int64) (core.DahuaCamera, error) {
 	var camera core.DahuaCamera
-	err := qes.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
+	err := qes.ScanOne(dbCtx.Context, dbCtx.Conn, &camera, dahua.Cameras.
 		SELECT(pDahuaCamera).
-		WHERE(DahuaCameras.ID.EQ(Int64(id))))
+		WHERE(dahua.Cameras.ID.EQ(Int64(id))))
 	return camera, err
 }
 
 func DahuaCameraGetByAddress(ctx Context, address string) (core.DahuaCamera, error) {
 	var camera core.DahuaCamera
-	err := qes.ScanOne(ctx.Context, ctx.Conn, &camera, DahuaCameras.
+	err := qes.ScanOne(ctx.Context, ctx.Conn, &camera, dahua.Cameras.
 		SELECT(pDahuaCamera).
-		WHERE(DahuaCameras.Address.EQ(String(address))))
+		WHERE(dahua.Cameras.Address.EQ(String(address))))
 	return camera, err
 }
 
-func DahuaCameraDelete(ctx Context, id int64) error {
-	_, err := qes.ExecOne(ctx.Context, ctx.Conn, DahuaCameras.DELETE().WHERE(DahuaCameras.ID.EQ(Int64(id))).RETURNING(DahuaCameras.ID))
+func DahuaCameraDelete(dbCtx Context, id int64) error {
+	_, err := qes.ExecOne(dbCtx.Context, dbCtx.Conn, dahua.Cameras.DELETE().WHERE(dahua.Cameras.ID.EQ(Int64(id))).RETURNING(dahua.Cameras.ID))
 	return err
 }

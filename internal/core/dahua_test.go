@@ -41,7 +41,7 @@ func TestDahuaCameraNew(t *testing.T) {
 }
 
 func TestDahuaCameraUpdate(t *testing.T) {
-	update := NewDahuaCameraUpdate(0).UpdateAddress("test")
+	update := NewDahuaCameraUpdate(0).AddressUpdate("test")
 	value, err := update.Value()
 	assert.NoError(t, err)
 	assert.Equal(t, DahuaCamera{ID: 0, Address: "test"}, value)

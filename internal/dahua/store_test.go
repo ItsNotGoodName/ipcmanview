@@ -53,22 +53,16 @@ func TestStore(t *testing.T) {
 
 	// Update camera 1
 	{
-		// Get
-		actorCam1, err := actor1.Get(context)
-		assert.NoError(t, err)
-		assert.True(t, cam1.Equal(actorCam1))
-
 		// Update database
-		update := core.NewDahuaCameraUpdate(cam1.ID).UpdateAddress("hi")
+		update := core.NewDahuaCameraUpdate(cam1.ID).AddressUpdate("hi")
 		assert.NoError(t, err)
 
 		cam1Updated, err := db.DahuaCameraUpdate(context, update)
 		assert.NoError(t, err)
 
 		// Update store
-		store.GetOrCreate(context, cam1.ID)
-		actorCam1, err = actor1.Get(context)
+		actorCam1, err := store.GetOrCreate(context, cam1.ID)
 		assert.NoError(t, err)
-		assert.True(t, cam1Updated.Equal(actorCam1))
+		assert.True(t, cam1Updated.Equal(actorCam1.Camera))
 	}
 }

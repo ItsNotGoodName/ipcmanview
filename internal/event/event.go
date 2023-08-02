@@ -60,7 +60,7 @@ func Start(ctx context.Context, pool *pgxpool.Pool, bus *Bus) error {
 			return err
 		}
 
-		bus.Handle(dbCtx, notification)
+		bus.handle(dbCtx, notification)
 	}
 }
 

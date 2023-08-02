@@ -2,22 +2,16 @@ package dahua
 
 import (
 	"context"
-	"errors"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/core"
 	"github.com/ItsNotGoodName/ipcmango/internal/db"
 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
 )
 
-type StoreActor Actor
+type StoreActor ActorHandle
 
 func (c StoreActor) RPC(ctx context.Context) (dahua.RequestBuilder, error) {
-	return Actor(c).RPC(ctx)
-}
-
-func (c StoreActor) Get(ctx context.Context) (core.DahuaCamera, error) {
-	return Actor(c).Get(ctx)
+	return ActorHandle(c).RPC(ctx)
 }
 
 type Store struct {
@@ -31,34 +25,31 @@ func NewStore() *Store {
 	}
 }
 
-func (s *Store) GetOrCreate(context db.Context, id int64) (StoreActor, error) {
+func (s *Store) GetOrCreate(dbCtx db.Context, id int64) (StoreActor, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	cam, err := db.DahuaCameraGet(context, id)
+	cam, err := db.DahuaCameraGet(dbCtx, id)
 	if err != nil {
 		return StoreActor{}, err
 	}
 
-	for _, actor := range s.actors {
-		if actor.ID != id {
+	for i := range s.actors {
+		if s.actors[i].Camera.ID != id {
 			continue
 		}
 
-		err := Actor(actor).Update(context.Context, cam)
-		if err != nil {
-			if errors.Is(err, ErrActorClosed) {
-				break
-			}
-
-			return StoreActor{}, err
+		if !s.actors[i].Camera.Equal(cam) {
+			ActorHandle(s.actors[i]).Close(dbCtx.Context)
+			s.actors[i] = StoreActor(NewActorHandle(cam))
 		}
 
-		return actor, nil
+		return s.actors[i], nil
 	}
 
-	actor := StoreActor(StartActor(cam))
+	actor := StoreActor(NewActorHandle(cam))
 	s.actors = append(s.actors, actor)
+
 	return actor, nil
 }
 
@@ -68,12 +59,12 @@ func (s *Store) Delete(ctx context.Context, id int64) {
 
 	actors := []StoreActor{}
 	for i := range s.actors {
-		if s.actors[i].ID != id {
+		if s.actors[i].Camera.ID != id {
 			actors = append(actors, StoreActor(s.actors[i]))
 			continue
 		}
 
-		Actor(s.actors[i]).Close(ctx)
+		ActorHandle(s.actors[i]).Close(ctx)
 	}
 
 	s.actors = actors
