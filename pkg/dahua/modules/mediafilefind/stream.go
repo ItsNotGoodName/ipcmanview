@@ -23,12 +23,12 @@ func NewStream(ctx context.Context, gen dahua.GenRPC, condtion Condition) (*Stre
 	var closed bool
 	ok, err := FindFile(ctx, gen, object, condtion)
 	if err != nil {
-		var resErr *dahua.ResponseError
+		var resErr *dahua.ErrResponse
 		if !errors.As(err, &resErr) {
 			return nil, err
 		}
 
-		if resErr.Type != dahua.ErrResponseNoData {
+		if resErr.Type != dahua.ErrResponseTypeNoData {
 			return nil, err
 		}
 

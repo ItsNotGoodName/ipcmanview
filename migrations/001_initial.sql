@@ -68,7 +68,7 @@ CREATE TABLE dahua.camera_files (
   size INTEGER NOT NULL,
   start_time TIMESTAMPTZ NOT NULL UNIQUE,
   end_time TIMESTAMPTZ NOT NULL,
-  duration INTEGER GENERATED ALWAYS AS (EXTRACT(EPOCH FROM start_time - end_time)) STORED,
+  duration INTEGER GENERATED ALWAYS AS (EXTRACT(EPOCH FROM end_time - start_time)) STORED,
   updated_at TIMESTAMPTZ NOT NULL,
   events JSONB NOT NULL,
   UNIQUE (camera_id, file_path)

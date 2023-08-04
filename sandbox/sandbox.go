@@ -39,6 +39,7 @@ func Sandbox(ctx context.Context, pool *pgxpool.Pool) {
 	defer c.Close(ctx)
 
 	print(dahua.Scan(ctx, conn, c, models.DahuaScanCamera{
+		Seed:     88,
 		ID:       cam.ID,
 		Location: time.Local,
 	}, dahua.ScanPeriod{

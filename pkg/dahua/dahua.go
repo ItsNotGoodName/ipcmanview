@@ -79,22 +79,21 @@ func (s ResponseResult) Bool() bool {
 }
 
 // Response from the camera.
-// T should always be as pointer type, this will prevent null being defaulted to T.
 type Response[T any] struct {
 	ID      int             `json:"id"`
-	Session ResponseSession `json:"session"` // Session can be a string or an int64
-	Error   *ResponseError  `json:"error"`
+	Session ResponseSession `json:"session"`
+	Error   *ErrResponse    `json:"error"`
 	Params  T               `json:"params"`
-	Result  ResponseResult  `json:"result"` // Result can be a bool or an int64
+	Result  ResponseResult  `json:"result"`
 }
 
-type ResponseError struct {
+type ErrResponse struct {
 	Code    int
 	Message string
-	Type    ResponseErrorType
+	Type    ErrResponseType
 }
 
-func (r *ResponseError) UnmarshalJSON(data []byte) error {
+func (r *ErrResponse) UnmarshalJSON(data []byte) error {
 	var res struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
@@ -108,32 +107,32 @@ func (r *ResponseError) UnmarshalJSON(data []byte) error {
 
 	switch res.Code {
 	case 268894209:
-		r.Type = ErrResponseInvalidRequest
+		r.Type = ErrResponseTypeInvalidRequest
 	case 268894210:
-		r.Type = ErrResponseMethodNotFound
+		r.Type = ErrResponseTypeMethodNotFound
 	case 268632064:
-		r.Type = ErrResponseInterfaceNotFound
+		r.Type = ErrResponseTypeInterfaceNotFound
 	case 285409284:
-		r.Type = ErrResponseNoData
+		r.Type = ErrResponseTypeNoData
 	default:
-		r.Type = ErrResponseUnknown
+		r.Type = ErrResponseTypeUnknown
 	}
 
 	return nil
 }
 
-func (r ResponseError) Error() string {
+func (r ErrResponse) Error() string {
 	return r.Message
 }
 
-type ResponseErrorType string
+type ErrResponseType string
 
 var (
-	ErrResponseInvalidRequest    ResponseErrorType = "InvalidRequest"
-	ErrResponseMethodNotFound    ResponseErrorType = "MethodNotFound"
-	ErrResponseInterfaceNotFound ResponseErrorType = "InterfaceNotFound"
-	ErrResponseNoData            ResponseErrorType = "NoData"
-	ErrResponseUnknown           ResponseErrorType = "Unknown"
+	ErrResponseTypeInvalidRequest    ErrResponseType = "InvalidRequest"
+	ErrResponseTypeMethodNotFound    ErrResponseType = "MethodNotFound"
+	ErrResponseTypeInterfaceNotFound ErrResponseType = "InterfaceNotFound"
+	ErrResponseTypeNoData            ErrResponseType = "NoData"
+	ErrResponseTypeUnknown           ErrResponseType = "Unknown"
 )
 
 type Request struct {
@@ -176,7 +175,7 @@ func (r RequestBuilder) Method(method string) RequestBuilder {
 	return r
 }
 
-// TODO: I want this attached to the RequestBuilder
+// SendRaw sends RPC request to camera without checking if the response contains an error field.
 func SendRaw[T any](ctx context.Context, r RequestBuilder) (Response[T], error) {
 	var res Response[T]
 
@@ -204,7 +203,7 @@ func SendRaw[T any](ctx context.Context, r RequestBuilder) (Response[T], error) 
 	return res, nil
 }
 
-// TODO: I want this attached to the RequestBuilder
+// Send sends RPC request to camera and throws error if the response contains an error field.
 func Send[T any](ctx context.Context, r RequestBuilder) (Response[T], error) {
 	res, err := SendRaw[T](ctx, r)
 	if err != nil {

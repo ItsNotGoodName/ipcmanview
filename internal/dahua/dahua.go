@@ -103,6 +103,6 @@ func isNotResponseError(err error) bool {
 	if err == nil {
 		return false
 	}
-	var responseErr *dahua.ResponseError
+	var responseErr *dahua.ErrResponse
 	return !errors.As(err, &responseErr)
 }

@@ -89,7 +89,7 @@ func login(ctx context.Context, conn *dahua.Conn, username, password string) err
 	passwordHash := firstLogin.Params.HashPassword(username, password)
 	err = global.SecondLogin(ctx, conn, username, passwordHash, loginType, firstLogin.Params.Encryption)
 	if err != nil {
-		var responseErr *dahua.ResponseError
+		var responseErr *dahua.ErrResponse
 		if errors.As(err, &responseErr) {
 			if loginErr := intoLoginError(responseErr); loginErr != nil {
 				return errors.Join(loginErr, err)
@@ -102,7 +102,7 @@ func login(ctx context.Context, conn *dahua.Conn, username, password string) err
 	return nil
 }
 
-func intoLoginError(r *dahua.ResponseError) *LoginError {
+func intoLoginError(r *dahua.ErrResponse) *LoginError {
 	switch r.Code {
 	case 268632085:
 		return &ErrLoginUserOrPasswordNotValid
