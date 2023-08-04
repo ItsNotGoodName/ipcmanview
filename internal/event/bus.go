@@ -1,18 +1,18 @@
 package event
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/db"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/rs/zerolog/log"
 )
 
 type Bus struct {
-	Connect            []func(context db.Context)
-	DahuaCameraUpdated []func(context db.Context, evt DahuaCameraUpdated)
-	DahuaCameraDeleted []func(context db.Context, evt DahuaCameraDeleted)
+	Connect            []func(ctx context.Context)
+	DahuaCameraUpdated []func(ctx context.Context, evt DahuaCameraUpdated)
+	DahuaCameraDeleted []func(ctx context.Context, evt DahuaCameraDeleted)
 }
 
 type DahuaCameraUpdated struct {
@@ -33,7 +33,7 @@ var channels = []string{
 	dahuaCamerasDeleted,
 }
 
-func (b *Bus) handle(dbCtx db.Context, notification *pgconn.Notification) {
+func (b *Bus) handle(ctx context.Context, notification *pgconn.Notification) {
 	switch notification.Channel {
 	case dahuaCamerasDeleted:
 		id, err := strconv.ParseInt(notification.Payload, 10, 64)
@@ -46,7 +46,7 @@ func (b *Bus) handle(dbCtx db.Context, notification *pgconn.Notification) {
 
 		evt := DahuaCameraDeleted{IDS: []int64{id}}
 		for _, v := range b.DahuaCameraDeleted {
-			v(dbCtx, evt)
+			v(ctx, evt)
 		}
 	case dahuaCamerasUpdated:
 		id, err := strconv.ParseInt(notification.Payload, 10, 64)
@@ -59,14 +59,14 @@ func (b *Bus) handle(dbCtx db.Context, notification *pgconn.Notification) {
 
 		evt := DahuaCameraUpdated{IDS: []int64{id}}
 		for _, v := range b.DahuaCameraUpdated {
-			v(dbCtx, evt)
+			v(ctx, evt)
 		}
 	}
 }
 
-func (b *Bus) handleConnect(dbCtx db.Context) {
+func (b *Bus) handleConnect(ctx context.Context) {
 	for _, v := range b.Connect {
-		v(dbCtx)
+		v(ctx)
 	}
 }
 

@@ -2,6 +2,8 @@ package core
 
 import (
 	"time"
+
+	"github.com/ItsNotGoodName/ipcmango/internal/models"
 )
 
 type DahuaCamera struct {
@@ -9,6 +11,7 @@ type DahuaCamera struct {
 	Address   string `validate:"address"`
 	Username  string
 	Password  string
+	Location  models.Location
 	CreatedAt time.Time
 }
 
@@ -31,6 +34,7 @@ type DahuaCameraCreate struct {
 	Address  string
 	Username string
 	Password string
+	Location *time.Location
 }
 
 func NewDahuaCamera(r DahuaCameraCreate) (DahuaCamera, error) {

@@ -1,4 +1,4 @@
-package db
+package dahua
 
 import (
 	"context"
@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmango/internal/core"
+	"github.com/ItsNotGoodName/ipcmango/internal/dbtest"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDahuaCamera(t *testing.T) {
-	dbCtx, close := TestConnect(context.Background())
+func TestCamera(t *testing.T) {
+	ctx := context.Background()
+	db, close := dbtest.Connect(ctx)
 	defer close()
 
 	// Create
@@ -21,7 +23,7 @@ func TestDahuaCamera(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	createCam, err := DahuaCameraCreate(dbCtx, coreCam)
+	createCam, err := DB.CameraCreate(ctx, db, coreCam)
 	assert.NoError(t, err)
 
 	assert.NotEqual(t, coreCam.ID, createCam.ID, "should have new id")
@@ -30,7 +32,9 @@ func TestDahuaCamera(t *testing.T) {
 	assert.NotEqual(t, time.Time{}, createCam.CreatedAt, "should not have default CreatedAt")
 	coreCam.CreatedAt = createCam.CreatedAt
 
-	assert.Equal(t, coreCam, createCam)
+	assert.Equal(t, coreCam.Address, createCam.Address)
+	assert.Equal(t, coreCam.Username, createCam.Username)
+	assert.Equal(t, coreCam.Password, createCam.Password)
 
 	// Update
 	updateAddress := "user"
@@ -39,13 +43,13 @@ func TestDahuaCamera(t *testing.T) {
 		NewDahuaCameraUpdate(createCam.ID).
 		AddressUpdate(updateAddress)
 
-	updateCam, err := DahuaCameraUpdate(dbCtx, update)
+	updateCam, err := DB.CameraUpdate(ctx, db, update)
 	assert.NoError(t, err)
 	assert.Equal(t, updateAddress, updateCam.Address)
 
 	// Get
 	{
-		getCam, err := DahuaCameraGet(dbCtx, updateCam.ID)
+		getCam, err := DB.CameraGet(ctx, db, updateCam.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, updateCam, getCam)
 	}
@@ -54,9 +58,9 @@ func TestDahuaCamera(t *testing.T) {
 	{
 		value, err := update.Value()
 		assert.NoError(t, err)
-		err = DahuaCameraDelete(dbCtx, value.ID)
+		err = DB.CameraDelete(ctx, db, value.ID)
 		assert.NoError(t, err)
-		err = DahuaCameraDelete(dbCtx, value.ID)
+		err = DB.CameraDelete(ctx, db, value.ID)
 		assert.Error(t, err)
 	}
 }

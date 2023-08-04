@@ -1,4 +1,4 @@
-package db
+package dbtest
 
 import (
 	"context"
@@ -10,26 +10,19 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// TestConnect is only used for testing.
-func TestConnect(ctx context.Context) (Context, func()) {
+func Connect(ctx context.Context) (*pgx.Conn, func()) {
 	url := "postgres://postgres:postgres@localhost:5432"
 	database := "postgres_test_" + strconv.Itoa(rand.Int())
 
 	// ---------------------- Initialize database
 
-	initConn, err := pgx.Connect(ctx, url)
+	tempConn, err := pgx.Connect(ctx, url)
 	if err != nil {
 		panic(err)
 	}
 
-	_, err = initConn.Exec(ctx, fmt.Sprintf(`DROP DATABASE IF EXISTS %s`, database))
-	if err != nil {
-		initConn.Close(ctx)
-		panic(err)
-	}
-
-	_, err = initConn.Exec(ctx, fmt.Sprintf(`CREATE DATABASE %s`, database))
-	initConn.Close(ctx)
+	_, err = tempConn.Exec(ctx, fmt.Sprintf(`CREATE DATABASE %s`, database))
+	tempConn.Close(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -59,8 +52,5 @@ func TestConnect(ctx context.Context) (Context, func()) {
 		panic(err)
 	}
 
-	return Context{
-		Context: ctx,
-		Conn:    conn,
-	}, close
+	return conn, close
 }

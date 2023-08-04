@@ -17,18 +17,17 @@ type completedScansTable struct {
 	postgres.Table
 
 	// Columns
-	ID          postgres.ColumnInteger
-	CameraID    postgres.ColumnInteger
-	Kind        postgres.ColumnString
-	Range       postgres.ColumnString
-	RangeCursor postgres.ColumnTimestampz
-	StartedAt   postgres.ColumnTimestampz
-	Deleted     postgres.ColumnInteger
-	Upserted    postgres.ColumnInteger
-	Percent     postgres.ColumnFloat
-	Duration    postgres.ColumnInteger
-	Success     postgres.ColumnBool
-	Error       postgres.ColumnString
+	ID        postgres.ColumnInteger
+	CameraID  postgres.ColumnInteger
+	Kind      postgres.ColumnString
+	Range     postgres.ColumnString
+	StartedAt postgres.ColumnTimestampz
+	Deleted   postgres.ColumnInteger
+	Upserted  postgres.ColumnInteger
+	Percent   postgres.ColumnFloat
+	Duration  postgres.ColumnInteger
+	Success   postgres.ColumnBool
+	Error     postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -69,38 +68,36 @@ func newCompletedScansTable(schemaName, tableName, alias string) *CompletedScans
 
 func newCompletedScansTableImpl(schemaName, tableName, alias string) completedScansTable {
 	var (
-		IDColumn          = postgres.IntegerColumn("id")
-		CameraIDColumn    = postgres.IntegerColumn("camera_id")
-		KindColumn        = postgres.StringColumn("kind")
-		RangeColumn       = postgres.StringColumn("range")
-		RangeCursorColumn = postgres.TimestampzColumn("range_cursor")
-		StartedAtColumn   = postgres.TimestampzColumn("started_at")
-		DeletedColumn     = postgres.IntegerColumn("deleted")
-		UpsertedColumn    = postgres.IntegerColumn("upserted")
-		PercentColumn     = postgres.FloatColumn("percent")
-		DurationColumn    = postgres.IntegerColumn("duration")
-		SuccessColumn     = postgres.BoolColumn("success")
-		ErrorColumn       = postgres.StringColumn("error")
-		allColumns        = postgres.ColumnList{IDColumn, CameraIDColumn, KindColumn, RangeColumn, RangeCursorColumn, StartedAtColumn, DeletedColumn, UpsertedColumn, PercentColumn, DurationColumn, SuccessColumn, ErrorColumn}
-		mutableColumns    = postgres.ColumnList{CameraIDColumn, KindColumn, RangeColumn, RangeCursorColumn, StartedAtColumn, DeletedColumn, UpsertedColumn, PercentColumn, DurationColumn, ErrorColumn}
+		IDColumn        = postgres.IntegerColumn("id")
+		CameraIDColumn  = postgres.IntegerColumn("camera_id")
+		KindColumn      = postgres.StringColumn("kind")
+		RangeColumn     = postgres.StringColumn("range")
+		StartedAtColumn = postgres.TimestampzColumn("started_at")
+		DeletedColumn   = postgres.IntegerColumn("deleted")
+		UpsertedColumn  = postgres.IntegerColumn("upserted")
+		PercentColumn   = postgres.FloatColumn("percent")
+		DurationColumn  = postgres.IntegerColumn("duration")
+		SuccessColumn   = postgres.BoolColumn("success")
+		ErrorColumn     = postgres.StringColumn("error")
+		allColumns      = postgres.ColumnList{IDColumn, CameraIDColumn, KindColumn, RangeColumn, StartedAtColumn, DeletedColumn, UpsertedColumn, PercentColumn, DurationColumn, SuccessColumn, ErrorColumn}
+		mutableColumns  = postgres.ColumnList{CameraIDColumn, KindColumn, RangeColumn, StartedAtColumn, DeletedColumn, UpsertedColumn, PercentColumn, DurationColumn, ErrorColumn}
 	)
 
 	return completedScansTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		ID:          IDColumn,
-		CameraID:    CameraIDColumn,
-		Kind:        KindColumn,
-		Range:       RangeColumn,
-		RangeCursor: RangeCursorColumn,
-		StartedAt:   StartedAtColumn,
-		Deleted:     DeletedColumn,
-		Upserted:    UpsertedColumn,
-		Percent:     PercentColumn,
-		Duration:    DurationColumn,
-		Success:     SuccessColumn,
-		Error:       ErrorColumn,
+		ID:        IDColumn,
+		CameraID:  CameraIDColumn,
+		Kind:      KindColumn,
+		Range:     RangeColumn,
+		StartedAt: StartedAtColumn,
+		Deleted:   DeletedColumn,
+		Upserted:  UpsertedColumn,
+		Percent:   PercentColumn,
+		Duration:  DurationColumn,
+		Success:   SuccessColumn,
+		Error:     ErrorColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,

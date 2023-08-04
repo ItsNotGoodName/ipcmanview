@@ -11,11 +11,11 @@ import (
 	"time"
 )
 
-type Scanner struct {
-	ID           *int32
-	Lock         *bool
-	LockPid      string
-	FullComplete *bool
-	FullCursor   time.Time
-	QuickCursor  time.Time
+type Cameras struct {
+	ID        int32 `sql:"primary_key"`
+	Address   string
+	Username  string
+	Password  string
+	Location  string
+	CreatedAt time.Time
 }

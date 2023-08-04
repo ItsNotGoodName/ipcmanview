@@ -7,15 +7,7 @@
 
 package model
 
-import (
-	"time"
-)
-
-type Cameras struct {
-	ID        int32 `sql:"primary_key"`
-	Address   string
-	Username  string
-	Password  string
-	Sequence  time.Time
-	CreatedAt time.Time
+type TimeSeeds struct {
+	Seed     int32
+	CameraID *int32
 }

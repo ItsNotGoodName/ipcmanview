@@ -2,50 +2,47 @@ package sandbox
 
 import (
 	"context"
-	"fmt"
+	"os"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmango/internal/core"
+	"github.com/ItsNotGoodName/ipcmango/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmango/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/rs/zerolog/log"
 )
 
-func notifyStart(ctx context.Context, pool *pgxpool.Pool) {
+func Sandbox(ctx context.Context, pool *pgxpool.Pool) {
 	conn, err := pool.Acquire(ctx)
 	if err != nil {
-		log.Err(err).Msg("Failed get connection")
+		return
 	}
 	defer conn.Release()
 
-	for range []int{2, 3, 4} {
-		_, err := conn.Exec(ctx, "select pg_notify('order_progress_event', 'Hello world!');")
-		if err != nil {
-			log.Err(err).Msg("Failed to notify")
-		}
-		time.Sleep(1 * time.Second)
-	}
-}
+	username, _ := os.LookupEnv("IPC_USERNAME")
+	password, _ := os.LookupEnv("IPC_PASSWORD")
+	ip, _ := os.LookupEnv("IPC_IP")
 
-func Notify(ctx context.Context, pool *pgxpool.Pool) error {
-	conn, err := pool.Acquire(ctx)
+	cam := core.DahuaCamera{
+		Address:  ip,
+		Username: username,
+		Password: password,
+	}
+
+	cam, err = dahua.DB.CameraCreate(ctx, conn, cam)
 	if err != nil {
-		return err
-	}
-	defer conn.Release()
-
-	go notifyStart(ctx, pool)
-
-	_, err = conn.Conn().Exec(ctx, "LISTEN order_progress_event")
-	if err != nil {
-		return err
-	}
-	for {
-		notify, err := conn.Conn().WaitForNotification(ctx)
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(notify.Channel, notify.Payload)
+		print(cam, err)
+		cam, err = dahua.DB.CameraGetByAddress(ctx, conn, ip)
+		print(cam, err)
 	}
 
-	return nil
+	c := dahua.NewActorHandle(cam)
+	defer c.Close(ctx)
+
+	print(dahua.Scan(ctx, conn, c, models.DahuaScanCamera{
+		ID:       cam.ID,
+		Location: time.Local,
+	}, dahua.ScanPeriod{
+		Start: time.Now().Add(-24 * time.Hour * 30),
+		End:   time.Now(),
+	}))
 }

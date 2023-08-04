@@ -11,7 +11,10 @@ package table
 // this method only once at the beginning of the program.
 func UseSchema(schema string) {
 	CameraDetails = CameraDetails.FromSchema(schema)
+	CameraFiles = CameraFiles.FromSchema(schema)
 	Cameras = Cameras.FromSchema(schema)
 	CompletedScans = CompletedScans.FromSchema(schema)
-	Scanner = Scanner.FromSchema(schema)
+	ScannerLocks = ScannerLocks.FromSchema(schema)
+	Scanners = Scanners.FromSchema(schema)
+	TimeSeeds = TimeSeeds.FromSchema(schema)
 }

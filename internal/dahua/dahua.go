@@ -47,7 +47,7 @@ func CameraDetailGet(ctx context.Context, actor ActorHandle) (core.DahuaCameraDe
 	}
 
 	return core.DahuaCameraDetail{
-		ID:              actor.Camera.ID,
+		ID:              actor.cam.ID,
 		SN:              sn,
 		DeviceClass:     deviceClass,
 		DeviceType:      deviceType,
@@ -65,7 +65,7 @@ func CameraSoftwareVersionGet(ctx context.Context, actor ActorHandle) (core.Dahu
 	}
 
 	return core.DahuaSoftwareVersion{
-		ID:                      actor.Camera.ID,
+		ID:                      actor.cam.ID,
 		Build:                   res.Build,
 		BuildDate:               res.BuildDate,
 		SecurityBaseLineVersion: res.SecurityBaseLineVersion,
@@ -83,7 +83,7 @@ func LicensesList(ctx context.Context, actor ActorHandle) ([]core.DahuaCameraLic
 	licenses := make([]core.DahuaCameraLicense, 0, len(res))
 	for _, v := range res {
 		licenses = append(licenses, core.DahuaCameraLicense{
-			ID:            actor.Camera.ID,
+			ID:            actor.cam.ID,
 			AbroadInfo:    v.AbroadInfo,
 			AllType:       v.AllType,
 			DigitChannel:  v.DigitChannel,

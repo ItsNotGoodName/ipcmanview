@@ -8,7 +8,7 @@
 package model
 
 type CameraDetails struct {
-	ID              *int32
+	ID              int32
 	Sn              string
 	DeviceClass     string
 	DeviceType      string

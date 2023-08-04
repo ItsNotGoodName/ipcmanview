@@ -16,10 +16,10 @@ var ErrActorClosed = fmt.Errorf("dahua actor is closed")
 const actorLogoutTimeout = 15 * time.Second
 
 type ActorHandle struct {
-	Camera core.DahuaCamera
-	rpcC   chan<- actorRPCRequest
-	stopC  <-chan *dahua.Conn
-	doneC  <-chan struct{}
+	cam   core.DahuaCamera
+	rpcC  chan<- actorRPCRequest
+	stopC <-chan *dahua.Conn
+	doneC <-chan struct{}
 }
 
 func NewActorHandle(cam core.DahuaCamera) ActorHandle {
@@ -30,10 +30,10 @@ func NewActorHandle(cam core.DahuaCamera) ActorHandle {
 	go actorStart(cam, rpcC, stopC, doneC)
 
 	return ActorHandle{
-		Camera: cam,
-		rpcC:   rpcC,
-		stopC:  stopC,
-		doneC:  doneC,
+		cam:   cam,
+		rpcC:  rpcC,
+		stopC: stopC,
+		doneC: doneC,
 	}
 }
 

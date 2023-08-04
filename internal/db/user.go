@@ -1,9 +1,11 @@
 package db
 
 import (
+	"context"
+
 	"github.com/ItsNotGoodName/ipcmango/internal/core"
-	"github.com/ItsNotGoodName/ipcmango/internal/db/gen/postgres/public/model"
-	. "github.com/ItsNotGoodName/ipcmango/internal/db/gen/postgres/public/table"
+	"github.com/ItsNotGoodName/ipcmango/internal/dbgen/postgres/public/model"
+	. "github.com/ItsNotGoodName/ipcmango/internal/dbgen/postgres/public/table"
 	"github.com/ItsNotGoodName/ipcmango/pkg/qes"
 	. "github.com/go-jet/jet/v2/postgres"
 )
@@ -16,23 +18,27 @@ var pUsers ProjectionList = []Projection{
 	Users.CreatedAt.AS("created_at"),
 }
 
-func UserCreate(dbCtx Context, r core.User) (core.User, error) {
+type userT struct{}
+
+var User userT
+
+func (userT) Create(ctx context.Context, db qes.Querier, u core.User) (core.User, error) {
 	var user core.User
-	err := qes.ScanOne(dbCtx.Context, dbCtx.Conn, &user, Users.
+	err := qes.ScanOne(ctx, db, &user, Users.
 		INSERT(Users.Email, Users.Username, Users.Password).
 		MODEL(model.Users{
-			Email:    r.Email,
-			Username: r.Username,
-			Password: r.Password,
+			Email:    u.Email,
+			Username: u.Username,
+			Password: u.Password,
 		}).
 		RETURNING(pUsers),
 	)
 	return user, err
 }
 
-func UserGetByUsernameOrEmail(dbCtx Context, usernameOrEmail string) (core.User, error) {
+func (userT) GetByUsernameOrEmail(ctx context.Context, db qes.Querier, usernameOrEmail string) (core.User, error) {
 	var user core.User
-	err := qes.ScanOne(dbCtx.Context, dbCtx.Conn, &user, Users.
+	err := qes.ScanOne(ctx, db, &user, Users.
 		SELECT(pUsers).
 		WHERE(
 			Users.Email.EQ(String(usernameOrEmail)).OR(Users.Username.EQ(String(usernameOrEmail))),
@@ -40,9 +46,9 @@ func UserGetByUsernameOrEmail(dbCtx Context, usernameOrEmail string) (core.User,
 	return user, err
 }
 
-func UserGet(dbCtx Context, id int64) (core.User, error) {
+func (userT) Get(ctx context.Context, db qes.Querier, id int64) (core.User, error) {
 	var user core.User
-	err := qes.ScanOne(dbCtx.Context, dbCtx.Conn, &user, Users.
+	err := qes.ScanOne(ctx, db, &user, Users.
 		SELECT(pUsers).
 		WHERE(
 			Users.ID.EQ(Int64(id)),

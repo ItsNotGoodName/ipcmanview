@@ -21,25 +21,22 @@ func NewUserService(pool *pgxpool.Pool) UserService {
 	}
 }
 
-func (u UserService) context(ctx context.Context) (db.Context, func(), error) {
+func (u UserService) context(ctx context.Context) (*pgxpool.Conn, func(), error) {
 	conn, err := u.pool.Acquire(ctx)
 	if err != nil {
-		return db.Context{}, nil, service.ErrorWithCause(service.ErrWebrpcServerPanic, err)
+		return nil, nil, service.ErrorWithCause(service.ErrWebrpcServerPanic, err)
 	}
-	return db.Context{
-		Context: ctx,
-		Conn:    conn.Conn(),
-	}, conn.Release, nil
+	return conn, conn.Release, nil
 }
 
 func (u UserService) Login(ctx context.Context, usernameOrEmail string, password string) (*service.User, string, error) {
-	context, release, err := u.context(ctx)
+	conn, release, err := u.context(ctx)
 	if err != nil {
 		return nil, "", err
 	}
 	defer release()
 
-	user, err := db.UserGetByUsernameOrEmail(context, strings.ToLower(usernameOrEmail))
+	user, err := db.User.GetByUsernameOrEmail(ctx, conn, strings.ToLower(usernameOrEmail))
 	if err != nil {
 		return nil, "", service.ErrWebrpcBadRequest
 	}
@@ -52,14 +49,14 @@ func (u UserService) Login(ctx context.Context, usernameOrEmail string, password
 }
 
 func (u UserService) Me(ctx context.Context) (*service.User, error) {
-	context, release, err := u.context(ctx)
+	conn, release, err := u.context(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer release()
 
 	id := jwt.DecodeUserID(ctx)
-	user, err := db.UserGet(context, id)
+	user, err := db.User.Get(ctx, conn, id)
 	if err != nil {
 		return nil, service.ErrorWithCause(service.ErrWebrpcBadResponse, err)
 	}
@@ -68,7 +65,7 @@ func (u UserService) Me(ctx context.Context) (*service.User, error) {
 }
 
 func (u UserService) Register(ctx context.Context, r *service.UserRegister) error {
-	context, release, err := u.context(ctx)
+	conn, release, err := u.context(ctx)
 	if err != nil {
 		return err
 	}
@@ -84,7 +81,7 @@ func (u UserService) Register(ctx context.Context, r *service.UserRegister) erro
 		return service.ErrorWithCause(service.ErrWebrpcBadRequest, err)
 	}
 
-	user, err = db.UserCreate(context, user)
+	user, err = db.User.Create(ctx, conn, user)
 	if err != nil {
 		return service.ErrorWithCause(service.ErrWebrpcBadRequest, err)
 	}

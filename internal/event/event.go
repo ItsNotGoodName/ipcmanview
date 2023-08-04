@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/db"
 	"github.com/ItsNotGoodName/ipcmango/pkg/background"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 )
 
-func Background(bus *Bus, pool *pgxpool.Pool) background.Background {
+func Background(bus *Bus, pool *pgxpool.Pool) background.Function {
 	return background.NewFunction(background.BlockingContext, func(ctx context.Context) {
 		for {
 			err := Start(ctx, pool, bus)
@@ -37,6 +36,8 @@ func Start(ctx context.Context, pool *pgxpool.Pool, bus *Bus) error {
 	}
 	defer conn.Release()
 
+	bus.handleConnect(ctx)
+
 	{
 		batch := &pgx.Batch{}
 		for _, channel := range channels {
@@ -49,18 +50,13 @@ func Start(ctx context.Context, pool *pgxpool.Pool, bus *Bus) error {
 		}
 	}
 
-	dbCtx := db.Context{
-		Context: ctx,
-		Conn:    conn.Conn(),
-	}
-
 	for {
-		notification, err := dbCtx.Conn.WaitForNotification(ctx)
+		notification, err := conn.Conn().WaitForNotification(ctx)
 		if err != nil {
 			return err
 		}
 
-		bus.handle(dbCtx, notification)
+		bus.handle(ctx, notification)
 	}
 }
 

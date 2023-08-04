@@ -21,7 +21,7 @@ type camerasTable struct {
 	Address   postgres.ColumnString
 	Username  postgres.ColumnString
 	Password  postgres.ColumnString
-	Sequence  postgres.ColumnTimestampz
+	Location  postgres.ColumnString
 	CreatedAt postgres.ColumnTimestampz
 
 	AllColumns     postgres.ColumnList
@@ -67,10 +67,10 @@ func newCamerasTableImpl(schemaName, tableName, alias string) camerasTable {
 		AddressColumn   = postgres.StringColumn("address")
 		UsernameColumn  = postgres.StringColumn("username")
 		PasswordColumn  = postgres.StringColumn("password")
-		SequenceColumn  = postgres.TimestampzColumn("sequence")
+		LocationColumn  = postgres.StringColumn("location")
 		CreatedAtColumn = postgres.TimestampzColumn("created_at")
-		allColumns      = postgres.ColumnList{IDColumn, AddressColumn, UsernameColumn, PasswordColumn, SequenceColumn, CreatedAtColumn}
-		mutableColumns  = postgres.ColumnList{AddressColumn, UsernameColumn, PasswordColumn, SequenceColumn, CreatedAtColumn}
+		allColumns      = postgres.ColumnList{IDColumn, AddressColumn, UsernameColumn, PasswordColumn, LocationColumn, CreatedAtColumn}
+		mutableColumns  = postgres.ColumnList{AddressColumn, UsernameColumn, PasswordColumn, LocationColumn, CreatedAtColumn}
 	)
 
 	return camerasTable{
@@ -81,7 +81,7 @@ func newCamerasTableImpl(schemaName, tableName, alias string) camerasTable {
 		Address:   AddressColumn,
 		Username:  UsernameColumn,
 		Password:  PasswordColumn,
-		Sequence:  SequenceColumn,
+		Location:  LocationColumn,
 		CreatedAt: CreatedAtColumn,
 
 		AllColumns:     allColumns,
