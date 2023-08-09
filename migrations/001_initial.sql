@@ -143,14 +143,14 @@ CREATE TYPE dahua.scan_kind AS ENUM ('full', 'quick', 'manual');
 CREATE TABLE dahua.scan_queue_tasks (
   camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
   kind dahua.scan_kind NOT NULL,
-  range tstzrange NOT NULL CHECK ("range" != empty)
+  range tstzrange NOT NULL CHECK (range != 'empty')
 );
 
 CREATE TABLE dahua.scan_active_tasks (
   camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
   queue_id INTEGER NOT NULL UNIQUE REFERENCES dahua.scan_queue_tasks(camera_id) ON DELETE CASCADE,
   kind dahua.scan_kind NOT NULL,
-  range tstzrange NOT NULL CHECK ("range" != empty),
+  range tstzrange NOT NULL CHECK (range != 'empty'),
   cursor TIMESTAMPTZ NOT NULL,
   started_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted INTEGER NOT NULL DEFAULT 0,
@@ -162,7 +162,7 @@ CREATE TABLE dahua.scan_complete_tasks (
   id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   camera_id INTEGER NOT NULL REFERENCES dahua.cameras(id) ON DELETE CASCADE,
   kind dahua.scan_kind NOT NULL,
-  range tstzrange NOT NULL CHECK ("range" != empty),
+  range tstzrange NOT NULL CHECK (range != 'empty'),
   cursor TIMESTAMPTZ NOT NULL,
   started_at TIMESTAMPTZ NOT NULL,
   deleted INTEGER NOT NULL,
