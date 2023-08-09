@@ -13,6 +13,7 @@ type ScanKind string
 
 const (
 	ScanKind_Full   ScanKind = "full"
+	ScanKind_Quick  ScanKind = "quick"
 	ScanKind_Manual ScanKind = "manual"
 )
 
@@ -30,6 +31,8 @@ func (e *ScanKind) Scan(value interface{}) error {
 	switch enumValue {
 	case "full":
 		*e = ScanKind_Full
+	case "quick":
+		*e = ScanKind_Quick
 	case "manual":
 		*e = ScanKind_Manual
 	default:

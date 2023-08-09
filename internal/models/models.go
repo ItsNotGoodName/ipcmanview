@@ -12,8 +12,7 @@ type Location struct {
 
 func (dst *Location) Scan(src any) error {
 	if src == nil {
-		*dst = Location{time.Local}
-		return nil
+		return fmt.Errorf("cannot scan nil")
 	}
 
 	switch src := src.(type) {

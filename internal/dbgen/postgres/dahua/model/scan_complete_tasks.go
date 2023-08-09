@@ -11,11 +11,12 @@ import (
 	"time"
 )
 
-type CompletedScans struct {
+type ScanCompleteTasks struct {
 	ID        int32 `sql:"primary_key"`
 	CameraID  int32
 	Kind      ScanKind
 	Range     string
+	Cursor    time.Time
 	StartedAt time.Time
 	Deleted   int32
 	Upserted  int32

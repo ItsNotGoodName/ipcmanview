@@ -7,14 +7,8 @@
 
 package model
 
-import (
-	"time"
-)
-
-type Scanners struct {
-	ID           int32
-	FullComplete *bool
-	FullCursor   time.Time
-	FullEpoch    time.Time
-	QuickCursor  time.Time
+type ScanQueueTasks struct {
+	CameraID int32
+	Kind     ScanKind
+	Range    string
 }

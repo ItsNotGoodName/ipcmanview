@@ -121,7 +121,7 @@ func (r *ErrResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (r ErrResponse) Error() string {
+func (r *ErrResponse) Error() string {
 	return r.Message
 }
 
@@ -188,13 +188,13 @@ func SendRaw[T any](ctx context.Context, r RequestBuilder) (Response[T], error) 
 	if err != nil {
 		return res, err
 	}
-
 	req = req.WithContext(ctx)
 
 	resp, err := r.client.Do(req)
 	if err != nil {
 		return res, errors.Join(ErrRequestFailed, err)
 	}
+	defer resp.Body.Close()
 
 	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
 		return res, err

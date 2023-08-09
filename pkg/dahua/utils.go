@@ -9,12 +9,14 @@ import (
 	"time"
 )
 
+// TODO: remove this in favor of anonymous structs with json tags
+// TODO: find out if struct json reflection is faster than maps
 type JSON = map[string]any
 
 type AuthParam struct {
-	Encryption string `json:"encryption,omitempty"`
-	Random     string `json:"random,omitempty"`
-	Realm      string `json:"realm,omitempty"`
+	Encryption string `json:"encryption"`
+	Random     string `json:"random"`
+	Realm      string `json:"realm"`
 }
 
 // HashPassword runs the bespoke hashing algorithm for the password.
@@ -28,15 +30,22 @@ func (a AuthParam) HashPassword(username, password string) string {
 				"%s:%s:%s",
 				username,
 				a.Random,
-				strings.ToUpper(fmt.Sprintf("%x",
+				strings.ToUpper(fmt.Sprintf(
+					"%x",
 					md5.Sum([]byte(fmt.Sprintf("%s:%s:%s", username, a.Realm, password))),
-				)))))))
+				)),
+			)))))
 	default:
 		return password
 	}
 }
 
 type Timestamp string
+
+// NewTimestamp converts the given UTC time to the given location and returns the timestamp.
+func NewTimestamp(date time.Time, cameraLocation *time.Location) Timestamp {
+	return Timestamp(date.In(cameraLocation).Format("2006-01-02 15:04:05"))
+}
 
 // Parse returns the UTC time for the given timestamp and location.
 func (t Timestamp) Parse(cameraLocation *time.Location) (time.Time, error) {
@@ -46,11 +55,6 @@ func (t Timestamp) Parse(cameraLocation *time.Location) (time.Time, error) {
 	}
 
 	return date.UTC(), nil
-}
-
-// NewTimestamp converts the given UTC time to the given location and returns the timestamp.
-func NewTimestamp(date time.Time, cameraLocation *time.Location) Timestamp {
-	return Timestamp(date.In(cameraLocation).Format("2006-01-02 15:04:05"))
 }
 
 // ExtractFilePathTags extracts tags that are surrounded by brackets from the given file path.
@@ -72,6 +76,7 @@ func ExtractFilePathTags(filePath string) []string {
 	return tags
 }
 
+// Integer is for types that are supposed to integer but for some reason the camera returns a float.
 type Integer int64
 
 func (s *Integer) UnmarshalJSON(data []byte) error {

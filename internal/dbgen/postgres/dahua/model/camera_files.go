@@ -19,7 +19,7 @@ type CameraFiles struct {
 	Size      int32
 	StartTime time.Time
 	EndTime   time.Time
-	Duration  *int32
-	UpdatedAt time.Time
+	Duration  int32
+	ScannedAt time.Time
 	Events    string
 }

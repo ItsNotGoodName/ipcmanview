@@ -8,12 +8,17 @@
 package model
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
-type ScannerLocks struct {
-	ID        int32
-	UUID      uuid.UUID
-	CreatedAt time.Time
+type ScanActiveTasks struct {
+	CameraID  int32
+	QueueID   int32
+	Kind      ScanKind
+	Range     string
+	Cursor    time.Time
+	StartedAt time.Time
+	Deleted   int32
+	Upserted  int32
+	Percent   float32
 }

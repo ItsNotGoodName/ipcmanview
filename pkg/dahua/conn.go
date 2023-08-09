@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+var _ GenRPC = (*Conn)(nil)
+var _ GenRPCLogin = (*Conn)(nil)
+
 type Conn struct {
 	state       State
 	client      *http.Client

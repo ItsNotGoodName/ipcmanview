@@ -7,7 +7,14 @@
 
 package model
 
-type TimeSeeds struct {
-	Seed     int32
-	CameraID *int32
+import (
+	"time"
+)
+
+type ScanCursors struct {
+	CameraID     int32
+	QuickCursor  time.Time
+	FullCursor   time.Time
+	FullEpoch    time.Time
+	FullComplete bool
 }

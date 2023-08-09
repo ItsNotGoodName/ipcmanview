@@ -120,7 +120,7 @@ type FindNextFileInfo struct {
 //
 //	Dahua cameras can only handle timestamps that are precise up to the second, the leftover microseconds (.000_000) are used to create a unique time.
 //	Unique means it won't conflict with other media files on the camera.
-//	A seed can optionally be passed to make the media file not conflict with other cameras.
+//	An affixSeed can optionally be passed to make the media file not conflict with other cameras.
 func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Location) (time.Time, time.Time, error) {
 	startTime, err := f.StartTime.Parse(cameraLocation)
 	if err != nil {
@@ -151,8 +151,6 @@ func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Locatio
 
 	return startTime.Add(seed), endTime.Add(seed), nil
 }
-
-var defaultTagSeed = []string{"0", "0"}
 
 func GetCount(ctx context.Context, gen dahua.GenRPC, object int64) (int, error) {
 	rpc, err := gen.RPC(ctx)

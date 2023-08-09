@@ -17,7 +17,7 @@ type cameraDetailsTable struct {
 	postgres.Table
 
 	// Columns
-	ID              postgres.ColumnInteger
+	CameraID        postgres.ColumnInteger
 	Sn              postgres.ColumnString
 	DeviceClass     postgres.ColumnString
 	DeviceType      postgres.ColumnString
@@ -65,7 +65,7 @@ func newCameraDetailsTable(schemaName, tableName, alias string) *CameraDetailsTa
 
 func newCameraDetailsTableImpl(schemaName, tableName, alias string) cameraDetailsTable {
 	var (
-		IDColumn              = postgres.IntegerColumn("id")
+		CameraIDColumn        = postgres.IntegerColumn("camera_id")
 		SnColumn              = postgres.StringColumn("sn")
 		DeviceClassColumn     = postgres.StringColumn("device_class")
 		DeviceTypeColumn      = postgres.StringColumn("device_type")
@@ -73,15 +73,15 @@ func newCameraDetailsTableImpl(schemaName, tableName, alias string) cameraDetail
 		MarketAreaColumn      = postgres.StringColumn("market_area")
 		ProcessInfoColumn     = postgres.StringColumn("process_info")
 		VendorColumn          = postgres.StringColumn("vendor")
-		allColumns            = postgres.ColumnList{IDColumn, SnColumn, DeviceClassColumn, DeviceTypeColumn, HardwareVersionColumn, MarketAreaColumn, ProcessInfoColumn, VendorColumn}
-		mutableColumns        = postgres.ColumnList{IDColumn, SnColumn, DeviceClassColumn, DeviceTypeColumn, HardwareVersionColumn, MarketAreaColumn, ProcessInfoColumn, VendorColumn}
+		allColumns            = postgres.ColumnList{CameraIDColumn, SnColumn, DeviceClassColumn, DeviceTypeColumn, HardwareVersionColumn, MarketAreaColumn, ProcessInfoColumn, VendorColumn}
+		mutableColumns        = postgres.ColumnList{CameraIDColumn, SnColumn, DeviceClassColumn, DeviceTypeColumn, HardwareVersionColumn, MarketAreaColumn, ProcessInfoColumn, VendorColumn}
 	)
 
 	return cameraDetailsTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		ID:              IDColumn,
+		CameraID:        CameraIDColumn,
 		Sn:              SnColumn,
 		DeviceClass:     DeviceClassColumn,
 		DeviceType:      DeviceTypeColumn,

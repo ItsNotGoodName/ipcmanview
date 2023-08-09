@@ -2,48 +2,94 @@ package sandbox
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"sync"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/core"
 	"github.com/ItsNotGoodName/ipcmango/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmango/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/zerolog/log"
+	"github.com/thejerf/suture/v4"
 )
 
 func Sandbox(ctx context.Context, pool *pgxpool.Pool) {
-	conn, err := pool.Acquire(ctx)
-	if err != nil {
-		return
-	}
-	defer conn.Release()
+	super := suture.NewSimple("root")
 
 	username, _ := os.LookupEnv("IPC_USERNAME")
 	password, _ := os.LookupEnv("IPC_PASSWORD")
 	ip, _ := os.LookupEnv("IPC_IP")
 
-	cam := core.DahuaCamera{
+	cam := models.DahuaCamera{
 		Address:  ip,
 		Username: username,
 		Password: password,
+		Location: models.Location{Location: time.Local},
 	}
 
-	cam, err = dahua.DB.CameraCreate(ctx, conn, cam)
+	cam, err := dahua.DB.CameraCreate(ctx, pool, cam)
 	if err != nil {
-		print(cam, err)
-		cam, err = dahua.DB.CameraGetByAddress(ctx, conn, ip)
-		print(cam, err)
+		cam, err = dahua.DB.CameraGetByAddress(ctx, pool, ip)
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	c := dahua.NewActorHandle(cam)
-	defer c.Close(ctx)
+	worker := dahua.NewWorker(pool, cam.ID)
 
-	print(dahua.Scan(ctx, conn, c, models.DahuaScanCamera{
-		Seed:     88,
-		ID:       cam.ID,
-		Location: time.Local,
-	}, dahua.ScanPeriod{
-		Start: time.Now().Add(-24 * time.Hour * 30),
-		End:   time.Now(),
-	}))
+	super.Add(worker)
+
+	err = dahua.DB.ScanQueueTaskClear(ctx, pool)
+	if err != nil {
+		panic(err)
+	}
+
+	go scan(ctx, pool, worker, cam)
+
+	super.Serve(ctx)
+}
+
+var tesMu *sync.Mutex = &sync.Mutex{}
+
+func scan(ctx context.Context, pool *pgxpool.Pool, worker dahua.Worker, cam models.DahuaCamera) {
+	worker.Queue(&dahua.TestJob{DB: pool})
+
+	scanCam, err := dahua.DB.ScanCursorGet(ctx, pool, cam.ID)
+	if err != nil {
+		log.Err(err).Msg("")
+		return
+	}
+
+	queueTask, err := dahua.NewScanTaskFull(scanCam)
+	if err != nil {
+		log.Err(err).Msg("")
+		return
+	}
+
+	fmt.Println("3")
+	err = dahua.DB.ScanQueueTaskCreate(ctx, pool, queueTask)
+	if err != nil {
+		log.Err(err).Msg("")
+		return
+	}
+
+	err = dahua.DB.ScanQueueTaskGetAndLock(ctx, pool, scanCam.CameraID, func(ctx context.Context, queueTask models.DahuaScanQueueTask) error {
+		if !tesMu.TryLock() {
+			panic("THIS IS A FAILURE")
+		}
+		return dahua.ScanTaskQueueExecute(ctx, pool, worker, queueTask)
+	})
+
+	if err != nil {
+		log.Err(err).Msg("")
+	}
+}
+
+func print(data ...any) {
+	if len(data) > 1 && data[1] != nil {
+		log.Debug().Err(data[1].(error)).Msg("")
+		return
+	}
+	log.Debug().Any("data", data[0]).Msg("")
 }

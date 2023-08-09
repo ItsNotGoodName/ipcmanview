@@ -12,9 +12,12 @@ package table
 func UseSchema(schema string) {
 	CameraDetails = CameraDetails.FromSchema(schema)
 	CameraFiles = CameraFiles.FromSchema(schema)
+	CameraLicenses = CameraLicenses.FromSchema(schema)
+	CameraSoftwares = CameraSoftwares.FromSchema(schema)
 	Cameras = Cameras.FromSchema(schema)
-	CompletedScans = CompletedScans.FromSchema(schema)
-	ScannerLocks = ScannerLocks.FromSchema(schema)
-	Scanners = Scanners.FromSchema(schema)
-	TimeSeeds = TimeSeeds.FromSchema(schema)
+	ScanActiveTasks = ScanActiveTasks.FromSchema(schema)
+	ScanCompleteTasks = ScanCompleteTasks.FromSchema(schema)
+	ScanCursors = ScanCursors.FromSchema(schema)
+	ScanQueueTasks = ScanQueueTasks.FromSchema(schema)
+	ScanSeeds = ScanSeeds.FromSchema(schema)
 }

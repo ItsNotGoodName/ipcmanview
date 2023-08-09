@@ -11,8 +11,10 @@ import "github.com/go-jet/jet/v2/postgres"
 
 var ScanKind = &struct {
 	Full   postgres.StringExpression
+	Quick  postgres.StringExpression
 	Manual postgres.StringExpression
 }{
 	Full:   postgres.NewEnumValue("full"),
+	Quick:  postgres.NewEnumValue("quick"),
 	Manual: postgres.NewEnumValue("manual"),
 }

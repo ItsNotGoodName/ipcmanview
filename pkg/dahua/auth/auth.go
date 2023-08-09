@@ -38,14 +38,7 @@ func KeepAlive(ctx context.Context, conn *dahua.Conn) error {
 }
 
 func Login(ctx context.Context, conn *dahua.Conn, username, password string) error {
-	// if conn.State == dahua.StateLogin {
-	// 	Logout(ctx, conn)
-	// } else if conn.State == dahua.StateError {
-	// 	return conn.Error
-	// }
-
-	err := login(ctx, conn, username, password)
-	if err != nil {
+	if err := login(ctx, conn, username, password); err != nil {
 		var e *LoginError
 		if errors.As(err, &e) {
 			conn.Set(dahua.StateError, err)

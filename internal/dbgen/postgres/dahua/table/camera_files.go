@@ -25,7 +25,7 @@ type cameraFilesTable struct {
 	StartTime postgres.ColumnTimestampz
 	EndTime   postgres.ColumnTimestampz
 	Duration  postgres.ColumnInteger
-	UpdatedAt postgres.ColumnTimestampz
+	ScannedAt postgres.ColumnTimestampz
 	Events    postgres.ColumnString
 
 	AllColumns     postgres.ColumnList
@@ -75,10 +75,10 @@ func newCameraFilesTableImpl(schemaName, tableName, alias string) cameraFilesTab
 		StartTimeColumn = postgres.TimestampzColumn("start_time")
 		EndTimeColumn   = postgres.TimestampzColumn("end_time")
 		DurationColumn  = postgres.IntegerColumn("duration")
-		UpdatedAtColumn = postgres.TimestampzColumn("updated_at")
+		ScannedAtColumn = postgres.TimestampzColumn("scanned_at")
 		EventsColumn    = postgres.StringColumn("events")
-		allColumns      = postgres.ColumnList{IDColumn, CameraIDColumn, FilePathColumn, KindColumn, SizeColumn, StartTimeColumn, EndTimeColumn, DurationColumn, UpdatedAtColumn, EventsColumn}
-		mutableColumns  = postgres.ColumnList{CameraIDColumn, FilePathColumn, KindColumn, SizeColumn, StartTimeColumn, EndTimeColumn, UpdatedAtColumn, EventsColumn}
+		allColumns      = postgres.ColumnList{IDColumn, CameraIDColumn, FilePathColumn, KindColumn, SizeColumn, StartTimeColumn, EndTimeColumn, DurationColumn, ScannedAtColumn, EventsColumn}
+		mutableColumns  = postgres.ColumnList{CameraIDColumn, FilePathColumn, KindColumn, SizeColumn, StartTimeColumn, EndTimeColumn, ScannedAtColumn, EventsColumn}
 	)
 
 	return cameraFilesTable{
@@ -93,7 +93,7 @@ func newCameraFilesTableImpl(schemaName, tableName, alias string) cameraFilesTab
 		StartTime: StartTimeColumn,
 		EndTime:   EndTimeColumn,
 		Duration:  DurationColumn,
-		UpdatedAt: UpdatedAtColumn,
+		ScannedAt: ScannedAtColumn,
 		Events:    EventsColumn,
 
 		AllColumns:     allColumns,
