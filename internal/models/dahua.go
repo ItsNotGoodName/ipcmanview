@@ -113,13 +113,13 @@ type DahuaScanActiveTask struct {
 	Percent   float64
 }
 
-func (q DahuaScanActiveTask) NewProgress() DahuaScanProgress {
-	return DahuaScanProgress{
+func (q DahuaScanActiveTask) NewProgress() DahuaScanActiveProgress {
+	return DahuaScanActiveProgress{
 		CameraID: q.CameraID,
 	}
 }
 
-type DahuaScanProgress struct {
+type DahuaScanActiveProgress struct {
 	CameraID int64
 	Upserted int
 	Deleted  int

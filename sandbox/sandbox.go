@@ -7,15 +7,16 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmango/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmango/internal/event"
 	"github.com/ItsNotGoodName/ipcmango/internal/models"
+	"github.com/ItsNotGoodName/ipcmango/pkg/sutureext"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 	"github.com/thejerf/suture/v4"
 )
 
 func Sandbox(ctx context.Context, pool *pgxpool.Pool) {
-	super := suture.NewSimple("root")
-
+	// --------------------- Seed
 	username, _ := os.LookupEnv("IPC_USERNAME")
 	password, _ := os.LookupEnv("IPC_PASSWORD")
 	ip, _ := os.LookupEnv("IPC_IP")
@@ -27,6 +28,7 @@ func Sandbox(ctx context.Context, pool *pgxpool.Pool) {
 		Location: models.Location{Location: time.Local},
 	}
 
+	// Force create
 	cam, err := dahua.DB.CameraCreate(ctx, pool, cam)
 	if err != nil {
 		cam, err = dahua.DB.CameraGetByAddress(ctx, pool, ip)
@@ -35,25 +37,27 @@ func Sandbox(ctx context.Context, pool *pgxpool.Pool) {
 		}
 	}
 
-	worker := dahua.NewWorker(pool, cam.ID)
+	// ----------------------------------------------------------------------------
 
-	super.Add(worker)
+	super := suture.New("root", suture.Spec{
+		EventHook: sutureext.EventHook(),
+	})
 
-	// err = dahua.DB.ScanQueueTaskClear(ctx, pool)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	dahuaSuper := dahua.NewSupervisor(pool, &event.Bus{})
+	super.Add(dahuaSuper)
+	dahuaScanSuper := dahua.NewScanSupervisor(pool, dahuaSuper, 5)
+	super.Add(dahuaScanSuper)
 
-	go scan(ctx, pool, worker, cam)
+	go func() {
+		scan(ctx, pool, cam, dahuaScanSuper)
+	}()
 
 	super.Serve(ctx)
 }
 
 var tesMu *sync.Mutex = &sync.Mutex{}
 
-func scan(ctx context.Context, pool *pgxpool.Pool, worker dahua.Worker, cam models.DahuaCamera) {
-	worker.Queue(&dahua.TestJob{DB: pool})
-
+func scan(ctx context.Context, pool *pgxpool.Pool, cam models.DahuaCamera, super *dahua.ScanSupervisor) {
 	err := dahua.DB.ScanCursorReset(ctx, pool, cam.ID)
 	if err != nil {
 		log.Err(err).Msg("")
@@ -86,12 +90,23 @@ func scan(ctx context.Context, pool *pgxpool.Pool, worker dahua.Worker, cam mode
 		return
 	}
 
-	for {
-		err = dahua.DB.ScanQueueTaskGetAndLock(ctx, pool, scanCam.CameraID, func(ctx context.Context, queueTask models.DahuaScanQueueTask) error {
-			return dahua.ScanTaskQueueExecute(ctx, pool, worker, queueTask)
-		})
-		time.Sleep(5 * time.Second)
-	}
+	super.Scan()
+	super.Scan()
+	super.Scan()
+	super.Scan()
+	super.Scan()
+	super.Scan()
+	super.Scan()
+	super.Scan()
+	super.Scan()
+	super.Scan()
+
+	// for {
+	// 	err = dahua.DB.ScanQueueTaskNext(ctx, pool, func(ctx context.Context, scanCursorLock dahua.ScanCursorLock, queueTask models.DahuaScanQueueTask) error {
+	// 		return dahua.ScanTaskQueueExecute(ctx, pool, worker, scanCursorLock, queueTask)
+	// 	})
+	// 	time.Sleep(5 * time.Second)
+	// }
 
 	if err != nil {
 		log.Err(err).Msg("")

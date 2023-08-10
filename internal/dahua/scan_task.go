@@ -52,25 +52,19 @@ func NewScanTaskManual(cursor models.DahuaScanCursor, scanRange models.DahuaScan
 }
 
 // ScanTaskQueueExecute runs the queued scan task.
-func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahua.GenRPC, queueTask models.DahuaScanQueueTask) error {
+func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahua.GenRPC, scanCursorLock ScanCursorLock, queueTask models.DahuaScanQueueTask) error {
 	activeTask, err := DB.ScanActiveTaskCreate(ctx, db, queueTask)
 	if err != nil {
 		return err
 	}
 
 	scanErrString, err := func() (string, error) {
-		// WARNING: this assumes the scan cursor will not be modified by other functions
-		scanCursor, err := DB.ScanCursorGet(ctx, db, activeTask.CameraID)
-		if err != nil {
-			return err.Error(), err
-		}
-
 		// Run the scan
-		scanErr := scanTaskActiveExecute(ctx, db, gen, scanCursor, activeTask)
+		scanErr := scanTaskActiveExecute(ctx, db, gen, scanCursorLock.DahuaScanCursor, activeTask)
 		if scanErr != nil {
 			// Sad path, scan encounterd some sort of error
 			if activeTask.Kind == models.DahuaScanKindFull {
-				err := DB.ScanCursorUpdateFullCursorFromActiveScanTaskCursor(ctx, db, activeTask.CameraID)
+				err := scanCursorLock.UpdateFullCursorFromActiveScanTaskCursor(ctx)
 				if err != nil {
 					return err.Error() + scanErr.Error(), err
 				}
@@ -82,12 +76,12 @@ func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahua.GenRPC,
 		// Happy path, scan was successful
 		switch activeTask.Kind {
 		case models.DahuaScanKindFull:
-			err := DB.ScanCursorUpdateFullCursor(ctx, db, activeTask.CameraID, activeTask.Range.Start)
+			err := scanCursorLock.UpdateFullCursor(ctx, activeTask.Range.Start)
 			if err != nil {
 				return err.Error(), err
 			}
 		case models.DahuaScanKindQuick:
-			err := DB.ScanCursorUpdateQuickCursor(ctx, db, activeTask.CameraID, ScanQuickCursorFromScanRange(activeTask.Range))
+			err := scanCursorLock.UpdateQuickCursor(ctx, ScanQuickCursorFromScanRange(activeTask.Range))
 			if err != nil {
 				return err.Error(), err
 			}
@@ -119,7 +113,7 @@ func scanTaskActiveExecute(ctx context.Context, db qes.Querier, gen dahua.GenRPC
 		progress.Percent = scanPeriodIterator.Percent()
 		progress.Cursor = scanPeriodIterator.Cursor()
 
-		progress, err = DB.ScanProgressUpdate(ctx, db, progress)
+		progress, err = DB.ScanActiveProgressUpdate(ctx, db, progress)
 		if err != nil {
 			return err
 		}
