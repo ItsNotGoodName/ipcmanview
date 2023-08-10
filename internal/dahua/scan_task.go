@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/models"
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
-	"github.com/ItsNotGoodName/ipcmango/pkg/qes"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 )
 
 func NewScanTaskFull(cursor models.DahuaScanCursor) (models.DahuaScanQueueTask, error) {

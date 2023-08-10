@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
 )
 
 func Create(ctx context.Context, gen dahua.GenRPC) (int64, error) {

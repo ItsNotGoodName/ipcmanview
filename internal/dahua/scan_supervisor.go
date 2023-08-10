@@ -3,8 +3,8 @@ package dahua
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/models"
-	"github.com/ItsNotGoodName/ipcmango/pkg/qes"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 	"github.com/thejerf/suture/v4"
 )
 

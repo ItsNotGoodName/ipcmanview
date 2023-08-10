@@ -3,7 +3,7 @@ package global
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
 )
 
 func FirstLogin(ctx context.Context, gen dahua.GenRPCLogin, username string) (dahua.Response[dahua.AuthParam], error) {

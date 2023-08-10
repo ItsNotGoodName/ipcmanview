@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
 )
 
 var _ dahua.GenRPC = (*Conn)(nil)

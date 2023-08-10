@@ -4,11 +4,11 @@ import (
 	"context"
 	"os"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/build"
-	"github.com/ItsNotGoodName/ipcmango/internal/db"
-	"github.com/ItsNotGoodName/ipcmango/migrations"
-	"github.com/ItsNotGoodName/ipcmango/pkg/interrupt"
-	"github.com/ItsNotGoodName/ipcmango/sandbox"
+	"github.com/ItsNotGoodName/ipcmanview/internal/build"
+	"github.com/ItsNotGoodName/ipcmanview/internal/db"
+	"github.com/ItsNotGoodName/ipcmanview/migrations"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/interrupt"
+	"github.com/ItsNotGoodName/ipcmanview/sandbox"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )

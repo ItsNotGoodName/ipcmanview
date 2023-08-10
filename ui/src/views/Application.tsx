@@ -163,7 +163,7 @@ export const Application: Component = () => {
       <div>
         <Header>
           <HeaderText>
-            <HeaderTextContent>IPCMango</HeaderTextContent>
+            <HeaderTextContent>IPCManView</HeaderTextContent>
           </HeaderText>
           <HeaderEnd>
             <ThemeSwitcher class={chipClass}>

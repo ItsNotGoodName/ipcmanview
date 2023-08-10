@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/ItsNotGoodName/ipcmango/server/service"
+	"github.com/ItsNotGoodName/ipcmanview/server/service"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )

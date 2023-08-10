@@ -3,11 +3,11 @@ package sandbox
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmango/server"
-	"github.com/ItsNotGoodName/ipcmango/server/jwt"
-	"github.com/ItsNotGoodName/ipcmango/server/rpc"
-	"github.com/ItsNotGoodName/ipcmango/server/service"
-	"github.com/ItsNotGoodName/ipcmango/ui"
+	"github.com/ItsNotGoodName/ipcmanview/server"
+	"github.com/ItsNotGoodName/ipcmanview/server/jwt"
+	"github.com/ItsNotGoodName/ipcmanview/server/rpc"
+	"github.com/ItsNotGoodName/ipcmanview/server/service"
+	"github.com/ItsNotGoodName/ipcmanview/ui"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth/v5"

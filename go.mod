@@ -1,4 +1,4 @@
-module github.com/ItsNotGoodName/ipcmango
+module github.com/ItsNotGoodName/ipcmanview
 
 go 1.20
 

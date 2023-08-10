@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/models"
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/license"
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/magicbox"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/license"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/magicbox"
 )
 
 func CameraDetailGet(ctx context.Context, gen dahua.GenRPC) (models.DahuaCameraDetail, error) {

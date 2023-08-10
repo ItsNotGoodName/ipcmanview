@@ -3,7 +3,7 @@ package dahua
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
 )
 
 type Store interface {

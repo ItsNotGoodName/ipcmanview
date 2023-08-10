@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmango/pkg/background"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/background"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"

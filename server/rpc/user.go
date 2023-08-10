@@ -4,10 +4,10 @@ import (
 	"context"
 	"strings"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/core"
-	"github.com/ItsNotGoodName/ipcmango/internal/db"
-	"github.com/ItsNotGoodName/ipcmango/server/jwt"
-	"github.com/ItsNotGoodName/ipcmango/server/service"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/db"
+	"github.com/ItsNotGoodName/ipcmanview/server/jwt"
+	"github.com/ItsNotGoodName/ipcmanview/server/service"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

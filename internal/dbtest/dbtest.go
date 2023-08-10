@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"strconv"
 
-	"github.com/ItsNotGoodName/ipcmango/migrations"
+	"github.com/ItsNotGoodName/ipcmanview/migrations"
 	"github.com/jackc/pgx/v5"
 )
 

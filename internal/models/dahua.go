@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/dbgen/postgres/dahua/model"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dbgen/postgres/dahua/model"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 

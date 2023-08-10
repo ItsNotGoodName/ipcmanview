@@ -1,8 +1,8 @@
 package rpc
 
 import (
-	"github.com/ItsNotGoodName/ipcmango/internal/core"
-	"github.com/ItsNotGoodName/ipcmango/server/service"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/server/service"
 )
 
 func newUser(user core.User) *service.User {

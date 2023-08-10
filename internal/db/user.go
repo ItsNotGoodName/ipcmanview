@@ -3,10 +3,10 @@ package db
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/core"
-	"github.com/ItsNotGoodName/ipcmango/internal/dbgen/postgres/public/model"
-	. "github.com/ItsNotGoodName/ipcmango/internal/dbgen/postgres/public/table"
-	"github.com/ItsNotGoodName/ipcmango/pkg/qes"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dbgen/postgres/public/model"
+	. "github.com/ItsNotGoodName/ipcmanview/internal/dbgen/postgres/public/table"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 	. "github.com/go-jet/jet/v2/postgres"
 )
 

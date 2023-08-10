@@ -5,9 +5,9 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/event"
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
-	"github.com/ItsNotGoodName/ipcmango/pkg/qes"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 	"github.com/thejerf/suture/v4"
 )
 

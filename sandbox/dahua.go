@@ -8,14 +8,14 @@ package sandbox
 // 	"os"
 // 	"time"
 //
-// 	"github.com/ItsNotGoodName/ipcmango/internal/core"
-// 	"github.com/ItsNotGoodName/ipcmango/internal/dahua"
-// 	dh "github.com/ItsNotGoodName/ipcmango/pkg/dahua"
-// 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/global"
-// 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/license"
-// 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/magicbox"
-// 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/mediafilefind"
-// 	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/modules/storage"
+// 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+// 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+// 	dh "github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+// 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/global"
+// 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/license"
+// 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/magicbox"
+// 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/mediafilefind"
+// 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/storage"
 // )
 //
 //

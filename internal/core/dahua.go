@@ -3,7 +3,7 @@ package core
 import (
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmango/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
 
 type DahuaCamera struct {

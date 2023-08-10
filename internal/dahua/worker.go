@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua"
-	"github.com/ItsNotGoodName/ipcmango/pkg/dahua/auth"
-	"github.com/ItsNotGoodName/ipcmango/pkg/qes"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/auth"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 	"github.com/jackc/pgx/v5"
 	"github.com/thejerf/suture/v4"
 )
