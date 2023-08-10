@@ -205,6 +205,7 @@ func (dbT) ScanCameraFilesUpsert(ctx context.Context, db qes.Querier, scannedAt 
 		return 0, nil
 	}
 
+	// TODO: use MERGE instead of INSERT to prevent exhausting IDs
 	stmt := dahua.CameraFiles.INSERT(
 		dahua.CameraFiles.CameraID,
 		dahua.CameraFiles.FilePath,
@@ -279,6 +280,7 @@ func (dbT) ScanCursorGet(ctx context.Context, db qes.Querier, cameraID int64) (m
 		dahua.ScanCursors.FullComplete.AS("full_complete"),
 		dahua.ScanCursors.FullCursor.AS("full_cursor"),
 		dahua.ScanCursors.FullEpoch.AS("full_epoch"),
+		dahua.ScanCursors.FullEpochEnd.AS("full_epoch_end"),
 		dahua.ScanCursors.QuickCursor.AS("quick_cursor"),
 	).FROM(dahua.Cameras.
 		LEFT_JOIN(dahua.ScanCursors, dahua.ScanCursors.CameraID.EQ(dahua.Cameras.ID)).
@@ -293,6 +295,17 @@ func (dbT) ScanCursorUpdateFullCursor(ctx context.Context, db qes.Querier, camer
 		SET(dahua.ScanCursors.FullCursor.SET(TimestampzT(fullCursor))).
 		WHERE(dahua.ScanCursors.CameraID.EQ(Int(cameraID))),
 	)
+	return err
+}
+
+func (dbT) ScanCursorReset(ctx context.Context, db qes.Querier, cameraID int64) error {
+	_, err := qes.ExecOne(ctx, db, dahua.ScanCursors.UPDATE().
+		SET(
+			dahua.ScanCursors.QuickCursor.SET(RawTimestampz("default")),
+			dahua.ScanCursors.FullCursor.SET(RawTimestampz("default")),
+			dahua.ScanCursors.FullEpochEnd.SET(RawTimestampz("default")),
+		).
+		WHERE(dahua.ScanCursors.CameraID.EQ(Int(cameraID))))
 	return err
 }
 
@@ -337,35 +350,44 @@ func (dbT) ScanQueueTaskCreate(ctx context.Context, db qes.Querier, r models.Dah
 	return err
 }
 
-// ScanQueueTaskClear removes all queued scan tasks that are not locked.
-// There is a small race condition between calling ScanQueueTaskCreate and ScanQueueTaskGetAndLock where the queued tasks might be deleted.
-func (dbT) ScanQueueTaskClear(ctx context.Context, db qes.Querier) error {
-	_, err := qes.Exec(ctx, db, dahua.ScanQueueTasks.
-		DELETE().
-		WHERE(
-			dahua.ScanQueueTasks.CameraID.IN(
-				dahua.ScanQueueTasks.SELECT(dahua.ScanQueueTasks.CameraID).FOR(UPDATE().SKIP_LOCKED()))))
-	return err
-}
+// // ScanQueueTaskClear removes all queued scan tasks that are not locked.
+// // There is a small race condition between calling ScanQueueTaskCreate and ScanQueueTaskGetAndLock where the queued tasks might be deleted.
+// func (dbT) ScanQueueTaskClear(ctx context.Context, db qes.Querier) error {
+// 	_, err := qes.Exec(ctx, db, dahua.ScanQueueTasks.
+// 		DELETE().
+// 		WHERE(
+// 			dahua.ScanQueueTasks.CameraID.IN(
+// 				dahua.ScanQueueTasks.SELECT(dahua.ScanQueueTasks.CameraID).FOR(UPDATE().SKIP_LOCKED()))))
+// 	return err
+// }
 
 // ScanQueueTaskGetAndLock retrieves a queued task for the camera and locks it.
-// If there is no task or the task is already locked, it will return pgx.ErrNoRows.
-// When the given function is finished, the queued task is removed.
+// Error when there is no task or the task is already locked.
+// Queued task is removed at the end.
 func (dbT) ScanQueueTaskGetAndLock(ctx context.Context, db qes.Querier, cameraID int64, fn func(ctx context.Context, queueTask models.DahuaScanQueueTask) error) error {
 	return pgx.BeginFunc(ctx, db, func(tx pgx.Tx) error {
-		_, err := qes.Exec(ctx, tx, dahua.ScanQueueTasks.LOCK().IN(LOCK_ROW_EXCLUSIVE))
-		if err != nil {
-			return err
-		}
+		// _, err := qes.Exec(ctx, tx, dahua.ScanQueueTasks.LOCK().IN(LOCK_ROW_EXCLUSIVE))
+		// if err != nil {
+		// 	return err
+		// }
 
-		// Get queued scan task for the given camera and lock it
+		// Get exclusive lock on a camera's queued scan
 		var queueTask models.DahuaScanQueueTask
-		err = qes.ScanOne(ctx, tx, &queueTask, dahua.ScanQueueTasks.SELECT(
+		err := qes.ScanOne(ctx, tx, &queueTask, dahua.ScanQueueTasks.SELECT(
+			dahua.ScanQueueTasks.ID.AS("id"),
 			dahua.ScanQueueTasks.CameraID.AS("camera_id"),
 			dahua.ScanQueueTasks.Kind.AS("kind"),
 			dahua.ScanQueueTasks.Range.AS("range"),
 		).WHERE(dahua.ScanQueueTasks.CameraID.EQ(Int(cameraID))).
-			FOR(NO_KEY_UPDATE().SKIP_LOCKED()))
+			ORDER_BY(dahua.ScanQueueTasks.ID.ASC()).
+			LIMIT(1).
+			FOR(NO_KEY_UPDATE().NOWAIT()))
+		if err != nil {
+			return err
+		}
+
+		// Clear any orphan / failed active scans
+		_, err = qes.Exec(ctx, db, dahua.ScanActiveTasks.DELETE().WHERE(dahua.ScanActiveTasks.CameraID.EQ(Int(queueTask.CameraID))))
 		if err != nil {
 			return err
 		}
@@ -375,7 +397,7 @@ func (dbT) ScanQueueTaskGetAndLock(ctx context.Context, db qes.Querier, cameraID
 		}
 
 		// Delete the queued scan task
-		_, err = qes.Exec(ctx, tx, dahua.ScanQueueTasks.DELETE().WHERE(dahua.ScanQueueTasks.CameraID.EQ(Int(cameraID))))
+		_, err = qes.Exec(ctx, tx, dahua.ScanQueueTasks.DELETE().WHERE(dahua.ScanQueueTasks.ID.EQ(Int(queueTask.ID))))
 		return err
 	})
 }
@@ -395,7 +417,7 @@ func (dbT) ScanActiveTaskCreate(ctx context.Context, db qes.Querier, r models.Da
 		}{
 			ScanActiveTasks: model.ScanActiveTasks{
 				CameraID: int32(r.CameraID),
-				QueueID:  int32(r.CameraID),
+				QueueID:  int32(r.ID),
 				Kind:     r.Kind,
 				Cursor:   r.Range.End,
 			},
@@ -437,7 +459,7 @@ func (dbT) ScanActiveTaskComplete(ctx context.Context, db qes.Querier, cameraID 
 				dahua.ScanActiveTasks.Deleted,
 				dahua.ScanActiveTasks.Upserted,
 				dahua.ScanActiveTasks.Percent,
-				Raw(fmt.Sprintf("extract(EPOCH FROM age(CURRENT_TIMESTAMP, %s.%s))", dahua.ScanActiveTasks.StartedAt.TableName(), dahua.ScanActiveTasks.StartedAt.Name())),
+				Raw(fmt.Sprintf("EXTRACT(EPOCH FROM age(CURRENT_TIMESTAMP, %s.%s))", dahua.ScanActiveTasks.StartedAt.TableName(), dahua.ScanActiveTasks.StartedAt.Name())),
 				String(errString).AS("error"),
 			).WHERE(dahua.ScanActiveTasks.CameraID.EQ(Int(cameraID)))))
 		if err != nil {

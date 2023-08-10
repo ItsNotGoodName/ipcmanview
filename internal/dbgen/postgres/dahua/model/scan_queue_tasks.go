@@ -8,6 +8,7 @@
 package model
 
 type ScanQueueTasks struct {
+	ID       int32 `sql:"primary_key"`
 	CameraID int32
 	Kind     ScanKind
 	Range    string

@@ -17,6 +17,7 @@ type scanQueueTasksTable struct {
 	postgres.Table
 
 	// Columns
+	ID       postgres.ColumnInteger
 	CameraID postgres.ColumnInteger
 	Kind     postgres.ColumnString
 	Range    postgres.ColumnString
@@ -60,10 +61,11 @@ func newScanQueueTasksTable(schemaName, tableName, alias string) *ScanQueueTasks
 
 func newScanQueueTasksTableImpl(schemaName, tableName, alias string) scanQueueTasksTable {
 	var (
+		IDColumn       = postgres.IntegerColumn("id")
 		CameraIDColumn = postgres.IntegerColumn("camera_id")
 		KindColumn     = postgres.StringColumn("kind")
 		RangeColumn    = postgres.StringColumn("range")
-		allColumns     = postgres.ColumnList{CameraIDColumn, KindColumn, RangeColumn}
+		allColumns     = postgres.ColumnList{IDColumn, CameraIDColumn, KindColumn, RangeColumn}
 		mutableColumns = postgres.ColumnList{CameraIDColumn, KindColumn, RangeColumn}
 	)
 
@@ -71,6 +73,7 @@ func newScanQueueTasksTableImpl(schemaName, tableName, alias string) scanQueueTa
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
+		ID:       IDColumn,
 		CameraID: CameraIDColumn,
 		Kind:     KindColumn,
 		Range:    RangeColumn,

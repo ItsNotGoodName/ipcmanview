@@ -17,8 +17,8 @@ type scanActiveTasksTable struct {
 	postgres.Table
 
 	// Columns
-	CameraID  postgres.ColumnInteger
 	QueueID   postgres.ColumnInteger
+	CameraID  postgres.ColumnInteger
 	Kind      postgres.ColumnString
 	Range     postgres.ColumnString
 	Cursor    postgres.ColumnTimestampz
@@ -66,8 +66,8 @@ func newScanActiveTasksTable(schemaName, tableName, alias string) *ScanActiveTas
 
 func newScanActiveTasksTableImpl(schemaName, tableName, alias string) scanActiveTasksTable {
 	var (
-		CameraIDColumn  = postgres.IntegerColumn("camera_id")
 		QueueIDColumn   = postgres.IntegerColumn("queue_id")
+		CameraIDColumn  = postgres.IntegerColumn("camera_id")
 		KindColumn      = postgres.StringColumn("kind")
 		RangeColumn     = postgres.StringColumn("range")
 		CursorColumn    = postgres.TimestampzColumn("cursor")
@@ -75,16 +75,16 @@ func newScanActiveTasksTableImpl(schemaName, tableName, alias string) scanActive
 		DeletedColumn   = postgres.IntegerColumn("deleted")
 		UpsertedColumn  = postgres.IntegerColumn("upserted")
 		PercentColumn   = postgres.FloatColumn("percent")
-		allColumns      = postgres.ColumnList{CameraIDColumn, QueueIDColumn, KindColumn, RangeColumn, CursorColumn, StartedAtColumn, DeletedColumn, UpsertedColumn, PercentColumn}
-		mutableColumns  = postgres.ColumnList{CameraIDColumn, QueueIDColumn, KindColumn, RangeColumn, CursorColumn, StartedAtColumn, DeletedColumn, UpsertedColumn, PercentColumn}
+		allColumns      = postgres.ColumnList{QueueIDColumn, CameraIDColumn, KindColumn, RangeColumn, CursorColumn, StartedAtColumn, DeletedColumn, UpsertedColumn, PercentColumn}
+		mutableColumns  = postgres.ColumnList{QueueIDColumn, CameraIDColumn, KindColumn, RangeColumn, CursorColumn, StartedAtColumn, DeletedColumn, UpsertedColumn, PercentColumn}
 	)
 
 	return scanActiveTasksTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		CameraID:  CameraIDColumn,
 		QueueID:   QueueIDColumn,
+		CameraID:  CameraIDColumn,
 		Kind:      KindColumn,
 		Range:     RangeColumn,
 		Cursor:    CursorColumn,

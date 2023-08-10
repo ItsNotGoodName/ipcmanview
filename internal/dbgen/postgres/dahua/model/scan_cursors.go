@@ -15,6 +15,7 @@ type ScanCursors struct {
 	CameraID     int32
 	QuickCursor  time.Time
 	FullCursor   time.Time
+	FullEpochEnd time.Time
 	FullEpoch    time.Time
 	FullComplete bool
 }

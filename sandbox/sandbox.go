@@ -2,7 +2,6 @@ package sandbox
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -40,10 +39,10 @@ func Sandbox(ctx context.Context, pool *pgxpool.Pool) {
 
 	super.Add(worker)
 
-	err = dahua.DB.ScanQueueTaskClear(ctx, pool)
-	if err != nil {
-		panic(err)
-	}
+	// err = dahua.DB.ScanQueueTaskClear(ctx, pool)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	go scan(ctx, pool, worker, cam)
 
@@ -55,31 +54,44 @@ var tesMu *sync.Mutex = &sync.Mutex{}
 func scan(ctx context.Context, pool *pgxpool.Pool, worker dahua.Worker, cam models.DahuaCamera) {
 	worker.Queue(&dahua.TestJob{DB: pool})
 
+	err := dahua.DB.ScanCursorReset(ctx, pool, cam.ID)
+	if err != nil {
+		log.Err(err).Msg("")
+		return
+	}
+
 	scanCam, err := dahua.DB.ScanCursorGet(ctx, pool, cam.ID)
 	if err != nil {
 		log.Err(err).Msg("")
 		return
 	}
 
-	queueTask, err := dahua.NewScanTaskFull(scanCam)
+	// queueTask := dahua.NewScanTaskQuick(scanCam)
+
+	queueTask2, err := dahua.NewScanTaskFull(scanCam)
 	if err != nil {
 		log.Err(err).Msg("")
 		return
 	}
 
-	fmt.Println("3")
-	err = dahua.DB.ScanQueueTaskCreate(ctx, pool, queueTask)
+	// err = dahua.DB.ScanQueueTaskCreate(ctx, pool, queueTask)
+	// if err != nil {
+	// 	log.Err(err).Msg("")
+	// 	return
+	// }
+
+	err = dahua.DB.ScanQueueTaskCreate(ctx, pool, queueTask2)
 	if err != nil {
 		log.Err(err).Msg("")
 		return
 	}
 
-	err = dahua.DB.ScanQueueTaskGetAndLock(ctx, pool, scanCam.CameraID, func(ctx context.Context, queueTask models.DahuaScanQueueTask) error {
-		if !tesMu.TryLock() {
-			panic("THIS IS A FAILURE")
-		}
-		return dahua.ScanTaskQueueExecute(ctx, pool, worker, queueTask)
-	})
+	for {
+		err = dahua.DB.ScanQueueTaskGetAndLock(ctx, pool, scanCam.CameraID, func(ctx context.Context, queueTask models.DahuaScanQueueTask) error {
+			return dahua.ScanTaskQueueExecute(ctx, pool, worker, queueTask)
+		})
+		time.Sleep(5 * time.Second)
+	}
 
 	if err != nil {
 		log.Err(err).Msg("")

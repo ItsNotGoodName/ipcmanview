@@ -97,7 +97,7 @@ CREATE TABLE dahua.camera_files (
   UNIQUE (camera_id, file_path)
 );
 
---------- time seeds for creating unique times
+--------- camera file scanning
 
 CREATE TABLE dahua.scan_seeds (
   seed INTEGER NOT NULL UNIQUE,
@@ -106,13 +106,12 @@ CREATE TABLE dahua.scan_seeds (
 
 INSERT INTO dahua.scan_seeds (seed) VALUES (generate_series(1,999));
 
---------- camera file scanning
-
 CREATE TABLE dahua.scan_cursors (
   camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
-  quick_cursor TIMESTAMPTZ NOT NULL DEFAULT (CURRENT_TIMESTAMP - INTERVAL '8 hours'),  -- (scanned) <- quick_cursor -> (not scanned / volatile)
-  full_cursor TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,                          -- (not scanned) <- full_cursor -> (scanned)
+  quick_cursor TIMESTAMPTZ NOT NULL DEFAULT (CURRENT_TIMESTAMP - INTERVAL '8 hours'),              -- (scanned) <- quick_cursor -> (not scanned / volatile)
+  full_cursor TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP CHECK(full_cursor <= full_epoch_end), -- (not scanned) <- full_cursor -> (scanned)
   full_epoch TIMESTAMPTZ NOT NULL DEFAULT '2009-12-31 00:00:00',
+  full_epoch_end TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
   full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED
 );
 
@@ -123,7 +122,6 @@ CREATE FUNCTION dahua.fn_cameras_created() RETURNS TRIGGER AS $$
     INSERT INTO dahua.camera_details (camera_id) VALUES (NEW.id);
     INSERT INTO dahua.camera_softwares (camera_id) VALUES (NEW.id);
     INSERT INTO dahua.scan_cursors (camera_id) VALUES (NEW.id);
-    -- Assign time seed to camera, If none are available then this operation is a no-op.
     UPDATE dahua.scan_seeds SET camera_id = NEW.id 
       WHERE seed = (SELECT seed FROM dahua.scan_seeds WHERE camera_id = NEW.id OR camera_id IS NULL ORDER BY camera_id asc LIMIT 1);
     PERFORM pg_notify('dahua.cameras:created', cast(NEW.id AS TEXT));
@@ -141,14 +139,15 @@ EXECUTE PROCEDURE dahua.fn_cameras_created();
 CREATE TYPE dahua.scan_kind AS ENUM ('full', 'quick', 'manual');
 
 CREATE TABLE dahua.scan_queue_tasks (
-  camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
+  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  camera_id INTEGER NOT NULL REFERENCES dahua.cameras(id) ON DELETE CASCADE,
   kind dahua.scan_kind NOT NULL,
-  range tstzrange NOT NULL CHECK (range != 'empty')
+  range tstzrange NOT NULL DEFAULT 'empty'
 );
 
 CREATE TABLE dahua.scan_active_tasks (
+  queue_id INTEGER NOT NULL REFERENCES dahua.scan_queue_tasks(id) ON DELETE CASCADE,
   camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
-  queue_id INTEGER NOT NULL UNIQUE REFERENCES dahua.scan_queue_tasks(camera_id) ON DELETE CASCADE,
   kind dahua.scan_kind NOT NULL,
   range tstzrange NOT NULL CHECK (range != 'empty'),
   cursor TIMESTAMPTZ NOT NULL,
@@ -172,18 +171,6 @@ CREATE TABLE dahua.scan_complete_tasks (
   success BOOLEAN GENERATED ALWAYS AS (error = '') STORED,
   error TEXT NOT NULL DEFAULT ''
 );
-
--- CREATE TYPE dahua.job_slug AS ENUM (
---   'refresh', -- refresh information
---   'scan'     -- scan files
--- );
--- 
--- CREATE TABLE dahua.jobs (
---   id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
---   camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
---   slug dahua.job_slug NOT NULL,
---   data JSONB
--- );
 
 ---- create above / drop below ----
 

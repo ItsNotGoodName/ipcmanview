@@ -62,7 +62,7 @@ func (s *ScanPeriodIterator) Next() (ScanPeriod, bool) {
 		maybe_start := s.cursor.Add(-MaxScanPeriod)
 		if maybe_start.Before(s.start) {
 			cursor = s.start
-			start = s.cursor
+			start = s.start
 		} else {
 			cursor = maybe_start
 			start = maybe_start
@@ -85,6 +85,15 @@ func (s *ScanPeriodIterator) Cursor() time.Time {
 
 func ScanQuickCursor() time.Time {
 	return time.Now().Add(-8 * time.Hour)
+}
+
+func ScanQuickCursorFromCursor(cursor time.Time) time.Time {
+	quickCursor := ScanQuickCursor()
+	if quickCursor.Before(cursor) {
+		return quickCursor
+	}
+
+	return cursor
 }
 
 func ScanQuickCursorFromScanRange(scanRange models.DahuaScanRange) time.Time {

@@ -2,6 +2,7 @@ package dahua
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,79 +11,92 @@ import (
 	"github.com/ItsNotGoodName/ipcmango/pkg/qes"
 )
 
-func NewScanTaskFull(cam models.DahuaScanCursor) (models.DahuaScanQueueTask, error) {
-	if cam.FullComplete {
+func NewScanTaskFull(cursor models.DahuaScanCursor) (models.DahuaScanQueueTask, error) {
+	if cursor.FullComplete {
 		return models.DahuaScanQueueTask{}, fmt.Errorf("full scan complete")
 	}
 
 	return models.DahuaScanQueueTask{
-		CameraID: cam.CameraID,
+		CameraID: cursor.CameraID,
 		Range: models.DahuaScanRange{
-			Start: cam.FullEpoch,
-			End:   cam.FullCursor,
+			Start: cursor.FullEpoch,
+			End:   cursor.FullCursor,
 		},
 		Kind: models.DahuaScanKindFull,
 	}, nil
 }
 
-func NewScanTaskQuick(cam models.DahuaScanCursor) models.DahuaScanQueueTask {
+func NewScanTaskQuick(cursor models.DahuaScanCursor) models.DahuaScanQueueTask {
+	// Prevent start from being older than when the last full scan ends
+	start := cursor.QuickCursor
+	if start.Before(cursor.FullEpochEnd) { // && cursor.FullComplete {
+		start = ScanQuickCursorFromCursor(cursor.FullEpochEnd)
+	}
+
 	return models.DahuaScanQueueTask{
-		CameraID: cam.CameraID,
+		CameraID: cursor.CameraID,
 		Range: models.DahuaScanRange{
-			Start: cam.QuickCursor,
+			Start: start,
 			End:   time.Now(),
 		},
 		Kind: models.DahuaScanKindQuick,
 	}
 }
 
-func NewScanTaskManual(cam models.DahuaScanCursor, scanRange models.DahuaScanRange) models.DahuaScanQueueTask {
+func NewScanTaskManual(cursor models.DahuaScanCursor, scanRange models.DahuaScanRange) models.DahuaScanQueueTask {
 	return models.DahuaScanQueueTask{
-		CameraID: cam.CameraID,
+		CameraID: cursor.CameraID,
 		Range:    scanRange,
 		Kind:     models.DahuaScanKindManual,
 	}
 }
 
-// ScanTaskQueueExecute runs the queued scan task. This should not being called concurrently with the same camera.
+// ScanTaskQueueExecute runs the queued scan task.
 func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahua.GenRPC, queueTask models.DahuaScanQueueTask) error {
-	scanCursor, err := DB.ScanCursorGet(ctx, db, queueTask.CameraID)
-	if err != nil {
-		return err
-	}
-
 	activeTask, err := DB.ScanActiveTaskCreate(ctx, db, queueTask)
 	if err != nil {
 		return err
 	}
 
-	var errString string
-	if err = scanTaskActiveExecute(ctx, db, gen, scanCursor, activeTask); err != nil {
-		errString = err.Error()
-		// Update full cursor from active tasks' cursor
-		if queueTask.Kind == models.DahuaScanKindFull {
-			err := DB.ScanCursorUpdateFullCursorFromActiveScanTaskCursor(ctx, db, queueTask.CameraID)
-			if err != nil {
-				return err
-			}
+	scanErrString, err := func() (string, error) {
+		// WARNING: this assumes the scan cursor will not be modified by other functions
+		scanCursor, err := DB.ScanCursorGet(ctx, db, activeTask.CameraID)
+		if err != nil {
+			return err.Error(), err
 		}
-	} else {
-		// Update scan cursors on success
-		switch queueTask.Kind {
+
+		// Run the scan
+		scanErr := scanTaskActiveExecute(ctx, db, gen, scanCursor, activeTask)
+		if scanErr != nil {
+			// Sad path, scan encounterd some sort of error
+			if activeTask.Kind == models.DahuaScanKindFull {
+				err := DB.ScanCursorUpdateFullCursorFromActiveScanTaskCursor(ctx, db, activeTask.CameraID)
+				if err != nil {
+					return err.Error() + scanErr.Error(), err
+				}
+			}
+
+			return scanErr.Error(), nil
+		}
+
+		// Happy path, scan was successful
+		switch activeTask.Kind {
 		case models.DahuaScanKindFull:
-			err := DB.ScanCursorUpdateFullCursor(ctx, db, queueTask.CameraID, queueTask.Range.Start)
+			err := DB.ScanCursorUpdateFullCursor(ctx, db, activeTask.CameraID, activeTask.Range.Start)
 			if err != nil {
-				return err
+				return err.Error(), err
 			}
 		case models.DahuaScanKindQuick:
-			err := DB.ScanCursorUpdateQuickCursor(ctx, db, queueTask.CameraID, ScanQuickCursorFromScanRange(queueTask.Range))
+			err := DB.ScanCursorUpdateQuickCursor(ctx, db, activeTask.CameraID, ScanQuickCursorFromScanRange(activeTask.Range))
 			if err != nil {
-				return err
+				return err.Error(), err
 			}
 		}
-	}
 
-	return DB.ScanActiveTaskComplete(ctx, db, activeTask.CameraID, errString)
+		return "", nil
+	}()
+
+	return errors.Join(err, DB.ScanActiveTaskComplete(ctx, db, activeTask.CameraID, scanErrString))
 }
 
 func scanTaskActiveExecute(ctx context.Context, db qes.Querier, gen dahua.GenRPC, scanCursor models.DahuaScanCursor, activeTask models.DahuaScanActiveTask) error {

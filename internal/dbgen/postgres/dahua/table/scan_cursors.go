@@ -20,6 +20,7 @@ type scanCursorsTable struct {
 	CameraID     postgres.ColumnInteger
 	QuickCursor  postgres.ColumnTimestampz
 	FullCursor   postgres.ColumnTimestampz
+	FullEpochEnd postgres.ColumnTimestampz
 	FullEpoch    postgres.ColumnTimestampz
 	FullComplete postgres.ColumnBool
 
@@ -65,10 +66,11 @@ func newScanCursorsTableImpl(schemaName, tableName, alias string) scanCursorsTab
 		CameraIDColumn     = postgres.IntegerColumn("camera_id")
 		QuickCursorColumn  = postgres.TimestampzColumn("quick_cursor")
 		FullCursorColumn   = postgres.TimestampzColumn("full_cursor")
+		FullEpochEndColumn = postgres.TimestampzColumn("full_epoch_end")
 		FullEpochColumn    = postgres.TimestampzColumn("full_epoch")
 		FullCompleteColumn = postgres.BoolColumn("full_complete")
-		allColumns         = postgres.ColumnList{CameraIDColumn, QuickCursorColumn, FullCursorColumn, FullEpochColumn, FullCompleteColumn}
-		mutableColumns     = postgres.ColumnList{CameraIDColumn, QuickCursorColumn, FullCursorColumn, FullEpochColumn}
+		allColumns         = postgres.ColumnList{CameraIDColumn, QuickCursorColumn, FullCursorColumn, FullEpochEndColumn, FullEpochColumn, FullCompleteColumn}
+		mutableColumns     = postgres.ColumnList{CameraIDColumn, QuickCursorColumn, FullCursorColumn, FullEpochEndColumn, FullEpochColumn}
 	)
 
 	return scanCursorsTable{
@@ -78,6 +80,7 @@ func newScanCursorsTableImpl(schemaName, tableName, alias string) scanCursorsTab
 		CameraID:     CameraIDColumn,
 		QuickCursor:  QuickCursorColumn,
 		FullCursor:   FullCursorColumn,
+		FullEpochEnd: FullEpochEndColumn,
 		FullEpoch:    FullEpochColumn,
 		FullComplete: FullCompleteColumn,
 

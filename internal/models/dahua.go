@@ -53,6 +53,7 @@ type DahuaScanCursor struct {
 	FullComplete bool
 	FullCursor   time.Time
 	FullEpoch    time.Time
+	FullEpochEnd time.Time
 	QuickCursor  time.Time
 }
 
@@ -95,6 +96,7 @@ var (
 )
 
 type DahuaScanQueueTask struct {
+	ID       int64
 	CameraID int64
 	Kind     DahuaScanKind
 	Range    DahuaScanRange

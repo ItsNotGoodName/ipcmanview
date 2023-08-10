@@ -12,8 +12,8 @@ import (
 )
 
 type ScanActiveTasks struct {
-	CameraID  int32
 	QueueID   int32
+	CameraID  int32
 	Kind      ScanKind
 	Range     string
 	Cursor    time.Time
