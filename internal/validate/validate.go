@@ -1,27 +1,27 @@
-package core
+package validate
 
 import "github.com/go-playground/validator/v10"
 
 // use a single instance of Validate, it caches struct info
-var validate *validator.Validate
+var Validate *validator.Validate
 
 func init() {
-	validate = validator.New()
-	validate.RegisterValidation("address", validateAddress)
+	Validate = validator.New()
+	Validate.RegisterValidation("address", validateAddress)
 }
 
 func validateAddress(fl validator.FieldLevel) bool {
-	err := validate.Var(fl.Field().String(), "hostname")
+	err := Validate.Var(fl.Field().String(), "hostname")
 	if err == nil {
 		return true
 	}
 
-	err = validate.Var(fl.Field().String(), "hostname_port")
+	err = Validate.Var(fl.Field().String(), "hostname_port")
 	if err == nil {
 		return true
 	}
 
-	err = validate.Var(fl.Field().String(), "ip")
+	err = Validate.Var(fl.Field().String(), "ip")
 	if err == nil {
 		return true
 	}

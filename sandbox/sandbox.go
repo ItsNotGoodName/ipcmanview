@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -43,7 +42,7 @@ func Sandbox(ctx context.Context, pool *pgxpool.Pool) {
 		EventHook: sutureext.EventHook(),
 	})
 
-	dahuaSuper := dahua.NewSupervisor(pool, &event.Bus{})
+	dahuaSuper := dahua.NewSupervisor(pool)
 	super.Add(dahuaSuper)
 	dahuaScanSuper := dahua.NewScanSupervisor(pool, dahuaSuper, 5)
 	super.Add(dahuaScanSuper)

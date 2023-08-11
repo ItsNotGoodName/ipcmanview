@@ -5,7 +5,6 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 	"github.com/thejerf/suture/v4"
@@ -24,7 +23,7 @@ type SupervisorWorker struct {
 	token  suture.ServiceToken
 }
 
-func NewSupervisor(db qes.Querier, bus *event.Bus) *Supervisor {
+func NewSupervisor(db qes.Querier) *Supervisor {
 	return &Supervisor{
 		db:         db,
 		Supervisor: suture.NewSimple("dahua.Supervisor"),

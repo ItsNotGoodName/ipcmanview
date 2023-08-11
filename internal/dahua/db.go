@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dbgen/postgres/dahua/model"
 	dahua "github.com/ItsNotGoodName/ipcmanview/internal/dbgen/postgres/dahua/table"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -32,11 +31,20 @@ var dbCameraProjection ProjectionList = []Projection{
 	dahua.Cameras.CreatedAt.AS("created_at"),
 }
 
-// TODO: validate here, use request instead of the model directly
+// CameraCreate [final]
 func (dbT) CameraCreate(ctx context.Context, db qes.Querier, r models.DahuaCamera) (models.DahuaCamera, error) {
+	if err := validateCamera(r); err != nil {
+		return models.DahuaCamera{}, err
+	}
+
 	var camera models.DahuaCamera
 	err := qes.ScanOne(ctx, db, &camera, dahua.Cameras.
-		INSERT(dahua.Cameras.Address, dahua.Cameras.Username, dahua.Cameras.Password, dahua.Cameras.Location).
+		INSERT(
+			dahua.Cameras.Address,
+			dahua.Cameras.Username,
+			dahua.Cameras.Password,
+			dahua.Cameras.Location,
+		).
 		MODEL(struct {
 			model.Cameras
 			Location models.Location
@@ -48,43 +56,41 @@ func (dbT) CameraCreate(ctx context.Context, db qes.Querier, r models.DahuaCamer
 			},
 			Location: r.Location,
 		}).
-		RETURNING(dbCameraProjection),
-	)
+		RETURNING(dbCameraProjection))
 	return camera, err
 }
 
-// TODO: make this just update the complete camera instead of patch and validate here
-func (dbT) CameraUpdate(ctx context.Context, db qes.Querier, r *core.DahuaCameraUpdate) (core.DahuaCamera, error) {
-	value, err := r.Value()
-	if err != nil {
-		return value, err
+// CameraUpdate [final]
+func (dbT) CameraUpdate(ctx context.Context, db qes.Querier, r models.DahuaCamera) (models.DahuaCamera, error) {
+	if err := validateCamera(r); err != nil {
+		return models.DahuaCamera{}, err
 	}
 
-	var cols ColumnList
-	if r.Address {
-		cols = append(cols, dahua.Cameras.Address)
-	}
-	if r.Username {
-		cols = append(cols, dahua.Cameras.Username)
-	}
-	if r.Password {
-		cols = append(cols, dahua.Cameras.Password)
-	}
-
-	var camera core.DahuaCamera
-	err = qes.ScanOne(ctx, db, &camera, dahua.Cameras.
-		UPDATE(cols).
-		MODEL(model.Cameras{
-			Address:  value.Address,
-			Username: value.Username,
-			Password: value.Password,
+	var camera models.DahuaCamera
+	err := qes.ScanOne(ctx, db, &camera, dahua.Cameras.
+		UPDATE(
+			dahua.Cameras.Address,
+			dahua.Cameras.Username,
+			dahua.Cameras.Password,
+			dahua.Cameras.Location,
+		).
+		MODEL(struct {
+			model.Cameras
+			Location models.Location
+		}{
+			Cameras: model.Cameras{
+				Address:  r.Address,
+				Username: r.Username,
+				Password: r.Password,
+			},
+			Location: r.Location,
 		}).
-		WHERE(dahua.Cameras.ID.EQ(Int64(value.ID))).
-		RETURNING(dbCameraProjection),
-	)
+		WHERE(dahua.Cameras.ID.EQ(Int64(r.ID))).
+		RETURNING(dbCameraProjection))
 	return camera, err
 }
 
+// CameraExists [final]
 func (dbT) CameraExists(ctx context.Context, db qes.Querier, id int64) error {
 	_, err := qes.ExecOne(ctx, db, dahua.Cameras.SELECT(dahua.Cameras.ID).WHERE(dahua.Cameras.ID.EQ(Int(id))))
 	return err
@@ -139,7 +145,6 @@ func (dbT) CameraDetailUpdate(ctx context.Context, db qes.Querier, id int64, r m
 			Vendor:          r.Vendor,
 		}).
 		WHERE(dahua.CameraDetails.CameraID.EQ(Int(id))))
-
 	return err
 }
 
@@ -161,7 +166,6 @@ func (dbT) CameraSoftwaresUpdate(ctx context.Context, db qes.Querier, id int64, 
 			WebVersion:              r.WebVersion,
 		}).
 		WHERE(dahua.CameraSoftwares.CameraID.EQ(Int(id))))
-
 	return err
 }
 
@@ -391,6 +395,8 @@ func (dbT) ScanQueueTaskCreate(ctx context.Context, db qes.Querier, r models.Dah
 	})
 }
 
+// ScanQueueTaskNext pops a queued task off the queue and locks the scan cursor.
+// WARNING: fn can only access scan tables or else it will deadlock when the camera gets deleted.
 func (dbT) ScanQueueTaskNext(ctx context.Context, db qes.Querier, fn func(ctx context.Context, scanCursorLock ScanCursorLock, queueTask models.DahuaScanQueueTask) error) (bool, error) {
 	var ok bool
 	return ok, pgx.BeginFunc(ctx, db, func(tx pgx.Tx) error {
@@ -434,12 +440,14 @@ func (dbT) ScanQueueTaskNext(ctx context.Context, db qes.Querier, fn func(ctx co
 	})
 }
 
-// func (dbT) ScanActiveQueueClear(ctx context.Context, db qes.Querier) error {
-// 	_, err := qes.Exec(ctx, db, dahua.ScanActiveTasks.
-// 		DELETE().
-// 		WHERE(dahua.ScanActiveTasks.CameraID.IN(dahua.ScanCursors.SELECT(dahua.ScanCursors.CameraID).FOR(UPDATE().SKIP_LOCKED()))))
-// 	return err
-// }
+// ScanActiveQueueClear clears orphan active scans.
+func (dbT) ScanActiveQueueClear(ctx context.Context, db qes.Querier) error {
+	_, err := qes.Exec(ctx, db, dahua.ScanActiveTasks.
+		DELETE().
+		WHERE(dahua.ScanActiveTasks.CameraID.IN(
+			dahua.ScanCursors.SELECT(dahua.ScanCursors.CameraID).FOR(UPDATE().SKIP_LOCKED()))))
+	return err
+}
 
 func (dbT) ScanActiveTaskCreate(ctx context.Context, db qes.Querier, r models.DahuaScanQueueTask) (models.DahuaScanActiveTask, error) {
 	var res models.DahuaScanActiveTask

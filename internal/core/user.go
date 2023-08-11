@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,7 +33,7 @@ func NewUser(r UserCreate) (User, error) {
 		return User{}, fmt.Errorf("passwords do not match")
 	}
 
-	if err := validate.Struct(&r); err != nil {
+	if err := validate.Validate.Struct(&r); err != nil {
 		return User{}, err
 	}
 

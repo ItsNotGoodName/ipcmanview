@@ -25,10 +25,6 @@ type Worker struct {
 	doneC    <-chan struct{}
 }
 
-func (w *Worker) String() string {
-	return fmt.Sprintf("dahua.Worker@id-%d", w.CameraID)
-}
-
 func NewWorker(db qes.Querier, cameraID int64, doneC <-chan struct{}) Worker {
 	return Worker{
 		CameraID: cameraID,
@@ -37,6 +33,10 @@ func NewWorker(db qes.Querier, cameraID int64, doneC <-chan struct{}) Worker {
 		restartC: make(chan struct{}),
 		doneC:    doneC,
 	}
+}
+
+func (w *Worker) String() string {
+	return fmt.Sprintf("dahua.Worker@id-%d", w.CameraID)
 }
 
 func (w Worker) Serve(ctx context.Context) error {
