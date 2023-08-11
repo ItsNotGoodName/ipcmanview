@@ -11,6 +11,25 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 )
 
+func ScanKindQuota(kind models.DahuaScanKind, count int64) error {
+	switch kind {
+	case models.DahuaScanKindFull:
+		if count > 0 {
+			return fmt.Errorf("full scan already queued")
+		}
+	case models.DahuaScanKindQuick:
+		if count > 1 {
+			return fmt.Errorf("too many quick scans: %d", count)
+		}
+	case models.DahuaScanKindManual:
+		if count > 1 {
+			return fmt.Errorf("too many manual scans: %d", count)
+		}
+	}
+
+	return nil
+}
+
 func NewScanTaskFull(cursor models.DahuaScanCursor) (models.DahuaScanQueueTask, error) {
 	if cursor.FullComplete {
 		return models.DahuaScanQueueTask{}, fmt.Errorf("full scan complete")

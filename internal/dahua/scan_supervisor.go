@@ -29,6 +29,7 @@ func NewScanSupervisor(db qes.Querier, store Store, scanners int) *ScanSuperviso
 	}
 }
 
+// Scan signals to a worker to start scan if they are not busy.
 func (s *ScanSupervisor) Scan() {
 	for i := range s.workers {
 		if s.workers[i].Scan() {

@@ -70,24 +70,21 @@ func scan(ctx context.Context, pool *pgxpool.Pool, cam models.DahuaCamera, super
 		return
 	}
 
-	// queueTask := dahua.NewScanTaskQuick(scanCam)
+	queueTask := dahua.NewScanTaskQuick(scanCam)
 
 	queueTask2, err := dahua.NewScanTaskFull(scanCam)
 	if err != nil {
 		log.Err(err).Msg("")
-		return
 	}
 
-	// err = dahua.DB.ScanQueueTaskCreate(ctx, pool, queueTask)
-	// if err != nil {
-	// 	log.Err(err).Msg("")
-	// 	return
-	// }
+	err = dahua.DB.ScanQueueTaskCreate(ctx, pool, queueTask)
+	if err != nil {
+		log.Err(err).Msg("")
+	}
 
 	err = dahua.DB.ScanQueueTaskCreate(ctx, pool, queueTask2)
 	if err != nil {
 		log.Err(err).Msg("")
-		return
 	}
 
 	super.Scan()

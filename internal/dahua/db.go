@@ -355,23 +355,39 @@ func (s ScanCursorLock) UpdateQuickCursor(ctx context.Context, quickCursor time.
 // ----------
 
 func (dbT) ScanQueueTaskCreate(ctx context.Context, db qes.Querier, r models.DahuaScanQueueTask) error {
-	_, err := qes.Exec(ctx, db, dahua.ScanQueueTasks.
-		INSERT(
-			dahua.ScanQueueTasks.CameraID,
-			dahua.ScanQueueTasks.Kind,
-			dahua.ScanQueueTasks.Range,
-		).
-		MODEL(struct {
-			model.ScanQueueTasks
-			Range models.DahuaScanRange
-		}{
-			ScanQueueTasks: model.ScanQueueTasks{
-				CameraID: int32(r.CameraID),
-				Kind:     r.Kind,
-			},
-			Range: r.Range,
-		}))
-	return err
+	return pgx.BeginFunc(ctx, db, func(tx pgx.Tx) error {
+		res, err := qes.Exec(ctx, tx, dahua.ScanQueueTasks.
+			SELECT(dahua.ScanQueueTasks.ID).
+			WHERE(AND(
+				dahua.ScanQueueTasks.CameraID.EQ(Int(r.CameraID)),
+				dahua.ScanQueueTasks.Kind.EQ(NewEnumValue(r.Kind.String()))),
+			).
+			FOR(UPDATE()))
+		if err != nil {
+			return err
+		}
+		if err := ScanKindQuota(r.Kind, res.RowsAffected()); err != nil {
+			return err
+		}
+
+		_, err = qes.Exec(ctx, tx, dahua.ScanQueueTasks.
+			INSERT(
+				dahua.ScanQueueTasks.CameraID,
+				dahua.ScanQueueTasks.Kind,
+				dahua.ScanQueueTasks.Range,
+			).
+			MODEL(struct {
+				model.ScanQueueTasks
+				Range models.DahuaScanRange
+			}{
+				ScanQueueTasks: model.ScanQueueTasks{
+					CameraID: int32(r.CameraID),
+					Kind:     r.Kind,
+				},
+				Range: r.Range,
+			}))
+		return err
+	})
 }
 
 func (dbT) ScanQueueTaskNext(ctx context.Context, db qes.Querier, fn func(ctx context.Context, scanCursorLock ScanCursorLock, queueTask models.DahuaScanQueueTask) error) (bool, error) {

@@ -15,10 +15,10 @@ type Supervisor struct {
 	*suture.Supervisor
 	db       qes.Querier
 	mu       sync.Mutex
-	registry []SupervisorRegistry
+	registry []SupervisorWorker
 }
 
-type SupervisorRegistry struct {
+type SupervisorWorker struct {
 	doneC  chan<- struct{}
 	worker Worker
 	token  suture.ServiceToken
@@ -57,7 +57,7 @@ func (s *Supervisor) GetWorker(ctx context.Context, cameraID int64) (Worker, err
 	worker := NewWorker(s.db, cameraID, doneC)
 	workerToken := s.Add(newSupervisorWorker(s, worker))
 
-	s.registry = append(s.registry, SupervisorRegistry{
+	s.registry = append(s.registry, SupervisorWorker{
 		doneC:  doneC,
 		worker: worker,
 		token:  workerToken,
@@ -80,7 +80,7 @@ func (s *Supervisor) DeleteWorker(cameraID int64) {
 
 // deleteWorker deletes worker by cameraID.
 func (s *Supervisor) deleteWorker(cameraID int64) {
-	registry := []SupervisorRegistry{}
+	registry := []SupervisorWorker{}
 	for i := range s.registry {
 		if s.registry[i].worker.CameraID != cameraID {
 			registry = append(registry, s.registry[i])
