@@ -94,7 +94,7 @@ CREATE TABLE dahua.scan_cursors (
   full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED
 );
 
-CREATE TABLE dahua.camera_files (
+CREATE TABLE dahua.scan_camera_files (
   id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   camera_id INTEGER NOT NULL REFERENCES dahua.scan_cursors(camera_id) ON DELETE CASCADE,
   file_path TEXT NOT NULL,

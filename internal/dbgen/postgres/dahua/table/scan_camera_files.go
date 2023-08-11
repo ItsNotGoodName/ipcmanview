@@ -11,9 +11,9 @@ import (
 	"github.com/go-jet/jet/v2/postgres"
 )
 
-var CameraFiles = newCameraFilesTable("dahua", "camera_files", "")
+var ScanCameraFiles = newScanCameraFilesTable("dahua", "scan_camera_files", "")
 
-type cameraFilesTable struct {
+type scanCameraFilesTable struct {
 	postgres.Table
 
 	// Columns
@@ -32,40 +32,40 @@ type cameraFilesTable struct {
 	MutableColumns postgres.ColumnList
 }
 
-type CameraFilesTable struct {
-	cameraFilesTable
+type ScanCameraFilesTable struct {
+	scanCameraFilesTable
 
-	EXCLUDED cameraFilesTable
+	EXCLUDED scanCameraFilesTable
 }
 
-// AS creates new CameraFilesTable with assigned alias
-func (a CameraFilesTable) AS(alias string) *CameraFilesTable {
-	return newCameraFilesTable(a.SchemaName(), a.TableName(), alias)
+// AS creates new ScanCameraFilesTable with assigned alias
+func (a ScanCameraFilesTable) AS(alias string) *ScanCameraFilesTable {
+	return newScanCameraFilesTable(a.SchemaName(), a.TableName(), alias)
 }
 
-// Schema creates new CameraFilesTable with assigned schema name
-func (a CameraFilesTable) FromSchema(schemaName string) *CameraFilesTable {
-	return newCameraFilesTable(schemaName, a.TableName(), a.Alias())
+// Schema creates new ScanCameraFilesTable with assigned schema name
+func (a ScanCameraFilesTable) FromSchema(schemaName string) *ScanCameraFilesTable {
+	return newScanCameraFilesTable(schemaName, a.TableName(), a.Alias())
 }
 
-// WithPrefix creates new CameraFilesTable with assigned table prefix
-func (a CameraFilesTable) WithPrefix(prefix string) *CameraFilesTable {
-	return newCameraFilesTable(a.SchemaName(), prefix+a.TableName(), a.TableName())
+// WithPrefix creates new ScanCameraFilesTable with assigned table prefix
+func (a ScanCameraFilesTable) WithPrefix(prefix string) *ScanCameraFilesTable {
+	return newScanCameraFilesTable(a.SchemaName(), prefix+a.TableName(), a.TableName())
 }
 
-// WithSuffix creates new CameraFilesTable with assigned table suffix
-func (a CameraFilesTable) WithSuffix(suffix string) *CameraFilesTable {
-	return newCameraFilesTable(a.SchemaName(), a.TableName()+suffix, a.TableName())
+// WithSuffix creates new ScanCameraFilesTable with assigned table suffix
+func (a ScanCameraFilesTable) WithSuffix(suffix string) *ScanCameraFilesTable {
+	return newScanCameraFilesTable(a.SchemaName(), a.TableName()+suffix, a.TableName())
 }
 
-func newCameraFilesTable(schemaName, tableName, alias string) *CameraFilesTable {
-	return &CameraFilesTable{
-		cameraFilesTable: newCameraFilesTableImpl(schemaName, tableName, alias),
-		EXCLUDED:         newCameraFilesTableImpl("", "excluded", ""),
+func newScanCameraFilesTable(schemaName, tableName, alias string) *ScanCameraFilesTable {
+	return &ScanCameraFilesTable{
+		scanCameraFilesTable: newScanCameraFilesTableImpl(schemaName, tableName, alias),
+		EXCLUDED:             newScanCameraFilesTableImpl("", "excluded", ""),
 	}
 }
 
-func newCameraFilesTableImpl(schemaName, tableName, alias string) cameraFilesTable {
+func newScanCameraFilesTableImpl(schemaName, tableName, alias string) scanCameraFilesTable {
 	var (
 		IDColumn        = postgres.IntegerColumn("id")
 		CameraIDColumn  = postgres.IntegerColumn("camera_id")
@@ -81,7 +81,7 @@ func newCameraFilesTableImpl(schemaName, tableName, alias string) cameraFilesTab
 		mutableColumns  = postgres.ColumnList{CameraIDColumn, FilePathColumn, KindColumn, SizeColumn, StartTimeColumn, EndTimeColumn, ScannedAtColumn, EventsColumn}
 	)
 
-	return cameraFilesTable{
+	return scanCameraFilesTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns

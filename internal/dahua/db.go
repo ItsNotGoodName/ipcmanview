@@ -214,16 +214,16 @@ func (dbT) ScanCameraFilesUpsert(ctx context.Context, db qes.Querier, scannedAt 
 	}
 
 	// TODO: use MERGE instead of INSERT to prevent exhausting IDs
-	stmt := dahua.CameraFiles.
+	stmt := dahua.ScanCameraFiles.
 		INSERT(
-			dahua.CameraFiles.CameraID,
-			dahua.CameraFiles.FilePath,
-			dahua.CameraFiles.Kind,
-			dahua.CameraFiles.Size,
-			dahua.CameraFiles.StartTime,
-			dahua.CameraFiles.EndTime,
-			dahua.CameraFiles.Events,
-			dahua.CameraFiles.ScannedAt,
+			dahua.ScanCameraFiles.CameraID,
+			dahua.ScanCameraFiles.FilePath,
+			dahua.ScanCameraFiles.Kind,
+			dahua.ScanCameraFiles.Size,
+			dahua.ScanCameraFiles.StartTime,
+			dahua.ScanCameraFiles.EndTime,
+			dahua.ScanCameraFiles.Events,
+			dahua.ScanCameraFiles.ScannedAt,
 		)
 
 	for _, file := range files {
@@ -239,7 +239,7 @@ func (dbT) ScanCameraFilesUpsert(ctx context.Context, db qes.Querier, scannedAt 
 		}
 
 		stmt = stmt.MODEL(
-			model.CameraFiles{
+			model.ScanCameraFiles{
 				CameraID:  int32(cam.CameraID),
 				FilePath:  file.FilePath,
 				Kind:      file.Type,
@@ -254,16 +254,16 @@ func (dbT) ScanCameraFilesUpsert(ctx context.Context, db qes.Querier, scannedAt 
 
 	stmt = stmt.
 		// FIXME: dahua.camera_files.start_time unique conflict should be handled somehow
-		ON_CONFLICT(dahua.CameraFiles.CameraID, dahua.CameraFiles.FilePath).
+		ON_CONFLICT(dahua.ScanCameraFiles.CameraID, dahua.ScanCameraFiles.FilePath).
 		DO_UPDATE(SET(
-			dahua.CameraFiles.CameraID.SET(dahua.CameraFiles.EXCLUDED.CameraID),
-			dahua.CameraFiles.FilePath.SET(dahua.CameraFiles.EXCLUDED.FilePath),
-			dahua.CameraFiles.Kind.SET(dahua.CameraFiles.EXCLUDED.Kind),
-			dahua.CameraFiles.Size.SET(dahua.CameraFiles.EXCLUDED.Size),
-			dahua.CameraFiles.StartTime.SET(dahua.CameraFiles.EXCLUDED.StartTime),
-			dahua.CameraFiles.EndTime.SET(dahua.CameraFiles.EXCLUDED.EndTime),
-			dahua.CameraFiles.ScannedAt.SET(dahua.CameraFiles.EXCLUDED.ScannedAt),
-			dahua.CameraFiles.Events.SET(dahua.CameraFiles.EXCLUDED.Events)))
+			dahua.ScanCameraFiles.CameraID.SET(dahua.ScanCameraFiles.EXCLUDED.CameraID),
+			dahua.ScanCameraFiles.FilePath.SET(dahua.ScanCameraFiles.EXCLUDED.FilePath),
+			dahua.ScanCameraFiles.Kind.SET(dahua.ScanCameraFiles.EXCLUDED.Kind),
+			dahua.ScanCameraFiles.Size.SET(dahua.ScanCameraFiles.EXCLUDED.Size),
+			dahua.ScanCameraFiles.StartTime.SET(dahua.ScanCameraFiles.EXCLUDED.StartTime),
+			dahua.ScanCameraFiles.EndTime.SET(dahua.ScanCameraFiles.EXCLUDED.EndTime),
+			dahua.ScanCameraFiles.ScannedAt.SET(dahua.ScanCameraFiles.EXCLUDED.ScannedAt),
+			dahua.ScanCameraFiles.Events.SET(dahua.ScanCameraFiles.EXCLUDED.Events)))
 
 	res, err := qes.Exec(ctx, db, stmt)
 	return res.RowsAffected(), err
@@ -271,12 +271,12 @@ func (dbT) ScanCameraFilesUpsert(ctx context.Context, db qes.Querier, scannedAt 
 
 // ScanCameraFilesDelete [final]
 func (dbT) ScanCameraFilesDelete(ctx context.Context, db qes.Querier, scannedAt time.Time, cameraID int64, scanPeriod ScanPeriod) (int64, error) {
-	res, err := qes.Exec(ctx, db, dahua.CameraFiles.
+	res, err := qes.Exec(ctx, db, dahua.ScanCameraFiles.
 		DELETE().
-		WHERE(dahua.CameraFiles.ScannedAt.LT(TimestampzT(scannedAt)).
-			AND(dahua.CameraFiles.CameraID.EQ(Int64(cameraID))).
-			AND(dahua.CameraFiles.StartTime.GT_EQ(TimestampzT(scanPeriod.Start))).
-			AND(dahua.CameraFiles.StartTime.LT(TimestampzT(scanPeriod.End)))))
+		WHERE(dahua.ScanCameraFiles.ScannedAt.LT(TimestampzT(scannedAt)).
+			AND(dahua.ScanCameraFiles.CameraID.EQ(Int64(cameraID))).
+			AND(dahua.ScanCameraFiles.StartTime.GT_EQ(TimestampzT(scanPeriod.Start))).
+			AND(dahua.ScanCameraFiles.StartTime.LT(TimestampzT(scanPeriod.End)))))
 	return res.RowsAffected(), err
 }
 

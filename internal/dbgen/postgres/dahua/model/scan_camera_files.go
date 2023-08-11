@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type CameraFiles struct {
+type ScanCameraFiles struct {
 	ID        int32 `sql:"primary_key"`
 	CameraID  int32
 	FilePath  string
