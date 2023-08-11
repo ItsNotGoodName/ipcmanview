@@ -100,6 +100,17 @@ func (s Sandbox) Serve(ctx context.Context) error {
 
 		dahuaScanSuper.Scan()
 		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
+		dahuaScanSuper.Scan()
 	}()
 
 	// ----------------------------------------------------------------------------

@@ -49,8 +49,7 @@ require (
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
-	github.com/thejerf/suture v4.0.2+incompatible // indirect
-	github.com/thejerf/suture/v4 v4.0.2 // indirect
+	github.com/thejerf/suture/v4 v4.0.2
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/text v0.10.0 // indirect

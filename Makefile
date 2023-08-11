@@ -4,13 +4,19 @@ gen:
 	webrpc-gen -schema=./server/api.ridl -target=golang -pkg=service -server -out=./server/service/proto.gen.go
 	webrpc-gen -schema=./server/api.ridl -target=typescript -client -out=./ui/src/core/client.gen.ts
 
-preview: build-ui run
+cli:
+	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run ./cmd/console
 
-run:
-	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run .
+preview: build-ui run
 
 build-ui:
 	cd ui && pnpm run build && cd ..
+
+run:
+	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run ./cmd/server
+
+migrate:
+	cd migrations && tern migrate
 
 dev:
 	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" air
