@@ -114,6 +114,14 @@ func (dbT) CameraGetByAddress(ctx context.Context, db qes.Querier, address strin
 	return camera, err
 }
 
+// CameraList [final]
+func (dbT) CameraList(ctx context.Context, db qes.Querier) ([]models.DahuaCamera, error) {
+	var camera []models.DahuaCamera
+	err := qes.ScanMany(ctx, db, &camera, dahua.Cameras.
+		SELECT(dbCameraProjection))
+	return camera, err
+}
+
 // CameraDelete [final]
 func (dbT) CameraDelete(ctx context.Context, db qes.Querier, id int64) error {
 	_, err := qes.ExecOne(ctx, db, dahua.Cameras.

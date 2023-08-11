@@ -52,7 +52,7 @@ func newScanSupervisorWorker(db qes.Querier, store Store) scanSupervisorWorker {
 	return scanSupervisorWorker{
 		db:    db,
 		store: store,
-		scanC: make(chan struct{}, 1),
+		scanC: make(chan struct{}),
 	}
 }
 
@@ -85,7 +85,7 @@ func (s scanSupervisorWorker) Serve(ctx context.Context) error {
 func (s scanSupervisorWorker) Scan() bool {
 	select {
 	case s.scanC <- struct{}{}:
-		return true
+		return len(s.scanC) == 0
 	default:
 		return false
 	}

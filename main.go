@@ -8,15 +8,16 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/db"
 	"github.com/ItsNotGoodName/ipcmanview/migrations"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/interrupt"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/sandbox"
+	"github.com/ItsNotGoodName/ipcmanview/server"
+	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/thejerf/suture/v4"
 )
 
 func main() {
-	// sandbox.Dahua(interrupt.Context())
-	// return
-
 	ctx, shutdown := context.WithCancel(interrupt.Context())
 	defer shutdown()
 
@@ -32,80 +33,23 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
 
-	sandbox.Sandbox(ctx, pool)
-
-	return
-
-	// // Event Bus
-	// bus := event.NewBus()
+	// sandbox.Sandbox(ctx, pool)
 	//
-	// // Dahua
-	// store := dahua.NewStore()
-	// dahua.StoreConnectBus(bus, store, pool)
-	//
-	// // sandbox.Jet(ctx, pool)
-	// <-background.Run(ctx,
-	// 	sandbox.Chi(ctx, shutdown, pool),
-	// 	event.Background(bus, pool),
-	// 	// background.NewFunction(background.BlockingForever, func(ctx context.Context) {
-	// 	// 	pool.AcquireFunc(ctx, func(c *pgxpool.Conn) error {
-	// 	// 		username, _ := os.LookupEnv("IPC_USERNAME")
-	// 	// 		password, _ := os.LookupEnv("IPC_PASSWORD")
-	// 	// 		ip, _ := os.LookupEnv("IPC_IP")
-	// 	//
-	// 	// 		dbCtx := db.Conn{Context: ctx, Conn: c.Conn()}
-	// 	// 		var cam core.DahuaCamera
-	// 	// 		{
-	// 	// 			req, err := core.NewDahuaCamera(core.DahuaCameraCreate{
-	// 	// 				Address:  ip,
-	// 	// 				Username: username,
-	// 	// 				Password: password,
-	// 	// 			})
-	// 	// 			if err != nil {
-	// 	// 				if errors.Is(err, context.Canceled) {
-	// 	// 					return nil
-	// 	// 				}
-	// 	// 				panic(err)
-	// 	// 			}
-	// 	//
-	// 	// 			ctx := dahua.DB(dbCtx)
-	// 	//
-	// 	// 			cam, err = ctx.CameraCreate(req)
-	// 	// 			if err != nil {
-	// 	// 				cam, err = ctx.CameraGetByAddress(req.Address)
-	// 	// 				if err != nil {
-	// 	// 					return err
-	// 	// 				}
-	// 	// 			}
-	// 	// 		}
-	// 	//
-	// 	// 		for {
-	// 	// 			log.Debug().Msg("Sleeping...")
-	// 	// 			time.Sleep(1 * time.Second)
-	// 	//
-	// 	// 			actor, err := store.GetOrCreate(dahua.DB(dbCtx), cam.ID)
-	// 	// 			if err != nil {
-	// 	// 				if errors.Is(err, context.Canceled) {
-	// 	// 					return nil
-	// 	// 				}
-	// 	// 				log.Err(err).Msg("Failed to get actor")
-	// 	// 				continue
-	// 	// 			}
-	// 	//
-	// 	// 			sn, err := magicbox.GetSerialNo(ctx, actor)
-	// 	// 			if err != nil {
-	// 	// 				if errors.Is(err, context.Canceled) {
-	// 	// 					return nil
-	// 	// 				}
-	// 	// 				log.Err(err).Msg("Failed to get sn")
-	// 	// 				continue
-	// 	// 			}
-	// 	// 			fmt.Println(sn)
-	// 	// 		}
-	// 	// 	})
-	// 	// }),
-	// )
-	// sandbox.User(ctx, pool)
+	// return
+
+	// Supervisor
+	super := suture.New("root", suture.Spec{
+		EventHook: sutureext.EventHook(),
+	})
+
+	// HTTP/webrpc
+	http := server.NewHTTP(chi.NewRouter(), ":8080", shutdown)
+	super.Add(http)
+
+	// DEBUG
+	super.Add(sandbox.NewSandbox(pool))
+
+	super.Serve(ctx)
 }
 
 var (
