@@ -83,9 +83,20 @@ CREATE TABLE IF NOT EXISTS dahua.camera_licenses (
   username TEXT DEFAULT '' NOT NULL
 );
 
+--------- camera file scanning
+
+CREATE TABLE dahua.scan_cursors (
+  camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
+  quick_cursor TIMESTAMPTZ NOT NULL DEFAULT (CURRENT_TIMESTAMP - INTERVAL '8 hours'),              -- (scanned) <- quick_cursor -> (not scanned / volatile)
+  full_cursor TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP CHECK(full_cursor <= full_epoch_end), -- (not scanned) <- full_cursor -> (scanned)
+  full_epoch TIMESTAMPTZ NOT NULL DEFAULT '2009-12-31 00:00:00',
+  full_epoch_end TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED
+);
+
 CREATE TABLE dahua.camera_files (
   id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  camera_id INTEGER NOT NULL REFERENCES dahua.cameras(id) ON DELETE CASCADE,
+  camera_id INTEGER NOT NULL REFERENCES dahua.scan_cursors(camera_id) ON DELETE CASCADE,
   file_path TEXT NOT NULL,
   kind TEXT NOT NULL,
   size INTEGER NOT NULL,
@@ -97,23 +108,13 @@ CREATE TABLE dahua.camera_files (
   UNIQUE (camera_id, file_path)
 );
 
---------- camera file scanning
 
 CREATE TABLE dahua.scan_seeds (
   seed INTEGER NOT NULL UNIQUE,
-  camera_id INTEGER UNIQUE REFERENCES dahua.cameras(id) ON DELETE SET NULL
+  camera_id INTEGER UNIQUE REFERENCES dahua.scan_cursors(camera_id) ON DELETE SET NULL
 );
 
 INSERT INTO dahua.scan_seeds (seed) VALUES (generate_series(1,999));
-
-CREATE TABLE dahua.scan_cursors (
-  camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
-  quick_cursor TIMESTAMPTZ NOT NULL DEFAULT (CURRENT_TIMESTAMP - INTERVAL '8 hours'),              -- (scanned) <- quick_cursor -> (not scanned / volatile)
-  full_cursor TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP CHECK(full_cursor <= full_epoch_end), -- (not scanned) <- full_cursor -> (scanned)
-  full_epoch TIMESTAMPTZ NOT NULL DEFAULT '2009-12-31 00:00:00',
-  full_epoch_end TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED
-);
 
 --------- notify when camera is created and insert 1-1 releations
 
@@ -140,14 +141,14 @@ CREATE TYPE dahua.scan_kind AS ENUM ('full', 'quick', 'manual');
 
 CREATE TABLE dahua.scan_queue_tasks (
   id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  camera_id INTEGER NOT NULL REFERENCES dahua.cameras(id) ON DELETE CASCADE,
+  camera_id INTEGER NOT NULL REFERENCES dahua.scan_cursors(camera_id) ON DELETE CASCADE,
   kind dahua.scan_kind NOT NULL,
   range tstzrange NOT NULL DEFAULT 'empty'
 );
 
 CREATE TABLE dahua.scan_active_tasks (
   queue_id INTEGER NOT NULL REFERENCES dahua.scan_queue_tasks(id) ON DELETE CASCADE,
-  camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
+  camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.scan_cursors(camera_id) ON DELETE CASCADE,
   kind dahua.scan_kind NOT NULL,
   range tstzrange NOT NULL CHECK (range != 'empty'),
   cursor TIMESTAMPTZ NOT NULL,
@@ -159,7 +160,7 @@ CREATE TABLE dahua.scan_active_tasks (
 
 CREATE TABLE dahua.scan_complete_tasks (
   id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  camera_id INTEGER NOT NULL REFERENCES dahua.cameras(id) ON DELETE CASCADE,
+  camera_id INTEGER NOT NULL REFERENCES dahua.scan_cursors(camera_id) ON DELETE CASCADE,
   kind dahua.scan_kind NOT NULL,
   range tstzrange NOT NULL CHECK (range != 'empty'),
   cursor TIMESTAMPTZ NOT NULL,

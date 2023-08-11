@@ -354,6 +354,7 @@ func (s ScanCursorLock) UpdateQuickCursor(ctx context.Context, quickCursor time.
 
 // ----------
 
+// ScanQueueTaskCreate [final]
 func (dbT) ScanQueueTaskCreate(ctx context.Context, db qes.Querier, r models.DahuaScanQueueTask) error {
 	return pgx.BeginFunc(ctx, db, func(tx pgx.Tx) error {
 		res, err := qes.Exec(ctx, tx, dahua.ScanQueueTasks.
@@ -527,6 +528,7 @@ func (dbT) ScanActiveTaskComplete(ctx context.Context, db qes.Querier, cameraID 
 	})
 }
 
+// ScanActiveProgressUpdate [final]
 func (dbT) ScanActiveProgressUpdate(ctx context.Context, db qes.Querier, r models.DahuaScanActiveProgress) (models.DahuaScanActiveProgress, error) {
 	var res models.DahuaScanActiveProgress
 	err := qes.ScanOne(ctx, db, &res, dahua.ScanActiveTasks.
