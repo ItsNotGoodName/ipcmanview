@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/auth"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/auth"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 	"github.com/jackc/pgx/v5"
 	"github.com/thejerf/suture/v4"
@@ -49,7 +49,7 @@ func (w Worker) Serve(ctx context.Context) error {
 		return err
 	}
 
-	authConn := auth.NewConn(dahua.NewConn(http.DefaultClient, cam.Address), cam.Username, cam.Password)
+	authConn := auth.NewConn(dahuarpc.NewConn(http.DefaultClient, cam.Address), cam.Username, cam.Password)
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		authConn.Logout(ctx)
@@ -80,17 +80,17 @@ func (w Worker) Restart(ctx context.Context) error {
 	}
 }
 
-func (w Worker) RPC(ctx context.Context) (dahua.RequestBuilder, error) {
+func (w Worker) RPC(ctx context.Context) (dahuarpc.RequestBuilder, error) {
 	resC := make(chan workerRPCResponse)
 	select {
 	case <-ctx.Done():
-		return dahua.RequestBuilder{}, ctx.Err()
+		return dahuarpc.RequestBuilder{}, ctx.Err()
 	case <-w.doneC:
-		return dahua.RequestBuilder{}, ErrWorkerClosed
+		return dahuarpc.RequestBuilder{}, ErrWorkerClosed
 	case w.rpcC <- workerRPCRequest{ctx, resC}:
 		res := <-resC
 		if res.err != nil {
-			return dahua.RequestBuilder{}, res.err
+			return dahuarpc.RequestBuilder{}, res.err
 		}
 
 		return res.rpc, nil
@@ -103,6 +103,6 @@ type workerRPCRequest struct {
 }
 
 type workerRPCResponse struct {
-	rpc dahua.RequestBuilder
+	rpc dahuarpc.RequestBuilder
 	err error
 }

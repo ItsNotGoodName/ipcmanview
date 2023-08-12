@@ -3,147 +3,147 @@ package magicbox
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func Reboot(ctx context.Context, gen dahua.GenRPC) (bool, error) {
+func Reboot(ctx context.Context, gen dahuarpc.Gen) (bool, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	res, err := dahua.Send[any](ctx, rpc.Method("magicBox.reboot"))
+	res, err := dahuarpc.Send[any](ctx, rpc.Method("magicBox.reboot"))
 
 	return res.Result.Bool(), err
 }
 
-func NeedReboot(ctx context.Context, gen dahua.GenRPC) (int, error) {
+func NeedReboot(ctx context.Context, gen dahuarpc.Gen) (int, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		NeedReboot int `json:"needReboot"`
 	}](ctx, rpc.Method("magicBox.needReboot"))
 
 	return res.Params.NeedReboot, err
 }
 
-func GetSerialNo(ctx context.Context, gen dahua.GenRPC) (string, error) {
+func GetSerialNo(ctx context.Context, gen dahuarpc.Gen) (string, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		SN string `json:"sn"`
 	}](ctx, rpc.Method("magicBox.getSerialNo"))
 
 	return res.Params.SN, err
 }
 
-func GetDeviceType(ctx context.Context, gen dahua.GenRPC) (string, error) {
+func GetDeviceType(ctx context.Context, gen dahuarpc.Gen) (string, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		Type string `json:"type"`
 	}](ctx, rpc.Method("magicBox.getDeviceType"))
 
 	return res.Params.Type, err
 }
 
-func GetMemoryInfo(ctx context.Context, gen dahua.GenRPC) (GetMemoryInfoResult, error) {
+func GetMemoryInfo(ctx context.Context, gen dahuarpc.Gen) (GetMemoryInfoResult, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return GetMemoryInfoResult{}, err
 	}
 
-	res, err := dahua.Send[GetMemoryInfoResult](ctx, rpc.Method("magicBox.getMemoryInfo"))
+	res, err := dahuarpc.Send[GetMemoryInfoResult](ctx, rpc.Method("magicBox.getMemoryInfo"))
 
 	return res.Params, err
 }
 
 type GetMemoryInfoResult struct {
-	Free  dahua.Integer `json:"free"`
-	Total dahua.Integer `json:"total"`
+	Free  dahuarpc.Integer `json:"free"`
+	Total dahuarpc.Integer `json:"total"`
 }
 
-func GetCPUUsage(ctx context.Context, gen dahua.GenRPC) (int, error) {
+func GetCPUUsage(ctx context.Context, gen dahuarpc.Gen) (int, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		Usage int `json:"usage"`
-	}](ctx, rpc.Method("magicBox.getCPUUsage").Params(dahua.JSON{"index": 0}))
+	}](ctx, rpc.Method("magicBox.getCPUUsage").Params(dahuarpc.JSON{"index": 0}))
 
 	return res.Params.Usage, err
 }
 
-func GetDeviceClass(ctx context.Context, gen dahua.GenRPC) (string, error) {
+func GetDeviceClass(ctx context.Context, gen dahuarpc.Gen) (string, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		Type string `json:"type"`
 	}](ctx, rpc.Method("magicBox.getDeviceClass"))
 
 	return res.Params.Type, err
 }
 
-func GetProcessInfo(ctx context.Context, gen dahua.GenRPC) (string, error) {
+func GetProcessInfo(ctx context.Context, gen dahuarpc.Gen) (string, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		Info string `json:"info"`
 	}](ctx, rpc.Method("magicBox.getProcessInfo"))
 
 	return res.Params.Info, err
 }
 
-func GetHardwareVersion(ctx context.Context, gen dahua.GenRPC) (string, error) {
+func GetHardwareVersion(ctx context.Context, gen dahuarpc.Gen) (string, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		Version string `json:"version"`
 	}](ctx, rpc.Method("magicBox.getHardwareVersion"))
 
 	return res.Params.Version, err
 }
 
-func GetVendor(ctx context.Context, gen dahua.GenRPC) (string, error) {
+func GetVendor(ctx context.Context, gen dahuarpc.Gen) (string, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		Vendor string `json:"Vendor"`
 	}](ctx, rpc.Method("magicBox.getVendor"))
 
 	return res.Params.Vendor, err
 }
 
-func GetSoftwareVersion(ctx context.Context, gen dahua.GenRPC) (GetSoftwareVersionResult, error) {
+func GetSoftwareVersion(ctx context.Context, gen dahuarpc.Gen) (GetSoftwareVersionResult, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return GetSoftwareVersionResult{}, err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		Version GetSoftwareVersionResult `json:"version"`
 	}](ctx, rpc.Method("magicBox.getSoftwareVersion"))
 	return res.Params.Version, err
@@ -157,26 +157,26 @@ type GetSoftwareVersionResult struct {
 	WebVersion              string `json:"WebVersion"`
 }
 
-func GetMarketArea(ctx context.Context, gen dahua.GenRPC) (string, error) {
+func GetMarketArea(ctx context.Context, gen dahuarpc.Gen) (string, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		AbroadInfo string `json:"AbroadInfo"`
 	}](ctx, rpc.Method("magicBox.getMarketArea"))
 
 	return res.Params.AbroadInfo, err
 }
 
-func GetUpTime(ctx context.Context, gen dahua.GenRPC) (GetUpTimeResult, error) {
+func GetUpTime(ctx context.Context, gen dahuarpc.Gen) (GetUpTimeResult, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return GetUpTimeResult{}, err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		Info GetUpTimeResult `json:"info"`
 	}](ctx, rpc.Method("magicBox.getUpTime"))
 

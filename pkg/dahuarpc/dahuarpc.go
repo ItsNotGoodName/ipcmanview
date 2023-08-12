@@ -1,4 +1,4 @@
-package dahua
+package dahuarpc
 
 import (
 	"bytes"
@@ -16,11 +16,11 @@ var (
 	ErrRequestFailed  = fmt.Errorf("request failed")
 )
 
-type GenRPC interface {
+type Gen interface {
 	RPC(ctx context.Context) (RequestBuilder, error)
 }
 
-type GenRPCLogin interface {
+type GenLogin interface {
 	RPCLogin() RequestBuilder
 }
 

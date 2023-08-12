@@ -5,44 +5,44 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func Create(ctx context.Context, gen dahua.GenRPC) (int64, error) {
+func Create(ctx context.Context, gen dahuarpc.Gen) (int64, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	res, err := dahua.Send[any](ctx, rpc.Method("mediaFileFind.factory.create"))
+	res, err := dahuarpc.Send[any](ctx, rpc.Method("mediaFileFind.factory.create"))
 
 	return res.Result.Integer(), err
 }
 
-func FindFile(ctx context.Context, gen dahua.GenRPC, object int64, condition Condition) (bool, error) {
+func FindFile(ctx context.Context, gen dahuarpc.Gen, object int64, condition Condition) (bool, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	res, err := dahua.Send[any](ctx, rpc.
+	res, err := dahuarpc.Send[any](ctx, rpc.
 		Method("mediaFileFind.findFile").
-		Params(dahua.JSON{"condition": condition}).
+		Params(dahuarpc.JSON{"condition": condition}).
 		Object(object))
 
 	return res.Result.Bool(), err
 }
 
 type Condition struct {
-	Channel   int             `json:"Channel"`
-	Dirs      []string        `json:"Dirs"`
-	Types     []string        `json:"Types"`
-	Order     ConditionOrder  `json:"Order"`
-	Redundant string          `json:"Redundant"`
-	Events    []string        `json:"Events"`
-	StartTime dahua.Timestamp `json:"StartTime"`
-	EndTime   dahua.Timestamp `json:"EndTime"`
-	Flags     []string        `json:"Flags"`
+	Channel   int                `json:"Channel"`
+	Dirs      []string           `json:"Dirs"`
+	Types     []string           `json:"Types"`
+	Order     ConditionOrder     `json:"Order"`
+	Redundant string             `json:"Redundant"`
+	Events    []string           `json:"Events"`
+	StartTime dahuarpc.Timestamp `json:"StartTime"`
+	EndTime   dahuarpc.Timestamp `json:"EndTime"`
+	Flags     []string           `json:"Flags"`
 }
 
 type ConditionOrder = string
@@ -52,7 +52,7 @@ const (
 	ConditionOrderDescent ConditionOrder = "Descent"
 )
 
-func NewCondtion(startTime dahua.Timestamp, endTime dahua.Timestamp) Condition {
+func NewCondtion(startTime dahuarpc.Timestamp, endTime dahuarpc.Timestamp) Condition {
 	return Condition{
 		Channel:   0,
 		Dirs:      nil,
@@ -77,15 +77,15 @@ func (c Condition) Picture() Condition {
 	return c
 }
 
-func FindNextFile(ctx context.Context, gen dahua.GenRPC, object int64, count int) (FindNextFileResult, error) {
+func FindNextFile(ctx context.Context, gen dahuarpc.Gen, object int64, count int) (FindNextFileResult, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return FindNextFileResult{}, err
 	}
 
-	res, err := dahua.Send[FindNextFileResult](ctx, rpc.
+	res, err := dahuarpc.Send[FindNextFileResult](ctx, rpc.
 		Method("mediaFileFind.findNextFile").
-		Params(dahua.JSON{"count": count}).
+		Params(dahuarpc.JSON{"count": count}).
 		Object(object))
 
 	return res.Params, err
@@ -97,23 +97,23 @@ type FindNextFileResult struct {
 }
 
 type FindNextFileInfo struct {
-	Channel     int             `json:"Channel"`
-	StartTime   dahua.Timestamp `json:"StartTime"`
-	EndTime     dahua.Timestamp `json:"EndTime"`
-	Length      int             `json:"Length"`
-	Type        string          `json:"Type"`
-	FilePath    string          `json:"FilePath"`
-	Duration    int             `json:"Duration"`
-	Disk        int             `json:"Disk"`
-	VideoStream string          `json:"VideoStream"`
-	Flags       []string        `json:"Flags"`
-	Events      []string        `json:"Events"`
-	Cluster     int             `json:"Cluster"`
-	Partition   int             `json:"Partition"`
-	PicIndex    int             `json:"PicIndex"`
-	Repeat      int             `json:"Repeat"`
-	WorkDir     string          `json:"WorkDir"`
-	WorkDirSN   int             `json:"WorkDirSN"`
+	Channel     int                `json:"Channel"`
+	StartTime   dahuarpc.Timestamp `json:"StartTime"`
+	EndTime     dahuarpc.Timestamp `json:"EndTime"`
+	Length      int                `json:"Length"`
+	Type        string             `json:"Type"`
+	FilePath    string             `json:"FilePath"`
+	Duration    int                `json:"Duration"`
+	Disk        int                `json:"Disk"`
+	VideoStream string             `json:"VideoStream"`
+	Flags       []string           `json:"Flags"`
+	Events      []string           `json:"Events"`
+	Cluster     int                `json:"Cluster"`
+	Partition   int                `json:"Partition"`
+	PicIndex    int                `json:"PicIndex"`
+	Repeat      int                `json:"Repeat"`
+	WorkDir     string             `json:"WorkDir"`
+	WorkDirSN   int                `json:"WorkDirSN"`
 }
 
 // UniqueTime returns StartTime and EndTime that are unique.
@@ -135,7 +135,7 @@ func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Locatio
 	var prefixSeed int
 
 	{
-		tags := dahua.ExtractFilePathTags(f.FilePath)
+		tags := dahuarpc.ExtractFilePathTags(f.FilePath)
 		if len(tags) >= 4 {
 			tag1Seed, _ := strconv.Atoi(tags[2])
 			tag2Seed, _ := strconv.Atoi(tags[3])
@@ -152,13 +152,13 @@ func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Locatio
 	return startTime.Add(seed), endTime.Add(seed), nil
 }
 
-func GetCount(ctx context.Context, gen dahua.GenRPC, object int64) (int, error) {
+func GetCount(ctx context.Context, gen dahuarpc.Gen, object int64) (int, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return 0, err
 	}
 
-	res, err := dahua.Send[struct {
+	res, err := dahuarpc.Send[struct {
 		Count int `json:"count"`
 	}](ctx, rpc.
 		Method("mediaFileFind.getCount").
@@ -167,26 +167,26 @@ func GetCount(ctx context.Context, gen dahua.GenRPC, object int64) (int, error) 
 	return res.Params.Count, err
 }
 
-func Close(ctx context.Context, gen dahua.GenRPC, object int64) (bool, error) {
+func Close(ctx context.Context, gen dahuarpc.Gen, object int64) (bool, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	res, err := dahua.Send[any](ctx, rpc.
+	res, err := dahuarpc.Send[any](ctx, rpc.
 		Method("mediaFileFind.close").
 		Object(object))
 
 	return res.Result.Bool(), err
 }
 
-func Destroy(ctx context.Context, gen dahua.GenRPC, object int64) (bool, error) {
+func Destroy(ctx context.Context, gen dahuarpc.Gen, object int64) (bool, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return false, err
 	}
 
-	res, err := dahua.Send[any](ctx, rpc.
+	res, err := dahuarpc.Send[any](ctx, rpc.
 		Method("mediaFileFind.destroy").
 		Object(object))
 

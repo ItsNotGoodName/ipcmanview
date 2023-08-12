@@ -1,4 +1,4 @@
-package dahua
+package dahuarpc
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-var _ GenRPC = (*Conn)(nil)
-var _ GenRPCLogin = (*Conn)(nil)
+var _ Gen = (*Conn)(nil)
+var _ GenLogin = (*Conn)(nil)
 
 type Conn struct {
 	state       State

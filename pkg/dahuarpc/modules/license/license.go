@@ -3,7 +3,7 @@ package license
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
 type LicenseInfo struct {
@@ -18,13 +18,13 @@ type LicenseInfo struct {
 	Username      string `json:"Username"`
 }
 
-func GetLicenseInfo(ctx context.Context, gen dahua.GenRPC) ([]LicenseInfo, error) {
+func GetLicenseInfo(ctx context.Context, gen dahuarpc.Gen) ([]LicenseInfo, error) {
 	rpc, err := gen.RPC(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := dahua.Send[[]struct {
+	res, err := dahuarpc.Send[[]struct {
 		Info LicenseInfo `json:"Info"`
 	}](ctx, rpc.Method("License.getLicenseInfo"))
 	if err != nil {

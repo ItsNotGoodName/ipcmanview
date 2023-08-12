@@ -1,4 +1,4 @@
-package dahua
+package dahuarpc
 
 import (
 	"crypto/md5"

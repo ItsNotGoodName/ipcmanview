@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 )
 
@@ -71,7 +71,7 @@ func NewScanTaskManual(cursor models.DahuaScanCursor, scanRange models.DahuaScan
 }
 
 // ScanTaskQueueExecute runs the queued scan task.
-func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahua.GenRPC, scanCursorLock ScanCursorLock, queueTask models.DahuaScanQueueTask) error {
+func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahuarpc.Gen, scanCursorLock ScanCursorLock, queueTask models.DahuaScanQueueTask) error {
 	activeTask, err := DB.ScanActiveTaskCreate(ctx, db, queueTask)
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahua.GenRPC,
 	return errors.Join(err, DB.ScanActiveTaskComplete(ctx, db, activeTask.CameraID, scanErrString))
 }
 
-func scanTaskActiveExecute(ctx context.Context, db qes.Querier, gen dahua.GenRPC, scanCursor models.DahuaScanCursor, activeTask models.DahuaScanActiveTask) error {
+func scanTaskActiveExecute(ctx context.Context, db qes.Querier, gen dahuarpc.Gen, scanCursor models.DahuaScanCursor, activeTask models.DahuaScanActiveTask) error {
 	scanPeriodIterator := NewScanPeriodIterator(activeTask.Range)
 	progress := activeTask.NewProgress()
 

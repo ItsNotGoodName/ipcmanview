@@ -5,12 +5,12 @@ import (
 	"errors"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/license"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/magicbox"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/license"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/magicbox"
 )
 
-func RPCDetailGet(ctx context.Context, gen dahua.GenRPC) (models.DahuaCameraDetail, error) {
+func RPCDetailGet(ctx context.Context, gen dahuarpc.Gen) (models.DahuaCameraDetail, error) {
 	sn, err := magicbox.GetSerialNo(ctx, gen)
 	if isNotResponseError(err) {
 		return models.DahuaCameraDetail{}, err
@@ -57,7 +57,7 @@ func RPCDetailGet(ctx context.Context, gen dahua.GenRPC) (models.DahuaCameraDeta
 	}, nil
 }
 
-func RPCSoftwareVersionGet(ctx context.Context, gen dahua.GenRPC) (magicbox.GetSoftwareVersionResult, error) {
+func RPCSoftwareVersionGet(ctx context.Context, gen dahuarpc.Gen) (magicbox.GetSoftwareVersionResult, error) {
 	res, err := magicbox.GetSoftwareVersion(ctx, gen)
 	if isNotResponseError(err) {
 		return magicbox.GetSoftwareVersionResult{}, err
@@ -66,7 +66,7 @@ func RPCSoftwareVersionGet(ctx context.Context, gen dahua.GenRPC) (magicbox.GetS
 	return res, nil
 }
 
-func RPCLicenseList(ctx context.Context, gen dahua.GenRPC) ([]license.LicenseInfo, error) {
+func RPCLicenseList(ctx context.Context, gen dahuarpc.Gen) ([]license.LicenseInfo, error) {
 	res, err := license.GetLicenseInfo(ctx, gen)
 	if isNotResponseError(err) {
 		return nil, err
@@ -79,6 +79,6 @@ func isNotResponseError(err error) bool {
 	if err == nil {
 		return false
 	}
-	var responseErr *dahua.ErrResponse
+	var responseErr *dahuarpc.ErrResponse
 	return !errors.As(err, &responseErr)
 }

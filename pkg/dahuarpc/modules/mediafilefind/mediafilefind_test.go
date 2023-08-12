@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,28 +21,28 @@ func TestFindNextFileInfo_UniqueTime(t *testing.T) {
 		{
 			first: FindNextFileInfo{
 				FilePath:  "/mnt/sd/2023-04-09/001/jpg/07/12/04[M][0@0][0][].jpg",
-				StartTime: dahua.NewTimestamp(startTime, time.Local),
-				EndTime:   dahua.NewTimestamp(endTime, time.Local),
+				StartTime: dahuarpc.NewTimestamp(startTime, time.Local),
+				EndTime:   dahuarpc.NewTimestamp(endTime, time.Local),
 				Type:      "jpg",
 			},
 			second: FindNextFileInfo{
 				FilePath:  "/mnt/sd/2023-04-09/001/jpg/07/12/04[M][0@0][0][1].jpg",
-				StartTime: dahua.NewTimestamp(startTime, time.Local),
-				EndTime:   dahua.NewTimestamp(endTime, time.Local),
+				StartTime: dahuarpc.NewTimestamp(startTime, time.Local),
+				EndTime:   dahuarpc.NewTimestamp(endTime, time.Local),
 				Type:      "jpg",
 			},
 		},
 		{
 			first: FindNextFileInfo{
 				FilePath:  "/mnt/sd/2023-04-09/001/jpg/07/12/04[M][0@0][0][].jpg",
-				StartTime: dahua.NewTimestamp(startTime, time.Local),
-				EndTime:   dahua.NewTimestamp(endTime, time.Local),
+				StartTime: dahuarpc.NewTimestamp(startTime, time.Local),
+				EndTime:   dahuarpc.NewTimestamp(endTime, time.Local),
 				Type:      "dav",
 			},
 			second: FindNextFileInfo{
 				FilePath:  "/mnt/sd/2023-04-09/001/jpg/07/12/04[M][0@0][0][].jpg",
-				StartTime: dahua.NewTimestamp(startTime, time.Local),
-				EndTime:   dahua.NewTimestamp(endTime, time.Local),
+				StartTime: dahuarpc.NewTimestamp(startTime, time.Local),
+				EndTime:   dahuarpc.NewTimestamp(endTime, time.Local),
 				Type:      "jpg",
 			},
 		},
@@ -63,14 +63,14 @@ func TestFindNextFileInfo_UniqueTime(t *testing.T) {
 		{
 			first: FindNextFileInfo{
 				FilePath:  "/mnt/sd/2023-04-09/001/jpg/07/12/04[M][0@0][0][].jpg",
-				StartTime: dahua.NewTimestamp(startTime, time.Local),
-				EndTime:   dahua.NewTimestamp(endTime, time.Local),
+				StartTime: dahuarpc.NewTimestamp(startTime, time.Local),
+				EndTime:   dahuarpc.NewTimestamp(endTime, time.Local),
 				Type:      "jpg",
 			},
 			second: FindNextFileInfo{
 				FilePath:  "/mnt/sd/2023-04-09/001/jpg/07/12/04[M][0@0][0][].jpg",
-				StartTime: dahua.NewTimestamp(startTime, time.Local),
-				EndTime:   dahua.NewTimestamp(endTime, time.Local),
+				StartTime: dahuarpc.NewTimestamp(startTime, time.Local),
+				EndTime:   dahuarpc.NewTimestamp(endTime, time.Local),
 				Type:      "jpg",
 			},
 		},

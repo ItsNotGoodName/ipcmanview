@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
 type Stream struct {
@@ -14,7 +14,7 @@ type Stream struct {
 	closed bool
 }
 
-func NewStream(ctx context.Context, gen dahua.GenRPC, condtion Condition) (*Stream, error) {
+func NewStream(ctx context.Context, gen dahuarpc.Gen, condtion Condition) (*Stream, error) {
 	object, err := Create(ctx, gen)
 	if err != nil {
 		return nil, err
@@ -23,12 +23,12 @@ func NewStream(ctx context.Context, gen dahua.GenRPC, condtion Condition) (*Stre
 	var closed bool
 	ok, err := FindFile(ctx, gen, object, condtion)
 	if err != nil {
-		var resErr *dahua.ErrResponse
+		var resErr *dahuarpc.ErrResponse
 		if !errors.As(err, &resErr) {
 			return nil, err
 		}
 
-		if resErr.Type != dahua.ErrResponseTypeNoData {
+		if resErr.Type != dahuarpc.ErrResponseTypeNoData {
 			return nil, err
 		}
 
@@ -44,7 +44,7 @@ func NewStream(ctx context.Context, gen dahua.GenRPC, condtion Condition) (*Stre
 	}, nil
 }
 
-func (s *Stream) Next(ctx context.Context, gen dahua.GenRPC) ([]FindNextFileInfo, error) {
+func (s *Stream) Next(ctx context.Context, gen dahuarpc.Gen) ([]FindNextFileInfo, error) {
 	if s.closed {
 		return nil, nil
 	}
@@ -67,7 +67,7 @@ func (s *Stream) Next(ctx context.Context, gen dahua.GenRPC) ([]FindNextFileInfo
 	return files.Infos, nil
 }
 
-func (s *Stream) Close(gen dahua.GenRPC) {
+func (s *Stream) Close(gen dahuarpc.Gen) {
 	if s.closed {
 		return
 	}

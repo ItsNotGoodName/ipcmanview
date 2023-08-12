@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua/modules/mediafilefind"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 )
 
@@ -105,10 +105,10 @@ func ScanQuickCursorFromScanRange(scanRange models.DahuaScanRange) time.Time {
 	return quickCursor
 }
 
-func Scan(ctx context.Context, db qes.Querier, gen dahua.GenRPC, scanCamera models.DahuaScanCursor, scanPeriod ScanPeriod) (ScanResult, error) {
+func Scan(ctx context.Context, db qes.Querier, gen dahuarpc.Gen, scanCamera models.DahuaScanCursor, scanPeriod ScanPeriod) (ScanResult, error) {
 	baseCondition := mediafilefind.NewCondtion(
-		dahua.NewTimestamp(scanPeriod.Start, scanCamera.Location.Location),
-		dahua.NewTimestamp(scanPeriod.End, scanCamera.Location.Location),
+		dahuarpc.NewTimestamp(scanPeriod.Start, scanCamera.Location.Location),
+		dahuarpc.NewTimestamp(scanPeriod.End, scanCamera.Location.Location),
 	)
 
 	var upserted int64

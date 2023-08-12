@@ -5,7 +5,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 	"github.com/thejerf/suture/v4"
 )
@@ -30,7 +30,7 @@ func NewSupervisor(db qes.Querier) *Supervisor {
 	}
 }
 
-func (s *Supervisor) GetGenRPC(ctx context.Context, cameraID int64) (dahua.GenRPC, error) {
+func (s *Supervisor) GetGenRPC(ctx context.Context, cameraID int64) (dahuarpc.Gen, error) {
 	return s.GetWorker(ctx, cameraID)
 }
 

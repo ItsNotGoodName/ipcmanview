@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func GetDeviceAllInfo(ctx context.Context, gen dahua.GenRPC) ([]Storage, error) {
+func GetDeviceAllInfo(ctx context.Context, gen dahuarpc.Gen) ([]Storage, error) {
 	var object int64
 	{
 		rpc, err := gen.RPC(ctx)
@@ -15,7 +15,7 @@ func GetDeviceAllInfo(ctx context.Context, gen dahua.GenRPC) ([]Storage, error) 
 			return []Storage{}, err
 		}
 
-		res, err := dahua.Send[any](ctx, rpc.Method("storage.factory.instance"))
+		res, err := dahuarpc.Send[any](ctx, rpc.Method("storage.factory.instance"))
 		if err != nil {
 			return []Storage{}, err
 		}
@@ -28,7 +28,7 @@ func GetDeviceAllInfo(ctx context.Context, gen dahua.GenRPC) ([]Storage, error) 
 		return []Storage{}, err
 	}
 
-	res, err := dahua.Send[GetDeviceAllInfoResult](ctx, rpc.Method("storage.getDeviceAllInfo").Object(object))
+	res, err := dahuarpc.Send[GetDeviceAllInfoResult](ctx, rpc.Method("storage.getDeviceAllInfo").Object(object))
 	if err != nil {
 		return []Storage{}, err
 	}
@@ -43,11 +43,11 @@ type Storage struct {
 }
 
 type StorageDetail struct {
-	Path       string        `json:"Path"`
-	Type       string        `json:"Type"`
-	TotalBytes dahua.Integer `json:"TotalBytes"`
-	UsedBytes  dahua.Integer `json:"UsedBytes"`
-	IsError    bool          `json:"IsError"`
+	Path       string           `json:"Path"`
+	Type       string           `json:"Type"`
+	TotalBytes dahuarpc.Integer `json:"TotalBytes"`
+	UsedBytes  dahuarpc.Integer `json:"UsedBytes"`
+	IsError    bool             `json:"IsError"`
 }
 
 type GetDeviceAllInfoResult struct {
