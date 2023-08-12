@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/jwtauth/v5 v5.1.1
 	github.com/go-jet/jet/v2 v2.10.1
 	github.com/go-playground/validator/v10 v10.14.1
+	github.com/icholy/digest v0.1.22
 	github.com/jackc/pgx-zerolog v0.0.0-20230315001418-f978528409eb
 	github.com/jackc/pgx/v5 v5.4.2
 	github.com/jackc/tern/v2 v2.1.1
