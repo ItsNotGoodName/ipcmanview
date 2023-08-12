@@ -13,7 +13,7 @@ type Snapshot struct {
 	ContentLength string
 }
 
-func SnapshotGet(ctx context.Context, cgi GenCGI, channel int) (Snapshot, error) {
+func SnapshotGet(ctx context.Context, cgi Gen, channel int) (Snapshot, error) {
 	method := "snapshot.cgi"
 
 	query := url.Values{}

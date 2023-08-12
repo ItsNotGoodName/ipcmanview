@@ -16,7 +16,7 @@ type EventBoundary string
 const defaultEventBoundary EventBoundary = "--myboundary"
 
 // EventManager attaches to all events.
-func EventManager(ctx context.Context, cgi GenCGI, heartbeat int) (EventSession, error) {
+func EventManager(ctx context.Context, cgi Gen, heartbeat int) (EventSession, error) {
 	method := "eventManager.cgi"
 
 	query := url.Values{}

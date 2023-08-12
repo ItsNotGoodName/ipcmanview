@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func AudioInputChannelCount(ctx context.Context, cgi GenCGI) (int, error) {
+func AudioInputChannelCount(ctx context.Context, cgi Gen) (int, error) {
 	method := "devAudioInput.cgi?action=getCollect"
 
 	table, err := OKTable(cgi.CGIGet(ctx, method))
@@ -19,7 +19,7 @@ func AudioInputChannelCount(ctx context.Context, cgi GenCGI) (int, error) {
 	return strconv.Atoi(table.Get("result"))
 }
 
-func AudioOutputChannelCount(ctx context.Context, cgi GenCGI) (int, error) {
+func AudioOutputChannelCount(ctx context.Context, cgi Gen) (int, error) {
 	method := "devAudioOutput.cgi?action=getCollect"
 
 	table, err := OKTable(cgi.CGIGet(ctx, method))
@@ -42,7 +42,7 @@ type AudioStream struct {
 	ContentType string
 }
 
-func AudioStreamGet(ctx context.Context, cgi GenCGI, channel int, httpType HTTPType) (AudioStream, error) {
+func AudioStreamGet(ctx context.Context, cgi Gen, channel int, httpType HTTPType) (AudioStream, error) {
 	method := "audio.cgi"
 
 	query := url.Values{}
@@ -67,7 +67,7 @@ func AudioStreamGet(ctx context.Context, cgi GenCGI, channel int, httpType HTTPT
 }
 
 // WARNING: this has not been tested yet
-func AudioStreamPost(ctx context.Context, cgi GenCGI, channel int, httpType HTTPType, contentType string, body io.Reader) error {
+func AudioStreamPost(ctx context.Context, cgi Gen, channel int, httpType HTTPType, contentType string, body io.Reader) error {
 	method := "audio.cgi"
 
 	query := url.Values{}

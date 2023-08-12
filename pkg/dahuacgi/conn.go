@@ -9,7 +9,7 @@ import (
 	"github.com/icholy/digest"
 )
 
-var _ GenCGI = (*Conn)(nil)
+var _ Gen = (*Conn)(nil)
 
 type Conn struct {
 	client  *http.Client

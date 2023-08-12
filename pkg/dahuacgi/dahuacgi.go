@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type GenCGI interface {
+type Gen interface {
 	CGIGet(ctx context.Context, method string) (*http.Response, error)
 	CGIPost(ctx context.Context, method string, headers http.Header, body io.Reader) (*http.Response, error)
 }
