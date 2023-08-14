@@ -1,3 +1,4 @@
+// dahuarpc is a CGI client library for Dahua's CGI API.
 package dahuacgi
 
 import (

@@ -31,7 +31,7 @@ func Test_Timestamp(t *testing.T) {
 	}
 }
 
-func Test_extractFilePathTags(t *testing.T) {
+func Test_ExtractFilePathTags(t *testing.T) {
 	data := []struct {
 		Path string
 		Tags []string

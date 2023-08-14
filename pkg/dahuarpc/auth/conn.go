@@ -6,8 +6,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-var _ dahuarpc.Client = (*Conn)(nil)
-
 type Conn struct {
 	conn     *dahuarpc.Conn
 	username string

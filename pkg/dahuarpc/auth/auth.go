@@ -68,7 +68,9 @@ func login(ctx context.Context, conn *dahuarpc.Conn, username, password string) 
 	}
 
 	// Update session
-	conn.UpdateSession(firstLogin.Session.String())
+	if err := conn.UpdateSession(firstLogin.Session.String()); err != nil {
+		return err
+	}
 
 	// Magic
 	loginType := func() string {

@@ -7,9 +7,6 @@ import (
 	"time"
 )
 
-var _ Client = (*Conn)(nil)
-var _ ClientLogin = (*Conn)(nil)
-
 type Conn struct {
 	state       State
 	client      *http.Client
@@ -65,11 +62,13 @@ const (
 	StateError
 )
 
-func (c *Conn) UpdateSession(session string) {
+func (c *Conn) UpdateSession(session string) error {
 	if c.state != StateLogout {
-		panic("cannot set session when not logged out")
+		return fmt.Errorf("cannot set session when not logged out")
 	}
+
 	c.Session = session
+	return nil
 }
 
 func (c *Conn) State() State {
@@ -90,9 +89,10 @@ func (c *Conn) Set(newState State, err ...error) {
 
 	if newState == StateError {
 		if len(err) == 0 {
-			panic("no error was supplied")
+			c.Error = fmt.Errorf("no error specified")
+		} else {
+			c.Error = err[0]
 		}
-		c.Error = err[0]
 	}
 
 	c.state = newState

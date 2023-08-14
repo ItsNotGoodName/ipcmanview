@@ -74,6 +74,7 @@ func (s *Stream) Close(c dahuarpc.Client) {
 
 	s.closed = true
 
+	// TODO: find another way to close stream when context was canceled.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

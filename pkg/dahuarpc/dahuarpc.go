@@ -1,14 +1,14 @@
+// dahuarpc is a RPC client library for Dahua's RPC API.
 package dahuarpc
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
-
-	"golang.org/x/net/context"
 )
 
 var (
@@ -184,11 +184,10 @@ func SendRaw[T any](ctx context.Context, r RequestBuilder) (Response[T], error) 
 		return res, err
 	}
 
-	req, err := http.NewRequest("POST", r.url, bytes.NewBuffer(b))
+	req, err := http.NewRequestWithContext(ctx, "POST", r.url, bytes.NewBuffer(b))
 	if err != nil {
 		return res, err
 	}
-	req = req.WithContext(ctx)
 
 	resp, err := r.client.Do(req)
 	if err != nil {
@@ -203,7 +202,7 @@ func SendRaw[T any](ctx context.Context, r RequestBuilder) (Response[T], error) 
 	return res, nil
 }
 
-// Send sends RPC request to camera and throws error if the response contains an error field.
+// Send RPC request to camera and check the response's error field.
 func Send[T any](ctx context.Context, r RequestBuilder) (Response[T], error) {
 	res, err := SendRaw[T](ctx, r)
 	if err != nil {

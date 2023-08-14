@@ -9,8 +9,6 @@ import (
 	"time"
 )
 
-// TODO: remove this in favor of anonymous structs with json tags
-// TODO: find out if struct json reflection is faster than maps
 type JSON = map[string]any
 
 type AuthParam struct {
@@ -19,7 +17,7 @@ type AuthParam struct {
 	Realm      string `json:"realm"`
 }
 
-// HashPassword runs the bespoke hashing algorithm for the password.
+// HashPassword runs the hashing algorithm for the password.
 func (a AuthParam) HashPassword(username, password string) string {
 	switch a.Encryption {
 	case "Basic":
@@ -47,7 +45,7 @@ func NewTimestamp(date time.Time, cameraLocation *time.Location) Timestamp {
 	return Timestamp(date.In(cameraLocation).Format("2006-01-02 15:04:05"))
 }
 
-// Parse returns the UTC time for the given timestamp and location.
+// Parse returns the UTC time for the given timestamp and camera location.
 func (t Timestamp) Parse(cameraLocation *time.Location) (time.Time, error) {
 	date, err := time.ParseInLocation("2006-01-02 15:04:05", string(t), cameraLocation)
 	if err != nil {
