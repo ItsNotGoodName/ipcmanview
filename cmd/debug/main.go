@@ -1,16 +1,18 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"os"
+	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/db"
 	"github.com/ItsNotGoodName/ipcmanview/migrations"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/magicbox"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/interrupt"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
-	"github.com/ItsNotGoodName/ipcmanview/server"
-	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/thejerf/suture/v4"
@@ -37,40 +39,43 @@ func main() {
 		EventHook: sutureext.EventHook(),
 	})
 
-	// Bus
 	bus := db.NewBusFromPool(pool)
 	super.Add(bus)
 
-	// Dahua
 	dahuaSuper := dahua.NewSupervisor(pool)
 	dahuaSuper.Register(bus)
 	super.Add(dahuaSuper)
 
-	// HTTP/webrpc
-	http := server.NewHTTP(chi.NewRouter(), ":8080", shutdown)
-	super.Add(http)
+	superDoneC := super.ServeBackground(ctx)
 
-	super.Serve(ctx)
+	// --------------------------------------------------------------------------
+	{
+		seed(ctx, pool)
+	}
+
+	// --------------------------------------------------------------------------
+	super.Add(sutureext.NewServiceFunc("debug", func(ctx context.Context) error {
+		time.Sleep(1 * time.Second)
+		c, err := dahuaSuper.GetOrCreateWorker(ctx, 319)
+		if err != nil {
+			return err
+		}
+
+		sn, err := magicbox.GetSerialNo(ctx, c)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("SN:", sn)
+
+		return suture.ErrDoNotRestart
+	}))
+
+	if err := <-superDoneC; err != nil && !errors.Is(err, context.Canceled) {
+		panic(err)
+	}
 }
-
-var (
-	builtBy    = "unknown"
-	commit     = ""
-	date       = ""
-	version    = "dev"
-	repoURL    = "https://github.com/ItsNotGoodName/smtpbridge"
-	releaseURL = ""
-)
 
 func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
-	build.Current = build.Build{
-		BuiltBy:    builtBy,
-		Commit:     commit,
-		Date:       date,
-		Version:    version,
-		RepoURL:    repoURL,
-		ReleaseURL: releaseURL,
-	}
 }

@@ -6,8 +6,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func FirstLogin(ctx context.Context, gen dahuarpc.GenLogin, username string) (dahuarpc.Response[dahuarpc.AuthParam], error) {
-	return dahuarpc.SendRaw[dahuarpc.AuthParam](ctx, gen.
+func FirstLogin(ctx context.Context, c dahuarpc.ClientLogin, username string) (dahuarpc.Response[dahuarpc.AuthParam], error) {
+	return dahuarpc.SendRaw[dahuarpc.AuthParam](ctx, c.
 		RPCLogin().
 		Method("global.login").
 		Params(dahuarpc.JSON{
@@ -18,8 +18,8 @@ func FirstLogin(ctx context.Context, gen dahuarpc.GenLogin, username string) (da
 		}))
 }
 
-func SecondLogin(ctx context.Context, gen dahuarpc.GenLogin, username, password, loginType, authorityType string) error {
-	_, err := dahuarpc.Send[any](ctx, gen.
+func SecondLogin(ctx context.Context, c dahuarpc.ClientLogin, username, password, loginType, authorityType string) error {
+	_, err := dahuarpc.Send[any](ctx, c.
 		RPCLogin().
 		Method("global.login").
 		Params(dahuarpc.JSON{
@@ -33,8 +33,8 @@ func SecondLogin(ctx context.Context, gen dahuarpc.GenLogin, username, password,
 	return err
 }
 
-func GetCurrentTime(ctx context.Context, gen dahuarpc.Gen) (string, error) {
-	rpc, err := gen.RPC(ctx)
+func GetCurrentTime(ctx context.Context, c dahuarpc.Client) (string, error) {
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -46,8 +46,8 @@ func GetCurrentTime(ctx context.Context, gen dahuarpc.Gen) (string, error) {
 	return res.Params.Time, err
 }
 
-func KeepAlive(ctx context.Context, gen dahuarpc.Gen) (int, error) {
-	rpc, err := gen.RPC(ctx)
+func KeepAlive(ctx context.Context, c dahuarpc.Client) (int, error) {
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -59,8 +59,8 @@ func KeepAlive(ctx context.Context, gen dahuarpc.Gen) (int, error) {
 	return res.Params.Timeout, err
 }
 
-func Logout(ctx context.Context, gen dahuarpc.Gen) (bool, error) {
-	rpc, err := gen.RPC(ctx)
+func Logout(ctx context.Context, c dahuarpc.Client) (bool, error) {
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return false, err
 	}

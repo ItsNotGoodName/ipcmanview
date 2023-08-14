@@ -47,7 +47,7 @@ AFTER DELETE ON dahua.cameras
 FOR EACH ROW
 EXECUTE FUNCTION dahua.fn_cameras_deleted();
 
---------- information cached from camera
+--------- information from camera
 
 CREATE TABLE dahua.camera_details (
   camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
@@ -83,10 +83,22 @@ CREATE TABLE IF NOT EXISTS dahua.camera_licenses (
   username TEXT DEFAULT '' NOT NULL
 );
 
+CREATE TABLE dahua.camera_events (
+  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  camera_id INTEGER NOT NULL REFERENCES dahua.cameras(id) ON DELETE CASCADE,
+  content_type TEXT NOT NULL,
+  content_length INTEGER NOT NULL,
+  code TEXT NOT NULL,
+  action TEXT NOT NULL,
+  index INTEGER NOT NULL,
+  data JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 --------- camera file scanning
 
 CREATE TABLE dahua.scan_cursors (
-  camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE CASCADE,
+  camera_id INTEGER NOT NULL UNIQUE REFERENCES dahua.cameras(id) ON DELETE RESTRICT,
   quick_cursor TIMESTAMPTZ NOT NULL DEFAULT (CURRENT_TIMESTAMP - INTERVAL '8 hours'),              -- (scanned) <- quick_cursor -> (not scanned / volatile)
   full_cursor TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP CHECK(full_cursor <= full_epoch_end), -- (not scanned) <- full_cursor -> (scanned)
   full_epoch TIMESTAMPTZ NOT NULL DEFAULT '2009-12-31 00:00:00',

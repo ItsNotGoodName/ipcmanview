@@ -71,7 +71,7 @@ func NewScanTaskManual(cursor models.DahuaScanCursor, scanRange models.DahuaScan
 }
 
 // ScanTaskQueueExecute runs the queued scan task.
-func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahuarpc.Gen, scanCursorLock ScanCursorLock, queueTask models.DahuaScanQueueTask) error {
+func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, rpcClient dahuarpc.Client, scanCursorLock ScanCursorLock, queueTask models.DahuaScanQueueTask) error {
 	activeTask, err := DB.ScanActiveTaskCreate(ctx, db, queueTask)
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahuarpc.Gen,
 
 	scanErrString, err := func() (string, error) {
 		// Run the scan
-		scanErr := scanTaskActiveExecute(ctx, db, gen, scanCursorLock.DahuaScanCursor, activeTask)
+		scanErr := scanTaskActiveExecute(ctx, db, rpcClient, scanCursorLock.DahuaScanCursor, activeTask)
 		if scanErr != nil {
 			// Sad path, scan encounterd some sort of error
 			if activeTask.Kind == models.DahuaScanKindFull {
@@ -112,7 +112,7 @@ func ScanTaskQueueExecute(ctx context.Context, db qes.Querier, gen dahuarpc.Gen,
 	return errors.Join(err, DB.ScanActiveTaskComplete(ctx, db, activeTask.CameraID, scanErrString))
 }
 
-func scanTaskActiveExecute(ctx context.Context, db qes.Querier, gen dahuarpc.Gen, scanCursor models.DahuaScanCursor, activeTask models.DahuaScanActiveTask) error {
+func scanTaskActiveExecute(ctx context.Context, db qes.Querier, rpcClient dahuarpc.Client, scanCursor models.DahuaScanCursor, activeTask models.DahuaScanActiveTask) error {
 	scanPeriodIterator := NewScanPeriodIterator(activeTask.Range)
 	progress := activeTask.NewProgress()
 
@@ -122,7 +122,7 @@ func scanTaskActiveExecute(ctx context.Context, db qes.Querier, gen dahuarpc.Gen
 			break
 		}
 
-		res, err := Scan(ctx, db, gen, scanCursor, scanPeriod)
+		res, err := Scan(ctx, db, rpcClient, scanCursor, scanPeriod)
 		if err != nil {
 			return err
 		}

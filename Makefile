@@ -7,12 +7,15 @@ gen:
 cli:
 	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run ./cmd/console
 
-preview: build-ui run
+debug:
+	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run ./cmd/debug
+
+preview: build-ui server
 
 build-ui:
 	cd ui && pnpm run build && cd ..
 
-run:
+server:
 	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run ./cmd/server
 
 migrate:

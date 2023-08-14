@@ -2,6 +2,7 @@ package sandbox
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
@@ -98,19 +100,50 @@ func (s Sandbox) Serve(ctx context.Context) error {
 			}
 		}
 
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
-		dahuaScanSuper.Scan()
+		// dahuaScanSuper.Scan()
+	}()
+
+	go func() {
+		fmt.Println("LISTING")
+		cams, err := dahua.DB.CameraList(ctx, s.db)
+		if err != nil {
+			log.Err(err).Msg("Failed to list cameras")
+		}
+
+		for _, cam := range cams {
+			go func(cam models.DahuaCamera) {
+				fmt.Println("LISTENING ON", cam.ID)
+				conn := dahuacgi.NewConn(cam.Address, cam.Username, cam.Password)
+				em, err := dahuacgi.EventManagerGet(ctx, conn, 0)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				defer em.Close()
+
+				rd := em.Reader()
+				for {
+					err := rd.Poll()
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+
+					evt, err := rd.ReadEvent()
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+
+					event, err := dahua.DB.CameraEventCreate(ctx, s.db, cam.ID, evt)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+					fmt.Print("%+v\n", event)
+				}
+			}(cam)
+		}
 	}()
 
 	// ----------------------------------------------------------------------------

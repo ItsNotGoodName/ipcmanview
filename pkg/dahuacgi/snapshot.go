@@ -3,8 +3,6 @@ package dahuacgi
 import (
 	"context"
 	"io"
-	"net/url"
-	"strconv"
 )
 
 type Snapshot struct {
@@ -13,19 +11,14 @@ type Snapshot struct {
 	ContentLength string
 }
 
-func SnapshotGet(ctx context.Context, cgi Gen, channel int) (Snapshot, error) {
-	method := "snapshot.cgi"
+func SnapshotGet(ctx context.Context, c Client, channel int) (Snapshot, error) {
+	req := NewRequest("snapshot.cgi")
 
-	query := url.Values{}
-	query.Add("action", "attach")
-	query.Add("codes", "[All]")
 	if channel != 0 {
-		query.Add("channel", strconv.Itoa(channel))
+		req.QueryInt("channel", channel)
 	}
-	if len(query) > 0 {
-		method += "?" + query.Encode()
-	}
-	res, err := OK(cgi.CGIGet(ctx, method))
+
+	res, err := OK(c.CGIGet(ctx, req))
 	if err != nil {
 		return Snapshot{}, err
 	}

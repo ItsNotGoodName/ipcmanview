@@ -4,14 +4,56 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 )
 
-type Gen interface {
-	CGIGet(ctx context.Context, method string) (*http.Response, error)
-	CGIPost(ctx context.Context, method string, headers http.Header, body io.Reader) (*http.Response, error)
+type Client interface {
+	CGIGet(ctx context.Context, req *Request) (*http.Response, error)
+}
+
+type Request struct {
+	method string
+	query  url.Values
+	Header http.Header
+}
+
+func NewRequest(method string) *Request {
+	return &Request{
+		method: method,
+		query:  url.Values{},
+		Header: http.Header{},
+	}
+}
+
+func (r *Request) QueryString(key string, value string) *Request {
+	r.query.Add(key, value)
+	return r
+}
+
+func (r *Request) QueryInt(key string, value int) *Request {
+	r.query.Add(key, strconv.Itoa(value))
+	return r
+}
+
+func (r *Request) HeaderString(key string, value string) *Request {
+	r.Header.Add(key, value)
+	return r
+}
+
+func (r *Request) URL(baseURL string) string {
+	query := r.query.Encode()
+	if query != "" {
+		query = "?" + query
+	}
+	return baseURL + r.method + query
+}
+
+func (r *Request) Request(req *http.Request) *http.Request {
+	req.Header = r.Header
+	return req
 }
 
 func OK(res *http.Response, err error) (*http.Response, error) {
@@ -26,21 +68,6 @@ func OK(res *http.Response, err error) (*http.Response, error) {
 	}
 
 	return res, nil
-}
-
-func OKBody(res *http.Response, err error) (io.ReadCloser, error) {
-	if err != nil {
-		return nil, err
-	}
-
-	// OK
-	if res.StatusCode < 200 || res.StatusCode > 299 {
-		res.Body.Close()
-		return nil, fmt.Errorf(res.Status)
-	}
-
-	// Body
-	return res.Body, nil
 }
 
 type Table []TableData

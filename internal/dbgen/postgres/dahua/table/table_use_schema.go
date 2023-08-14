@@ -11,6 +11,7 @@ package table
 // this method only once at the beginning of the program.
 func UseSchema(schema string) {
 	CameraDetails = CameraDetails.FromSchema(schema)
+	CameraEvents = CameraEvents.FromSchema(schema)
 	CameraLicenses = CameraLicenses.FromSchema(schema)
 	CameraSoftwares = CameraSoftwares.FromSchema(schema)
 	Cameras = Cameras.FromSchema(schema)

@@ -140,3 +140,15 @@ type DahuaScanCompleteTask struct {
 	Percent   float64
 	Error     string
 }
+
+type DahuaCameraEvent struct {
+	ID            int64
+	CameraID      int64
+	ContentType   string
+	ContentLength int
+	Code          string
+	Action        string
+	Index         int
+	Data          []byte
+	CreatedAt     time.Time
+}

@@ -18,7 +18,9 @@ const (
 )
 
 func main() {
-	ctx := interrupt.Context()
+	ctx, cancel := interrupt.Context()
+	defer cancel()
+
 	ip := getEnv(EnvIP)
 	username := getEnv(EnvUsername)
 	password := getEnv(EnvPassword)
@@ -39,7 +41,7 @@ func main() {
 	} else {
 		fmt.Println("Audio output count", count)
 	}
-	if stream, err := dahuacgi.AudioStreamGet(ctx, cgi, 1, dahuacgi.HTTPTypeSinglePart); err != nil {
+	if stream, err := dahuacgi.AudioStreamGet(ctx, cgi, 0, dahuacgi.HTTPTypeSinglePart); err != nil {
 		log.Err(err).Msg("Failed to get audio output")
 	} else {
 		b := make([]byte, 1024)
@@ -74,9 +76,10 @@ func main() {
 
 	// Events
 	fmt.Println("Testing events forever...")
-	if eventSession, err := dahuacgi.EventManager(ctx, cgi, 0); err != nil {
+	if eventManager, err := dahuacgi.EventManagerGet(ctx, cgi, 0); err != nil {
 		log.Err(err).Msg("Failed to events")
 	} else {
+		eventSession := eventManager.Reader()
 		for {
 			fmt.Println("Waiting for next event...")
 
@@ -86,7 +89,7 @@ func main() {
 				break
 			}
 
-			event, err := eventSession.Read()
+			event, err := eventSession.ReadEvent()
 			if err != nil {
 				log.Err(err).Msg("Failed to parse event")
 			}

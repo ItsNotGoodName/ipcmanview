@@ -7,7 +7,7 @@ import (
 )
 
 // Context will return a context that will be cancelled on os.interrupt signal.
-func Context() context.Context {
+func Context() (context.Context, context.CancelFunc) {
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -18,5 +18,5 @@ func Context() context.Context {
 		cancel()
 	}()
 
-	return ctx
+	return ctx, cancel
 }

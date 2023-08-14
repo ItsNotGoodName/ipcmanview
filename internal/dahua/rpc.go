@@ -10,38 +10,38 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/magicbox"
 )
 
-func RPCDetailGet(ctx context.Context, gen dahuarpc.Gen) (models.DahuaCameraDetail, error) {
-	sn, err := magicbox.GetSerialNo(ctx, gen)
+func RPCDetailGet(ctx context.Context, rpcClient dahuarpc.Client) (models.DahuaCameraDetail, error) {
+	sn, err := magicbox.GetSerialNo(ctx, rpcClient)
 	if isNotResponseError(err) {
 		return models.DahuaCameraDetail{}, err
 	}
 
-	deviceClass, err := magicbox.GetDeviceClass(ctx, gen)
+	deviceClass, err := magicbox.GetDeviceClass(ctx, rpcClient)
 	if isNotResponseError(err) {
 		return models.DahuaCameraDetail{}, err
 	}
 
-	deviceType, err := magicbox.GetDeviceType(ctx, gen)
+	deviceType, err := magicbox.GetDeviceType(ctx, rpcClient)
 	if isNotResponseError(err) {
 		return models.DahuaCameraDetail{}, err
 	}
 
-	hardwareVersion, err := magicbox.GetHardwareVersion(ctx, gen)
+	hardwareVersion, err := magicbox.GetHardwareVersion(ctx, rpcClient)
 	if isNotResponseError(err) {
 		return models.DahuaCameraDetail{}, err
 	}
 
-	marketArea, err := magicbox.GetMarketArea(ctx, gen)
+	marketArea, err := magicbox.GetMarketArea(ctx, rpcClient)
 	if isNotResponseError(err) {
 		return models.DahuaCameraDetail{}, err
 	}
 
-	ProcessInfo, err := magicbox.GetProcessInfo(ctx, gen)
+	ProcessInfo, err := magicbox.GetProcessInfo(ctx, rpcClient)
 	if isNotResponseError(err) {
 		return models.DahuaCameraDetail{}, err
 	}
 
-	vendor, err := magicbox.GetVendor(ctx, gen)
+	vendor, err := magicbox.GetVendor(ctx, rpcClient)
 	if isNotResponseError(err) {
 		return models.DahuaCameraDetail{}, err
 	}
@@ -57,8 +57,8 @@ func RPCDetailGet(ctx context.Context, gen dahuarpc.Gen) (models.DahuaCameraDeta
 	}, nil
 }
 
-func RPCSoftwareVersionGet(ctx context.Context, gen dahuarpc.Gen) (magicbox.GetSoftwareVersionResult, error) {
-	res, err := magicbox.GetSoftwareVersion(ctx, gen)
+func RPCSoftwareVersionGet(ctx context.Context, rpcClient dahuarpc.Client) (magicbox.GetSoftwareVersionResult, error) {
+	res, err := magicbox.GetSoftwareVersion(ctx, rpcClient)
 	if isNotResponseError(err) {
 		return magicbox.GetSoftwareVersionResult{}, err
 	}
@@ -66,8 +66,8 @@ func RPCSoftwareVersionGet(ctx context.Context, gen dahuarpc.Gen) (magicbox.GetS
 	return res, nil
 }
 
-func RPCLicenseList(ctx context.Context, gen dahuarpc.Gen) ([]license.LicenseInfo, error) {
-	res, err := license.GetLicenseInfo(ctx, gen)
+func RPCLicenseList(ctx context.Context, rpcClient dahuarpc.Client) ([]license.LicenseInfo, error) {
+	res, err := license.GetLicenseInfo(ctx, rpcClient)
 	if isNotResponseError(err) {
 		return nil, err
 	}

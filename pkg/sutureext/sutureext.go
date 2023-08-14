@@ -44,13 +44,19 @@ func logJSON(event *zerolog.Event, v any) {
 }
 
 type ServiceFunc struct {
-	fn func(ctx context.Context) error
+	fn   func(ctx context.Context) error
+	name string
 }
 
-func NewServiceFunc(fn func(ctx context.Context) error) ServiceFunc {
+func NewServiceFunc(name string, fn func(ctx context.Context) error) ServiceFunc {
 	return ServiceFunc{
-		fn: fn,
+		fn:   fn,
+		name: name,
 	}
+}
+
+func (s ServiceFunc) String() string {
+	return s.name
 }
 
 func (s ServiceFunc) Serve(ctx context.Context) error {

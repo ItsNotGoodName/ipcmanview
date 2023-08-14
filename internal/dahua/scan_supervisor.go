@@ -29,7 +29,7 @@ func NewScanSupervisor(db qes.Querier, store Store, scanners int) *ScanSuperviso
 	}
 }
 
-// Scan signals to a worker to start scan if they are not busy.
+// Scan tells worker to start a scan when they are not busy.
 func (s *ScanSupervisor) Scan() {
 	for i := range s.workers {
 		if s.workers[i].Scan() {
@@ -64,7 +64,7 @@ func (s scanSupervisorWorker) Serve(ctx context.Context) error {
 		case <-s.scanC:
 			for {
 				ok, err := DB.ScanQueueTaskNext(ctx, s.db, func(ctx context.Context, scanCursorLock ScanCursorLock, queueTask models.DahuaScanQueueTask) error {
-					gen, err := s.store.GetGenRPC(ctx, queueTask.CameraID)
+					gen, err := s.store.ClientRPC(ctx, queueTask.CameraID)
 					if err != nil {
 						return err
 					}

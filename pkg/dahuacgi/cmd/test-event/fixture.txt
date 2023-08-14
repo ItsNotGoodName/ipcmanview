@@ -1,0 +1,22 @@
+--myboundary
+Content-Type: text/plain
+Content-Length: 147
+
+Code=VideoMotion;action=Start;index=0;data={
+	"LocaleTime":	"2023-08-11 21:37:30",
+	"UTC":	1691815050,
+	"Name":	"IPC",
+	"SmartMotionEnable":	true
+}
+
+--myboundary
+Content-Type: text/plain
+Content-Length: 146
+
+Code=VideoMotion;action=Stop;index=0;test=doesnotexist;data={
+	"LocaleTime":	"2023-08-11 21:37:46",
+	"UTC":	1691815066,
+	"Name":	"IPC",
+	"SmartMotionEnable":	true
+}
+

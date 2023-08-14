@@ -8,8 +8,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func Create(ctx context.Context, gen dahuarpc.Gen) (int64, error) {
-	rpc, err := gen.RPC(ctx)
+func Create(ctx context.Context, c dahuarpc.Client) (int64, error) {
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -19,8 +19,8 @@ func Create(ctx context.Context, gen dahuarpc.Gen) (int64, error) {
 	return res.Result.Integer(), err
 }
 
-func FindFile(ctx context.Context, gen dahuarpc.Gen, object int64, condition Condition) (bool, error) {
-	rpc, err := gen.RPC(ctx)
+func FindFile(ctx context.Context, c dahuarpc.Client, object int64, condition Condition) (bool, error) {
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -77,8 +77,8 @@ func (c Condition) Picture() Condition {
 	return c
 }
 
-func FindNextFile(ctx context.Context, gen dahuarpc.Gen, object int64, count int) (FindNextFileResult, error) {
-	rpc, err := gen.RPC(ctx)
+func FindNextFile(ctx context.Context, c dahuarpc.Client, object int64, count int) (FindNextFileResult, error) {
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return FindNextFileResult{}, err
 	}
@@ -152,8 +152,8 @@ func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Locatio
 	return startTime.Add(seed), endTime.Add(seed), nil
 }
 
-func GetCount(ctx context.Context, gen dahuarpc.Gen, object int64) (int, error) {
-	rpc, err := gen.RPC(ctx)
+func GetCount(ctx context.Context, c dahuarpc.Client, object int64) (int, error) {
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -167,8 +167,8 @@ func GetCount(ctx context.Context, gen dahuarpc.Gen, object int64) (int, error) 
 	return res.Params.Count, err
 }
 
-func Close(ctx context.Context, gen dahuarpc.Gen, object int64) (bool, error) {
-	rpc, err := gen.RPC(ctx)
+func Close(ctx context.Context, c dahuarpc.Client, object int64) (bool, error) {
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return false, err
 	}
@@ -180,8 +180,8 @@ func Close(ctx context.Context, gen dahuarpc.Gen, object int64) (bool, error) {
 	return res.Result.Bool(), err
 }
 
-func Destroy(ctx context.Context, gen dahuarpc.Gen, object int64) (bool, error) {
-	rpc, err := gen.RPC(ctx)
+func Destroy(ctx context.Context, c dahuarpc.Client, object int64) (bool, error) {
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return false, err
 	}

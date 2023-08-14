@@ -105,7 +105,7 @@ func ScanQuickCursorFromScanRange(scanRange models.DahuaScanRange) time.Time {
 	return quickCursor
 }
 
-func Scan(ctx context.Context, db qes.Querier, gen dahuarpc.Gen, scanCamera models.DahuaScanCursor, scanPeriod ScanPeriod) (ScanResult, error) {
+func Scan(ctx context.Context, db qes.Querier, rpcClient dahuarpc.Client, scanCamera models.DahuaScanCursor, scanPeriod ScanPeriod) (ScanResult, error) {
 	baseCondition := mediafilefind.NewCondtion(
 		dahuarpc.NewTimestamp(scanPeriod.Start, scanCamera.Location.Location),
 		dahuarpc.NewTimestamp(scanPeriod.End, scanCamera.Location.Location),
@@ -116,14 +116,14 @@ func Scan(ctx context.Context, db qes.Querier, gen dahuarpc.Gen, scanCamera mode
 
 	// Pictures
 	{
-		pictureStream, err := mediafilefind.NewStream(ctx, gen, baseCondition.Picture())
+		pictureStream, err := mediafilefind.NewStream(ctx, rpcClient, baseCondition.Picture())
 		if err != nil {
 			return ScanResult{}, err
 		}
-		defer pictureStream.Close(gen)
+		defer pictureStream.Close(rpcClient)
 
 		for {
-			files, err := pictureStream.Next(ctx, gen)
+			files, err := pictureStream.Next(ctx, rpcClient)
 			if err != nil {
 				return ScanResult{}, err
 			}
@@ -142,14 +142,14 @@ func Scan(ctx context.Context, db qes.Querier, gen dahuarpc.Gen, scanCamera mode
 
 	// Videos
 	{
-		videoStream, err := mediafilefind.NewStream(ctx, gen, baseCondition.Video())
+		videoStream, err := mediafilefind.NewStream(ctx, rpcClient, baseCondition.Video())
 		if err != nil {
 			return ScanResult{}, err
 		}
-		defer videoStream.Close(gen)
+		defer videoStream.Close(rpcClient)
 
 		for {
-			files, err := videoStream.Next(ctx, gen)
+			files, err := videoStream.Next(ctx, rpcClient)
 			if err != nil {
 				return ScanResult{}, err
 			}

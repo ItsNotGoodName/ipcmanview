@@ -16,11 +16,11 @@ var (
 	ErrRequestFailed  = fmt.Errorf("request failed")
 )
 
-type Gen interface {
+type Client interface {
 	RPC(ctx context.Context) (RequestBuilder, error)
 }
 
-type GenLogin interface {
+type ClientLogin interface {
 	RPCLogin() RequestBuilder
 }
 

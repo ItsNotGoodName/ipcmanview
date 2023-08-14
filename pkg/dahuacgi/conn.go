@@ -3,13 +3,10 @@ package dahuacgi
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/icholy/digest"
 )
-
-var _ Gen = (*Conn)(nil)
 
 type Conn struct {
 	client  *http.Client
@@ -28,21 +25,11 @@ func NewConn(ip, username, password string) Conn {
 	}
 }
 
-func (c Conn) CGIGet(ctx context.Context, method string) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+method, nil)
+func (c Conn) CGIGet(ctx context.Context, r *Request) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, r.URL(c.baseURL), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.client.Do(req)
-}
-
-func (c Conn) CGIPost(ctx context.Context, method string, headers http.Header, body io.Reader) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+method, body)
-	if err != nil {
-		return nil, err
-	}
-	req.Header = headers
-
-	return c.client.Do(req)
+	return c.client.Do(r.Request(req))
 }

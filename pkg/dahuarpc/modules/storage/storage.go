@@ -7,10 +7,10 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func GetDeviceAllInfo(ctx context.Context, gen dahuarpc.Gen) ([]Storage, error) {
+func GetDeviceAllInfo(ctx context.Context, c dahuarpc.Client) ([]Storage, error) {
 	var object int64
 	{
-		rpc, err := gen.RPC(ctx)
+		rpc, err := c.RPC(ctx)
 		if err != nil {
 			return []Storage{}, err
 		}
@@ -23,7 +23,7 @@ func GetDeviceAllInfo(ctx context.Context, gen dahuarpc.Gen) ([]Storage, error) 
 		object = res.Result.Integer()
 	}
 
-	rpc, err := gen.RPC(ctx)
+	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return []Storage{}, err
 	}

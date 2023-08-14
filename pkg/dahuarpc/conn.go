@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-var _ Gen = (*Conn)(nil)
-var _ GenLogin = (*Conn)(nil)
+var _ Client = (*Conn)(nil)
+var _ ClientLogin = (*Conn)(nil)
 
 type Conn struct {
 	state       State

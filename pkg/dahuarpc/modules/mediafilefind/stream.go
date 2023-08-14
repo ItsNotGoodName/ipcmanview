@@ -14,14 +14,14 @@ type Stream struct {
 	closed bool
 }
 
-func NewStream(ctx context.Context, gen dahuarpc.Gen, condtion Condition) (*Stream, error) {
-	object, err := Create(ctx, gen)
+func NewStream(ctx context.Context, c dahuarpc.Client, condtion Condition) (*Stream, error) {
+	object, err := Create(ctx, c)
 	if err != nil {
 		return nil, err
 	}
 
 	var closed bool
-	ok, err := FindFile(ctx, gen, object, condtion)
+	ok, err := FindFile(ctx, c, object, condtion)
 	if err != nil {
 		var resErr *dahuarpc.ErrResponse
 		if !errors.As(err, &resErr) {
@@ -44,30 +44,30 @@ func NewStream(ctx context.Context, gen dahuarpc.Gen, condtion Condition) (*Stre
 	}, nil
 }
 
-func (s *Stream) Next(ctx context.Context, gen dahuarpc.Gen) ([]FindNextFileInfo, error) {
+func (s *Stream) Next(ctx context.Context, c dahuarpc.Client) ([]FindNextFileInfo, error) {
 	if s.closed {
 		return nil, nil
 	}
 
-	files, err := FindNextFile(ctx, gen, s.object, s.count)
+	files, err := FindNextFile(ctx, c, s.object, s.count)
 	if err != nil {
-		s.Close(gen)
+		s.Close(c)
 		return nil, err
 	}
 
 	if files.Infos == nil {
-		s.Close(gen)
+		s.Close(c)
 		return nil, nil
 	}
 
 	if files.Found < s.count {
-		s.Close(gen)
+		s.Close(c)
 	}
 
 	return files.Infos, nil
 }
 
-func (s *Stream) Close(gen dahuarpc.Gen) {
+func (s *Stream) Close(c dahuarpc.Client) {
 	if s.closed {
 		return
 	}
@@ -77,9 +77,9 @@ func (s *Stream) Close(gen dahuarpc.Gen) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if _, err := Close(ctx, gen, s.object); err != nil {
+	if _, err := Close(ctx, c, s.object); err != nil {
 		return
 	}
 
-	Destroy(ctx, gen, s.object)
+	Destroy(ctx, c, s.object)
 }

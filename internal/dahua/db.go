@@ -10,6 +10,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dbgen/postgres/dahua/model"
 	dahua "github.com/ItsNotGoodName/ipcmanview/internal/dbgen/postgres/dahua/table"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/license"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/magicbox"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
@@ -567,5 +568,42 @@ func (dbT) ScanActiveProgressUpdate(ctx context.Context, db qes.Querier, r model
 			dahua.ScanActiveTasks.Deleted.AS("deleted"),
 			dahua.ScanActiveTasks.Percent.AS("percent"),
 			dahua.ScanActiveTasks.Cursor.AS("cursor")))
+	return res, err
+}
+
+var dbCameraEventProjection ProjectionList = []Projection{
+	dahua.CameraEvents.ID.AS("id"),
+	dahua.CameraEvents.CameraID.AS("camera_id"),
+	dahua.CameraEvents.ContentType.AS("content_type"),
+	dahua.CameraEvents.ContentLength.AS("content_length"),
+	dahua.CameraEvents.Code.AS("code"),
+	dahua.CameraEvents.Action.AS("action"),
+	dahua.CameraEvents.Index.AS("index"),
+	dahua.CameraEvents.Data.AS("data"),
+	dahua.CameraEvents.CreatedAt.AS("created_at"),
+}
+
+func (dbT) CameraEventCreate(ctx context.Context, db qes.Querier, id int64, event dahuacgi.Event) (models.DahuaCameraEvent, error) {
+	var res models.DahuaCameraEvent
+	err := qes.ScanOne(ctx, db, &res, dahua.CameraEvents.
+		INSERT(
+			dahua.CameraEvents.CameraID,
+			dahua.CameraEvents.ContentType,
+			dahua.CameraEvents.ContentLength,
+			dahua.CameraEvents.Code,
+			dahua.CameraEvents.Action,
+			dahua.CameraEvents.Index,
+			dahua.CameraEvents.Data,
+		).
+		MODEL(model.CameraEvents{
+			CameraID:      int32(id),
+			ContentType:   event.ContentType,
+			ContentLength: int32(event.ContentLength),
+			Code:          event.Code,
+			Action:        event.Action,
+			Index:         int32(event.Index),
+			Data:          string(event.Data),
+		}).
+		RETURNING(dbCameraEventProjection))
 	return res, err
 }

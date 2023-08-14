@@ -7,5 +7,6 @@ import (
 )
 
 type Store interface {
-	GetGenRPC(ctx context.Context, cameraID int64) (dahuarpc.Gen, error)
+	ClientRPC(ctx context.Context, cameraID int64) (dahuarpc.Client, error)
+	// ClientCGI(ctx context.Context, cameraID int64) (dahuacgi.Client, error)
 }

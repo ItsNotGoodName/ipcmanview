@@ -6,49 +6,68 @@ import (
 	"errors"
 	"io"
 	"net/textproto"
-	"net/url"
 	"strconv"
 	"strings"
 )
 
 type EventBoundary string
 
-const defaultEventBoundary EventBoundary = "--myboundary"
+const DefaultEventBoundary EventBoundary = "myboundary"
 
-// EventManager attaches to all events.
-func EventManager(ctx context.Context, cgi Gen, heartbeat int) (EventSession, error) {
-	method := "eventManager.cgi"
+type EventManager struct {
+	io.ReadCloser
+	Boundary EventBoundary
+}
 
-	query := url.Values{}
-	query.Add("action", "attach")
-	query.Add("codes", "[All]")
+func EventManagerGet(ctx context.Context, c Client, heartbeat int) (EventManager, error) {
+	req := NewRequest("eventManager.cgi").
+		QueryString("action", "attach").
+		QueryString("codes", "[All]")
+
 	if heartbeat != 0 {
-		query.Add("heartbeat", strconv.Itoa(heartbeat))
-	}
-	if len(query) > 0 {
-		method += "?" + query.Encode()
+		req.QueryInt("heartbeat", heartbeat)
 	}
 
-	rd, err := OKBody(cgi.CGIGet(ctx, method))
+	res, err := OK(c.CGIGet(ctx, req))
 	if err != nil {
-		return EventSession{}, err
+		return EventManager{}, err
 	}
 
-	return EventSession{
-		br:       bufio.NewReader(rd),
-		boundary: string(defaultEventBoundary), // TODO: parse boundary from Content-Type
+	// Parse boundary
+	contentType := res.Header.Get("Content-Type")
+	boundary := DefaultEventBoundary
+	for _, token := range strings.Split(contentType, ";") {
+		maybeKV := strings.SplitN(token, "=", 2)
+		if len(maybeKV) != 2 {
+			continue
+		}
+		if maybeKV[0] != "boundary" {
+			continue
+		}
+
+		boundary = EventBoundary(maybeKV[1])
+		break
+	}
+
+	return EventManager{
+		ReadCloser: res.Body,
+		Boundary:   boundary,
 	}, nil
 }
 
-type EventSession struct {
-	br       *bufio.Reader
-	boundary string
+func (em EventManager) Reader() EventReader {
+	return NewEventReader(em.ReadCloser, em.Boundary)
 }
 
-func NewEventSession(br *bufio.Reader) EventSession {
-	return EventSession{
-		br:       br,
-		boundary: string(defaultEventBoundary),
+type EventReader struct {
+	br                 *bufio.Reader
+	boundaryWithPrefix string
+}
+
+func NewEventReader(rd io.Reader, boundary EventBoundary) EventReader {
+	return EventReader{
+		br:                 bufio.NewReader(rd),
+		boundaryWithPrefix: "--" + string(boundary),
 	}
 }
 
@@ -61,23 +80,23 @@ type Event struct {
 	Data          []byte
 }
 
-// Poll waits for the next event.
-func (es EventSession) Poll() error {
+// Poll waits for the next event boundary.
+func (er EventReader) Poll() error {
 	for {
-		s, _, err := es.br.ReadLine()
+		s, _, err := er.br.ReadLine()
 		if err != nil {
 			return err
 		}
-		if strings.HasPrefix(string(s), es.boundary) {
+		if strings.HasPrefix(string(s), er.boundaryWithPrefix) {
 			return nil
 		}
 	}
 }
 
-// Read parses the event. It should only be called after Poll.
-func (es EventSession) Read() (Event, error) {
+// ReadEvent parses the next event. Should be called after Poll.
+func (er EventReader) ReadEvent() (Event, error) {
 	// Parse headers
-	headers, err := es.seekAfterEmptyLine()
+	headers, err := er.seekAfterEmptyLine()
 	if err != nil {
 		return Event{}, err
 	}
@@ -90,7 +109,7 @@ func (es EventSession) Read() (Event, error) {
 	contentLength, _ := strconv.Atoi(mimeHeaders.Get("Content-Length"))
 
 	// Parse body
-	body, err := es.seekAfterEmptyLine()
+	body, err := er.seekAfterEmptyLine()
 	if err != nil {
 		return Event{}, err
 	}
@@ -111,12 +130,12 @@ func (es EventSession) Read() (Event, error) {
 }
 
 // seekAfterEmptyLine moves reader until it is after the next empty line.
-func (es EventSession) seekAfterEmptyLine() (string, error) {
+func (er EventReader) seekAfterEmptyLine() (string, error) {
 	var tokens string
 	for {
 		var s string
 		for {
-			b, isPrefix, err := es.br.ReadLine()
+			b, isPrefix, err := er.br.ReadLine()
 			if err != nil {
 				return "", err
 			}
