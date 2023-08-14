@@ -56,7 +56,7 @@ func main() {
 	// --------------------------------------------------------------------------
 	super.Add(sutureext.NewServiceFunc("debug", func(ctx context.Context) error {
 		time.Sleep(1 * time.Second)
-		c, err := dahuaSuper.GetOrCreateWorker(ctx, 319)
+		c, err := dahuaSuper.GetOrCreateWorker(ctx, 2)
 		if err != nil {
 			return err
 		}
