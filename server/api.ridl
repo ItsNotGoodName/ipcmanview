@@ -23,4 +23,7 @@ service AuthService
 service UserService
   - Me() => (user: User)
 
+service DahuaService
+  - CameraCount() => (count: int)
+
 error 100 InvalidToken    "invalid token"   HTTP 401

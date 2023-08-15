@@ -47,7 +47,7 @@ func main() {
 	super.Add(dahuaSuper)
 
 	// HTTP/webrpc
-	http := server.NewHTTP(chi.NewRouter(), ":8080", shutdown)
+	http := server.NewHTTP(chi.NewRouter(), ":8080")
 	super.Add(http)
 
 	super.Serve(ctx)

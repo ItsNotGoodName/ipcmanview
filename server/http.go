@@ -10,21 +10,19 @@ import (
 )
 
 type HTTP struct {
-	r        chi.Router
-	addr     string
-	shutdown context.CancelFunc
+	r       chi.Router
+	address string
 }
 
-func NewHTTP(r chi.Router, addr string, shutdown context.CancelFunc) HTTP {
+func NewHTTP(r chi.Router, addr string) HTTP {
 	return HTTP{
-		r:        r,
-		addr:     addr,
-		shutdown: shutdown,
+		r:       r,
+		address: addr,
 	}
 }
 
 func (r HTTP) Serve(ctx context.Context) error {
-	server := &http.Server{Addr: r.addr, Handler: r.r}
+	server := &http.Server{Addr: r.address, Handler: r.r}
 
 	go func() {
 		<-ctx.Done()
@@ -47,10 +45,9 @@ func (r HTTP) Serve(ctx context.Context) error {
 		}
 	}()
 
-	err := server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		log.Err(err).Msg("Failed to start HTTP server")
-		r.shutdown()
+	log.Info().Str("address", r.address).Msg("Starting HTTP server")
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		return err
 	}
 
 	return nil

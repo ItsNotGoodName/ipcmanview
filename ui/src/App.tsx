@@ -7,6 +7,7 @@ import { Application } from "./views/Application";
 import { Register } from "./views/Register";
 import { Route, Routes } from "@solidjs/router";
 import { Login } from "./views/Login";
+import { ServiceProvider } from "./providers/service";
 
 globalStyle("a", {
   textDecoration: "none",
@@ -32,7 +33,11 @@ function App() {
             <Route path="/*" component={Login} />
           </Routes>
         )}
-        authenticated={<Application />}
+        authenticated={
+          <ServiceProvider>
+            <Application />
+          </ServiceProvider>
+        }
       />
     </Root>
   )

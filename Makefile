@@ -1,34 +1,54 @@
-gen:
+export DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
+export JWT_SECRET=stop-logging-me-out
+
+include .env
+
+# NOTE: IDK if the wildcard is doing anything
+.PHONY: fake debug server dev-* dep-*
+
+gen: gen-jet gen-webrpc
+
+gen-jet:
 	jet -dsn=postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable -path=./internal/dbgen
 	jet -dsn=postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable -path=./internal/dbgen -schema dahua
+
+gen-webrpc:
 	webrpc-gen -schema=./server/api.ridl -target=golang -pkg=service -server -out=./server/service/proto.gen.go
 	webrpc-gen -schema=./server/api.ridl -target=typescript -client -out=./ui/src/core/client.gen.ts
 
-cli:
-	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run ./cmd/console
+preview: build-ui server
+
+fake:
+	go run ./cmd/ipcmanview-fake
 
 debug:
-	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run ./cmd/debug
+	go run ./cmd/ipcmanview-debug
 
-preview: build-ui server
+server:
+	go run ./cmd/ipcmanview
 
 build-ui:
 	cd ui && pnpm run build && cd ..
 
-server:
-	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" go run ./cmd/server
-
-migrate:
-	cd migrations && tern migrate
-
-dev:
-	DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres" air
-
 dev-db:
 	podman run --rm -e POSTGRES_PASSWORD=postgres -p 5432:5432 docker.io/postgres:15 -c log_statement=all
 
+dev-fake:
+	air -build.cmd="go build -o ./tmp/main -tags dev ./cmd/ipcmanview-fake"
+
+dev-debug:
+	air -build.cmd="go build -o ./tmp/main -tags dev ./cmd/ipcmanview-debug"
+
+dev-server:
+	air
+
 dev-ui:
 	cd ui && pnpm run dev
+
+dev-migrate:
+	cd migrations && tern migrate
+
+# Development dependencies
 
 dep: dep-tern dep-jet dep-air dep-webrpc-gen dep-ui
 
@@ -41,7 +61,6 @@ dep-jet:
 dep-air:
 		go install github.com/cosmtrek/air@latest
 
-# TODO: fix this install
 dep-webrpc-gen:
 		go install -ldflags="-s -w -X github.com/webrpc/webrpc.VERSION=v0.12.0" github.com/webrpc/webrpc/cmd/webrpc-gen@v0.12.0
 
