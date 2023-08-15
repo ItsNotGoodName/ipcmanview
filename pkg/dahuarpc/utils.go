@@ -30,9 +30,7 @@ func (a AuthParam) HashPassword(username, password string) string {
 				a.Random,
 				strings.ToUpper(fmt.Sprintf(
 					"%x",
-					md5.Sum([]byte(fmt.Sprintf("%s:%s:%s", username, a.Realm, password))),
-				)),
-			)))))
+					md5.Sum([]byte(fmt.Sprintf("%s:%s:%s", username, a.Realm, password))))))))))
 	default:
 		return password
 	}

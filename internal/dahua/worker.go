@@ -55,8 +55,6 @@ func (w WorkerRPC) Serve(ctx context.Context) error {
 		if err := w.serve(ctx); !errors.Is(err, ErrWorkerRestart) {
 			return err
 		}
-		// Prevent connection reset
-		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -68,7 +66,7 @@ func (w WorkerRPC) serve(ctx context.Context) error {
 
 	authConn := auth.NewConn(dahuarpc.NewConn(http.DefaultClient, cam.Address), cam.Username, cam.Password)
 	defer func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		authConn.Logout(ctx)
 		cancel()
 	}()
@@ -78,6 +76,12 @@ func (w WorkerRPC) serve(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-w.restartC:
+			// Wait for RPCs that are in progress to complete.
+			select {
+			case <-ctx.Done():
+				return nil
+			case <-time.After(1 * time.Second):
+			}
 			return ErrWorkerRestart
 		case req := <-w.rpcC:
 			rpc, err := authConn.RPC(req.ctx)

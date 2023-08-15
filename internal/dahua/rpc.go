@@ -57,10 +57,10 @@ func RPCDetailGet(ctx context.Context, rpcClient dahuarpc.Client) (models.DahuaC
 	}, nil
 }
 
-func RPCSoftwareVersionGet(ctx context.Context, rpcClient dahuarpc.Client) (magicbox.GetSoftwareVersionResult, error) {
+func RPCSoftwareVersionGet(ctx context.Context, rpcClient dahuarpc.Client) (magicbox.SoftwareVersion, error) {
 	res, err := magicbox.GetSoftwareVersion(ctx, rpcClient)
 	if isNotResponseError(err) {
-		return magicbox.GetSoftwareVersionResult{}, err
+		return magicbox.SoftwareVersion{}, err
 	}
 
 	return res, nil

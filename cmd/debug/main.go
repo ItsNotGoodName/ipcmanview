@@ -5,12 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/db"
 	"github.com/ItsNotGoodName/ipcmanview/migrations"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/magicbox"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/interrupt"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog"
@@ -55,18 +54,24 @@ func main() {
 
 	// --------------------------------------------------------------------------
 	super.Add(sutureext.NewServiceFunc("debug", func(ctx context.Context) error {
-		time.Sleep(1 * time.Second)
-		c, err := dahuaSuper.GetOrCreateWorker(ctx, 2)
+		res, err := dahua.DB.CameraList(ctx, pool)
 		if err != nil {
 			return err
 		}
 
-		sn, err := magicbox.GetSerialNo(ctx, c)
-		if err != nil {
-			return err
-		}
+		for _, dc := range res {
+			c, err := dahuaSuper.GetOrCreateWorker(ctx, dc.ID)
+			if err != nil {
+				return err
+			}
 
-		fmt.Println("SN:", sn)
+			sn, err := coaxialcontrolio.GetCaps(ctx, c, 0)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("SN:", sn)
+		}
 
 		return suture.ErrDoNotRestart
 	}))

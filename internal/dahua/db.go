@@ -158,7 +158,7 @@ func (dbT) CameraDetailUpdate(ctx context.Context, db qes.Querier, id int64, r m
 }
 
 // CameraSoftwaresUpdate [final]
-func (dbT) CameraSoftwaresUpdate(ctx context.Context, db qes.Querier, id int64, r magicbox.GetSoftwareVersionResult) error {
+func (dbT) CameraSoftwaresUpdate(ctx context.Context, db qes.Querier, id int64, r magicbox.SoftwareVersion) error {
 	_, err := qes.ExecOne(ctx, db, dahua.CameraSoftwares.
 		UPDATE(
 			dahua.CameraSoftwares.Build,
@@ -324,7 +324,7 @@ func (dbT) ScanCursorReset(ctx context.Context, db qes.Querier, cameraID int64) 
 	return err
 }
 
-// ---------- ScanCursorLock
+// ---------- START ScanCursorLock
 
 type ScanCursorLock struct {
 	models.DahuaScanCursor
@@ -365,7 +365,7 @@ func (s ScanCursorLock) UpdateQuickCursor(ctx context.Context, quickCursor time.
 	return err
 }
 
-// ----------
+// ---------- END
 
 // ScanQueueTaskCreate [final]
 func (dbT) ScanQueueTaskCreate(ctx context.Context, db qes.Querier, r models.DahuaScanQueueTask) error {
@@ -405,7 +405,6 @@ func (dbT) ScanQueueTaskCreate(ctx context.Context, db qes.Querier, r models.Dah
 }
 
 // ScanQueueTaskNext pops a queued task off the queue and locks the scan cursor.
-// WARNING: fn can only access scan tables or else it will deadlock when the camera gets deleted.
 func (dbT) ScanQueueTaskNext(ctx context.Context, db qes.Querier, fn func(ctx context.Context, scanCursorLock ScanCursorLock, queueTask models.DahuaScanQueueTask) error) (bool, error) {
 	var ok bool
 	return ok, pgx.BeginFunc(ctx, db, func(tx pgx.Tx) error {

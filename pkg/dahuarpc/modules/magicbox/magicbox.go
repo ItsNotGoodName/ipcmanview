@@ -56,18 +56,18 @@ func GetDeviceType(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.Type, err
 }
 
-func GetMemoryInfo(ctx context.Context, c dahuarpc.Client) (GetMemoryInfoResult, error) {
+func GetMemoryInfo(ctx context.Context, c dahuarpc.Client) (MemoryInfo, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
-		return GetMemoryInfoResult{}, err
+		return MemoryInfo{}, err
 	}
 
-	res, err := dahuarpc.Send[GetMemoryInfoResult](ctx, rpc.Method("magicBox.getMemoryInfo"))
+	res, err := dahuarpc.Send[MemoryInfo](ctx, rpc.Method("magicBox.getMemoryInfo"))
 
 	return res.Params, err
 }
 
-type GetMemoryInfoResult struct {
+type MemoryInfo struct {
 	Free  dahuarpc.Integer `json:"free"`
 	Total dahuarpc.Integer `json:"total"`
 }
@@ -137,19 +137,19 @@ func GetVendor(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.Vendor, err
 }
 
-func GetSoftwareVersion(ctx context.Context, c dahuarpc.Client) (GetSoftwareVersionResult, error) {
+func GetSoftwareVersion(ctx context.Context, c dahuarpc.Client) (SoftwareVersion, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
-		return GetSoftwareVersionResult{}, err
+		return SoftwareVersion{}, err
 	}
 
 	res, err := dahuarpc.Send[struct {
-		Version GetSoftwareVersionResult `json:"version"`
+		Version SoftwareVersion `json:"version"`
 	}](ctx, rpc.Method("magicBox.getSoftwareVersion"))
 	return res.Params.Version, err
 }
 
-type GetSoftwareVersionResult struct {
+type SoftwareVersion struct {
 	Build                   string `json:"Build"`
 	BuildDate               string `json:"BuildDate"`
 	SecurityBaseLineVersion string `json:"SecurityBaseLineVersion"`
@@ -170,20 +170,20 @@ func GetMarketArea(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.AbroadInfo, err
 }
 
-func GetUpTime(ctx context.Context, c dahuarpc.Client) (GetUpTimeResult, error) {
+func GetUpTime(ctx context.Context, c dahuarpc.Client) (UpTime, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
-		return GetUpTimeResult{}, err
+		return UpTime{}, err
 	}
 
 	res, err := dahuarpc.Send[struct {
-		Info GetUpTimeResult `json:"info"`
+		Info UpTime `json:"info"`
 	}](ctx, rpc.Method("magicBox.getUpTime"))
 
 	return res.Params.Info, err
 }
 
-type GetUpTimeResult struct {
+type UpTime struct {
 	Last  int64 `json:"last"`
 	Total int64 `json:"total"`
 }

@@ -28,7 +28,7 @@ func GetDeviceAllInfo(ctx context.Context, c dahuarpc.Client) ([]Storage, error)
 		return []Storage{}, err
 	}
 
-	res, err := dahuarpc.Send[GetDeviceAllInfoResult](ctx, rpc.Method("storage.getDeviceAllInfo").Object(object))
+	res, err := dahuarpc.Send[getDeviceAllInfoResult](ctx, rpc.Method("storage.getDeviceAllInfo").Object(object))
 	if err != nil {
 		return []Storage{}, err
 	}
@@ -50,11 +50,11 @@ type StorageDetail struct {
 	IsError    bool             `json:"IsError"`
 }
 
-type GetDeviceAllInfoResult struct {
+type getDeviceAllInfoResult struct {
 	Info []Storage
 }
 
-func (g *GetDeviceAllInfoResult) UnmarshalJSON(data []byte) error {
+func (g *getDeviceAllInfoResult) UnmarshalJSON(data []byte) error {
 	{
 		res := struct {
 			Info []Storage `json:"info"`
