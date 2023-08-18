@@ -1,28 +1,63 @@
-## Usage
+# Nuxt 3 Minimal Starter
+
+Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+
+## Setup
+
+Make sure to install the dependencies:
 
 ```bash
-$ npm install # or pnpm install or yarn install
+# npm
+npm install
+
+# pnpm
+pnpm install
+
+# yarn
+yarn install
 ```
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+## Development Server
 
-## Available Scripts
+Start the development server on `http://localhost:3000`:
 
-In the project directory, you can run:
+```bash
+# npm
+npm run dev
 
-### `npm run dev`
+# pnpm
+pnpm run dev
 
-Runs the app in the development mode.<br>
-Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
+# yarn
+yarn dev
+```
 
-### `npm run build`
+## Production
 
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
+Build the application for production:
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+```bash
+# npm
+npm run build
 
-## Deployment
+# pnpm
+pnpm run build
 
-Learn more about deploying your application with the [documentations](https://vitejs.dev/guide/static-deploy.html)
+# yarn
+yarn build
+```
+
+Locally preview production build:
+
+```bash
+# npm
+npm run preview
+
+# pnpm
+pnpm run preview
+
+# yarn
+yarn preview
+```
+
+Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.

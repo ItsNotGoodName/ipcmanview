@@ -123,6 +123,12 @@ func (dbT) CameraList(ctx context.Context, db qes.Querier) ([]models.DahuaCamera
 	return camera, err
 }
 
+// CameraCount [final]
+func (dbT) CameraCount(ctx context.Context, db qes.Querier) (int, error) {
+	res, err := qes.Exec(ctx, db, dahua.Cameras.SELECT(RawString("COUNT(*)")))
+	return int(res.RowsAffected()), err
+}
+
 // CameraDelete [final]
 func (dbT) CameraDelete(ctx context.Context, db qes.Querier, id int64) error {
 	_, err := qes.ExecOne(ctx, db, dahua.Cameras.
@@ -542,6 +548,11 @@ func (dbT) ScanActiveTaskComplete(ctx context.Context, db qes.Querier, cameraID 
 
 		return err
 	})
+}
+
+func (dbT) ScanActiveTaskCount(ctx context.Context, db qes.Querier) (int, error) {
+	res, err := qes.Exec(ctx, db, dahua.ScanActiveTasks.SELECT(RawString("COUNT(*)")))
+	return int(res.RowsAffected()), err
 }
 
 // ScanActiveProgressUpdate [final]

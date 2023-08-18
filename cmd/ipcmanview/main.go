@@ -10,7 +10,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/interrupt"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/server"
-	"github.com/go-chi/chi/v5"
+	"github.com/ItsNotGoodName/ipcmanview/server/rpc"
+	"github.com/ItsNotGoodName/ipcmanview/server/rpcfake"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/thejerf/suture/v4"
@@ -41,14 +42,31 @@ func main() {
 	bus := db.NewBusFromPool(pool)
 	super.Add(bus)
 
-	// Dahua
+	// Dahua supervisor
 	dahuaSuper := dahua.NewSupervisor(pool)
 	dahuaSuper.Register(bus)
 	super.Add(dahuaSuper)
 
+	// Dahua scan supervisor
+	dahuaScanSuper := dahua.NewScanSupervisor(pool, dahuaSuper, 5)
+	super.Add(dahuaScanSuper)
+
+	// +++++DEBUG
+	DEBUG_userService := rpcfake.NewUserService()
+	if err := rpcfake.SeedAuthService(ctx, DEBUG_userService); err != nil {
+		panic(err)
+	}
+	// +++++DEBUG
+
 	// HTTP/webrpc
-	http := server.NewHTTP(chi.NewRouter(), ":8080")
-	super.Add(http)
+	dahuaService := rpc.NewDahuaService(pool, dahuaSuper, dahuaScanSuper)
+	router := server.Router(
+		DEBUG_userService,
+		DEBUG_userService,
+		dahuaService,
+	)
+	server := server.New(router, ":8080")
+	super.Add(server)
 
 	super.Serve(ctx)
 }

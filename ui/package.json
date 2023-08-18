@@ -1,28 +1,23 @@
 {
-  "name": "ui",
+  "name": "nuxt-app",
   "private": true,
-  "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@macaron-css/core": "^1.2.0",
-    "@macaron-css/solid": "^1.4.1",
-    "@modular-forms/solid": "^0.19.1",
-    "@solid-primitives/storage": "^2.1.0",
-    "@solidjs/router": "^0.8.3",
-    "modern-normalize": "^2.0.0",
-    "solid-icons": "^1.0.11",
-    "solid-js": "^1.7.11"
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@macaron-css/vite": "^1.4.3",
-    "@types/node": "^20.5.0",
-    "typescript": "^5.1.6",
-    "vite": "^4.4.9",
-    "vite-plugin-solid": "^2.7.0"
+    "@nuxt/devtools": "latest",
+    "@nuxtjs/color-mode": "^3.3.0",
+    "@nuxtjs/tailwindcss": "^6.8.0",
+    "@pinia/nuxt": "^0.4.11",
+    "@types/node": "^18.17.3",
+    "nuxt": "^3.6.5",
+    "nuxt-headlessui": "^1.1.4",
+    "nuxt-icon": "^0.5.0",
+    "pinia": "^2.1.6",
+    "tw-colors": "^2.0.3"
   }
 }

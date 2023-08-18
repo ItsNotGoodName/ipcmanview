@@ -25,5 +25,6 @@ service UserService
 
 service DahuaService
   - CameraCount() => (count: int)
+  - ActiveScannerCount() => (activeScanners: int, totalScanners: int)
 
 error 100 InvalidToken    "invalid token"   HTTP 401

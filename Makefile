@@ -1,7 +1,7 @@
 export DATABASE_URL=postgres://postgres:postgres@localhost:5432/postgres
 export JWT_SECRET=stop-logging-me-out
 
-include .env
+-include .env
 
 # NOTE: IDK if the wildcard is doing anything
 .PHONY: fake debug server dev-* dep-*
@@ -13,10 +13,13 @@ gen-jet:
 	jet -dsn=postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable -path=./internal/dbgen -schema dahua
 
 gen-webrpc:
-	webrpc-gen -schema=./server/api.ridl -target=golang -pkg=service -server -out=./server/service/proto.gen.go
-	webrpc-gen -schema=./server/api.ridl -target=typescript -client -out=./ui/src/core/client.gen.ts
+	webrpc-gen -schema=./server/api.ridl -target=golang -pkg=rpcgen -server -out=./server/rpcgen/rpcgen.gen.go
+	webrpc-gen -schema=./server/api.ridl -target=./server/gen-typescript-nuxt -client -out=./ui/core/client.gen.ts
 
 preview: build-ui server
+
+preview-ui: build-ui
+	cd ui && npm run preview
 
 fake:
 	go run ./cmd/ipcmanview-fake
@@ -62,7 +65,7 @@ dep-air:
 		go install github.com/cosmtrek/air@latest
 
 dep-webrpc-gen:
-		go install -ldflags="-s -w -X github.com/webrpc/webrpc.VERSION=v0.12.0" github.com/webrpc/webrpc/cmd/webrpc-gen@v0.12.0
+		go install -ldflags="-s -w -X github.com/webrpc/webrpc.VERSION=v0.12.1" github.com/webrpc/webrpc/cmd/webrpc-gen@v0.12.1
 
 dep-ui:
 	cd ui && pnpm install

@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/ItsNotGoodName/ipcmanview/server/service"
+	"github.com/ItsNotGoodName/ipcmanview/server/rpcgen"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
@@ -29,12 +29,12 @@ func Authenticator(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token, _, err := jwtauth.FromContext(r.Context())
 		if err != nil {
-			service.RespondWithError(w, service.ErrInvalidToken)
+			rpcgen.RespondWithError(w, rpcgen.ErrInvalidToken)
 			return
 		}
 
 		if token == nil || jwt.Validate(token) != nil {
-			service.RespondWithError(w, service.ErrInvalidToken)
+			rpcgen.RespondWithError(w, rpcgen.ErrInvalidToken)
 			return
 		}
 
