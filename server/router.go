@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/ItsNotGoodName/ipcmanview/server/api"
 	"github.com/ItsNotGoodName/ipcmanview/server/jwt"
 	"github.com/ItsNotGoodName/ipcmanview/server/rpcgen"
 	"github.com/go-chi/chi/v5"
@@ -10,6 +11,7 @@ import (
 )
 
 func Router(
+	h api.Handler,
 	authService rpcgen.AuthService,
 	userService rpcgen.UserService,
 	dahauService rpcgen.DahuaService,
@@ -38,6 +40,14 @@ func Router(
 
 		r.Handle("/rpc/UserService/*", rpcgen.NewUserServiceServer(userService))
 		r.Handle("/rpc/DahuaService/*", rpcgen.NewDahuaServiceServer(dahauService))
+	})
+
+	r.Group(func(r chi.Router) {
+		// TODO: cookie based jwt token auth
+		// r.Use(jwtauth.Verifier(jwt.TokenAuth))
+		// r.Use(jwt.Authenticator)
+
+		r.Get("/api/dahua/cameras/{id}/snapshot", h.WithID(api.Snapshot))
 	})
 
 	return r

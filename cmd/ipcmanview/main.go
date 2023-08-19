@@ -10,6 +10,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/interrupt"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/server"
+	"github.com/ItsNotGoodName/ipcmanview/server/api"
 	"github.com/ItsNotGoodName/ipcmanview/server/rpc"
 	"github.com/ItsNotGoodName/ipcmanview/server/rpcfake"
 	"github.com/rs/zerolog"
@@ -59,8 +60,10 @@ func main() {
 	// +++++DEBUG
 
 	// HTTP/webrpc
+	apiHandler := api.NewHandler(dahuaSuper)
 	dahuaService := rpc.NewDahuaService(pool, dahuaSuper, dahuaScanSuper)
 	router := server.Router(
+		apiHandler,
 		DEBUG_userService,
 		DEBUG_userService,
 		dahuaService,

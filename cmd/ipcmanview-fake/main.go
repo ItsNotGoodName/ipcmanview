@@ -9,6 +9,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/interrupt"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/server"
+	"github.com/ItsNotGoodName/ipcmanview/server/api"
 	"github.com/ItsNotGoodName/ipcmanview/server/rpcfake"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -22,7 +23,7 @@ func main() {
 	svc := rpcfake.NewService()
 
 	// Router
-	r := server.Router(svc, svc, svc)
+	r := server.Router(api.NewHandler(nil), svc, svc, svc)
 
 	// Supervisor
 	super := suture.New("root", suture.Spec{
