@@ -7,15 +7,10 @@ export default defineNuxtPlugin(async () => {
     path: "/",
     secure: true,
     sameSite: "strict",
-    httpOnly: false, // change to "true" if you want only server-side access
+    httpOnly: true, // change to "true" if you want only server-side access
     maxAge: 604800,
   })
 
   // Load token from cookie into auth store
-  await useAsyncData(() => authStore.load(cookieToken.value))
-
-  // Sync auth store's token with cookie
-  authStore.$subscribe((_, state) => {
-    cookieToken.value = state.token
-  })
+  await authStore.load(cookieToken.value)
 })

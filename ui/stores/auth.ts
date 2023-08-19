@@ -17,38 +17,53 @@ export const useAuthStore = defineStore({
 
   },
   actions: {
-    load(token: string | null | undefined): Promise<null> {
+    async load(token: string | null | undefined): Promise<null> {
       if (!token) {
         return Promise.resolve(null)
       }
+
       this.$patch({
         token,
       })
+
       const { $userService } = useNuxtApp()
-      return $userService.me().then((res) => {
-        this.$patch({
-          user: res.user,
-          tokenValid: true,
-        })
-        return null
+
+      const res = await $userService.me()
+
+      this.$patch({
+        user: res.user,
+        tokenValid: true,
       })
+
+      return null
     },
 
-    logout() {
+    async logout(): Promise<null> {
       this.$reset()
+
+      await $fetch('/api/token', { method: 'POST', body: '' })
+
       navigateTo('/login')
+
+      return null
     },
 
-    login(usernameOrEmail: string, password: string): Promise<void> {
+    async login(usernameOrEmail: string, password: string): Promise<null> {
       const { $authService } = useNuxtApp()
-      return $authService.login({ usernameOrEmail, password }).then((res) => {
-        this.$patch({
-          token: res.token,
-          user: res.user,
-          tokenValid: true
-        })
-        navigateTo('/')
+
+      const res = await $authService.login({ usernameOrEmail, password })
+
+      await $fetch('/api/token', { method: 'POST', body: res.token })
+
+      this.$patch({
+        token: res.token,
+        user: res.user,
+        tokenValid: true
       })
+
+      navigateTo('/')
+
+      return null
     },
   },
 })

@@ -4,6 +4,7 @@ import { formatInitials } from '~/utils'
 
 const authStore = useAuthStore();
 
+const { mutate: logout, loading: logoutLoading } = useMutation(() => authStore.logout())
 </script>
 
 <template>
@@ -46,7 +47,7 @@ const authStore = useAuthStore();
                     </HeadlessMenuItem>
                     <HeadlessMenuItem v-slot="{ active }">
                       <div class="rounded" :class='{ "bg-Red text-Crust": active }'>
-                        <button class="flex w-full items-center gap-2 p-1" @click="authStore.logout">
+                        <button class="flex w-full items-center gap-2 p-1" @click="logout" :disabled="logoutLoading">
                           <Icon name="ri:logout-circle-r-line" class="h-5 w-5" />
                           Log out
                         </button>
