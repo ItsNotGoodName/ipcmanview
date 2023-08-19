@@ -45,6 +45,7 @@ func (b *Bus) backlog(ctx context.Context, qes qes.Querier) error {
 type Bus struct {
 	listener
 	Backlog            []func(ctx context.Context) error
+	DahuaCameraCreated []func(ctx context.Context, evt event.DahuaCameraCreated) error
 	DahuaCameraUpdated []func(ctx context.Context, evt event.DahuaCameraUpdated) error
 	DahuaCameraDeleted []func(ctx context.Context, evt event.DahuaCameraDeleted) error
 }
@@ -61,7 +62,25 @@ func (b *Bus) OnDahuaCameraUpdated(fn func(ctx context.Context, evt event.DahuaC
 	b.DahuaCameraUpdated = append(b.DahuaCameraUpdated, fn)
 }
 
+func (b *Bus) OnDahuaCameraCreated(fn func(ctx context.Context, evt event.DahuaCameraCreated) error) {
+	b.DahuaCameraCreated = append(b.DahuaCameraCreated, fn)
+}
+
 func registerHandlers(b *Bus, h map[string]handlerFunc) {
+	h["dahua.cameras:created"] = func(ctx context.Context, notification *pgconn.Notification, qes qes.Querier) error {
+		id, err := strconv.ParseInt(notification.Payload, 10, 64)
+		if err != nil {
+			return err
+		}
+
+		evt := event.DahuaCameraCreated{CameraID: id}
+		for _, v := range b.DahuaCameraCreated {
+			v(ctx, evt)
+		}
+
+		return nil
+	}
+
 	h["dahua.cameras:updated"] = func(ctx context.Context, notification *pgconn.Notification, qes qes.Querier) error {
 		id, err := strconv.ParseInt(notification.Payload, 10, 64)
 		if err != nil {

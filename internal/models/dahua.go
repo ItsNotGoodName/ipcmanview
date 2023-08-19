@@ -9,6 +9,7 @@ import (
 
 type DahuaCamera struct {
 	ID        int64
+	Name      string
 	Address   string `validate:"address"`
 	Username  string
 	Password  string

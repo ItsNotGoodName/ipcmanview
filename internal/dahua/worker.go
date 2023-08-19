@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/auth"
@@ -31,7 +30,7 @@ type workerRPCResponse struct {
 
 // WorkerRPC is responsible for genrating RPC requests for the given camera.
 type WorkerRPC struct {
-	camC     <-chan models.DahuaCamera
+	camC     <-chan Camera
 	rpcC     <-chan workerRPCRequest
 	restartC <-chan struct{}
 }
@@ -40,7 +39,7 @@ func (w WorkerRPC) String() string {
 	return "dahua.WorkerRPC"
 }
 
-func NewWorkerRPC(camC <-chan models.DahuaCamera, rpcC <-chan workerRPCRequest, restartC <-chan struct{}) WorkerRPC {
+func NewWorkerRPC(camC <-chan Camera, rpcC <-chan workerRPCRequest, restartC <-chan struct{}) WorkerRPC {
 	return WorkerRPC{
 		camC:     camC,
 		rpcC:     rpcC,
@@ -90,30 +89,33 @@ func (w WorkerRPC) serve(ctx context.Context) error {
 	}
 }
 
-// WorkerCamera fetches camera from the database and sends it to camera channel.
+// WorkerCamera fetches camera from the database and caches it.
+// The camera is always available through the camera channel until it is closed.
 // If there is no camera for the given id, the entire supervisor tree above it is terminated.
 type WorkerCamera struct {
-	cameraID int64
-	db       qes.Querier
-	refetchC <-chan struct{}
-	camC     chan<- models.DahuaCamera
+	cameraID   int64
+	db         qes.Querier
+	refetchC   <-chan struct{}
+	dependents []chan<- struct{}
+	camC       chan<- Camera
 }
 
 func (w WorkerCamera) String() string {
 	return "dahua.WorkerCamera"
 }
 
-func NewWorkerCamera(cameraID int64, db qes.Querier, camC chan<- models.DahuaCamera, refetchC chan struct{}) WorkerCamera {
+func NewWorkerCamera(cameraID int64, db qes.Querier, camC chan<- Camera, refetchC chan struct{}, dependents []chan<- struct{}) WorkerCamera {
 	return WorkerCamera{
-		cameraID: cameraID,
-		db:       db,
-		camC:     camC,
-		refetchC: refetchC,
+		cameraID:   cameraID,
+		db:         db,
+		camC:       camC,
+		dependents: dependents,
+		refetchC:   refetchC,
 	}
 }
 
 func (w WorkerCamera) Serve(ctx context.Context) error {
-	cam, err := w.fetchCamera(ctx)
+	cam, err := w.fetch(ctx)
 	if err != nil {
 		return err
 	}
@@ -124,22 +126,34 @@ func (w WorkerCamera) Serve(ctx context.Context) error {
 			return nil
 		case w.camC <- cam:
 		case <-w.refetchC:
-			cam, err = w.fetchCamera(ctx)
+			newCam, err := w.fetch(ctx)
 			if err != nil {
 				return err
 			}
+
+			// Restart only if new camera is different
+			if cam.Different(newCam) {
+				for i := range w.dependents {
+					select {
+					case w.dependents[i] <- struct{}{}:
+					default:
+					}
+				}
+			}
+
+			cam = newCam
 		}
 	}
 }
 
-func (w WorkerCamera) fetchCamera(ctx context.Context) (models.DahuaCamera, error) {
+func (w WorkerCamera) fetch(ctx context.Context) (Camera, error) {
 	cam, err := DB.CameraGet(ctx, w.db, w.cameraID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		close(w.camC)
-		return cam, errors.Join(suture.ErrTerminateSupervisorTree, err)
+		return Camera{}, errors.Join(suture.ErrTerminateSupervisorTree, err)
 	}
 
-	return cam, err
+	return NewCamera(cam), err
 }
 
 // WorkerDone closes the done channel when the context is canceled.
@@ -171,7 +185,7 @@ func (w WorkerDone) Serve(ctx context.Context) error {
 type WorkerEvent struct {
 	cameraID int64
 	db       qes.Querier
-	camC     <-chan models.DahuaCamera
+	camC     <-chan Camera
 	restartC <-chan struct{}
 }
 
@@ -179,7 +193,7 @@ func (w WorkerEvent) String() string {
 	return "dahua.WorkerEvent"
 }
 
-func NewWorkerEvent(cameraID int64, db qes.Querier, camC <-chan models.DahuaCamera, restartC <-chan struct{}) WorkerEvent {
+func NewWorkerEvent(cameraID int64, db qes.Querier, camC <-chan Camera, restartC <-chan struct{}) WorkerEvent {
 	return WorkerEvent{
 		cameraID: cameraID,
 		db:       db,

@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 	"github.com/thejerf/suture/v4"
@@ -45,8 +45,12 @@ func (s *Supervisor) Register(bus event.Bus) {
 		return s.Sync(ctx)
 	})
 
-	bus.OnDahuaCameraDeleted(func(ctx context.Context, evt event.DahuaCameraDeleted) error {
-		s.DeleteWorker(evt.CameraID)
+	bus.OnDahuaCameraCreated(func(ctx context.Context, evt event.DahuaCameraCreated) error {
+		_, err := s.GetOrCreateWorker(ctx, evt.CameraID)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 
@@ -58,8 +62,15 @@ func (s *Supervisor) Register(bus event.Bus) {
 
 		return worker.Restart(ctx)
 	})
+
+	bus.OnDahuaCameraDeleted(func(ctx context.Context, evt event.DahuaCameraDeleted) error {
+		s.DeleteWorker(evt.CameraID)
+		return nil
+	})
 }
 
+// Sync pulls cameras from database and merges them with the current supervised camers.
+// New cameras are created, existing cameras are restarted, and the rest are deleted.
 func (s *Supervisor) Sync(ctx context.Context) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -92,6 +103,26 @@ func (s *Supervisor) Sync(ctx context.Context) error {
 
 func (s *Supervisor) ClientRPC(ctx context.Context, cameraID int64) (dahuarpc.Client, error) {
 	return s.GetOrCreateWorker(ctx, cameraID)
+}
+
+func (s *Supervisor) ClientCGI(ctx context.Context, cameraID int64) (dahuacgi.Client, error) {
+	worker, err := s.GetOrCreateWorker(ctx, cameraID)
+	if err != nil {
+		return nil, err
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-worker.doneC:
+		return nil, ErrWorkerClosed
+	case cam, ok := <-worker.camC:
+		if !ok {
+			return nil, ErrWorkerClosed
+		}
+		// TODO: reuse connection
+		return dahuacgi.NewConn(cam.Address, cam.Username, cam.Password), nil
+	}
 }
 
 func (s *Supervisor) GetOrCreateWorker(ctx context.Context, cameraID int64) (SupervisorWorker, error) {
@@ -160,12 +191,9 @@ type SupervisorWorker struct {
 	CameraID int64
 
 	CamRefetchC chan struct{}
-	camC        chan models.DahuaCamera
+	camC        chan Camera
 
-	rpcRestartC chan struct{}
-	rpcC        chan<- workerRPCRequest
-
-	eventRestartC chan struct{}
+	rpcC chan<- workerRPCRequest
 
 	doneC chan struct{}
 }
@@ -180,28 +208,26 @@ func newSupervisorWorker(cameraID int64, db qes.Querier) SupervisorWorker {
 	super.Add(NewWorkerDone(cameraID, doneC))
 
 	// Camera worker
-	camC := make(chan models.DahuaCamera)
+	camC := make(chan Camera)
 	camRefetchC := make(chan struct{}, 1)
-	super.Add(NewWorkerCamera(cameraID, db, camC, camRefetchC))
+	rpcRestartC := make(chan struct{}, 1)
+	eventRestartC := make(chan struct{}, 1)
+	super.Add(NewWorkerCamera(cameraID, db, camC, camRefetchC, []chan<- struct{}{rpcRestartC, eventRestartC}))
 
 	// RPC worker
 	rpcC := make(chan workerRPCRequest)
-	rpcRestartC := make(chan struct{}, 1)
 	super.Add(NewWorkerRPC(camC, rpcC, rpcRestartC))
 
 	// Event worker
-	eventRestartC := make(chan struct{}, 1)
 	super.Add(NewWorkerEvent(cameraID, db, camC, eventRestartC))
 
 	return SupervisorWorker{
-		Supervisor:    super,
-		CameraID:      cameraID,
-		CamRefetchC:   camRefetchC,
-		camC:          camC,
-		rpcRestartC:   rpcRestartC,
-		rpcC:          rpcC,
-		eventRestartC: eventRestartC,
-		doneC:         doneC,
+		Supervisor:  super,
+		CameraID:    cameraID,
+		CamRefetchC: camRefetchC,
+		camC:        camC,
+		rpcC:        rpcC,
+		doneC:       doneC,
 	}
 }
 
@@ -225,30 +251,14 @@ func (w SupervisorWorker) RPC(ctx context.Context) (dahuarpc.RequestBuilder, err
 func (w SupervisorWorker) Restart(ctx context.Context) error {
 	// Refetch camera from database
 	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-w.doneC:
-		return ErrWorkerClosed
 	case w.CamRefetchC <- struct{}{}:
+	default:
 	}
 
-	// Restart rpc client
 	select {
-	case <-ctx.Done():
-		return ctx.Err()
 	case <-w.doneC:
 		return ErrWorkerClosed
-	case w.rpcRestartC <- struct{}{}:
+	default:
+		return nil
 	}
-
-	// restart event client
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-w.doneC:
-		return ErrWorkerClosed
-	case w.eventRestartC <- struct{}{}:
-	}
-
-	return nil
 }
