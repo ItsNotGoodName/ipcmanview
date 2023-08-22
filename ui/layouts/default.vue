@@ -1,14 +1,35 @@
 <script setup lang="ts">
-import { useAuthStore } from '~/stores/auth';
+import { useAuthStore, } from '~/stores/auth';
+import { useAlertStore } from '~/stores/alert';
 import { formatInitials } from '~/utils'
 
 const authStore = useAuthStore();
+const alertStore = useAlertStore();
+
+onMounted(() => {
+  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'info' })
+  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'error' })
+  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'success' })
+  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'success', timeout: 0 })
+  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'success', timeout: 0 })
+  // alertStore.toast({ title: "Hello", type: 'success', timeout: 0 })
+})
 
 const { mutate: logout, loading: logoutLoading } = useMutation(() => authStore.logout())
 </script>
 
 <template>
   <NuxtLoadingIndicator class="from-Mauve to-Mauve-200 bg-gradient-to-r" color="" />
+  <!-- Alerts -->
+  <div
+    class="absolute bottom-0 right-0 z-50 flex h-full w-full flex-col-reverse gap-4 overflow-y-auto p-4 sm:w-96 pointer-events-none overflow-x-hidden">
+    <TransitionGroup enter-active-class="duration-300 ease-out" enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100" leave-active-class="duration-300 ease-out"
+      leave-from-class="opacity-100 translate-x-0" leave-to-class="opacity-0 translate-x-full">
+      <AlertCard v-for="alert in alertStore.alerts" :key="alert.id" :alert="alert" :tabindex="alert.id"
+        @close="alertStore.dismiss(alert.id)" />
+    </TransitionGroup>
+  </div>
   <div class="bg-Base text-Text fixed inset-0">
     <div class="flex h-full flex-col">
       <!-- Header -->
