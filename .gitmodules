@@ -1,3 +1,0 @@
-[submodule "server/gen-typescript-nuxt"]
-	path = server/gen-typescript-nuxt
-	url = https://github.com/ItsNotGoodName/gen-typescript-nuxt.git

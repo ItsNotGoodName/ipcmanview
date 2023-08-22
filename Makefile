@@ -14,7 +14,7 @@ gen-jet:
 
 gen-webrpc:
 	webrpc-gen -schema=./server/api.ridl -target=golang -pkg=rpcgen -server -out=./server/rpcgen/rpcgen.gen.go
-	webrpc-gen -schema=./server/api.ridl -target=./server/gen-typescript-nuxt -client -out=./ui/core/client.gen.ts
+	webrpc-gen -schema=./server/api.ridl -target=github.com/ItsNotGoodName/gen-typescript-nuxt@heads/master -client -out=./ui/core/client.gen.ts
 
 preview: build-ui server
 
@@ -65,7 +65,7 @@ dep-air:
 		go install github.com/cosmtrek/air@latest
 
 dep-webrpc-gen:
-		go install -ldflags="-s -w -X github.com/webrpc/webrpc.VERSION=v0.12.1" github.com/webrpc/webrpc/cmd/webrpc-gen@v0.12.1
+	go install -ldflags="-s -w -X github.com/webrpc/webrpc.VERSION=v0.13.0" github.com/webrpc/webrpc/cmd/webrpc-gen@v0.13.0
 
 dep-ui:
 	cd ui && pnpm install
