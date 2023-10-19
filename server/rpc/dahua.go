@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/rpcgen"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
-	"github.com/ItsNotGoodName/ipcmanview/server/rpcgen"
 )
 
 type DahuaService struct {
@@ -28,7 +28,7 @@ var _ rpcgen.DahuaService = (*DahuaService)(nil)
 func (s DahuaService) ActiveScannerCount(ctx context.Context) (int, int, error) {
 	count, err := dahua.DB.ScanActiveTaskCount(ctx, s.db)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, handleErr(rpcgen.ErrWebrpcInternalError, err)
 	}
 
 	return count, s.scanSuper.WorkerCount(), nil

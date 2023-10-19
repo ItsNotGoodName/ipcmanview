@@ -11,5 +11,6 @@ package table
 // this method only once at the beginning of the program.
 func UseSchema(schema string) {
 	SchemaVersion = SchemaVersion.FromSchema(schema)
+	UserSessions = UserSessions.FromSchema(schema)
 	Users = Users.FromSchema(schema)
 }

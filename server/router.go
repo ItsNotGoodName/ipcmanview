@@ -1,16 +1,16 @@
 package server
 
 import (
+	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/rpcgen"
 	"github.com/ItsNotGoodName/ipcmanview/server/api"
-	"github.com/ItsNotGoodName/ipcmanview/server/jwt"
-	"github.com/ItsNotGoodName/ipcmanview/server/rpcgen"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/jwtauth/v5"
 )
 
 func Router(
+	jwt auth.JWTAuth,
 	h api.Handler,
 	authService rpcgen.AuthService,
 	userService rpcgen.UserService,
@@ -35,19 +35,18 @@ func Router(
 
 	r.Handle("/rpc/AuthService/*", rpcgen.NewAuthServiceServer(authService))
 	r.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verifier(jwt.TokenAuth))
-		r.Use(jwt.Authenticator)
+		r.Use(jwt.Verifier)
+		r.Use(auth.JWTAuthenticator)
 
 		r.Handle("/rpc/UserService/*", rpcgen.NewUserServiceServer(userService))
 		r.Handle("/rpc/DahuaService/*", rpcgen.NewDahuaServiceServer(dahauService))
 	})
 
 	r.Group(func(r chi.Router) {
-		// TODO: cookie based jwt token auth
-		// r.Use(jwtauth.Verifier(jwt.TokenAuth))
-		// r.Use(jwt.Authenticator)
+		r.Use(jwt.Verifier)
+		r.Use(auth.JWTAuthenticator)
 
-		r.Get("/api/dahua/cameras/{id}/snapshot", h.WithID(api.Snapshot))
+		r.Get("/v1/dahua/cameras/{id}/snapshot", h.WithID(api.Snapshot))
 	})
 
 	return r

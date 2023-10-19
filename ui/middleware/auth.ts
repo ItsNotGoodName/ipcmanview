@@ -6,7 +6,7 @@ export default defineNuxtRouteMiddleware(() => {
   if (process.client && nuxtApp.isHydrating && nuxtApp.payload.serverRendered) return
 
   const authStore = useAuthStore()
-  if (!authStore.loggedIn) {
+  if (!authStore.valid) {
     return navigateTo('/login')
   }
 })

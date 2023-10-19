@@ -10,6 +10,10 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/rpc': 'http://localhost:8080',
+        '/v1': {
+          target: 'http://localhost:8080',
+          cookieDomainRewrite: 'localhost'
+        },
       }
     }
   },
@@ -18,7 +22,8 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     'nuxt-icon',
     'nuxt-headlessui',
-    '@pinia/nuxt'
+    '@pinia/nuxt',
+    '@vueuse/nuxt'
   ],
   colorMode: {
     classPrefix: 'theme-',

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { UserRegister } from '~/core/client.gen';
+import { RegisterArgs } from '~/core/client.gen';
 
 definePageMeta({
   layout: "center",
@@ -10,7 +10,7 @@ definePageMeta({
 
 const { $authService } = useNuxtApp()
 
-const req = reactive<UserRegister>({
+const req = reactive<RegisterArgs>({
   email: "",
   username: "",
   password: "",
@@ -21,8 +21,7 @@ const {
   mutate: register,
   loading: registerLoading,
   error: registerError
-} = useMutation(() => $authService.register({ user: req }).
-  then(() => { navigateTo('/') }))
+} = useMutation(() => $authService.register(req).then(() => { navigateTo('/login') }))
 </script>
 
 <template>

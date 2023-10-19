@@ -5,16 +5,8 @@ import { formatInitials } from '~/utils'
 
 const authStore = useAuthStore();
 const alertStore = useAlertStore();
-
-onMounted(() => {
-  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'info' })
-  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'error' })
-  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'success' })
-  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'success', timeout: 0 })
-  // alertStore.toast({ message: "Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.", type: 'success', timeout: 0 })
-  // alertStore.toast({ title: "Hello", type: 'success', timeout: 0 })
-})
-
+const { $userService } = useNuxtApp()
+const user = useAsyncData('userService.me', () => $userService.me())
 const { mutate: logout, loading: logoutLoading } = useMutation(() => authStore.logout())
 </script>
 
@@ -48,7 +40,7 @@ const { mutate: logout, loading: logoutLoading } = useMutation(() => authStore.l
               <HeadlessMenuButton title="Profile"
                 class="hover:text-Mauve hover:fill-Mauve flex items-center justify-center">
                 <div class="bg-Surface flex h-7 w-7 items-center justify-center rounded-full">
-                  {{ formatInitials(authStore.user.username) }}
+                  {{ formatInitials(user.data.value?.user.username || "") }}
                 </div>
               </HeadlessMenuButton>
               <div class="flex flex-row-reverse">

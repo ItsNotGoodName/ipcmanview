@@ -8,6 +8,17 @@ CREATE TABLE users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE user_sessions (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
+  client_id TEXT NOT NULL,
+  ip_address INET NOT NULL,
+  expired_at TIMESTAMPTZ NOT NULL,
+  last_used_at TIMESTAMPTZ NOT NULL, 
+  issued_at TIMESTAMPTZ NOT NULL
+);
+
+
 CREATE SCHEMA dahua;
 
 CREATE TABLE dahua.cameras (

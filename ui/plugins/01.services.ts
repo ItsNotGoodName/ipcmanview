@@ -4,21 +4,30 @@ import { AuthService, DahuaService, Fetch, UserService } from "~/core/client.gen
 export default defineNuxtPlugin(async () => {
   const authStore = useAuthStore()
 
-  const authFetch: Fetch = (input, init) =>
-    $fetch.raw(input, {
+  const authFetch: Fetch = async (input, init) => {
+    const res = await $fetch.raw(input, {
       ...init,
       headers: {
         ...init?.headers,
         "Authorization": `Bearer ${authStore.token}`
       },
-    }).then(async (res) => {
-      if (res.status == 401 && authStore.token != "") {
-        console.log("No longer authenticated.");
-        await authStore.logout()
-      }
-
-      return res
     })
+
+    // Refresh token and try request again
+    if (res.status == 401 && authStore.valid) {
+      await authStore.refresh()
+
+      return await $fetch.raw(input, {
+        ...init,
+        headers: {
+          ...init?.headers,
+          "Authorization": `Bearer ${authStore.token}`
+        },
+      })
+    }
+
+    return res
+  }
 
   const runtimeConfig = useRuntimeConfig()
 

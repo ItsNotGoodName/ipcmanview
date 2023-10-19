@@ -13,7 +13,7 @@ gen-jet:
 	jet -dsn=postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable -path=./internal/dbgen -schema dahua
 
 gen-webrpc:
-	webrpc-gen -schema=./server/api.ridl -target=golang -pkg=rpcgen -server -out=./server/rpcgen/rpcgen.gen.go
+	webrpc-gen -schema=./server/api.ridl -target=golang -pkg=rpcgen -server -out=./internal/rpcgen/rpcgen.gen.go
 	webrpc-gen -schema=./server/api.ridl -target=github.com/ItsNotGoodName/gen-typescript-nuxt@heads/master -client -out=./ui/core/client.gen.ts
 
 preview: build-ui server

@@ -3,22 +3,22 @@ webrpc = v1
 name = api
 version = v1.0.0
 
-struct UserRegister
-  - email: string
-  - username: string
-  - password: string
-  - passwordConfirm: string
-
 struct User
   - id: int64
   - email: string
   - username: string
-  - created_at: timestamp
-    + go.field.name = CreatedAt
+  - createdAt: timestamp
+
+struct AuthLoginResponse
+  - session: string
+  - token: string
+  - expiredAt: timestamp
 
 service AuthService
-  - Register(user: UserRegister) => ()
-  - Login(usernameOrEmail: string, password: string) => (user: User, token: string)
+  - Register(email: string, username: string, password: string, passwordConfirm: string) => ()
+  - Login(usernameOrEmail: string, password: string, clientId: string, ipAddress: string) => (res: AuthLoginResponse)
+  - Refresh(session: string) => (token: string)
+  - Logout(session: string) => ()
 
 service UserService
   - Me() => (user: User)
@@ -27,4 +27,5 @@ service DahuaService
   - CameraCount() => (count: int)
   - ActiveScannerCount() => (activeScanners: int, totalScanners: int)
 
-error 100 InvalidToken    "invalid token"   HTTP 401
+error 700 InvalidSession    "invalid session"   HTTP 401
+error 701 InvalidToken      "invalid token"     HTTP 401

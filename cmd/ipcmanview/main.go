@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/db"
@@ -12,7 +13,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/server"
 	"github.com/ItsNotGoodName/ipcmanview/server/api"
 	"github.com/ItsNotGoodName/ipcmanview/server/rpc"
-	"github.com/ItsNotGoodName/ipcmanview/server/rpcfake"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/thejerf/suture/v4"
@@ -52,20 +52,19 @@ func main() {
 	dahuaScanSuper := dahua.NewScanSupervisor(pool, dahuaSuper, 5)
 	super.Add(dahuaScanSuper)
 
-	// +++++DEBUG
-	DEBUG_userService := rpcfake.NewUserService()
-	if err := rpcfake.SeedAuthService(ctx, DEBUG_userService); err != nil {
-		panic(err)
-	}
-	// +++++DEBUG
+	jwt := auth.NewJWTAuthenticator(auth.JWTRandomSecret())
+	authService := rpc.NewAuthService(pool, jwt)
+
+	userService := rpc.NewUserService(pool)
 
 	// HTTP/webrpc
 	apiHandler := api.NewHandler(dahuaSuper)
 	dahuaService := rpc.NewDahuaService(pool, dahuaSuper, dahuaScanSuper)
 	router := server.Router(
+		jwt,
 		apiHandler,
-		DEBUG_userService,
-		DEBUG_userService,
+		authService,
+		userService,
 		dahuaService,
 	)
 	server := server.New(router, ":8080")

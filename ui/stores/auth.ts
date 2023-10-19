@@ -1,47 +1,49 @@
+import { FetchError } from 'ofetch'
 import { defineStore, acceptHMRUpdate } from 'pinia'
+import { LoginRequest } from 'server/api/login.post'
+import { useAlertStore } from './alert'
 
 export const useAuthStore = defineStore({
   id: 'auth',
-  state: () => ({
-    user: {
-      id: 0,
-      email: "",
-      username: "",
-      created_at: ""
-    },
-    tokenValid: false,
+  state: (): { token: string, refreshPromise?: Promise<string> } => ({
     token: "",
   }),
   getters: {
-    loggedIn: (state) => state.tokenValid
-
+    valid: (state) => !!state.token,
   },
   actions: {
-    async load(token: string | null | undefined): Promise<null> {
-      if (!token) {
-        return Promise.resolve(null)
+    async refresh(): Promise<null> {
+      if (this.$state.refreshPromise) {
+        return this.$state.refreshPromise.then(() => null)
       }
+      this.$state.refreshPromise = $fetch('/api/refresh', { method: "POST" })
 
-      this.$patch({
-        token,
-      })
+      try {
+        const token = await this.$state.refreshPromise
+        this.$patch({ token })
+      } catch (e) {
+        if (e instanceof FetchError && e.statusCode == 401) {
+          this.$reset()
 
-      const { $userService } = useNuxtApp()
+          navigateTo('/login')
+        } else if (e instanceof Error) {
+          useAlertStore().toast({ title: "Auth Refresh", message: e.message, type: 'error' })
 
-      const res = await $userService.me()
+          throw e
+        } else {
+          throw e
+        }
+      } finally {
+        this.$state.refreshPromise = undefined
 
-      this.$patch({
-        user: res.user,
-        tokenValid: true,
-      })
-
-      return null
+        return null
+      }
     },
 
     async logout(): Promise<null> {
-      this.$reset()
+      await $fetch('/api/logout', { method: "POST" })
 
-      await $fetch('/api/token', { method: 'POST', body: '' })
+      this.$reset()
 
       navigateTo('/login')
 
@@ -49,17 +51,14 @@ export const useAuthStore = defineStore({
     },
 
     async login(usernameOrEmail: string, password: string): Promise<null> {
-      const { $authService } = useNuxtApp()
-
-      const res = await $authService.login({ usernameOrEmail, password })
-
-      await $fetch('/api/token', { method: 'POST', body: res.token })
-
-      this.$patch({
-        token: res.token,
-        user: res.user,
-        tokenValid: true
+      const { token } = await $fetch('/api/login', {
+        method: 'POST', body: {
+          usernameOrEmail,
+          password
+        } satisfies LoginRequest
       })
+
+      this.$patch({ token })
 
       navigateTo('/')
 
