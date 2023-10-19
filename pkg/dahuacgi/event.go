@@ -3,6 +3,7 @@ package dahuacgi
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"net/textproto"
@@ -77,7 +78,7 @@ type Event struct {
 	Code          string
 	Action        string
 	Index         int
-	Data          []byte
+	Data          json.RawMessage
 }
 
 // Poll waits for the next event boundary.

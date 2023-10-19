@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
@@ -27,7 +28,7 @@ func main() {
 
 	fmt.Printf("Testing CGI features on %s\n", ip)
 
-	cgi := dahuacgi.NewConn(ip, username, password)
+	cgi := dahuacgi.NewConn(http.Client{}, ip, username, password)
 
 	// Audio
 	fmt.Println("Testing audio...")

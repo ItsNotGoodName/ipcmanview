@@ -3,6 +3,7 @@ package dahua
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
@@ -121,7 +122,7 @@ func (s *Supervisor) ClientCGI(ctx context.Context, cameraID int64) (dahuacgi.Cl
 			return nil, ErrWorkerClosed
 		}
 		// TODO: reuse connection
-		return dahuacgi.NewConn(cam.Address, cam.Username, cam.Password), nil
+		return dahuacgi.NewConn(http.Client{}, cam.Address, cam.Username, cam.Password), nil
 	}
 }
 

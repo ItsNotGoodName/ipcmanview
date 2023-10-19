@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -33,7 +34,12 @@ func main() {
 			log.Fatal().Err(err).Msg("Failed to parse event")
 		}
 
-		fmt.Printf("%+v\n", event)
+		b, err := json.MarshalIndent(event, "", "  ")
+		if err != nil {
+			log.Fatal().Err(err).Msg("Failed to marshal event")
+		}
+
+		fmt.Println(string(b))
 	}
 }
 

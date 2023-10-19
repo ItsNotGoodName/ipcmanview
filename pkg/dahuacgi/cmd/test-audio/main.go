@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"time"
 
@@ -31,8 +32,8 @@ func main() {
 
 	fmt.Printf("Testing audio features from %s to %s\n", inIp, outIp)
 
-	inClient := dahuacgi.NewConn(inIp, username, password)
-	clientOut := dahuacgi.NewConn(outIp, username, password)
+	inClient := dahuacgi.NewConn(http.Client{}, inIp, username, password)
+	clientOut := dahuacgi.NewConn(http.Client{}, outIp, username, password)
 
 	inCount, err := dahuacgi.AudioInputChannelCount(ctx, inClient)
 	if err != nil {

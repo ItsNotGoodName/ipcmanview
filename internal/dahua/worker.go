@@ -248,7 +248,7 @@ func (w WorkerEvent) serve(ctx context.Context) error {
 		return suture.ErrDoNotRestart
 	}
 
-	c := dahuacgi.NewConn(cam.Address, cam.Username, cam.Password)
+	c := dahuacgi.NewConn(http.Client{}, cam.Address, cam.Username, cam.Password)
 
 	em, err := dahuacgi.EventManagerGet(ctx, c, 0)
 	if err != nil {

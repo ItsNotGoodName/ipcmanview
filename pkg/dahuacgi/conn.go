@@ -13,15 +13,14 @@ type Conn struct {
 	baseURL string
 }
 
-func NewConn(ip, username, password string) Conn {
+func NewConn(httpClient http.Client, ip, username, password string) Conn {
+	httpClient.Transport = &digest.Transport{
+		Username: username,
+		Password: password,
+	}
 	return Conn{
 		baseURL: fmt.Sprintf("http://%s/cgi-bin/", ip),
-		client: &http.Client{
-			Transport: &digest.Transport{
-				Username: username,
-				Password: password,
-			},
-		},
+		client:  &httpClient,
 	}
 }
 
