@@ -1,6 +1,6 @@
 module github.com/ItsNotGoodName/ipcmanview
 
-go 1.20
+go 1.21.3
 
 require (
 	github.com/georgysavva/scany/v2 v2.0.0
