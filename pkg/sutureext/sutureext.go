@@ -3,6 +3,7 @@ package sutureext
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/rs/zerolog"
@@ -18,7 +19,7 @@ func EventHook() suture.EventHook {
 			log.Info().Str("supervisor", e.SupervisorName).Str("service", e.ServiceName).Msg("Service failed to terminate in a timely manner")
 		case suture.EventServicePanic:
 			log.Warn().Msg("Caught a service panic, which shouldn't happen")
-			logJSON(log.Info(), e)
+			log.Info().Str("panic", e.PanicMsg).Msg(e.Stacktrace)
 		case suture.EventServiceTerminate:
 			if e.ServiceName == prevTerminate.ServiceName && e.Err == prevTerminate.Err {
 				log.Debug().Str("supervisor", e.SupervisorName).Str("service", e.ServiceName).Str("err", fmt.Sprint(e.Err)).Msg("Service failed")
@@ -28,9 +29,9 @@ func EventHook() suture.EventHook {
 			prevTerminate = e
 			logJSON(log.Debug(), e)
 		case suture.EventBackoff:
-			log.Debug().Str("supervisor", e.SupervisorName).Msg("Exiting backoff state")
-		case suture.EventResume:
 			log.Debug().Str("supervisor", e.SupervisorName).Msg("Too many service failures - entering the backoff state")
+		case suture.EventResume:
+			log.Debug().Str("supervisor", e.SupervisorName).Msg("Exiting backoff state")
 		default:
 			log.Warn().Int("type", int(e.Type())).Msg("Unknown suture supervisor event type")
 			logJSON(log.Info(), e)
@@ -44,14 +45,14 @@ func logJSON(event *zerolog.Event, v any) {
 }
 
 type ServiceFunc struct {
-	fn   func(ctx context.Context) error
 	name string
+	fn   func(ctx context.Context) error
 }
 
 func NewServiceFunc(name string, fn func(ctx context.Context) error) ServiceFunc {
 	return ServiceFunc{
-		fn:   fn,
 		name: name,
+		fn:   fn,
 	}
 }
 
@@ -61,4 +62,15 @@ func (s ServiceFunc) String() string {
 
 func (s ServiceFunc) Serve(ctx context.Context) error {
 	return s.fn(ctx)
+}
+
+func OneShotFunc(fn func(ctx context.Context) error) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		err := fn(ctx)
+		if err != nil {
+			return errors.Join(suture.ErrTerminateSupervisorTree, err)
+		}
+
+		return suture.ErrDoNotRestart
+	}
 }

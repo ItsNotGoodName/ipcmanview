@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// JSON exists because I chose Go.
 type JSON = map[string]any
 
 type AuthParam struct {
@@ -45,12 +46,21 @@ func NewTimestamp(date time.Time, cameraLocation *time.Location) Timestamp {
 
 // Parse returns the UTC time for the given timestamp and camera location.
 func (t Timestamp) Parse(cameraLocation *time.Location) (time.Time, error) {
-	date, err := time.ParseInLocation("2006-01-02 15:04:05", string(t), cameraLocation)
-	if err != nil {
-		return date, err
-	}
+	if strings.HasSuffix(string(t), "PM") || strings.HasSuffix(string(t), "AM") {
+		date, err := time.ParseInLocation("2006-01-02 03:04:05 PM", string(t), cameraLocation)
+		if err != nil {
+			return date, err
+		}
 
-	return date.UTC(), nil
+		return date.UTC(), nil
+	} else {
+		date, err := time.ParseInLocation("2006-01-02 15:04:05", string(t), cameraLocation)
+		if err != nil {
+			return date, err
+		}
+
+		return date.UTC(), nil
+	}
 }
 
 // ExtractFilePathTags extracts tags that are surrounded by brackets from the given file path.
@@ -88,4 +98,12 @@ func (s *Integer) UnmarshalJSON(data []byte) error {
 
 func (s Integer) Integer() int64 {
 	return int64(s)
+}
+
+func LoadFileURL(address, path string) string {
+	return fmt.Sprintf("%s/RPC_Loadfile%s", address, path)
+}
+
+func Cookie(session string) string {
+	return fmt.Sprintf("WebClientSessionID=%s; DWebClientSessionID=%s; DhWebClientSessionID=%s", session, session, session)
 }

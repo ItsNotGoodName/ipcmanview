@@ -4,12 +4,27 @@ package dahuacgi
 import (
 	"bufio"
 	"context"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 )
+
+func newHTPError(r *http.Response) HTTPError {
+	return HTTPError{
+		StatusCode: r.StatusCode,
+		Status:     r.Status,
+	}
+}
+
+type HTTPError struct {
+	StatusCode int
+	Status     string
+}
+
+func (e HTTPError) Error() string {
+	return e.Status
+}
 
 type Client interface {
 	CGIGet(ctx context.Context, req *Request) (*http.Response, error)
@@ -65,7 +80,7 @@ func OK(res *http.Response, err error) (*http.Response, error) {
 	// OK
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		res.Body.Close()
-		return nil, fmt.Errorf(res.Status)
+		return nil, newHTPError(res)
 	}
 
 	return res, nil
@@ -86,7 +101,7 @@ func OKTable(res *http.Response, err error) (Table, error) {
 
 	// OK
 	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return nil, fmt.Errorf(res.Status)
+		return nil, newHTPError(res)
 	}
 
 	// Table

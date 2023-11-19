@@ -6,9 +6,14 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func FirstLogin(ctx context.Context, c dahuarpc.ClientLogin, username string) (dahuarpc.Response[dahuarpc.AuthParam], error) {
+type Client interface {
+	RawRPC(ctx context.Context) (dahuarpc.RequestBuilder, error)
+	RawRPCLogin() dahuarpc.RequestBuilder
+}
+
+func FirstLogin(ctx context.Context, c Client, username string) (dahuarpc.Response[dahuarpc.AuthParam], error) {
 	return dahuarpc.SendRaw[dahuarpc.AuthParam](ctx, c.
-		RPCLogin().
+		RawRPCLogin().
 		Method("global.login").
 		Params(dahuarpc.JSON{
 			"userName":   username,
@@ -18,9 +23,9 @@ func FirstLogin(ctx context.Context, c dahuarpc.ClientLogin, username string) (d
 		}))
 }
 
-func SecondLogin(ctx context.Context, c dahuarpc.ClientLogin, username, password, loginType, authorityType string) error {
+func SecondLogin(ctx context.Context, c Client, username, password, loginType, authorityType string) error {
 	_, err := dahuarpc.Send[any](ctx, c.
-		RPCLogin().
+		RawRPCLogin().
 		Method("global.login").
 		Params(dahuarpc.JSON{
 			"userName":      username,
@@ -33,8 +38,8 @@ func SecondLogin(ctx context.Context, c dahuarpc.ClientLogin, username, password
 	return err
 }
 
-func GetCurrentTime(ctx context.Context, c dahuarpc.Client) (string, error) {
-	rpc, err := c.RPC(ctx)
+func GetCurrentTime(ctx context.Context, c Client) (string, error) {
+	rpc, err := c.RawRPC(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -46,8 +51,8 @@ func GetCurrentTime(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.Time, err
 }
 
-func KeepAlive(ctx context.Context, c dahuarpc.Client) (int, error) {
-	rpc, err := c.RPC(ctx)
+func KeepAlive(ctx context.Context, c Client) (int, error) {
+	rpc, err := c.RawRPC(ctx)
 	if err != nil {
 		return 0, err
 	}
@@ -59,8 +64,8 @@ func KeepAlive(ctx context.Context, c dahuarpc.Client) (int, error) {
 	return res.Params.Timeout, err
 }
 
-func Logout(ctx context.Context, c dahuarpc.Client) (bool, error) {
-	rpc, err := c.RPC(ctx)
+func Logout(ctx context.Context, c Client) (bool, error) {
+	rpc, err := c.RawRPC(ctx)
 	if err != nil {
 		return false, err
 	}

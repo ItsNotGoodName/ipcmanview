@@ -18,8 +18,10 @@
 # vendor/
 
 # Go workspace file
-# go.work
+go.work
 
+# Custom
 tmp
-dist
 .env
+dist
+fixtures

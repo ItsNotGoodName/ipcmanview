@@ -23,7 +23,7 @@ func NewStream(ctx context.Context, c dahuarpc.Client, condtion Condition) (*Str
 	var closed bool
 	ok, err := FindFile(ctx, c, object, condtion)
 	if err != nil {
-		var resErr *dahuarpc.ErrResponse
+		var resErr *dahuarpc.ResponseError
 		if !errors.As(err, &resErr) {
 			return nil, err
 		}

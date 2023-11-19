@@ -4,96 +4,156 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
+	"sync"
 	"time"
 )
 
-type Conn struct {
-	state       State
-	client      *http.Client
-	rpcURL      string
-	rpcLoginURL string
-	lastID      int
-	Session     string
-	Error       error
-	LastLogin   time.Time
-}
-
-func NewConn(client *http.Client, ip string) *Conn {
-	return &Conn{
-		state:       StateLogout,
-		client:      client,
-		rpcURL:      fmt.Sprintf("http://%s/RPC2", ip),
-		rpcLoginURL: fmt.Sprintf("http://%s/RPC2_Login", ip),
-	}
-}
-
-func (c *Conn) RPC(ctx context.Context) (RequestBuilder, error) {
-	if c.Session == "" {
-		return RequestBuilder{}, ErrInvalidSession
-	}
-
-	return NewRequestBuilder(
-		c.client,
-		c.nextID(),
-		c.rpcURL,
-		c.Session,
-	), nil
-}
-
-func (c *Conn) RPCLogin() RequestBuilder {
-	return NewRequestBuilder(
-		c.client,
-		c.nextID(),
-		c.rpcLoginURL,
-		c.Session,
-	)
-}
-
-func (c *Conn) nextID() int {
-	c.lastID += 1
-	return c.lastID
-}
-
-type State = int
+type State int
 
 const (
 	StateLogout State = iota
 	StateLogin
 	StateError
+	StateClosed
 )
 
-func (c *Conn) UpdateSession(session string) error {
-	if c.state != StateLogout {
-		return fmt.Errorf("cannot set session when not logged out")
+func (s State) String() string {
+	switch s {
+	case StateLogin:
+		return "login"
+	case StateLogout:
+		return "logout"
+	case StateError:
+		return "error"
+	case StateClosed:
+		return "closed"
+	default:
+		return "unknown"
+	}
+}
+
+func (s State) Is(states ...State) bool {
+	return slices.Contains(states, s)
+}
+
+type ConnData struct {
+	lastID    int
+	State     State
+	Session   string
+	Error     error
+	LastLogin time.Time
+}
+
+func (c *ConnData) nextID() int {
+	c.lastID += 1
+	return c.lastID
+}
+
+func NewConn(client *http.Client, address string) *Conn {
+	return &Conn{
+		client:      client,
+		rpcURL:      fmt.Sprintf("%s/RPC2", address),
+		rpcLoginURL: fmt.Sprintf("%s/RPC2_Login", address),
+		dataMu:      sync.Mutex{},
+		data: ConnData{
+			State:     StateLogout,
+			lastID:    0,
+			Session:   "",
+			Error:     nil,
+			LastLogin: time.Time{},
+		},
+	}
+}
+
+type Conn struct {
+	client      *http.Client
+	rpcURL      string
+	rpcLoginURL string
+
+	dataMu sync.Mutex
+	data   ConnData
+}
+
+func (c *Conn) RawRPC(ctx context.Context) (RequestBuilder, error) {
+	c.dataMu.Lock()
+	if c.data.Session == "" {
+		c.dataMu.Unlock()
+		return RequestBuilder{}, ErrInvalidSession
 	}
 
-	c.Session = session
+	rpc := NewRequestBuilder(
+		c.client,
+		c.data.nextID(),
+		c.rpcURL,
+		c.data.Session,
+	)
+	c.dataMu.Unlock()
+
+	return rpc, nil
+}
+
+func (c *Conn) RawRPCLogin() RequestBuilder {
+	c.dataMu.Lock()
+	rpc := NewRequestBuilder(
+		c.client,
+		c.data.nextID(),
+		c.rpcLoginURL,
+		c.data.Session,
+	)
+	c.dataMu.Unlock()
+
+	return rpc
+}
+
+func (c *Conn) Data() ConnData {
+	c.dataMu.Lock()
+	data := c.data
+	c.dataMu.Unlock()
+	return data
+}
+
+func (c *Conn) Session() string {
+	c.dataMu.Lock()
+	session := c.data.Session
+	c.dataMu.Unlock()
+	return session
+}
+
+func (c *Conn) UpdateSession(session string) error {
+	c.dataMu.Lock()
+	if !c.data.State.Is(StateLogout, StateClosed) {
+		c.dataMu.Unlock()
+		return fmt.Errorf("cannot set session when logout or closed")
+	}
+
+	c.data.Session = session
+	c.dataMu.Unlock()
+
 	return nil
 }
 
-func (c *Conn) State() State {
-	return c.state
-}
-
-func (c *Conn) Set(newState State, err ...error) {
-	if c.state == StateLogout && newState == StateLogin {
-		c.LastLogin = time.Now()
-	} else if c.state == StateLogin && newState == StateLogin {
-		c.LastLogin = time.Now()
-	} else {
-		c.lastID = 0
-		c.Session = ""
-		c.Error = nil
-		c.LastLogin = time.Time{}
-	}
-
-	if newState == StateError {
+func (c *Conn) UpdateState(state State, err ...error) {
+	c.dataMu.Lock()
+	switch state {
+	case StateLogout, StateClosed:
+		// (*) => (Logout, Closed)
+		c.data = ConnData{}
+	case StateLogin:
+		// (*) => (Login)
+		if c.data.State.Is(StateLogout, StateLogin) {
+			// (Logout, Login) => (Login)
+			c.data.LastLogin = time.Now()
+		}
+	case StateError:
+		// (*) => (Error)
 		if len(err) == 0 {
-			c.Error = fmt.Errorf("no error specified")
+			c.data.Error = fmt.Errorf("unknown error")
 		} else {
-			c.Error = err[0]
+			c.data.Error = err[0]
 		}
 	}
 
-	c.state = newState
+	c.data.State = state
+	c.dataMu.Unlock()
 }

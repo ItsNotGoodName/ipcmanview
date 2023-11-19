@@ -1,20 +1,18 @@
 package build
 
-type Build struct {
-	BuiltBy    string
-	Commit     string
-	Date       string
-	Version    string
-	RepoURL    string
-	ReleaseURL string
-}
+var (
+	Version string
+	Commit  string
+	Date    string
+	RepoURL string
+)
 
-func (b Build) CommitURL() string {
-	return b.RepoURL + "/tree/" + b.Commit
-}
+var (
+	CommitURL  string
+	LicenseURL string
+)
 
-func (b Build) LicenseURL() string {
-	return b.RepoURL + "/blob/master/LICENSE"
+func init() {
+	CommitURL = RepoURL + "/tree/" + Commit
+	LicenseURL = RepoURL + "/blob/master/LICENSE"
 }
-
-var Current Build

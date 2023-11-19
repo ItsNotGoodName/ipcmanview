@@ -1,15 +1,16 @@
 package main
 
 import (
+	"context"
 	_ "embed"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/interrupt"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -22,7 +23,7 @@ const (
 )
 
 func main() {
-	ctx, cancel := interrupt.Context()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
 	inIp := getEnv(EnvIPIn)

@@ -1,61 +1,83 @@
 package models
 
 import (
+	"encoding/json"
 	"time"
-
-	"github.com/ItsNotGoodName/ipcmanview/internal/dbgen/postgres/dahua/model"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type DahuaCamera struct {
-	ID        int64
-	Name      string
-	Address   string `validate:"address"`
-	Username  string
-	Password  string
-	Location  Location
-	CreatedAt time.Time
+type EventDahuaCameraCreated struct {
+	Camera DahuaCamera
 }
 
-type DahuaCameraDetail struct {
-	SN              string
-	DeviceClass     string
-	DeviceType      string
-	HardwareVersion string
-	MarketArea      string
-	ProcessInfo     string
-	Vendor          string
+type EventDahuaCameraUpdated struct {
+	Camera DahuaCamera
+}
+
+type EventDahuaCameraEvent struct {
+	ID    string     `json:"id"`
+	Event DahuaEvent `json:"event"`
+}
+
+type DahuaStatus struct {
+	ID           string    `json:"id"`
+	Address      string    `json:"address"`
+	Username     string    `json:"username"`
+	Location     string    `json:"location"`
+	RPCError     string    `json:"rpc_error"`
+	RPCState     string    `json:"rpc_state"`
+	RPCLastLogin time.Time `json:"rpc_last_login"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+type DahuaCamera struct {
+	ID         string
+	Address    string `validate:"address"`
+	Username   string
+	Password   string
+	Location   Location
+	CreartedAt time.Time
+}
+
+type DahuaDetail struct {
+	SN              string `json:"sn"`
+	DeviceClass     string `json:"device_class"`
+	DeviceType      string `json:"device_type"`
+	HardwareVersion string `json:"hardware_version"`
+	MarketArea      string `json:"market_area"`
+	ProcessInfo     string `json:"process_info"`
+	Vendor          string `json:"vendor"`
 }
 
 type DahuaSoftwareVersion struct {
-	Build                   string
-	BuildDate               string
-	SecurityBaseLineVersion string
-	Version                 string
-	WebVersion              string
+	Build                   string `json:"build"`
+	BuildDate               string `json:"build_date"`
+	SecurityBaseLineVersion string `json:"security_base_line_version"`
+	Version                 string `json:"version"`
+	WebVersion              string `json:"web_version"`
 }
 
-type DahuaCameraLicense struct {
-	AbroadInfo    string
-	AllType       bool
-	DigitChannel  int
-	EffectiveDays int
-	EffectiveTime int
-	LicenseID     int
-	ProductType   string
-	Status        int
-	Username      string
+type DahuaLicense struct {
+	AbroadInfo       string    `json:"abroad_info"`
+	AllType          bool      `json:"all_type"`
+	DigitChannel     int       `json:"digit_channel"`
+	EffectiveDays    int       `json:"effective_days"`
+	EffectiveTime    time.Time `json:"effective_time"`
+	EffectiveTimeRaw int       `json:"effective_time_raw"`
+	LicenseID        int       `json:"license_id"`
+	ProductType      string    `json:"product_type"`
+	Status           int       `json:"status"`
+	Username         string    `json:"username"`
 }
 
-type DahuaScanCursor struct {
-	CameraID     int64
-	Seed         int
-	Location     Location
-	FullComplete bool
-	FullCursor   time.Time
-	FullEpoch    time.Time
-	FullEpochEnd time.Time
-	QuickCursor  time.Time
+type DahuaCoaxialStatus struct {
+	WhiteLight bool `json:"white_light"`
+	Speaker    bool `json:"speaker"`
+}
+
+type DahuaCoaxialCaps struct {
+	SupportControlFullcolorLight bool `json:"support_control_fullcolor_light"`
+	SupportControlLight          bool `json:"support_control_light"`
+	SupportControlSpeaker        bool `json:"support_control_speaker"`
 }
 
 // DahuaScanRange is INCLUSIVE Start and EXCLUSIVE End.
@@ -64,92 +86,57 @@ type DahuaScanRange struct {
 	End   time.Time
 }
 
-func (d DahuaScanRange) IsNull() bool {
-	return false
+type DahuaFile struct {
+	Channel      int       `json:"channel"`
+	StartTime    time.Time `json:"start_time"`
+	StartTimeRaw string    `json:"start_time_raw"`
+	EndTime      time.Time `json:"end_time"`
+	EndTimeRaw   string    `json:"end_time_raw"`
+	Length       int       `json:"length"`
+	Type         string    `json:"type"`
+	FilePath     string    `json:"file_path"`
+	Duration     int       `json:"duration"`
+	Disk         int       `json:"disk"`
+	VideoStream  string    `json:"video_stream"`
+	Flags        []string  `json:"flags"`
+	Events       []string  `json:"events"`
+	Cluster      int       `json:"cluster"`
+	Partition    int       `json:"partition"`
+	PicIndex     int       `json:"pic_index"`
+	Repeat       int       `json:"repeat"`
+	WorkDir      string    `json:"work_dir"`
+	WorkDirSN    int       `json:"work_dir_sn"`
 }
 
-func (d DahuaScanRange) BoundTypes() (pgtype.BoundType, pgtype.BoundType) {
-	return pgtype.Inclusive, pgtype.Exclusive
+type DahuaEvent struct {
+	ContentType   string          `json:"content_type"`
+	ContentLength int             `json:"content_length"`
+	Code          string          `json:"code"`
+	Action        string          `json:"action"`
+	Index         int             `json:"index"`
+	Data          json.RawMessage `json:"data"`
+	CreatedAt     time.Time       `json:"created_at"`
 }
 
-func (d DahuaScanRange) Bounds() (any, any) {
-	return d.Start, d.End
+type DahuaStorage struct {
+	Name    string               `json:"name"`
+	State   string               `json:"state"`
+	Details []DahuaStorageDetail `json:"details"`
 }
 
-func (d *DahuaScanRange) ScanNull() error {
-	return nil
+type DahuaStorageDetail struct {
+	Path       string `json:"path"`
+	Type       string `json:"type"`
+	TotalBytes int64  `json:"total_bytes"`
+	UsedBytes  int64  `json:"used_bytes"`
+	IsError    bool   `json:"is_error"`
 }
 
-func (d *DahuaScanRange) ScanBounds() (any, any) {
-	return &d.Start, &d.End
-}
-
-func (d *DahuaScanRange) SetBoundTypes(lower, upper pgtype.BoundType) error {
-	return nil
-}
-
-type DahuaScanKind = model.ScanKind
-
-var (
-	DahuaScanKindFull   = model.ScanKind_Full
-	DahuaScanKindQuick  = model.ScanKind_Quick
-	DahuaScanKindManual = model.ScanKind_Manual
-)
-
-type DahuaScanQueueTask struct {
-	ID       int64
-	CameraID int64
-	Kind     DahuaScanKind
-	Range    DahuaScanRange
-}
-
-type DahuaScanActiveTask struct {
-	CameraID  int64
-	Kind      DahuaScanKind
-	Range     DahuaScanRange
-	Cursor    time.Time
-	StartedAt time.Time
-	Deleted   int
-	Upserted  int
-	Percent   float64
-}
-
-func (q DahuaScanActiveTask) NewProgress() DahuaScanActiveProgress {
-	return DahuaScanActiveProgress{
-		CameraID: q.CameraID,
-	}
-}
-
-type DahuaScanActiveProgress struct {
-	CameraID int64
-	Upserted int
-	Deleted  int
-	Percent  float64
-	Cursor   time.Time
-}
-
-type DahuaScanCompleteTask struct {
-	ID        int64
-	CameraID  int64
-	Kind      DahuaScanKind
-	Range     DahuaScanRange
-	Cursor    time.Time
-	StartedAt time.Time
-	Duration  int
-	Upserted  int
-	Deleted   int
-	Percent   float64
-	Error     string
-}
-
-type DahuaCameraEvent struct {
-	ID            int64
-	CameraID      int64
-	ContentType   string
-	ContentLength int
-	Code          string
-	Action        string
-	Index         int
-	Data          []byte
-	CreatedAt     time.Time
+type DahuaUser struct {
+	ClientAddress string    `json:"client_address"`
+	ClientType    string    `json:"client_type"`
+	Group         string    `json:"group"`
+	ID            int       `json:"id"`
+	LoginTime     time.Time `json:"login_time"`
+	Name          string    `json:"name"`
 }

@@ -20,10 +20,6 @@ type Client interface {
 	RPC(ctx context.Context) (RequestBuilder, error)
 }
 
-type ClientLogin interface {
-	RPCLogin() RequestBuilder
-}
-
 type ResponseSession string
 
 func (s *ResponseSession) UnmarshalJSON(data []byte) error {
@@ -82,18 +78,19 @@ func (s ResponseResult) Bool() bool {
 type Response[T any] struct {
 	ID      int             `json:"id"`
 	Session ResponseSession `json:"session"`
-	Error   *ErrResponse    `json:"error"`
+	Error   *ResponseError  `json:"error"`
 	Params  T               `json:"params"`
 	Result  ResponseResult  `json:"result"`
 }
 
-type ErrResponse struct {
+type ResponseError struct {
+	Method  string
 	Code    int
 	Message string
-	Type    ErrResponseType
+	Type    ReponseErrorType
 }
 
-func (r *ErrResponse) UnmarshalJSON(data []byte) error {
+func (r *ResponseError) UnmarshalJSON(data []byte) error {
 	var res struct {
 		Code    int    `json:"code"`
 		Message string `json:"message"`
@@ -121,18 +118,18 @@ func (r *ErrResponse) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (r *ErrResponse) Error() string {
+func (r *ResponseError) Error() string {
 	return r.Message
 }
 
-type ErrResponseType string
+type ReponseErrorType string
 
 var (
-	ErrResponseTypeInvalidRequest    ErrResponseType = "InvalidRequest"
-	ErrResponseTypeMethodNotFound    ErrResponseType = "MethodNotFound"
-	ErrResponseTypeInterfaceNotFound ErrResponseType = "InterfaceNotFound"
-	ErrResponseTypeNoData            ErrResponseType = "NoData"
-	ErrResponseTypeUnknown           ErrResponseType = "Unknown"
+	ErrResponseTypeInvalidRequest    ReponseErrorType = "InvalidRequest"
+	ErrResponseTypeMethodNotFound    ReponseErrorType = "MethodNotFound"
+	ErrResponseTypeInterfaceNotFound ReponseErrorType = "InterfaceNotFound"
+	ErrResponseTypeNoData            ReponseErrorType = "NoData"
+	ErrResponseTypeUnknown           ReponseErrorType = "Unknown"
 )
 
 type Request struct {
@@ -141,6 +138,7 @@ type Request struct {
 	Method  string `json:"method"`
 	Params  any    `json:"params"`
 	Object  int64  `json:"object,omitempty"`
+	Seq     int    `json:"seq,omitempty"`
 }
 
 type RequestBuilder struct {
@@ -175,6 +173,11 @@ func (r RequestBuilder) Method(method string) RequestBuilder {
 	return r
 }
 
+func (r RequestBuilder) Seq(seq int) RequestBuilder {
+	r.req.Seq = seq
+	return r
+}
+
 // SendRaw sends RPC request to camera without checking if the response contains an error field.
 func SendRaw[T any](ctx context.Context, r RequestBuilder) (Response[T], error) {
 	var res Response[T]
@@ -199,6 +202,10 @@ func SendRaw[T any](ctx context.Context, r RequestBuilder) (Response[T], error) 
 		return res, err
 	}
 
+	if res.Error != nil {
+		res.Error.Method = r.req.Method
+	}
+
 	return res, nil
 }
 
@@ -210,6 +217,8 @@ func Send[T any](ctx context.Context, r RequestBuilder) (Response[T], error) {
 	}
 	if res.Error != nil {
 		if res.Error.Code == 287637505 || res.Error.Code == 287637504 {
+			// TODO: ErrInvalidSession and ResponseError are duplicate errors
+			// for signaling that the current request could not be made because the session is invalid.
 			return res, errors.Join(ErrInvalidSession, res.Error)
 		}
 		return res, res.Error

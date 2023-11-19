@@ -7,24 +7,23 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/qes"
 )
 
+func init() {
+	var err error
+	ScanEpoch, err = time.ParseInLocation(time.DateTime, "2009-12-31 00:00:00", time.UTC)
+	if err != nil {
+		panic(err)
+	}
+}
+
 const (
-	// MaxScanPeriod is longest allowed time range for a mediafilefind query because some cameras give false data past the MaxScanPeriod.
+	// MaxScanPeriod is longest allowed time range for a mediafilefind query because some cameras give invalid data past the MaxScanPeriod.
 	MaxScanPeriod = 30 * 24 * time.Hour
 )
 
-// // ScanEpoch is the oldest time a camera file can exist.
-// var ScanEpoch time.Time
-//
-// func init() {
-// 	var err error
-// 	ScanEpoch, err = time.ParseInLocation(time.DateTime, "2009-12-31 00:00:00", time.UTC)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
+// ScanEpoch is the oldest time a camera file can exist.
+var ScanEpoch time.Time
 
 // ScanPeriod is INCLUSIVE Start and EXCLUSIVE End.
 type ScanPeriod struct {
@@ -83,60 +82,57 @@ func (s *ScanPeriodIterator) Cursor() time.Time {
 	return s.cursor
 }
 
-func ScanQuickCursor() time.Time {
-	return time.Now().Add(-8 * time.Hour)
+func Scan(
+	ctx context.Context,
+	rpcClient dahuarpc.Client,
+	scanPeriod ScanPeriod,
+	location *time.Location,
+	resC chan<- []mediafilefind.FindNextFileInfo,
+) <-chan error {
+	errC := make(chan error, 1)
+
+	go func() {
+		err := scan(ctx, rpcClient, scanPeriod, location, resC)
+		errC <- err
+	}()
+
+	return errC
 }
 
-func ScanQuickCursorFromCursor(cursor time.Time) time.Time {
-	quickCursor := ScanQuickCursor()
-	if quickCursor.Before(cursor) {
-		return quickCursor
-	}
-
-	return cursor
-}
-
-func ScanQuickCursorFromScanRange(scanRange models.DahuaScanRange) time.Time {
-	quickCursor := ScanQuickCursor()
-	if scanRange.End.Before(quickCursor) {
-		return scanRange.End
-	}
-
-	return quickCursor
-}
-
-func Scan(ctx context.Context, db qes.Querier, rpcClient dahuarpc.Client, scanCamera models.DahuaScanCursor, scanPeriod ScanPeriod) (ScanResult, error) {
+func scan(
+	ctx context.Context,
+	rpcClient dahuarpc.Client,
+	scanPeriod ScanPeriod,
+	location *time.Location,
+	resC chan<- []mediafilefind.FindNextFileInfo,
+) error {
 	baseCondition := mediafilefind.NewCondtion(
-		dahuarpc.NewTimestamp(scanPeriod.Start, scanCamera.Location.Location),
-		dahuarpc.NewTimestamp(scanPeriod.End, scanCamera.Location.Location),
+		dahuarpc.NewTimestamp(scanPeriod.Start, location),
+		dahuarpc.NewTimestamp(scanPeriod.End, location),
 	)
-
-	var upserted int64
-	scannedAt := time.Now()
 
 	// Pictures
 	{
 		pictureStream, err := mediafilefind.NewStream(ctx, rpcClient, baseCondition.Picture())
 		if err != nil {
-			return ScanResult{}, err
+			return err
 		}
 		defer pictureStream.Close(rpcClient)
 
 		for {
 			files, err := pictureStream.Next(ctx, rpcClient)
 			if err != nil {
-				return ScanResult{}, err
+				return err
 			}
 			if files == nil {
 				break
 			}
 
-			count, err := DB.ScanCameraFilesUpsert(ctx, db, scannedAt, scanCamera, files)
-			if err != nil {
-				return ScanResult{}, err
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case resC <- files:
 			}
-
-			upserted += count
 		}
 	}
 
@@ -144,40 +140,26 @@ func Scan(ctx context.Context, db qes.Querier, rpcClient dahuarpc.Client, scanCa
 	{
 		videoStream, err := mediafilefind.NewStream(ctx, rpcClient, baseCondition.Video())
 		if err != nil {
-			return ScanResult{}, err
+			return err
 		}
 		defer videoStream.Close(rpcClient)
 
 		for {
 			files, err := videoStream.Next(ctx, rpcClient)
 			if err != nil {
-				return ScanResult{}, err
+				return err
 			}
 			if files == nil {
 				break
 			}
 
-			count, err := DB.ScanCameraFilesUpsert(ctx, db, scannedAt, scanCamera, files)
-			if err != nil {
-				return ScanResult{}, err
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case resC <- files:
 			}
-
-			upserted += count
 		}
 	}
 
-	deleted, err := DB.ScanCameraFilesDelete(ctx, db, scannedAt, scanCamera.CameraID, scanPeriod)
-	if err != nil {
-		return ScanResult{}, err
-	}
-
-	return ScanResult{
-		Upserted: upserted,
-		Deleted:  deleted,
-	}, nil
-}
-
-type ScanResult struct {
-	Upserted int64
-	Deleted  int64
+	return nil
 }

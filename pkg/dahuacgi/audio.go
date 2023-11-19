@@ -65,10 +65,10 @@ func AudioStreamGet(ctx context.Context, c Client, channel int, httpType HTTPTyp
 	}, nil
 }
 
-// INFO: The following reasons are why streaming audio to the camera cannot be added.
+// INFO: Streaming audio to the camera cannot be added for the following reasons.
 // - The HTTP digest library (github.com/icholy/digest) copies the body before sending the real request,
 //   this does not work if the body is infinite like what we are doing.
-// - I swear that my camera SD2A500-GN-A-PV (Build Date: 2022-08-26) has a broken AudioStreamPost CGI API.
+// - I swear that my camera (SD2A500-GN-A-PV, Build Date: 2022-08-26) has a broken AudioStreamPost CGI API.
 //   I tested it with cURL and it would keep doing a connection reset after sending a bit of audio data.
 // - The current Client interface does not support POST, but that is an easy fix the HTTP digest library is fixed.
 
