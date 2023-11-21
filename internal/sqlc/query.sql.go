@@ -7,6 +7,7 @@ package sqlc
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -14,10 +15,10 @@ import (
 
 const createDahuaCamera = `-- name: CreateDahuaCamera :one
 INSERT INTO dahua_cameras (
-  name, address, username, password, location, created_at
+  name, address, username, password, location, created_at, updated_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?
-) RETURNING id, name, address, username, password, location, created_at
+  ?, ?, ?, ?, ?, ?, ?
+) RETURNING id, name, address, username, password, location, created_at, updated_at
 `
 
 type CreateDahuaCameraParams struct {
@@ -27,6 +28,7 @@ type CreateDahuaCameraParams struct {
 	Password  string
 	Location  models.Location
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (q *Queries) CreateDahuaCamera(ctx context.Context, arg CreateDahuaCameraParams) (DahuaCamera, error) {
@@ -37,6 +39,7 @@ func (q *Queries) CreateDahuaCamera(ctx context.Context, arg CreateDahuaCameraPa
 		arg.Password,
 		arg.Location,
 		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	var i DahuaCamera
 	err := row.Scan(
@@ -46,6 +49,59 @@ func (q *Queries) CreateDahuaCamera(ctx context.Context, arg CreateDahuaCameraPa
 		&i.Username,
 		&i.Password,
 		&i.Location,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createDahuaEvent = `-- name: CreateDahuaEvent :one
+INSERT INTO dahua_events (
+  camera_id,
+  content_type,
+  content_length,
+  code,
+  action,
+  ` + "`" + `index` + "`" + `,
+  data,
+  created_at
+) VALUES (
+  ?, ?, ?, ?, ?, ?, ?, ?
+) RETURNING id, camera_id, content_type, content_length, code, "action", ` + "`" + `index` + "`" + `, data, created_at
+`
+
+type CreateDahuaEventParams struct {
+	CameraID      int64
+	ContentType   string
+	ContentLength int64
+	Code          string
+	Action        string
+	Index         int64
+	Data          json.RawMessage
+	CreatedAt     time.Time
+}
+
+func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventParams) (DahuaEvent, error) {
+	row := q.db.QueryRowContext(ctx, createDahuaEvent,
+		arg.CameraID,
+		arg.ContentType,
+		arg.ContentLength,
+		arg.Code,
+		arg.Action,
+		arg.Index,
+		arg.Data,
+		arg.CreatedAt,
+	)
+	var i DahuaEvent
+	err := row.Scan(
+		&i.ID,
+		&i.CameraID,
+		&i.ContentType,
+		&i.ContentLength,
+		&i.Code,
+		&i.Action,
+		&i.Index,
+		&i.Data,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -61,7 +117,7 @@ func (q *Queries) DeleteDahuaCamera(ctx context.Context, id int64) error {
 }
 
 const getDahuaCamera = `-- name: GetDahuaCamera :one
-SELECT id, name, address, username, password, location, created_at FROM dahua_cameras
+SELECT id, name, address, username, password, location, created_at, updated_at FROM dahua_cameras
 WHERE id = ? LIMIT 1
 `
 
@@ -76,12 +132,13 @@ func (q *Queries) GetDahuaCamera(ctx context.Context, id int64) (DahuaCamera, er
 		&i.Password,
 		&i.Location,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const listDahuaCamera = `-- name: ListDahuaCamera :many
-SELECT id, name, address, username, password, location, created_at FROM dahua_cameras
+SELECT id, name, address, username, password, location, created_at, updated_at FROM dahua_cameras
 `
 
 func (q *Queries) ListDahuaCamera(ctx context.Context) ([]DahuaCamera, error) {
@@ -101,6 +158,50 @@ func (q *Queries) ListDahuaCamera(ctx context.Context) ([]DahuaCamera, error) {
 			&i.Password,
 			&i.Location,
 			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDahuaEvent = `-- name: ListDahuaEvent :many
+SELECT id, camera_id, content_type, content_length, code, "action", ` + "`" + `index` + "`" + `, data, created_at FROM dahua_events
+LIMIT ? OFFSET ?
+`
+
+type ListDahuaEventParams struct {
+	Limit  int64
+	Offset int64
+}
+
+func (q *Queries) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) ([]DahuaEvent, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaEvent, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DahuaEvent
+	for rows.Next() {
+		var i DahuaEvent
+		if err := rows.Scan(
+			&i.ID,
+			&i.CameraID,
+			&i.ContentType,
+			&i.ContentLength,
+			&i.Code,
+			&i.Action,
+			&i.Index,
+			&i.Data,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -118,7 +219,7 @@ func (q *Queries) ListDahuaCamera(ctx context.Context) ([]DahuaCamera, error) {
 const updateDahuaCamera = `-- name: UpdateDahuaCamera :one
 UPDATE dahua_cameras 
 SET name = ?, address = ?, username = ?, password = ?, location = ?
-WHERE id = ? RETURNING id, name, address, username, password, location, created_at
+WHERE id = ? RETURNING id, name, address, username, password, location, created_at, updated_at
 `
 
 type UpdateDahuaCameraParams struct {
@@ -148,6 +249,7 @@ func (q *Queries) UpdateDahuaCamera(ctx context.Context, arg UpdateDahuaCameraPa
 		&i.Password,
 		&i.Location,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

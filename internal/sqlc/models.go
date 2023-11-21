@@ -5,6 +5,8 @@
 package sqlc
 
 import (
+	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -18,4 +20,35 @@ type DahuaCamera struct {
 	Password  string
 	Location  models.Location
 	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+type DahuaCameraFile struct {
+	ID        int64
+	CameraID  int64
+	FilePath  string
+	Kind      string
+	Size      int64
+	StartTime time.Time
+	EndTime   time.Time
+	Duration  int64
+	Events    json.RawMessage
+	UpdatedAt time.Time
+}
+
+type DahuaEvent struct {
+	ID            int64
+	CameraID      int64
+	ContentType   string
+	ContentLength int64
+	Code          string
+	Action        string
+	Index         int64
+	Data          json.RawMessage
+	CreatedAt     time.Time
+}
+
+type DahuaSeed struct {
+	Seed     int64
+	CameraID sql.NullInt64
 }

@@ -5,5 +5,42 @@ CREATE TABLE dahua_cameras (
   username TEXT NOT NULL,
   password TEXT NOT NULL,
   location TEXT NOT NULL,
-  created_at DATETIME NOT NULL
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL
+);
+
+CREATE TABLE dahua_seeds (
+  seed INTEGER NOT NULL PRIMARY KEY,
+  camera_id INTEGER,
+  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE TABLE dahua_events (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  camera_id INTEGER NOT NULL,
+  content_type TEXT NOT NULL,
+  content_length INTEGER NOT NULL,
+  code TEXT NOT NULL,
+  action TEXT NOT NULL,
+  `index` INTEGER NOT NULL,
+  data JSON NOT NULL,
+  created_at DATETIME NOT NULL,
+
+  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE dahua_camera_files (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  camera_id INTEGER NOT NULL,
+  file_path TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  size INTEGER NOT NULL,
+  start_time DATETIME NOT NULL UNIQUE,
+  end_time DATETIME NOT NULL,
+  duration INTEGER NOT NULL,
+  events JSON NOT NULL,
+  updated_at DATETIME NOT NULL,
+
+  UNIQUE (camera_id, file_path),
+  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
 );

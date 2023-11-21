@@ -163,6 +163,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Address:   dto.Address,
 		Location:  dto.Location,
 		CreatedAt: dto.CreatedAt,
+		UpdatedAt: dto.CreatedAt,
 	})
 	if err != nil {
 		return err

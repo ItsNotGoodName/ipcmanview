@@ -55,6 +55,9 @@ func run() lieut.Executor {
 			EventHook: sutureext.EventHook(),
 		})
 
+		// Bus
+		dahuaBus := dahua.NewBus()
+
 		// Database
 		sqlDB, err := sqlite.New(os.Getenv("DB_PATH"))
 		if err != nil {
@@ -66,8 +69,7 @@ func run() lieut.Executor {
 		}
 		sqlcDB := sqlc.New(sqliteDB)
 
-		// Bus
-		dahuaBus := dahua.NewBus()
+		webcore.RegisterDahuaBus(dahuaBus, sqlcDB)
 
 		// Stores
 		dahuaStore := dahua.NewStore(dahuaBus)

@@ -9,6 +9,31 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 )
 
+type DahuaBus interface {
+	OnCameraEvent(h func(ctx context.Context, evt models.EventDahuaCameraEvent) error)
+}
+
+func RegisterDahuaBus(bus DahuaBus, sqlcDB *sqlc.Queries) {
+	bus.OnCameraEvent(func(ctx context.Context, evt models.EventDahuaCameraEvent) error {
+		cameraID, err := strconv.ParseInt(evt.Event.CameraID, 10, 64)
+		if err != nil {
+			return err
+		}
+
+		_, err = sqlcDB.CreateDahuaEvent(ctx, sqlc.CreateDahuaEventParams{
+			CameraID:      cameraID,
+			ContentType:   evt.Event.ContentType,
+			ContentLength: int64(evt.Event.ContentLength),
+			Code:          evt.Event.Code,
+			Action:        evt.Event.Action,
+			Index:         int64(evt.Event.Index),
+			Data:          evt.Event.Data,
+			CreatedAt:     evt.Event.CreatedAt,
+		})
+		return err
+	})
+}
+
 func SyncDahuaStore(ctx context.Context, sqlcDB *sqlc.Queries, store *dahua.Store) error {
 	dbCameras, err := sqlcDB.ListDahuaCamera(ctx)
 	if err != nil {
