@@ -19,33 +19,6 @@ type PubSub interface {
 	SubscribeDahuaEvents(ctx context.Context, ids []string) (<-chan models.EventDahuaCameraEvent, error)
 }
 
-// func useConnFromBody(c echo.Context, store *dahua.Store) (dahua.Conn, error) {
-// 	context := models.DTODahuaCamera{}
-// 	if err := c.Bind(&context); err != nil {
-// 		return dahua.Conn{}, echo.ErrBadRequest.WithInternal(err)
-// 	}
-//
-// 	id := c.Param("id")
-//
-// 	camera, err := dahua.NewDahuaCamera(id, context)
-// 	if err != nil {
-// 		return dahua.Conn{}, echo.ErrBadRequest.WithInternal(err)
-// 	}
-//
-// 	return store.ConnByCamera(c.Request().Context(), camera), nil
-// }
-
-func useConn(c echo.Context, store *dahua.Store) (dahua.Conn, error) {
-	id := c.Param("id")
-
-	client, err := store.ConnByID(c.Request().Context(), id)
-	if err != nil {
-		return dahua.Conn{}, echo.ErrNotFound.WithInternal(err)
-	}
-
-	return client, nil
-}
-
 // ---------- Stream
 
 func useStream(c echo.Context) *json.Encoder {

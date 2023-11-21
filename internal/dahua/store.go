@@ -37,7 +37,7 @@ func cameraIdentityEqual(lhs, rhs models.DahuaCamera) bool {
 }
 
 func newStoreClient(camera models.DahuaCamera) storeClient {
-	address := NewAddress(camera.Address)
+	address := NewHTTPAddress(camera.Address)
 	rpcHTTPClient := &http.Client{
 		Timeout: 5 * time.Second,
 	}
@@ -93,8 +93,7 @@ func (s *Store) Serve(ctx context.Context) error {
 	return ctx.Err()
 }
 
-func (s *Store) ConnByCamera(ctx context.Context, camera models.DahuaCamera) Conn {
-	s.clientsMu.Lock()
+func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaCamera) Conn {
 	client, ok := s.clients[camera.ID]
 	created := false
 	updated := false
@@ -108,7 +107,6 @@ func (s *Store) ConnByCamera(ctx context.Context, camera models.DahuaCamera) Con
 		s.clients[camera.ID] = client
 		updated = true
 	}
-	s.clientsMu.Unlock()
 
 	conn := newConn(client)
 
@@ -122,19 +120,19 @@ func (s *Store) ConnByCamera(ctx context.Context, camera models.DahuaCamera) Con
 	return conn
 }
 
-func (s *Store) ConnByID(ctx context.Context, id string) (Conn, error) {
+func (s *Store) ConnByCamera(ctx context.Context, camera models.DahuaCamera) Conn {
 	s.clientsMu.Lock()
-	client, ok := s.clients[id]
+	conn := s.getOrCreateCamera(ctx, camera)
 	s.clientsMu.Unlock()
-	if !ok {
-		return Conn{}, fmt.Errorf("Conn not found by ID: %s", id)
-	}
-
-	return newConn(client), nil
+	return conn
 }
 
-func (s *Store) ConnList(ctx context.Context) ([]Conn, error) {
+func (s *Store) ConnListByCameras(ctx context.Context, cameras ...models.DahuaCamera) ([]Conn, error) {
 	s.clientsMu.Lock()
+	for _, camera := range cameras {
+		_ = s.getOrCreateCamera(ctx, camera)
+	}
+
 	clients := make([]Conn, 0, len(s.clients))
 	for _, client := range s.clients {
 		clients = append(clients, newConn(client))
@@ -144,4 +142,15 @@ func (s *Store) ConnList(ctx context.Context) ([]Conn, error) {
 	slices.SortFunc(clients, func(a, b Conn) int { return cmp.Compare(a.Camera.ID, b.Camera.ID) })
 
 	return clients, nil
+}
+
+func (s *Store) ConnByID(ctx context.Context, id string) (Conn, error) {
+	s.clientsMu.Lock()
+	client, ok := s.clients[id]
+	s.clientsMu.Unlock()
+	if !ok {
+		return Conn{}, fmt.Errorf("Conn not found by ID: %s", id)
+	}
+
+	return newConn(client), nil
 }

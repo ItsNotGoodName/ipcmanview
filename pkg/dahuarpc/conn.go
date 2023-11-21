@@ -50,11 +50,11 @@ func (c *ConnData) nextID() int {
 	return c.lastID
 }
 
-func NewConn(client *http.Client, address string) *Conn {
+func NewConn(client *http.Client, httpAddress string) *Conn {
 	return &Conn{
 		client:      client,
-		rpcURL:      fmt.Sprintf("%s/RPC2", address),
-		rpcLoginURL: fmt.Sprintf("%s/RPC2_Login", address),
+		rpcURL:      fmt.Sprintf("%s/RPC2", httpAddress),
+		rpcLoginURL: fmt.Sprintf("%s/RPC2_Login", httpAddress),
 		dataMu:      sync.Mutex{},
 		data: ConnData{
 			State:     StateLogout,

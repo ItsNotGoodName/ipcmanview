@@ -1,6 +1,8 @@
 package models
 
 import (
+	"database/sql/driver"
+	"fmt"
 	"time"
 )
 
@@ -19,6 +21,28 @@ func (l *Location) UnmarshalJSON(data []byte) error {
 	}
 	*l = Location{loc}
 	return nil
+}
+
+func (dst *Location) Scan(src any) error {
+	if src == nil {
+		return fmt.Errorf("cannot scan nil")
+	}
+
+	switch src := src.(type) {
+	case string:
+		loc, err := time.LoadLocation(string(src))
+		if err != nil {
+			return err
+		}
+		*dst = Location{loc}
+		return nil
+	}
+
+	return fmt.Errorf("cannot scan %T", src)
+}
+
+func (src Location) Value() (driver.Value, error) {
+	return src.Location.String(), nil
 }
 
 type Error struct {

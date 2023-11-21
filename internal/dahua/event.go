@@ -15,7 +15,7 @@ import (
 )
 
 type EventHooks interface {
-	CameraEvent(ctx context.Context, camera models.DahuaCamera, event models.DahuaEvent)
+	CameraEvent(ctx context.Context, event models.DahuaEvent)
 }
 
 func newEventWorker(camera models.DahuaCamera, hooks EventHooks) eventWorker {
@@ -35,7 +35,7 @@ func (w eventWorker) String() string {
 }
 
 func (w eventWorker) Serve(ctx context.Context) error {
-	c := dahuacgi.NewConn(http.Client{}, NewAddress(w.Camera.Address), w.Camera.Username, w.Camera.Password)
+	c := dahuacgi.NewConn(http.Client{}, NewHTTPAddress(w.Camera.Address), w.Camera.Username, w.Camera.Password)
 
 	manager, err := dahuacgi.EventManagerGet(ctx, c, 0)
 	if err != nil {
@@ -61,9 +61,9 @@ func (w eventWorker) Serve(ctx context.Context) error {
 			return err
 		}
 
-		event := NewDahuaEvent(rawEvent, time.Now())
+		event := NewDahuaEvent(w.Camera.ID, rawEvent, time.Now())
 
-		w.hooks.CameraEvent(ctx, w.Camera, event)
+		w.hooks.CameraEvent(ctx, event)
 	}
 }
 

@@ -63,11 +63,10 @@ func (b *Bus) ConnUpdated(conn Conn) {
 	b.mu.Unlock()
 }
 
-func (b *Bus) CameraEvent(ctx context.Context, camera models.DahuaCamera, event models.DahuaEvent) {
+func (b *Bus) CameraEvent(ctx context.Context, event models.DahuaEvent) {
 	b.mu.Lock()
 	for _, v := range b.onCameraEvent {
 		busLogErr(v(ctx, models.EventDahuaCameraEvent{
-			ID:    camera.ID,
 			Event: event,
 		}))
 	}

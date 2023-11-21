@@ -1,0 +1,12 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    queries: "internal/sqlc/query.sql"
+    schema: "internal/migrations/schema.sql"
+    gen:
+      go:
+        package: "sqlc"
+        out: "internal/sqlc"
+        overrides:
+          - column: "dahua_cameras.location"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.Location"

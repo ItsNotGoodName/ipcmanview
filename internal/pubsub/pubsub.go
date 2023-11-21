@@ -70,7 +70,7 @@ func register(dahuaBus DahuaBus, p *Pub) *Pub {
 		var deadSubIDs []int
 		for id, sub := range p.dahuaEventSubscribers {
 			if len(sub.IDs) != 0 {
-				_, found := slices.BinarySearch(sub.IDs, evt.ID)
+				_, found := slices.BinarySearch(sub.IDs, evt.Event.CameraID)
 				if !found {
 					continue
 				}

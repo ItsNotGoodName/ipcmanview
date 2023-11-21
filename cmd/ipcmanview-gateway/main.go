@@ -30,6 +30,7 @@ func main() {
 		lieut.AppInfo{
 			Name:    "ipcmanview-gateway",
 			Version: build.Version,
+			Summary: "API gateway for accessing IP Cameras.",
 		},
 		run(),
 		flags,
@@ -52,18 +53,22 @@ func run() lieut.Executor {
 		// Bus
 		dahuaBus := dahua.NewBus()
 
-		// Store
+		// Stores
 		dahuaStore := dahua.NewStore(dahuaBus)
 		super.Add(dahuaStore)
 		eventWorkerStore := dahua.NewEventWorkerStore(super, dahuaBus)
 		dahua.RegisterEventBus(eventWorkerStore, dahuaBus)
 
-		// Server
 		pubSub := pubsub.NewPub(dahuaBus)
-		apiDahuaServer := api.NewDahuaServer(dahuaStore, pubSub)
 
-		// HTTP
-		httpRouter := http.NewRouter(apiDahuaServer)
+		// HTTP Router
+		httpRouter := http.NewRouter()
+
+		// Servers
+		apiDahuaServer := api.NewDahuaServer(dahuaStore, pubSub)
+		api.RegisterDahuaRoutes(httpRouter, apiDahuaServer)
+
+		// HTTP Server
 		httpServer := http.NewServer(httpRouter, ":8080")
 		super.Add(httpServer)
 

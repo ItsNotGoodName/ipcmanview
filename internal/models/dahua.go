@@ -14,12 +14,11 @@ type EventDahuaCameraUpdated struct {
 }
 
 type EventDahuaCameraEvent struct {
-	ID    string     `json:"id"`
 	Event DahuaEvent `json:"event"`
 }
 
 type DahuaStatus struct {
-	ID           string    `json:"id"`
+	CameraID     string    `json:"camera_id"`
 	Address      string    `json:"address"`
 	Username     string    `json:"username"`
 	Location     string    `json:"location"`
@@ -30,15 +29,17 @@ type DahuaStatus struct {
 }
 
 type DahuaCamera struct {
-	ID         string
-	Address    string `validate:"address"`
-	Username   string
-	Password   string
-	Location   Location
-	CreartedAt time.Time
+	ID        string
+	Address   string `validate:"address"`
+	Username  string
+	Password  string
+	Location  Location
+	Seed      int
+	CreatedAt time.Time
 }
 
 type DahuaDetail struct {
+	CameraID        string `json:"camera_id"`
 	SN              string `json:"sn"`
 	DeviceClass     string `json:"device_class"`
 	DeviceType      string `json:"device_type"`
@@ -49,6 +50,7 @@ type DahuaDetail struct {
 }
 
 type DahuaSoftwareVersion struct {
+	CameraID                string `json:"camera_id"`
 	Build                   string `json:"build"`
 	BuildDate               string `json:"build_date"`
 	SecurityBaseLineVersion string `json:"security_base_line_version"`
@@ -57,27 +59,29 @@ type DahuaSoftwareVersion struct {
 }
 
 type DahuaLicense struct {
-	AbroadInfo       string    `json:"abroad_info"`
-	AllType          bool      `json:"all_type"`
-	DigitChannel     int       `json:"digit_channel"`
-	EffectiveDays    int       `json:"effective_days"`
-	EffectiveTime    time.Time `json:"effective_time"`
-	EffectiveTimeRaw int       `json:"effective_time_raw"`
-	LicenseID        int       `json:"license_id"`
-	ProductType      string    `json:"product_type"`
-	Status           int       `json:"status"`
-	Username         string    `json:"username"`
+	CameraID      string    `json:"camera_id"`
+	AbroadInfo    string    `json:"abroad_info"`
+	AllType       bool      `json:"all_type"`
+	DigitChannel  int       `json:"digit_channel"`
+	EffectiveDays int       `json:"effective_days"`
+	EffectiveTime time.Time `json:"effective_time"`
+	LicenseID     int       `json:"license_id"`
+	ProductType   string    `json:"product_type"`
+	Status        int       `json:"status"`
+	Username      string    `json:"username"`
 }
 
 type DahuaCoaxialStatus struct {
-	WhiteLight bool `json:"white_light"`
-	Speaker    bool `json:"speaker"`
+	CameraID   string `json:"camera_id"`
+	WhiteLight bool   `json:"white_light"`
+	Speaker    bool   `json:"speaker"`
 }
 
 type DahuaCoaxialCaps struct {
-	SupportControlFullcolorLight bool `json:"support_control_fullcolor_light"`
-	SupportControlLight          bool `json:"support_control_light"`
-	SupportControlSpeaker        bool `json:"support_control_speaker"`
+	CameraID                     string `json:"camera_id"`
+	SupportControlFullcolorLight bool   `json:"support_control_fullcolor_light"`
+	SupportControlLight          bool   `json:"support_control_light"`
+	SupportControlSpeaker        bool   `json:"support_control_speaker"`
 }
 
 // DahuaScanRange is INCLUSIVE Start and EXCLUSIVE End.
@@ -87,28 +91,28 @@ type DahuaScanRange struct {
 }
 
 type DahuaFile struct {
-	Channel      int       `json:"channel"`
-	StartTime    time.Time `json:"start_time"`
-	StartTimeRaw string    `json:"start_time_raw"`
-	EndTime      time.Time `json:"end_time"`
-	EndTimeRaw   string    `json:"end_time_raw"`
-	Length       int       `json:"length"`
-	Type         string    `json:"type"`
-	FilePath     string    `json:"file_path"`
-	Duration     int       `json:"duration"`
-	Disk         int       `json:"disk"`
-	VideoStream  string    `json:"video_stream"`
-	Flags        []string  `json:"flags"`
-	Events       []string  `json:"events"`
-	Cluster      int       `json:"cluster"`
-	Partition    int       `json:"partition"`
-	PicIndex     int       `json:"pic_index"`
-	Repeat       int       `json:"repeat"`
-	WorkDir      string    `json:"work_dir"`
-	WorkDirSN    int       `json:"work_dir_sn"`
+	CameraID    string    `json:"camera_id"`
+	Channel     int       `json:"channel"`
+	StartTime   time.Time `json:"start_time"`
+	EndTime     time.Time `json:"end_time"`
+	Length      int       `json:"length"`
+	Type        string    `json:"type"`
+	FilePath    string    `json:"file_path"`
+	Duration    int       `json:"duration"`
+	Disk        int       `json:"disk"`
+	VideoStream string    `json:"video_stream"`
+	Flags       []string  `json:"flags"`
+	Events      []string  `json:"events"`
+	Cluster     int       `json:"cluster"`
+	Partition   int       `json:"partition"`
+	PicIndex    int       `json:"pic_index"`
+	Repeat      int       `json:"repeat"`
+	WorkDir     string    `json:"work_dir"`
+	WorkDirSN   int       `json:"work_dir_sn"`
 }
 
 type DahuaEvent struct {
+	CameraID      string          `json:"camera_id"`
 	ContentType   string          `json:"content_type"`
 	ContentLength int             `json:"content_length"`
 	Code          string          `json:"code"`
@@ -119,12 +123,9 @@ type DahuaEvent struct {
 }
 
 type DahuaStorage struct {
-	Name    string               `json:"name"`
-	State   string               `json:"state"`
-	Details []DahuaStorageDetail `json:"details"`
-}
-
-type DahuaStorageDetail struct {
+	CameraID   string `json:"camera_id"`
+	Name       string `json:"name"`
+	State      string `json:"state"`
 	Path       string `json:"path"`
 	Type       string `json:"type"`
 	TotalBytes int64  `json:"total_bytes"`
@@ -133,6 +134,7 @@ type DahuaStorageDetail struct {
 }
 
 type DahuaUser struct {
+	CameraID      string    `json:"camera_id"`
 	ClientAddress string    `json:"client_address"`
 	ClientType    string    `json:"client_type"`
 	Group         string    `json:"group"`

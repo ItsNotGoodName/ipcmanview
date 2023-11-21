@@ -1,0 +1,9 @@
+CREATE TABLE dahua_cameras (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  address TEXT NOT NULL UNIQUE,
+  username TEXT NOT NULL,
+  password TEXT NOT NULL,
+  location TEXT NOT NULL,
+  created_at DATETIME NOT NULL
+);

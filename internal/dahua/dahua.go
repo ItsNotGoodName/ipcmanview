@@ -36,7 +36,7 @@ func ignorableError(err error) bool {
 	return false
 }
 
-func GetDahuaDetail(ctx context.Context, rpcClient dahuarpc.Client) (models.DahuaDetail, error) {
+func GetDahuaDetail(ctx context.Context, cameraID string, rpcClient dahuarpc.Client) (models.DahuaDetail, error) {
 	sn, err := magicbox.GetSerialNo(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return models.DahuaDetail{}, err
@@ -73,6 +73,7 @@ func GetDahuaDetail(ctx context.Context, rpcClient dahuarpc.Client) (models.Dahu
 	}
 
 	return models.DahuaDetail{
+		CameraID:        cameraID,
 		SN:              sn,
 		DeviceClass:     deviceClass,
 		DeviceType:      deviceType,
@@ -83,13 +84,14 @@ func GetDahuaDetail(ctx context.Context, rpcClient dahuarpc.Client) (models.Dahu
 	}, nil
 }
 
-func GetSoftwareVersion(ctx context.Context, rpcClient dahuarpc.Client) (models.DahuaSoftwareVersion, error) {
+func GetSoftwareVersion(ctx context.Context, cameraID string, rpcClient dahuarpc.Client) (models.DahuaSoftwareVersion, error) {
 	res, err := magicbox.GetSoftwareVersion(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return models.DahuaSoftwareVersion{}, err
 	}
 
 	return models.DahuaSoftwareVersion{
+		CameraID:                cameraID,
 		Build:                   res.Build,
 		BuildDate:               res.BuildDate,
 		SecurityBaseLineVersion: res.SecurityBaseLineVersion,
@@ -98,7 +100,7 @@ func GetSoftwareVersion(ctx context.Context, rpcClient dahuarpc.Client) (models.
 	}, nil
 }
 
-func GetLicenseList(ctx context.Context, rpcClient dahuarpc.Client) ([]models.DahuaLicense, error) {
+func GetLicenseList(ctx context.Context, cameraID string, rpcClient dahuarpc.Client) ([]models.DahuaLicense, error) {
 	licenses, err := license.GetLicenseInfo(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return nil, err
@@ -109,23 +111,23 @@ func GetLicenseList(ctx context.Context, rpcClient dahuarpc.Client) ([]models.Da
 		effectiveTime := time.Unix(int64(l.EffectiveTime), 0)
 
 		res = append(res, models.DahuaLicense{
-			AbroadInfo:       l.AbroadInfo,
-			AllType:          l.AllType,
-			DigitChannel:     l.DigitChannel,
-			EffectiveDays:    l.EffectiveDays,
-			EffectiveTime:    effectiveTime,
-			EffectiveTimeRaw: l.EffectiveTime,
-			LicenseID:        l.LicenseID,
-			ProductType:      l.ProductType,
-			Status:           l.Status,
-			Username:         l.Username,
+			CameraID:      cameraID,
+			AbroadInfo:    l.AbroadInfo,
+			AllType:       l.AllType,
+			DigitChannel:  l.DigitChannel,
+			EffectiveDays: l.EffectiveDays,
+			EffectiveTime: effectiveTime,
+			LicenseID:     l.LicenseID,
+			ProductType:   l.ProductType,
+			Status:        l.Status,
+			Username:      l.Username,
 		})
 	}
 
 	return res, nil
 }
 
-func GetStorage(ctx context.Context, rpcClient dahuarpc.Client) ([]models.DahuaStorage, error) {
+func GetStorage(ctx context.Context, cameraID string, rpcClient dahuarpc.Client) ([]models.DahuaStorage, error) {
 	devices, err := storage.GetDeviceAllInfo(ctx, rpcClient)
 	if err != nil {
 		if ignorableError(err) {
@@ -134,11 +136,13 @@ func GetStorage(ctx context.Context, rpcClient dahuarpc.Client) ([]models.DahuaS
 		return nil, err
 	}
 
-	res := make([]models.DahuaStorage, 0, len(devices))
+	var res []models.DahuaStorage
 	for _, device := range devices {
-		resDetails := make([]models.DahuaStorageDetail, 0, len(device.Detail))
 		for _, detail := range device.Detail {
-			resDetails = append(resDetails, models.DahuaStorageDetail{
+			res = append(res, models.DahuaStorage{
+				CameraID:   cameraID,
+				Name:       device.Name,
+				State:      device.State,
 				Path:       detail.Path,
 				Type:       detail.Type,
 				TotalBytes: detail.TotalBytes.Integer(),
@@ -146,12 +150,6 @@ func GetStorage(ctx context.Context, rpcClient dahuarpc.Client) ([]models.DahuaS
 				IsError:    detail.IsError,
 			})
 		}
-
-		res = append(res, models.DahuaStorage{
-			Name:    device.Name,
-			State:   device.State,
-			Details: resDetails,
-		})
 	}
 
 	return res, nil
@@ -169,7 +167,7 @@ func GetError(conn *dahuarpc.Conn) models.Error {
 	}
 }
 
-func GetCoaxialStatus(ctx context.Context, rpcClient dahuarpc.Client, channel int) (models.DahuaCoaxialStatus, error) {
+func GetCoaxialStatus(ctx context.Context, cameraID string, rpcClient dahuarpc.Client, channel int) (models.DahuaCoaxialStatus, error) {
 	if channel == 0 {
 		channel = 1
 	}
@@ -180,12 +178,13 @@ func GetCoaxialStatus(ctx context.Context, rpcClient dahuarpc.Client, channel in
 	}
 
 	return models.DahuaCoaxialStatus{
+		CameraID:   cameraID,
 		Speaker:    status.Speaker == "On",
 		WhiteLight: status.WhiteLight == "On",
 	}, nil
 }
 
-func GetCoaxialCaps(ctx context.Context, rpcClient dahuarpc.Client, channel int) (models.DahuaCoaxialCaps, error) {
+func GetCoaxialCaps(ctx context.Context, cameraID string, rpcClient dahuarpc.Client, channel int) (models.DahuaCoaxialCaps, error) {
 	if channel == 0 {
 		channel = 1
 	}
@@ -196,13 +195,14 @@ func GetCoaxialCaps(ctx context.Context, rpcClient dahuarpc.Client, channel int)
 	}
 
 	return models.DahuaCoaxialCaps{
+		CameraID:                     cameraID,
 		SupportControlFullcolorLight: caps.SupportControlFullcolorLight == 1,
 		SupportControlLight:          caps.SupportControlLight == 1,
 		SupportControlSpeaker:        caps.SupportControlSpeaker == 1,
 	}, nil
 }
 
-func GetUsers(ctx context.Context, rpcClient dahuarpc.Client, location *time.Location) ([]models.DahuaUser, error) {
+func GetUsers(ctx context.Context, cameraID string, rpcClient dahuarpc.Client, location *time.Location) ([]models.DahuaUser, error) {
 	users, err := usermanager.GetActiveUserInfoAll(ctx, rpcClient)
 	if err != nil {
 		return nil, err
@@ -216,6 +216,7 @@ func GetUsers(ctx context.Context, rpcClient dahuarpc.Client, location *time.Loc
 		}
 
 		res = append(res, models.DahuaUser{
+			CameraID:      cameraID,
 			ClientAddress: u.ClientAddress,
 			ClientType:    u.ClientType,
 			Group:         u.Group,
@@ -228,8 +229,9 @@ func GetUsers(ctx context.Context, rpcClient dahuarpc.Client, location *time.Loc
 	return res, nil
 }
 
-func NewDahuaEvent(event dahuacgi.Event, createdAt time.Time) models.DahuaEvent {
+func NewDahuaEvent(cameraID string, event dahuacgi.Event, createdAt time.Time) models.DahuaEvent {
 	return models.DahuaEvent{
+		CameraID:      cameraID,
 		ContentType:   event.ContentType,
 		ContentLength: event.ContentLength,
 		Code:          event.Code,
@@ -251,39 +253,38 @@ func NewDahuaScanRange(start, end time.Time) (models.DahuaScanRange, error) {
 	}, nil
 }
 
-func NewDahuaFile(file mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) (models.DahuaFile, error) {
+func NewDahuaFile(cameraID string, file mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) (models.DahuaFile, error) {
 	startTime, endTime, err := file.UniqueTime(affixSeed, location)
 	if err != nil {
 		return models.DahuaFile{}, err
 	}
 
 	return models.DahuaFile{
-		Channel:      file.Channel,
-		StartTime:    startTime,
-		StartTimeRaw: string(file.StartTime),
-		EndTime:      endTime,
-		EndTimeRaw:   string(file.EndTime),
-		Length:       file.Length,
-		Type:         file.Type,
-		FilePath:     file.FilePath,
-		Duration:     file.Duration,
-		Disk:         file.Disk,
-		VideoStream:  file.VideoStream,
-		Flags:        file.Flags,
-		Events:       file.Events,
-		Cluster:      file.Cluster,
-		Partition:    file.Partition,
-		PicIndex:     file.PicIndex,
-		Repeat:       file.Repeat,
-		WorkDir:      file.WorkDir,
-		WorkDirSN:    file.WorkDirSN,
+		CameraID:    cameraID,
+		Channel:     file.Channel,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		Length:      file.Length,
+		Type:        file.Type,
+		FilePath:    file.FilePath,
+		Duration:    file.Duration,
+		Disk:        file.Disk,
+		VideoStream: file.VideoStream,
+		Flags:       file.Flags,
+		Events:      file.Events,
+		Cluster:     file.Cluster,
+		Partition:   file.Partition,
+		PicIndex:    file.PicIndex,
+		Repeat:      file.Repeat,
+		WorkDir:     file.WorkDir,
+		WorkDirSN:   file.WorkDirSN,
 	}, nil
 }
 
-func NewDahuaFiles(files []mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) ([]models.DahuaFile, error) {
+func NewDahuaFiles(cameraID string, files []mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) ([]models.DahuaFile, error) {
 	res := make([]models.DahuaFile, 0, len(files))
 	for _, file := range files {
-		r, err := NewDahuaFile(file, affixSeed, location)
+		r, err := NewDahuaFile(cameraID, file, affixSeed, location)
 		if err != nil {
 			return []models.DahuaFile{}, err
 		}
@@ -298,21 +299,22 @@ func ValidateDahuaCamera(c models.DahuaCamera) (models.DahuaCamera, error) {
 	return c, validate.Validate.Struct(c)
 }
 
-func NewDahuaCamera(id string, context models.DTODahuaCamera) (models.DahuaCamera, error) {
+func NewDahuaCamera(id string, dto models.DTODahuaCamera) (models.DahuaCamera, error) {
 	var location models.Location
-	if context.Location.Location == nil {
+	if dto.Location.Location == nil {
 		location = models.Location{Location: time.Local}
 	} else {
-		location = context.Location
+		location = dto.Location
 	}
 
 	camera, err := ValidateDahuaCamera(models.DahuaCamera{
-		ID:         id,
-		Address:    context.Address,
-		Username:   context.Username,
-		Password:   context.Password,
-		Location:   location,
-		CreartedAt: time.Now(),
+		ID:        id,
+		Address:   dto.Address,
+		Username:  dto.Username,
+		Password:  dto.Password,
+		Location:  location,
+		Seed:      dto.Seed,
+		CreatedAt: time.Now(),
 	})
 	if err != nil {
 		return models.DahuaCamera{}, err
@@ -321,10 +323,14 @@ func NewDahuaCamera(id string, context models.DTODahuaCamera) (models.DahuaCamer
 	return camera, nil
 }
 
-func NewAffixSeed(id string) int {
-	seed, err := strconv.Atoi(id)
+func GetSeed(c models.DahuaCamera) int {
+	if c.Seed != 0 {
+		return c.Seed
+	}
+
+	seed, err := strconv.Atoi(c.ID)
 	if err != nil {
-		for _, c := range id {
+		for _, c := range c.ID {
 			seed += int(c)
 		}
 	}
@@ -332,25 +338,25 @@ func NewAffixSeed(id string) int {
 	return seed
 }
 
-func NewAddress(address string) string {
+func NewHTTPAddress(address string) string {
 	return "http://" + address
 }
 
-func NewDahuaStatus(camera models.DahuaCamera, rpcConn *dahuarpc.Conn) models.DahuaStatus {
+func GetDahuaStatus(camera models.DahuaCamera, rpcConn *dahuarpc.Conn) models.DahuaStatus {
 	rpcData := rpcConn.Data()
 	var rpcError string
 	if rpcData.Error != nil {
 		rpcError = rpcData.Error.Error()
 	}
 	return models.DahuaStatus{
-		ID:           camera.ID,
+		CameraID:     camera.ID,
 		Address:      camera.Address,
 		Username:     camera.Username,
 		Location:     camera.Location.String(),
 		RPCError:     rpcError,
 		RPCState:     rpcData.State.String(),
 		RPCLastLogin: rpcData.LastLogin,
-		CreatedAt:    camera.CreartedAt,
+		CreatedAt:    camera.CreatedAt,
 	}
 }
 

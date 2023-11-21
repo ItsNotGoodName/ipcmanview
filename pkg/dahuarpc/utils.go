@@ -100,8 +100,8 @@ func (s Integer) Integer() int64 {
 	return int64(s)
 }
 
-func LoadFileURL(address, path string) string {
-	return fmt.Sprintf("%s/RPC_Loadfile%s", address, path)
+func LoadFileURL(httpAddress, path string) string {
+	return fmt.Sprintf("%s/RPC_Loadfile%s", httpAddress, path)
 }
 
 func Cookie(session string) string {
