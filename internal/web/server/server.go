@@ -1,9 +1,9 @@
 package webserver
 
 import (
+	"bytes"
 	"cmp"
 	"context"
-	"fmt"
 	"net/http"
 	"slices"
 	"strconv"
@@ -16,24 +16,10 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	webcore "github.com/ItsNotGoodName/ipcmanview/internal/web/core"
-	"github.com/gorilla/schema"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
 )
-
-var decoder = schema.NewDecoder()
-
-func parseForm(c echo.Context, form any) error {
-	if err := c.Request().ParseForm(); err != nil {
-		return err
-	}
-	if err := decoder.Decode(form, c.Request().PostForm); err != nil {
-		return echo.ErrBadRequest.WithInternal(err)
-	}
-
-	return nil
-}
 
 func RegisterMiddleware(e *echo.Echo) {
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
@@ -50,10 +36,9 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 	e.GET("/dahua/data", w.DahuaData)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
 	e.GET("/dahua/events/stream", w.DahuaEventStream)
+	e.GET("/dahua/events", w.DahuaEvent)
 	e.POST("/dahua/cameras/create", w.DahuaCamerasCreatePOST)
 }
-
-type Data map[string]any
 
 type Server struct {
 	db         *sqlc.Queries
@@ -77,8 +62,16 @@ func (s Server) Dahua(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua", nil)
 }
 
+func (s Server) DahuaEvent(c echo.Context) error {
+	return c.Render(http.StatusOK, "dahua-events", nil)
+}
+
 func (s Server) DahuaEventStream(c echo.Context) error {
-	c.Request().Header.Set(echo.HeaderContentType, "text/event-stream")
+	w := c.Response()
+
+	w.Header().Set(echo.HeaderContentType, "text/event-stream")
+	w.Header().Set(echo.HeaderCacheControl, "no-cache")
+	w.Header().Set(echo.HeaderConnection, "keep-alive")
 
 	ctx, cancel := context.WithCancel(c.Request().Context())
 	defer cancel()
@@ -88,13 +81,23 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 		return err
 	}
 
+	buf := new(bytes.Buffer)
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case event := <-eventsC:
-			// TODO: this
-			fmt.Println(event)
+			if err := c.Echo().Renderer.Render(buf, "dahua-events", TemplateBlock{
+				"event-row",
+				Data{
+					"Event": event.Event,
+				},
+			}, c); err != nil {
+				return err
+			}
+			w.Write(formatSSE("message", buf.String()))
+			buf.Reset()
+			w.Flush()
 		}
 	}
 }

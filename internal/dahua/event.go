@@ -93,7 +93,7 @@ func (s *EventWorkerStore) Create(camera models.DahuaCamera) error {
 		return fmt.Errorf("eventWorker already exists: %s", camera.ID)
 	}
 
-	log.Info().Str("id", camera.ID).Msg("Creating eventWorker")
+	log.Info().Str("id", camera.ID).Msg("Creating dahua.eventWorker")
 	worker := newEventWorker(camera, s.hooks)
 	token = s.super.Add(worker)
 	s.workers[camera.ID] = token

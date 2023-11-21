@@ -14,6 +14,15 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+func RegisterRenderer(e *echo.Echo) error {
+	r, err := NewRenderer()
+	if err != nil {
+		return err
+	}
+	e.Renderer = r
+	return nil
+}
+
 func parseTemplate(name string) (*template.Template, error) {
 	return template.
 		New(name).
@@ -52,17 +61,6 @@ type TemplateBlock struct {
 	any
 }
 
-func RegisterRenderer(e *echo.Echo) error {
-	r, err := NewRenderer()
-	if err != nil {
-		return err
-	}
-
-	e.Renderer = r
-
-	return nil
-}
-
 func NewRenderer() (Renderer, error) {
 	files, err := web.ViewsFS().ReadDir("views")
 	if err != nil {
@@ -99,13 +97,14 @@ func (t Renderer) Render(w io.Writer, name string, data any, c echo.Context) err
 		Template: name,
 		URI:      c.Request().RequestURI,
 		Head:     t.head,
-		Data:     data,
 	}
 
 	switch data := data.(type) {
 	case TemplateBlock:
+		tmplData.Data = data.any
 		return tmpl.ExecuteTemplate(w, data.Name, tmplData)
 	default:
+		tmplData.Data = data
 		return tmpl.Execute(w, tmplData)
 	}
 }

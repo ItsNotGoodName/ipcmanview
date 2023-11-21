@@ -60,11 +60,11 @@ func run() lieut.Executor {
 		if err != nil {
 			return err
 		}
-		db := sqlite.NewDebugDB(sqlDB)
-		if err := migrations.Migrate(db); err != nil {
+		sqliteDB := sqlite.NewDebugDB(sqlDB)
+		if err := migrations.Migrate(sqliteDB); err != nil {
 			return err
 		}
-		sqlc := sqlc.New(db)
+		sqlcDB := sqlc.New(sqliteDB)
 
 		// Bus
 		dahuaBus := dahua.NewBus()
@@ -74,6 +74,9 @@ func run() lieut.Executor {
 		super.Add(dahuaStore)
 		eventWorkerStore := dahua.NewEventWorkerStore(super, dahuaBus)
 		dahua.RegisterEventBus(eventWorkerStore, dahuaBus)
+		if err := webcore.SyncDahuaStore(ctx, sqlcDB, dahuaStore); err != nil {
+			return err
+		}
 
 		pubSub := pubsub.NewPub(dahuaBus)
 
@@ -89,11 +92,11 @@ func run() lieut.Executor {
 		// HTTP API
 		apiDahuaServer := api.
 			NewDahuaServer(webcore.
-				NewDahuaStoreProxy(dahuaStore, sqlc), pubSub)
+				NewDahuaStoreProxy(dahuaStore, sqlcDB), pubSub)
 		api.RegisterDahuaRoutes(httpRouter, apiDahuaServer)
 
 		// HTTP Web
-		webServer := webserver.New(sqlc, dahuaStore, pubSub)
+		webServer := webserver.New(sqlcDB, dahuaStore, pubSub)
 		webserver.RegisterRoutes(httpRouter, webServer)
 
 		// HTTP Server

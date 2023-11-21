@@ -6,7 +6,8 @@ import 'flowbite';
 
 // ---------- htmx
 
-import "htmx.org"
+import "./htmx.js"
+import 'htmx.org/dist/ext/sse.js'
 
 // ---------- Shoelace
 

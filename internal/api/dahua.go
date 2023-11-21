@@ -269,7 +269,7 @@ func (s *DahuaServer) GETIDEvents(c echo.Context) error {
 			}
 		}
 	} else {
-		// Get events from the event worker
+		// Get events from PubSub
 
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()

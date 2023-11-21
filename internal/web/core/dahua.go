@@ -9,6 +9,24 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 )
 
+func SyncDahuaStore(ctx context.Context, sqlcDB *sqlc.Queries, store *dahua.Store) error {
+	dbCameras, err := sqlcDB.ListDahuaCamera(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = store.ConnListByCameras(ctx, ConvertDahuaCameras(dbCameras)...)
+	return err
+}
+
+func ConvertDahuaCameras(dbCameras []sqlc.DahuaCamera) []models.DahuaCamera {
+	cameras := make([]models.DahuaCamera, 0, len(dbCameras))
+	for _, dbCamera := range dbCameras {
+		cameras = append(cameras, ConvertDahuaCamera(dbCamera))
+	}
+
+	return cameras
+}
+
 func ConvertDahuaCamera(c sqlc.DahuaCamera) models.DahuaCamera {
 	return models.DahuaCamera{
 		ID:        strconv.FormatInt(c.ID, 10),
@@ -21,10 +39,10 @@ func ConvertDahuaCamera(c sqlc.DahuaCamera) models.DahuaCamera {
 	}
 }
 
-func NewDahuaStoreProxy(dahuaStore *dahua.Store, db *sqlc.Queries) DahuaStoreProxy {
+func NewDahuaStoreProxy(dahuaStore *dahua.Store, sqlcDB *sqlc.Queries) DahuaStoreProxy {
 	return DahuaStoreProxy{
 		store: dahuaStore,
-		db:    db,
+		db:    sqlcDB,
 	}
 }
 
