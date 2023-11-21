@@ -175,6 +175,7 @@ func (q *Queries) ListDahuaCamera(ctx context.Context) ([]DahuaCamera, error) {
 
 const listDahuaEvent = `-- name: ListDahuaEvent :many
 SELECT id, camera_id, content_type, content_length, code, "action", ` + "`" + `index` + "`" + `, data, created_at FROM dahua_events
+ORDER BY created_at DESC
 LIMIT ? OFFSET ?
 `
 

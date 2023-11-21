@@ -36,4 +36,5 @@ INSERT INTO dahua_events (
 
 -- name: ListDahuaEvent :many
 SELECT * FROM dahua_events
+ORDER BY created_at DESC
 LIMIT ? OFFSET ?;

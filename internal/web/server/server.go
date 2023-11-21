@@ -29,15 +29,19 @@ func RegisterMiddleware(e *echo.Echo) {
 
 func RegisterRoutes(e *echo.Echo, w Server) {
 	e.DELETE("/dahua/cameras/:id", w.DahuaCamerasIDDelete)
+
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
 	e.GET("/dahua/cameras", w.DahuaCameras)
 	e.GET("/dahua/cameras/create", w.DahuaCamerasCreate)
+	e.GET("/dahua/cameras/:id/update", w.DahuaCamerasUpdate)
 	e.GET("/dahua/data", w.DahuaData)
-	e.GET("/dahua/snapshots", w.DahuaSnapshots)
-	e.GET("/dahua/events/stream", w.DahuaEventStream)
 	e.GET("/dahua/events", w.DahuaEvent)
+	e.GET("/dahua/events/stream", w.DahuaEventStream)
+	e.GET("/dahua/snapshots", w.DahuaSnapshots)
+
 	e.POST("/dahua/cameras/create", w.DahuaCamerasCreatePOST)
+	e.POST("/dahua/cameras/:id/update", w.DahuaCamerasUpdatePOST)
 }
 
 type Server struct {
@@ -67,6 +71,8 @@ func (s Server) DahuaEvent(c echo.Context) error {
 }
 
 func (s Server) DahuaEventStream(c echo.Context) error {
+	// FIXME: this handler prevents Echo from gracefully shutting down because the context is not canceled when Echo.Shutdown is called.
+
 	w := c.Response()
 
 	w.Header().Set(echo.HeaderContentType, "text/event-stream")
@@ -82,6 +88,29 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	}
 
 	buf := new(bytes.Buffer)
+
+	// Send previous 10 events
+	events, err := s.db.ListDahuaEvent(ctx, sqlc.ListDahuaEventParams{
+		Limit: 10,
+	})
+	if err != nil {
+		return err
+	}
+	slices.Reverse(events)
+	for _, event := range events {
+		if err := c.Echo().Renderer.Render(buf, "dahua-events", TemplateBlock{
+			"event-row",
+			Data{
+				"Event": event,
+			},
+		}, c); err != nil {
+			return err
+		}
+		w.Write(formatSSE("message", buf.String()))
+		buf.Reset()
+		w.Flush()
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -141,12 +170,17 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 	if err := parseForm(c, &form); err != nil {
 		return err
 	}
-
+	if form.Name == "" {
+		form.Name = form.Address
+	}
+	if form.Username == "" {
+		form.Username = "admin"
+	}
 	location, err := core.NewLocation(form.Location)
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
-
 	}
+
 	dto, err := dahua.NewDahuaCamera("", models.DTODahuaCamera{
 		Address:  form.Address,
 		Username: form.Username,
@@ -164,6 +198,65 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Location:  dto.Location,
 		CreatedAt: dto.CreatedAt,
 		UpdatedAt: dto.CreatedAt,
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
+}
+
+func (s Server) DahuaCamerasUpdate(c echo.Context) error {
+	camera, err := useDahuaCamera(c, s.db)
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "dahua-cameras-update", Data{
+		"Camera": camera,
+	})
+}
+
+func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
+	camera, err := useDahuaCamera(c, s.db)
+	if err != nil {
+		return err
+	}
+
+	var form struct {
+		Name     string
+		Address  string
+		Username string
+		Password string
+		Location string
+	}
+	if err := parseForm(c, &form); err != nil {
+		return err
+	}
+	location, err := core.NewLocation(form.Location)
+	if err != nil {
+		return echo.ErrBadRequest.WithInternal(err)
+	}
+	if form.Password == "" {
+		form.Password = camera.Password
+	}
+
+	dto, err := dahua.NewDahuaCamera("", models.DTODahuaCamera{
+		Address:  form.Address,
+		Username: form.Username,
+		Password: form.Password,
+		Location: location,
+	})
+
+	ctx := c.Request().Context()
+
+	_, err = s.db.UpdateDahuaCamera(ctx, sqlc.UpdateDahuaCameraParams{
+		ID:       camera.ID,
+		Name:     form.Name,
+		Username: dto.Username,
+		Password: dto.Password,
+		Address:  dto.Address,
+		Location: dto.Location,
 	})
 	if err != nil {
 		return err

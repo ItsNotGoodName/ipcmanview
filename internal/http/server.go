@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
@@ -33,6 +34,12 @@ func (s Server) Serve(ctx context.Context) error {
 	case <-ctx.Done():
 		ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 		defer cancel()
-		return s.e.Shutdown(ctx)
+
+		if err := s.e.Shutdown(ctx); err != nil {
+			log.Err(err).Msg("HTTP Server failed to shutdown gracefully")
+			return err
+		}
+
+		return nil
 	}
 }

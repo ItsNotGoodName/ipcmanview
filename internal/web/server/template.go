@@ -41,7 +41,7 @@ func parseTemplate(name string) (*template.Template, error) {
 				return humanize.Bytes(uint64(bytes))
 			},
 			"SLFormatDate": func(date time.Time) template.HTML {
-				return template.HTML(fmt.Sprintf(`<sl-format-date month="numeric" day="numeric" year="numeric" hour="numeric" minute="numeric" hour-format="12" date="%s"></sl-format-date>`, date.Format(time.RFC3339)))
+				return template.HTML(fmt.Sprintf(`<sl-format-date month="numeric" day="numeric" year="numeric" hour="numeric" minute="numeric" hour-format="12" second="numeric" date="%s"></sl-format-date>`, date.Format(time.RFC3339)))
 			},
 		}).
 		ParseFS(web.ViewsFS(), "views/partials/*.html", "views/"+name)

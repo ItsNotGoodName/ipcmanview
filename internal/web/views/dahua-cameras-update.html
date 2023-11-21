@@ -1,0 +1,48 @@
+{{template "base.html" .}}
+{{define "body"}}
+
+{{template "dahua-tabs.html" .}}
+
+<section class="bg-white dark:bg-gray-900">
+  <div class="mx-auto max-w-xl p-4">
+    <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Create Camera</h2>
+    <form method="post">
+      <div class="mb-6">
+        <label for="name" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Name</label>
+        <input type="name" id="name" name="name"
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+          placeholder="CAM-1" value="{{.Data.Camera.Name}}">
+      </div>
+      <div class="mb-6">
+        <label for="address" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Address</label>
+        <input type="address" id="address" name="address"
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+          placeholder="192.168.1.108" required value="{{.Data.Camera.Address}}">
+      </div>
+      <div class="mb-6">
+        <label for="username" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Username</label>
+        <input type="username" id="username" name="username"
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+          placeholder="admin" value="{{.Data.Camera.Username}}">
+      </div>
+      <div class="mb-6">
+        <label for="password" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Password</label>
+        <input type="password" id="password" name="password"
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
+          placeholder="********">
+      </div>
+      <div class="mb-6">
+        <label for="location" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Location</label>
+        <select id="location" name="location"
+          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500">
+          <option value="">Local</option>
+        </select>
+      </div>
+      <button type="submit"
+        class="w-full rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 sm:w-auto">
+        Submit
+      </button>
+    </form>
+  </div>
+</section>
+{{end}}

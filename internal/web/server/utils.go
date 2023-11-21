@@ -1,8 +1,10 @@
 package webserver
 
 import (
+	"strconv"
 	"strings"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 	"github.com/gorilla/schema"
 	"github.com/labstack/echo/v4"
 )
@@ -29,4 +31,18 @@ func formatSSE(event string, data string) []byte {
 		eventPayload = eventPayload + "data: " + line + "\n"
 	}
 	return []byte(eventPayload + "\n")
+}
+
+func useDahuaCamera(c echo.Context, db *sqlc.Queries) (sqlc.DahuaCamera, error) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return sqlc.DahuaCamera{}, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	camera, err := db.GetDahuaCamera(c.Request().Context(), id)
+	if err != nil {
+		return sqlc.DahuaCamera{}, err
+	}
+
+	return camera, nil
 }
