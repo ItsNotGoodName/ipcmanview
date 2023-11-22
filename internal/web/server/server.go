@@ -15,7 +15,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
-	webcore "github.com/ItsNotGoodName/ipcmanview/internal/web/core"
+	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
@@ -45,16 +45,18 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 }
 
 type Server struct {
-	db         *sqlc.Queries
-	dahuaStore *dahua.Store
+	db         sqlc.DB
 	pubSub     api.PubSub
+	dahuaStore *dahua.Store
+	dahuaBus   *dahua.Bus
 }
 
-func New(db *sqlc.Queries, dahuaStore *dahua.Store, pubSub api.PubSub) Server {
+func New(db sqlc.DB, pubSub api.PubSub, dahuaStore *dahua.Store, dahuaBus *dahua.Bus) Server {
 	return Server{
 		db:         db,
-		dahuaStore: dahuaStore,
 		pubSub:     pubSub,
+		dahuaStore: dahuaStore,
+		dahuaBus:   dahuaBus,
 	}
 }
 
@@ -82,7 +84,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	ctx, cancel := context.WithCancel(c.Request().Context())
 	defer cancel()
 
-	eventsC, err := s.pubSub.SubscribeDahuaEvents(ctx, []string{})
+	eventsC, err := s.pubSub.SubscribeDahuaEvents(ctx, []int64{})
 	if err != nil {
 		return err
 	}
@@ -140,6 +142,7 @@ func (s Server) DahuaCamerasIDDelete(c echo.Context) error {
 	if err := s.db.DeleteDahuaCamera(c.Request().Context(), id); err != nil {
 		return err
 	}
+	s.dahuaBus.CameraDeleted(id)
 
 	return c.NoContent(http.StatusOK)
 }
@@ -181,7 +184,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	dto, err := dahua.NewDahuaCamera("", models.DTODahuaCamera{
+	dto, err := dahua.NewDahuaCamera(0, models.DTODahuaCamera{
 		Address:  form.Address,
 		Username: form.Username,
 		Password: form.Password,
@@ -190,7 +193,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 
 	ctx := c.Request().Context()
 
-	_, err = s.db.CreateDahuaCamera(ctx, sqlc.CreateDahuaCameraParams{
+	id, err := s.db.CreateDahuaCamera(ctx, sqlc.CreateDahuaCameraParams{
 		Name:      form.Name,
 		Username:  dto.Username,
 		Password:  dto.Password,
@@ -202,6 +205,12 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	dbCamera, err := s.db.GetDahuaCamera(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	s.dahuaBus.CameraCreated(webdahua.ConvertGetDahuaCameraRow(dbCamera))
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
 }
@@ -241,7 +250,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		form.Password = camera.Password
 	}
 
-	dto, err := dahua.NewDahuaCamera("", models.DTODahuaCamera{
+	dto, err := dahua.NewDahuaCamera(0, models.DTODahuaCamera{
 		Address:  form.Address,
 		Username: form.Username,
 		Password: form.Password,
@@ -261,6 +270,12 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+
+	dbCamera, err := s.db.GetDahuaCamera(ctx, camera.ID)
+	if err != nil {
+		return err
+	}
+	s.dahuaBus.CameraUpdated(webdahua.ConvertGetDahuaCameraRow(dbCamera))
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
 }
@@ -296,11 +311,16 @@ func (s Server) DahuaData(c echo.Context) error {
 	wg := sync.WaitGroup{}
 	for _, camera := range cameras {
 		wg.Add(1)
-		go func(camera sqlc.DahuaCamera) {
+		go func(camera sqlc.ListDahuaCameraRow) {
 			defer wg.Done()
 
-			conn := s.dahuaStore.ConnByCamera(ctx, webcore.ConvertDahuaCamera(camera))
-			log := log.With().Str("id", conn.Camera.ID).Logger()
+			log := log.With().Int64("id", camera.ID).Logger()
+
+			conn, err := s.dahuaStore.Conn(ctx, camera.ID)
+			if err != nil {
+				log.Err(err).Msg("Failed to get connection")
+				return
+			}
 
 			var data cameraData
 
@@ -360,7 +380,7 @@ func (s Server) DahuaData(c echo.Context) error {
 	wg.Wait()
 	close(cameraDataC)
 
-	conns, err := s.dahuaStore.ConnListByCameras(ctx)
+	conns, err := s.dahuaStore.ConnList(ctx)
 	if err != nil {
 		return err
 	}

@@ -7,13 +7,12 @@ migrate:
 	goose -dir migrations/sql sqlite3 "$(DB_PATH)" up
 
 clean:
-	rm DB_PATH
+	rm ${DB_PATH}
 
 # Preview
 
 preview-web:
 	cd internal/web && pnpm run build && cd ../.. && go run ./cmd/ipcmanview-web
-
 
 # Run
 
@@ -29,7 +28,7 @@ dev-web:
 	air -build.cmd "go build -o ./tmp/main -tags dev ./cmd/ipcmanview-web"
 
 dev-web-assets:
-	cd internal/web && pnpm run dev
+	cd internal/web && pnpm install && pnpm run dev
 
 # Gen
 

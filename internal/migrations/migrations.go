@@ -1,11 +1,11 @@
 package migrations
 
 import (
+	"database/sql"
 	"embed"
 	"fmt"
 	"strings"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/pressly/goose/v3"
 	"github.com/rs/zerolog/log"
 )
@@ -13,14 +13,14 @@ import (
 //go:embed sql/*.sql
 var migrations embed.FS
 
-func Migrate(db sqlite.Querier) error {
+func Migrate(db *sql.DB) error {
 	goose.SetBaseFS(migrations)
 
 	if err := goose.SetDialect("sqlite3"); err != nil {
 		return err
 	}
 
-	if err := goose.Up(db.Conn(), "sql"); err != nil {
+	if err := goose.Up(db, "sql"); err != nil {
 		return err
 	}
 

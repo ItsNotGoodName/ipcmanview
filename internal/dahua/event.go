@@ -15,7 +15,7 @@ import (
 )
 
 type EventHooks interface {
-	CameraEvent(ctx context.Context, event models.DahuaEvent)
+	CameraEvent(event models.DahuaEvent)
 }
 
 func newEventWorker(camera models.DahuaCamera, hooks EventHooks) eventWorker {
@@ -31,7 +31,7 @@ type eventWorker struct {
 }
 
 func (w eventWorker) String() string {
-	return fmt.Sprintf("dahua.eventWorker(id=%s)", w.Camera.ID)
+	return fmt.Sprintf("dahua.eventWorker(id=%d)", w.Camera.ID)
 }
 
 func (w eventWorker) Serve(ctx context.Context) error {
@@ -63,7 +63,7 @@ func (w eventWorker) Serve(ctx context.Context) error {
 
 		event := NewDahuaEvent(w.Camera.ID, rawEvent, time.Now())
 
-		w.hooks.CameraEvent(ctx, event)
+		w.hooks.CameraEvent(event)
 	}
 }
 
@@ -72,7 +72,7 @@ type EventWorkerStore struct {
 	hooks EventHooks
 
 	workersMu sync.Mutex
-	workers   map[string]suture.ServiceToken
+	workers   map[int64]suture.ServiceToken
 }
 
 func NewEventWorkerStore(super *suture.Supervisor, hooks EventHooks) *EventWorkerStore {
@@ -80,7 +80,7 @@ func NewEventWorkerStore(super *suture.Supervisor, hooks EventHooks) *EventWorke
 		super:     super,
 		hooks:     hooks,
 		workersMu: sync.Mutex{},
-		workers:   make(map[string]suture.ServiceToken),
+		workers:   make(map[int64]suture.ServiceToken),
 	}
 }
 
@@ -90,10 +90,10 @@ func (s *EventWorkerStore) Create(camera models.DahuaCamera) error {
 
 	token, found := s.workers[camera.ID]
 	if found {
-		return fmt.Errorf("eventWorker already exists: %s", camera.ID)
+		return fmt.Errorf("eventWorker already exists: %d", camera.ID)
 	}
 
-	log.Info().Str("id", camera.ID).Msg("Creating dahua.eventWorker")
+	log.Info().Int64("id", camera.ID).Msg("Creating dahua.eventWorker")
 	worker := newEventWorker(camera, s.hooks)
 	token = s.super.Add(worker)
 	s.workers[camera.ID] = token
@@ -107,10 +107,10 @@ func (s *EventWorkerStore) Update(camera models.DahuaCamera) error {
 
 	token, found := s.workers[camera.ID]
 	if !found {
-		return fmt.Errorf("eventWorker not found by ID: %s", camera.ID)
+		return fmt.Errorf("eventWorker not found by ID: %d", camera.ID)
 	}
 
-	log.Info().Str("id", camera.ID).Msg("Updating eventWorker")
+	log.Info().Int64("id", camera.ID).Msg("Updating eventWorker")
 	s.super.Remove(token)
 	worker := newEventWorker(camera, s.hooks)
 	token = s.super.Add(worker)
@@ -119,27 +119,31 @@ func (s *EventWorkerStore) Update(camera models.DahuaCamera) error {
 	return nil
 }
 
-// func (s *EventSupervisor) Delete(id string) {
-// 	s.workersMu.Lock()
-// 	defer s.workersMu.Unlock()
-//
-// 	token, found := s.workers[id]
-// 	if found {
-// 		s.super.Remove(token)
-// 	}
-// 	delete(s.workers, id)
-// }
+func (s *EventWorkerStore) Delete(id int64) {
+	s.workersMu.Lock()
+	token, found := s.workers[id]
+	if found {
+		s.super.Remove(token)
+	}
+	delete(s.workers, id)
+	s.workersMu.Unlock()
+}
 
 type EventBus interface {
-	OnCameraCreated(h func(evt models.EventDahuaCameraCreated) error)
-	OnCameraUpdated(h func(evt models.EventDahuaCameraUpdated) error)
+	OnCameraCreated(h func(ctx context.Context, evt models.EventDahuaCameraCreated) error)
+	OnCameraUpdated(h func(ctx context.Context, evt models.EventDahuaCameraUpdated) error)
+	OnCameraDeleted(h func(ctx context.Context, evt models.EventDahuaCameraDeleted) error)
 }
 
 func RegisterEventBus(e *EventWorkerStore, bus EventBus) {
-	bus.OnCameraCreated(func(evt models.EventDahuaCameraCreated) error {
+	bus.OnCameraCreated(func(ctx context.Context, evt models.EventDahuaCameraCreated) error {
 		return e.Create(evt.Camera)
 	})
-	bus.OnCameraUpdated(func(evt models.EventDahuaCameraUpdated) error {
+	bus.OnCameraUpdated(func(ctx context.Context, evt models.EventDahuaCameraUpdated) error {
 		return e.Update(evt.Camera)
+	})
+	bus.OnCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
+		e.Delete(evt.CameraID)
+		return nil
 	})
 }

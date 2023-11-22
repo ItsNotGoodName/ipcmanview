@@ -7,13 +7,14 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
 	"github.com/ItsNotGoodName/ipcmanview/internal/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
-	webcore "github.com/ItsNotGoodName/ipcmanview/internal/web/core"
+	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	webserver "github.com/ItsNotGoodName/ipcmanview/internal/web/server"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/Rican7/lieut"
@@ -35,7 +36,7 @@ func main() {
 		lieut.AppInfo{
 			Name:    "ipcmanview-web",
 			Version: build.Version,
-			Summary: "Basic web interface for accessing IP Cameras.",
+			Summary: "Basic web application for accessing IP Cameras.",
 		},
 		run(),
 		flags,
@@ -63,20 +64,20 @@ func run() lieut.Executor {
 		if err != nil {
 			return err
 		}
-		sqliteDB := sqlite.NewDebugDB(sqlDB)
-		if err := migrations.Migrate(sqliteDB); err != nil {
+		if err := migrations.Migrate(sqlDB); err != nil {
 			return err
 		}
-		sqlcDB := sqlc.New(sqliteDB)
-
-		webcore.RegisterDahuaBus(dahuaBus, sqlcDB)
+		db := sqlc.NewDB(sqlite.NewDebugDB(sqlDB))
 
 		// Stores
-		dahuaStore := dahua.NewStore(dahuaBus)
+		dahuaCameraStore := webdahua.NewDahuaCameraStore(db)
+		dahuaStore := dahua.NewStore(dahuaCameraStore)
 		super.Add(dahuaStore)
-		eventWorkerStore := dahua.NewEventWorkerStore(super, dahuaBus)
+		eventWorkerStore :=
+			dahua.NewEventWorkerStore(super,
+				webdahua.NewDahuaEventHooksProxy(dahuaBus, db))
 		dahua.RegisterEventBus(eventWorkerStore, dahuaBus)
-		if err := webcore.SyncDahuaStore(ctx, sqlcDB, dahuaStore); err != nil {
+		if err := core.DahuaBootstrap(ctx, dahuaStore, eventWorkerStore); err != nil {
 			return err
 		}
 
@@ -92,13 +93,11 @@ func run() lieut.Executor {
 		webserver.RegisterMiddleware(httpRouter)
 
 		// HTTP API
-		apiDahuaServer := api.
-			NewDahuaServer(webcore.
-				NewDahuaStoreProxy(dahuaStore, sqlcDB), pubSub)
+		apiDahuaServer := api.NewDahuaServer(pubSub, dahuaStore, dahuaCameraStore)
 		api.RegisterDahuaRoutes(httpRouter, apiDahuaServer)
 
 		// HTTP Web
-		webServer := webserver.New(sqlcDB, dahuaStore, pubSub)
+		webServer := webserver.New(db, pubSub, dahuaStore, dahuaBus)
 		webserver.RegisterRoutes(httpRouter, webServer)
 
 		// HTTP Server

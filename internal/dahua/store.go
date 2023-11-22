@@ -1,11 +1,9 @@
 package dahua
 
 import (
-	"cmp"
 	"context"
 	"fmt"
 	"net/http"
-	"slices"
 	"sync"
 	"time"
 
@@ -14,6 +12,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/auth"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
+	"github.com/rs/zerolog/log"
 )
 
 func newConn(c storeClient) Conn {
@@ -62,22 +61,29 @@ type storeClient struct {
 	ConnCGI dahuacgi.Conn
 }
 
-type StoreHooks interface {
-	ConnCreated(conn Conn)
-	ConnUpdated(conn Conn)
+func (c storeClient) Close(ctx context.Context) {
+	if err := c.ConnRPC.Close(ctx); err != nil {
+		log.Err(err).Int64("id", c.Camera.ID).Caller().Msg("Failed to close RPC connection")
+	}
+}
+
+type StoreCameraStore interface {
+	List(ctx context.Context) ([]models.DahuaCamera, error)
+	Get(ctx context.Context, id int64) (models.DahuaCamera, bool, error)
 }
 
 type Store struct {
+	cameraStore StoreCameraStore
+
 	clientsMu sync.Mutex
-	clients   map[string]storeClient
-	hooks     StoreHooks
+	clients   map[int64]storeClient
 }
 
-func NewStore(hooks StoreHooks) *Store {
+func NewStore(cameraStore StoreCameraStore) *Store {
 	return &Store{
-		clientsMu: sync.Mutex{},
-		clients:   make(map[string]storeClient),
-		hooks:     hooks,
+		cameraStore: cameraStore,
+		clientsMu:   sync.Mutex{},
+		clients:     make(map[int64]storeClient),
 	}
 }
 
@@ -95,62 +101,81 @@ func (s *Store) Serve(ctx context.Context) error {
 
 func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaCamera) Conn {
 	client, ok := s.clients[camera.ID]
-	created := false
-	updated := false
 	if !ok {
+		// Not found
 		client = newStoreClient(camera)
 		s.clients[camera.ID] = client
-		created = true
 	} else if !cameraIdentityEqual(client.Camera, camera) {
-		client.ConnRPC.Close(ctx)
+		// Found but not equal
+
+		client.Close(ctx)
 		client = newStoreClient(camera)
 		s.clients[camera.ID] = client
-		updated = true
 	}
 
 	conn := newConn(client)
 
-	if created {
-		s.hooks.ConnCreated(conn)
-	}
-	if updated {
-		s.hooks.ConnUpdated(conn)
-	}
-
 	return conn
 }
 
-func (s *Store) ConnByCamera(ctx context.Context, camera models.DahuaCamera) Conn {
+func (s *Store) ConnList(ctx context.Context) ([]Conn, error) {
 	s.clientsMu.Lock()
-	conn := s.getOrCreateCamera(ctx, camera)
-	s.clientsMu.Unlock()
-	return conn
-}
-
-func (s *Store) ConnListByCameras(ctx context.Context, cameras ...models.DahuaCamera) ([]Conn, error) {
-	s.clientsMu.Lock()
-	for _, camera := range cameras {
-		_ = s.getOrCreateCamera(ctx, camera)
+	cameras, err := s.cameraStore.List(ctx)
+	if err != nil {
+		s.clientsMu.Unlock()
+		return nil, err
 	}
 
 	clients := make([]Conn, 0, len(s.clients))
-	for _, client := range s.clients {
-		clients = append(clients, newConn(client))
+	for _, camera := range cameras {
+		clients = append(clients, s.getOrCreateCamera(ctx, camera))
 	}
 	s.clientsMu.Unlock()
-
-	slices.SortFunc(clients, func(a, b Conn) int { return cmp.Compare(a.Camera.ID, b.Camera.ID) })
 
 	return clients, nil
 }
 
-func (s *Store) ConnByID(ctx context.Context, id string) (Conn, error) {
+func (s *Store) Conn(ctx context.Context, id int64) (Conn, error) {
 	s.clientsMu.Lock()
-	client, ok := s.clients[id]
-	s.clientsMu.Unlock()
-	if !ok {
-		return Conn{}, fmt.Errorf("Conn not found by ID: %s", id)
+	camera, found, err := s.cameraStore.Get(ctx, id)
+	if err != nil {
+		s.clientsMu.Unlock()
+		return Conn{}, err
 	}
+	if !found {
+		client, found := s.clients[id]
+		if found {
+			client.Close(ctx)
+		}
+		s.clientsMu.Unlock()
+		return Conn{}, fmt.Errorf("Conn not found by ID: %d", id)
+	}
+	client := s.getOrCreateCamera(ctx, camera)
+	s.clientsMu.Unlock()
 
-	return newConn(client), nil
+	return client, nil
+}
+
+func (s *Store) ConnDelete(ctx context.Context, id int64) {
+	s.clientsMu.Lock()
+	client, found := s.clients[id]
+	if found {
+		delete(s.clients, id)
+	}
+	s.clientsMu.Unlock()
+
+	if found {
+		client.Close(ctx)
+	}
+}
+
+type StoreBus interface {
+	OnCameraDeleted(h func(ctx context.Context, evt models.EventDahuaCameraDeleted) error)
+}
+
+func RegisterStoreBus(bus StoreBus, store *Store) {
+	bus.OnCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
+		store.ConnDelete(ctx, evt.CameraID)
+		return nil
+	})
 }

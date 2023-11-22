@@ -33,15 +33,15 @@ func formatSSE(event string, data string) []byte {
 	return []byte(eventPayload + "\n")
 }
 
-func useDahuaCamera(c echo.Context, db *sqlc.Queries) (sqlc.DahuaCamera, error) {
+func useDahuaCamera(c echo.Context, db sqlc.DB) (sqlc.GetDahuaCameraRow, error) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return sqlc.DahuaCamera{}, echo.ErrBadRequest.WithInternal(err)
+		return sqlc.GetDahuaCameraRow{}, echo.ErrBadRequest.WithInternal(err)
 	}
 
 	camera, err := db.GetDahuaCamera(c.Request().Context(), id)
 	if err != nil {
-		return sqlc.DahuaCamera{}, err
+		return sqlc.GetDahuaCameraRow{}, err
 	}
 
 	return camera, nil

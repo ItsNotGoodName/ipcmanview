@@ -23,19 +23,6 @@ type DahuaCamera struct {
 	UpdatedAt time.Time
 }
 
-type DahuaCameraFile struct {
-	ID        int64
-	CameraID  int64
-	FilePath  string
-	Kind      string
-	Size      int64
-	StartTime time.Time
-	EndTime   time.Time
-	Duration  int64
-	Events    json.RawMessage
-	UpdatedAt time.Time
-}
-
 type DahuaEvent struct {
 	ID            int64
 	CameraID      int64
@@ -48,7 +35,39 @@ type DahuaEvent struct {
 	CreatedAt     time.Time
 }
 
+type DahuaFile struct {
+	ID        int64
+	CameraID  int64
+	FilePath  string
+	Kind      string
+	Size      int64
+	StartTime time.Time
+	EndTime   time.Time
+	Duration  int64
+	Events    json.RawMessage
+	UpdatedAt time.Time
+}
+
+type DahuaFileCursor struct {
+	CameraID     int64
+	QuickCursor  time.Time
+	FullCursor   time.Time
+	FullEpoch    time.Time
+	FullEpochEnd time.Time
+	FullComplete bool
+}
+
+type DahuaFileScanLock struct {
+	CameraID  int64
+	CreatedAt time.Time
+}
+
 type DahuaSeed struct {
 	Seed     int64
 	CameraID sql.NullInt64
+}
+
+type Setting struct {
+	SiteName        string
+	DefaultLocation models.Location
 }

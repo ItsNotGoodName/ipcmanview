@@ -54,7 +54,8 @@ func run() lieut.Executor {
 		dahuaBus := dahua.NewBus()
 
 		// Stores
-		dahuaStore := dahua.NewStore(dahuaBus)
+		dahuaCameraStore := dahua.NewCameraStore()
+		dahuaStore := dahua.NewStore(dahuaCameraStore)
 		super.Add(dahuaStore)
 		eventWorkerStore := dahua.NewEventWorkerStore(super, dahuaBus)
 		dahua.RegisterEventBus(eventWorkerStore, dahuaBus)
@@ -64,8 +65,8 @@ func run() lieut.Executor {
 		// HTTP Router
 		httpRouter := http.NewRouter()
 
-		// Servers
-		apiDahuaServer := api.NewDahuaServer(dahuaStore, pubSub)
+		// HTTP API
+		apiDahuaServer := api.NewDahuaServer(pubSub, dahuaStore, dahuaCameraStore)
 		api.RegisterDahuaRoutes(httpRouter, apiDahuaServer)
 
 		// HTTP Server

@@ -10,5 +10,7 @@ sql:
         overrides:
           - column: "dahua_cameras.location"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.Location"
+          - column: "settings.default_location"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.Location"
           - db_type: "JSON"
             go_type: "encoding/json.RawMessage"

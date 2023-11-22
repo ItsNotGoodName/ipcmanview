@@ -29,7 +29,7 @@ func newClientData() clientData {
 }
 
 type Client struct {
-	ClientRPC
+	rpc ClientRPC
 
 	dataMu sync.Mutex
 	data   clientData
@@ -37,22 +37,22 @@ type Client struct {
 
 func NewClient(clientRPC ClientRPC) *Client {
 	return &Client{
-		ClientRPC: clientRPC,
-		dataMu:    sync.Mutex{},
-		data:      newClientData(),
+		rpc:    clientRPC,
+		dataMu: sync.Mutex{},
+		data:   newClientData(),
 	}
 }
 
 func (c *Client) Instance(ctx context.Context, channel int) (dahuarpc.Response[json.RawMessage], error) {
 	c.dataMu.Lock()
-	res, err := c.data.Instance.Get(ctx, c.ClientRPC, strconv.Itoa(channel), nil)
+	res, err := c.data.Instance.Get(ctx, c.rpc, strconv.Itoa(channel), nil)
 	c.dataMu.Unlock()
 	return res, err
 }
 
 func (c *Client) RPCSEQ(ctx context.Context) (dahuarpc.RequestBuilder, error) {
 	c.dataMu.Lock()
-	session := c.Session()
+	session := c.rpc.Session()
 	if session != c.data.LastSession {
 		c.data = newClientData()
 	}
@@ -61,7 +61,7 @@ func (c *Client) RPCSEQ(ctx context.Context) (dahuarpc.RequestBuilder, error) {
 	seq := getSeq(session, c.data.ID)
 	c.data.ID = getNextID(c.data.ID)
 
-	rpc, err := c.ClientRPC.RPC(ctx)
+	rpc, err := c.rpc.RPC(ctx)
 	c.dataMu.Unlock()
 	if err != nil {
 		return dahuarpc.RequestBuilder{}, err

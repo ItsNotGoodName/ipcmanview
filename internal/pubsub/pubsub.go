@@ -9,8 +9,8 @@ import (
 )
 
 type pubSub struct {
-	Ch  chan<- models.EventDahuaCameraEvent
-	IDs []string
+	Ch             chan<- models.EventDahuaCameraEvent
+	dahuaCameraIDs []int64
 }
 
 func NewPub(dahuaBus DahuaBus) *Pub {
@@ -35,7 +35,7 @@ func (p *Pub) unsubscribeDahuaEvents(id int) {
 	}
 }
 
-func (p *Pub) SubscribeDahuaEvents(ctx context.Context, ids []string) (<-chan models.EventDahuaCameraEvent, error) {
+func (p *Pub) SubscribeDahuaEvents(ctx context.Context, ids []int64) (<-chan models.EventDahuaCameraEvent, error) {
 	ch := make(chan models.EventDahuaCameraEvent, 100)
 	slices.Sort(ids)
 
@@ -43,8 +43,8 @@ func (p *Pub) SubscribeDahuaEvents(ctx context.Context, ids []string) (<-chan mo
 	p.id += 1
 	id := p.id
 	p.dahuaEventSubscribers[id] = pubSub{
-		Ch:  ch,
-		IDs: ids,
+		Ch:             ch,
+		dahuaCameraIDs: ids,
 	}
 	p.mu.Unlock()
 
@@ -69,8 +69,8 @@ func register(dahuaBus DahuaBus, p *Pub) *Pub {
 
 		var deadSubIDs []int
 		for id, sub := range p.dahuaEventSubscribers {
-			if len(sub.IDs) != 0 {
-				_, found := slices.BinarySearch(sub.IDs, evt.Event.CameraID)
+			if len(sub.dahuaCameraIDs) != 0 {
+				_, found := slices.BinarySearch(sub.dahuaCameraIDs, evt.Event.CameraID)
 				if !found {
 					continue
 				}

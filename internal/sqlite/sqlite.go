@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,18 +22,6 @@ func beginTx(ctx context.Context, db *sql.DB, write bool) (*sql.Tx, error) {
 	}
 
 	return tx, nil
-}
-
-type Querier interface {
-	Conn() *sql.DB
-	BeginTx(ctx context.Context, write bool) (QuerierTx, error)
-}
-
-type QuerierTx interface {
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	Commit() error
-	Rollback() error
 }
 
 func New(dbPath string) (*sql.DB, error) {
@@ -53,49 +42,41 @@ func New(dbPath string) (*sql.DB, error) {
 }
 
 type DB struct {
-	*sql.DB
+	db *sql.DB
 }
 
 func NewDB(db *sql.DB) DB {
 	return DB{db}
 }
 
-func (db DB) Conn() *sql.DB {
-	return db.DB
-}
-
-func (db DB) BeginTx(ctx context.Context, write bool) (QuerierTx, error) {
-	return beginTx(ctx, db.DB, write)
+func (db DB) BeginTx(ctx context.Context, write bool) (sqlc.SQLiteTx, error) {
+	return beginTx(ctx, db.db, write)
 }
 
 type DebugTx struct {
-	*sql.Tx
+	tx *sql.Tx
 }
 
 type DebugDB struct {
-	*sql.DB
+	db *sql.DB
 }
 
 func NewDebugDB(db *sql.DB) DebugDB {
 	return DebugDB{db}
 }
 
-func (db DebugDB) Conn() *sql.DB {
-	return db.DB
-}
-
 func (db DebugDB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	log.Debug().
 		Str("func", "PrepareContext").
 		Msg(query)
-	return db.DB.PrepareContext(ctx, query)
+	return db.db.PrepareContext(ctx, query)
 }
 
 func (tx DebugTx) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	log.Debug().
 		Str("func", "PrepareContext (Tx)").
 		Msg(query)
-	return tx.Tx.PrepareContext(ctx, query)
+	return tx.tx.PrepareContext(ctx, query)
 }
 
 func (db DebugDB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
@@ -103,7 +84,7 @@ func (db DebugDB) ExecContext(ctx context.Context, query string, args ...any) (s
 		Str("func", "ExecContext").
 		Any("args", args).
 		Msg(query)
-	return db.DB.ExecContext(ctx, query, args...)
+	return db.db.ExecContext(ctx, query, args...)
 }
 
 func (tx DebugTx) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
@@ -111,7 +92,7 @@ func (tx DebugTx) ExecContext(ctx context.Context, query string, args ...any) (s
 		Str("func", "ExecContext (Tx)").
 		Any("args", args).
 		Msg(query)
-	return tx.Tx.ExecContext(ctx, query, args...)
+	return tx.tx.ExecContext(ctx, query, args...)
 }
 
 func (db DebugDB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
@@ -119,7 +100,7 @@ func (db DebugDB) QueryContext(ctx context.Context, query string, args ...any) (
 		Str("func", "QueryContext").
 		Any("args", args).
 		Msg(query)
-	return db.DB.QueryContext(ctx, query, args...)
+	return db.db.QueryContext(ctx, query, args...)
 }
 
 func (tx DebugTx) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
@@ -127,7 +108,7 @@ func (tx DebugTx) QueryContext(ctx context.Context, query string, args ...any) (
 		Str("func", "QueryContext (Tx)").
 		Any("args", args).
 		Msg(query)
-	return tx.Tx.QueryContext(ctx, query, args...)
+	return tx.tx.QueryContext(ctx, query, args...)
 }
 
 func (db DebugDB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
@@ -135,7 +116,7 @@ func (db DebugDB) QueryRowContext(ctx context.Context, query string, args ...any
 		Str("func", "QueryRowContext").
 		Any("args", args).
 		Msg(query)
-	return db.DB.QueryRowContext(ctx, query, args...)
+	return db.db.QueryRowContext(ctx, query, args...)
 }
 
 func (tx DebugTx) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
@@ -143,29 +124,29 @@ func (tx DebugTx) QueryRowContext(ctx context.Context, query string, args ...any
 		Str("func", "QueryRowContext (Tx)").
 		Any("args", args).
 		Msg(query)
-	return tx.Tx.QueryRowContext(ctx, query, args...)
+	return tx.tx.QueryRowContext(ctx, query, args...)
 }
 
-func (db DebugDB) BeginTx(ctx context.Context, write bool) (QuerierTx, error) {
+func (db DebugDB) BeginTx(ctx context.Context, write bool) (sqlc.SQLiteTx, error) {
 	log.Debug().
 		Msg("BeginTx (Tx)")
-	tx, err := beginTx(ctx, db.DB, write)
+	tx, err := beginTx(ctx, db.db, write)
 	if err != nil {
 		return DebugTx{}, err
 	}
-	return DebugTx{Tx: tx}, nil
+	return DebugTx{tx: tx}, nil
 }
 
 func (tx DebugTx) Commit() error {
 	log.Debug().
 		Str("func", "Commit (Tx)").
 		Msg("")
-	return tx.Tx.Commit()
+	return tx.tx.Commit()
 }
 
 func (tx DebugTx) Rollback() error {
 	log.Debug().
 		Str("func", "Rollback (Tx)").
 		Msg("")
-	return tx.Tx.Rollback()
+	return tx.tx.Rollback()
 }

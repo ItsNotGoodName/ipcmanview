@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
@@ -16,8 +17,12 @@ import (
 )
 
 type DahuaStore interface {
-	ConnListByCameras(ctx context.Context, cameras ...models.DahuaCamera) ([]dahua.Conn, error)
-	ConnByID(ctx context.Context, id string) (dahua.Conn, error)
+	ConnList(ctx context.Context) ([]dahua.Conn, error)
+	Conn(ctx context.Context, id int64) (dahua.Conn, error)
+}
+
+type DahuaCameraStore interface {
+	Save(ctx context.Context, camera ...models.DahuaCamera) error
 }
 
 func RegisterDahuaRoutes(e *echo.Echo, s *DahuaServer) {
@@ -44,9 +49,12 @@ func RegisterDahuaRoutes(e *echo.Echo, s *DahuaServer) {
 }
 
 func useDahuaConn(c echo.Context, store DahuaStore) (dahua.Conn, error) {
-	id := c.Param("id")
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return dahua.Conn{}, echo.ErrBadRequest.WithInternal(err)
+	}
 
-	client, err := store.ConnByID(c.Request().Context(), id)
+	client, err := store.Conn(c.Request().Context(), id)
 	if err != nil {
 		return dahua.Conn{}, echo.ErrNotFound.WithInternal(err)
 	}
@@ -54,20 +62,22 @@ func useDahuaConn(c echo.Context, store DahuaStore) (dahua.Conn, error) {
 	return client, nil
 }
 
-func NewDahuaServer(dahuaStore DahuaStore, dahuaPubSub PubSub) *DahuaServer {
+func NewDahuaServer(pubSub PubSub, dahuaStore DahuaStore, dahuaCameraStore DahuaCameraStore) *DahuaServer {
 	return &DahuaServer{
-		store:  dahuaStore,
-		pubSub: dahuaPubSub,
+		pubSub:      pubSub,
+		store:       dahuaStore,
+		cameraStore: dahuaCameraStore,
 	}
 }
 
 type DahuaServer struct {
-	store  DahuaStore
-	pubSub PubSub
+	pubSub      PubSub
+	store       DahuaStore
+	cameraStore DahuaCameraStore
 }
 
 func (s *DahuaServer) GET(c echo.Context) error {
-	conns, err := s.store.ConnListByCameras(c.Request().Context())
+	conns, err := s.store.ConnList(c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -81,7 +91,7 @@ func (s *DahuaServer) GET(c echo.Context) error {
 }
 
 func (s *DahuaServer) POST(c echo.Context) error {
-	var req map[string]models.DTODahuaCamera
+	var req map[int64]models.DTODahuaCamera
 	err := c.Bind(&req)
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
@@ -97,7 +107,7 @@ func (s *DahuaServer) POST(c echo.Context) error {
 		cameras = append(cameras, camera)
 	}
 
-	_, err = s.store.ConnListByCameras(c.Request().Context(), cameras...)
+	err = s.cameraStore.Save(c.Request().Context(), cameras...)
 	if err != nil {
 		return err
 	}
@@ -220,6 +230,7 @@ func (s *DahuaServer) GETIDSnapshot(c echo.Context) error {
 	defer snapshot.Close()
 
 	c.Response().Header().Set(echo.HeaderContentLength, snapshot.ContentLength)
+	c.Response().Header().Set(echo.HeaderCacheControl, "no-store")
 
 	_, err = io.Copy(c.Response().Writer, snapshot)
 	if err != nil {
@@ -274,7 +285,7 @@ func (s *DahuaServer) GETIDEvents(c echo.Context) error {
 		ctx, cancel := context.WithCancel(c.Request().Context())
 		defer cancel()
 
-		dataC, err := s.pubSub.SubscribeDahuaEvents(ctx, []string{conn.Camera.ID})
+		dataC, err := s.pubSub.SubscribeDahuaEvents(ctx, []int64{conn.Camera.ID})
 		if err != nil {
 			return err
 		}
@@ -298,7 +309,15 @@ func (s *DahuaServer) GETIDEvents(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETEvents(c echo.Context) error {
-	ids := c.QueryParams()["ids"]
+	ids := make([]int64, 0)
+	idsStr := c.QueryParams()["ids"]
+	for _, v := range idsStr {
+		id, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return echo.ErrBadRequest.WithInternal(err)
+		}
+		ids = append(ids, id)
+	}
 
 	ctx, cancel := context.WithCancel(c.Request().Context())
 	defer cancel()

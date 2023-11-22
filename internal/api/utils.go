@@ -16,7 +16,7 @@ import (
 var ErrSubscriptionClosed = errors.New("subscription closed")
 
 type PubSub interface {
-	SubscribeDahuaEvents(ctx context.Context, ids []string) (<-chan models.EventDahuaCameraEvent, error)
+	SubscribeDahuaEvents(ctx context.Context, cameraIDs []int64) (<-chan models.EventDahuaCameraEvent, error)
 }
 
 // ---------- Stream
