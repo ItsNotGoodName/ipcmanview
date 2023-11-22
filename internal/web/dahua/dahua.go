@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -88,19 +87,23 @@ type DahuaCameraStore struct {
 }
 
 func (s DahuaCameraStore) Save(ctx context.Context, camera ...models.DahuaCamera) error {
-	for _, camera := range camera {
-		now := time.Now()
-		s.db.UpsertDahuaCamera(ctx, camera.ID, sqlc.CreateDahuaCameraParams{
-			Name:      camera.Address,
-			Address:   camera.Address,
-			Username:  camera.Username,
-			Password:  camera.Password,
-			Location:  camera.Location,
-			CreatedAt: now,
-			UpdatedAt: now,
-		})
-	}
-	return nil
+	return errors.ErrUnsupported
+	// for _, camera := range camera {
+	// 	now := time.Now()
+	// 	_, err := s.db.UpsertDahuaCamera(ctx, camera.ID, sqlc.CreateDahuaCameraParams{
+	// 		Name:      camera.Address,
+	// 		Address:   camera.Address,
+	// 		Username:  camera.Username,
+	// 		Password:  camera.Password,
+	// 		Location:  camera.Location,
+	// 		CreatedAt: now,
+	// 		UpdatedAt: now,
+	// 	})
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+	// return nil
 }
 
 func (s DahuaCameraStore) Get(ctx context.Context, id int64) (models.DahuaCamera, bool, error) {

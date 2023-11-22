@@ -1,8 +1,8 @@
 -- name: createDahuaCamera :one
 INSERT INTO dahua_cameras (
-  name, address, username, password, location, created_at, updated_at
+  name, address, username, password, location, created_at, updated_at, id
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?, coalesce(sqlc.narg('id'), id) 
 ) RETURNING id;
 
 -- name: UpdateDahuaCamera :one
@@ -72,3 +72,33 @@ DELETE FROM dahua_file_scan_locks WHERE camera_id = ?;
 -- name: GetDahuaFileCursor :one
 SELECT * FROM dahua_file_cursors 
 WHERE camera_id = ?;
+
+-- name: CreateDahuaFile :exec
+INSERT INTO dahua_files (
+  camera_id,
+  file_path,
+  kind,
+  size,
+  start_time,
+  end_time,
+  duration,
+  events,
+  updated_at
+) VALUES (
+  ?, ?, ?, ?, ?, ?, ?, ?, ?
+);
+
+-- name: UpdateDahuaFile :one
+UPDATE dahua_files 
+SET 
+  camera_id = sqlc.arg('camera_id'),
+  file_path = sqlc.arg('file_path'),
+  kind = ?,
+  size = ?,
+  start_time = ?,
+  end_time = ?,
+  duration = ?,
+  events = ?,
+  updated_at = ?
+WHERE camera_id = sqlc.arg('camera_id') AND file_path = sqlc.arg('file_path')
+RETURNING id;

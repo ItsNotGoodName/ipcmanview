@@ -56,6 +56,49 @@ func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventPara
 	return id, err
 }
 
+const createDahuaFile = `-- name: CreateDahuaFile :exec
+INSERT INTO dahua_files (
+  camera_id,
+  file_path,
+  kind,
+  size,
+  start_time,
+  end_time,
+  duration,
+  events,
+  updated_at
+) VALUES (
+  ?, ?, ?, ?, ?, ?, ?, ?, ?
+)
+`
+
+type CreateDahuaFileParams struct {
+	CameraID  int64
+	FilePath  string
+	Kind      string
+	Size      int64
+	StartTime time.Time
+	EndTime   time.Time
+	Duration  int64
+	Events    json.RawMessage
+	UpdatedAt time.Time
+}
+
+func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams) error {
+	_, err := q.db.ExecContext(ctx, createDahuaFile,
+		arg.CameraID,
+		arg.FilePath,
+		arg.Kind,
+		arg.Size,
+		arg.StartTime,
+		arg.EndTime,
+		arg.Duration,
+		arg.Events,
+		arg.UpdatedAt,
+	)
+	return err
+}
+
 const createDahuaFileScanLock = `-- name: CreateDahuaFileScanLock :one
 INSERT INTO dahua_file_scan_locks (
   camera_id, created_at
@@ -280,6 +323,51 @@ func (q *Queries) UpdateDahuaCamera(ctx context.Context, arg UpdateDahuaCameraPa
 	return id, err
 }
 
+const updateDahuaFile = `-- name: UpdateDahuaFile :one
+UPDATE dahua_files 
+SET 
+  camera_id = ?8,
+  file_path = ?9,
+  kind = ?,
+  size = ?,
+  start_time = ?,
+  end_time = ?,
+  duration = ?,
+  events = ?,
+  updated_at = ?
+WHERE camera_id = ?8 AND file_path = ?9
+RETURNING id
+`
+
+type UpdateDahuaFileParams struct {
+	CameraID  int64
+	FilePath  string
+	Kind      string
+	Size      int64
+	StartTime time.Time
+	EndTime   time.Time
+	Duration  int64
+	Events    json.RawMessage
+	UpdatedAt time.Time
+}
+
+func (q *Queries) UpdateDahuaFile(ctx context.Context, arg UpdateDahuaFileParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, updateDahuaFile,
+		arg.CameraID,
+		arg.FilePath,
+		arg.Kind,
+		arg.Size,
+		arg.StartTime,
+		arg.EndTime,
+		arg.Duration,
+		arg.Events,
+		arg.UpdatedAt,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const updateSettings = `-- name: UpdateSettings :one
 UPDATE settings
 SET
@@ -303,9 +391,9 @@ func (q *Queries) UpdateSettings(ctx context.Context, arg UpdateSettingsParams) 
 
 const createDahuaCamera = `-- name: createDahuaCamera :one
 INSERT INTO dahua_cameras (
-  name, address, username, password, location, created_at, updated_at
+  name, address, username, password, location, created_at, updated_at, id
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?, coalesce(?8, id) 
 ) RETURNING id
 `
 
@@ -317,6 +405,7 @@ type createDahuaCameraParams struct {
 	Location  models.Location
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	ID        interface{}
 }
 
 func (q *Queries) createDahuaCamera(ctx context.Context, arg createDahuaCameraParams) (int64, error) {
@@ -328,6 +417,7 @@ func (q *Queries) createDahuaCamera(ctx context.Context, arg createDahuaCameraPa
 		arg.Location,
 		arg.CreatedAt,
 		arg.UpdatedAt,
+		arg.ID,
 	)
 	var id int64
 	err := row.Scan(&id)

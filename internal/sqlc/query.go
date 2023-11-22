@@ -3,7 +3,6 @@ package sqlc
 import (
 	"context"
 	"database/sql"
-	"errors"
 )
 
 type CreateDahuaCameraParams = createDahuaCameraParams
@@ -37,21 +36,21 @@ func (db DB) CreateDahuaCamera(ctx context.Context, arg CreateDahuaCameraParams)
 	return id, nil
 }
 
-func (db DB) UpsertDahuaCamera(ctx context.Context, id int64, args CreateDahuaCameraParams) (int64, error) {
-	_, err := db.UpdateDahuaCamera(ctx, UpdateDahuaCameraParams{
-		Name:     args.Name,
-		Address:  args.Address,
-		Username: args.Username,
-		Password: args.Password,
-		Location: args.Location,
-		ID:       id,
-	})
-	if err == nil {
-		return id, nil
-	}
-	if !errors.Is(err, sql.ErrNoRows) {
-		return 0, err
-	}
-
-	return db.createDahuaCamera(ctx, args)
-}
+// func (db DB) UpsertDahuaCamera(ctx context.Context, id int64, args CreateDahuaCameraParams) (int64, error) {
+// 	_, err := db.UpdateDahuaCamera(ctx, UpdateDahuaCameraParams{
+// 		Name:     args.Name,
+// 		Address:  args.Address,
+// 		Username: args.Username,
+// 		Password: args.Password,
+// 		Location: args.Location,
+// 		ID:       id,
+// 	})
+// 	if err == nil {
+// 		return id, nil
+// 	}
+// 	if !errors.Is(err, sql.ErrNoRows) {
+// 		return 0, err
+// 	}
+//
+// 	return db.createDahuaCamera(ctx, args)
+// }
