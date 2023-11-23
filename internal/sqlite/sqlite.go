@@ -42,7 +42,7 @@ func New(dbPath string) (*sql.DB, error) {
 }
 
 type DB struct {
-	db *sql.DB
+	*sql.DB
 }
 
 func NewDB(db *sql.DB) DB {
@@ -50,7 +50,7 @@ func NewDB(db *sql.DB) DB {
 }
 
 func (db DB) BeginTx(ctx context.Context, write bool) (sqlc.SQLiteTx, error) {
-	return beginTx(ctx, db.db, write)
+	return beginTx(ctx, db.DB, write)
 }
 
 type DebugTx struct {

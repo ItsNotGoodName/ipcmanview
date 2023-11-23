@@ -56,47 +56,79 @@ func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventPara
 	return id, err
 }
 
-const createDahuaFile = `-- name: CreateDahuaFile :exec
+const createDahuaFile = `-- name: CreateDahuaFile :one
 INSERT INTO dahua_files (
   camera_id,
-  file_path,
-  kind,
-  size,
+  channel,
   start_time,
   end_time,
+  length,
+  type,
+  file_path,
   duration,
+  disk,
+  video_stream,
+  flags,
   events,
+  cluster,
+  partition,
+  pic_index,
+  repeat,
+  work_dir,
+  work_dir_sn,
   updated_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?, ?
-)
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
+) RETURNING id
 `
 
 type CreateDahuaFileParams struct {
-	CameraID  int64
-	FilePath  string
-	Kind      string
-	Size      int64
-	StartTime time.Time
-	EndTime   time.Time
-	Duration  int64
-	Events    json.RawMessage
-	UpdatedAt time.Time
+	CameraID    int64
+	Channel     int64
+	StartTime   time.Time
+	EndTime     time.Time
+	Length      int64
+	Type        string
+	FilePath    string
+	Duration    int64
+	Disk        int64
+	VideoStream string
+	Flags       models.StringSlice
+	Events      models.StringSlice
+	Cluster     int64
+	Partition   int64
+	PicIndex    int64
+	Repeat      int64
+	WorkDir     string
+	WorkDirSn   int64
+	UpdatedAt   time.Time
 }
 
-func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams) error {
-	_, err := q.db.ExecContext(ctx, createDahuaFile,
+func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createDahuaFile,
 		arg.CameraID,
-		arg.FilePath,
-		arg.Kind,
-		arg.Size,
+		arg.Channel,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Length,
+		arg.Type,
+		arg.FilePath,
 		arg.Duration,
+		arg.Disk,
+		arg.VideoStream,
+		arg.Flags,
 		arg.Events,
+		arg.Cluster,
+		arg.Partition,
+		arg.PicIndex,
+		arg.Repeat,
+		arg.WorkDir,
+		arg.WorkDirSn,
 		arg.UpdatedAt,
 	)
-	return err
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const createDahuaFileScanLock = `-- name: CreateDahuaFileScanLock :one
@@ -125,6 +157,32 @@ DELETE FROM dahua_cameras WHERE id = ?
 
 func (q *Queries) DeleteDahuaCamera(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteDahuaCamera, id)
+	return err
+}
+
+const deleteDahuaFile = `-- name: DeleteDahuaFile :exec
+DELETE FROM dahua_files
+WHERE
+  updated_at < ?1 AND
+  camera_id = ?2 AND
+  start_time <= ?3 AND
+  ?4 < start_time
+`
+
+type DeleteDahuaFileParams struct {
+	UpdatedAt time.Time
+	CameraID  int64
+	End       time.Time
+	Start     time.Time
+}
+
+func (q *Queries) DeleteDahuaFile(ctx context.Context, arg DeleteDahuaFileParams) error {
+	_, err := q.db.ExecContext(ctx, deleteDahuaFile,
+		arg.UpdatedAt,
+		arg.CameraID,
+		arg.End,
+		arg.Start,
+	)
 	return err
 }
 
@@ -171,7 +229,7 @@ func (q *Queries) GetDahuaCamera(ctx context.Context, id int64) (GetDahuaCameraR
 }
 
 const getDahuaFileCursor = `-- name: GetDahuaFileCursor :one
-SELECT camera_id, quick_cursor, full_cursor, full_epoch, full_epoch_end, full_complete FROM dahua_file_cursors 
+SELECT camera_id, quick_cursor, full_cursor, full_epoch, full_complete FROM dahua_file_cursors 
 WHERE camera_id = ?
 `
 
@@ -183,7 +241,6 @@ func (q *Queries) GetDahuaFileCursor(ctx context.Context, cameraID int64) (Dahua
 		&i.QuickCursor,
 		&i.FullCursor,
 		&i.FullEpoch,
-		&i.FullEpochEnd,
 		&i.FullComplete,
 	)
 	return i, err
@@ -293,6 +350,57 @@ func (q *Queries) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) 
 	return items, nil
 }
 
+const listDahuaFileCursor = `-- name: ListDahuaFileCursor :many
+SELECT 
+  c.camera_id,
+  c.quick_cursor,
+  c.full_cursor,
+  c.full_epoch,
+  c.full_complete,
+  count(f.camera_id) as files
+FROM dahua_file_cursors AS c
+LEFT JOIN dahua_files as f ON f.camera_id = c.camera_id
+`
+
+type ListDahuaFileCursorRow struct {
+	CameraID     int64
+	QuickCursor  time.Time
+	FullCursor   time.Time
+	FullEpoch    time.Time
+	FullComplete bool
+	Files        int64
+}
+
+func (q *Queries) ListDahuaFileCursor(ctx context.Context) ([]ListDahuaFileCursorRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaFileCursor)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListDahuaFileCursorRow
+	for rows.Next() {
+		var i ListDahuaFileCursorRow
+		if err := rows.Scan(
+			&i.CameraID,
+			&i.QuickCursor,
+			&i.FullCursor,
+			&i.FullEpoch,
+			&i.FullComplete,
+			&i.Files,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateDahuaCamera = `-- name: UpdateDahuaCamera :one
 UPDATE dahua_cameras 
 SET name = ?, address = ?, username = ?, password = ?, location = ?
@@ -326,46 +434,109 @@ func (q *Queries) UpdateDahuaCamera(ctx context.Context, arg UpdateDahuaCameraPa
 const updateDahuaFile = `-- name: UpdateDahuaFile :one
 UPDATE dahua_files 
 SET 
-  camera_id = ?8,
-  file_path = ?9,
-  kind = ?,
-  size = ?,
+  channel = ?,
   start_time = ?,
   end_time = ?,
+  length = ?,
+  type = ?,
   duration = ?,
+  disk = ?,
+  video_stream = ?,
+  flags = ?,
   events = ?,
+  cluster = ?,
+  partition = ?,
+  pic_index = ?,
+  repeat = ?,
+  work_dir = ?,
+  work_dir_sn = ?,
   updated_at = ?
-WHERE camera_id = ?8 AND file_path = ?9
+WHERE camera_id = ? AND file_path = ?
 RETURNING id
 `
 
 type UpdateDahuaFileParams struct {
-	CameraID  int64
-	FilePath  string
-	Kind      string
-	Size      int64
-	StartTime time.Time
-	EndTime   time.Time
-	Duration  int64
-	Events    json.RawMessage
-	UpdatedAt time.Time
+	Channel     int64
+	StartTime   time.Time
+	EndTime     time.Time
+	Length      int64
+	Type        string
+	Duration    int64
+	Disk        int64
+	VideoStream string
+	Flags       models.StringSlice
+	Events      models.StringSlice
+	Cluster     int64
+	Partition   int64
+	PicIndex    int64
+	Repeat      int64
+	WorkDir     string
+	WorkDirSn   int64
+	UpdatedAt   time.Time
+	CameraID    int64
+	FilePath    string
 }
 
 func (q *Queries) UpdateDahuaFile(ctx context.Context, arg UpdateDahuaFileParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, updateDahuaFile,
-		arg.CameraID,
-		arg.FilePath,
-		arg.Kind,
-		arg.Size,
+		arg.Channel,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Length,
+		arg.Type,
 		arg.Duration,
+		arg.Disk,
+		arg.VideoStream,
+		arg.Flags,
 		arg.Events,
+		arg.Cluster,
+		arg.Partition,
+		arg.PicIndex,
+		arg.Repeat,
+		arg.WorkDir,
+		arg.WorkDirSn,
 		arg.UpdatedAt,
+		arg.CameraID,
+		arg.FilePath,
 	)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const updateDahuaFileCursor = `-- name: UpdateDahuaFileCursor :one
+UPDATE dahua_file_cursors
+SET 
+  quick_cursor = ?,
+  full_cursor = ?,
+  full_epoch = ?
+WHERE camera_id = ?
+RETURNING camera_id, quick_cursor, full_cursor, full_epoch, full_complete
+`
+
+type UpdateDahuaFileCursorParams struct {
+	QuickCursor time.Time
+	FullCursor  time.Time
+	FullEpoch   time.Time
+	CameraID    int64
+}
+
+func (q *Queries) UpdateDahuaFileCursor(ctx context.Context, arg UpdateDahuaFileCursorParams) (DahuaFileCursor, error) {
+	row := q.db.QueryRowContext(ctx, updateDahuaFileCursor,
+		arg.QuickCursor,
+		arg.FullCursor,
+		arg.FullEpoch,
+		arg.CameraID,
+	)
+	var i DahuaFileCursor
+	err := row.Scan(
+		&i.CameraID,
+		&i.QuickCursor,
+		&i.FullCursor,
+		&i.FullEpoch,
+		&i.FullComplete,
+	)
+	return i, err
 }
 
 const updateSettings = `-- name: UpdateSettings :one
@@ -391,9 +562,9 @@ func (q *Queries) UpdateSettings(ctx context.Context, arg UpdateSettingsParams) 
 
 const createDahuaCamera = `-- name: createDahuaCamera :one
 INSERT INTO dahua_cameras (
-  name, address, username, password, location, created_at, updated_at, id
+  name, address, username, password, location, created_at, updated_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, coalesce(?8, id) 
+  ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id
 `
 
@@ -405,7 +576,6 @@ type createDahuaCameraParams struct {
 	Location  models.Location
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	ID        interface{}
 }
 
 func (q *Queries) createDahuaCamera(ctx context.Context, arg createDahuaCameraParams) (int64, error) {
@@ -417,11 +587,38 @@ func (q *Queries) createDahuaCamera(ctx context.Context, arg createDahuaCameraPa
 		arg.Location,
 		arg.CreatedAt,
 		arg.UpdatedAt,
-		arg.ID,
 	)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const createDahuaFileCursor = `-- name: createDahuaFileCursor :exec
+INSERT INTO dahua_file_cursors (
+  camera_id,
+  quick_cursor,
+  full_cursor,
+  full_epoch
+) VALUES (
+  ?, ?, ?, ?
+)
+`
+
+type createDahuaFileCursorParams struct {
+	CameraID    int64
+	QuickCursor time.Time
+	FullCursor  time.Time
+	FullEpoch   time.Time
+}
+
+func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFileCursorParams) error {
+	_, err := q.db.ExecContext(ctx, createDahuaFileCursor,
+		arg.CameraID,
+		arg.QuickCursor,
+		arg.FullCursor,
+		arg.FullEpoch,
+	)
+	return err
 }
 
 const setDahuaSeed = `-- name: setDahuaSeed :exec

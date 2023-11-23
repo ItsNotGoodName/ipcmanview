@@ -37,13 +37,23 @@ CREATE TABLE dahua_events (
 CREATE TABLE dahua_files (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   camera_id INTEGER NOT NULL,
-  file_path TEXT NOT NULL,
-  kind TEXT NOT NULL,
-  size INTEGER NOT NULL,
+  channel INTEGER NOT NULL,
   start_time DATETIME NOT NULL UNIQUE,
   end_time DATETIME NOT NULL,
+  length INTEGER NOT NULL,
+  type TEXT NOT NULL,
+  file_path TEXT NOT NULL,
   duration INTEGER NOT NULL,
+  disk INTEGER NOT NULL,
+  video_stream TEXT NOT NULL,
+  flags JSON NOT NULL,
   events JSON NOT NULL,
+  cluster INTEGER NOT NULL,
+  partition INTEGER NOT NULL,
+  pic_index INTEGER NOT NULL,
+  repeat INTEGER NOT NULL,
+  work_dir TEXT NOT NULL,
+  work_dir_sn INTEGER NOT NULL,
   updated_at DATETIME NOT NULL,
 
   UNIQUE (camera_id, file_path),
@@ -52,10 +62,9 @@ CREATE TABLE dahua_files (
 
 CREATE TABLE dahua_file_cursors (
   camera_id INTEGER NOT NULL UNIQUE,
-  quick_cursor DATETIME NOT NULL,                                     -- (scanned) <- quick_cursor -> (not scanned / volatile)
-  full_cursor DATETIME NOT NULL CHECK(full_cursor <= full_epoch_end), -- (not scanned) <- full_cursor -> (scanned)
+  quick_cursor DATETIME NOT NULL, -- (scanned) <- quick_cursor -> (not scanned / volatile)
+  full_cursor DATETIME NOT NULL,  -- (not scanned) <- full_cursor -> (scanned)
   full_epoch DATETIME NOT NULL,
-  full_epoch_end DATETIME NOT NULL,
   full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED,
 
   FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE

@@ -26,3 +26,19 @@ func NewDB(sqlite SQLite) DB {
 		Queries: New(sqlite),
 	}
 }
+
+func (db DB) BeginTx(ctx context.Context, write bool) (DBTx, error) {
+	tx, err := db.SQLite.BeginTx(ctx, write)
+	if err != nil {
+		return DBTx{}, err
+	}
+	return DBTx{
+		SQLiteTx: tx,
+		Queries:  New(tx),
+	}, nil
+}
+
+type DBTx struct {
+	SQLiteTx
+	*Queries
+}

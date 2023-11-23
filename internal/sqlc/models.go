@@ -36,16 +36,26 @@ type DahuaEvent struct {
 }
 
 type DahuaFile struct {
-	ID        int64
-	CameraID  int64
-	FilePath  string
-	Kind      string
-	Size      int64
-	StartTime time.Time
-	EndTime   time.Time
-	Duration  int64
-	Events    json.RawMessage
-	UpdatedAt time.Time
+	ID          int64
+	CameraID    int64
+	Channel     int64
+	StartTime   time.Time
+	EndTime     time.Time
+	Length      int64
+	Type        string
+	FilePath    string
+	Duration    int64
+	Disk        int64
+	VideoStream string
+	Flags       models.StringSlice
+	Events      models.StringSlice
+	Cluster     int64
+	Partition   int64
+	PicIndex    int64
+	Repeat      int64
+	WorkDir     string
+	WorkDirSn   int64
+	UpdatedAt   time.Time
 }
 
 type DahuaFileCursor struct {
@@ -53,7 +63,6 @@ type DahuaFileCursor struct {
 	QuickCursor  time.Time
 	FullCursor   time.Time
 	FullEpoch    time.Time
-	FullEpochEnd time.Time
 	FullComplete bool
 }
 

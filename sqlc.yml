@@ -14,3 +14,7 @@ sql:
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.Location"
           - db_type: "JSON"
             go_type: "encoding/json.RawMessage"
+          - column: "dahua_files.flags"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.StringSlice"
+          - column: "dahua_files.events"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.StringSlice"

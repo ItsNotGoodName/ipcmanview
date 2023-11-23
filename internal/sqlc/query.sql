@@ -1,8 +1,8 @@
 -- name: createDahuaCamera :one
 INSERT INTO dahua_cameras (
-  name, address, username, password, location, created_at, updated_at, id
+  name, address, username, password, location, created_at, updated_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, coalesce(sqlc.narg('id'), id) 
+  ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id;
 
 -- name: UpdateDahuaCamera :one
@@ -73,32 +73,88 @@ DELETE FROM dahua_file_scan_locks WHERE camera_id = ?;
 SELECT * FROM dahua_file_cursors 
 WHERE camera_id = ?;
 
--- name: CreateDahuaFile :exec
+-- name: ListDahuaFileCursor :many
+SELECT 
+  c.camera_id,
+  c.quick_cursor,
+  c.full_cursor,
+  c.full_epoch,
+  c.full_complete,
+  count(f.camera_id) as files
+FROM dahua_file_cursors AS c
+LEFT JOIN dahua_files as f ON f.camera_id = c.camera_id;
+
+-- name: UpdateDahuaFileCursor :one
+UPDATE dahua_file_cursors
+SET 
+  quick_cursor = ?,
+  full_cursor = ?,
+  full_epoch = ?
+WHERE camera_id = ?
+RETURNING *;
+
+-- name: createDahuaFileCursor :exec
+INSERT INTO dahua_file_cursors (
+  camera_id,
+  quick_cursor,
+  full_cursor,
+  full_epoch
+) VALUES (
+  ?, ?, ?, ?
+);
+
+-- name: CreateDahuaFile :one
 INSERT INTO dahua_files (
   camera_id,
-  file_path,
-  kind,
-  size,
+  channel,
   start_time,
   end_time,
+  length,
+  type,
+  file_path,
   duration,
+  disk,
+  video_stream,
+  flags,
   events,
+  cluster,
+  partition,
+  pic_index,
+  repeat,
+  work_dir,
+  work_dir_sn,
   updated_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?, ?
-);
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
+) RETURNING id;
 
 -- name: UpdateDahuaFile :one
 UPDATE dahua_files 
 SET 
-  camera_id = sqlc.arg('camera_id'),
-  file_path = sqlc.arg('file_path'),
-  kind = ?,
-  size = ?,
+  channel = ?,
   start_time = ?,
   end_time = ?,
+  length = ?,
+  type = ?,
   duration = ?,
+  disk = ?,
+  video_stream = ?,
+  flags = ?,
   events = ?,
+  cluster = ?,
+  partition = ?,
+  pic_index = ?,
+  repeat = ?,
+  work_dir = ?,
+  work_dir_sn = ?,
   updated_at = ?
-WHERE camera_id = sqlc.arg('camera_id') AND file_path = sqlc.arg('file_path')
+WHERE camera_id = ? AND file_path = ?
 RETURNING id;
+
+-- name: DeleteDahuaFile :exec
+DELETE FROM dahua_files
+WHERE
+  updated_at < sqlc.arg('updated_at') AND
+  camera_id = sqlc.arg('camera_id') AND
+  start_time <= sqlc.arg('end') AND
+  sqlc.arg('start') < start_time;

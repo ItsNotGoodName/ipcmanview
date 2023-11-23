@@ -153,8 +153,14 @@ func (s Server) DahuaCameras(c echo.Context) error {
 		return err
 	}
 
+	fileCursors, err := s.db.ListDahuaFileCursor(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
 	return c.Render(http.StatusOK, "dahua-cameras", Data{
-		"Cameras": cameras,
+		"Cameras":     cameras,
+		"FileCursors": fileCursors,
 	})
 }
 
@@ -201,7 +207,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Location:  dto.Location,
 		CreatedAt: dto.CreatedAt,
 		UpdatedAt: dto.CreatedAt,
-	})
+	}, webdahua.DefaultFileCursor())
 	if err != nil {
 		return err
 	}
