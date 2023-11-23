@@ -1,0 +1,61 @@
+# yaml-language-server: https://taskfile.dev/schema.json
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  CMD_NAME: ipcmanview-web
+  PACKAGE_NAME: "github.com/ItsNotGoodName/ipcmanview"
+
+tasks:
+  clean:
+    cmds:
+      - rm -rf dist
+      - mkdir -p dist/artifacts
+
+  build-server:
+    internal: true
+    cmds:
+      - go mod tidy
+      - go generate ./...
+      - GOOS=linux GOARCH=amd64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_x86_64       {{.MAIN_PACKAGE}}
+      - GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_armv7        {{.MAIN_PACKAGE}}
+      - GOOS=linux GOARCH=arm64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_arm64        {{.MAIN_PACKAGE}}
+      - GOOS=darwin GOARCH=arm64      go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Darwin_arm64       {{.MAIN_PACKAGE}}
+      - GOOS=windows GOARCH=amd64     go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Windows_x86_64.exe {{.MAIN_PACKAGE}}
+    env:
+      CGO_ENABLED: 0
+    vars:
+      BUILD_PACKAGE_NAME: "{{.PACKAGE_NAME}}/internal/build/build"
+      BUILD_VERSION: "nightly"
+      BUILD_DATE: '{{now | date "2006-01-02T15:04:05Z07:00"}}'
+      BUILD_COMMIT:
+        sh: git rev-parse HEAD
+      BUILD_REPO_URL: "https://{{.PACKAGE_NAME}}"
+
+      LDFLAGS: -s -w -X {{.BUILD_PACKAGE_NAME}}.Version={{.BUILD_VERSION}} -X {{.BUILD_PACKAGE_NAME}}.Commit={{.BUILD_COMMIT}} -X {{.BUILD_PACKAGE_NAME}}.Date={{.BUILD_DATE}} -X {{.BUILD_PACKAGE_NAME}}.RepoURL={{.BUILD_REPO_URL}}
+      MAIN_PACKAGE: "{{.PACKAGE_NAME}}/cmd/{{.CMD_NAME}}"
+
+  compile-artifacts:
+    internal: true
+    dir: dist
+    cmds:
+      - for: { var: FILES }
+        cmd: cp ../{{.ITEM}} .
+      - for: { var: WINDOWS_FILES }
+        cmd: cp ../{{.ITEM}} .
+      - tar -czf artifacts/{{.CMD_NAME}}_Linux_x86_64.tar.gz {{.CMD_NAME}}_Linux_x86_64       {{.FILES}}
+      - tar -czf artifacts/{{.CMD_NAME}}_Linux_armv7.tar.gz  {{.CMD_NAME}}_Linux_armv7        {{.FILES}}
+      - tar -czf artifacts/{{.CMD_NAME}}_Linux_arm64.tar.gz  {{.CMD_NAME}}_Linux_arm64        {{.FILES}}
+      - tar -czf artifacts/{{.CMD_NAME}}_Darwin_arm64.tar.gz {{.CMD_NAME}}_Darwin_arm64       {{.FILES}}
+      - zip -q artifacts/{{.CMD_NAME}}_Windows_x86_64.zip    {{.CMD_NAME}}_Windows_x86_64.exe {{.FILES}} {{.WINDOWS_FILES}}
+      - cd artifacts && sha256sum *.tar.gz *.zip > checksum.txt
+    vars:
+      FILES: README.md LICENSE
+      WINDOWS_FILES:
+
+  build:
+    deps: [clean, build-server]
+    dir: dist
+    cmds:
+      - task: compile-artifacts
