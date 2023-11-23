@@ -150,23 +150,16 @@ func (s Server) DahuaCamerasIDDelete(c echo.Context) error {
 }
 
 func (s Server) DahuaCameras(c echo.Context) error {
-	api, _ := strconv.ParseBool(c.QueryParam("api"))
-
-	var apiData any
-	if api {
-		var err error
-		apiData, err = useDahuaAPIData(c.Request().Context(), s.db, s.dahuaStore)
+	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+		apiData, err := useDahuaAPIData(c.Request().Context(), s.db, s.dahuaStore)
 		if err != nil {
 			return err
 		}
 
-		if htmx.GetRequest(c.Request()) {
-			htmx.SetReplaceURL(c.Response(), "/dahua/cameras?api=true")
-			return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{
-				"htmx-api-data",
-				apiData,
-			})
-		}
+		return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{
+			"htmx-api-data",
+			apiData,
+		})
 	}
 
 	cameras, err := s.db.ListDahuaCamera(c.Request().Context())
@@ -182,7 +175,6 @@ func (s Server) DahuaCameras(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-cameras", Data{
 		"Cameras":     cameras,
 		"FileCursors": fileCursors,
-		"APIData":     apiData,
 	})
 }
 

@@ -103,13 +103,9 @@
     </div>
   </section>
 
-  {{with .Data.APIData}}
-  {{template "api-data" .}}
-  {{else}}
-  <button hx-get="/dahua/cameras?api=true" hx-swap="outerHTML" class="btn btn-primary no-animation">
+  <button hx-get="/dahua/cameras?api=true" hx-swap="outerHTML" hx-trigger="load" class="btn btn-primary no-animation">
     Load API Data
   </button>
-  {{end}}
 </div>
 {{end}}
 

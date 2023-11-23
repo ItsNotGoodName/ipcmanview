@@ -352,14 +352,11 @@ func (q *Queries) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) 
 
 const listDahuaFileCursor = `-- name: ListDahuaFileCursor :many
 SELECT 
-  c.camera_id,
-  c.quick_cursor,
-  c.full_cursor,
-  c.full_epoch,
-  c.full_complete,
+  c.camera_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete,
   count(f.camera_id) as files
 FROM dahua_file_cursors AS c
 LEFT JOIN dahua_files as f ON f.camera_id = c.camera_id
+GROUP BY c.camera_id
 `
 
 type ListDahuaFileCursorRow struct {
