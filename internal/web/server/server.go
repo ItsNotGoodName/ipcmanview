@@ -2,12 +2,10 @@ package webserver
 
 import (
 	"bytes"
-	"cmp"
 	"context"
 	"net/http"
 	"slices"
 	"strconv"
-	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -16,9 +14,9 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/rs/zerolog/log"
 )
 
 func RegisterMiddleware(e *echo.Echo) {
@@ -33,11 +31,11 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
 	e.GET("/dahua/cameras", w.DahuaCameras)
-	e.GET("/dahua/cameras/create", w.DahuaCamerasCreate)
 	e.GET("/dahua/cameras/:id/update", w.DahuaCamerasUpdate)
-	e.GET("/dahua/data", w.DahuaData)
+	e.GET("/dahua/cameras/create", w.DahuaCamerasCreate)
 	e.GET("/dahua/events", w.DahuaEvent)
 	e.GET("/dahua/events/stream", w.DahuaEventStream)
+	e.GET("/dahua/files", w.DahuaFiles)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
 
 	e.POST("/dahua/cameras/create", w.DahuaCamerasCreatePOST)
@@ -70,6 +68,10 @@ func (s Server) Dahua(c echo.Context) error {
 
 func (s Server) DahuaEvent(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-events", nil)
+}
+
+func (s Server) DahuaFiles(c echo.Context) error {
+	return c.Render(http.StatusOK, "dahua-files", nil)
 }
 
 func (s Server) DahuaEventStream(c echo.Context) error {
@@ -148,6 +150,25 @@ func (s Server) DahuaCamerasIDDelete(c echo.Context) error {
 }
 
 func (s Server) DahuaCameras(c echo.Context) error {
+	api, _ := strconv.ParseBool(c.QueryParam("api"))
+
+	var apiData any
+	if api {
+		var err error
+		apiData, err = useDahuaAPIData(c.Request().Context(), s.db, s.dahuaStore)
+		if err != nil {
+			return err
+		}
+
+		if htmx.GetRequest(c.Request()) {
+			htmx.SetReplaceURL(c.Response(), "/dahua/cameras?api=true")
+			return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{
+				"htmx-api-data",
+				apiData,
+			})
+		}
+	}
+
 	cameras, err := s.db.ListDahuaCamera(c.Request().Context())
 	if err != nil {
 		return err
@@ -161,6 +182,7 @@ func (s Server) DahuaCameras(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-cameras", Data{
 		"Cameras":     cameras,
 		"FileCursors": fileCursors,
+		"APIData":     apiData,
 	})
 }
 
@@ -294,132 +316,5 @@ func (s Server) DahuaSnapshots(c echo.Context) error {
 
 	return c.Render(http.StatusOK, "dahua-snapshots", Data{
 		"Cameras": cameras,
-	})
-}
-
-func (s Server) DahuaData(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	cameras, err := s.db.ListDahuaCamera(ctx)
-	if err != nil {
-		return err
-	}
-
-	type cameraData struct {
-		detail               models.DahuaDetail
-		softwareVersion      models.DahuaSoftwareVersion
-		licenses             []models.DahuaLicense
-		storage              []models.DahuaStorage
-		coaxialcontrolStatus []models.DahuaCoaxialStatus
-	}
-
-	cameraDataC := make(chan cameraData, len(cameras))
-	wg := sync.WaitGroup{}
-	for _, camera := range cameras {
-		wg.Add(1)
-		go func(camera sqlc.ListDahuaCameraRow) {
-			defer wg.Done()
-
-			log := log.With().Int64("id", camera.ID).Logger()
-
-			conn, err := s.dahuaStore.Conn(ctx, camera.ID)
-			if err != nil {
-				log.Err(err).Msg("Failed to get connection")
-				return
-			}
-
-			var data cameraData
-
-			{
-				res, err := dahua.GetDahuaDetail(ctx, conn.Camera.ID, conn.RPC)
-				if err != nil {
-					log.Err(err).Msg("Failed to get detail")
-				} else {
-					data.detail = res
-				}
-			}
-
-			{
-				res, err := dahua.GetSoftwareVersion(ctx, conn.Camera.ID, conn.RPC)
-				if err != nil {
-					log.Err(err).Msg("Failed to get software version")
-				} else {
-					data.softwareVersion = res
-				}
-			}
-
-			{
-				res, err := dahua.GetLicenseList(ctx, conn.Camera.ID, conn.RPC)
-				if err != nil {
-					log.Err(err).Msg("Failed to get licenses")
-				} else {
-					data.licenses = res
-				}
-			}
-
-			{
-				res, err := dahua.GetStorage(ctx, conn.Camera.ID, conn.RPC)
-				if err != nil {
-					log.Err(err).Msg("Failed to get storage")
-				} else {
-					data.storage = res
-				}
-			}
-
-			{
-				caps, err := dahua.GetCoaxialCaps(ctx, conn.Camera.ID, conn.RPC, 0)
-				if err != nil {
-					log.Err(err).Msg("Failed to get coaxial caps")
-				} else if caps.SupportControlLight || caps.SupportControlSpeaker || caps.SupportControlFullcolorLight {
-					res, err := dahua.GetCoaxialStatus(ctx, conn.Camera.ID, conn.RPC, 0)
-					if err != nil {
-						log.Err(err).Msg("Failed to get coaxial status")
-					} else {
-						data.coaxialcontrolStatus = append(data.coaxialcontrolStatus, res)
-					}
-				}
-			}
-
-			cameraDataC <- data
-		}(camera)
-	}
-	wg.Wait()
-	close(cameraDataC)
-
-	conns, err := s.dahuaStore.ConnList(ctx)
-	if err != nil {
-		return err
-	}
-	status := make([]models.DahuaStatus, 0, len(conns))
-	for _, conn := range conns {
-		status = append(status, dahua.GetDahuaStatus(conn.Camera, conn.RPC.Conn))
-	}
-
-	details := make([]models.DahuaDetail, 0, len(cameras))
-	softwareVersions := make([]models.DahuaSoftwareVersion, 0, len(cameras))
-	licenses := make([]models.DahuaLicense, 0, len(cameras))
-	storage := make([]models.DahuaStorage, 0, len(cameras))
-	coaxialStatus := make([]models.DahuaCoaxialStatus, 0, len(cameras))
-	for data := range cameraDataC {
-		details = append(details, data.detail)
-		softwareVersions = append(softwareVersions, data.softwareVersion)
-		licenses = append(licenses, data.licenses...)
-		storage = append(storage, data.storage...)
-		coaxialStatus = append(coaxialStatus, data.coaxialcontrolStatus...)
-	}
-	slices.SortFunc(details, func(a, b models.DahuaDetail) int { return cmp.Compare(a.CameraID, b.CameraID) })
-	slices.SortFunc(softwareVersions, func(a, b models.DahuaSoftwareVersion) int { return cmp.Compare(a.CameraID, b.CameraID) })
-	slices.SortFunc(licenses, func(a, b models.DahuaLicense) int { return cmp.Compare(a.CameraID, b.CameraID) })
-	slices.SortFunc(storage, func(a, b models.DahuaStorage) int { return cmp.Compare(a.CameraID, b.CameraID) })
-	slices.SortFunc(coaxialStatus, func(a, b models.DahuaCoaxialStatus) int { return cmp.Compare(a.CameraID, b.CameraID) })
-
-	return c.Render(http.StatusOK, "dahua-data", Data{
-		"Cameras":          cameras,
-		"Status":           status,
-		"Details":          details,
-		"SoftwareVersions": softwareVersions,
-		"Licenses":         licenses,
-		"Storage":          storage,
-		"CoaxialStatus":    coaxialStatus,
 	})
 }

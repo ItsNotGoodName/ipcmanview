@@ -218,7 +218,7 @@ func (s *DahuaServer) GETIDSnapshot(c echo.Context) error {
 		return err
 	}
 
-	channel, err := queryInt(c, "channel")
+	channel, err := queryIntOptional(c, "channel")
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func (s *DahuaServer) GETIDEvents(c echo.Context) error {
 		return err
 	}
 
-	direct, err := queryBool(c, "direct")
+	direct, err := queryBoolOptional(c, "direct")
 	if err != nil {
 		return err
 	}
@@ -425,7 +425,7 @@ func (s *DahuaServer) GETIDAudio(c echo.Context) error {
 		return err
 	}
 
-	channel, err := queryInt(c, "channel")
+	channel, err := queryIntOptional(c, "channel")
 	if err != nil {
 		return err
 	}
@@ -451,7 +451,7 @@ func (s *DahuaServer) GETIDCoaxialStatus(c echo.Context) error {
 		return err
 	}
 
-	channel, err := queryInt(c, "channel")
+	channel, err := queryIntOptional(c, "channel")
 	if err != nil {
 		return err
 	}
@@ -470,7 +470,7 @@ func (s *DahuaServer) GETIDCoaxialCaps(c echo.Context) error {
 		return err
 	}
 
-	channel, err := queryInt(c, "channel")
+	channel, err := queryIntOptional(c, "channel")
 	if err != nil {
 		return err
 	}
@@ -489,12 +489,12 @@ func (s *DahuaServer) POSTIDPTZPreset(c echo.Context) error {
 		return err
 	}
 
-	channel, err := queryInt(c, "channel")
+	channel, err := queryIntOptional(c, "channel")
 	if err != nil {
 		return err
 	}
 
-	index, err := queryInt(c, "index")
+	index, err := queryIntOptional(c, "index")
 	if err != nil {
 		return err
 	}

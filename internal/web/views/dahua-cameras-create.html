@@ -1,48 +1,66 @@
 {{template "base.html" .}}
+
 {{define "body"}}
+{{template "dahua-base.html" .}}
+{{end}}
 
-{{template "dahua-tabs.html" .}}
+{{define "header-navbar-start"}}
+{{template "dahua-base-drawer-button" .}}
+{{end}}
 
-<section class="bg-white dark:bg-gray-900">
-  <div class="mx-auto max-w-xl p-4">
-    <h2 class="mb-4 text-xl font-bold text-gray-900 dark:text-white">Create Camera</h2>
-    <form method="post">
-      <div class="mb-6">
-        <label for="name" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Name</label>
-        <input type="name" id="name" name="name"
-          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-          placeholder="CAM-1">
+{{define "dahua-base-body"}}
+{{template "header.html". }}
+
+<div class="px-4">
+  <div class="text-sm breadcrumbs">
+    <ul>
+      <li><a href="/dahua/cameras">Cameras</a></li>
+      <li>Create</li>
+    </ul>
+  </div>
+
+  <div class="flex justify-center">
+    <form method="post" class="flex max-w-md flex-1 flex-col gap-4">
+      <div class="card-title">Create Camera</div>
+      <div class="form-control w-full">
+        <label for="name" class="label">
+          <span class="label-text">Name</span>
+        </label>
+        <input id="name" name="name" type="text" placeholder="CAM-1" class="input input-bordered w-full" />
       </div>
-      <div class="mb-6">
-        <label for="address" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Address</label>
-        <input type="address" id="address" name="address"
-          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-          placeholder="192.168.1.108" required>
+      <div class="form-control w-full">
+        <label for="address" class="label">
+          <span class="label-text">Address</span>
+        </label>
+        <input id="address" name="address" type="text" placeholder="192.168.1.108"
+          class="input input-bordered w-full" />
       </div>
-      <div class="mb-6">
-        <label for="username" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Username</label>
-        <input type="username" id="username" name="username"
-          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-          placeholder="admin">
+      <div class="form-control w-full">
+        <label for="username" class="label">
+          <span class="label-text">Username</span>
+        </label>
+        <input id="username" name="username" type="text" placeholder="admin" class="input input-bordered w-full" />
       </div>
-      <div class="mb-6">
-        <label for="password" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Password</label>
-        <input type="password" id="password" name="password"
-          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-          placeholder="********" required>
+      <div class="form-control w-full">
+        <label for="password" class="label">
+          <span class="label-text">Password</span>
+        </label>
+        <input id="password" name="password" type="password" placeholder="********" class="input input-bordered w-full"
+          required />
       </div>
-      <div class="mb-6">
-        <label for="location" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Location</label>
-        <select id="location" name="location"
-          class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500">
-          <option value="Local">Local</option>
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text">Location</span>
+        </label>
+        <select id="location" name="location" class="select select-bordered">
+          <option selected value="Local">Local</option>
+          <option value="UTC">UTC</option>
         </select>
       </div>
-      <button type="submit"
-        class="w-full rounded-lg bg-blue-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 sm:w-auto">
+      <button type="submit" class="btn btn-primary">
         Submit
       </button>
     </form>
   </div>
-</section>
+</div>
 {{end}}

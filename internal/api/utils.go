@@ -57,7 +57,7 @@ func sendStream(c echo.Context, enc *json.Encoder, data any) error {
 
 // ---------- Queries
 
-func queryInt(c echo.Context, key string) (int, error) {
+func queryIntOptional(c echo.Context, key string) (int, error) {
 	str := c.QueryParam(key)
 	if str == "" {
 		return 0, nil
@@ -71,7 +71,7 @@ func queryInt(c echo.Context, key string) (int, error) {
 	return number, nil
 }
 
-func queryBool(c echo.Context, key string) (bool, error) {
+func queryBoolOptional(c echo.Context, key string) (bool, error) {
 	str := c.QueryParam(key)
 	if str == "" {
 		return false, nil

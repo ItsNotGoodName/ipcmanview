@@ -1,16 +1,24 @@
 {{template "base.html" .}}
+
 {{define "body"}}
+{{template "dahua-base.html" .}}
+{{end}}
 
-{{template "dahua-tabs.html" .}}
+{{define "header-navbar-start"}}
+{{template "dahua-base-drawer-button" .}}
+{{end}}
 
-<div class="p-4">
-  <div class="flex flex-wrap gap-4 justify-center">
-    {{range .Data.Cameras}}
-    <figure class="max-w-lg">
-      <img class="h-auto max-w-full rounded-lg" src="/v1/dahua/{{.ID}}/snapshot" alt="Camera {{.ID}} Snapshot">
-      <figcaption class="mt-2 text-sm text-center text-gray-500 dark:text-gray-400">Camera {{.ID}} Snapshot</figcaption>
-    </figure>
-    {{end}}
-  </div>
+{{define "dahua-base-body"}}
+{{template "header.html". }}
+
+<div class="grid justify-center gap-4 px-4 md:grid-cols-3">
+  {{range .Data.Cameras}}
+  <figure>
+    <img class="rounded-lg" src="/v1/dahua/{{.ID}}/snapshot" alt="{{.Name}} Snapshot">
+    <div class="flex justify-center pt-2">
+      <figcaption>{{.Name}} Snapshot</figcaption>
+    </div>
+  </figure>
+  {{end}}
 </div>
 {{end}}

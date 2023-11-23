@@ -1,9 +1,5 @@
 import "./index.css"
 
-// ---------- Flowbite
-
-import 'flowbite';
-
 // ---------- htmx
 
 import "./htmx.js"
