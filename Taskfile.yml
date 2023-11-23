@@ -52,7 +52,7 @@ tasks:
       - cd artifacts && sha256sum *.tar.gz *.zip > checksum.txt
     vars:
       FILES: README.md LICENSE
-      WINDOWS_FILES:
+      WINDOWS_FILES: start.bat
 
   build:
     deps: [clean, build-server]

@@ -7,6 +7,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
+	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
@@ -31,6 +32,7 @@ func main() {
 	ctx := context.Background()
 
 	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	cfg := config.NewWeb(flags)
 
 	app := lieut.NewSingleCommandApp(
 		lieut.AppInfo{
@@ -38,7 +40,7 @@ func main() {
 			Version: build.Version,
 			Summary: "Basic web application for accessing IP Cameras.",
 		},
-		run(),
+		run(flags, cfg),
 		flags,
 		os.Stdout,
 		os.Stderr,
@@ -49,8 +51,13 @@ func main() {
 	os.Exit(code)
 }
 
-func run() lieut.Executor {
+func run(flags *flag.FlagSet, cfg *config.Web) lieut.Executor {
 	return func(ctx context.Context, arguments []string) error {
+		err := flags.Parse(arguments)
+		if err != nil {
+			return err
+		}
+
 		// Supervisor
 		super := suture.New("root", suture.Spec{
 			EventHook: sutureext.EventHook(),
@@ -60,7 +67,7 @@ func run() lieut.Executor {
 		dahuaBus := dahua.NewBus()
 
 		// Database
-		sqlDB, err := sqlite.New(os.Getenv("DB_PATH"))
+		sqlDB, err := sqlite.New(cfg.DBPath)
 		if err != nil {
 			return err
 		}
@@ -101,7 +108,7 @@ func run() lieut.Executor {
 		webserver.RegisterRoutes(httpRouter, webServer)
 
 		// HTTP Server
-		httpServer := http.NewServer(httpRouter, ":8080")
+		httpServer := http.NewServer(httpRouter, cfg.HTTPHost+":"+cfg.HTTPPort)
 		super.Add(httpServer)
 
 		return super.Serve(ctx)
