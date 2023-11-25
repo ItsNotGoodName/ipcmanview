@@ -80,7 +80,13 @@ func GetCPUUsage(ctx context.Context, c dahuarpc.Client) (int, error) {
 
 	res, err := dahuarpc.Send[struct {
 		Usage int `json:"usage"`
-	}](ctx, rpc.Method("magicBox.getCPUUsage").Params(dahuarpc.JSON{"index": 0}))
+	}](ctx, rpc.
+		Method("magicBox.getCPUUsage").
+		Params(struct {
+			Index int `json:"index"`
+		}{
+			Index: 0,
+		}))
 
 	return res.Params.Usage, err
 }

@@ -27,7 +27,11 @@ func FindFile(ctx context.Context, c dahuarpc.Client, object int64, condition Co
 
 	res, err := dahuarpc.Send[any](ctx, rpc.
 		Method("mediaFileFind.findFile").
-		Params(dahuarpc.JSON{"condition": condition}).
+		Params(struct {
+			Condition Condition `json:"condition"`
+		}{
+			Condition: condition,
+		}).
 		Object(object))
 
 	return res.Result.Bool(), err
@@ -85,7 +89,11 @@ func FindNextFile(ctx context.Context, c dahuarpc.Client, object int64, count in
 
 	res, err := dahuarpc.Send[FindNextFileResult](ctx, rpc.
 		Method("mediaFileFind.findNextFile").
-		Params(dahuarpc.JSON{"count": count}).
+		Params(struct {
+			Count int `json:"count"`
+		}{
+			Count: count,
+		}).
 		Object(object))
 
 	return res.Params, err

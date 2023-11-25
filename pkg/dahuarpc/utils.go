@@ -9,9 +9,6 @@ import (
 	"time"
 )
 
-// JSON exists because I chose Go.
-type JSON = map[string]any
-
 type AuthParam struct {
 	Encryption string `json:"encryption"`
 	Random     string `json:"random"`

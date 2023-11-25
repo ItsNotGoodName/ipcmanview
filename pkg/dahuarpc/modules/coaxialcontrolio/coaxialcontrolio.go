@@ -16,7 +16,11 @@ func GetStatus(ctx context.Context, c dahuarpc.Client, channel int) (Status, err
 		Status Status `json:"status"`
 	}](ctx, rpc.
 		Method("CoaxialControlIO.getStatus").
-		Params(dahuarpc.JSON{"channel": channel}))
+		Params(struct {
+			Channel int `json:"channel"`
+		}{
+			Channel: channel,
+		}))
 
 	return res.Params.Status, err
 }
@@ -36,7 +40,11 @@ func GetCaps(ctx context.Context, c dahuarpc.Client, channel int) (Caps, error) 
 		Caps Caps `json:"caps"`
 	}](ctx, rpc.
 		Method("CoaxialControlIO.getCaps").
-		Params(dahuarpc.JSON{"channel": channel}))
+		Params(struct {
+			Channel int `json:"channel"`
+		}{
+			Channel: channel,
+		}))
 
 	return res.Params.Caps, err
 }
@@ -61,9 +69,12 @@ func Control(ctx context.Context, c dahuarpc.Client, channel int, controls ...Co
 
 	_, err = dahuarpc.Send[any](ctx, rpc.
 		Method("CoaxialControlIO.control").
-		Params(dahuarpc.JSON{
-			"channel": channel,
-			"info":    controls,
+		Params(struct {
+			Channel int              `json:"channel"`
+			Info    []ControlRequest `json:"info"`
+		}{
+			Channel: channel,
+			Info:    controls,
 		}))
 
 	return err

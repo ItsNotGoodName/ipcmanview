@@ -15,11 +15,16 @@ func FirstLogin(ctx context.Context, c Client, username string) (dahuarpc.Respon
 	return dahuarpc.SendRaw[dahuarpc.AuthParam](ctx, c.
 		RawRPCLogin().
 		Method("global.login").
-		Params(dahuarpc.JSON{
-			"userName":   username,
-			"password":   "",
-			"loginType":  "Direct",
-			"clientType": "Web3.0",
+		Params(struct {
+			Username   string `json:"userName"`
+			Password   string `json:"password"`
+			LoginType  string `json:"loginType"`
+			ClientType string `json:"clientType"`
+		}{
+			Username:   username,
+			Password:   "",
+			LoginType:  "Direct",
+			ClientType: "Web3.0",
 		}))
 }
 
@@ -27,12 +32,18 @@ func SecondLogin(ctx context.Context, c Client, username, password, loginType, a
 	_, err := dahuarpc.Send[any](ctx, c.
 		RawRPCLogin().
 		Method("global.login").
-		Params(dahuarpc.JSON{
-			"userName":      username,
-			"password":      password,
-			"clientType":    "Web3.0",
-			"loginType":     loginType,
-			"authorityType": authorityType,
+		Params(struct {
+			Username      string `json:"userName"`
+			Password      string `json:"password"`
+			LoginType     string `json:"loginType"`
+			ClientType    string `json:"clientType"`
+			AuthorityType string `json:"authorityType"`
+		}{
+			Username:      username,
+			Password:      password,
+			LoginType:     loginType,
+			ClientType:    "Web3.0",
+			AuthorityType: authorityType,
 		}))
 
 	return err
