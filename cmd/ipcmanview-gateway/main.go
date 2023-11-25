@@ -55,7 +55,7 @@ func run() lieut.Executor {
 
 		// Stores
 		dahuaCameraStore := dahua.NewCameraStore()
-		dahuaStore := dahua.NewStore(dahuaCameraStore)
+		dahuaStore := dahua.NewStore()
 		super.Add(dahuaStore)
 		eventWorkerStore := dahua.NewEventWorkerStore(super, dahuaBus)
 		dahua.RegisterEventBus(eventWorkerStore, dahuaBus)

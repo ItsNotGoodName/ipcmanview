@@ -9,6 +9,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	"github.com/rs/zerolog/log"
 )
 
@@ -26,20 +27,16 @@ func useDahuaAPIData(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (
 		coaxialcontrolStatus []models.DahuaCoaxialStatus
 	}
 
+	conns := dahuaStore.ConnList(ctx, webdahua.ConvertListDahuaCameraRows(cameras))
+
 	cameraDataC := make(chan cameraData, len(cameras))
 	wg := sync.WaitGroup{}
-	for _, camera := range cameras {
+	for _, conn := range conns {
 		wg.Add(1)
-		go func(camera sqlc.ListDahuaCameraRow) {
+		go func(conn dahua.Conn) {
 			defer wg.Done()
 
-			log := log.With().Int64("id", camera.ID).Logger()
-
-			conn, err := dahuaStore.Conn(ctx, camera.ID)
-			if err != nil {
-				log.Err(err).Msg("Failed to get connection")
-				return
-			}
+			log := log.With().Int64("id", conn.Camera.ID).Logger()
 
 			var data cameraData
 
@@ -94,15 +91,11 @@ func useDahuaAPIData(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (
 			}
 
 			cameraDataC <- data
-		}(camera)
+		}(conn)
 	}
 	wg.Wait()
 	close(cameraDataC)
 
-	conns, err := dahuaStore.ConnList(ctx)
-	if err != nil {
-		return nil, err
-	}
 	status := make([]models.DahuaStatus, 0, len(conns))
 	for _, conn := range conns {
 		status = append(status, dahua.GetDahuaStatus(conn.Camera, conn.RPC.Conn))

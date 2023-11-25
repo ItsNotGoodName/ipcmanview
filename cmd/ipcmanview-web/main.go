@@ -78,13 +78,13 @@ func run(flags *flag.FlagSet, cfg *config.Web) lieut.Executor {
 
 		// Stores
 		dahuaCameraStore := webdahua.NewDahuaCameraStore(db)
-		dahuaStore := dahua.NewStore(dahuaCameraStore)
+		dahuaStore := dahua.NewStore()
 		super.Add(dahuaStore)
 		eventWorkerStore :=
 			dahua.NewEventWorkerStore(super,
 				webdahua.NewDahuaEventHooksProxy(dahuaBus, db))
 		dahua.RegisterEventBus(eventWorkerStore, dahuaBus)
-		if err := core.DahuaBootstrap(ctx, dahuaStore, eventWorkerStore); err != nil {
+		if err := core.DahuaBootstrap(ctx, dahuaCameraStore, dahuaStore, eventWorkerStore); err != nil {
 			return err
 		}
 

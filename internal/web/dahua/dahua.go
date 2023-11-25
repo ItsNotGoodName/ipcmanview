@@ -119,10 +119,9 @@ func (s DahuaCameraStore) Get(ctx context.Context, id int64) (models.DahuaCamera
 }
 
 func (s DahuaCameraStore) List(ctx context.Context) ([]models.DahuaCamera, error) {
-	dbCameras, err := s.db.ListDahuaCamera(ctx)
+	cameras, err := s.db.ListDahuaCamera(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	return ConvertListDahuaCameraRows(dbCameras), nil
+	return ConvertListDahuaCameraRows(cameras), nil
 }
