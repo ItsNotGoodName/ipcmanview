@@ -55,8 +55,8 @@ type DahuaEventHooksProxy struct {
 	db    sqlc.DB
 }
 
-func (p DahuaEventHooksProxy) CameraEvent(evt models.DahuaEvent) {
-	id, err := p.db.CreateDahuaEvent(context.TODO(), sqlc.CreateDahuaEventParams{
+func (p DahuaEventHooksProxy) CameraEvent(ctx context.Context, evt models.DahuaEvent) {
+	id, err := p.db.CreateDahuaEvent(ctx, sqlc.CreateDahuaEventParams{
 		CameraID:      evt.CameraID,
 		ContentType:   evt.ContentType,
 		ContentLength: int64(evt.ContentLength),
@@ -71,7 +71,7 @@ func (p DahuaEventHooksProxy) CameraEvent(evt models.DahuaEvent) {
 		return
 	}
 	evt.ID = id
-	p.hooks.CameraEvent(evt)
+	p.hooks.CameraEvent(ctx, evt)
 }
 
 // ---------- DahuaCameraStore

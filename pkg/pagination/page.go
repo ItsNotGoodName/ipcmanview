@@ -24,7 +24,7 @@ type PageResult struct {
 	TotalItems int
 }
 
-func NewPageResult(p Page, totalItems int) PageResult {
+func (p Page) Result(totalItems int) PageResult {
 	totalPage := int(math.Ceil(float64(float64(totalItems) / float64(p.PerPage))))
 	if totalPage == 0 {
 		totalPage = 1

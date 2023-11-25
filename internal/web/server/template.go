@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"time"
@@ -43,6 +44,13 @@ func parseTemplate(name string) (*template.Template, error) {
 			"SLFormatDate": func(date time.Time) template.HTML {
 				return template.HTML(fmt.Sprintf(`<sl-format-date month="numeric" day="numeric" year="numeric" hour="numeric" minute="numeric" hour-format="12" second="numeric" date="%s"></sl-format-date>`, date.Format(time.RFC3339)))
 			},
+			"Query": func(queries url.Values, vals ...any) template.URL {
+				length := len(vals)
+				for i := 0; i < length; i += 2 {
+					queries.Set(vals[i].(string), fmt.Sprint(vals[i+1]))
+				}
+				return template.URL(queries.Encode())
+			},
 		}).
 		ParseFS(web.ViewsFS(), "views/partials/*.html", "views/"+name)
 }
@@ -50,7 +58,7 @@ func parseTemplate(name string) (*template.Template, error) {
 type TemplateContext struct {
 	// Template is the current template that is being rendered.
 	Template string
-	URI      string
+	URL      *url.URL
 	Head     template.HTML
 	Data     any
 }
@@ -95,7 +103,7 @@ func (t Renderer) Render(w io.Writer, name string, data any, c echo.Context) err
 
 	tmplData := TemplateContext{
 		Template: name,
-		URI:      c.Request().RequestURI,
+		URL:      c.Request().URL,
 		Head:     t.head,
 	}
 

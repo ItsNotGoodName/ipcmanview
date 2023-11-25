@@ -89,7 +89,7 @@ func (s *Store) Serve(ctx context.Context) error {
 		case <-ctx.Done():
 			s.clientsMu.Lock()
 			for _, rpcClient := range s.clients {
-				rpcClient.ConnRPC.Close(context.Background())
+				rpcClient.Close(context.Background())
 			}
 			s.clientsMu.Unlock()
 
@@ -125,7 +125,9 @@ func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaCamera
 	} else if !cameraEqual(client.Camera, camera) {
 		// Found but not equal
 
-		client.Close(ctx)
+		// Closing camera connection should not block that store
+		go client.Close(ctx)
+
 		client = newStoreClient(camera, time.Now())
 		s.clients[camera.ID] = client
 	} else {

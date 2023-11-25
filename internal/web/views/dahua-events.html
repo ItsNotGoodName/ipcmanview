@@ -11,47 +11,121 @@
 {{define "dahua-base-body"}}
 {{template "header.html". }}
 
-<div class="flex flex-col gap-4 px-4">
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Camera ID</th>
-          <th>Code</th>
-          <th>Action</th>
-          <th>Created At</th>
-        </tr>
-      </thead>
-      <tbody hx-ext="sse" sse-connect="/dahua/events/stream">
-        <tr class="hidden" sse-swap="message" hx-swap="afterend"></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-{{end}}
+{{template "dahua-events-header.html". }}
 
-{{define "event-row"}}
-<tr>
-  <th>
-    {{.Data.Event.ID}}
-  </th>
-  <td>
-    {{.Data.Event.CameraID}}
-  </td>
-  <td>
-    {{.Data.Event.Code}}
-  </td>
-  <td>
-    {{.Data.Event.Action}}
-  </td>
-  <td>
-    {{SLFormatDate .Data.Event.CreatedAt}}
-  </td>
-</tr>
-<tr>
-  <td colspan="5">
-    <pre><code>{{.Data.Event.Data | toPrettyJson}}</code></pre>
-  </td>
-</tr>
+<section class="flex flex-col gap-4 p-4" hx-target="this">
+  {{block "htmx" .}}
+  <form class="flex flex-col items-center gap-4 sm:flex-row" hx-get="/dahua/events" hx-trigger="change">
+    <div class="form-control w-full">
+      <label class="label">
+        <span class="label-text">Event Code</span>
+      </label>
+
+      <select name="Code" class="select select-bordered">
+        <option value="">All</option>
+        {{range .Data.EventCodes}}
+        <option {{if has . $.Data.Params.Code }} selected {{end}}>{{.}}</option>
+        {{end}}
+      </select>
+    </div>
+
+    <div class="form-control w-full">
+      <label class="label">
+        <span class="label-text">Event Action</span>
+      </label>
+
+      <select name="Action" class="select select-bordered">
+        <option value="">All</option>
+        {{range .Data.EventAction}}
+        <option {{if has . $.Data.Params.Action }} selected {{end}}>{{.}}</option>
+        {{end}}
+      </select>
+    </div>
+
+    <div class="form-control w-full">
+      <label class="label">
+        <span class="label-text">Camera</span>
+      </label>
+
+      <select name="CameraID" class="select select-bordered">
+        <option value="">All</option>
+        {{range .Data.Cameras}}
+        <option {{if has .ID $.Data.Params.CameraID }} selected {{end}} value="{{.ID}}">{{.Name}}</option>
+        {{end}}
+      </select>
+    </div>
+  </form>
+
+  <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div class="flex gap-4 flex-1 items-center justify-between">
+      <div class="mr-auto whitespace-nowrap">{{ .Data.Events.Seen }} of {{ .Data.Events.TotalItems }}</div>
+
+      <form hx-get="/dahua/events" hx-trigger="change">
+        <div class="form-control w-full">
+          <select name="PerPage" class="select select-bordered">
+            <option disabled>Per Page</option>
+            {{range list 10 25 100}}
+            <option {{if eq . $.Data.Params.PerPage }} selected {{end}}>{{.}}</option>
+            {{end}}
+          </select>
+        </div>
+      </form>
+    </div>
+
+    <div class="join flex justify-end">
+      <div class="join">
+        <a class="join-item btn" {{if .Data.Events.HasPrevious}}
+          hx-get="{{.URL.Path}}?{{Query .URL.Query `Page` .Data.Events.Previous}}"
+          href="{{.URL.Path}}?{{Query .URL.Query `Page` .Data.Events.Previous}}" {{else}} disabled {{end}}>«</a>
+        <button class="join-item btn">Page {{.Data.Events.Page}}</button>
+        <a class="join-item btn" {{if .Data.Events.HasNext}}
+          hx-get="{{.URL.Path}}?{{Query .URL.Query `Page` .Data.Events.Next}}"
+          href="{{.URL.Path}}?{{Query .URL.Query `Page` .Data.Events.Next}}" {{else}} disabled {{end}}>»</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-4">
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Camera ID</th>
+            <th>Code</th>
+            <th>Action</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Data.Events.Data}}
+          <tr>
+            <th>
+              {{.ID}}
+            </th>
+            <td>
+              {{.CameraID}}
+            </td>
+            <td>
+              {{.Code}}
+            </td>
+            <td>
+              {{.Action}}
+            </td>
+            <td>
+              {{SLFormatDate .CreatedAt}}
+            </td>
+          </tr>
+          <tr>
+            <td colspan="5" class="bg-base-200 rounded-box">
+              <pre><code>{{.Data | toPrettyJson}}</code></pre>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {{end}}
+</section>
 {{end}}

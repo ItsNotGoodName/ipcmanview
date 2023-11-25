@@ -306,40 +306,50 @@ func (q *Queries) ListDahuaCamera(ctx context.Context) ([]ListDahuaCameraRow, er
 	return items, nil
 }
 
-const listDahuaEvent = `-- name: ListDahuaEvent :many
-SELECT id, camera_id, content_type, content_length, code, "action", ` + "`" + `index` + "`" + `, data, created_at FROM dahua_events
-ORDER BY created_at DESC
-LIMIT ? OFFSET ?
+const listDahuaEventActions = `-- name: ListDahuaEventActions :many
+SELECT DISTINCT action FROM dahua_events
 `
 
-type ListDahuaEventParams struct {
-	Limit  int64
-	Offset int64
-}
-
-func (q *Queries) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) ([]DahuaEvent, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaEvent, arg.Limit, arg.Offset)
+func (q *Queries) ListDahuaEventActions(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaEventActions)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []DahuaEvent
+	var items []string
 	for rows.Next() {
-		var i DahuaEvent
-		if err := rows.Scan(
-			&i.ID,
-			&i.CameraID,
-			&i.ContentType,
-			&i.ContentLength,
-			&i.Code,
-			&i.Action,
-			&i.Index,
-			&i.Data,
-			&i.CreatedAt,
-		); err != nil {
+		var action string
+		if err := rows.Scan(&action); err != nil {
 			return nil, err
 		}
-		items = append(items, i)
+		items = append(items, action)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDahuaEventCodes = `-- name: ListDahuaEventCodes :many
+SELECT DISTINCT code FROM dahua_events
+`
+
+func (q *Queries) ListDahuaEventCodes(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaEventCodes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			return nil, err
+		}
+		items = append(items, code)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

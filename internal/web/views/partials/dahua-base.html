@@ -18,14 +18,30 @@
   <div class="drawer-side z-20">
     <label for="my-drawer-2" class="drawer-overlay"></label>
     <ul class="menu bg-base-200 text-base-content h-full w-60 p-4">
-      <li><a hx-boost="true" href="/dahua" {{if eq "/dahua" .URI}} class="active" {{end}}>Home</a></li>
-      <li><a hx-boost="true" href="/dahua/cameras" {{if hasPrefix "/dahua/cameras" .URI}} class="active"
-          {{end}}>Cameras</a></li>
-      <li><a hx-boost="true" href="/dahua/snapshots" {{if hasPrefix "/dahua/snapshots" .URI}} class="active"
-          {{end}}>Snapshots</a></li>
-      <li><a hx-boost="true" href="/dahua/events" {{if hasPrefix "/dahua/events" .URI}} class="active"
-          {{end}}>Events</a></li>
-      <li><a hx-boost="true" href="/dahua/files" {{if hasPrefix "/dahua/files" .URI}} class="active" {{end}}>Files</a>
+      <li>
+        <a hx-boost="true" href="/dahua" {{if eq "/dahua" .URL.Path}} class="active" {{end}}>
+          Home
+        </a>
+      </li>
+      <li>
+        <a hx-boost="true" href="/dahua/cameras" {{if hasPrefix "/dahua/cameras" .URL.Path}} class="active" {{end}}>
+          Cameras
+        </a>
+      </li>
+      <li>
+        <a hx-boost="true" href="/dahua/snapshots" {{if hasPrefix "/dahua/snapshots" .URL.Path}} class="active" {{end}}>
+          Snapshots
+        </a>
+      </li>
+      <li>
+        <a hx-boost="true" href="/dahua/events" {{if hasPrefix "/dahua/events" .URL.Path}} class="active" {{end}}>
+          Events
+        </a>
+      </li>
+      <li>
+        <a hx-boost="true" href="/dahua/files" {{if hasPrefix "/dahua/files" .URL.Path}} class="active" {{end}}>
+          Files
+        </a>
       </li>
     </ul>
   </div>

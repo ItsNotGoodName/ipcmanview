@@ -4,7 +4,9 @@ go 1.21
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
+	github.com/Masterminds/squirrel v1.5.4
 	github.com/Rican7/lieut v0.1.1
+	github.com/georgysavva/scany/v2 v2.0.0
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/gorilla/schema v1.2.1
 	github.com/icholy/digest v0.1.22
@@ -14,6 +16,12 @@ require (
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/sync v0.5.0
 	modernc.org/sqlite v1.27.0
+)
+
+require (
+	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
+	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
+	github.com/lib/pq v1.10.8 // indirect
 )
 
 require (

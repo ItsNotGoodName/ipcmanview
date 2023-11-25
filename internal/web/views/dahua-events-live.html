@@ -1,0 +1,61 @@
+{{template "base.html" .}}
+
+{{define "body"}}
+{{template "dahua-base.html" .}}
+{{end}}
+
+{{define "header-navbar-start"}}
+{{template "dahua-base-drawer-button" .}}
+{{end}}
+
+{{define "dahua-base-body"}}
+{{template "header.html". }}
+
+{{template "dahua-events-header.html". }}
+
+<div class="p-4">
+  <div class="flex flex-col gap-4">
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Camera ID</th>
+            <th>Code</th>
+            <th>Action</th>
+            <th>Created At</th>
+          </tr>
+        </thead>
+        <tbody hx-ext="sse" sse-connect="/dahua/events/stream">
+          <tr class="hidden" sse-swap="message" hx-swap="afterend"></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{{end}}
+
+{{define "event-row"}}
+<tr>
+  <th>
+    {{.Data.Event.ID}}
+  </th>
+  <td>
+    {{.Data.Event.CameraID}}
+  </td>
+  <td>
+    {{.Data.Event.Code}}
+  </td>
+  <td>
+    {{.Data.Event.Action}}
+  </td>
+  <td>
+    {{SLFormatDate .Data.Event.CreatedAt}}
+  </td>
+</tr>
+<tr>
+  <td colspan="5" class="bg-base-200 rounded-box">
+    <pre><code>{{.Data | toPrettyJson}}</code></pre>
+  </td>
+</tr>
+{{end}}

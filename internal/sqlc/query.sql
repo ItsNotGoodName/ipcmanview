@@ -37,11 +37,6 @@ INSERT INTO dahua_events (
   ?, ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id;
 
--- name: ListDahuaEvent :many
-SELECT * FROM dahua_events
-ORDER BY created_at DESC
-LIMIT ? OFFSET ?;
-
 -- name: GetSettings :one
 SELECT * FROM settings
 LIMIT 1;
@@ -155,3 +150,9 @@ WHERE
   camera_id = sqlc.arg('camera_id') AND
   start_time <= sqlc.arg('end') AND
   sqlc.arg('start') < start_time;
+
+-- name: ListDahuaEventCodes :many
+SELECT DISTINCT code FROM dahua_events;
+
+-- name: ListDahuaEventActions :many
+SELECT DISTINCT action FROM dahua_events;

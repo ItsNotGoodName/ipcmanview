@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"net/http"
-	"slices"
 	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
@@ -15,6 +14,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -33,7 +33,8 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 	e.GET("/dahua/cameras", w.DahuaCameras)
 	e.GET("/dahua/cameras/:id/update", w.DahuaCamerasUpdate)
 	e.GET("/dahua/cameras/create", w.DahuaCamerasCreate)
-	e.GET("/dahua/events", w.DahuaEvent)
+	e.GET("/dahua/events", w.DahuaEvents)
+	e.GET("/dahua/events/live", w.DahuaEventsLive)
 	e.GET("/dahua/events/stream", w.DahuaEventStream)
 	e.GET("/dahua/files", w.DahuaFiles)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
@@ -66,12 +67,76 @@ func (s Server) Dahua(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua", nil)
 }
 
-func (s Server) DahuaEvent(c echo.Context) error {
-	return c.Render(http.StatusOK, "dahua-events", nil)
+func (s Server) DahuaEvents(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	params := struct {
+		CameraID []int64
+		Code     []string
+		Action   []string
+		Page     int64
+		PerPage  int64
+	}{
+		Page:    1,
+		PerPage: 10,
+	}
+	err := parseQuery(c, &params)
+	if err != nil {
+		return err
+	}
+
+	events, err := s.db.ListDahuaEvent(ctx, sqlc.ListDahuaEventParams{
+		CameraID: params.CameraID,
+		Code:     params.Code,
+		Action:   params.Action,
+		Page: pagination.Page{
+			Page:    int(params.Page),
+			PerPage: int(params.PerPage),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	eventCodes, err := s.db.ListDahuaEventCodes(ctx)
+	if err != nil {
+		return err
+	}
+
+	eventActions, err := s.db.ListDahuaEventActions(ctx)
+	if err != nil {
+		return err
+	}
+
+	cameras, err := s.db.ListDahuaCamera(ctx)
+	if err != nil {
+		return err
+	}
+
+	query := writeQuery(c, params)
+
+	data := Data{
+		"Params":      params,
+		"Cameras":     cameras,
+		"Events":      events,
+		"EventCodes":  eventCodes,
+		"EventAction": eventActions,
+	}
+
+	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+		htmx.SetReplaceURL(c.Response(), "/dahua/events?"+query.Encode())
+		return c.Render(http.StatusOK, "dahua-events", TemplateBlock{"htmx", data})
+	}
+
+	return c.Render(http.StatusOK, "dahua-events", data)
 }
 
 func (s Server) DahuaFiles(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-files", nil)
+}
+
+func (s Server) DahuaEventsLive(c echo.Context) error {
+	return c.Render(http.StatusOK, "dahua-events-live", nil)
 }
 
 func (s Server) DahuaEventStream(c echo.Context) error {
@@ -93,34 +158,12 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 
 	buf := new(bytes.Buffer)
 
-	// Send previous 10 events
-	events, err := s.db.ListDahuaEvent(ctx, sqlc.ListDahuaEventParams{
-		Limit: 10,
-	})
-	if err != nil {
-		return err
-	}
-	slices.Reverse(events)
-	for _, event := range events {
-		if err := c.Echo().Renderer.Render(buf, "dahua-events", TemplateBlock{
-			"event-row",
-			Data{
-				"Event": event,
-			},
-		}, c); err != nil {
-			return err
-		}
-		w.Write(formatSSE("message", buf.String()))
-		buf.Reset()
-		w.Flush()
-	}
-
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case event := <-eventsC:
-			if err := c.Echo().Renderer.Render(buf, "dahua-events", TemplateBlock{
+			if err := c.Echo().Renderer.Render(buf, "dahua-events-live", TemplateBlock{
 				"event-row",
 				Data{
 					"Event": event.Event,

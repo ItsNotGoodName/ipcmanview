@@ -4,6 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+
+	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
+	sq "github.com/Masterminds/squirrel"
 )
 
 type CreateDahuaCameraParams = createDahuaCameraParams
@@ -94,4 +98,52 @@ func (db DB) UpsertDahuaFiles(ctx context.Context, args CreateDahuaFileParams) (
 	}
 
 	return db.CreateDahuaFile(ctx, args)
+}
+
+type ListDahuaEventParams struct {
+	pagination.Page
+	Code     []string
+	Action   []string
+	CameraID []int64
+}
+
+type ListDahuaEventResult struct {
+	pagination.PageResult
+	Data []DahuaEvent
+}
+
+func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (ListDahuaEventResult, error) {
+	where := sq.Eq{}
+	if len(arg.Code) != 0 {
+		where["code"] = arg.Code
+	}
+	if len(arg.Action) != 0 {
+		where["action"] = arg.Action
+	}
+	if len(arg.CameraID) != 0 {
+		where["camera_id"] = arg.CameraID
+	}
+
+	var res []DahuaEvent
+	err := ssq.Query(ctx, db, &res, sq.
+		Select("*").
+		From("dahua_events").
+		Where(where).
+		OrderBy("created_at DESC").
+		Limit(uint64(arg.Page.Limit())).
+		Offset(uint64(arg.Page.Offset())))
+	if err != nil {
+		return ListDahuaEventResult{}, err
+	}
+
+	var count int
+	err = ssq.QueryOne(ctx, db, &count, sq.Select("COUNT(*)").From("dahua_events").Where(where))
+	if err != nil {
+		return ListDahuaEventResult{}, err
+	}
+
+	return ListDahuaEventResult{
+		PageResult: arg.Page.Result(count),
+		Data:       res,
+	}, nil
 }

@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -10,6 +11,8 @@ import (
 )
 
 type Data map[string]any
+
+var encoder = schema.NewEncoder()
 
 var decoder = schema.NewDecoder()
 
@@ -22,6 +25,23 @@ func parseForm(c echo.Context, form any) error {
 	}
 
 	return nil
+}
+
+func parseQuery(c echo.Context, query any) error {
+	if err := decoder.Decode(query, c.Request().URL.Query()); err != nil {
+		return echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return nil
+}
+
+func writeQuery(c echo.Context, src any) url.Values {
+	query := c.Request().URL.Query()
+	err := encoder.Encode(src, query)
+	if err != nil {
+		panic(err)
+	}
+	return query
 }
 
 func formatSSE(event string, data string) []byte {

@@ -126,7 +126,12 @@ func LoggerWithConfig(config LoggerConfig) echo.MiddlewareFunc {
 			}
 			stop := time.Now()
 
-			log := config.Logger.Info()
+			var log *zerolog.Event
+			if res.Status >= 500 {
+				log = config.Logger.Error()
+			} else {
+				log = config.Logger.Info()
+			}
 
 			fn := func(log *zerolog.Event, tag string) (*zerolog.Event, error) {
 				switch tag {

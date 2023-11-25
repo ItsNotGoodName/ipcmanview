@@ -15,7 +15,7 @@ import (
 )
 
 type EventHooks interface {
-	CameraEvent(event models.DahuaEvent)
+	CameraEvent(ctx context.Context, event models.DahuaEvent)
 }
 
 func newEventWorker(camera models.DahuaCamera, hooks EventHooks) eventWorker {
@@ -63,7 +63,7 @@ func (w eventWorker) Serve(ctx context.Context) error {
 
 		event := NewDahuaEvent(w.Camera.ID, rawEvent, time.Now())
 
-		w.hooks.CameraEvent(event)
+		w.hooks.CameraEvent(ctx, event)
 	}
 }
 

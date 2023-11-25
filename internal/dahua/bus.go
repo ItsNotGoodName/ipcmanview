@@ -80,7 +80,7 @@ func (b *Bus) CameraDeleted(id int64) {
 	b.mu.Unlock()
 }
 
-func (b *Bus) CameraEvent(event models.DahuaEvent) {
+func (b *Bus) CameraEvent(ctx context.Context, event models.DahuaEvent) {
 	b.mu.Lock()
 	for _, v := range b.onCameraEvent {
 		busLogErr(v(context.TODO(), models.EventDahuaCameraEvent{
