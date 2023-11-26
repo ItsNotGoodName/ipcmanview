@@ -3,7 +3,9 @@ package webdahua
 import (
 	"context"
 	"database/sql"
+	_ "embed"
 	"errors"
+	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -11,7 +13,21 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// ---------- Convert
+var Locations []string
+
+//go:embed locations.txt
+var locationsStr string
+
+func init() {
+
+	for _, location := range strings.Split(locationsStr, "\n") {
+		if location != "" {
+			Locations = append(Locations, location)
+		}
+	}
+}
+
+// ---------- Cringe
 
 func ConvertListDahuaCameraRows(dbCameras []sqlc.ListDahuaCameraRow) []models.DahuaCamera {
 	cameras := make([]models.DahuaCamera, 0, len(dbCameras))

@@ -1,18 +1,30 @@
 package build
 
 var (
-	Version string
-	Commit  string
-	Date    string
-	RepoURL string
-)
-
-var (
-	CommitURL  string
-	LicenseURL string
+	commit  = ""
+	date    = ""
+	version = "dev"
+	repoURL = "https://github.com/ItsNotGoodName/ipcmanview"
 )
 
 func init() {
-	CommitURL = RepoURL + "/tree/" + Commit
-	LicenseURL = RepoURL + "/blob/master/LICENSE"
+	Current = Build{
+		Commit:     commit,
+		Date:       date,
+		Version:    version,
+		RepoURL:    repoURL,
+		CommitURL:  repoURL + "/tree/" + commit,
+		LicenseURL: repoURL + "/blob/master/LICENSE",
+	}
+}
+
+var Current Build
+
+type Build struct {
+	Commit     string
+	Version    string
+	Date       string
+	RepoURL    string
+	CommitURL  string
+	LicenseURL string
 }

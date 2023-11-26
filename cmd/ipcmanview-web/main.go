@@ -37,7 +37,7 @@ func main() {
 	app := lieut.NewSingleCommandApp(
 		lieut.AppInfo{
 			Name:    "ipcmanview-web",
-			Version: build.Version,
+			Version: build.Current.Version,
 			Summary: "Basic web application for accessing IP Cameras.",
 		},
 		run(flags, cfg),

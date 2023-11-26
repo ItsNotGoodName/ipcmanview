@@ -9,10 +9,11 @@
 {{ end }}
 
 {{ define "dahua-base-body" }}
-  {{ template "header.html". }}
+  {{ template "header.html" . }}
 
-  <div class="px-4">
-    <div class="text-sm breadcrumbs">
+
+  <main class="px-4 min-h-screen">
+    <div class="breadcrumbs text-sm">
       <ul>
         <li><a href="/dahua/cameras">Cameras</a></li>
         <li>Create</li>
@@ -22,7 +23,7 @@
     <div class="flex justify-center">
       <form method="post" class="flex max-w-md flex-1 flex-col gap-4">
         <div class="card-title">Create Camera</div>
-        <div class="form-control w-full">
+        <div class="form-control">
           <label for="name" class="label">
             <span class="label-text">Name</span>
           </label>
@@ -30,11 +31,11 @@
             id="name"
             name="name"
             type="text"
-            placeholder="CAM-1"
-            class="input input-bordered w-full"
+            placeholder="Name"
+            class="input input-bordered"
           />
         </div>
-        <div class="form-control w-full">
+        <div class="form-control">
           <label for="address" class="label">
             <span class="label-text">Address</span>
           </label>
@@ -42,11 +43,11 @@
             id="address"
             name="address"
             type="text"
-            placeholder="192.168.1.108"
-            class="input input-bordered w-full"
+            placeholder="Address"
+            class="input input-bordered"
           />
         </div>
-        <div class="form-control w-full">
+        <div class="form-control">
           <label for="username" class="label">
             <span class="label-text">Username</span>
           </label>
@@ -54,11 +55,11 @@
             id="username"
             name="username"
             type="text"
-            placeholder="admin"
-            class="input input-bordered w-full"
+            placeholder="Username"
+            class="input input-bordered"
           />
         </div>
-        <div class="form-control w-full">
+        <div class="form-control">
           <label for="password" class="label">
             <span class="label-text">Password</span>
           </label>
@@ -66,22 +67,28 @@
             id="password"
             name="password"
             type="password"
-            placeholder="********"
-            class="input input-bordered w-full"
+            placeholder="Password"
+            class="input input-bordered"
             required
           />
         </div>
-        <div class="form-control w-full">
+        <div class="form-control">
           <label class="label">
             <span class="label-text">Location</span>
           </label>
           <select id="location" name="location" class="select select-bordered">
-            <option selected value="Local">Local</option>
-            <option value="UTC">UTC</option>
+            {{ with first .Data.Locations }}
+              <option selected value="{{ . }}">{{ . }}</option>
+            {{ end }}
+            {{ range rest .Data.Locations }}
+              <option>{{ . }}</option>
+            {{ end }}
           </select>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
     </div>
-  </div>
+  </main>
+
+  {{ template "footer.html" . }}
 {{ end }}

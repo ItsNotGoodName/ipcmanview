@@ -3,6 +3,11 @@
 {{ define "body" }}
   {{ template "header.html" . }}
 
-  Template:
-  {{ .Template }}
+
+  <div class="min-h-screen">
+    Template:
+    {{ .Template }}
+  </div>
+
+  {{ template "footer.html" . }}
 {{ end }}

@@ -9,10 +9,10 @@
 {{ end }}
 
 {{ define "dahua-base-body" }}
-  {{ template "header.html". }}
+  {{ template "header.html" . }}
 
 
-  <div class="grid justify-center gap-4 px-4 md:grid-cols-3">
+  <main class="grid min-h-screen justify-center gap-4 px-4 md:grid-cols-3">
     {{ range .Data.Cameras }}
       <figure>
         <img
@@ -25,5 +25,7 @@
         </div>
       </figure>
     {{ end }}
-  </div>
+  </main>
+
+  {{ template "footer.html" . }}
 {{ end }}

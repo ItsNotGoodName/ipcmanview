@@ -222,7 +222,9 @@ func (s Server) DahuaCameras(c echo.Context) error {
 }
 
 func (s Server) DahuaCamerasCreate(c echo.Context) error {
-	return c.Render(http.StatusOK, "dahua-cameras-create", nil)
+	return c.Render(http.StatusOK, "dahua-cameras-create", Data{
+		"Locations": webdahua.Locations,
+	})
 }
 
 func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
@@ -285,7 +287,8 @@ func (s Server) DahuaCamerasUpdate(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "dahua-cameras-update", Data{
-		"Camera": camera,
+		"Locations": webdahua.Locations,
+		"Camera":    camera,
 	})
 }
 

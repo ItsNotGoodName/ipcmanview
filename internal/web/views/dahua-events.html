@@ -9,25 +9,61 @@
 {{ end }}
 
 {{ define "dahua-base-body" }}
-  {{ template "header.html". }}
+  {{ template "header.html" . }}
 
-  {{ template "dahua-events-header.html". }}
+  {{ template "dahua-events-header.html" . }}
 
 
-  <section class="flex flex-col gap-4 p-4" hx-target="this">
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/tokyo-night-dark.min.css"
+  />
+
+  <main class="flex min-h-screen flex-col gap-4 px-4" hx-target="this">
     {{ block "htmx" . }}
+      <script type="module">
+        import hljs from "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/es/highlight.min.js";
+        hljs.highlightAll();
+      </script>
       <form
-        class="flex flex-col items-center gap-4 sm:flex-row"
+        class="i flex flex-col items-end gap-4 sm:flex-row"
         hx-get="/dahua/events"
-        hx-trigger="change"
       >
         <div class="form-control w-full">
           <label class="label">
-            <span class="label-text">Event Code</span>
+            <span class="label-text">Cameras</span>
           </label>
 
-          <select name="Code" class="select select-bordered">
-            <option value="">All</option>
+          <select name="CameraID" class="select select-bordered" multiple>
+            <option
+              value=""
+              {{ if eq (len $.Data.Params.CameraID) 0 }}selected{{ end }}
+            >
+              All
+            </option>
+            {{ range .Data.Cameras }}
+              <option
+                {{ if has .ID $.Data.Params.CameraID }}selected{{ end }}
+                value="{{ .ID }}"
+              >
+                {{ .Name }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Event Codes</span>
+          </label>
+
+          <select name="Code" class="select select-bordered" multiple>
+            <option
+              value=""
+              {{ if eq (len $.Data.Params.Code) 0 }}selected{{ end }}
+            >
+              All
+            </option>
             {{ range .Data.EventCodes }}
               <option {{ if has . $.Data.Params.Code }}selected{{ end }}>
                 {{ . }}
@@ -38,11 +74,16 @@
 
         <div class="form-control w-full">
           <label class="label">
-            <span class="label-text">Event Action</span>
+            <span class="label-text">Event Actions</span>
           </label>
 
-          <select name="Action" class="select select-bordered">
-            <option value="">All</option>
+          <select name="Action" class="select select-bordered" multiple>
+            <option
+              value=""
+              {{ if eq (len $.Data.Params.Action) 0 }}selected{{ end }}
+            >
+              All
+            </option>
             {{ range .Data.EventAction }}
               <option {{ if has . $.Data.Params.Action }}selected{{ end }}>
                 {{ . }}
@@ -51,22 +92,11 @@
           </select>
         </div>
 
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">Camera</span>
-          </label>
-
-          <select name="CameraID" class="select select-bordered">
-            <option value="">All</option>
-            {{ range .Data.Cameras }}
-              <option
-                {{ if has .ID $.Data.Params.CameraID }}selected{{ end }}
-                value="{{ .ID }}"
-              >
-                {{ .Name }}
-              </option>
-            {{ end }}
-          </select>
+        <div class="flex gap-2 flex-col w-full sm:w-auto">
+          <a class="btn flex-1" href="{{ .URL.Path }}" hx-get="{{ .URL.Path }}">
+            Reset
+          </a>
+          <button class="btn btn-info flex-1" type="submit">Apply</button>
         </div>
       </form>
 
@@ -100,13 +130,18 @@
                   <td>
                     {{ .Action }}
                   </td>
-                  <td>
-                    {{ SLFormatDate .CreatedAt }}
+                  <td title="">
+                    <div
+                      class="tooltip"
+                      data-tip="{{ TimeHumanize .CreatedAt }}"
+                    >
+                      {{ SLFormatDate .CreatedAt }}
+                    </div>
                   </td>
                 </tr>
                 <tr>
-                  <td colspan="5" class="bg-base-200 rounded-box">
-                    <pre><code>{{ .Data | toPrettyJson }}</code></pre>
+                  <td colspan="5" class="p-0">
+                    <pre><code class="rounded-box language-json">{{ .Data | toPrettyJson }}</code></pre>
                   </td>
                 </tr>
               {{ end }}
@@ -117,31 +152,16 @@
 
       {{ if gt (len .Data.Events.Data) 0 }}
         {{ template "pagination" . }}
-      {{ else }}
-        <div role="alert" class="alert">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            class="stroke-info shrink-0 w-6 h-6"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            ></path>
-          </svg>
-          <span>No results.</span>
-        </div>
       {{ end }}
     {{ end }}
-  </section>
+  </main>
+
+  {{ template "footer.html". }}
 {{ end }}
 
 {{ define "pagination" }}
   <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-    <div class="flex gap-4 flex-1 items-center justify-between">
+    <div class="flex flex-1 items-center justify-between gap-4">
       <div class="mr-auto whitespace-nowrap">
         {{ .Data.Events.Seen }} of
         {{ .Data.Events.TotalItems }}

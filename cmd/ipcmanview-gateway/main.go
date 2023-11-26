@@ -29,7 +29,7 @@ func main() {
 	app := lieut.NewSingleCommandApp(
 		lieut.AppInfo{
 			Name:    "ipcmanview-gateway",
-			Version: build.Version,
+			Version: build.Current.Version,
 			Summary: "API gateway for accessing IP Cameras.",
 		},
 		run(),

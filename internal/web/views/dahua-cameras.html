@@ -9,10 +9,10 @@
 {{ end }}
 
 {{ define "dahua-base-body" }}
-  {{ template "header.html". }}
+  {{ template "header.html" . }}
 
 
-  <div class="flex flex-col gap-4 px-4">
+  <main class="flex min-h-screen flex-col gap-4 px-4">
     <section class="flex flex-col gap-4">
       <div class="border-b-base-content flex justify-between gap-4">
         <div class="card-title" id="cameras">
@@ -110,15 +110,17 @@
       </div>
     </section>
 
-    <button
+    <div
+      class="flex justify-center"
       hx-get="/dahua/cameras?api=true"
       hx-swap="outerHTML"
       hx-trigger="load"
-      class="btn btn-primary no-animation"
     >
-      Load API Data
-    </button>
-  </div>
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  </main>
+
+  {{ template "footer.html". }}
 {{ end }}
 
 {{ define "htmx-api-data" }}

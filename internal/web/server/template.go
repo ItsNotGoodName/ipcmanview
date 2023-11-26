@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/dustin/go-humanize"
@@ -29,6 +30,9 @@ func parseTemplate(name string) (*template.Template, error) {
 		New(name).
 		Funcs(sprig.FuncMap()).
 		Funcs(template.FuncMap{
+			"Build": func() build.Build {
+				return build.Current
+			},
 			"Title": func(sub string) string {
 				if sub != "" {
 					return "IPCManView - " + sub
@@ -49,6 +53,13 @@ func parseTemplate(name string) (*template.Template, error) {
 				query := newQuery(params)
 				for i := 0; i < length; i += 2 {
 					query.Set(vals[i].(string), fmt.Sprint(vals[i+1]))
+				}
+				return template.URL(query.Encode())
+			},
+			"QueryDelete": func(params any, vals ...string) template.URL {
+				query := newQuery(params)
+				for _, v := range vals {
+					query.Del(v)
 				}
 				return template.URL(query.Encode())
 			},

@@ -9,8 +9,13 @@
 {{ end }}
 
 {{ define "dahua-base-body" }}
-  {{ template "header.html". }}
+  {{ template "header.html" . }}
 
-  Template:
-  {{ .Template }}
+
+  <main class="min-h-screen">
+    Template:
+    {{ .Template }}
+  </main>
+
+  {{ template "footer.html" . }}
 {{ end }}

@@ -1,61 +1,74 @@
-{{template "base.html" .}}
+{{ template "base.html" . }}
 
-{{define "body"}}
-{{template "dahua-base.html" .}}
-{{end}}
+{{ define "body" }}
+  {{ template "dahua-base.html" . }}
+{{ end }}
 
-{{define "header-navbar-start"}}
-{{template "dahua-base-drawer-button" .}}
-{{end}}
+{{ define "header-navbar-start" }}
+  {{ template "dahua-base-drawer-button" . }}
+{{ end }}
 
-{{define "dahua-base-body"}}
-{{template "header.html". }}
+{{ define "dahua-base-body" }}
+  {{ template "header.html" . }}
 
-{{template "dahua-events-header.html". }}
+  {{ template "dahua-events-header.html" . }}
 
-<div class="p-4">
-  <div class="flex flex-col gap-4">
-    <div class="overflow-x-auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Camera ID</th>
-            <th>Code</th>
-            <th>Action</th>
-            <th>Created At</th>
-          </tr>
-        </thead>
-        <tbody hx-ext="sse" sse-connect="/dahua/events/stream">
-          <tr class="hidden" sse-swap="message" hx-swap="afterend"></tr>
-        </tbody>
-      </table>
+
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/tokyo-night-dark.min.css"
+  />
+
+  <main class="px-4 min-h-screen">
+    <div class="flex flex-col gap-4">
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Camera ID</th>
+              <th>Code</th>
+              <th>Action</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody hx-ext="sse" sse-connect="/dahua/events/stream">
+            <tr class="hidden" sse-swap="message" hx-swap="afterend"></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-</div>
-{{end}}
+  </main>
 
-{{define "event-row"}}
-<tr>
-  <th>
-    {{.Data.Event.ID}}
-  </th>
-  <td>
-    {{.Data.Event.CameraID}}
-  </td>
-  <td>
-    {{.Data.Event.Code}}
-  </td>
-  <td>
-    {{.Data.Event.Action}}
-  </td>
-  <td>
-    {{SLFormatDate .Data.Event.CreatedAt}}
-  </td>
-</tr>
-<tr>
-  <td colspan="5" class="bg-base-200 rounded-box">
-    <pre><code>{{.Data.Event.Data | toPrettyJson}}</code></pre>
-  </td>
-</tr>
-{{end}}
+  {{ template "footer.html" . }}
+{{ end }}
+
+{{ define "event-row" }}
+  <tr>
+    <th>
+      {{ .Data.Event.ID }}
+    </th>
+    <td>
+      {{ .Data.Event.CameraID }}
+    </td>
+    <td>
+      {{ .Data.Event.Code }}
+    </td>
+    <td>
+      {{ .Data.Event.Action }}
+    </td>
+    <td>
+      {{ SLFormatDate .Data.Event.CreatedAt }}
+    </td>
+  </tr>
+  <tr>
+    <td colspan="5" class="bg-base-200 rounded-box">
+      <script type="module">
+    console.log(this)
+        import hljs from "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/es/highlight.min.js";
+        hljs.highlightElement(document.getElementById("event-{{.Data.Event.ID}}"));
+      </script>
+      <pre><code id="event-{{ .Data.Event.ID }}" class="rounded-box language-json">{{ .Data.Event | toPrettyJson }}</code></pre>
+    </td>
+  </tr>
+{{ end }}

@@ -9,11 +9,11 @@
 {{ end }}
 
 {{ define "dahua-base-body" }}
-  {{ template "header.html". }}
+  {{ template "header.html" . }}
 
 
-  <div class="px-4">
-    <div class="text-sm breadcrumbs">
+  <main class="px-4 min-h-screen">
+    <div class="breadcrumbs text-sm">
       <ul>
         <li><a href="/dahua/cameras">Cameras</a></li>
         <li>
@@ -36,7 +36,7 @@
             id="name"
             name="name"
             type="text"
-            placeholder="CAM-1"
+            placeholder="Name"
             class="input input-bordered w-full"
             value="{{ .Data.Camera.Name }}"
           />
@@ -49,7 +49,7 @@
             id="address"
             name="address"
             type="text"
-            placeholder="192.168.1.108"
+            placeholder="Username"
             class="input input-bordered w-full"
             value="{{ .Data.Camera.Address }}"
           />
@@ -75,7 +75,7 @@
             id="password"
             name="password"
             type="password"
-            placeholder="********"
+            placeholder="Password"
             class="input input-bordered w-full"
           />
         </div>
@@ -84,12 +84,19 @@
             <span class="label-text">Location</span>
           </label>
           <select id="location" name="location" class="select select-bordered">
-            <option selected value="Local">Local</option>
-            <option value="UTC">UTC</option>
+            {{ range .Data.Locations }}
+              <option
+                {{ if eq . $.Data.Camera.Location.String }}selected{{ end }}
+              >
+                {{ . }}
+              </option>
+            {{ end }}
           </select>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
     </div>
-  </div>
+  </main>
+
+  {{ template "footer.html" . }}
 {{ end }}

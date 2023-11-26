@@ -33,7 +33,7 @@ tasks:
         sh: git rev-parse HEAD
       BUILD_REPO_URL: "https://{{.PACKAGE_NAME}}"
 
-      LDFLAGS: -s -w -X {{.BUILD_PACKAGE_NAME}}.Version={{.BUILD_VERSION}} -X {{.BUILD_PACKAGE_NAME}}.Commit={{.BUILD_COMMIT}} -X {{.BUILD_PACKAGE_NAME}}.Date={{.BUILD_DATE}} -X {{.BUILD_PACKAGE_NAME}}.RepoURL={{.BUILD_REPO_URL}}
+      LDFLAGS: -s -w -X {{.BUILD_PACKAGE_NAME}}.version={{.BUILD_VERSION}} -X {{.BUILD_PACKAGE_NAME}}.commit={{.BUILD_COMMIT}} -X {{.BUILD_PACKAGE_NAME}}.date={{.BUILD_DATE}} -X {{.BUILD_PACKAGE_NAME}}.repoURL={{.BUILD_REPO_URL}}
       MAIN_PACKAGE: "{{.PACKAGE_NAME}}/cmd/{{.CMD_NAME}}"
 
   compile-artifacts:
