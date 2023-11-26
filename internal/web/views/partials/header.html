@@ -1,28 +1,46 @@
 <div class="navbar bg-base-100">
   <div class="navbar-start">
-    {{block "header-navbar-start" .}}{{end}}
+    {{ block "header-navbar-start" . }}{{ end }}
     <a href="/" class="btn btn-ghost text-xl">IPCManView</a>
   </div>
   <div class="navbar-end">
     <div class="hidden md:flex">
       <ul class="menu menu-sm menu-horizontal gap-4">
         <li>
-          <a href="/dahua" {{if hasPrefix "/dahua" .URL.Path}} class="active" {{end}}>Dahua</a>
+          <a
+            href="/dahua"
+            {{ if hasPrefix "/dahua" .URL.Path }}class="active"{{ end }}
+            >Dahua</a
+          >
         </li>
       </ul>
     </div>
     <div class="dropdown dropdown-end">
       <label tabindex="0" class="btn btn-ghost md:hidden">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-          class="inline-block w-5 h-5 stroke-current">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z">
-          </path>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          class="inline-block w-5 h-5 stroke-current"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
+          ></path>
         </svg>
       </label>
-      <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+      <ul
+        tabindex="0"
+        class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+      >
         <li>
-          <a href="/dahua" {{if hasPrefix "/dahua" .URL.Path}} class="active" {{end}}>Dahua</a>
+          <a
+            href="/dahua"
+            {{ if hasPrefix "/dahua" .URL.Path }}class="active"{{ end }}
+            >Dahua</a
+          >
         </li>
       </ul>
     </div>

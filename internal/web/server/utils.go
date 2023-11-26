@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/gorilla/schema"
 	"github.com/labstack/echo/v4"
 )
@@ -35,8 +36,16 @@ func parseQuery(c echo.Context, query any) error {
 	return nil
 }
 
-func writeQuery(c echo.Context, src any) url.Values {
-	query := c.Request().URL.Query()
+func validateStruct(src any) error {
+	err := validate.Validate.Struct(src)
+	if err != nil {
+		return echo.ErrBadRequest.WithInternal(err)
+	}
+	return err
+}
+
+func newQuery(src any) url.Values {
+	query := make(url.Values)
 	err := encoder.Encode(src, query)
 	if err != nil {
 		panic(err)

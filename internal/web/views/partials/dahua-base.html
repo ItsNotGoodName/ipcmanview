@@ -1,45 +1,79 @@
-{{define "dahua-base-drawer-button"}}
-<div class="flex-none">
-  <label for="my-drawer-2" class="drawer-button btn btn-square btn-ghost lg:hidden">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-5 h-5 stroke-current">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-    </svg>
-  </label>
-</div>
-{{end}}
+{{ define "dahua-base-drawer-button" }}
+  <div class="flex-none">
+    <label
+      for="my-drawer-2"
+      class="drawer-button btn btn-square btn-ghost lg:hidden"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        class="inline-block w-5 h-5 stroke-current"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 6h16M4 12h16M4 18h16"
+        ></path>
+      </svg>
+    </label>
+  </div>
+{{ end }}
+
 
 <div class="drawer lg:drawer-open">
   <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
   <div class="drawer-content overflow-x-auto">
     <div class="min-h-screen">
-      {{block "dahua-base-body" .}}Template: {{.Template}}{{end}}
+      {{ block "dahua-base-body" . }}Template: {{ .Template }}{{ end }}
     </div>
   </div>
   <div class="drawer-side z-20">
     <label for="my-drawer-2" class="drawer-overlay"></label>
     <ul class="menu bg-base-200 text-base-content h-full w-60 p-4">
       <li>
-        <a hx-boost="true" href="/dahua" {{if eq "/dahua" .URL.Path}} class="active" {{end}}>
+        <a
+          hx-boost="true"
+          href="/dahua"
+          {{ if eq "/dahua" .URL.Path }}class="active"{{ end }}
+        >
           Home
         </a>
       </li>
       <li>
-        <a hx-boost="true" href="/dahua/cameras" {{if hasPrefix "/dahua/cameras" .URL.Path}} class="active" {{end}}>
+        <a
+          hx-boost="true"
+          href="/dahua/cameras"
+          {{ if hasPrefix "/dahua/cameras" .URL.Path }}class="active"{{ end }}
+        >
           Cameras
         </a>
       </li>
       <li>
-        <a hx-boost="true" href="/dahua/snapshots" {{if hasPrefix "/dahua/snapshots" .URL.Path}} class="active" {{end}}>
+        <a
+          hx-boost="true"
+          href="/dahua/snapshots"
+          {{ if hasPrefix "/dahua/snapshots" .URL.Path }}class="active"{{ end }}
+        >
           Snapshots
         </a>
       </li>
       <li>
-        <a hx-boost="true" href="/dahua/events" {{if hasPrefix "/dahua/events" .URL.Path}} class="active" {{end}}>
+        <a
+          hx-boost="true"
+          href="/dahua/events"
+          {{ if hasPrefix "/dahua/events" .URL.Path }}class="active"{{ end }}
+        >
           Events
         </a>
       </li>
       <li>
-        <a hx-boost="true" href="/dahua/files" {{if hasPrefix "/dahua/files" .URL.Path}} class="active" {{end}}>
+        <a
+          hx-boost="true"
+          href="/dahua/files"
+          {{ if hasPrefix "/dahua/files" .URL.Path }}class="active"{{ end }}
+        >
           Files
         </a>
       </li>

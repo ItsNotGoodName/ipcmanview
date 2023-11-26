@@ -1,72 +1,172 @@
-{{template "base.html" .}}
+{{ template "base.html" . }}
 
-{{define "body"}}
-{{template "dahua-base.html" .}}
-{{end}}
+{{ define "body" }}
+  {{ template "dahua-base.html" . }}
+{{ end }}
 
-{{define "header-navbar-start"}}
-{{template "dahua-base-drawer-button" .}}
-{{end}}
+{{ define "header-navbar-start" }}
+  {{ template "dahua-base-drawer-button" . }}
+{{ end }}
 
-{{define "dahua-base-body"}}
-{{template "header.html". }}
+{{ define "dahua-base-body" }}
+  {{ template "header.html". }}
 
-{{template "dahua-events-header.html". }}
+  {{ template "dahua-events-header.html". }}
 
-<section class="flex flex-col gap-4 p-4" hx-target="this">
-  {{block "htmx" .}}
-  <form class="flex flex-col items-center gap-4 sm:flex-row" hx-get="/dahua/events" hx-trigger="change">
-    <div class="form-control w-full">
-      <label class="label">
-        <span class="label-text">Event Code</span>
-      </label>
 
-      <select name="Code" class="select select-bordered">
-        <option value="">All</option>
-        {{range .Data.EventCodes}}
-        <option {{if has . $.Data.Params.Code }} selected {{end}}>{{.}}</option>
-        {{end}}
-      </select>
-    </div>
+  <section class="flex flex-col gap-4 p-4" hx-target="this">
+    {{ block "htmx" . }}
+      <form
+        class="flex flex-col items-center gap-4 sm:flex-row"
+        hx-get="/dahua/events"
+        hx-trigger="change"
+      >
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Event Code</span>
+          </label>
 
-    <div class="form-control w-full">
-      <label class="label">
-        <span class="label-text">Event Action</span>
-      </label>
+          <select name="Code" class="select select-bordered">
+            <option value="">All</option>
+            {{ range .Data.EventCodes }}
+              <option {{ if has . $.Data.Params.Code }}selected{{ end }}>
+                {{ . }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
 
-      <select name="Action" class="select select-bordered">
-        <option value="">All</option>
-        {{range .Data.EventAction}}
-        <option {{if has . $.Data.Params.Action }} selected {{end}}>{{.}}</option>
-        {{end}}
-      </select>
-    </div>
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Event Action</span>
+          </label>
 
-    <div class="form-control w-full">
-      <label class="label">
-        <span class="label-text">Camera</span>
-      </label>
+          <select name="Action" class="select select-bordered">
+            <option value="">All</option>
+            {{ range .Data.EventAction }}
+              <option {{ if has . $.Data.Params.Action }}selected{{ end }}>
+                {{ . }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
 
-      <select name="CameraID" class="select select-bordered">
-        <option value="">All</option>
-        {{range .Data.Cameras}}
-        <option {{if has .ID $.Data.Params.CameraID }} selected {{end}} value="{{.ID}}">{{.Name}}</option>
-        {{end}}
-      </select>
-    </div>
-  </form>
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Camera</span>
+          </label>
 
+          <select name="CameraID" class="select select-bordered">
+            <option value="">All</option>
+            {{ range .Data.Cameras }}
+              <option
+                {{ if has .ID $.Data.Params.CameraID }}selected{{ end }}
+                value="{{ .ID }}"
+              >
+                {{ .Name }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
+      </form>
+
+      {{ template "pagination" . }}
+
+
+      <div class="flex flex-col gap-4">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Camera ID</th>
+                <th>Code</th>
+                <th>Action</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{ range .Data.Events.Data }}
+                <tr>
+                  <th>
+                    {{ .ID }}
+                  </th>
+                  <td>
+                    {{ .CameraID }}
+                  </td>
+                  <td>
+                    {{ .Code }}
+                  </td>
+                  <td>
+                    {{ .Action }}
+                  </td>
+                  <td>
+                    {{ SLFormatDate .CreatedAt }}
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="5" class="bg-base-200 rounded-box">
+                    <pre><code>{{ .Data | toPrettyJson }}</code></pre>
+                  </td>
+                </tr>
+              {{ end }}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {{ if gt (len .Data.Events.Data) 0 }}
+        {{ template "pagination" . }}
+      {{ else }}
+        <div role="alert" class="alert">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            class="stroke-info shrink-0 w-6 h-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+          <span>No results.</span>
+        </div>
+      {{ end }}
+    {{ end }}
+  </section>
+{{ end }}
+
+{{ define "pagination" }}
   <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
     <div class="flex gap-4 flex-1 items-center justify-between">
-      <div class="mr-auto whitespace-nowrap">{{ .Data.Events.Seen }} of {{ .Data.Events.TotalItems }}</div>
+      <div class="mr-auto whitespace-nowrap">
+        {{ .Data.Events.Seen }} of
+        {{ .Data.Events.TotalItems }}
+      </div>
 
       <form hx-get="/dahua/events" hx-trigger="change">
+        {{ range .Data.Params.Code }}
+          <input type="hidden" name="Code" value="{{ . }}" />
+        {{ end }}
+        {{ range .Data.Params.Action }}
+          <input type="hidden" name="Action" value="{{ . }}" />
+        {{ end }}
+        {{ range .Data.Params.CameraID }}
+          <input type="hidden" name="CameraID" value="{{ . }}" />
+        {{ end }}
+
+
         <div class="form-control w-full">
           <select name="PerPage" class="select select-bordered">
             <option disabled>Per Page</option>
-            {{range list 10 25 100}}
-            <option {{if eq . $.Data.Params.PerPage }} selected {{end}}>{{.}}</option>
-            {{end}}
+            {{ range list 10 25 100 }}
+              <option {{ if eq . $.Data.Params.PerPage }}selected{{ end }}>
+                {{ . }}
+              </option>
+            {{ end }}
           </select>
         </div>
       </form>
@@ -74,58 +174,28 @@
 
     <div class="join flex justify-end">
       <div class="join">
-        <a class="join-item btn" {{if .Data.Events.HasPrevious}}
-          hx-get="{{.URL.Path}}?{{Query .URL.Query `Page` .Data.Events.Previous}}"
-          href="{{.URL.Path}}?{{Query .URL.Query `Page` .Data.Events.Previous}}" {{else}} disabled {{end}}>«</a>
-        <button class="join-item btn">Page {{.Data.Events.Page}}</button>
-        <a class="join-item btn" {{if .Data.Events.HasNext}}
-          hx-get="{{.URL.Path}}?{{Query .URL.Query `Page` .Data.Events.Next}}"
-          href="{{.URL.Path}}?{{Query .URL.Query `Page` .Data.Events.Next}}" {{else}} disabled {{end}}>»</a>
+        <a
+          class="join-item btn"
+          {{ if .Data.Events.HasPrevious }}
+            {{ $url:= list .URL.Path (Query .Data.Params `Page` .Data.Events.Previous) | join `?` }}
+            hx-get="{{ $url }}" href="{{ $url }}"
+          {{ else }}
+            disabled
+          {{ end }}
+          >«</a
+        >
+        <button class="join-item btn">Page {{ .Data.Events.Page }}</button>
+        <a
+          class="join-item btn"
+          {{ if .Data.Events.HasNext }}
+            {{ $url:= list .URL.Path (Query .Data.Params `Page` .Data.Events.Next) | join `?` }}
+            hx-get="{{ $url }}" href="{{ $url }}"
+          {{ else }}
+            disabled
+          {{ end }}
+          >»</a
+        >
       </div>
     </div>
   </div>
-
-  <div class="flex flex-col gap-4">
-    <div class="overflow-x-auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Camera ID</th>
-            <th>Code</th>
-            <th>Action</th>
-            <th>Created At</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{range .Data.Events.Data}}
-          <tr>
-            <th>
-              {{.ID}}
-            </th>
-            <td>
-              {{.CameraID}}
-            </td>
-            <td>
-              {{.Code}}
-            </td>
-            <td>
-              {{.Action}}
-            </td>
-            <td>
-              {{SLFormatDate .CreatedAt}}
-            </td>
-          </tr>
-          <tr>
-            <td colspan="5" class="bg-base-200 rounded-box">
-              <pre><code>{{.Data | toPrettyJson}}</code></pre>
-            </td>
-          </tr>
-          {{end}}
-        </tbody>
-      </table>
-    </div>
-  </div>
-  {{end}}
-</section>
-{{end}}
+{{ end }}

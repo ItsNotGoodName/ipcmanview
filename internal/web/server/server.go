@@ -74,14 +74,16 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		CameraID []int64
 		Code     []string
 		Action   []string
-		Page     int64
+		Page     int64 `validate:"gt=0"`
 		PerPage  int64
 	}{
 		Page:    1,
 		PerPage: 10,
 	}
-	err := parseQuery(c, &params)
-	if err != nil {
+	if err := parseQuery(c, &params); err != nil {
+		return err
+	}
+	if err := validateStruct(params); err != nil {
 		return err
 	}
 
@@ -113,8 +115,6 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
-	query := writeQuery(c, params)
-
 	data := Data{
 		"Params":      params,
 		"Cameras":     cameras,
@@ -124,7 +124,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 	}
 
 	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
-		htmx.SetReplaceURL(c.Response(), "/dahua/events?"+query.Encode())
+		htmx.SetReplaceURL(c.Response(), "/dahua/events?"+newQuery(params).Encode())
 		return c.Render(http.StatusOK, "dahua-events", TemplateBlock{"htmx", data})
 	}
 

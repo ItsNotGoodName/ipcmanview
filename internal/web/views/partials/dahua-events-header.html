@@ -1,14 +1,30 @@
 <div class="flex justify-between gap-4 px-4">
-  <div class="card-title">
-    Events
-  </div>
+  <div class="card-title">Events</div>
   <div role="tablist" class="tabs tabs-boxed">
-    <a hx-boost="true" role="tab" href="/dahua/events" {{if eq "/dahua/events" .URL.Path}}class="tab tab-active"
-      {{else}}class="tab" {{end}}>
+    <a
+      hx-boost="true"
+      role="tab"
+      href="/dahua/events"
+      {{ if eq "/dahua/events" .URL.Path }}
+        class="tab tab-active"
+      {{ else }}
+        class="tab"
+      {{ end }}
+    >
       Past
     </a>
-    <a hx-boost="true" role="tab" href="/dahua/events/live" {{if eq "/dahua/events/live"
-      .URL.Path}}class="tab tab-active" {{else}}class="tab" {{end}}>
+    <a
+      hx-boost="true"
+      role="tab"
+      href="/dahua/events/live"
+      {{ if eq "/dahua/events/live"
+        .URL.Path
+      }}
+        class="tab tab-active"
+      {{ else }}
+        class="tab"
+      {{ end }}
+    >
       Live
     </a>
   </div>

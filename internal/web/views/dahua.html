@@ -1,15 +1,16 @@
-{{template "base.html" .}}
+{{ template "base.html" . }}
 
-{{define "body"}}
-{{template "dahua-base.html" .}}
-{{end}}
+{{ define "body" }}
+  {{ template "dahua-base.html" . }}
+{{ end }}
 
-{{define "header-navbar-start"}}
-{{template "dahua-base-drawer-button" .}}
-{{end}}
+{{ define "header-navbar-start" }}
+  {{ template "dahua-base-drawer-button" . }}
+{{ end }}
 
-{{define "dahua-base-body"}}
-{{template "header.html". }}
+{{ define "dahua-base-body" }}
+  {{ template "header.html". }}
 
-Template: {{.Template}}
-{{end}}
+  Template:
+  {{ .Template }}
+{{ end }}

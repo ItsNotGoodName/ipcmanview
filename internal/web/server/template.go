@@ -44,12 +44,13 @@ func parseTemplate(name string) (*template.Template, error) {
 			"SLFormatDate": func(date time.Time) template.HTML {
 				return template.HTML(fmt.Sprintf(`<sl-format-date month="numeric" day="numeric" year="numeric" hour="numeric" minute="numeric" hour-format="12" second="numeric" date="%s"></sl-format-date>`, date.Format(time.RFC3339)))
 			},
-			"Query": func(queries url.Values, vals ...any) template.URL {
+			"Query": func(params any, vals ...any) template.URL {
 				length := len(vals)
+				query := newQuery(params)
 				for i := 0; i < length; i += 2 {
-					queries.Set(vals[i].(string), fmt.Sprint(vals[i+1]))
+					query.Set(vals[i].(string), fmt.Sprint(vals[i+1]))
 				}
-				return template.URL(queries.Encode())
+				return template.URL(query.Encode())
 			},
 		}).
 		ParseFS(web.ViewsFS(), "views/partials/*.html", "views/"+name)

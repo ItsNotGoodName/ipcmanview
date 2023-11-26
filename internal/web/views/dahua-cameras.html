@@ -1,74 +1,135 @@
-{{template "base.html" .}}
+{{ template "base.html" . }}
 
-{{define "body"}}
-{{template "dahua-base.html" .}}
-{{end}}
+{{ define "body" }}
+  {{ template "dahua-base.html" . }}
+{{ end }}
 
-{{define "header-navbar-start"}}
-{{template "dahua-base-drawer-button" .}}
-{{end}}
+{{ define "header-navbar-start" }}
+  {{ template "dahua-base-drawer-button" . }}
+{{ end }}
 
-{{define "dahua-base-body"}}
-{{template "header.html". }}
+{{ define "dahua-base-body" }}
+  {{ template "header.html". }}
 
-<div class="flex flex-col gap-4 px-4">
-  <section class="flex flex-col gap-4">
-    <div class="flex justify-between gap-4 border-b-base-content">
-      <div class="card-title" id="cameras">
-        <a href="#cameras">
-          Cameras
-        </a>
+
+  <div class="flex flex-col gap-4 px-4">
+    <section class="flex flex-col gap-4">
+      <div class="border-b-base-content flex justify-between gap-4">
+        <div class="card-title" id="cameras">
+          <a href="#cameras"> Cameras </a>
+        </div>
+        <div class="flex gap-4">
+          <a href="/dahua/cameras/create" class="btn btn-sm btn-primary"
+            >Create</a
+          >
+        </div>
       </div>
-      <div class="flex gap-4">
-        <a href="/dahua/cameras/create" class="btn btn-sm btn-primary">Create</a>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Address</th>
+              <th>Username</th>
+              <th>Location</th>
+              <th>Created At</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range $index, $val := .Data.Cameras }}
+              <tr>
+                <th id="camera-{{ $val.ID }}">
+                  <a href="#camera-{{ $val.ID }}">
+                    {{ $val.ID }}
+                  </a>
+                </th>
+                <td>{{ $val.Name }}</td>
+                <td>{{ $val.Address }}</td>
+                <td>{{ $val.Username }}</td>
+                <td>{{ $val.Location }}</td>
+                <td>{{ SLFormatDate $val.CreatedAt }}</td>
+                <td class="join">
+                  <a
+                    class="join-item btn-xs btn"
+                    href="/dahua/cameras/{{ $val.ID }}/update"
+                    >Update</a
+                  >
+                  <button
+                    class="join-item btn btn-xs btn-error"
+                    hx-delete="/dahua/cameras/{{ $val.ID }}"
+                    hx-target="closest tr"
+                    hx-confirm="Are you sure you wish to delete camera '{{ $val.Name }}'?"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            {{ end }}
+          </tbody>
+        </table>
       </div>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Username</th>
-            <th>Location</th>
-            <th>Created At</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {{range $index, $val := .Data.Cameras}}
-          <tr>
-            <th id="camera-{{$val.ID}}">
-              <a href="#camera-{{$val.ID}}">
-                {{$val.ID}}
-              </a>
-            </th>
-            <td>{{$val.Name}}</td>
-            <td>{{$val.Address}}</td>
-            <td>{{$val.Username}}</td>
-            <td>{{$val.Location}}</td>
-            <td>{{SLFormatDate $val.CreatedAt}}</td>
-            <td class="join">
-              <a class="join-item btn-xs btn" href="/dahua/cameras/{{$val.ID}}/update">Update</a>
-              <button class="join-item btn btn-xs btn-error" hx-delete="/dahua/cameras/{{$val.ID}}"
-                hx-target="closest tr" hx-confirm="Are you sure you wish to delete camera '{{$val.Name}}'?">
-                Delete
-              </button>
-            </td>
-          </tr>
-          {{end}}
-        </tbody>
-      </table>
-    </div>
-  </section>
+    </section>
+
+    <section class="flex flex-col gap-4">
+      <div class="border-b-base-content flex justify-between gap-4">
+        <div class="card-title" id="file-cursors">
+          <a href="#file-cursors"> File Cursors </a>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Camera ID</th>
+              <th>Files</th>
+              <th>Quick Cursor</th>
+              <th>Full Cursor</th>
+              <th>Full Epoch</th>
+              <th>Full Complete</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range $index, $val := .Data.FileCursors }}
+              <tr>
+                <th>
+                  <a href="#camera-{{ $val.CameraID }}">
+                    {{ $val.CameraID }}
+                  </a>
+                </th>
+                <td>{{ $val.Files }}</td>
+                <td>{{ SLFormatDate $val.QuickCursor }}</td>
+                <td>{{ SLFormatDate $val.FullCursor }}</td>
+                <td>{{ SLFormatDate $val.FullEpoch }}</td>
+                <td>{{ $val.FullComplete }}</td>
+              </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <button
+      hx-get="/dahua/cameras?api=true"
+      hx-swap="outerHTML"
+      hx-trigger="load"
+      class="btn btn-primary no-animation"
+    >
+      Load API Data
+    </button>
+  </div>
+{{ end }}
+
+{{ define "htmx-api-data" }}
+  {{ template "api-data" .Data }}
+{{ end }}
+{{ define "api-data" }}
 
   <section class="flex flex-col gap-4">
-    <div class="flex justify-between gap-4 border-b-base-content">
-      <div class="card-title" id="file-cursors">
-        <a href="#file-cursors">
-          File Cursors
-        </a>
+    <div class="border-b-base-content flex justify-between gap-4">
+      <div class="card-title" id="status">
+        <a href="#status"> Status </a>
       </div>
     </div>
     <div class="overflow-x-auto">
@@ -76,294 +137,233 @@
         <thead>
           <tr>
             <th>Camera ID</th>
-            <th>Files</th>
-            <th>Quick Cursor</th>
-            <th>Full Cursor</th>
-            <th>Full Epoch</th>
-            <th>Full Complete</th>
+            <th>RPC State</th>
+            <th>RPC Last Login</th>
+            <th>RPC Error</th>
           </tr>
         </thead>
         <tbody>
-          {{range $index, $val := .Data.FileCursors}}
-          <tr>
-            <th>
-              <a href="#camera-{{$val.CameraID}}">
-                {{$val.CameraID}}
-              </a>
-            </th>
-            <td>{{$val.Files}}</td>
-            <td>{{SLFormatDate $val.QuickCursor}}</td>
-            <td>{{SLFormatDate $val.FullCursor}}</td>
-            <td>{{SLFormatDate $val.FullEpoch}}</td>
-            <td>{{$val.FullComplete}}</td>
-          </tr>
-          {{end}}
+          {{ range $index, $val := .Status }}
+            <tr>
+              <th>
+                <a href="#camera-{{ $val.CameraID }}">
+                  {{ $val.CameraID }}
+                </a>
+              </th>
+              <td>{{ $val.RPCState }}</td>
+              <td>{{ TimeHumanize $val.RPCLastLogin }}</td>
+              <td>{{ $val.RPCError }}</td>
+            </tr>
+          {{ end }}
         </tbody>
       </table>
     </div>
   </section>
 
-  <button hx-get="/dahua/cameras?api=true" hx-swap="outerHTML" hx-trigger="load" class="btn btn-primary no-animation">
-    Load API Data
-  </button>
-</div>
-{{end}}
-
-{{define "htmx-api-data"}}
-{{template "api-data" .Data}}
-{{end}}
-{{define "api-data"}}
-
-<section class="flex flex-col gap-4">
-  <div class="flex justify-between gap-4 border-b-base-content">
-    <div class="card-title" id="status">
-      <a href="#status">
-        Status
-      </a>
+  <section class="flex flex-col gap-4">
+    <div class="border-b-base-content flex justify-between gap-4">
+      <div class="card-title" id="details">
+        <a href="#details"> Details </a>
+      </div>
     </div>
-  </div>
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Camera ID</th>
-          <th>RPC State</th>
-          <th>RPC Last Login</th>
-          <th>RPC Error</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{range $index, $val := .Status}}
-        <tr>
-          <th>
-            <a href="#camera-{{$val.CameraID}}">
-              {{$val.CameraID}}
-            </a>
-          </th>
-          <td>{{$val.RPCState}}</td>
-          <td>{{TimeHumanize $val.RPCLastLogin}}</td>
-          <td>{{$val.RPCError}}</td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section class="flex flex-col gap-4">
-  <div class="flex justify-between gap-4 border-b-base-content">
-    <div class="card-title" id="details">
-      <a href="#details">
-        Details
-      </a>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Camera ID</th>
+            <th>SN</th>
+            <th>Device Class</th>
+            <th>Device Type</th>
+            <th>Hardware Version</th>
+            <th>Market Area</th>
+            <th>Process Info</th>
+            <th>Vendor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range $index, $val := .Details }}
+            <tr>
+              <th>
+                <a href="#camera-{{ $val.CameraID }}">
+                  {{ $val.CameraID }}
+                </a>
+              </th>
+              <td>
+                <label class="swap">
+                  <input type="checkbox" />
+                  <div class="swap-on">{{ $val.SN }}</div>
+                  <div class="swap-off">***************</div>
+                </label>
+              </td>
+              <td>{{ $val.DeviceClass }}</td>
+              <td>{{ $val.DeviceType }}</td>
+              <td>{{ $val.HardwareVersion }}</td>
+              <td>{{ $val.MarketArea }}</td>
+              <td>{{ $val.ProcessInfo }}</td>
+              <td>{{ $val.Vendor }}</td>
+            </tr>
+          {{ end }}
+        </tbody>
+      </table>
     </div>
-  </div>
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Camera ID</th>
-          <th>SN</th>
-          <th>Device Class</th>
-          <th>Device Type</th>
-          <th>Hardware Version</th>
-          <th>Market Area</th>
-          <th>Process Info</th>
-          <th>Vendor</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{range $index, $val := .Details}}
-        <tr>
-          <th>
-            <a href="#camera-{{$val.CameraID}}">
-              {{$val.CameraID}}
-            </a>
-          </th>
-          <td>
-            <label class="swap">
-              <input type="checkbox" />
-              <div class="swap-on">{{$val.SN}}</div>
-              <div class="swap-off">***************</div>
-            </label>
-          </td>
-          <td>{{$val.DeviceClass}}</td>
-          <td>{{$val.DeviceType}}</td>
-          <td>{{$val.HardwareVersion}}</td>
-          <td>{{$val.MarketArea}}</td>
-          <td>{{$val.ProcessInfo}}</td>
-          <td>{{$val.Vendor}}</td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
-  </div>
-</section>
+  </section>
 
-<section class="flex flex-col gap-4">
-  <div class="flex justify-between gap-4 border-b-base-content">
-    <div class="card-title" id="software-versions">
-      <a href="#software-versions">
-        Software Versions
-      </a>
+  <section class="flex flex-col gap-4">
+    <div class="border-b-base-content flex justify-between gap-4">
+      <div class="card-title" id="software-versions">
+        <a href="#software-versions"> Software Versions </a>
+      </div>
     </div>
-  </div>
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Camera ID</th>
-          <th>Build</th>
-          <th>Build Date</th>
-          <th>Security Baseline Version</th>
-          <th>Version</th>
-          <th>Web Version</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{range $index, $val := .SoftwareVersions}}
-        <tr>
-          <th>
-            <a href="#camera-{{$val.CameraID}}">
-              {{$val.CameraID}}
-            </a>
-          </th>
-          <td>{{$val.Build}}</td>
-          <td>{{$val.BuildDate}}</td>
-          <td>{{$val.SecurityBaseLineVersion}}</td>
-          <td>{{$val.Version}}</td>
-          <td>{{$val.WebVersion}}</td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
-  </div>
-</section>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Camera ID</th>
+            <th>Build</th>
+            <th>Build Date</th>
+            <th>Security Baseline Version</th>
+            <th>Version</th>
+            <th>Web Version</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range $index, $val := .SoftwareVersions }}
+            <tr>
+              <th>
+                <a href="#camera-{{ $val.CameraID }}">
+                  {{ $val.CameraID }}
+                </a>
+              </th>
+              <td>{{ $val.Build }}</td>
+              <td>{{ $val.BuildDate }}</td>
+              <td>{{ $val.SecurityBaseLineVersion }}</td>
+              <td>{{ $val.Version }}</td>
+              <td>{{ $val.WebVersion }}</td>
+            </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-<section class="flex flex-col gap-4">
-  <div class="flex justify-between gap-4 border-b-base-content">
-    <div class="card-title" id="storage">
-      <a href="#storage">
-        Storage
-      </a>
+  <section class="flex flex-col gap-4">
+    <div class="border-b-base-content flex justify-between gap-4">
+      <div class="card-title" id="storage">
+        <a href="#storage"> Storage </a>
+      </div>
     </div>
-  </div>
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Camera ID</th>
-          <th>Name</th>
-          <th>State</th>
-          <th>Path</th>
-          <th>Type</th>
-          <th>Used</th>
-          <th>Total</th>
-          <th>Is Error</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{range $index, $val := .Storage}}
-        <tr>
-          <th>
-            <a href="#camera-{{$val.CameraID}}">
-              {{$val.CameraID}}
-            </a>
-          </th>
-          <td>{{$val.Name}}</td>
-          <td>{{$val.State}}</td>
-          <td>{{$val.Path}}</td>
-          <td>{{$val.Type}}</td>
-          <td>{{$val.UsedBytes | BytesHumanize}}</td>
-          <td>{{$val.TotalBytes | BytesHumanize}}</td>
-          <td>{{$val.IsError}}</td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
-  </div>
-</section>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Camera ID</th>
+            <th>Name</th>
+            <th>State</th>
+            <th>Path</th>
+            <th>Type</th>
+            <th>Used</th>
+            <th>Total</th>
+            <th>Is Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range $index, $val := .Storage }}
+            <tr>
+              <th>
+                <a href="#camera-{{ $val.CameraID }}">
+                  {{ $val.CameraID }}
+                </a>
+              </th>
+              <td>{{ $val.Name }}</td>
+              <td>{{ $val.State }}</td>
+              <td>{{ $val.Path }}</td>
+              <td>{{ $val.Type }}</td>
+              <td>{{ $val.UsedBytes | BytesHumanize }}</td>
+              <td>{{ $val.TotalBytes | BytesHumanize }}</td>
+              <td>{{ $val.IsError }}</td>
+            </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-<section class="flex flex-col gap-4">
-  <div class="flex justify-between gap-4 border-b-base-content">
-    <div class="card-title" id="licenses">
-      <a href="#licenses">
-        Licenses
-      </a>
+  <section class="flex flex-col gap-4">
+    <div class="border-b-base-content flex justify-between gap-4">
+      <div class="card-title" id="licenses">
+        <a href="#licenses"> Licenses </a>
+      </div>
     </div>
-  </div>
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Camera ID</th>
-          <th>Abroad Info</th>
-          <th>All Type</th>
-          <th>Digit Channel</th>
-          <th>Effective Days</th>
-          <th>Effective Time</th>
-          <th>License ID</th>
-          <th>Product Type</th>
-          <th>Status</th>
-          <th>Username</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{range $index, $val := .Licenses}}
-        <tr>
-          <th>
-            <a href="#camera-{{$val.CameraID}}">
-              {{$val.CameraID}}
-            </a>
-          </th>
-          <td>{{$val.AbroadInfo}}</td>
-          <td>{{$val.AllType}}</td>
-          <td>{{$val.DigitChannel}}</td>
-          <td>{{$val.EffectiveDays}}</td>
-          <td>{{SLFormatDate $val.EffectiveTime}}</td>
-          <td>{{$val.LicenseID}}</td>
-          <td>{{$val.ProductType}}</td>
-          <td>{{$val.Status}}</td>
-          <td>{{$val.Username}}</td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
-  </div>
-</section>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Camera ID</th>
+            <th>Abroad Info</th>
+            <th>All Type</th>
+            <th>Digit Channel</th>
+            <th>Effective Days</th>
+            <th>Effective Time</th>
+            <th>License ID</th>
+            <th>Product Type</th>
+            <th>Status</th>
+            <th>Username</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range $index, $val := .Licenses }}
+            <tr>
+              <th>
+                <a href="#camera-{{ $val.CameraID }}">
+                  {{ $val.CameraID }}
+                </a>
+              </th>
+              <td>{{ $val.AbroadInfo }}</td>
+              <td>{{ $val.AllType }}</td>
+              <td>{{ $val.DigitChannel }}</td>
+              <td>{{ $val.EffectiveDays }}</td>
+              <td>{{ SLFormatDate $val.EffectiveTime }}</td>
+              <td>{{ $val.LicenseID }}</td>
+              <td>{{ $val.ProductType }}</td>
+              <td>{{ $val.Status }}</td>
+              <td>{{ $val.Username }}</td>
+            </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-<section class="flex flex-col gap-4">
-  <div class="flex justify-between gap-4 border-b-base-content">
-    <div class="card-title" id="coaxial-status">
-      <a href="#coaxial-status">
-        Coaxial Status
-      </a>
+  <section class="flex flex-col gap-4">
+    <div class="border-b-base-content flex justify-between gap-4">
+      <div class="card-title" id="coaxial-status">
+        <a href="#coaxial-status"> Coaxial Status </a>
+      </div>
     </div>
-  </div>
-  <div class="overflow-x-auto">
-    <table class="table">
-      <thead>
-        <tr>
-        <tr>
-          <th>Camera ID</th>
-          <th>White Light</th>
-          <th>Speaker</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{range $index, $val := .CoaxialStatus}}
-        <tr>
-          <th>
-            <a href="#camera-{{$val.CameraID}}">
-              {{$val.CameraID}}
-            </a>
-          </th>
-          <td>{{$val.WhiteLight}}</td>
-          <td>{{$val.Speaker}}</td>
-        </tr>
-        {{end}}
-      </tbody>
-    </table>
-  </div>
-</section>
-{{end}}
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr></tr>
+          <tr>
+            <th>Camera ID</th>
+            <th>White Light</th>
+            <th>Speaker</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range $index, $val := .CoaxialStatus }}
+            <tr>
+              <th>
+                <a href="#camera-{{ $val.CameraID }}">
+                  {{ $val.CameraID }}
+                </a>
+              </th>
+              <td>{{ $val.WhiteLight }}</td>
+              <td>{{ $val.Speaker }}</td>
+            </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{{ end }}

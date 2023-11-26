@@ -1,16 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ block "title" . }}{{ Title "" }}{{ end }}</title>
+    {{ .Head }}
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{block "title" .}}{{Title ""}}{{end}}</title>
-  {{.Head}}
-</head>
-
-<body class="h-screen">
-  {{block "body" .}}Template: {{.Template}}{{end}}
-</body>
-
+  <body class="h-screen">
+    {{ block "body" . }}Template: {{ .Template }}{{ end }}
+  </body>
 </html>

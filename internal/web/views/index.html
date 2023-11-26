@@ -1,7 +1,8 @@
-{{template "base.html" .}}
+{{ template "base.html" . }}
 
-{{define "body"}}
-{{template "header.html" .}}
+{{ define "body" }}
+  {{ template "header.html" . }}
 
-Template: {{.Template}}
-{{end}}
+  Template:
+  {{ .Template }}
+{{ end }}
