@@ -228,6 +228,17 @@ func (q *Queries) GetDahuaCamera(ctx context.Context, id int64) (GetDahuaCameraR
 	return i, err
 }
 
+const getDahuaEventData = `-- name: GetDahuaEventData :one
+SELECT data FROM dahua_events WHERE id = ?
+`
+
+func (q *Queries) GetDahuaEventData(ctx context.Context, id int64) (json.RawMessage, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaEventData, id)
+	var data json.RawMessage
+	err := row.Scan(&data)
+	return data, err
+}
+
 const getDahuaFileCursor = `-- name: GetDahuaFileCursor :one
 SELECT camera_id, quick_cursor, full_cursor, full_epoch, full_complete FROM dahua_file_cursors 
 WHERE camera_id = ?

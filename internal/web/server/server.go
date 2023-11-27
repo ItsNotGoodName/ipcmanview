@@ -36,6 +36,7 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 	e.GET("/dahua/events", w.DahuaEvents)
 	e.GET("/dahua/events/live", w.DahuaEventsLive)
 	e.GET("/dahua/events/stream", w.DahuaEventStream)
+	e.GET("/dahua/events/:id/data", w.DahuaEventsIDData)
 	e.GET("/dahua/files", w.DahuaFiles)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
 
@@ -76,6 +77,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		Action   []string
 		Page     int64 `validate:"gt=0"`
 		PerPage  int64
+		Data     bool
 	}{
 		Page:    1,
 		PerPage: 10,
@@ -129,6 +131,23 @@ func (s Server) DahuaEvents(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "dahua-events", data)
+}
+
+func (s Server) DahuaEventsIDData(c echo.Context) error {
+	id, err := pathID(c)
+	if err != nil {
+		return err
+	}
+
+	data, err := s.db.GetDahuaEventData(c.Request().Context(), id)
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "dahua-events", TemplateBlock{
+		"hx-event-data",
+		data,
+	})
 }
 
 func (s Server) DahuaFiles(c echo.Context) error {

@@ -75,3 +75,31 @@ func useDahuaCamera(c echo.Context, db sqlc.DB) (sqlc.GetDahuaCameraRow, error) 
 
 	return camera, nil
 }
+
+func pathID(c echo.Context) (int64, error) {
+	str := c.Param("id")
+	if str == "" {
+		return 0, echo.ErrBadRequest
+	}
+
+	number, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return 0, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return number, nil
+}
+
+func queryInt(c echo.Context, key string) (int64, error) {
+	str := c.QueryParam(key)
+	if str == "" {
+		return 0, echo.ErrBadRequest
+	}
+
+	number, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return 0, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return number, nil
+}

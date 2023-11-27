@@ -156,3 +156,6 @@ SELECT DISTINCT code FROM dahua_events;
 
 -- name: ListDahuaEventActions :many
 SELECT DISTINCT action FROM dahua_events;
+
+-- name: GetDahuaEventData :one
+SELECT data FROM dahua_events WHERE id = ?;

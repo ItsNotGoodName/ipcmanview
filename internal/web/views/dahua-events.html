@@ -18,17 +18,19 @@
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/tokyo-night-dark.min.css"
   />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
-  <main class="flex min-h-screen flex-col gap-4 px-4" hx-target="this">
+  <main class="flex min-h-screen flex-col px-4" hx-target="this">
     {{ block "htmx" . }}
-      <script type="module">
-        import hljs from "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/es/highlight.min.js";
+      <script>
         hljs.highlightAll();
       </script>
       <form
         class="i flex flex-col items-end gap-4 sm:flex-row"
         hx-get="/dahua/events"
       >
+        <input type="hidden" name="Data" value="{{ .Data.Params.Data }}" />
+
         <div class="form-control w-full">
           <label class="label">
             <span class="label-text">Cameras</span>
@@ -92,7 +94,7 @@
           </select>
         </div>
 
-        <div class="flex gap-2 flex-col w-full sm:w-auto">
+        <div class="flex w-full flex-col gap-2 sm:w-auto">
           <a class="btn flex-1" href="{{ .URL.Path }}" hx-get="{{ .URL.Path }}">
             Reset
           </a>
@@ -100,59 +102,76 @@
         </div>
       </form>
 
-      {{ template "pagination" . }}
-
+      <div class="divider"></div>
 
       <div class="flex flex-col gap-4">
-        <div class="overflow-x-auto">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Camera ID</th>
-                <th>Code</th>
-                <th>Action</th>
-                <th>Created At</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{ range .Data.Events.Data }}
-                <tr>
-                  <th>
-                    {{ .ID }}
-                  </th>
-                  <td>
-                    {{ .CameraID }}
-                  </td>
-                  <td>
-                    {{ .Code }}
-                  </td>
-                  <td>
-                    {{ .Action }}
-                  </td>
-                  <td title="">
-                    <div
-                      class="tooltip"
-                      data-tip="{{ TimeHumanize .CreatedAt }}"
-                    >
-                      {{ SLFormatDate .CreatedAt }}
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td colspan="5" class="p-0">
-                    <pre><code class="rounded-box language-json">{{ .Data | toPrettyJson }}</code></pre>
-                  </td>
-                </tr>
-              {{ end }}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {{ if gt (len .Data.Events.Data) 0 }}
         {{ template "pagination" . }}
-      {{ end }}
+
+
+        <div class="flex flex-col gap-4">
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Camera ID</th>
+                  <th>Code</th>
+                  <th>Action</th>
+                  <th>Created At</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{ range .Data.Events.Data }}
+                  <tr>
+                    <th>
+                      {{ .ID }}
+                    </th>
+                    <td>
+                      {{ .CameraID }}
+                    </td>
+                    <td>
+                      {{ .Code }}
+                    </td>
+                    <td>
+                      {{ .Action }}
+                    </td>
+                    <td title="">
+                      <div
+                        class="tooltip"
+                        data-tip="{{ TimeHumanize .CreatedAt }}"
+                      >
+                        {{ SLFormatDate .CreatedAt }}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="5" class="p-0">
+                      {{ if $.Data.Params.Data }}
+                        {{ block "hx-event-data" . }}
+                          <pre><code class="rounded-box language-json"><img src onerror="window.hljs.highlightElement(this.parentNode)" class="hidden" alt="">{{ .Data | toPrettyJson }}</code></pre>
+                        {{ end }}
+                      {{ else }}
+                        <button
+                          class="btn btn-sm w-full"
+                          hx-get="{{ $.URL.Path }}/{{ .ID }}/data"
+                          hx-swap="outerHTML"
+                          hx-target="this"
+                        >
+                          Load Data
+                        </button>
+                      {{ end }}
+                    </td>
+                  </tr>
+                {{ end }}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {{ if gt (len .Data.Events.Data) 0 }}
+          {{ template "pagination" . }}
+        {{ end }}
+      </div>
     {{ end }}
   </main>
 
@@ -161,8 +180,10 @@
 
 {{ define "pagination" }}
   <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-    <div class="flex flex-1 items-center justify-between gap-4">
-      <div class="mr-auto whitespace-nowrap">
+    <div
+      class="flex flex-1 items-center justify-between gap-4 sm:justify-start"
+    >
+      <div class="whitespace-nowrap">
         {{ .Data.Events.Seen }} of
         {{ .Data.Events.TotalItems }}
       </div>
@@ -177,7 +198,7 @@
         {{ range .Data.Params.CameraID }}
           <input type="hidden" name="CameraID" value="{{ . }}" />
         {{ end }}
-
+        <input type="hidden" name="Data" value="{{ .Data.Params.Data }}" />
 
         <div class="form-control w-full">
           <select name="PerPage" class="select select-bordered">
@@ -192,7 +213,24 @@
       </form>
     </div>
 
-    <div class="join flex justify-end">
+    <div class="join flex justify-end gap-4">
+      {{ if .Data.Params.Data }}
+        <a
+          class="btn"
+          {{ $url := list .URL.Path (Query .Data.Params `Data` false) | join `?` }}
+          href="{{ $url }}"
+          hx-get="{{ $url }}"
+          >Hide Data</a
+        >
+      {{ else }}
+        <a
+          class="btn"
+          {{ $url := list .URL.Path (Query .Data.Params `Data` true) | join `?` }}
+          href="{{ $url }}"
+          hx-get="{{ $url }}"
+          >Load Data</a
+        >
+      {{ end }}
       <div class="join">
         <a
           class="join-item btn"
