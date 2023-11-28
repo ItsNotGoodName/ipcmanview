@@ -8,9 +8,15 @@ dependencies:
   '@shoelace-style/shoelace':
     specifier: ^2.12.0
     version: 2.12.0(@types/react@18.2.38)
+  highlight.js:
+    specifier: ^11.9.0
+    version: 11.9.0
   htmx.org:
     specifier: ^1.9.8
     version: 1.9.8
+  lit:
+    specifier: ^3.0.2
+    version: 3.1.0
 
 devDependencies:
   autoprefixer:
@@ -740,6 +746,11 @@ packages:
     dependencies:
       function-bind: 1.1.2
     dev: true
+
+  /highlight.js@11.9.0:
+    resolution: {integrity: sha512-fJ7cW7fQGCYAkgv4CPfwFHrfd/cLS4Hau96JuJ+ZTOWhjnhoeN1ub1tFmALm/+lW5z4WCAuAV9bm05AP0mS6Gw==}
+    engines: {node: '>=12.0.0'}
+    dev: false
 
   /htmx.org@1.9.8:
     resolution: {integrity: sha512-eH825QM6yJ1AeHTJgUxy3xnXnP/uXD56x52/VYnQ9CMw+o9H04ar/GY5PHuiZeelsqLK4wkviVdCel7u+3h4Fw==}

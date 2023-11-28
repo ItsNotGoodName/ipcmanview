@@ -14,17 +14,8 @@
   {{ template "dahua-events-header.html" . }}
 
 
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/tokyo-night-dark.min.css"
-  />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-
   <main class="flex min-h-screen flex-col px-4" hx-target="this">
     {{ block "htmx" . }}
-      <script>
-        hljs.highlightAll();
-      </script>
       <form
         class="i flex flex-col items-end gap-4 sm:flex-row"
         hx-get="/dahua/events"
@@ -148,7 +139,7 @@
                     <td colspan="5" class="p-0">
                       {{ if $.Data.Params.Data }}
                         {{ block "hx-event-data" . }}
-                          <pre><code class="rounded-box language-json"><img src onerror="window.hljs.highlightElement(this.parentNode)" class="hidden" alt="">{{ .Data | toPrettyJson }}</code></pre>
+                          <x-json json="{{ .Data | toPrettyJson }}" />
                         {{ end }}
                       {{ else }}
                         <button

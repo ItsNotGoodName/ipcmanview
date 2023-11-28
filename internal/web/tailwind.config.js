@@ -2,7 +2,7 @@
 export default {
   darkMode: 'media',
   content: [
-    "./views/**/*.html",
+    "./views/**/*.{html,js,ts}",
   ],
   theme: {
     extend: {},
