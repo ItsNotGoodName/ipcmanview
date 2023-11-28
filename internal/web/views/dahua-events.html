@@ -85,7 +85,7 @@
           </select>
         </div>
 
-        <div class="form-control gap-4 w-full">
+        <div class="form-control w-full gap-4">
           <div class="form-control w-full flex-col">
             <label class="label">
               <span class="label-text">Datetime Range</span>
@@ -140,7 +140,9 @@
                       {{ .ID }}
                     </th>
                     <td>
-                      {{ .CameraID }}
+                      <a class="link" href="/dahua/cameras/{{ .CameraID }}">
+                        {{ .CameraID }}
+                      </a>
                     </td>
                     <td>
                       {{ .Code }}
@@ -148,7 +150,7 @@
                     <td>
                       {{ .Action }}
                     </td>
-                    <td title="">
+                    <td>
                       <div
                         class="tooltip"
                         data-tip="{{ TimeHumanize .CreatedAt }}"
@@ -165,12 +167,12 @@
                         {{ end }}
                       {{ else }}
                         <button
-                          class="btn btn-sm w-full"
+                          class="btn btn-sm no-animation w-full"
                           hx-get="{{ $.URL.Path }}/{{ .ID }}/data"
                           hx-swap="outerHTML"
                           hx-target="this"
                         >
-                          Load Data
+                          Show Data
                         </button>
                       {{ end }}
                     </td>
@@ -193,15 +195,13 @@
 
 {{ define "pagination" }}
   <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-    <div
-      class="flex flex-1 items-center justify-between gap-4 sm:justify-start"
-    >
+    <div class="flex flex-1 items-center gap-4 sm:justify-start">
       <div class="whitespace-nowrap">
         {{ .Data.Events.Seen }} of
         {{ .Data.Events.TotalItems }}
       </div>
 
-      <form hx-get="/dahua/events" hx-trigger="change">
+      <form hx-get="/dahua/events" hx-trigger="change" class="flex gap-4">
         {{ range .Data.Params.Code }}
           <input type="hidden" name="Code" value="{{ . }}" />
         {{ end }}
@@ -212,17 +212,12 @@
           <input type="hidden" name="CameraID" value="{{ . }}" />
         {{ end }}
         <input type="hidden" name="Data" value="{{ .Data.Params.Data }}" />
+        <input type="hidden" name="Start" value="{{ .Data.Params.Start }}" />
+        <input type="hidden" name="End" value="{{ .Data.Params.End }}" />
         <input
-          class="input input-bordered input-sm"
           type="hidden"
-          name="Start"
-          value="{{ .Data.Params.Start }}"
-        />
-        <input
-          class="input input-bordered input-sm"
-          type="hidden"
-          name="End"
-          value="{{ .Data.Params.End }}"
+          name="Ascending"
+          value="{{ .Data.Params.Ascending }}"
         />
 
         <div class="form-control w-full">
@@ -236,9 +231,18 @@
           </select>
         </div>
       </form>
+
+      {{ $url := list .URL.Path (Query .Data.Params `Ascending` (not .Data.Params.Ascending)) | join `?` }}
+      <a class="btn" href="{{ $url }}" hx-get="{{ $url }}">
+        {{ if .Data.Params.Ascending }}
+          ASC
+        {{ else }}
+          DESC
+        {{ end }}
+      </a>
     </div>
 
-    <div class="join flex justify-end gap-4">
+    <div class="flex justify-end gap-4">
       {{ if .Data.Params.Data }}
         <a
           class="btn"
@@ -253,7 +257,7 @@
           {{ $url := list .URL.Path (Query .Data.Params `Data` true) | join `?` }}
           href="{{ $url }}"
           hx-get="{{ $url }}"
-          >Load Data</a
+          >Show Data</a
         >
       {{ end }}
       <div class="join">

@@ -103,11 +103,12 @@ func (db DB) UpsertDahuaFiles(ctx context.Context, args CreateDahuaFileParams) (
 
 type ListDahuaEventParams struct {
 	pagination.Page
-	Code     []string
-	Action   []string
-	CameraID []int64
-	Start    types.Time
-	End      types.Time
+	Code      []string
+	Action    []string
+	CameraID  []int64
+	Start     types.Time
+	End       types.Time
+	Ascending bool
 }
 
 type ListDahuaEventResult struct {
@@ -139,12 +140,17 @@ func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (List
 	}
 	where = append(where, and)
 
+	order := "created_at DESC"
+	if arg.Ascending {
+		order = "created_at ASC"
+	}
+
 	var res []DahuaEvent
 	err := ssq.Query(ctx, db, &res, sq.
 		Select("*").
 		From("dahua_events").
 		Where(where).
-		OrderBy("created_at DESC").
+		OrderBy(order).
 		Limit(uint64(arg.Page.Limit())).
 		Offset(uint64(arg.Page.Offset())))
 	if err != nil {

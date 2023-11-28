@@ -73,14 +73,15 @@ func (s Server) DahuaEvents(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	params := struct {
-		CameraID []int64
-		Code     []string
-		Action   []string
-		Page     int64 `validate:"gt=0"`
-		PerPage  int64
-		Data     bool
-		Start    string
-		End      string
+		CameraID  []int64
+		Code      []string
+		Action    []string
+		Page      int64 `validate:"gt=0"`
+		PerPage   int64
+		Data      bool
+		Start     string
+		End       string
+		Ascending bool
 	}{
 		Page:    1,
 		PerPage: 10,
@@ -117,8 +118,9 @@ func (s Server) DahuaEvents(c echo.Context) error {
 			Page:    int(params.Page),
 			PerPage: int(params.PerPage),
 		},
-		Start: types.NewTime(start),
-		End:   types.NewTime(end),
+		Start:     types.NewTime(start),
+		End:       types.NewTime(end),
+		Ascending: params.Ascending,
 	})
 	if err != nil {
 		return err

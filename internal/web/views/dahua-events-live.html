@@ -39,26 +39,30 @@
 {{ end }}
 
 {{ define "event-row" }}
-  <tr>
-    <th>
-      {{ .Data.Event.ID }}
-    </th>
-    <td>
-      {{ .Data.Event.CameraID }}
-    </td>
-    <td>
-      {{ .Data.Event.Code }}
-    </td>
-    <td>
-      {{ .Data.Event.Action }}
-    </td>
-    <td>
-      {{ SLFormatDate .Data.Event.CreatedAt }}
-    </td>
-  </tr>
-  <tr>
-    <td colspan="5" class="p-0">
-      <x-json json="{{ .Data | toPrettyJson }}" />
-    </td>
-  </tr>
+  {{ with .Data.Event }}
+    <tr>
+      <th>
+        {{ .ID }}
+      </th>
+      <td>
+        <a class="link" href="/dahua/cameras/{{ .CameraID }}">
+          {{ .CameraID }}
+        </a>
+      </td>
+      <td>
+        {{ .Code }}
+      </td>
+      <td>
+        {{ .Action }}
+      </td>
+      <td>
+        {{ SLFormatDate .CreatedAt }}
+      </td>
+    </tr>
+    <tr>
+      <td colspan="5" class="p-0">
+        <x-json json="{{ .Data | toPrettyJson }}" />
+      </td>
+    </tr>
+  {{ end }}
 {{ end }}

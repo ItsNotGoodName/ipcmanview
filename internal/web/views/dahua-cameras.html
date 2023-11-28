@@ -324,7 +324,14 @@
               <td>{{ $val.AllType }}</td>
               <td>{{ $val.DigitChannel }}</td>
               <td>{{ $val.EffectiveDays }}</td>
-              <td>{{ SLFormatDate $val.EffectiveTime }}</td>
+              <td>
+                <div
+                  class="tooltip"
+                  data-tip="{{ TimeHumanize $val.EffectiveTime }}"
+                >
+                  {{ SLFormatDate $val.EffectiveTime }}
+                </div>
+              </td>
               <td>{{ $val.LicenseID }}</td>
               <td>{{ $val.ProductType }}</td>
               <td>{{ $val.Status }}</td>
