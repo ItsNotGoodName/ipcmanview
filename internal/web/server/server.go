@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -78,6 +79,8 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		Page     int64 `validate:"gt=0"`
 		PerPage  int64
 		Data     bool
+		Start    string
+		End      string
 	}{
 		Page:    1,
 		PerPage: 10,
@@ -89,6 +92,23 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
+	var start, end time.Time
+	if params.Start != "" {
+		var err error
+		start, err = time.ParseInLocation("2006-01-02T15:04", params.Start, time.Local)
+		if err != nil {
+			return echo.ErrBadRequest.WithInternal(err)
+		}
+	}
+
+	if params.End != "" {
+		var err error
+		end, err = time.ParseInLocation("2006-01-02T15:04", params.End, time.Local)
+		if err != nil {
+			return echo.ErrBadRequest.WithInternal(err)
+		}
+	}
+
 	events, err := s.db.ListDahuaEvent(ctx, sqlc.ListDahuaEventParams{
 		CameraID: params.CameraID,
 		Code:     params.Code,
@@ -97,6 +117,8 @@ func (s Server) DahuaEvents(c echo.Context) error {
 			Page:    int(params.Page),
 			PerPage: int(params.PerPage),
 		},
+		Start: types.NewTime(start),
+		End:   types.NewTime(end),
 	})
 	if err != nil {
 		return err

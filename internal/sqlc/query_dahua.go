@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
@@ -107,7 +106,8 @@ type ListDahuaEventParams struct {
 	Code     []string
 	Action   []string
 	CameraID []int64
-	Range    *models.TimeRange
+	Start    types.Time
+	End      types.Time
 }
 
 type ListDahuaEventResult struct {
@@ -130,12 +130,14 @@ func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (List
 	}
 	where = append(where, eq)
 
-	if arg.Range != nil {
-		where = append(where, sq.And{
-			sq.GtOrEq{"created_at": types.NewTime(arg.Range.Start)},
-			sq.Lt{"created_at": types.NewTime(arg.Range.End)},
-		})
+	and := sq.And{}
+	if !arg.Start.IsZero() {
+		and = append(and, sq.GtOrEq{"created_at": arg.Start})
 	}
+	if !arg.End.IsZero() {
+		and = append(and, sq.Lt{"created_at": arg.End})
+	}
+	where = append(where, and)
 
 	var res []DahuaEvent
 	err := ssq.Query(ctx, db, &res, sq.

@@ -82,6 +82,18 @@ func parseTemplate(name string) (*template.Template, error) {
 				}
 				return template.URL(query.Encode())
 			},
+			"FormFormatDate": func(date any) string {
+				var t time.Time
+				switch date := date.(type) {
+				case types.Time:
+					t = date.Time
+				case time.Time:
+					t = date
+				default:
+					panic("invalid date type")
+				}
+				return t.Format("2018-06-12T19:30")
+			},
 		}).
 		ParseFS(web.ViewsFS(), "views/partials/*.html", "views/"+name)
 }

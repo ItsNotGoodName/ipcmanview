@@ -8,7 +8,7 @@ import styles from "highlight.js/styles/tokyo-night-dark.css?inline"
 hljs.registerLanguage('json', json);
 
 @customElement('x-json')
-export class JsonBlock extends LitElement {
+export class XJson extends LitElement {
   @property()
   json = '{}';
 

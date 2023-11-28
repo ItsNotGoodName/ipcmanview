@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
@@ -26,6 +27,14 @@ func parseForm(c echo.Context, form any) error {
 	}
 
 	return nil
+}
+
+func parseLocation(location string) (*time.Location, error) {
+	loc, err := time.LoadLocation(location)
+	if err != nil {
+		return nil, echo.ErrBadRequest.WithInternal(err)
+	}
+	return loc, nil
 }
 
 func parseQuery(c echo.Context, query any) error {
