@@ -5,15 +5,16 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-func NewLocation(location string) (models.Location, error) {
+func NewLocation(location string) (types.Location, error) {
 	loc, err := time.LoadLocation(location)
 	if err != nil {
-		return models.Location{}, err
+		return types.Location{}, err
 	}
 
-	return models.Location{
+	return types.Location{
 		Location: loc,
 	}, nil
 }

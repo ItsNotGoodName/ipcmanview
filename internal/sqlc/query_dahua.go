@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
 	sq "github.com/Masterminds/squirrel"
@@ -115,6 +116,8 @@ type ListDahuaEventResult struct {
 }
 
 func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (ListDahuaEventResult, error) {
+	where := sq.And{}
+
 	eq := sq.Eq{}
 	if len(arg.Code) != 0 {
 		eq["code"] = arg.Code
@@ -125,20 +128,20 @@ func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (List
 	if len(arg.CameraID) != 0 {
 		eq["camera_id"] = arg.CameraID
 	}
+	where = append(where, eq)
 
-	and := sq.And{
-		eq,
+	if arg.Range != nil {
+		where = append(where, sq.And{
+			sq.GtOrEq{"created_at": types.NewTime(arg.Range.Start)},
+			sq.Lt{"created_at": types.NewTime(arg.Range.End)},
+		})
 	}
-	// and = append(and, sq.And{
-	// 	sq.Gt{"created_at": time.Now().Add(-5 * time.Hour)},
-	// 	sq.Lt{"created_at": time.Now()},
-	// })
 
 	var res []DahuaEvent
 	err := ssq.Query(ctx, db, &res, sq.
 		Select("*").
 		From("dahua_events").
-		Where(and).
+		Where(where).
 		OrderBy("created_at DESC").
 		Limit(uint64(arg.Page.Limit())).
 		Offset(uint64(arg.Page.Offset())))
@@ -147,7 +150,10 @@ func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (List
 	}
 
 	var count int
-	err = ssq.QueryOne(ctx, db, &count, sq.Select("COUNT(*)").From("dahua_events").Where(eq))
+	err = ssq.QueryOne(ctx, db, &count, sq.
+		Select("COUNT(*)").
+		From("dahua_events").
+		Where(where))
 	if err != nil {
 		return ListDahuaEventResult{}, err
 	}

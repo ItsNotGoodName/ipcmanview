@@ -3,6 +3,8 @@ package models
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
 type EventDahuaCameraCreated struct {
@@ -38,7 +40,7 @@ type DahuaCamera struct {
 	Address   string `validate:"address"`
 	Username  string
 	Password  string
-	Location  Location
+	Location  types.Location
 	Seed      int
 	CreatedAt time.Time
 }

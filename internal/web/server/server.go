@@ -10,6 +10,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
@@ -282,8 +283,8 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Password:  camera.Password,
 		Address:   camera.Address,
 		Location:  camera.Location,
-		CreatedAt: camera.CreatedAt,
-		UpdatedAt: camera.CreatedAt,
+		CreatedAt: types.NewTime(camera.CreatedAt),
+		UpdatedAt: types.NewTime(camera.CreatedAt),
 	}, webdahua.DefaultFileCursor())
 	if err != nil {
 		return err

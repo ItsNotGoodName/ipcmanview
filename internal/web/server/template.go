@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/dustin/go-humanize"
@@ -39,14 +40,32 @@ func parseTemplate(name string) (*template.Template, error) {
 				}
 				return "IPCManView"
 			},
-			"TimeHumanize": func(date time.Time) string {
-				return humanize.Time(date)
+			"TimeHumanize": func(date any) string {
+				var t time.Time
+				switch date := date.(type) {
+				case types.Time:
+					t = date.Time
+				case time.Time:
+					t = date
+				default:
+					panic("invalid date type")
+				}
+				return humanize.Time(t)
 			},
 			"BytesHumanize": func(bytes int64) string {
 				return humanize.Bytes(uint64(bytes))
 			},
-			"SLFormatDate": func(date time.Time) template.HTML {
-				return template.HTML(fmt.Sprintf(`<sl-format-date month="numeric" day="numeric" year="numeric" hour="numeric" minute="numeric" hour-format="12" second="numeric" date="%s"></sl-format-date>`, date.Format(time.RFC3339)))
+			"SLFormatDate": func(date any) template.HTML {
+				var t time.Time
+				switch date := date.(type) {
+				case types.Time:
+					t = date.Time
+				case time.Time:
+					t = date
+				default:
+					panic("invalid date type")
+				}
+				return template.HTML(fmt.Sprintf(`<sl-format-date month="numeric" day="numeric" year="numeric" hour="numeric" minute="numeric" hour-format="12" second="numeric" date="%s"></sl-format-date>`, t.Format(time.RFC3339)))
 			},
 			"Query": func(params any, vals ...any) template.URL {
 				length := len(vals)

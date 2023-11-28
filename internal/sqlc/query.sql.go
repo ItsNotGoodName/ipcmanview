@@ -9,9 +9,8 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
 const createDahuaEvent = `-- name: CreateDahuaEvent :one
@@ -37,7 +36,7 @@ type CreateDahuaEventParams struct {
 	Action        string
 	Index         int64
 	Data          json.RawMessage
-	CreatedAt     time.Time
+	CreatedAt     types.Time
 }
 
 func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventParams) (int64, error) {
@@ -85,23 +84,23 @@ INSERT INTO dahua_files (
 type CreateDahuaFileParams struct {
 	CameraID    int64
 	Channel     int64
-	StartTime   time.Time
-	EndTime     time.Time
+	StartTime   types.Time
+	EndTime     types.Time
 	Length      int64
 	Type        string
 	FilePath    string
 	Duration    int64
 	Disk        int64
 	VideoStream string
-	Flags       models.StringSlice
-	Events      models.StringSlice
+	Flags       types.StringSlice
+	Events      types.StringSlice
 	Cluster     int64
 	Partition   int64
 	PicIndex    int64
 	Repeat      int64
 	WorkDir     string
 	WorkDirSn   int64
-	UpdatedAt   time.Time
+	UpdatedAt   types.Time
 }
 
 func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams) (int64, error) {
@@ -141,7 +140,7 @@ INSERT INTO dahua_file_scan_locks (
 
 type CreateDahuaFileScanLockParams struct {
 	CameraID  int64
-	CreatedAt time.Time
+	CreatedAt types.Time
 }
 
 func (q *Queries) CreateDahuaFileScanLock(ctx context.Context, arg CreateDahuaFileScanLockParams) (DahuaFileScanLock, error) {
@@ -170,10 +169,10 @@ WHERE
 `
 
 type DeleteDahuaFileParams struct {
-	UpdatedAt time.Time
+	UpdatedAt types.Time
 	CameraID  int64
-	End       time.Time
-	Start     time.Time
+	End       types.Time
+	Start     types.Time
 }
 
 func (q *Queries) DeleteDahuaFile(ctx context.Context, arg DeleteDahuaFileParams) error {
@@ -207,8 +206,8 @@ type GetDahuaCameraRow struct {
 	Address   string
 	Username  string
 	Password  string
-	Location  models.Location
-	CreatedAt time.Time
+	Location  types.Location
+	CreatedAt types.Time
 	Seed      int64
 }
 
@@ -280,8 +279,8 @@ type ListDahuaCameraRow struct {
 	Address   string
 	Username  string
 	Password  string
-	Location  models.Location
-	CreatedAt time.Time
+	Location  types.Location
+	CreatedAt types.Time
 	Seed      int64
 }
 
@@ -382,9 +381,9 @@ GROUP BY c.camera_id
 
 type ListDahuaFileCursorRow struct {
 	CameraID     int64
-	QuickCursor  time.Time
-	FullCursor   time.Time
-	FullEpoch    time.Time
+	QuickCursor  types.Time
+	FullCursor   types.Time
+	FullEpoch    types.Time
 	FullComplete bool
 	Files        int64
 }
@@ -431,7 +430,7 @@ type UpdateDahuaCameraParams struct {
 	Address  string
 	Username string
 	Password string
-	Location models.Location
+	Location types.Location
 	ID       int64
 }
 
@@ -475,22 +474,22 @@ RETURNING id
 
 type UpdateDahuaFileParams struct {
 	Channel     int64
-	StartTime   time.Time
-	EndTime     time.Time
+	StartTime   types.Time
+	EndTime     types.Time
 	Length      int64
 	Type        string
 	Duration    int64
 	Disk        int64
 	VideoStream string
-	Flags       models.StringSlice
-	Events      models.StringSlice
+	Flags       types.StringSlice
+	Events      types.StringSlice
 	Cluster     int64
 	Partition   int64
 	PicIndex    int64
 	Repeat      int64
 	WorkDir     string
 	WorkDirSn   int64
-	UpdatedAt   time.Time
+	UpdatedAt   types.Time
 	CameraID    int64
 	FilePath    string
 }
@@ -533,9 +532,9 @@ RETURNING camera_id, quick_cursor, full_cursor, full_epoch, full_complete
 `
 
 type UpdateDahuaFileCursorParams struct {
-	QuickCursor time.Time
-	FullCursor  time.Time
-	FullEpoch   time.Time
+	QuickCursor types.Time
+	FullCursor  types.Time
+	FullEpoch   types.Time
 	CameraID    int64
 }
 
@@ -567,7 +566,7 @@ RETURNING site_name, default_location
 `
 
 type UpdateSettingsParams struct {
-	DefaultLocation models.Location
+	DefaultLocation types.Location
 	SiteName        sql.NullString
 }
 
@@ -591,9 +590,9 @@ type createDahuaCameraParams struct {
 	Address   string
 	Username  string
 	Password  string
-	Location  models.Location
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Location  types.Location
+	CreatedAt types.Time
+	UpdatedAt types.Time
 }
 
 func (q *Queries) createDahuaCamera(ctx context.Context, arg createDahuaCameraParams) (int64, error) {
@@ -624,9 +623,9 @@ INSERT INTO dahua_file_cursors (
 
 type createDahuaFileCursorParams struct {
 	CameraID    int64
-	QuickCursor time.Time
-	FullCursor  time.Time
-	FullEpoch   time.Time
+	QuickCursor types.Time
+	FullCursor  types.Time
+	FullEpoch   types.Time
 }
 
 func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFileCursorParams) error {

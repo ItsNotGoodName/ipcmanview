@@ -8,6 +8,8 @@ migrate:
 
 clean:
 	rm ${DB_PATH}
+	rm ${DB_PATH}-shm
+	rm ${DB_PATH}-wal
 
 # Preview
 

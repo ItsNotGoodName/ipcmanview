@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -285,7 +286,7 @@ func NewDahuaFiles(cameraID int64, files []mediafilefind.FindNextFileInfo, affix
 
 func NewDahuaCamera(c models.DahuaCamera) (models.DahuaCamera, error) {
 	if c.Location.Location == nil {
-		c.Location = models.Location{Location: time.Local}
+		c.Location = types.Location{Location: time.Local}
 	}
 	c.CreatedAt = time.Now()
 

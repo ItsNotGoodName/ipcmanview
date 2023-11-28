@@ -7,9 +7,8 @@ package sqlc
 import (
 	"database/sql"
 	"encoding/json"
-	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
 type DahuaCamera struct {
@@ -18,9 +17,9 @@ type DahuaCamera struct {
 	Address   string
 	Username  string
 	Password  string
-	Location  models.Location
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Location  types.Location
+	CreatedAt types.Time
+	UpdatedAt types.Time
 }
 
 type DahuaEvent struct {
@@ -32,43 +31,43 @@ type DahuaEvent struct {
 	Action        string
 	Index         int64
 	Data          json.RawMessage
-	CreatedAt     time.Time
+	CreatedAt     types.Time
 }
 
 type DahuaFile struct {
 	ID          int64
 	CameraID    int64
 	Channel     int64
-	StartTime   time.Time
-	EndTime     time.Time
+	StartTime   types.Time
+	EndTime     types.Time
 	Length      int64
 	Type        string
 	FilePath    string
 	Duration    int64
 	Disk        int64
 	VideoStream string
-	Flags       models.StringSlice
-	Events      models.StringSlice
+	Flags       types.StringSlice
+	Events      types.StringSlice
 	Cluster     int64
 	Partition   int64
 	PicIndex    int64
 	Repeat      int64
 	WorkDir     string
 	WorkDirSn   int64
-	UpdatedAt   time.Time
+	UpdatedAt   types.Time
 }
 
 type DahuaFileCursor struct {
 	CameraID     int64
-	QuickCursor  time.Time
-	FullCursor   time.Time
-	FullEpoch    time.Time
+	QuickCursor  types.Time
+	FullCursor   types.Time
+	FullEpoch    types.Time
 	FullComplete bool
 }
 
 type DahuaFileScanLock struct {
 	CameraID  int64
-	CreatedAt time.Time
+	CreatedAt types.Time
 }
 
 type DahuaSeed struct {
@@ -78,5 +77,5 @@ type DahuaSeed struct {
 
 type Setting struct {
 	SiteName        string
-	DefaultLocation models.Location
+	DefaultLocation types.Location
 }

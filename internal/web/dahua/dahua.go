@@ -10,6 +10,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/rs/zerolog/log"
 )
 
@@ -39,7 +40,7 @@ func ConvertListDahuaCameraRows(dbCameras []sqlc.ListDahuaCameraRow) []models.Da
 			Password:  c.Password,
 			Location:  c.Location,
 			Seed:      int(c.Seed),
-			CreatedAt: c.CreatedAt,
+			CreatedAt: c.CreatedAt.Time,
 		})
 	}
 	return cameras
@@ -53,7 +54,7 @@ func ConvertGetDahuaCameraRow(c sqlc.GetDahuaCameraRow) models.DahuaCamera {
 		Password:  c.Password,
 		Location:  c.Location,
 		Seed:      int(c.Seed),
-		CreatedAt: c.CreatedAt,
+		CreatedAt: c.CreatedAt.Time,
 	}
 }
 
@@ -80,7 +81,7 @@ func (p DahuaEventHooksProxy) CameraEvent(ctx context.Context, evt models.DahuaE
 		Action:        evt.Action,
 		Index:         int64(evt.Index),
 		Data:          evt.Data,
-		CreatedAt:     evt.CreatedAt,
+		CreatedAt:     types.NewTime(evt.CreatedAt),
 	})
 	if err != nil {
 		log.Err(err).Caller().Msg("Failed to save DahuaEvent")
