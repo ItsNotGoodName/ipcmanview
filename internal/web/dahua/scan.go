@@ -51,15 +51,15 @@ func updateFileCursor(fileCursor sqlc.DahuaFileCursor, scanPeriod dahua.ScanPeri
 	return fileCursor
 }
 
-func getScanRange(fileCursor sqlc.DahuaFileCursor, scanType ScanType) models.DahuaScanRange {
+func getScanRange(fileCursor sqlc.DahuaFileCursor, scanType ScanType) models.TimeRange {
 	switch scanType {
 	case ScanTypeFull:
-		return models.DahuaScanRange{
+		return models.TimeRange{
 			Start: fileCursor.FullEpoch,
 			End:   fileCursor.FullCursor,
 		}
 	case ScanTypeQuick:
-		return models.DahuaScanRange{
+		return models.TimeRange{
 			Start: fileCursor.QuickCursor,
 			End:   time.Now(),
 		}

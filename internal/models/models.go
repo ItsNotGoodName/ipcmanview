@@ -7,6 +7,12 @@ import (
 	"time"
 )
 
+// TimeRange is INCLUSIVE Start and EXCLUSIVE End.
+type TimeRange struct {
+	Start time.Time
+	End   time.Time
+}
+
 type Location struct {
 	*time.Location
 }

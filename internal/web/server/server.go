@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"net/http"
-	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -198,9 +197,9 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 }
 
 func (s Server) DahuaCamerasIDDelete(c echo.Context) error {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := pathID(c)
 	if err != nil {
-		return echo.ErrBadRequest.WithInternal(err)
+		return err
 	}
 
 	if err := s.db.DeleteDahuaCamera(c.Request().Context(), id); err != nil {
@@ -268,7 +267,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	dto, err := dahua.NewDahuaCamera(0, models.DTODahuaCamera{
+	camera, err := dahua.NewDahuaCamera(models.DahuaCamera{
 		Address:  form.Address,
 		Username: form.Username,
 		Password: form.Password,
@@ -279,12 +278,12 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 
 	id, err := s.db.CreateDahuaCamera(ctx, sqlc.CreateDahuaCameraParams{
 		Name:      form.Name,
-		Username:  dto.Username,
-		Password:  dto.Password,
-		Address:   dto.Address,
-		Location:  dto.Location,
-		CreatedAt: dto.CreatedAt,
-		UpdatedAt: dto.CreatedAt,
+		Username:  camera.Username,
+		Password:  camera.Password,
+		Address:   camera.Address,
+		Location:  camera.Location,
+		CreatedAt: camera.CreatedAt,
+		UpdatedAt: camera.CreatedAt,
 	}, webdahua.DefaultFileCursor())
 	if err != nil {
 		return err
@@ -335,17 +334,21 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		form.Password = camera.Password
 	}
 
-	dto, err := dahua.NewDahuaCamera(0, models.DTODahuaCamera{
+	dto, err := dahua.UpdateDahuaCamera(models.DahuaCamera{
+		ID:       camera.ID,
 		Address:  form.Address,
 		Username: form.Username,
 		Password: form.Password,
 		Location: location,
 	})
+	if err != nil {
+		return err
+	}
 
 	ctx := c.Request().Context()
 
 	_, err = s.db.UpdateDahuaCamera(ctx, sqlc.UpdateDahuaCameraParams{
-		ID:       camera.ID,
+		ID:       dto.ID,
 		Name:     form.Name,
 		Username: dto.Username,
 		Password: dto.Password,

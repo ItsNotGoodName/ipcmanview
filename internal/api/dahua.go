@@ -107,7 +107,14 @@ func (s *DahuaServer) POST(c echo.Context) error {
 
 	cameras := make([]models.DahuaCamera, 0, len(req))
 	for id, body := range req {
-		camera, err := dahua.NewDahuaCamera(id, body)
+		camera, err := dahua.NewDahuaCamera(models.DahuaCamera{
+			ID:       id,
+			Address:  body.Address,
+			Location: body.Location,
+			Username: body.Username,
+			Password: body.Password,
+			Seed:     body.Seed,
+		})
 		if err != nil {
 			return echo.ErrBadRequest.WithInternal(err)
 		}

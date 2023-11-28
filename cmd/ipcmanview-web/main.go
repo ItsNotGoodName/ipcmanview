@@ -8,7 +8,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/config"
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
@@ -84,7 +83,7 @@ func run(flags *flag.FlagSet, cfg *config.Web) lieut.Executor {
 			dahua.NewEventWorkerStore(super,
 				webdahua.NewDahuaEventHooksProxy(dahuaBus, db))
 		dahua.RegisterEventBus(eventWorkerStore, dahuaBus)
-		if err := core.DahuaBootstrap(ctx, dahuaCameraStore, dahuaStore, eventWorkerStore); err != nil {
+		if err := dahua.Bootstrap(ctx, dahuaCameraStore, dahuaStore, eventWorkerStore); err != nil {
 			return err
 		}
 

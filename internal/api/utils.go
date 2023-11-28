@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/labstack/echo/v4"
@@ -85,7 +86,7 @@ func queryBoolOptional(c echo.Context, key string) (bool, error) {
 	return bool, nil
 }
 
-func queryDahuaScanRange(c echo.Context) (models.DahuaScanRange, error) {
+func queryDahuaScanRange(c echo.Context) (models.TimeRange, error) {
 	end := time.Now()
 	start := end.Add(-dahua.MaxScanPeriod)
 	var err error
@@ -93,20 +94,20 @@ func queryDahuaScanRange(c echo.Context) (models.DahuaScanRange, error) {
 	if startStr := c.QueryParam("start"); startStr != "" {
 		start, err = time.Parse(time.RFC3339, startStr)
 		if err != nil {
-			return models.DahuaScanRange{}, echo.ErrBadRequest.WithInternal(err)
+			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
 		}
 	}
 
 	if endStr := c.QueryParam("end"); endStr != "" {
 		end, err = time.Parse(time.RFC3339, endStr)
 		if err != nil {
-			return models.DahuaScanRange{}, echo.ErrBadRequest.WithInternal(err)
+			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
 		}
 	}
 
-	res, err := dahua.NewDahuaScanRange(start, end)
+	res, err := core.NewTimeRange(start, end)
 	if err != nil {
-		return models.DahuaScanRange{}, echo.ErrBadRequest.WithInternal(err)
+		return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
 	}
 
 	return res, nil

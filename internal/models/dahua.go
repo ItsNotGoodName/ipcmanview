@@ -89,12 +89,6 @@ type DahuaCoaxialCaps struct {
 	SupportControlSpeaker        bool  `json:"support_control_speaker"`
 }
 
-// DahuaScanRange is INCLUSIVE Start and EXCLUSIVE End.
-type DahuaScanRange struct {
-	Start time.Time
-	End   time.Time
-}
-
 type DahuaFile struct {
 	CameraID    int64     `json:"camera_id"`
 	Channel     int       `json:"channel"`

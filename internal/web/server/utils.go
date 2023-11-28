@@ -62,10 +62,19 @@ func formatSSE(event string, data string) []byte {
 	return []byte(eventPayload + "\n")
 }
 
-func useDahuaCamera(c echo.Context, db sqlc.DB) (sqlc.GetDahuaCameraRow, error) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+func pathID(c echo.Context) (int64, error) {
+	number, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return sqlc.GetDahuaCameraRow{}, echo.ErrBadRequest.WithInternal(err)
+		return 0, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return number, nil
+}
+
+func useDahuaCamera(c echo.Context, db sqlc.DB) (sqlc.GetDahuaCameraRow, error) {
+	id, err := pathID(c)
+	if err != nil {
+		return sqlc.GetDahuaCameraRow{}, err
 	}
 
 	camera, err := db.GetDahuaCamera(c.Request().Context(), id)
@@ -74,20 +83,6 @@ func useDahuaCamera(c echo.Context, db sqlc.DB) (sqlc.GetDahuaCameraRow, error) 
 	}
 
 	return camera, nil
-}
-
-func pathID(c echo.Context) (int64, error) {
-	str := c.Param("id")
-	if str == "" {
-		return 0, echo.ErrBadRequest
-	}
-
-	number, err := strconv.ParseInt(str, 10, 64)
-	if err != nil {
-		return 0, echo.ErrBadRequest.WithInternal(err)
-	}
-
-	return number, nil
 }
 
 func queryInt(c echo.Context, key string) (int64, error) {

@@ -241,17 +241,6 @@ func NewDahuaEvent(cameraID int64, event dahuacgi.Event, createdAt time.Time) mo
 	}
 }
 
-func NewDahuaScanRange(start, end time.Time) (models.DahuaScanRange, error) {
-	if end.Before(start) {
-		return models.DahuaScanRange{}, errors.New("invalid start and end range")
-	}
-
-	return models.DahuaScanRange{
-		Start: start,
-		End:   end,
-	}, nil
-}
-
 func NewDahuaFile(cameraID int64, file mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) (models.DahuaFile, error) {
 	startTime, endTime, err := file.UniqueTime(affixSeed, location)
 	if err != nil {
@@ -294,32 +283,17 @@ func NewDahuaFiles(cameraID int64, files []mediafilefind.FindNextFileInfo, affix
 	return res, nil
 }
 
-func ValidateDahuaCamera(c models.DahuaCamera) (models.DahuaCamera, error) {
+func NewDahuaCamera(c models.DahuaCamera) (models.DahuaCamera, error) {
+	if c.Location.Location == nil {
+		c.Location = models.Location{Location: time.Local}
+	}
+	c.CreatedAt = time.Now()
+
 	return c, validate.Validate.Struct(c)
 }
 
-func NewDahuaCamera(id int64, dto models.DTODahuaCamera) (models.DahuaCamera, error) {
-	var location models.Location
-	if dto.Location.Location == nil {
-		location = models.Location{Location: time.Local}
-	} else {
-		location = dto.Location
-	}
-
-	camera, err := ValidateDahuaCamera(models.DahuaCamera{
-		ID:        id,
-		Address:   dto.Address,
-		Username:  dto.Username,
-		Password:  dto.Password,
-		Location:  location,
-		Seed:      dto.Seed,
-		CreatedAt: time.Now(),
-	})
-	if err != nil {
-		return models.DahuaCamera{}, err
-	}
-
-	return camera, nil
+func UpdateDahuaCamera(c models.DahuaCamera) (models.DahuaCamera, error) {
+	return c, validate.Validate.Struct(c)
 }
 
 func GetSeed(c models.DahuaCamera) int {
@@ -358,4 +332,22 @@ func SetPreset(ctx context.Context, clientPTZ *ptz.Client, channel, index int) e
 		Code: "GotoPreset",
 		Arg1: index,
 	})
+}
+
+type CameraRepo interface {
+	List(ctx context.Context) ([]models.DahuaCamera, error)
+}
+
+func Bootstrap(ctx context.Context, cameraStore CameraRepo, store *Store, eventWorkerStore *EventWorkerStore) error {
+	cameras, err := cameraStore.List(ctx)
+	if err != nil {
+		return err
+	}
+	conns := store.ConnList(ctx, cameras)
+	for _, conn := range conns {
+		if err := eventWorkerStore.Create(conn.Camera); err != nil {
+			return err
+		}
+	}
+	return err
 }

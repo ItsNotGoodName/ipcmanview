@@ -38,7 +38,7 @@ type ScanPeriodIterator struct {
 	cursor time.Time
 }
 
-func NewScanPeriodIterator(scanRange models.DahuaScanRange) *ScanPeriodIterator {
+func NewScanPeriodIterator(scanRange models.TimeRange) *ScanPeriodIterator {
 	return &ScanPeriodIterator{
 		start:  scanRange.Start,
 		end:    scanRange.End,
