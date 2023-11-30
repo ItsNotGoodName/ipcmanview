@@ -5,12 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
+	"github.com/gorilla/schema"
 	"github.com/labstack/echo/v4"
 )
 
@@ -86,19 +90,19 @@ func queryBoolOptional(c echo.Context, key string) (bool, error) {
 	return bool, nil
 }
 
-func queryDahuaScanRange(c echo.Context) (models.TimeRange, error) {
+func queryDahuaScanRange(startStr, endStr string) (models.TimeRange, error) {
 	end := time.Now()
 	start := end.Add(-dahua.MaxScanPeriod)
 	var err error
 
-	if startStr := c.QueryParam("start"); startStr != "" {
+	if startStr != "" {
 		start, err = time.Parse(time.RFC3339, startStr)
 		if err != nil {
 			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
 		}
 	}
 
-	if endStr := c.QueryParam("end"); endStr != "" {
+	if endStr != "" {
 		end, err = time.Parse(time.RFC3339, endStr)
 		if err != nil {
 			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
@@ -111,4 +115,84 @@ func queryDahuaScanRange(c echo.Context) (models.TimeRange, error) {
 	}
 
 	return res, nil
+}
+
+var encoder = schema.NewEncoder()
+
+var decoder = schema.NewDecoder()
+
+func ParseForm(c echo.Context, form any) error {
+	if err := c.Request().ParseForm(); err != nil {
+		return err
+	}
+	if err := decoder.Decode(form, c.Request().PostForm); err != nil {
+		return echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return nil
+}
+
+func ParseLocation(location string) (*time.Location, error) {
+	loc, err := time.LoadLocation(location)
+	if err != nil {
+		return nil, echo.ErrBadRequest.WithInternal(err)
+	}
+	return loc, nil
+}
+
+func ParseQuery(c echo.Context, query any) error {
+	if err := decoder.Decode(query, c.Request().URL.Query()); err != nil {
+		return echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return nil
+}
+
+func ValidateStruct(src any) error {
+	err := validate.Validate.Struct(src)
+	if err != nil {
+		return echo.ErrBadRequest.WithInternal(err)
+	}
+	return err
+}
+
+func NewQuery(src any) url.Values {
+	query := make(url.Values)
+	err := encoder.Encode(src, query)
+	if err != nil {
+		panic(err)
+	}
+	return query
+}
+
+func FormatSSE(event string, data string) []byte {
+	eventPayload := "event: " + event + "\n"
+	dataLines := strings.Split(data, "\n")
+	for _, line := range dataLines {
+		eventPayload = eventPayload + "data: " + line + "\n"
+	}
+	return []byte(eventPayload + "\n")
+}
+
+func PathID(c echo.Context) (int64, error) {
+	number, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return 0, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return number, nil
+}
+
+func QueryInt(c echo.Context, key string) (int64, error) {
+	str := c.QueryParam(key)
+	if str == "" {
+		return 0, echo.ErrBadRequest
+	}
+
+	number, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return 0, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return number, nil
 }

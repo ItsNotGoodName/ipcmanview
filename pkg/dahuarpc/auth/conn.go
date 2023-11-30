@@ -40,6 +40,16 @@ func (c *Conn) RPC(ctx context.Context) (dahuarpc.RequestBuilder, error) {
 	}
 }
 
+func (c *Conn) RPCSession(ctx context.Context) (string, error) {
+	resC := c.group.DoChan("auth.Conn.readyConnection", func() (interface{}, error) { return nil, c.readyConnection(ctx) })
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case <-resC:
+		return c.Session(), nil
+	}
+}
+
 func (c *Conn) readyConnection(ctx context.Context) error {
 	switch c.Conn.Data().State {
 	case dahuarpc.StateLogout:

@@ -86,10 +86,10 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		Page:    1,
 		PerPage: 10,
 	}
-	if err := parseQuery(c, &params); err != nil {
+	if err := api.ParseQuery(c, &params); err != nil {
 		return err
 	}
-	if err := validateStruct(params); err != nil {
+	if err := api.ValidateStruct(params); err != nil {
 		return err
 	}
 
@@ -150,7 +150,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 	}
 
 	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
-		htmx.SetReplaceURL(c.Response(), "/dahua/events?"+newQuery(params).Encode())
+		htmx.SetReplaceURL(c.Response(), "/dahua/events?"+api.NewQuery(params).Encode())
 		return c.Render(http.StatusOK, "dahua-events", TemplateBlock{"htmx", data})
 	}
 
@@ -158,7 +158,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 }
 
 func (s Server) DahuaEventsIDData(c echo.Context) error {
-	id, err := pathID(c)
+	id, err := api.PathID(c)
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 			}, c); err != nil {
 				return err
 			}
-			w.Write(formatSSE("message", buf.String()))
+			w.Write(api.FormatSSE("message", buf.String()))
 			buf.Reset()
 			w.Flush()
 		}
@@ -222,7 +222,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 }
 
 func (s Server) DahuaCamerasIDDelete(c echo.Context) error {
-	id, err := pathID(c)
+	id, err := api.PathID(c)
 	if err != nil {
 		return err
 	}
@@ -278,7 +278,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Password string
 		Location string
 	}
-	if err := parseForm(c, &form); err != nil {
+	if err := api.ParseForm(c, &form); err != nil {
 		return err
 	}
 	if form.Name == "" {
@@ -348,7 +348,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		Password string
 		Location string
 	}
-	if err := parseForm(c, &form); err != nil {
+	if err := api.ParseForm(c, &form); err != nil {
 		return err
 	}
 	location, err := core.NewLocation(form.Location)

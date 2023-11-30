@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
@@ -69,14 +70,14 @@ func parseTemplate(name string) (*template.Template, error) {
 			},
 			"Query": func(params any, vals ...any) template.URL {
 				length := len(vals)
-				query := newQuery(params)
+				query := api.NewQuery(params)
 				for i := 0; i < length; i += 2 {
 					query.Set(vals[i].(string), fmt.Sprint(vals[i+1]))
 				}
 				return template.URL(query.Encode())
 			},
 			"QueryDelete": func(params any, vals ...string) template.URL {
-				query := newQuery(params)
+				query := api.NewQuery(params)
 				for _, v := range vals {
 					query.Del(v)
 				}

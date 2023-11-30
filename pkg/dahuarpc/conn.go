@@ -40,7 +40,7 @@ func (s State) Is(states ...State) bool {
 type ConnData struct {
 	lastID    int
 	State     State
-	Session   string
+	session   string
 	Error     error
 	LastLogin time.Time
 }
@@ -59,7 +59,7 @@ func NewConn(client *http.Client, httpAddress string) *Conn {
 		data: ConnData{
 			State:     StateLogout,
 			lastID:    0,
-			Session:   "",
+			session:   "",
 			Error:     nil,
 			LastLogin: time.Time{},
 		},
@@ -77,7 +77,7 @@ type Conn struct {
 
 func (c *Conn) RawRPC(ctx context.Context) (RequestBuilder, error) {
 	c.dataMu.Lock()
-	if c.data.Session == "" {
+	if c.data.session == "" {
 		c.dataMu.Unlock()
 		return RequestBuilder{}, ErrInvalidSession
 	}
@@ -86,7 +86,7 @@ func (c *Conn) RawRPC(ctx context.Context) (RequestBuilder, error) {
 		c.client,
 		c.data.nextID(),
 		c.rpcURL,
-		c.data.Session,
+		c.data.session,
 	)
 	c.dataMu.Unlock()
 
@@ -99,7 +99,7 @@ func (c *Conn) RawRPCLogin() RequestBuilder {
 		c.client,
 		c.data.nextID(),
 		c.rpcLoginURL,
-		c.data.Session,
+		c.data.session,
 	)
 	c.dataMu.Unlock()
 
@@ -115,7 +115,7 @@ func (c *Conn) Data() ConnData {
 
 func (c *Conn) Session() string {
 	c.dataMu.Lock()
-	session := c.data.Session
+	session := c.data.session
 	c.dataMu.Unlock()
 	return session
 }
@@ -127,7 +127,7 @@ func (c *Conn) UpdateSession(session string) error {
 		return fmt.Errorf("cannot set session when logout or closed")
 	}
 
-	c.data.Session = session
+	c.data.session = session
 	c.dataMu.Unlock()
 
 	return nil

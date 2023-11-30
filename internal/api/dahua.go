@@ -365,10 +365,19 @@ func (s *DahuaServer) GETIDFiles(c echo.Context) error {
 		return err
 	}
 
-	scanRange, err := queryDahuaScanRange(c)
+	var form struct {
+		Start string
+		End   string
+	}
+	if err := ParseQuery(c, &form); err != nil {
+		return err
+	}
+
+	scanRange, err := queryDahuaScanRange(form.Start, form.End)
 	if err != nil {
 		return err
 	}
+
 	iter := dahua.NewScanPeriodIterator(scanRange)
 
 	filesC := make(chan []mediafilefind.FindNextFileInfo)
@@ -418,7 +427,12 @@ func (s *DahuaServer) GETIDFilesPath(c echo.Context) error {
 		return err
 	}
 
-	req.Header.Add("Cookie", dahuarpc.Cookie(conn.RPC.Data().Session))
+	session, err := conn.RPC.RPCSession(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Cookie", dahuarpc.Cookie(session))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
