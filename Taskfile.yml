@@ -11,18 +11,17 @@ tasks:
   clean:
     cmds:
       - rm -rf dist
-      - mkdir -p dist/artifacts
-
+      - mkdir dist dist/artifacts dist/files dist/files-windows
   build-server:
     internal: true
     cmds:
       - go mod tidy
       - go generate ./...
-      - GOOS=linux GOARCH=amd64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_x86_64       {{.MAIN_PACKAGE}}
-      - GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_armv7        {{.MAIN_PACKAGE}}
-      - GOOS=linux GOARCH=arm64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_arm64        {{.MAIN_PACKAGE}}
-      - GOOS=darwin GOARCH=arm64      go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Darwin_arm64       {{.MAIN_PACKAGE}}
-      - GOOS=windows GOARCH=amd64     go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Windows_x86_64.exe {{.MAIN_PACKAGE}}
+      - GOOS=linux GOARCH=amd64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_x86_64/{{.CMD_NAME}}       {{.MAIN_PACKAGE}}
+      - GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_armv7/{{.CMD_NAME}}        {{.MAIN_PACKAGE}}
+      - GOOS=linux GOARCH=arm64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_arm64/{{.CMD_NAME}}        {{.MAIN_PACKAGE}}
+      - GOOS=darwin GOARCH=arm64      go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Darwin_arm64/{{.CMD_NAME}}       {{.MAIN_PACKAGE}}
+      - GOOS=windows GOARCH=amd64     go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Windows_x86_64/{{.CMD_NAME}}.exe {{.MAIN_PACKAGE}}
     env:
       CGO_ENABLED: 0
     vars:
@@ -41,14 +40,14 @@ tasks:
     dir: dist
     cmds:
       - for: { var: FILES }
-        cmd: cp ../{{.ITEM}} .
+        cmd: cp ../{{.ITEM}} "./files/$(basename {{.ITEM}})"
       - for: { var: WINDOWS_FILES }
-        cmd: cp ../{{.ITEM}} .
-      - tar -czf artifacts/{{.CMD_NAME}}_Linux_x86_64.tar.gz {{.CMD_NAME}}_Linux_x86_64       {{.FILES}}
-      - tar -czf artifacts/{{.CMD_NAME}}_Linux_armv7.tar.gz  {{.CMD_NAME}}_Linux_armv7        {{.FILES}}
-      - tar -czf artifacts/{{.CMD_NAME}}_Linux_arm64.tar.gz  {{.CMD_NAME}}_Linux_arm64        {{.FILES}}
-      - tar -czf artifacts/{{.CMD_NAME}}_Darwin_arm64.tar.gz {{.CMD_NAME}}_Darwin_arm64       {{.FILES}}
-      - zip -q artifacts/{{.CMD_NAME}}_Windows_x86_64.zip    {{.CMD_NAME}}_Windows_x86_64.exe {{.FILES}} {{.WINDOWS_FILES}}
+        cmd: cp ../{{.ITEM}} "./files-windows/$(basename {{.ITEM}})"
+      - cd {{.CMD_NAME}}_Linux_x86_64   && cp ../files/* . &&                            tar -czf ../artifacts/{{.CMD_NAME}}_Linux_x86_64.tar.gz *
+      - cd {{.CMD_NAME}}_Linux_armv7    && cp ../files/* . &&                            tar -czf ../artifacts/{{.CMD_NAME}}_Linux_armv7.tar.gz  *
+      - cd {{.CMD_NAME}}_Linux_arm64    && cp ../files/* . &&                            tar -czf ../artifacts/{{.CMD_NAME}}_Linux_arm64.tar.gz  *
+      - cd {{.CMD_NAME}}_Darwin_arm64   && cp ../files/* . &&                            tar -czf ../artifacts/{{.CMD_NAME}}_Darwin_arm64.tar.gz *
+      - cd {{.CMD_NAME}}_Windows_x86_64 && cp ../files/* . && cp ../files-windows/* . && zip -q   ../artifacts/{{.CMD_NAME}}_Windows_x86_64.zip  *
       - cd artifacts && sha256sum *.tar.gz *.zip > checksum.txt
     vars:
       FILES: README.md LICENSE
