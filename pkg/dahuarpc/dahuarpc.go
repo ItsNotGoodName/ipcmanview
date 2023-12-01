@@ -7,8 +7,26 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"log/slog"
 	"net/http"
+	"slices"
 	"strconv"
+)
+
+const (
+	StateLogout State = iota
+	StateLogin
+	StateError
+	StateClosed
+)
+
+var (
+	ErrResponseTypeInvalidRequest    ResponseErrorType = "InvalidRequest"
+	ErrResponseTypeMethodNotFound    ResponseErrorType = "MethodNotFound"
+	ErrResponseTypeInterfaceNotFound ResponseErrorType = "InterfaceNotFound"
+	ErrResponseTypeNoData            ResponseErrorType = "NoData"
+	ErrResponseTypeUnknown           ResponseErrorType = "Unknown"
 )
 
 var (
@@ -16,9 +34,36 @@ var (
 	ErrRequestFailed  = fmt.Errorf("request failed")
 )
 
-type Client interface {
+// ---------- State
+
+type State int
+
+func (s State) String() string {
+	switch s {
+	case StateLogin:
+		return "login"
+	case StateLogout:
+		return "logout"
+	case StateError:
+		return "error"
+	case StateClosed:
+		return "closed"
+	default:
+		return "unknown"
+	}
+}
+
+func (s State) Is(states ...State) bool {
+	return slices.Contains(states, s)
+}
+
+// ---------- Conn
+
+type Conn interface {
 	RPC(ctx context.Context) (RequestBuilder, error)
 }
+
+// ---------- ResponseSession
 
 type ResponseSession string
 
@@ -43,6 +88,8 @@ func (s *ResponseSession) UnmarshalJSON(data []byte) error {
 func (s ResponseSession) String() string {
 	return string(s)
 }
+
+// ---------- ResponseResult
 
 type ResponseResult int64
 
@@ -74,6 +121,8 @@ func (s ResponseResult) Bool() bool {
 	return s == 1
 }
 
+// ---------- Response
+
 // Response from the camera.
 type Response[T any] struct {
 	ID      int             `json:"id"`
@@ -83,11 +132,21 @@ type Response[T any] struct {
 	Result  ResponseResult  `json:"result"`
 }
 
+// ---------- ResponseErrorType
+
+type ResponseErrorType string
+
+// ---------- ResponseError
+
 type ResponseError struct {
 	Method  string
 	Code    int
 	Message string
-	Type    ReponseErrorType
+	Type    ResponseErrorType
+}
+
+func (r *ResponseError) Error() string {
+	return r.Message
 }
 
 func (r *ResponseError) UnmarshalJSON(data []byte) error {
@@ -118,19 +177,7 @@ func (r *ResponseError) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (r *ResponseError) Error() string {
-	return r.Message
-}
-
-type ReponseErrorType string
-
-var (
-	ErrResponseTypeInvalidRequest    ReponseErrorType = "InvalidRequest"
-	ErrResponseTypeMethodNotFound    ReponseErrorType = "MethodNotFound"
-	ErrResponseTypeInterfaceNotFound ReponseErrorType = "InterfaceNotFound"
-	ErrResponseTypeNoData            ReponseErrorType = "NoData"
-	ErrResponseTypeUnknown           ReponseErrorType = "Unknown"
-)
+// ---------- Request
 
 type Request struct {
 	ID      int    `json:"id"`
@@ -140,6 +187,8 @@ type Request struct {
 	Object  int64  `json:"object,omitempty"`
 	Seq     int    `json:"seq,omitempty"`
 }
+
+// ---------- RequestBuilder
 
 type RequestBuilder struct {
 	client *http.Client
@@ -198,7 +247,16 @@ func SendRaw[T any](ctx context.Context, r RequestBuilder) (Response[T], error) 
 	}
 	defer resp.Body.Close()
 
-	if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return res, err
+	}
+	slog.Debug("dahuarpc.SendRaw",
+		slog.String("method", r.req.Method),
+		slog.Any("params", r.req.Params),
+		slog.Any("response", json.RawMessage(raw)))
+
+	if err := json.Unmarshal(raw, &res); err != nil {
 		return res, err
 	}
 

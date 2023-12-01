@@ -6,7 +6,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func GetStatus(ctx context.Context, c dahuarpc.Client, channel int) (Status, error) {
+func GetStatus(ctx context.Context, c dahuarpc.Conn, channel int) (Status, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return Status{}, err
@@ -30,7 +30,7 @@ type Status struct {
 	Speaker    string `json:"Speaker"`
 }
 
-func GetCaps(ctx context.Context, c dahuarpc.Client, channel int) (Caps, error) {
+func GetCaps(ctx context.Context, c dahuarpc.Conn, channel int) (Caps, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return Caps{}, err
@@ -61,7 +61,7 @@ type ControlRequest struct {
 	TriggerMode int `json:"TriggerMode"`
 }
 
-func Control(ctx context.Context, c dahuarpc.Client, channel int, controls ...ControlRequest) error {
+func Control(ctx context.Context, c dahuarpc.Conn, channel int, controls ...ControlRequest) error {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return err

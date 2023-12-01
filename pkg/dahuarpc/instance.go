@@ -17,7 +17,7 @@ func NewInstance(method string) *Instance {
 	}
 }
 
-func (i *Instance) Get(ctx context.Context, c Client, key string, params any) (Response[json.RawMessage], error) {
+func (i *Instance) Get(ctx context.Context, c Conn, key string, params any) (Response[json.RawMessage], error) {
 	if res, found := i.responses[key]; found {
 		return res, nil
 	}

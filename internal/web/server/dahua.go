@@ -98,7 +98,7 @@ func useDahuaAPIData(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (
 
 	status := make([]models.DahuaStatus, 0, len(conns))
 	for _, conn := range conns {
-		status = append(status, dahua.GetDahuaStatus(conn.Camera, conn.RPC.Conn))
+		status = append(status, dahua.GetDahuaStatus(conn.Camera, conn.RPC))
 	}
 
 	details := make([]models.DahuaDetail, 0, len(cameras))

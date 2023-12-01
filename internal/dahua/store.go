@@ -8,7 +8,6 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/auth"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
 	"github.com/rs/zerolog/log"
@@ -25,9 +24,9 @@ func newStoreClient(camera models.DahuaCamera, lastAccessed time.Time) storeClie
 	}
 	cgiHTTPClient := http.Client{}
 
-	connRPC := auth.NewConn(dahuarpc.NewConn(rpcHTTPClient, address), camera.Username, camera.Password)
+	connRPC := auth.NewClient(rpcHTTPClient, address, camera.Username, camera.Password)
 	connPTZ := ptz.NewClient(connRPC)
-	connCGI := dahuacgi.NewConn(cgiHTTPClient, address, camera.Username, camera.Password)
+	connCGI := dahuacgi.NewClient(cgiHTTPClient, address, camera.Username, camera.Password)
 
 	return storeClient{
 		LastAccessed: lastAccessed,
@@ -41,9 +40,9 @@ func newStoreClient(camera models.DahuaCamera, lastAccessed time.Time) storeClie
 type storeClient struct {
 	LastAccessed time.Time
 	Camera       models.DahuaCamera
-	ConnRPC      *auth.Conn
+	ConnRPC      auth.Client
 	ConnPTZ      *ptz.Client
-	ConnCGI      dahuacgi.Conn
+	ConnCGI      dahuacgi.Client
 }
 
 func (c storeClient) Close(ctx context.Context) {
@@ -63,9 +62,9 @@ func newConn(c storeClient) Conn {
 
 type Conn struct {
 	Camera models.DahuaCamera
-	RPC    *auth.Conn
+	RPC    auth.Client
 	PTZ    *ptz.Client
-	CGI    dahuacgi.Conn
+	CGI    dahuacgi.Client
 }
 
 type Store struct {

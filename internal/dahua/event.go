@@ -35,7 +35,7 @@ func (w eventWorker) String() string {
 }
 
 func (w eventWorker) Serve(ctx context.Context) error {
-	c := dahuacgi.NewConn(http.Client{}, NewHTTPAddress(w.Camera.Address), w.Camera.Username, w.Camera.Password)
+	c := dahuacgi.NewClient(http.Client{}, NewHTTPAddress(w.Camera.Address), w.Camera.Username, w.Camera.Password)
 
 	manager, err := dahuacgi.EventManagerGet(ctx, c, 0)
 	if err != nil {

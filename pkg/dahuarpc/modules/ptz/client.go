@@ -9,60 +9,54 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-type ClientRPC interface {
-	dahuarpc.Client
-	Session() string
-}
-
 type clientData struct {
-	Instance    *dahuarpc.Instance
-	LastSession string
-	ID          int
+	sync.Mutex
+	Instance *dahuarpc.Instance
+	Session  string
+	ID       int
 }
 
-func newClientData() clientData {
+func newClientData(session string) clientData {
 	return clientData{
-		Instance:    dahuarpc.NewInstance("ptz.factory.instance"),
-		LastSession: "",
-		ID:          0,
+		Instance: dahuarpc.NewInstance("ptz.factory.instance"),
+		Session:  session,
+		ID:       0,
 	}
 }
 
 type Client struct {
-	rpc ClientRPC
-
-	dataMu sync.Mutex
-	data   clientData
+	conn Conn
+	data clientData
 }
 
-func NewClient(clientRPC ClientRPC) *Client {
+func NewClient(conn Conn) *Client {
 	return &Client{
-		rpc:    clientRPC,
-		dataMu: sync.Mutex{},
-		data:   newClientData(),
+		conn: conn,
+		data: newClientData(""),
 	}
 }
 
-func (c *Client) Instance(ctx context.Context, channel int) (dahuarpc.Response[json.RawMessage], error) {
-	c.dataMu.Lock()
-	res, err := c.data.Instance.Get(ctx, c.rpc, strconv.Itoa(channel), nil)
-	c.dataMu.Unlock()
+func (c *Client) InstanceGet(ctx context.Context, channel int) (dahuarpc.Response[json.RawMessage], error) {
+	c.data.Lock()
+	res, err := c.data.Instance.Get(ctx, c.conn, strconv.Itoa(channel), nil)
+	c.data.Unlock()
+
 	return res, err
 }
 
 func (c *Client) RPCSEQ(ctx context.Context) (dahuarpc.RequestBuilder, error) {
-	c.dataMu.Lock()
-	session := c.rpc.Session()
-	if session != c.data.LastSession {
-		c.data = newClientData()
+	c.data.Lock()
+	session := c.conn.Session()
+	if session != c.data.Session {
+		c.data = newClientData(session)
 	}
-	c.data.LastSession = session
 
 	seq := getSeq(session, c.data.ID)
 	c.data.ID = getNextID(c.data.ID)
 
-	rpc, err := c.rpc.RPC(ctx)
-	c.dataMu.Unlock()
+	rpc, err := c.conn.RPC(ctx)
+	c.data.Unlock()
+
 	if err != nil {
 		return dahuarpc.RequestBuilder{}, err
 	}

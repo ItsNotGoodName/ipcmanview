@@ -18,7 +18,7 @@ type LicenseInfo struct {
 	Username      string `json:"Username"`
 }
 
-func GetLicenseInfo(ctx context.Context, c dahuarpc.Client) ([]LicenseInfo, error) {
+func GetLicenseInfo(ctx context.Context, c dahuarpc.Conn) ([]LicenseInfo, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return nil, err

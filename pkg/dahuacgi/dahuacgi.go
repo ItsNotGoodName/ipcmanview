@@ -26,7 +26,7 @@ func (e HTTPError) Error() string {
 	return e.Status
 }
 
-type Client interface {
+type Conn interface {
 	CGIGet(ctx context.Context, req *Request) (*http.Response, error)
 }
 

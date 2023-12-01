@@ -97,6 +97,14 @@ func (s Integer) Integer() int64 {
 	return int64(s)
 }
 
+func RPCURL(httpAddress string) string {
+	return fmt.Sprintf("%s/RPC2", httpAddress)
+}
+
+func RPCLoginURL(httpAddress string) string {
+	return fmt.Sprintf("%s/RPC2_Login", httpAddress)
+}
+
 func LoadFileURL(httpAddress, path string) string {
 	return fmt.Sprintf("%s/RPC_Loadfile%s", httpAddress, path)
 }

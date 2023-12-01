@@ -7,7 +7,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func GetDeviceAllInfo(ctx context.Context, c dahuarpc.Client) ([]Storage, error) {
+func GetDeviceAllInfo(ctx context.Context, c dahuarpc.Conn) ([]Storage, error) {
 	var object int64
 	{
 		rpc, err := c.RPC(ctx)

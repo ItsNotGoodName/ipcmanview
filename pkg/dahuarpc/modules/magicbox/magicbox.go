@@ -6,7 +6,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-func Reboot(ctx context.Context, c dahuarpc.Client) (bool, error) {
+func Reboot(ctx context.Context, c dahuarpc.Conn) (bool, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return false, err
@@ -17,7 +17,7 @@ func Reboot(ctx context.Context, c dahuarpc.Client) (bool, error) {
 	return res.Result.Bool(), err
 }
 
-func NeedReboot(ctx context.Context, c dahuarpc.Client) (int, error) {
+func NeedReboot(ctx context.Context, c dahuarpc.Conn) (int, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return 0, err
@@ -30,7 +30,7 @@ func NeedReboot(ctx context.Context, c dahuarpc.Client) (int, error) {
 	return res.Params.NeedReboot, err
 }
 
-func GetSerialNo(ctx context.Context, c dahuarpc.Client) (string, error) {
+func GetSerialNo(ctx context.Context, c dahuarpc.Conn) (string, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return "", err
@@ -43,7 +43,7 @@ func GetSerialNo(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.SN, err
 }
 
-func GetDeviceType(ctx context.Context, c dahuarpc.Client) (string, error) {
+func GetDeviceType(ctx context.Context, c dahuarpc.Conn) (string, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return "", err
@@ -56,7 +56,7 @@ func GetDeviceType(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.Type, err
 }
 
-func GetMemoryInfo(ctx context.Context, c dahuarpc.Client) (MemoryInfo, error) {
+func GetMemoryInfo(ctx context.Context, c dahuarpc.Conn) (MemoryInfo, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return MemoryInfo{}, err
@@ -72,7 +72,7 @@ type MemoryInfo struct {
 	Total dahuarpc.Integer `json:"total"`
 }
 
-func GetCPUUsage(ctx context.Context, c dahuarpc.Client) (int, error) {
+func GetCPUUsage(ctx context.Context, c dahuarpc.Conn) (int, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return 0, err
@@ -91,7 +91,7 @@ func GetCPUUsage(ctx context.Context, c dahuarpc.Client) (int, error) {
 	return res.Params.Usage, err
 }
 
-func GetDeviceClass(ctx context.Context, c dahuarpc.Client) (string, error) {
+func GetDeviceClass(ctx context.Context, c dahuarpc.Conn) (string, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return "", err
@@ -104,7 +104,7 @@ func GetDeviceClass(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.Type, err
 }
 
-func GetProcessInfo(ctx context.Context, c dahuarpc.Client) (string, error) {
+func GetProcessInfo(ctx context.Context, c dahuarpc.Conn) (string, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return "", err
@@ -117,7 +117,7 @@ func GetProcessInfo(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.Info, err
 }
 
-func GetHardwareVersion(ctx context.Context, c dahuarpc.Client) (string, error) {
+func GetHardwareVersion(ctx context.Context, c dahuarpc.Conn) (string, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return "", err
@@ -130,7 +130,7 @@ func GetHardwareVersion(ctx context.Context, c dahuarpc.Client) (string, error) 
 	return res.Params.Version, err
 }
 
-func GetVendor(ctx context.Context, c dahuarpc.Client) (string, error) {
+func GetVendor(ctx context.Context, c dahuarpc.Conn) (string, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return "", err
@@ -143,7 +143,7 @@ func GetVendor(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.Vendor, err
 }
 
-func GetSoftwareVersion(ctx context.Context, c dahuarpc.Client) (SoftwareVersion, error) {
+func GetSoftwareVersion(ctx context.Context, c dahuarpc.Conn) (SoftwareVersion, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return SoftwareVersion{}, err
@@ -163,7 +163,7 @@ type SoftwareVersion struct {
 	WebVersion              string `json:"WebVersion"`
 }
 
-func GetMarketArea(ctx context.Context, c dahuarpc.Client) (string, error) {
+func GetMarketArea(ctx context.Context, c dahuarpc.Conn) (string, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return "", err
@@ -176,7 +176,7 @@ func GetMarketArea(ctx context.Context, c dahuarpc.Client) (string, error) {
 	return res.Params.AbroadInfo, err
 }
 
-func GetUpTime(ctx context.Context, c dahuarpc.Client) (UpTime, error) {
+func GetUpTime(ctx context.Context, c dahuarpc.Conn) (UpTime, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return UpTime{}, err

@@ -15,7 +15,7 @@ type User struct {
 	Name          string             `json:"Name"`
 }
 
-func GetActiveUserInfoAll(ctx context.Context, c dahuarpc.Client) ([]User, error) {
+func GetActiveUserInfoAll(ctx context.Context, c dahuarpc.Conn) ([]User, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func GetActiveUserInfoAll(ctx context.Context, c dahuarpc.Client) ([]User, error
 	return res.Params.Users, nil
 }
 
-func GetAuthorityList(ctx context.Context, c dahuarpc.Client) ([]string, error) {
+func GetAuthorityList(ctx context.Context, c dahuarpc.Conn) ([]string, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ type UserInfo struct {
 	Sharable             bool     `json:"Sharable"`
 }
 
-func GetUserInfoAll(ctx context.Context, c dahuarpc.Client) ([]UserInfo, error) {
+func GetUserInfoAll(ctx context.Context, c dahuarpc.Conn) ([]UserInfo, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ type GroupInfo struct {
 	Name          string   `json:"Name"`
 }
 
-func GetGroupInfoAll(ctx context.Context, c dahuarpc.Client) ([]GroupInfo, error) {
+func GetGroupInfoAll(ctx context.Context, c dahuarpc.Conn) ([]GroupInfo, error) {
 	rpc, err := c.RPC(ctx)
 	if err != nil {
 		return nil, err

@@ -60,7 +60,7 @@ func main() {
 
 	// Connect
 	httpClient := http.Client{}
-	conn := dahuacgi.NewConn(httpClient, cfg.IP, cfg.Username, cfg.Password)
+	conn := dahuacgi.NewClient(httpClient, cfg.IP, cfg.Username, cfg.Password)
 	for {
 		slog.Info("Connecting to Dahua IP camera", "ip", cfg.IP, "username", cfg.Username)
 		stream, err := dahuacgi.EventManagerGet(ctx, conn, 0)

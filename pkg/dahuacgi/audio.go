@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-func AudioInputChannelCount(ctx context.Context, c Client) (int, error) {
+func AudioInputChannelCount(ctx context.Context, c Conn) (int, error) {
 	req := NewRequest("devAudioInput.cgi").
 		QueryString("action", "getCollect")
 
@@ -18,7 +18,7 @@ func AudioInputChannelCount(ctx context.Context, c Client) (int, error) {
 	return strconv.Atoi(table.Get("result"))
 }
 
-func AudioOutputChannelCount(ctx context.Context, c Client) (int, error) {
+func AudioOutputChannelCount(ctx context.Context, c Conn) (int, error) {
 	req := NewRequest("devAudioOutput.cgi").
 		QueryString("action", "getCollect")
 
@@ -42,7 +42,7 @@ type AudioStream struct {
 	ContentType string
 }
 
-func AudioStreamGet(ctx context.Context, c Client, channel int, httpType HTTPType) (AudioStream, error) {
+func AudioStreamGet(ctx context.Context, c Conn, channel int, httpType HTTPType) (AudioStream, error) {
 	if channel == 0 {
 		channel = 1
 	}
@@ -70,9 +70,9 @@ func AudioStreamGet(ctx context.Context, c Client, channel int, httpType HTTPTyp
 //   this does not work if the body is infinite like what we are doing.
 // - I swear that my camera (SD2A500-GN-A-PV, Build Date: 2022-08-26) has a broken AudioStreamPost CGI API.
 //   I tested it with cURL and it would keep doing a connection reset after sending a bit of audio data.
-// - The current Client interface does not support POST, but that is an easy fix the HTTP digest library is fixed.
+// - The current Conn interface does not support POST, but that is an easy fix the HTTP digest library is fixed.
 
-// func AudioStreamPost(ctx context.Context, c Client, channel int, httpType HTTPType, contentType string, body io.Reader) error {
+// func AudioStreamPost(ctx context.Context, c Conn, channel int, httpType HTTPType, contentType string, body io.Reader) error {
 // 	if channel == 0 {
 // 		channel = 1
 // 	}

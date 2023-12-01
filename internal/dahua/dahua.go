@@ -11,6 +11,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/auth"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/license"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/magicbox"
@@ -23,7 +24,7 @@ import (
 
 func ignorableError(err error) bool {
 	res := &dahuarpc.ResponseError{}
-	if errors.As(err, &res) && slices.Contains([]dahuarpc.ReponseErrorType{
+	if errors.As(err, &res) && slices.Contains([]dahuarpc.ResponseErrorType{
 		dahuarpc.ErrResponseTypeInvalidRequest,
 		dahuarpc.ErrResponseTypeMethodNotFound,
 		dahuarpc.ErrResponseTypeInterfaceNotFound,
@@ -36,7 +37,7 @@ func ignorableError(err error) bool {
 	return false
 }
 
-func GetDahuaDetail(ctx context.Context, cameraID int64, rpcClient dahuarpc.Client) (models.DahuaDetail, error) {
+func GetDahuaDetail(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn) (models.DahuaDetail, error) {
 	sn, err := magicbox.GetSerialNo(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return models.DahuaDetail{}, err
@@ -84,7 +85,7 @@ func GetDahuaDetail(ctx context.Context, cameraID int64, rpcClient dahuarpc.Clie
 	}, nil
 }
 
-func GetSoftwareVersion(ctx context.Context, cameraID int64, rpcClient dahuarpc.Client) (models.DahuaSoftwareVersion, error) {
+func GetSoftwareVersion(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn) (models.DahuaSoftwareVersion, error) {
 	res, err := magicbox.GetSoftwareVersion(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return models.DahuaSoftwareVersion{}, err
@@ -100,7 +101,7 @@ func GetSoftwareVersion(ctx context.Context, cameraID int64, rpcClient dahuarpc.
 	}, nil
 }
 
-func GetLicenseList(ctx context.Context, cameraID int64, rpcClient dahuarpc.Client) ([]models.DahuaLicense, error) {
+func GetLicenseList(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn) ([]models.DahuaLicense, error) {
 	licenses, err := license.GetLicenseInfo(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return nil, err
@@ -127,7 +128,7 @@ func GetLicenseList(ctx context.Context, cameraID int64, rpcClient dahuarpc.Clie
 	return res, nil
 }
 
-func GetStorage(ctx context.Context, cameraID int64, rpcClient dahuarpc.Client) ([]models.DahuaStorage, error) {
+func GetStorage(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn) ([]models.DahuaStorage, error) {
 	devices, err := storage.GetDeviceAllInfo(ctx, rpcClient)
 	if err != nil {
 		if ignorableError(err) {
@@ -156,7 +157,7 @@ func GetStorage(ctx context.Context, cameraID int64, rpcClient dahuarpc.Client) 
 
 }
 
-func GetError(conn *dahuarpc.Conn) models.Error {
+func GetError(conn auth.Client) models.Error {
 	err := conn.Data().Error
 	if err == nil {
 		return models.Error{}
@@ -167,7 +168,7 @@ func GetError(conn *dahuarpc.Conn) models.Error {
 	}
 }
 
-func GetCoaxialStatus(ctx context.Context, cameraID int64, rpcClient dahuarpc.Client, channel int) (models.DahuaCoaxialStatus, error) {
+func GetCoaxialStatus(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialStatus, error) {
 	if channel == 0 {
 		channel = 1
 	}
@@ -184,7 +185,7 @@ func GetCoaxialStatus(ctx context.Context, cameraID int64, rpcClient dahuarpc.Cl
 	}, nil
 }
 
-func GetCoaxialCaps(ctx context.Context, cameraID int64, rpcClient dahuarpc.Client, channel int) (models.DahuaCoaxialCaps, error) {
+func GetCoaxialCaps(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialCaps, error) {
 	if channel == 0 {
 		channel = 1
 	}
@@ -202,7 +203,7 @@ func GetCoaxialCaps(ctx context.Context, cameraID int64, rpcClient dahuarpc.Clie
 	}, nil
 }
 
-func GetUsers(ctx context.Context, cameraID int64, rpcClient dahuarpc.Client, location *time.Location) ([]models.DahuaUser, error) {
+func GetUsers(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn, location *time.Location) ([]models.DahuaUser, error) {
 	users, err := usermanager.GetActiveUserInfoAll(ctx, rpcClient)
 	if err != nil {
 		return nil, err
@@ -309,8 +310,8 @@ func NewHTTPAddress(address string) string {
 	return "http://" + address
 }
 
-func GetDahuaStatus(camera models.DahuaCamera, rpcConn *dahuarpc.Conn) models.DahuaStatus {
-	rpcData := rpcConn.Data()
+func GetDahuaStatus(camera models.DahuaCamera, rpcClient auth.Client) models.DahuaStatus {
+	rpcData := rpcClient.Data()
 	var rpcError string
 	if rpcData.Error != nil {
 		rpcError = rpcData.Error.Error()

@@ -70,7 +70,7 @@ func getScanRange(fileCursor sqlc.DahuaFileCursor, scanType ScanType) models.Tim
 }
 
 // Scan should only be called once per camera.
-func Scan(ctx context.Context, db sqlc.DB, rpcClient dahuarpc.Client, camera models.DahuaCamera, scanType ScanType) error {
+func Scan(ctx context.Context, db sqlc.DB, rpcClient dahuarpc.Conn, camera models.DahuaCamera, scanType ScanType) error {
 	fileCursor, err := db.GetDahuaFileCursor(ctx, camera.ID)
 	if err != nil {
 		return err

@@ -11,7 +11,7 @@ type Snapshot struct {
 	ContentLength string
 }
 
-func SnapshotGet(ctx context.Context, c Client, channel int) (Snapshot, error) {
+func SnapshotGet(ctx context.Context, c Conn, channel int) (Snapshot, error) {
 	req := NewRequest("snapshot.cgi")
 
 	if channel != 0 {

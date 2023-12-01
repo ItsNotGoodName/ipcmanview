@@ -33,8 +33,8 @@ func main() {
 
 	fmt.Printf("Testing audio features from %s to %s\n", inIp, outIp)
 
-	inClient := dahuacgi.NewConn(http.Client{}, inIp, username, password)
-	clientOut := dahuacgi.NewConn(http.Client{}, outIp, username, password)
+	inClient := dahuacgi.NewClient(http.Client{}, inIp, username, password)
+	clientOut := dahuacgi.NewClient(http.Client{}, outIp, username, password)
 
 	inCount, err := dahuacgi.AudioInputChannelCount(ctx, inClient)
 	if err != nil {

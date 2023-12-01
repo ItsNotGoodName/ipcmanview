@@ -84,7 +84,7 @@ func (s *ScanPeriodIterator) Cursor() time.Time {
 
 func Scan(
 	ctx context.Context,
-	rpcClient dahuarpc.Client,
+	rpcClient dahuarpc.Conn,
 	scanPeriod ScanPeriod,
 	location *time.Location,
 	resC chan<- []mediafilefind.FindNextFileInfo,
@@ -101,7 +101,7 @@ func Scan(
 
 func scan(
 	ctx context.Context,
-	rpcClient dahuarpc.Client,
+	rpcClient dahuarpc.Conn,
 	scanPeriod ScanPeriod,
 	location *time.Location,
 	resC chan<- []mediafilefind.FindNextFileInfo,

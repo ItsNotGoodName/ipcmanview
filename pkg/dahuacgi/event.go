@@ -20,7 +20,7 @@ type EventManager struct {
 	Boundary EventBoundary
 }
 
-func EventManagerGet(ctx context.Context, c Client, heartbeat int) (EventManager, error) {
+func EventManagerGet(ctx context.Context, c Conn, heartbeat int) (EventManager, error) {
 	req := NewRequest("eventManager.cgi").
 		QueryString("action", "attach").
 		QueryString("codes", "[All]")

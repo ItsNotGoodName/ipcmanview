@@ -92,7 +92,7 @@ func (s *DahuaServer) GET(c echo.Context) error {
 
 	res := make([]models.DahuaStatus, 0, len(conns))
 	for _, conn := range conns {
-		res = append(res, dahua.GetDahuaStatus(conn.Camera, conn.RPC.Conn))
+		res = append(res, dahua.GetDahuaStatus(conn.Camera, conn.RPC))
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -222,7 +222,7 @@ func (s *DahuaServer) GETIDError(c echo.Context) error {
 		return err
 	}
 
-	res := dahua.GetError(conn.RPC.Conn)
+	res := dahua.GetError(conn.RPC)
 
 	return c.JSON(http.StatusOK, res)
 }

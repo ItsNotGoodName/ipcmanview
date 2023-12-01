@@ -6,6 +6,11 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
+type Conn interface {
+	dahuarpc.Conn
+	Session() string
+}
+
 type Params struct {
 	Code string `json:"code"`
 	Arg1 int    `json:"arg1"`
@@ -15,7 +20,7 @@ type Params struct {
 }
 
 func Start(ctx context.Context, c *Client, channel int, params Params) error {
-	instance, err := c.Instance(ctx, channel)
+	instance, err := c.InstanceGet(ctx, channel)
 	if err != nil {
 		return err
 	}
@@ -33,7 +38,7 @@ func Start(ctx context.Context, c *Client, channel int, params Params) error {
 }
 
 func Stop(ctx context.Context, c *Client, channel int, params Params) error {
-	instance, err := c.Instance(ctx, channel)
+	instance, err := c.InstanceGet(ctx, channel)
 	if err != nil {
 		return err
 	}

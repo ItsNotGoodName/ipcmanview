@@ -8,12 +8,12 @@ import (
 	"github.com/icholy/digest"
 )
 
-type Conn struct {
+type Client struct {
 	client  *http.Client
 	baseURL string
 }
 
-func NewConn(httpClient http.Client, httpAddress, username, password string) Conn {
+func NewClient(httpClient http.Client, httpAddress, username, password string) Client {
 	t := &digest.Transport{
 		Username: username,
 		Password: password,
@@ -22,13 +22,13 @@ func NewConn(httpClient http.Client, httpAddress, username, password string) Con
 		t.Transport = httpClient.Transport
 	}
 	httpClient.Transport = t
-	return Conn{
+	return Client{
 		baseURL: fmt.Sprintf("%s/cgi-bin/", httpAddress),
 		client:  &httpClient,
 	}
 }
 
-func (c Conn) CGIGet(ctx context.Context, r *Request) (*http.Response, error) {
+func (c Client) CGIGet(ctx context.Context, r *Request) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, r.URL(c.baseURL), nil)
 	if err != nil {
 		return nil, err

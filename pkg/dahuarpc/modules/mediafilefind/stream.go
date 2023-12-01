@@ -14,7 +14,7 @@ type Stream struct {
 	closed bool
 }
 
-func NewStream(ctx context.Context, c dahuarpc.Client, condtion Condition) (*Stream, error) {
+func NewStream(ctx context.Context, c dahuarpc.Conn, condtion Condition) (*Stream, error) {
 	object, err := Create(ctx, c)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func NewStream(ctx context.Context, c dahuarpc.Client, condtion Condition) (*Str
 	}, nil
 }
 
-func (s *Stream) Next(ctx context.Context, c dahuarpc.Client) ([]FindNextFileInfo, error) {
+func (s *Stream) Next(ctx context.Context, c dahuarpc.Conn) ([]FindNextFileInfo, error) {
 	if s.closed {
 		return nil, nil
 	}
@@ -67,7 +67,7 @@ func (s *Stream) Next(ctx context.Context, c dahuarpc.Client) ([]FindNextFileInf
 	return files.Infos, nil
 }
 
-func (s *Stream) Close(c dahuarpc.Client) {
+func (s *Stream) Close(c dahuarpc.Conn) {
 	if s.closed {
 		return
 	}
