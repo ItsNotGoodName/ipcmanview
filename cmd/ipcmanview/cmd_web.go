@@ -11,13 +11,13 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-type WebCmd struct {
-	HTTPHost string `env:"HTTP_HOST"`
-	HTTPPort string `env:"HTTP_PORT" default:"8080"`
-	DBPath   string `env:"DB_PATH" default:"sqlite.db"`
+type CmdWeb struct {
+	Shared
+	HTTPHost string `env:"HTTP_HOST" help:"HTTP host to listen on."`
+	HTTPPort string `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
 }
 
-func (c *WebCmd) Run(ctx *Context) error {
+func (c *CmdWeb) Run(ctx *Context) error {
 	// Supervisor
 	super := suture.New("root", suture.Spec{
 		EventHook: sutureext.EventHook(),

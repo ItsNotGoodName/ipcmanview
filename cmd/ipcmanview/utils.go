@@ -6,6 +6,10 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 )
 
+type Shared struct {
+	DBPath string `default:"sqlite.db" env:"DB_PATH" help:"Path to SQLite database."`
+}
+
 func useDB(path string) (sqlc.DB, error) {
 	sqlDB, err := sqlite.New(path)
 	if err != nil {

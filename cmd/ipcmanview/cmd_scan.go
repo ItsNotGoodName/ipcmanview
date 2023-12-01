@@ -7,13 +7,13 @@ import (
 	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 )
 
-type ScanCmd struct {
-	DBPath string `env:"DB_PATH" default:"sqlite.db"`
-	Full   bool
-	Reset  bool
+type CmdScan struct {
+	Shared
+	Full  bool `help:"Run full scan."`
+	Reset bool `help:"Reset all file cursors."`
 }
 
-func (c *ScanCmd) Run(ctx *Context) error {
+func (c *CmdScan) Run(ctx *Context) error {
 	db, err := useDB(c.DBPath)
 	if err != nil {
 		return err
