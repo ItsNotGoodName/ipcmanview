@@ -4,7 +4,7 @@
 version: "3"
 
 vars:
-  CMD_NAME: ipcmanview-web
+  CMD_NAME: ipcmanview
   PACKAGE_NAME: "github.com/ItsNotGoodName/ipcmanview"
 
 tasks:

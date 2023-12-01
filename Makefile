@@ -19,7 +19,7 @@ preview-web:
 # Run
 
 run-web:
-	go run ./cmd/ipcmanview-web
+	go run ./cmd/ipcmanview web
 
 # Dev
 
@@ -27,7 +27,7 @@ dev-gateway:
 	air
 
 dev-web:
-	air -build.cmd "go build -o ./tmp/main -tags dev ./cmd/ipcmanview-web"
+	air -build.cmd "go build -o ./tmp/main -tags dev ./cmd/ipcmanview" -build.args_bin web
 
 dev-web-assets:
 	cd internal/web && pnpm install && pnpm run dev

@@ -60,6 +60,10 @@ func newConn(c storeClient) Conn {
 	}
 }
 
+func NewConn(camera models.DahuaCamera) Conn {
+	return newConn(newStoreClient(camera, time.Now()))
+}
+
 type Conn struct {
 	Camera models.DahuaCamera
 	RPC    auth.Client
@@ -86,11 +90,19 @@ func (s *Store) Serve(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
+			wg := sync.WaitGroup{}
+
 			s.clientsMu.Lock()
-			for _, rpcClient := range s.clients {
-				rpcClient.Close(context.Background())
+			for _, client := range s.clients {
+				wg.Add(1)
+				go func(client storeClient) {
+					client.Close(context.Background())
+					wg.Done()
+				}(client)
 			}
 			s.clientsMu.Unlock()
+
+			wg.Wait()
 
 			return ctx.Err()
 		case <-t.C:
