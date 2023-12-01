@@ -373,12 +373,13 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	_, err = s.db.UpdateDahuaCamera(ctx, sqlc.UpdateDahuaCameraParams{
-		ID:       dto.ID,
-		Name:     form.Name,
-		Username: dto.Username,
-		Password: dto.Password,
-		Address:  dto.Address,
-		Location: dto.Location,
+		ID:        dto.ID,
+		Name:      form.Name,
+		Username:  dto.Username,
+		Password:  dto.Password,
+		Address:   dto.Address,
+		Location:  dto.Location,
+		UpdatedAt: types.NewTime(time.Now()),
 	})
 	if err != nil {
 		return err

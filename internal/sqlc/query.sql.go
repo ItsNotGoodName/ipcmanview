@@ -195,7 +195,7 @@ func (q *Queries) DeleteDahuaFileScanLock(ctx context.Context, cameraID int64) e
 }
 
 const getDahuaCamera = `-- name: GetDahuaCamera :one
-SELECT id, name, address, username, password, location, created_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
 WHERE id = ? LIMIT 1
 `
@@ -208,6 +208,7 @@ type GetDahuaCameraRow struct {
 	Password  string
 	Location  types.Location
 	CreatedAt types.Time
+	UpdatedAt types.Time
 	Seed      int64
 }
 
@@ -222,6 +223,7 @@ func (q *Queries) GetDahuaCamera(ctx context.Context, id int64) (GetDahuaCameraR
 		&i.Password,
 		&i.Location,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.Seed,
 	)
 	return i, err
@@ -269,7 +271,7 @@ func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 }
 
 const listDahuaCamera = `-- name: ListDahuaCamera :many
-SELECT id, name, address, username, password, location, created_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
 `
 
@@ -281,6 +283,7 @@ type ListDahuaCameraRow struct {
 	Password  string
 	Location  types.Location
 	CreatedAt types.Time
+	UpdatedAt types.Time
 	Seed      int64
 }
 
@@ -301,6 +304,7 @@ func (q *Queries) ListDahuaCamera(ctx context.Context) ([]ListDahuaCameraRow, er
 			&i.Password,
 			&i.Location,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 			&i.Seed,
 		); err != nil {
 			return nil, err
@@ -420,18 +424,19 @@ func (q *Queries) ListDahuaFileCursor(ctx context.Context) ([]ListDahuaFileCurso
 
 const updateDahuaCamera = `-- name: UpdateDahuaCamera :one
 UPDATE dahua_cameras 
-SET name = ?, address = ?, username = ?, password = ?, location = ?
+SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?
 WHERE id = ?
 RETURNING id
 `
 
 type UpdateDahuaCameraParams struct {
-	Name     string
-	Address  string
-	Username string
-	Password string
-	Location types.Location
-	ID       int64
+	Name      string
+	Address   string
+	Username  string
+	Password  string
+	Location  types.Location
+	UpdatedAt types.Time
+	ID        int64
 }
 
 func (q *Queries) UpdateDahuaCamera(ctx context.Context, arg UpdateDahuaCameraParams) (int64, error) {
@@ -441,6 +446,7 @@ func (q *Queries) UpdateDahuaCamera(ctx context.Context, arg UpdateDahuaCameraPa
 		arg.Username,
 		arg.Password,
 		arg.Location,
+		arg.UpdatedAt,
 		arg.ID,
 	)
 	var id int64

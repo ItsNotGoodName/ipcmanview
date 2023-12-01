@@ -87,7 +87,7 @@ func Scan(ctx context.Context, db sqlc.DB, rpcClient dahuarpc.Conn, camera model
 		return err
 	}
 
-	updated_at := types.TimeNow()
+	updated_at := types.NewTime(time.Now())
 	iterator := dahua.NewScanPeriodIterator(getScanRange(fileCursor, scanType))
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
 

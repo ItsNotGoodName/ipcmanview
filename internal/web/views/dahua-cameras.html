@@ -34,6 +34,7 @@
               <th>Username</th>
               <th>Location</th>
               <th>Created At</th>
+              <th>Updated At</th>
               <th></th>
             </tr>
           </thead>
@@ -55,6 +56,14 @@
                     data-tip="{{ TimeHumanize $val.CreatedAt }}"
                   >
                     {{ SLFormatDate $val.CreatedAt }}
+                  </div>
+                </td>
+                <td>
+                  <div
+                    class="tooltip"
+                    data-tip="{{ TimeHumanize $val.UpdatedAt }}"
+                  >
+                    {{ SLFormatDate $val.UpdatedAt }}
                   </div>
                 </td>
                 <td class="join">

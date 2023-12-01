@@ -109,7 +109,10 @@ func (c Client) Session() string {
 
 func (c Client) Close(ctx context.Context) error {
 	c.state.Lock()
-	_, err := global.Logout(ctx, c.loginClient())
+	var err error
+	if c.state.State == dahuarpc.StateLogin {
+		_, err = global.Logout(ctx, c.loginClient())
+	}
 	c.state.SetClose()
 	c.state.Unlock()
 

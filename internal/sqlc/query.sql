@@ -7,17 +7,17 @@ INSERT INTO dahua_cameras (
 
 -- name: UpdateDahuaCamera :one
 UPDATE dahua_cameras 
-SET name = ?, address = ?, username = ?, password = ?, location = ?
+SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?
 WHERE id = ?
 RETURNING id;
 
 -- name: GetDahuaCamera :one
-SELECT id, name, address, username, password, location, created_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
 WHERE id = ? LIMIT 1;
 
 -- name: ListDahuaCamera :many
-SELECT id, name, address, username, password, location, created_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id;
 
 -- name: DeleteDahuaCamera :exec

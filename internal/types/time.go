@@ -10,10 +10,6 @@ func NewTime(t time.Time) Time {
 	return Time{Time: t}
 }
 
-func TimeNow() Time {
-	return Time{Time: time.Now()}
-}
-
 type Time struct {
 	time.Time
 }
