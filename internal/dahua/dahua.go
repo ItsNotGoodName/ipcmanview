@@ -13,9 +13,11 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/auth"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/intervideo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/license"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/magicbox"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/peripheralchip"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/storage"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/usermanager"
@@ -73,15 +75,33 @@ func GetDahuaDetail(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn
 		return models.DahuaDetail{}, err
 	}
 
+	onvifVersion, err := intervideo.ManagerGetVersion(ctx, rpcClient)
+	if err != nil && !ignorableError(err) {
+		return models.DahuaDetail{}, err
+	}
+
+	var algorithmVersion string
+	{
+		res, err := peripheralchip.GetVersion(ctx, rpcClient, peripheralchip.TypeBLOB)
+		if err != nil && !ignorableError(err) {
+			return models.DahuaDetail{}, err
+		}
+		if len(res) > 0 {
+			algorithmVersion = res[0].SoftwareVersion
+		}
+	}
+
 	return models.DahuaDetail{
-		CameraID:        cameraID,
-		SN:              sn,
-		DeviceClass:     deviceClass,
-		DeviceType:      deviceType,
-		HardwareVersion: hardwareVersion,
-		MarketArea:      marketArea,
-		ProcessInfo:     ProcessInfo,
-		Vendor:          vendor,
+		CameraID:         cameraID,
+		SN:               sn,
+		DeviceClass:      deviceClass,
+		DeviceType:       deviceType,
+		HardwareVersion:  hardwareVersion,
+		MarketArea:       marketArea,
+		ProcessInfo:      ProcessInfo,
+		Vendor:           vendor,
+		OnvifVersion:     onvifVersion,
+		AlgorithmVersion: algorithmVersion,
 	}, nil
 }
 

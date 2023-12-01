@@ -46,14 +46,16 @@ type DahuaCamera struct {
 }
 
 type DahuaDetail struct {
-	CameraID        int64  `json:"camera_id"`
-	SN              string `json:"sn"`
-	DeviceClass     string `json:"device_class"`
-	DeviceType      string `json:"device_type"`
-	HardwareVersion string `json:"hardware_version"`
-	MarketArea      string `json:"market_area"`
-	ProcessInfo     string `json:"process_info"`
-	Vendor          string `json:"vendor"`
+	CameraID         int64  `json:"camera_id"`
+	SN               string `json:"sn"`
+	DeviceClass      string `json:"device_class"`
+	DeviceType       string `json:"device_type"`
+	HardwareVersion  string `json:"hardware_version"`
+	MarketArea       string `json:"market_area"`
+	ProcessInfo      string `json:"process_info"`
+	Vendor           string `json:"vendor"`
+	OnvifVersion     string `json:"onvif_version"`
+	AlgorithmVersion string `json:"algorithm_version"`
 }
 
 type DahuaSoftwareVersion struct {

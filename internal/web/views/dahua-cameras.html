@@ -49,7 +49,14 @@
                 <td>{{ $val.Address }}</td>
                 <td>{{ $val.Username }}</td>
                 <td>{{ $val.Location }}</td>
-                <td>{{ SLFormatDate $val.CreatedAt }}</td>
+                <td>
+                  <div
+                    class="tooltip"
+                    data-tip="{{ TimeHumanize $val.CreatedAt }}"
+                  >
+                    {{ SLFormatDate $val.CreatedAt }}
+                  </div>
+                </td>
                 <td class="join">
                   <a
                     class="join-item btn-xs btn"
@@ -112,7 +119,7 @@
 
     <div
       class="flex justify-center"
-      hx-get="/dahua/cameras?api=true"
+      hx-get="/dahua/cameras"
       hx-swap="outerHTML"
       hx-trigger="load"
     >
@@ -123,10 +130,11 @@
   {{ template "footer.html". }}
 {{ end }}
 
-{{ define "htmx-api-data" }}
-  {{ template "api-data" .Data }}
+{{ define "htmx" }}
+  {{ template "tables" .Data }}
 {{ end }}
-{{ define "api-data" }}
+
+{{ define "tables" }}
 
   <section class="flex flex-col gap-4">
     <div class="border-b-base-content flex justify-between gap-4">
@@ -180,6 +188,8 @@
             <th>Market Area</th>
             <th>Process Info</th>
             <th>Vendor</th>
+            <th>Onvif Version</th>
+            <th>Algorithm Version</th>
           </tr>
         </thead>
         <tbody>
@@ -203,6 +213,8 @@
               <td>{{ $val.MarketArea }}</td>
               <td>{{ $val.ProcessInfo }}</td>
               <td>{{ $val.Vendor }}</td>
+              <td>{{ $val.OnvifVersion }}</td>
+              <td>{{ $val.AlgorithmVersion }}</td>
             </tr>
           {{ end }}
         </tbody>

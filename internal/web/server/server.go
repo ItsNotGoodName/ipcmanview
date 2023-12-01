@@ -237,14 +237,14 @@ func (s Server) DahuaCamerasIDDelete(c echo.Context) error {
 
 func (s Server) DahuaCameras(c echo.Context) error {
 	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
-		apiData, err := useDahuaAPIData(c.Request().Context(), s.db, s.dahuaStore)
+		tables, err := useDahuaTables(c.Request().Context(), s.db, s.dahuaStore)
 		if err != nil {
 			return err
 		}
 
 		return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{
-			"htmx-api-data",
-			apiData,
+			"htmx",
+			tables,
 		})
 	}
 

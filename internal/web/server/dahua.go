@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func useDahuaAPIData(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (any, error) {
+func useDahuaTables(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (any, error) {
 	cameras, err := db.ListDahuaCamera(ctx)
 	if err != nil {
 		return nil, err
