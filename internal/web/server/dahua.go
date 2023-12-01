@@ -44,49 +44,56 @@ func useDahuaTables(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (a
 				res, err := dahua.GetDahuaDetail(ctx, conn.Camera.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get detail")
-				} else {
-					data.detail = res
+					return
 				}
+
+				data.detail = res
 			}
 
 			{
 				res, err := dahua.GetSoftwareVersion(ctx, conn.Camera.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get software version")
-				} else {
-					data.softwareVersion = res
+					return
 				}
+
+				data.softwareVersion = res
 			}
 
 			{
 				res, err := dahua.GetLicenseList(ctx, conn.Camera.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get licenses")
-				} else {
-					data.licenses = res
+					return
 				}
+
+				data.licenses = res
 			}
 
 			{
 				res, err := dahua.GetStorage(ctx, conn.Camera.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get storage")
-				} else {
-					data.storage = res
 				}
+
+				data.storage = res
 			}
 
 			{
 				caps, err := dahua.GetCoaxialCaps(ctx, conn.Camera.ID, conn.RPC, 0)
 				if err != nil {
 					log.Err(err).Msg("Failed to get coaxial caps")
-				} else if caps.SupportControlLight || caps.SupportControlSpeaker || caps.SupportControlFullcolorLight {
+					return
+				}
+
+				if caps.SupportControlLight || caps.SupportControlSpeaker || caps.SupportControlFullcolorLight {
 					res, err := dahua.GetCoaxialStatus(ctx, conn.Camera.ID, conn.RPC, 0)
 					if err != nil {
 						log.Err(err).Msg("Failed to get coaxial status")
-					} else {
-						data.coaxialcontrolStatus = append(data.coaxialcontrolStatus, res)
+						return
 					}
+
+					data.coaxialcontrolStatus = append(data.coaxialcontrolStatus, res)
 				}
 			}
 
