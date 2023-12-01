@@ -23,7 +23,7 @@ var mainCmd struct {
 	Debug bool `help:"Enable debug mode."`
 
 	Web  WebCmd  `cmd:"" help:"Start web server."`
-	Scan ScanCmd `cmd:"" help:"Scan files on all cameras."`
+	Scan ScanCmd `cmd:"" help:"Scan files on cameras."`
 }
 
 func main() {

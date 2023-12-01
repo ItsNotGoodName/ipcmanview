@@ -21,7 +21,7 @@ var (
 
 const scanVolatileDuration = 8 * time.Hour
 
-func DefaultFileCursor() sqlc.CreateDahuaFileCursorParams {
+func NewFileCursor() sqlc.CreateDahuaFileCursorParams {
 	now := time.Now()
 	return sqlc.CreateDahuaFileCursorParams{
 		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
@@ -67,6 +67,17 @@ func getScanRange(fileCursor sqlc.DahuaFileCursor, scanType ScanType) models.Tim
 	default:
 		panic("unknown type")
 	}
+}
+
+func ScanReset(ctx context.Context, db sqlc.DB, id int64) error {
+	fileCursor := NewFileCursor()
+	_, err := db.UpdateDahuaFileCursor(ctx, sqlc.UpdateDahuaFileCursorParams{
+		QuickCursor: fileCursor.QuickCursor,
+		FullCursor:  fileCursor.FullCursor,
+		FullEpoch:   fileCursor.FullEpoch,
+		CameraID:    id,
+	})
+	return err
 }
 
 // Scan should only be called once per camera.

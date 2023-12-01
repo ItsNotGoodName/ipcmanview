@@ -309,7 +309,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Location:  camera.Location,
 		CreatedAt: types.NewTime(camera.CreatedAt),
 		UpdatedAt: types.NewTime(camera.CreatedAt),
-	}, webdahua.DefaultFileCursor())
+	}, webdahua.NewFileCursor())
 	if err != nil {
 		return err
 	}

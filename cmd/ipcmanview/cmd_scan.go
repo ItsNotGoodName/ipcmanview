@@ -10,6 +10,7 @@ import (
 type ScanCmd struct {
 	DBPath string `env:"DB_PATH" default:"sqlite.db"`
 	Full   bool
+	Reset  bool
 }
 
 func (c *ScanCmd) Run(ctx *Context) error {
@@ -26,6 +27,12 @@ func (c *ScanCmd) Run(ctx *Context) error {
 	scanType := webdahua.ScanTypeQuick
 	if c.Full {
 		scanType = webdahua.ScanTypeFull
+	}
+
+	if c.Reset {
+		for _, dbCamera := range dbCamera {
+			webdahua.ScanReset(ctx, db, dbCamera.ID)
+		}
 	}
 
 	for _, camera := range webdahua.ConvertListDahuaCameraRows(dbCamera) {
