@@ -15,9 +15,3 @@ func (t TimeRange) Null() bool {
 type Error struct {
 	Error string `json:"error"`
 }
-
-type StreamPayload struct {
-	Data    any     `json:"data,omitempty"`
-	Message *string `json:"message,omitempty"`
-	OK      bool    `json:"ok"`
-}

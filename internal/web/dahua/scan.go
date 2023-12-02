@@ -69,6 +69,7 @@ func getScanRange(fileCursor sqlc.DahuaFileCursor, scanType ScanType) models.Tim
 	}
 }
 
+// ScanReset should only be called once per camera.
 func ScanReset(ctx context.Context, db sqlc.DB, id int64) error {
 	fileCursor := NewFileCursor()
 	_, err := db.UpdateDahuaFileCursor(ctx, sqlc.UpdateDahuaFileCursorParams{

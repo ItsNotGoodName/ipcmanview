@@ -32,9 +32,15 @@ func useStream(c echo.Context) *json.Encoder {
 	return json.NewEncoder(c.Response())
 }
 
+type StreamPayload struct {
+	Data    any     `json:"data,omitempty"`
+	Message *string `json:"message,omitempty"`
+	OK      bool    `json:"ok"`
+}
+
 func sendStreamError(c echo.Context, enc *json.Encoder, err error) error {
 	str := err.Error()
-	if encodeErr := enc.Encode(models.StreamPayload{
+	if encodeErr := enc.Encode(StreamPayload{
 		OK:      false,
 		Message: &str,
 	}); encodeErr != nil {
@@ -47,7 +53,7 @@ func sendStreamError(c echo.Context, enc *json.Encoder, err error) error {
 }
 
 func sendStream(c echo.Context, enc *json.Encoder, data any) error {
-	err := enc.Encode(models.StreamPayload{
+	err := enc.Encode(StreamPayload{
 		OK:   true,
 		Data: data,
 	})
@@ -61,6 +67,20 @@ func sendStream(c echo.Context, enc *json.Encoder, data any) error {
 }
 
 // ---------- Queries
+
+func queryInts(c echo.Context, key string) ([]int64, error) {
+	ids := make([]int64, 0)
+	idsStr := c.QueryParams()[key]
+	for _, v := range idsStr {
+		id, err := strconv.ParseInt(v, 10, 64)
+		if err != nil {
+			return nil, echo.ErrBadRequest.WithInternal(err)
+		}
+		ids = append(ids, id)
+	}
+
+	return ids, nil
+}
 
 func queryIntOptional(c echo.Context, key string) (int, error) {
 	str := c.QueryParam(key)

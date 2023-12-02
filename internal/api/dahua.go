@@ -10,10 +10,14 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/pubsub"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
 	echo "github.com/labstack/echo/v4"
+	mqtt "github.com/mochi-mqtt/server/v2"
+	"github.com/mochi-mqtt/server/v2/packets"
 )
 
 type DahuaCameraStore interface {
@@ -66,16 +70,16 @@ func useDahuaConn(c echo.Context, cameraStore DahuaCameraStore, store *dahua.Sto
 	return client, nil
 }
 
-func NewDahuaServer(pubSub PubSub, dahuaStore *dahua.Store, dahuaCameraStore DahuaCameraStore) *DahuaServer {
+func NewDahuaServer(pub *pubsub.Pub, dahuaStore *dahua.Store, dahuaCameraStore DahuaCameraStore) *DahuaServer {
 	return &DahuaServer{
-		pubSub:      pubSub,
+		pub:         pub,
 		store:       dahuaStore,
 		cameraStore: dahuaCameraStore,
 	}
 }
 
 type DahuaServer struct {
-	pubSub      PubSub
+	pub         *pubsub.Pub
 	store       *dahua.Store
 	cameraStore DahuaCameraStore
 }
@@ -99,7 +103,15 @@ func (s *DahuaServer) GET(c echo.Context) error {
 }
 
 func (s *DahuaServer) POST(c echo.Context) error {
-	var req map[int64]models.DTODahuaCamera
+	type reqCamera struct {
+		Address  string         `json:"address"`
+		Location types.Location `json:"location"`
+		Username string         `json:"username"`
+		Password string         `json:"password"`
+		Seed     int            `json:"seed"`
+	}
+
+	var req map[int64]reqCamera
 	err := c.Bind(&req)
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
@@ -297,66 +309,47 @@ func (s *DahuaServer) GETIDEvents(c echo.Context) error {
 	} else {
 		// Get events from PubSub
 
-		ctx, cancel := context.WithCancel(c.Request().Context())
-		defer cancel()
-
-		dataC, err := s.pubSub.SubscribeDahuaEvents(ctx, []int64{conn.Camera.ID})
-		if err != nil {
-			return err
-		}
-
 		stream := useStream(c)
 
-		for {
-			select {
-			case <-ctx.Done():
-				return sendStreamError(c, stream, ctx.Err())
-			case data, ok := <-dataC:
-				if !ok {
-					return sendStreamError(c, stream, ErrSubscriptionClosed)
-				}
-				if err := sendStream(c, stream, data.Event); err != nil {
-					return err
-				}
-			}
-		}
+		sub := s.pub.NewSub(func(cl *mqtt.Client, sub packets.Subscription, pk packets.Packet) error {
+			return sendStream(c, stream, json.RawMessage(pk.Payload))
+		})
+		defer sub.Close()
+
+		sub.Subscribe("dahua/+/event")
+
+		return sub.Wait(c.Request().Context())
 	}
 }
 
 func (s *DahuaServer) GETEvents(c echo.Context) error {
-	ids := make([]int64, 0)
-	idsStr := c.QueryParams()["ids"]
-	for _, v := range idsStr {
-		id, err := strconv.ParseInt(v, 10, 64)
-		if err != nil {
-			return echo.ErrBadRequest.WithInternal(err)
-		}
-		ids = append(ids, id)
-	}
-
-	ctx, cancel := context.WithCancel(c.Request().Context())
-	defer cancel()
-
-	dataC, err := s.pubSub.SubscribeDahuaEvents(ctx, ids)
+	ids, err := queryInts(c, "id")
 	if err != nil {
 		return err
 	}
 
 	stream := useStream(c)
 
-	for {
-		select {
-		case <-ctx.Done():
-			return sendStreamError(c, stream, ctx.Err())
-		case data, ok := <-dataC:
-			if !ok {
-				return sendStreamError(c, stream, ErrSubscriptionClosed)
-			}
-			if err := sendStream(c, stream, data); err != nil {
+	sub := s.pub.NewSub(func(cl *mqtt.Client, sub packets.Subscription, pk packets.Packet) error {
+		return sendStream(c, stream, json.RawMessage(pk.Payload))
+	})
+	defer sub.Close()
+
+	if len(ids) == 0 {
+		err := sub.Subscribe("dahua/+/event")
+		if err != nil {
+			return err
+		}
+	} else {
+		for _, id := range ids {
+			err := sub.Subscribe("dahua/" + strconv.FormatInt(id, 10) + "/event")
+			if err != nil {
 				return err
 			}
 		}
 	}
+
+	return sub.Wait(c.Request().Context())
 }
 
 func (s *DahuaServer) GETIDFiles(c echo.Context) error {

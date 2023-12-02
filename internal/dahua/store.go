@@ -47,7 +47,7 @@ type storeClient struct {
 
 func (c storeClient) Close(ctx context.Context) {
 	if err := c.ConnRPC.Close(ctx); err != nil {
-		log.Err(err).Int64("id", c.Camera.ID).Caller().Msg("Failed to close RPC connection")
+		log.Err(err).Int64("id", c.Camera.ID).Msg("Failed to close RPC connection")
 	}
 }
 
@@ -186,11 +186,7 @@ func (s *Store) ConnDelete(ctx context.Context, id int64) {
 	}
 }
 
-type StoreBus interface {
-	OnCameraDeleted(h func(ctx context.Context, evt models.EventDahuaCameraDeleted) error)
-}
-
-func RegisterStoreBus(bus StoreBus, store *Store) {
+func (store *Store) Register(bus *Bus) {
 	bus.OnCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
 		store.ConnDelete(ctx, evt.CameraID)
 		return nil

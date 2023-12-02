@@ -54,3 +54,32 @@ func Stop(ctx context.Context, c *Client, channel int, params Params) error {
 		Object(instance.Result.Integer()))
 	return err
 }
+
+type Preset struct {
+	Index int    `json:"Index"`
+	Name  string `json:"Name"`
+}
+
+func GetPresets(ctx context.Context, c *Client, channel int, params Params) ([]Preset, error) {
+	instance, err := c.InstanceGet(ctx, channel)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := c.RPCSEQ(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := dahuarpc.Send[struct {
+		Presets []Preset `json:"presets"`
+	}](ctx, req.
+		Method("ptz.getPresets").
+		Params(params).
+		Object(instance.Result.Integer()))
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Params.Presets, nil
+}

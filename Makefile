@@ -14,7 +14,7 @@ clean:
 # Preview
 
 preview-web:
-	cd internal/web && pnpm run build && cd ../.. && go run ./cmd/ipcmanview-web
+	cd internal/web && pnpm run build && cd ../.. && go run ./cmd/ipcmanview web
 
 # Run
 

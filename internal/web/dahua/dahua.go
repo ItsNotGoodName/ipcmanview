@@ -84,7 +84,7 @@ func (p DahuaEventHooksProxy) CameraEvent(ctx context.Context, evt models.DahuaE
 		CreatedAt:     types.NewTime(evt.CreatedAt),
 	})
 	if err != nil {
-		log.Err(err).Caller().Msg("Failed to save DahuaEvent")
+		log.Err(err).Msg("Failed to save DahuaEvent")
 		return
 	}
 	evt.ID = id

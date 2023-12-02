@@ -32,7 +32,7 @@ func ignorableError(err error) bool {
 		dahuarpc.ErrResponseTypeInterfaceNotFound,
 		dahuarpc.ErrResponseTypeUnknown,
 	}, res.Type) {
-		log.Err(err).Str("method", res.Method).Int("code", res.Code).Str("type", string(res.Type)).Caller().Msg("Ignoring ResponseError")
+		log.Err(err).Str("method", res.Method).Int("code", res.Code).Str("type", string(res.Type)).Msg("Ignoring ResponseError")
 		return true
 	}
 
@@ -356,11 +356,11 @@ func SetPreset(ctx context.Context, clientPTZ *ptz.Client, channel, index int) e
 	})
 }
 
-type CameraRepo interface {
+type CameraStore interface {
 	List(ctx context.Context) ([]models.DahuaCamera, error)
 }
 
-func Bootstrap(ctx context.Context, cameraStore CameraRepo, store *Store, eventWorkerStore *EventWorkerStore) error {
+func Bootstrap(ctx context.Context, cameraStore CameraStore, store *Store, eventWorkerStore *EventWorkerStore) error {
 	cameras, err := cameraStore.List(ctx)
 	if err != nil {
 		return err

@@ -2,93 +2,173 @@ package pubsub
 
 import (
 	"context"
-	"slices"
+	"errors"
 	"sync"
+	"sync/atomic"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	mqtt "github.com/mochi-mqtt/server/v2"
+	"github.com/mochi-mqtt/server/v2/hooks/auth"
+	"github.com/mochi-mqtt/server/v2/listeners"
+	"github.com/mochi-mqtt/server/v2/packets"
+	"github.com/rs/zerolog/log"
+	"github.com/thejerf/suture/v4"
 )
 
-type pubSub struct {
-	Ch             chan<- models.EventDahuaCameraEvent
-	dahuaCameraIDs []int64
-}
-
-func NewPub(dahuaBus DahuaBus) *Pub {
-	return register(dahuaBus, &Pub{
-		mu:                    sync.Mutex{},
-		id:                    0,
-		dahuaEventSubscribers: map[int]pubSub{},
-	})
-}
-
 type Pub struct {
-	mu                    sync.Mutex
-	id                    int
-	dahuaEventSubscribers map[int]pubSub
+	*mqtt.Server
+	id int32
 }
 
-func (p *Pub) unsubscribeDahuaEvents(id int) {
-	sub, found := p.dahuaEventSubscribers[id]
-	if found {
-		close(sub.Ch)
-		delete(p.dahuaEventSubscribers, id)
-	}
+func (p *Pub) NextID() int {
+	return int(atomic.AddInt32(&p.id, 1))
 }
 
-func (p *Pub) SubscribeDahuaEvents(ctx context.Context, ids []int64) (<-chan models.EventDahuaCameraEvent, error) {
-	ch := make(chan models.EventDahuaCameraEvent, 100)
-	slices.Sort(ids)
-
-	p.mu.Lock()
-	p.id += 1
-	id := p.id
-	p.dahuaEventSubscribers[id] = pubSub{
-		Ch:             ch,
-		dahuaCameraIDs: ids,
-	}
-	p.mu.Unlock()
-
-	go func() {
-		<-ctx.Done()
-		p.mu.Lock()
-		p.unsubscribeDahuaEvents(id)
-		p.mu.Unlock()
-	}()
-
-	return ch, nil
-}
-
-type DahuaBus interface {
-	OnCameraEvent(h func(ctx context.Context, evt models.EventDahuaCameraEvent) error)
-}
-
-func register(dahuaBus DahuaBus, p *Pub) *Pub {
-	dahuaBus.OnCameraEvent(func(ctx context.Context, evt models.EventDahuaCameraEvent) error {
-		p.mu.Lock()
-		defer p.mu.Unlock()
-
-		var deadSubIDs []int
-		for id, sub := range p.dahuaEventSubscribers {
-			if len(sub.dahuaCameraIDs) != 0 {
-				_, found := slices.BinarySearch(sub.dahuaCameraIDs, evt.Event.CameraID)
-				if !found {
-					continue
-				}
-			}
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case sub.Ch <- evt:
-			default:
-				deadSubIDs = append(deadSubIDs, id)
-			}
-		}
-		for _, id := range deadSubIDs {
-			p.unsubscribeDahuaEvents(id)
-		}
-
-		return nil
+func NewPub(bind bool, address string) (*Pub, error) {
+	mqttServer := mqtt.New(&mqtt.Options{
+		InlineClient: true,
 	})
-	return p
+
+	if bind {
+		if err := mqttServer.AddListener(listeners.NewTCP("t1", address, nil)); err != nil {
+			return nil, err
+		}
+	}
+	if err := mqttServer.AddHook(new(auth.Hook), &auth.Options{
+		Ledger: &auth.Ledger{
+			Auth: auth.AuthRules{
+				{Username: "", Password: "", Allow: true},
+			},
+			ACL: auth.ACLRules{
+				{
+					Filters: auth.Filters{
+						"#": auth.ReadOnly,
+					},
+				},
+			},
+		},
+	}); err != nil {
+		return nil, err
+	}
+
+	return &Pub{mqttServer, 0}, nil
+}
+
+func (p *Pub) Serve(ctx context.Context) error {
+	err := p.Server.Serve()
+	if err != nil {
+		return errors.Join(suture.ErrTerminateSupervisorTree, err)
+	}
+
+	<-ctx.Done()
+
+	return p.Server.Close()
+}
+
+func (pub *Pub) Register(dahuaBus *dahua.Bus) {
+	dahuaBus.OnCameraEvent(func(ctx context.Context, evt models.EventDahuaCameraEvent) error {
+		return SendDahuaEvent(pub, evt.Event)
+	})
+}
+
+type Thing struct {
+	Server *mqtt.Server
+}
+
+// SubscribeDahuaEvents implements api.PubSub.
+func (Thing) SubscribeDahuaEvents(ctx context.Context, cameraIDs []int64) (<-chan models.EventDahuaCameraEvent, error) {
+	panic("unimplemented")
+}
+
+type Sub struct {
+	pub       *Pub
+	fn        func(cl *mqtt.Client, sub packets.Subscription, pk packets.Packet) error
+	closeOnce sync.Once
+	errC      chan error
+	closedC   chan struct{}
+
+	subsMu sync.Mutex
+	subs   []sub
+}
+
+type sub struct {
+	id     int
+	filter string
+}
+
+func (pub *Pub) NewSub(fn func(cl *mqtt.Client, sub packets.Subscription, pk packets.Packet) error) *Sub {
+	return &Sub{
+		pub:       pub,
+		fn:        fn,
+		closeOnce: sync.Once{},
+		errC:      make(chan error, 1),
+		closedC:   make(chan struct{}),
+		subs:      []sub{},
+	}
+}
+
+func (s *Sub) close(err error) {
+	s.closeOnce.Do(func() {
+		s.subsMu.Lock()
+		for _, sub := range s.subs {
+			err := s.pub.Unsubscribe(sub.filter, sub.id)
+			if err != nil {
+				log.Err(err).Str("topic", sub.filter).Msg("Failed to unsubscribe")
+			}
+		}
+		close(s.closedC)
+		s.errC <- err
+		s.subsMu.Unlock()
+	})
+}
+
+func (s *Sub) Close() {
+	s.close(nil)
+}
+
+func (s *Sub) Subscribe(filter string) error {
+	s.subsMu.Lock()
+	defer s.subsMu.Unlock()
+
+	select {
+	case <-s.closedC:
+		return errors.New("subscription closed")
+	default:
+	}
+
+	id := s.pub.NextID()
+
+	err := s.pub.Subscribe(filter, id, s.handle)
+	if err != nil {
+		return err
+	}
+
+	s.subs = append(s.subs, sub{
+		id:     id,
+		filter: filter,
+	})
+
+	return nil
+}
+
+func (s *Sub) Wait(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case err := <-s.errC:
+		s.errC <- err
+		return err
+	}
+}
+
+func (s *Sub) handle(cl *mqtt.Client, sub packets.Subscription, pk packets.Packet) {
+	select {
+	case <-s.closedC:
+		return
+	default:
+	}
+	if err := s.fn(cl, sub, pk); err != nil {
+		s.close(err)
+	}
 }

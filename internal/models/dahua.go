@@ -115,7 +115,7 @@ type DahuaFile struct {
 }
 
 type DahuaEvent struct {
-	ID            int64           `json:"-"`
+	ID            int64           `json:"id"`
 	CameraID      int64           `json:"camera_id"`
 	ContentType   string          `json:"content_type"`
 	ContentLength int             `json:"content_length"`

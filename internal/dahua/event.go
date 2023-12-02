@@ -129,13 +129,7 @@ func (s *EventWorkerStore) Delete(id int64) {
 	s.workersMu.Unlock()
 }
 
-type EventBus interface {
-	OnCameraCreated(h func(ctx context.Context, evt models.EventDahuaCameraCreated) error)
-	OnCameraUpdated(h func(ctx context.Context, evt models.EventDahuaCameraUpdated) error)
-	OnCameraDeleted(h func(ctx context.Context, evt models.EventDahuaCameraDeleted) error)
-}
-
-func RegisterEventBus(e *EventWorkerStore, bus EventBus) {
+func (e *EventWorkerStore) Register(bus *Bus) {
 	bus.OnCameraCreated(func(ctx context.Context, evt models.EventDahuaCameraCreated) error {
 		return e.Create(evt.Camera)
 	})
