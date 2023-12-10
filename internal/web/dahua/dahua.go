@@ -74,14 +74,12 @@ type DahuaEventHooksProxy struct {
 
 func (p DahuaEventHooksProxy) CameraEvent(ctx context.Context, evt models.DahuaEvent) {
 	id, err := p.db.CreateDahuaEvent(ctx, sqlc.CreateDahuaEventParams{
-		CameraID:      evt.CameraID,
-		ContentType:   evt.ContentType,
-		ContentLength: int64(evt.ContentLength),
-		Code:          evt.Code,
-		Action:        evt.Action,
-		Index:         int64(evt.Index),
-		Data:          evt.Data,
-		CreatedAt:     types.NewTime(evt.CreatedAt),
+		CameraID:  evt.CameraID,
+		Code:      evt.Code,
+		Action:    evt.Action,
+		Index:     int64(evt.Index),
+		Data:      evt.Data,
+		CreatedAt: types.NewTime(evt.CreatedAt),
 	})
 	if err != nil {
 		log.Err(err).Msg("Failed to save DahuaEvent")

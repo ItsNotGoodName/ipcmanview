@@ -252,14 +252,12 @@ func GetUsers(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn, loca
 
 func NewDahuaEvent(cameraID int64, event dahuacgi.Event, createdAt time.Time) models.DahuaEvent {
 	return models.DahuaEvent{
-		CameraID:      cameraID,
-		ContentType:   event.ContentType,
-		ContentLength: event.ContentLength,
-		Code:          event.Code,
-		Action:        event.Action,
-		Index:         event.Index,
-		Data:          event.Data,
-		CreatedAt:     createdAt,
+		CameraID:  cameraID,
+		Code:      event.Code,
+		Action:    event.Action,
+		Index:     event.Index,
+		Data:      event.Data,
+		CreatedAt: createdAt,
 	}
 }
 

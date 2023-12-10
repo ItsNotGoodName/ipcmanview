@@ -23,15 +23,13 @@ type DahuaCamera struct {
 }
 
 type DahuaEvent struct {
-	ID            int64
-	CameraID      int64
-	ContentType   string
-	ContentLength int64
-	Code          string
-	Action        string
-	Index         int64
-	Data          json.RawMessage
-	CreatedAt     types.Time
+	ID        int64
+	CameraID  int64
+	Code      string
+	Action    string
+	Index     int64
+	Data      json.RawMessage
+	CreatedAt types.Time
 }
 
 type DahuaFile struct {

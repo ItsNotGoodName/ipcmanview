@@ -26,15 +26,13 @@ DELETE FROM dahua_cameras WHERE id = ?;
 -- name: CreateDahuaEvent :one
 INSERT INTO dahua_events (
   camera_id,
-  content_type,
-  content_length,
   code,
   action,
   `index`,
   data,
   created_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?
 ) RETURNING id;
 
 -- name: GetSettings :one

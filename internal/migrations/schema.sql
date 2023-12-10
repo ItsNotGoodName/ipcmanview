@@ -23,8 +23,6 @@ CREATE TABLE dahua_seeds (
 CREATE TABLE dahua_events (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   camera_id INTEGER NOT NULL,
-  content_type TEXT NOT NULL,
-  content_length INTEGER NOT NULL,
   code TEXT NOT NULL,
   action TEXT NOT NULL,
   `index` INTEGER NOT NULL,

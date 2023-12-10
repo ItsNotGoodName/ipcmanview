@@ -99,15 +99,13 @@ type DahuaFile struct {
 }
 
 type DahuaEvent struct {
-	ID            int64           `json:"id"`
-	CameraID      int64           `json:"camera_id"`
-	ContentType   string          `json:"content_type"`
-	ContentLength int             `json:"content_length"`
-	Code          string          `json:"code"`
-	Action        string          `json:"action"`
-	Index         int             `json:"index"`
-	Data          json.RawMessage `json:"data"`
-	CreatedAt     time.Time       `json:"created_at"`
+	ID        int64           `json:"id"`
+	CameraID  int64           `json:"camera_id"`
+	Code      string          `json:"code"`
+	Action    string          `json:"action"`
+	Index     int             `json:"index"`
+	Data      json.RawMessage `json:"data"`
+	CreatedAt time.Time       `json:"created_at"`
 }
 
 type DahuaStorage struct {

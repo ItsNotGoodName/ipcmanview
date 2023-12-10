@@ -16,34 +16,28 @@ import (
 const createDahuaEvent = `-- name: CreateDahuaEvent :one
 INSERT INTO dahua_events (
   camera_id,
-  content_type,
-  content_length,
   code,
   action,
   ` + "`" + `index` + "`" + `,
   data,
   created_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?
 ) RETURNING id
 `
 
 type CreateDahuaEventParams struct {
-	CameraID      int64
-	ContentType   string
-	ContentLength int64
-	Code          string
-	Action        string
-	Index         int64
-	Data          json.RawMessage
-	CreatedAt     types.Time
+	CameraID  int64
+	Code      string
+	Action    string
+	Index     int64
+	Data      json.RawMessage
+	CreatedAt types.Time
 }
 
 func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, createDahuaEvent,
 		arg.CameraID,
-		arg.ContentType,
-		arg.ContentLength,
 		arg.Code,
 		arg.Action,
 		arg.Index,
