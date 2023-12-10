@@ -1,4 +1,4 @@
-// pubsub is a simple in-memory event pub/sub.
+// pubsub is a simple in-memory event pub sub.
 package pubsub
 
 import (

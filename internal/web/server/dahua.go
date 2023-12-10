@@ -9,7 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
-	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	"github.com/rs/zerolog/log"
 )
 
@@ -27,7 +26,7 @@ func useDahuaTables(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (a
 		coaxialcontrolStatus []models.DahuaCoaxialStatus
 	}
 
-	conns := dahuaStore.ConnList(ctx, webdahua.ConvertListDahuaCameraRows(cameras))
+	conns := dahuaStore.ConnList(ctx, sqlc.ConvertListDahuaCameraRow(cameras))
 
 	cameraDataC := make(chan cameraData, len(cameras))
 	wg := sync.WaitGroup{}

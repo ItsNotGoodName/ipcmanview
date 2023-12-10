@@ -9,6 +9,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
@@ -290,6 +291,67 @@ func (q *Queries) ListDahuaCamera(ctx context.Context) ([]ListDahuaCameraRow, er
 	var items []ListDahuaCameraRow
 	for rows.Next() {
 		var i ListDahuaCameraRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Address,
+			&i.Username,
+			&i.Password,
+			&i.Location,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Seed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDahuaCameraByIDs = `-- name: ListDahuaCameraByIDs :many
+SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
+LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
+WHERE id IN (/*SLICE:ids*/?)
+`
+
+type ListDahuaCameraByIDsRow struct {
+	ID        int64
+	Name      string
+	Address   string
+	Username  string
+	Password  string
+	Location  types.Location
+	CreatedAt types.Time
+	UpdatedAt types.Time
+	Seed      int64
+}
+
+func (q *Queries) ListDahuaCameraByIDs(ctx context.Context, ids []int64) ([]ListDahuaCameraByIDsRow, error) {
+	query := listDahuaCameraByIDs
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListDahuaCameraByIDsRow
+	for rows.Next() {
+		var i ListDahuaCameraByIDsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

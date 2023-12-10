@@ -20,6 +20,11 @@ WHERE id = ? LIMIT 1;
 SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id;
 
+-- name: ListDahuaCameraByIDs :many
+SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
+LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
+WHERE id IN (sqlc.slice('ids'));
+
 -- name: DeleteDahuaCamera :exec
 DELETE FROM dahua_cameras WHERE id = ?;
 

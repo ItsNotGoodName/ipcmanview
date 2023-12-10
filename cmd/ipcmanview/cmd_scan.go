@@ -9,6 +9,7 @@ import (
 
 type CmdScan struct {
 	Shared
+	SharedCameras
 	Full  bool `help:"Run full file scan."`
 	Reset bool `help:"Reset all file cursors."`
 }
@@ -19,7 +20,7 @@ func (c *CmdScan) Run(ctx *Context) error {
 		return err
 	}
 
-	dbCamera, err := db.ListDahuaCamera(ctx)
+	cameras, err := c.useCameras(ctx, db)
 	if err != nil {
 		return err
 	}
@@ -30,12 +31,12 @@ func (c *CmdScan) Run(ctx *Context) error {
 	}
 
 	if c.Reset {
-		for _, dbCamera := range dbCamera {
-			webdahua.ScanReset(ctx, db, dbCamera.ID)
+		for _, camera := range cameras {
+			webdahua.ScanReset(ctx, db, camera.ID)
 		}
 	}
 
-	for _, camera := range webdahua.ConvertListDahuaCameraRows(dbCamera) {
+	for _, camera := range cameras {
 		conn := dahua.NewConn(camera)
 		defer conn.RPC.Close(context.Background())
 

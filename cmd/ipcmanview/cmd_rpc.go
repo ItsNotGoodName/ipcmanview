@@ -1,24 +1,24 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
 type CmdRPC struct {
 	Shared
-	ID     int64  `help:"Run on one camera by ID."`
-	All    bool   `help:"Run on all cameras."`
-	Method string `help:"Set method."`
-	Params bool   `help:"Set params by reading from stdin as JSON."`
-	Object int64  `help:"Set object."`
-	Seq    int    `help:"Set seq."`
+	SharedCameras
+	Method string `help:"Set RPC method."`
+	Params bool   `help:"Set RPC params by reading from stdin as JSON."`
+	Object int64  `help:"Set RPC object."`
+	Seq    int    `help:"Set RPC seq."`
 }
 
 func (c *CmdRPC) Run(ctx *Context) error {
@@ -35,43 +35,17 @@ func (c *CmdRPC) Run(ctx *Context) error {
 		return err
 	}
 
-	var names []string
-	var conns []dahua.Conn
-	if c.All {
-		dbCameras, err := db.ListDahuaCamera(ctx)
-		if err != nil {
-			return err
-		}
-
-		for i, dbCamera := range webdahua.ConvertListDahuaCameraRows(dbCameras) {
-			conns = append(conns, dahua.NewConn(dbCamera))
-			names = append(names, dbCameras[i].Name)
-		}
-	} else {
-		dbCamera, err := db.GetDahuaCamera(ctx, c.ID)
-		if err != nil {
-			return err
-		}
-
-		conns = append(conns, dahua.NewConn(webdahua.ConvertGetDahuaCameraRow(dbCamera)))
-		names = append(names, dbCamera.Name)
+	cameras, err := c.useCameras(ctx, db)
+	if err != nil {
+		return err
 	}
-	defer func() {
-		wg := sync.WaitGroup{}
-		for _, c := range conns {
-			wg.Add(1)
-			go func(c dahua.Conn) {
-				c.RPC.Close(ctx)
-				wg.Done()
-			}(c)
-		}
-		wg.Wait()
-	}()
 
 	wg := sync.WaitGroup{}
-	for i, conn := range conns {
+	for _, camera := range cameras {
 		wg.Add(1)
-		go func(i int, conn dahua.Conn) {
+		go func(camera models.DahuaCamera) {
+			conn := dahua.NewConn(camera)
+
 			res, err := func() (string, error) {
 				rpc, err := conn.RPC.RPC(ctx)
 				if err != nil {
@@ -95,15 +69,16 @@ func (c *CmdRPC) Run(ctx *Context) error {
 
 				return string(b), nil
 			}()
-			prefix := fmt.Sprintf("id=%d, camera=%s", conn.Camera.ID, names[i])
+			prefix := fmt.Sprintf("id=%d", conn.Camera.ID)
 			if err != nil {
 				fmt.Println(prefix, err)
 			} else {
 				fmt.Println(prefix, res)
 			}
 
+			conn.RPC.Close(context.Background())
 			wg.Done()
-		}(i, conn)
+		}(camera)
 	}
 	wg.Wait()
 

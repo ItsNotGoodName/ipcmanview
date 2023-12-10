@@ -317,8 +317,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
-	s.dahuaBus.CameraCreated(webdahua.ConvertGetDahuaCameraRow(dbCamera))
+	s.dahuaBus.CameraCreated(dbCamera.Convert())
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
 }
@@ -389,7 +388,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	s.dahuaBus.CameraUpdated(webdahua.ConvertGetDahuaCameraRow(dbCamera))
+	s.dahuaBus.CameraUpdated(dbCamera.Convert())
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
 }
