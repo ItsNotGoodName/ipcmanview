@@ -183,8 +183,6 @@ func (s Server) DahuaEventsLive(c echo.Context) error {
 }
 
 func (s Server) DahuaEventStream(c echo.Context) error {
-	// FIXME: this handler prevents Echo from gracefully shutting down because the context is not canceled when Echo.Shutdown is called.
-
 	ctx := c.Request().Context()
 	w := c.Response()
 

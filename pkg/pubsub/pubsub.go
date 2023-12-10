@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var ErrPubSubClosed = errors.New("pub/sub closed")
+var ErrPubSubClosed = errors.New("pub sub closed")
 
 type Event interface {
 	EventName() string

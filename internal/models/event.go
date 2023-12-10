@@ -4,28 +4,30 @@ type EventDahuaCameraCreated struct {
 	Camera DahuaCamera
 }
 
-func (EventDahuaCameraCreated) EventName() string {
-	return "EventDahuaCameraCreated"
-}
-
 type EventDahuaCameraUpdated struct {
 	Camera DahuaCamera
-}
-
-func (EventDahuaCameraUpdated) EventName() string {
-	return "EventDahuaCameraUpdated"
 }
 
 type EventDahuaCameraDeleted struct {
 	CameraID int64
 }
 
+type EventDahuaCameraEvent struct {
+	Event DahuaEvent
+}
+
+// TODO: these should be generated
+
 func (EventDahuaCameraDeleted) EventName() string {
 	return "EventDahuaCameraDeleted"
 }
 
-type EventDahuaCameraEvent struct {
-	Event DahuaEvent `json:"event"`
+func (EventDahuaCameraCreated) EventName() string {
+	return "EventDahuaCameraCreated"
+}
+
+func (EventDahuaCameraUpdated) EventName() string {
+	return "EventDahuaCameraUpdated"
 }
 
 func (e EventDahuaCameraEvent) EventName() string {

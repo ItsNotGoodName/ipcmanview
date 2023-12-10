@@ -318,7 +318,7 @@ func (s *DahuaServer) GETIDEvents(c echo.Context) error {
 			}
 
 			return sendStream(c, stream, evt.Event)
-		}, models.EventDahuaCameraCreated{})
+		}, models.EventDahuaCameraEvent{})
 		if err != nil {
 			return err
 		}
@@ -348,7 +348,7 @@ func (s *DahuaServer) GETEvents(c echo.Context) error {
 		}
 
 		return sendStream(c, stream, evt.Event)
-	}, models.EventDahuaCameraCreated{})
+	}, models.EventDahuaCameraEvent{})
 	defer sub.Close()
 
 	return sub.Wait(c.Request().Context())

@@ -4,6 +4,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
+	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	webserver "github.com/ItsNotGoodName/ipcmanview/internal/web/server"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
@@ -13,9 +14,12 @@ import (
 
 type CmdWeb struct {
 	Shared
-	HTTPHost    string `env:"HTTP_HOST" help:"HTTP host to listen on."`
-	HTTPPort    string `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
-	MQTTAddress string `env:"MQTT_ADDRESS" help:"MQTT server to publish events."`
+	HTTPHost     string `env:"HTTP_HOST" help:"HTTP host to listen on."`
+	HTTPPort     string `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
+	MQTTAddress  string `env:"MQTT_ADDRESS" help:"MQTT broker to publish events."`
+	MQTTPrefix   string `env:"MQTT_PREFIX" default:"ipcmanview/" help:"MQTT topic prefix"`
+	MQTTUsername string `env:"MQTT_USERNAME" help:"MQTT broker username."`
+	MQTTPassword string `env:"MQTT_PASSWORD" help:"MQTT broker password."`
 }
 
 func (c *CmdWeb) Run(ctx *Context) error {
@@ -44,6 +48,12 @@ func (c *CmdWeb) Run(ctx *Context) error {
 
 	eventWorkerStore := dahua.NewEventWorkerStore(super, webdahua.NewDahuaEventHooksProxy(dahuaBus, db))
 	eventWorkerStore.Register(dahuaBus)
+
+	if c.MQTTAddress != "" {
+		mqttPublisher := mqtt.NewPublisher(c.MQTTPrefix, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
+		super.Add(mqttPublisher)
+		mqttPublisher.Register(dahuaBus)
+	}
 
 	if err := dahua.Bootstrap(ctx, dahuaCameraStore, dahuaStore, eventWorkerStore); err != nil {
 		return err
