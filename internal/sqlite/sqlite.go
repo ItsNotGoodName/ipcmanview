@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/rs/zerolog/log"
 )
 
@@ -49,7 +49,7 @@ func NewDB(db *sql.DB) DB {
 	return DB{db}
 }
 
-func (db DB) BeginTx(ctx context.Context, write bool) (sqlc.SQLiteTx, error) {
+func (db DB) BeginTx(ctx context.Context, write bool) (repo.SQLiteTx, error) {
 	return beginTx(ctx, db.DB, write)
 }
 
@@ -127,7 +127,7 @@ func (tx DebugTx) QueryRowContext(ctx context.Context, query string, args ...any
 	return tx.tx.QueryRowContext(ctx, query, args...)
 }
 
-func (db DebugDB) BeginTx(ctx context.Context, write bool) (sqlc.SQLiteTx, error) {
+func (db DebugDB) BeginTx(ctx context.Context, write bool) (repo.SQLiteTx, error) {
 	log.Debug().
 		Msg("BeginTx (Tx)")
 	tx, err := beginTx(ctx, db.db, write)

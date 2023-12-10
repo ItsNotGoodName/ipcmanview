@@ -9,7 +9,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
@@ -46,13 +46,13 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 }
 
 type Server struct {
-	db         sqlc.DB
+	db         repo.DB
 	pub        pubsub.Pub
 	dahuaStore *dahua.Store
 	dahuaBus   *dahua.Bus
 }
 
-func New(db sqlc.DB, pub pubsub.Pub, dahuaStore *dahua.Store, dahuaBus *dahua.Bus) Server {
+func New(db repo.DB, pub pubsub.Pub, dahuaStore *dahua.Store, dahuaBus *dahua.Bus) Server {
 	return Server{
 		db:         db,
 		pub:        pub,
@@ -110,7 +110,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		}
 	}
 
-	events, err := s.db.ListDahuaEvent(ctx, sqlc.ListDahuaEventParams{
+	events, err := s.db.ListDahuaEvent(ctx, repo.ListDahuaEventParams{
 		CameraID: params.CameraID,
 		Code:     params.Code,
 		Action:   params.Action,
@@ -301,7 +301,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 
 	ctx := c.Request().Context()
 
-	id, err := s.db.CreateDahuaCamera(ctx, sqlc.CreateDahuaCameraParams{
+	id, err := s.db.CreateDahuaCamera(ctx, repo.CreateDahuaCameraParams{
 		Name:      form.Name,
 		Username:  camera.Username,
 		Password:  camera.Password,
@@ -371,7 +371,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 
 	ctx := c.Request().Context()
 
-	_, err = s.db.UpdateDahuaCamera(ctx, sqlc.UpdateDahuaCameraParams{
+	_, err = s.db.UpdateDahuaCamera(ctx, repo.UpdateDahuaCameraParams{
 		ID:        dto.ID,
 		Name:      form.Name,
 		Username:  dto.Username,

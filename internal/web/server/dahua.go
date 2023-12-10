@@ -8,11 +8,11 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/rs/zerolog/log"
 )
 
-func useDahuaTables(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (any, error) {
+func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (any, error) {
 	dbCameras, err := db.ListDahuaCamera(ctx)
 	if err != nil {
 		return nil, err

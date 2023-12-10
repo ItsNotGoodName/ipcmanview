@@ -6,7 +6,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
@@ -21,16 +21,16 @@ var (
 
 const scanVolatileDuration = 8 * time.Hour
 
-func NewFileCursor() sqlc.CreateDahuaFileCursorParams {
+func NewFileCursor() repo.CreateDahuaFileCursorParams {
 	now := time.Now()
-	return sqlc.CreateDahuaFileCursorParams{
+	return repo.CreateDahuaFileCursorParams{
 		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
 		FullCursor:  types.NewTime(now),
 		FullEpoch:   types.NewTime(dahua.ScanEpoch),
 	}
 }
 
-func updateFileCursor(fileCursor sqlc.DahuaFileCursor, scanPeriod dahua.ScanPeriod, scanType ScanType) sqlc.DahuaFileCursor {
+func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod dahua.ScanPeriod, scanType ScanType) repo.DahuaFileCursor {
 	switch scanType {
 	case ScanTypeFull:
 		// Update FullCursor
@@ -52,7 +52,7 @@ func updateFileCursor(fileCursor sqlc.DahuaFileCursor, scanPeriod dahua.ScanPeri
 	return fileCursor
 }
 
-func getScanRange(fileCursor sqlc.DahuaFileCursor, scanType ScanType) models.TimeRange {
+func getScanRange(fileCursor repo.DahuaFileCursor, scanType ScanType) models.TimeRange {
 	switch scanType {
 	case ScanTypeFull:
 		return models.TimeRange{
@@ -70,9 +70,9 @@ func getScanRange(fileCursor sqlc.DahuaFileCursor, scanType ScanType) models.Tim
 }
 
 // ScanReset should only be called once per camera.
-func ScanReset(ctx context.Context, db sqlc.DB, id int64) error {
+func ScanReset(ctx context.Context, db repo.DB, id int64) error {
 	fileCursor := NewFileCursor()
-	_, err := db.UpdateDahuaFileCursor(ctx, sqlc.UpdateDahuaFileCursorParams{
+	_, err := db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
@@ -82,7 +82,7 @@ func ScanReset(ctx context.Context, db sqlc.DB, id int64) error {
 }
 
 // Scan should only be called once per camera.
-func Scan(ctx context.Context, db sqlc.DB, rpcClient dahuarpc.Conn, camera models.DahuaCamera, scanType ScanType) error {
+func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, camera models.DahuaCamera, scanType ScanType) error {
 	fileCursor, err := db.GetDahuaFileCursor(ctx, camera.ID)
 	if err != nil {
 		return err
@@ -112,7 +112,7 @@ func Scan(ctx context.Context, db sqlc.DB, rpcClient dahuarpc.Conn, camera model
 				}
 
 				for _, f := range files {
-					_, err := db.UpsertDahuaFiles(ctx, sqlc.CreateDahuaFileParams{
+					_, err := db.UpsertDahuaFiles(ctx, repo.CreateDahuaFileParams{
 						CameraID:    camera.ID,
 						Channel:     int64(f.Channel),
 						StartTime:   types.NewTime(f.StartTime),
@@ -140,7 +140,7 @@ func Scan(ctx context.Context, db sqlc.DB, rpcClient dahuarpc.Conn, camera model
 			}
 		}
 
-		err := db.DeleteDahuaFile(ctx, sqlc.DeleteDahuaFileParams{
+		err := db.DeleteDahuaFile(ctx, repo.DeleteDahuaFileParams{
 			UpdatedAt: updated_at,
 			CameraID:  camera.ID,
 			Start:     types.NewTime(scanPeriod.Start.UTC()),
@@ -151,7 +151,7 @@ func Scan(ctx context.Context, db sqlc.DB, rpcClient dahuarpc.Conn, camera model
 		}
 
 		fileCursor = updateFileCursor(fileCursor, scanPeriod, scanType)
-		fileCursor, err = db.UpdateDahuaFileCursor(ctx, sqlc.UpdateDahuaFileCursorParams{
+		fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
 			QuickCursor: fileCursor.QuickCursor,
 			FullCursor:  fileCursor.FullCursor,
 			FullEpoch:   fileCursor.FullEpoch,

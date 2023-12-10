@@ -9,7 +9,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/rs/zerolog/log"
 )
@@ -30,7 +30,7 @@ func init() {
 
 // ---------- DahuaEventHooksProxy
 
-func NewDahuaEventHooksProxy(hooks dahua.EventHooks, db sqlc.DB) DahuaEventHooksProxy {
+func NewDahuaEventHooksProxy(hooks dahua.EventHooks, db repo.DB) DahuaEventHooksProxy {
 	return DahuaEventHooksProxy{
 		hooks: hooks,
 		db:    db,
@@ -39,11 +39,11 @@ func NewDahuaEventHooksProxy(hooks dahua.EventHooks, db sqlc.DB) DahuaEventHooks
 
 type DahuaEventHooksProxy struct {
 	hooks dahua.EventHooks
-	db    sqlc.DB
+	db    repo.DB
 }
 
 func (p DahuaEventHooksProxy) CameraEvent(ctx context.Context, evt models.DahuaEvent) {
-	id, err := p.db.CreateDahuaEvent(ctx, sqlc.CreateDahuaEventParams{
+	id, err := p.db.CreateDahuaEvent(ctx, repo.CreateDahuaEventParams{
 		CameraID:  evt.CameraID,
 		Code:      evt.Code,
 		Action:    evt.Action,
@@ -61,14 +61,14 @@ func (p DahuaEventHooksProxy) CameraEvent(ctx context.Context, evt models.DahuaE
 
 // ---------- DahuaCameraStore
 
-func NewDahuaCameraStore(db sqlc.DB) DahuaCameraStore {
+func NewDahuaCameraStore(db repo.DB) DahuaCameraStore {
 	return DahuaCameraStore{
 		db: db,
 	}
 }
 
 type DahuaCameraStore struct {
-	db sqlc.DB
+	db repo.DB
 }
 
 func (s DahuaCameraStore) Save(ctx context.Context, camera ...models.DahuaCamera) error {

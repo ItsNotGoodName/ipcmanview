@@ -5,7 +5,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 )
 
@@ -13,18 +13,18 @@ type Shared struct {
 	DBPath string `default:"sqlite.db" env:"DB_PATH" help:"Path to SQLite database."`
 }
 
-func useDB(ctx *Context, path string) (sqlc.DB, error) {
+func useDB(ctx *Context, path string) (repo.DB, error) {
 	sqlDB, err := sqlite.New(path)
 	if err != nil {
-		return sqlc.DB{}, err
+		return repo.DB{}, err
 	}
 	if err := migrations.Migrate(sqlDB); err != nil {
-		return sqlc.DB{}, err
+		return repo.DB{}, err
 	}
 	if ctx.Debug {
-		return sqlc.NewDB(sqlite.NewDebugDB(sqlDB)), nil
+		return repo.NewDB(sqlite.NewDebugDB(sqlDB)), nil
 	}
-	return sqlc.NewDB(sqlite.NewDB(sqlDB)), nil
+	return repo.NewDB(sqlite.NewDB(sqlDB)), nil
 }
 
 type SharedCameras struct {
@@ -32,7 +32,7 @@ type SharedCameras struct {
 	All bool    `help:"Run on all cameras."`
 }
 
-func (c SharedCameras) useCameras(ctx context.Context, db sqlc.DB) ([]models.DahuaCameraInfo, error) {
+func (c SharedCameras) useCameras(ctx context.Context, db repo.DB) ([]models.DahuaCameraInfo, error) {
 	var cameras []models.DahuaCameraInfo
 	if c.All {
 		dbCameras, err := db.ListDahuaCamera(ctx)

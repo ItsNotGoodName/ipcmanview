@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 
@@ -9,10 +10,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
-
-func init() {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-}
 
 type Context struct {
 	context.Context
@@ -31,11 +28,24 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	ktx := kong.Parse(&mainCmd,
-		kong.Description("Application for managing and viewing Dahua IP cameras."))
+	ktx := kong.Parse(&mainCmd, kong.Description("Application for managing and viewing Dahua IP cameras."))
+
+	initLogger(mainCmd.Debug)
+
 	err := ktx.Run(&Context{
 		Context: ctx,
 		Debug:   mainCmd.Debug,
 	})
-	ktx.FatalIfErrorf(err)
+	if err != nil && !errors.Is(err, context.Canceled) {
+		log.Fatal().Err(err).Send()
+	}
+}
+
+func initLogger(debug bool) {
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	if debug {
+		log.Logger = log.Logger.Level(zerolog.DebugLevel)
+	} else {
+		log.Logger = log.Logger.Level(zerolog.InfoLevel)
+	}
 }

@@ -1,12 +1,15 @@
 version: "2"
 sql:
   - engine: "sqlite"
-    queries: "internal/sqlc/query.sql"
+    queries: "internal/repo/sqlc_query.sql"
     schema: "internal/migrations/schema.sql"
     gen:
       go:
-        package: "sqlc"
-        out: "internal/sqlc"
+        package: "repo"
+        out: "internal/repo"
+        output_db_file_name: "sqlc_db.go"
+        output_models_file_name: "sqlc_models.go"
+        output_querier_file_name: "sqlc_querier.go"
         overrides:
           - db_type: "DATETIME"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.Time"

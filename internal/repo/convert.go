@@ -1,4 +1,4 @@
-package sqlc
+package repo
 
 import "github.com/ItsNotGoodName/ipcmanview/internal/models"
 
