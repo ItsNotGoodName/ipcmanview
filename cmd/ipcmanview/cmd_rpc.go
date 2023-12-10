@@ -69,6 +69,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 
 				return string(b), nil
 			}()
+			// TODO: print name of camera
 			prefix := fmt.Sprintf("id=%d", conn.Camera.ID)
 			if err != nil {
 				fmt.Println(prefix, err)

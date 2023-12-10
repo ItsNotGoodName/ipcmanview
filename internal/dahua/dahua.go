@@ -3,6 +3,7 @@ package dahua
 import (
 	"context"
 	"errors"
+	"net/http"
 	"slices"
 	"time"
 
@@ -23,6 +24,32 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/usermanager"
 	"github.com/rs/zerolog/log"
 )
+
+func NewConn(camera models.DahuaCamera) Conn {
+	address := NewHTTPAddress(camera.Address)
+	rpcHTTPClient := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	cgiHTTPClient := http.Client{}
+
+	connRPC := auth.NewClient(rpcHTTPClient, address, camera.Username, camera.Password)
+	connPTZ := ptz.NewClient(connRPC)
+	connCGI := dahuacgi.NewClient(cgiHTTPClient, address, camera.Username, camera.Password)
+
+	return Conn{
+		Camera: camera,
+		RPC:    connRPC,
+		PTZ:    connPTZ,
+		CGI:    connCGI,
+	}
+}
+
+type Conn struct {
+	Camera models.DahuaCamera
+	RPC    auth.Client
+	PTZ    *ptz.Client
+	CGI    dahuacgi.Client
+}
 
 func ignorableError(err error) bool {
 	res := &dahuarpc.ResponseError{}

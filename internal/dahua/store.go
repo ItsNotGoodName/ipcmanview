@@ -2,14 +2,10 @@ package dahua
 
 import (
 	"context"
-	"net/http"
 	"sync"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/auth"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
 	"github.com/rs/zerolog/log"
 )
 
@@ -18,57 +14,21 @@ func cameraEqual(lhs, rhs models.DahuaCamera) bool {
 }
 
 func newStoreClient(camera models.DahuaCamera, lastAccessed time.Time) storeClient {
-	address := NewHTTPAddress(camera.Address)
-	rpcHTTPClient := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-	cgiHTTPClient := http.Client{}
-
-	connRPC := auth.NewClient(rpcHTTPClient, address, camera.Username, camera.Password)
-	connPTZ := ptz.NewClient(connRPC)
-	connCGI := dahuacgi.NewClient(cgiHTTPClient, address, camera.Username, camera.Password)
-
 	return storeClient{
 		LastAccessed: lastAccessed,
-		Camera:       camera,
-		ConnRPC:      connRPC,
-		ConnPTZ:      connPTZ,
-		ConnCGI:      connCGI,
+		Conn:         NewConn(camera),
 	}
 }
 
 type storeClient struct {
 	LastAccessed time.Time
-	Camera       models.DahuaCamera
-	ConnRPC      auth.Client
-	ConnPTZ      *ptz.Client
-	ConnCGI      dahuacgi.Client
+	Conn         Conn
 }
 
 func (c storeClient) Close(ctx context.Context) {
-	if err := c.ConnRPC.Close(ctx); err != nil {
-		log.Err(err).Int64("id", c.Camera.ID).Msg("Failed to close RPC connection")
+	if err := c.Conn.RPC.Close(ctx); err != nil {
+		log.Err(err).Int64("id", c.Conn.Camera.ID).Msg("Failed to close RPC connection")
 	}
-}
-
-func newConn(c storeClient) Conn {
-	return Conn{
-		Camera: c.Camera,
-		RPC:    c.ConnRPC,
-		PTZ:    c.ConnPTZ,
-		CGI:    c.ConnCGI,
-	}
-}
-
-func NewConn(camera models.DahuaCamera) Conn {
-	return newConn(newStoreClient(camera, time.Now()))
-}
-
-type Conn struct {
-	Camera models.DahuaCamera
-	RPC    auth.Client
-	PTZ    *ptz.Client
-	CGI    dahuacgi.Client
 }
 
 type Store struct {
@@ -133,7 +93,7 @@ func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaCamera
 
 		client = newStoreClient(camera, time.Now())
 		s.clients[camera.ID] = client
-	} else if !cameraEqual(client.Camera, camera) {
+	} else if !cameraEqual(client.Conn.Camera, camera) {
 		// Found but not equal
 
 		// Closing camera connection should not block that store
@@ -148,9 +108,7 @@ func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaCamera
 		s.clients[camera.ID] = client
 	}
 
-	conn := newConn(client)
-
-	return conn
+	return client.Conn
 }
 
 func (s *Store) ConnList(ctx context.Context, cameras []models.DahuaCamera) []Conn {

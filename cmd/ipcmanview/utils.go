@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
+
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
-	"golang.org/x/net/context"
 )
 
 type Shared struct {
