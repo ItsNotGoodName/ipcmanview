@@ -17,6 +17,7 @@ CREATE TABLE dahua_cameras (
 CREATE TABLE dahua_seeds (
   seed INTEGER NOT NULL PRIMARY KEY,
   camera_id INTEGER UNIQUE,
+
   FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 

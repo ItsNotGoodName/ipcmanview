@@ -15,7 +15,7 @@ type CmdScan struct {
 }
 
 func (c *CmdScan) Run(ctx *Context) error {
-	db, err := useDB(c.DBPath)
+	db, err := useDB(ctx, c.DBPath)
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (c *CmdScan) Run(ctx *Context) error {
 	}
 
 	for _, camera := range cameras {
-		conn := dahua.NewConn(camera)
+		conn := dahua.NewConn(camera.DahuaCamera)
 		defer conn.RPC.Close(context.Background())
 
 		err = webdahua.Scan(ctx, db, conn.RPC, conn.Camera, scanType)

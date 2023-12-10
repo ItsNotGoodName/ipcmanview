@@ -93,5 +93,10 @@ func (s DahuaCameraStore) List(ctx context.Context) ([]models.DahuaCamera, error
 		return nil, err
 	}
 
-	return sqlc.ConvertListDahuaCameraRow(dbCameras), nil
+	cameras := make([]models.DahuaCamera, 0, len(dbCameras))
+	for _, row := range dbCameras {
+		cameras = append(cameras, row.Convert())
+	}
+
+	return cameras, nil
 }

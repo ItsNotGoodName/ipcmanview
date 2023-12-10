@@ -29,7 +29,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	})
 
 	// Database
-	db, err := useDB(c.DBPath)
+	db, err := useDB(ctx, c.DBPath)
 	if err != nil {
 		return err
 	}

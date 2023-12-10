@@ -28,7 +28,7 @@ func (db DB) CreateDahuaCamera(ctx context.Context, arg CreateDahuaCameraParams,
 	}
 
 	// TODO: sql.NullInt64 should just be int64...
-	err = tx.setDahuaSeed(ctx, sql.NullInt64{
+	err = tx.allocateDahuaSeed(ctx, sql.NullInt64{
 		Valid: true,
 		Int64: id,
 	})
@@ -49,25 +49,6 @@ func (db DB) CreateDahuaCamera(ctx context.Context, arg CreateDahuaCameraParams,
 
 	return id, nil
 }
-
-// func (db DB) UpsertDahuaCamera(ctx context.Context, id int64, args CreateDahuaCameraParams) (int64, error) {
-// 	_, err := db.UpdateDahuaCamera(ctx, UpdateDahuaCameraParams{
-// 		Name:     args.Name,
-// 		Address:  args.Address,
-// 		Username: args.Username,
-// 		Password: args.Password,
-// 		Location: args.Location,
-// 		ID:       id,
-// 	})
-// 	if err == nil {
-// 		return id, nil
-// 	}
-// 	if !errors.Is(err, sql.ErrNoRows) {
-// 		return 0, err
-// 	}
-//
-// 	return db.createDahuaCamera(ctx, args)
-// }
 
 func (db DB) UpsertDahuaFiles(ctx context.Context, args CreateDahuaFileParams) (int64, error) {
 	id, err := db.UpdateDahuaFile(ctx, UpdateDahuaFileParams{

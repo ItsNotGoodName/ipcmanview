@@ -29,6 +29,12 @@ type DahuaCamera struct {
 	CreatedAt time.Time
 }
 
+type DahuaCameraInfo struct {
+	DahuaCamera
+	Name      string
+	UpdatedAt time.Time
+}
+
 type DahuaDetail struct {
 	CameraID         int64  `json:"camera_id"`
 	SN               string `json:"sn"`

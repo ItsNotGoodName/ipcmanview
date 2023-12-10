@@ -30,7 +30,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 		}
 	}
 
-	db, err := useDB(c.DBPath)
+	db, err := useDB(ctx, c.DBPath)
 	if err != nil {
 		return err
 	}
@@ -43,8 +43,8 @@ func (c *CmdRPC) Run(ctx *Context) error {
 	wg := sync.WaitGroup{}
 	for _, camera := range cameras {
 		wg.Add(1)
-		go func(camera models.DahuaCamera) {
-			conn := dahua.NewConn(camera)
+		go func(camera models.DahuaCameraInfo) {
+			conn := dahua.NewConn(camera.DahuaCamera)
 
 			res, err := func() (string, error) {
 				rpc, err := conn.RPC.RPC(ctx)
@@ -69,8 +69,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 
 				return string(b), nil
 			}()
-			// TODO: print name of camera
-			prefix := fmt.Sprintf("id=%d", conn.Camera.ID)
+			prefix := fmt.Sprintf("id=%d name=%s", camera.ID, camera.Name)
 			if err != nil {
 				fmt.Println(prefix, err)
 			} else {

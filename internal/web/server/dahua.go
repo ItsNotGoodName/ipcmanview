@@ -13,7 +13,7 @@ import (
 )
 
 func useDahuaTables(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (any, error) {
-	cameras, err := db.ListDahuaCamera(ctx)
+	dbCameras, err := db.ListDahuaCamera(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -26,9 +26,13 @@ func useDahuaTables(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (a
 		coaxialcontrolStatus []models.DahuaCoaxialStatus
 	}
 
-	conns := dahuaStore.ConnList(ctx, sqlc.ConvertListDahuaCameraRow(cameras))
+	cameras := make([]models.DahuaCamera, 0, len(dbCameras))
+	for _, row := range dbCameras {
+		cameras = append(cameras, row.Convert())
+	}
+	conns := dahuaStore.ConnList(ctx, cameras)
 
-	cameraDataC := make(chan cameraData, len(cameras))
+	cameraDataC := make(chan cameraData, len(dbCameras))
 	wg := sync.WaitGroup{}
 	for _, conn := range conns {
 		wg.Add(1)
@@ -107,11 +111,11 @@ func useDahuaTables(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (a
 		status = append(status, dahua.GetDahuaStatus(conn.Camera, conn.RPC))
 	}
 
-	details := make([]models.DahuaDetail, 0, len(cameras))
-	softwareVersions := make([]models.DahuaSoftwareVersion, 0, len(cameras))
-	licenses := make([]models.DahuaLicense, 0, len(cameras))
-	storage := make([]models.DahuaStorage, 0, len(cameras))
-	coaxialStatus := make([]models.DahuaCoaxialStatus, 0, len(cameras))
+	details := make([]models.DahuaDetail, 0, len(dbCameras))
+	softwareVersions := make([]models.DahuaSoftwareVersion, 0, len(dbCameras))
+	licenses := make([]models.DahuaLicense, 0, len(dbCameras))
+	storage := make([]models.DahuaStorage, 0, len(dbCameras))
+	coaxialStatus := make([]models.DahuaCoaxialStatus, 0, len(dbCameras))
 	for data := range cameraDataC {
 		if data.detail.CameraID != 0 {
 			details = append(details, data.detail)
@@ -130,7 +134,7 @@ func useDahuaTables(ctx context.Context, db sqlc.DB, dahuaStore *dahua.Store) (a
 	slices.SortFunc(coaxialStatus, func(a, b models.DahuaCoaxialStatus) int { return cmp.Compare(a.CameraID, b.CameraID) })
 
 	return Data{
-		"Cameras":          cameras,
+		"Cameras":          dbCameras,
 		"Status":           status,
 		"Details":          details,
 		"SoftwareVersions": softwareVersions,

@@ -190,7 +190,7 @@ func (q *Queries) DeleteDahuaFileScanLock(ctx context.Context, cameraID int64) e
 }
 
 const getDahuaCamera = `-- name: GetDahuaCamera :one
-SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT dahua_cameras.id, dahua_cameras.name, dahua_cameras.address, dahua_cameras.username, dahua_cameras.password, dahua_cameras.location, dahua_cameras.created_at, dahua_cameras.updated_at, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
 WHERE id = ? LIMIT 1
 `
@@ -266,7 +266,7 @@ func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 }
 
 const listDahuaCamera = `-- name: ListDahuaCamera :many
-SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT dahua_cameras.id, dahua_cameras.name, dahua_cameras.address, dahua_cameras.username, dahua_cameras.password, dahua_cameras.location, dahua_cameras.created_at, dahua_cameras.updated_at, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
 `
 
@@ -316,7 +316,7 @@ func (q *Queries) ListDahuaCamera(ctx context.Context) ([]ListDahuaCameraRow, er
 }
 
 const listDahuaCameraByIDs = `-- name: ListDahuaCameraByIDs :many
-SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT dahua_cameras.id, dahua_cameras.name, dahua_cameras.address, dahua_cameras.username, dahua_cameras.password, dahua_cameras.location, dahua_cameras.created_at, dahua_cameras.updated_at, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
 WHERE id IN (/*SLICE:ids*/?)
 `
@@ -639,6 +639,17 @@ func (q *Queries) UpdateSettings(ctx context.Context, arg UpdateSettingsParams) 
 	return i, err
 }
 
+const allocateDahuaSeed = `-- name: allocateDahuaSeed :exec
+UPDATE dahua_seeds 
+SET camera_id = ?1
+WHERE seed = (SELECT seed FROM dahua_seeds WHERE camera_id = ?1 OR camera_id IS NULL ORDER BY camera_id asc LIMIT 1)
+`
+
+func (q *Queries) allocateDahuaSeed(ctx context.Context, cameraID sql.NullInt64) error {
+	_, err := q.db.ExecContext(ctx, allocateDahuaSeed, cameraID)
+	return err
+}
+
 const createDahuaCamera = `-- name: createDahuaCamera :one
 INSERT INTO dahua_cameras (
   name, address, username, password, location, created_at, updated_at
@@ -697,16 +708,5 @@ func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFile
 		arg.FullCursor,
 		arg.FullEpoch,
 	)
-	return err
-}
-
-const setDahuaSeed = `-- name: setDahuaSeed :exec
-UPDATE dahua_seeds 
-SET camera_id = ?1
-WHERE seed = (SELECT seed FROM dahua_seeds WHERE camera_id = ?1 OR camera_id IS NULL ORDER BY camera_id asc LIMIT 1)
-`
-
-func (q *Queries) setDahuaSeed(ctx context.Context, cameraID sql.NullInt64) error {
-	_, err := q.db.ExecContext(ctx, setDahuaSeed, cameraID)
 	return err
 }

@@ -12,33 +12,21 @@ WHERE id = ?
 RETURNING id;
 
 -- name: GetDahuaCamera :one
-SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT dahua_cameras.*, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
 WHERE id = ? LIMIT 1;
 
 -- name: ListDahuaCamera :many
-SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT dahua_cameras.*, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id;
 
 -- name: ListDahuaCameraByIDs :many
-SELECT id, name, address, username, password, location, created_at, updated_at, coalesce(seed, id) FROM dahua_cameras 
+SELECT dahua_cameras.*, coalesce(seed, id) FROM dahua_cameras 
 LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
 WHERE id IN (sqlc.slice('ids'));
 
 -- name: DeleteDahuaCamera :exec
 DELETE FROM dahua_cameras WHERE id = ?;
-
--- name: CreateDahuaEvent :one
-INSERT INTO dahua_events (
-  camera_id,
-  code,
-  action,
-  `index`,
-  data,
-  created_at
-) VALUES (
-  ?, ?, ?, ?, ?, ?
-) RETURNING id;
 
 -- name: GetSettings :one
 SELECT * FROM settings
@@ -52,7 +40,7 @@ SET
 WHERE 1 = 1
 RETURNING *;
 
--- name: setDahuaSeed :exec
+-- name: allocateDahuaSeed :exec
 UPDATE dahua_seeds 
 SET camera_id = ?1
 WHERE seed = (SELECT seed FROM dahua_seeds WHERE camera_id = ?1 OR camera_id IS NULL ORDER BY camera_id asc LIMIT 1);
@@ -153,6 +141,18 @@ WHERE
   camera_id = sqlc.arg('camera_id') AND
   start_time <= sqlc.arg('end') AND
   sqlc.arg('start') < start_time;
+
+-- name: CreateDahuaEvent :one
+INSERT INTO dahua_events (
+  camera_id,
+  code,
+  action,
+  `index`,
+  data,
+  created_at
+) VALUES (
+  ?, ?, ?, ?, ?, ?
+) RETURNING id;
 
 -- name: ListDahuaEventCodes :many
 SELECT DISTINCT code FROM dahua_events;
