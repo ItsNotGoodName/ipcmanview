@@ -1,4 +1,4 @@
-package webdahua
+package dahuaweb
 
 import (
 	"context"

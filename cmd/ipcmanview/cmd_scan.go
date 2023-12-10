@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuaweb"
 )
 
 type CmdScan struct {
@@ -25,14 +25,14 @@ func (c *CmdScan) Run(ctx *Context) error {
 		return err
 	}
 
-	scanType := webdahua.ScanTypeQuick
+	scanType := dahuaweb.ScanTypeQuick
 	if c.Full {
-		scanType = webdahua.ScanTypeFull
+		scanType = dahuaweb.ScanTypeFull
 	}
 
 	if c.Reset {
 		for _, camera := range cameras {
-			webdahua.ScanReset(ctx, db, camera.ID)
+			dahuaweb.ScanReset(ctx, db, camera.ID)
 		}
 	}
 
@@ -40,7 +40,7 @@ func (c *CmdScan) Run(ctx *Context) error {
 		conn := dahua.NewConn(camera.DahuaCamera)
 		defer conn.RPC.Close(context.Background())
 
-		err = webdahua.Scan(ctx, db, conn.RPC, conn.Camera, scanType)
+		err = dahuaweb.Scan(ctx, db, conn.RPC, conn.Camera, scanType)
 		if err != nil {
 			return err
 		}

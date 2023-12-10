@@ -3,10 +3,10 @@ package main
 import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuaweb"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
-	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
-	webserver "github.com/ItsNotGoodName/ipcmanview/internal/web/server"
+	"github.com/ItsNotGoodName/ipcmanview/internal/webserver"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/thejerf/suture/v4"
@@ -40,13 +40,13 @@ func (c *CmdServe) Run(ctx *Context) error {
 	dahuaBus := dahua.NewBus()
 	dahuaBus.Register(pub)
 
-	dahuaCameraStore := webdahua.NewDahuaCameraStore(db)
+	dahuaCameraStore := dahuaweb.NewCameraStore(db)
 
 	dahuaStore := dahua.NewStore()
 	super.Add(dahuaStore)
 	dahuaStore.Register(dahuaBus)
 
-	eventWorkerStore := dahua.NewEventWorkerStore(super, webdahua.NewDahuaEventHooksProxy(dahuaBus, db))
+	eventWorkerStore := dahua.NewEventWorkerStore(super, dahuaweb.NewEventHooksProxy(dahuaBus, db))
 	eventWorkerStore.Register(dahuaBus)
 
 	if c.MQTTAddress != "" {

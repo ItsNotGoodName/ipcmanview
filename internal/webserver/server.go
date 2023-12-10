@@ -8,11 +8,11 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuaweb"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
-	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
@@ -266,7 +266,7 @@ func (s Server) DahuaCameras(c echo.Context) error {
 
 func (s Server) DahuaCamerasCreate(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-cameras-create", Data{
-		"Locations": webdahua.Locations,
+		"Locations": dahuaweb.Locations,
 	})
 }
 
@@ -309,7 +309,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Location:  camera.Location,
 		CreatedAt: types.NewTime(camera.CreatedAt),
 		UpdatedAt: types.NewTime(camera.CreatedAt),
-	}, webdahua.NewFileCursor())
+	}, dahuaweb.NewFileCursor())
 	if err != nil {
 		return err
 	}
@@ -329,7 +329,7 @@ func (s Server) DahuaCamerasUpdate(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "dahua-cameras-update", Data{
-		"Locations": webdahua.Locations,
+		"Locations": dahuaweb.Locations,
 		"Camera":    camera,
 	})
 }
