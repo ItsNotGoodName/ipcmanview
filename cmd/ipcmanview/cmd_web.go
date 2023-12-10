@@ -4,9 +4,9 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
-	"github.com/ItsNotGoodName/ipcmanview/internal/pubsub"
 	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	webserver "github.com/ItsNotGoodName/ipcmanview/internal/web/server"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/thejerf/suture/v4"
 )
@@ -15,9 +15,7 @@ type CmdWeb struct {
 	Shared
 	HTTPHost    string `env:"HTTP_HOST" help:"HTTP host to listen on."`
 	HTTPPort    string `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
-	MQTTDisable bool   `env:"MQTT_DISABLE" help:"Disable MQTT server."`
-	MQTTHost    string `env:"MQTT_HOST" help:"MQTT host to listen on."`
-	MQTTPort    string `env:"MQTT_PORT" default:"1883" help:"MQTT port to listen on."`
+	MQTTAddress string `env:"MQTT_ADDRESS" help:"MQTT server to publish events."`
 }
 
 func (c *CmdWeb) Run(ctx *Context) error {
@@ -32,15 +30,11 @@ func (c *CmdWeb) Run(ctx *Context) error {
 		return err
 	}
 
-	// MQTT
-	pub, err := pubsub.NewPub(!c.MQTTDisable, c.MQTTHost+":"+c.MQTTPort)
-	if err != nil {
-		return err
-	}
+	pub := pubsub.NewPub()
 	super.Add(pub)
 
 	dahuaBus := dahua.NewBus()
-	pub.Register(dahuaBus)
+	dahuaBus.Register(pub)
 
 	dahuaCameraStore := webdahua.NewDahuaCameraStore(db)
 

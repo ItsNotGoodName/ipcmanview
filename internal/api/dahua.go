@@ -5,19 +5,18 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	echo "github.com/labstack/echo/v4"
-	mqtt "github.com/mochi-mqtt/server/v2"
-	"github.com/mochi-mqtt/server/v2/packets"
 )
 
 type DahuaCameraStore interface {
@@ -70,7 +69,7 @@ func useDahuaConn(c echo.Context, cameraStore DahuaCameraStore, store *dahua.Sto
 	return client, nil
 }
 
-func NewDahuaServer(pub *pubsub.Pub, dahuaStore *dahua.Store, dahuaCameraStore DahuaCameraStore) *DahuaServer {
+func NewDahuaServer(pub pubsub.Pub, dahuaStore *dahua.Store, dahuaCameraStore DahuaCameraStore) *DahuaServer {
 	return &DahuaServer{
 		pub:         pub,
 		store:       dahuaStore,
@@ -79,7 +78,7 @@ func NewDahuaServer(pub *pubsub.Pub, dahuaStore *dahua.Store, dahuaCameraStore D
 }
 
 type DahuaServer struct {
-	pub         *pubsub.Pub
+	pub         pubsub.Pub
 	store       *dahua.Store
 	cameraStore DahuaCameraStore
 }
@@ -309,16 +308,23 @@ func (s *DahuaServer) GETIDEvents(c echo.Context) error {
 	} else {
 		// Get events from PubSub
 
+		ctx := c.Request().Context()
 		stream := useStream(c)
 
-		sub := s.pub.NewSub(func(cl *mqtt.Client, sub packets.Subscription, pk packets.Packet) error {
-			return sendStream(c, stream, json.RawMessage(pk.Payload))
-		})
+		sub, err := s.pub.Subscribe(ctx, func(event pubsub.Event) error {
+			evt, ok := event.(models.EventDahuaCameraEvent)
+			if !ok {
+				return nil
+			}
+
+			return sendStream(c, stream, evt.Event)
+		}, models.EventDahuaCameraCreated{})
+		if err != nil {
+			return err
+		}
 		defer sub.Close()
 
-		sub.Subscribe("dahua/+/event")
-
-		return sub.Wait(c.Request().Context())
+		return sub.Wait(ctx)
 	}
 }
 
@@ -328,26 +334,22 @@ func (s *DahuaServer) GETEvents(c echo.Context) error {
 		return err
 	}
 
+	ctx := c.Request().Context()
 	stream := useStream(c)
 
-	sub := s.pub.NewSub(func(cl *mqtt.Client, sub packets.Subscription, pk packets.Packet) error {
-		return sendStream(c, stream, json.RawMessage(pk.Payload))
-	})
-	defer sub.Close()
+	sub, err := s.pub.Subscribe(ctx, func(event pubsub.Event) error {
+		evt, ok := event.(models.EventDahuaCameraEvent)
+		if !ok {
+			return nil
+		}
 
-	if len(ids) == 0 {
-		err := sub.Subscribe("dahua/+/event")
-		if err != nil {
-			return err
+		if len(ids) != 0 && !slices.Contains(ids, evt.Event.CameraID) {
+			return nil
 		}
-	} else {
-		for _, id := range ids {
-			err := sub.Subscribe("dahua/" + strconv.FormatInt(id, 10) + "/event")
-			if err != nil {
-				return err
-			}
-		}
-	}
+
+		return sendStream(c, stream, evt.Event)
+	}, models.EventDahuaCameraCreated{})
+	defer sub.Close()
 
 	return sub.Wait(c.Request().Context())
 }

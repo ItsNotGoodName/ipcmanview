@@ -9,17 +9,15 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlc"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	webdahua "github.com/ItsNotGoodName/ipcmanview/internal/web/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	mqtt "github.com/mochi-mqtt/server/v2"
-	"github.com/mochi-mqtt/server/v2/packets"
 )
 
 func RegisterMiddleware(e *echo.Echo) {
@@ -49,12 +47,12 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 
 type Server struct {
 	db         sqlc.DB
-	pub        *pubsub.Pub
+	pub        pubsub.Pub
 	dahuaStore *dahua.Store
 	dahuaBus   *dahua.Bus
 }
 
-func New(db sqlc.DB, pub *pubsub.Pub, dahuaStore *dahua.Store, dahuaBus *dahua.Bus) Server {
+func New(db sqlc.DB, pub pubsub.Pub, dahuaStore *dahua.Store, dahuaBus *dahua.Bus) Server {
 	return Server{
 		db:         db,
 		pub:        pub,
@@ -187,6 +185,7 @@ func (s Server) DahuaEventsLive(c echo.Context) error {
 func (s Server) DahuaEventStream(c echo.Context) error {
 	// FIXME: this handler prevents Echo from gracefully shutting down because the context is not canceled when Echo.Shutdown is called.
 
+	ctx := c.Request().Context()
 	w := c.Response()
 
 	w.Header().Set(echo.HeaderContentType, "text/event-stream")
@@ -194,37 +193,34 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	w.Header().Set(echo.HeaderConnection, "keep-alive")
 
 	buf := new(bytes.Buffer)
-
-	sub := s.pub.NewSub(func(cl *mqtt.Client, sub packets.Subscription, pk packets.Packet) error {
-		event, err := pubsub.ParseDahuaEvent(pk)
-		if err != nil {
-			return err
+	sub, err := s.pub.Subscribe(ctx, func(event pubsub.Event) error {
+		evt, ok := event.(models.EventDahuaCameraEvent)
+		if !ok {
+			return nil
 		}
 
 		if err := c.Echo().Renderer.Render(buf, "dahua-events-live", TemplateBlock{
 			"event-row",
 			Data{
-				"Event": event,
+				"Event": evt.Event,
 			},
 		}, c); err != nil {
 			return err
 		}
-		_, err = w.Write(api.FormatSSE("message", buf.String()))
+		_, err := w.Write(api.FormatSSE("message", buf.String()))
 		if err != nil {
 			return err
 		}
 		buf.Reset()
 		w.Flush()
 		return nil
-	})
-	defer sub.Close()
-
-	err := sub.Subscribe("dahua/+/event")
+	}, models.EventDahuaCameraEvent{})
 	if err != nil {
 		return err
 	}
+	defer sub.Close()
 
-	return sub.Wait(c.Request().Context())
+	return sub.Wait(ctx)
 }
 
 func (s Server) DahuaCamerasIDDelete(c echo.Context) error {

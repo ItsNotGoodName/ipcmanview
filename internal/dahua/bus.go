@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,6 +23,12 @@ type Bus struct {
 	onCameraUpdated []func(ctx context.Context, evt models.EventDahuaCameraUpdated) error
 	onCameraDeleted []func(ctx context.Context, evt models.EventDahuaCameraDeleted) error
 	onCameraEvent   []func(ctx context.Context, evt models.EventDahuaCameraEvent) error
+}
+
+func (dahuaBus *Bus) Register(pub pubsub.Pub) {
+	dahuaBus.OnCameraEvent(func(ctx context.Context, evt models.EventDahuaCameraEvent) error {
+		return pub.Publish(ctx, evt)
+	})
 }
 
 func (b *Bus) OnCameraCreated(h func(ctx context.Context, evt models.EventDahuaCameraCreated) error) {

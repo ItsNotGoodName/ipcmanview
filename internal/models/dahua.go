@@ -7,22 +7,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-type EventDahuaCameraCreated struct {
-	Camera DahuaCamera
-}
-
-type EventDahuaCameraUpdated struct {
-	Camera DahuaCamera
-}
-
-type EventDahuaCameraDeleted struct {
-	CameraID int64
-}
-
-type EventDahuaCameraEvent struct {
-	Event DahuaEvent `json:"event"`
-}
-
 type DahuaStatus struct {
 	CameraID     int64     `json:"camera_id"`
 	Address      string    `json:"address"`
