@@ -1,2 +1,2 @@
-.\ipcmanview.exe web --http-port 80
+.\ipcmanview.exe serve --http-port 80
 pause

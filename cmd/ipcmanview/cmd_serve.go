@@ -12,7 +12,7 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-type CmdWeb struct {
+type CmdServe struct {
 	Shared
 	HTTPHost     string `env:"HTTP_HOST" help:"HTTP host to listen on."`
 	HTTPPort     string `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
@@ -22,7 +22,7 @@ type CmdWeb struct {
 	MQTTPassword string `env:"MQTT_PASSWORD" help:"MQTT broker password."`
 }
 
-func (c *CmdWeb) Run(ctx *Context) error {
+func (c *CmdServe) Run(ctx *Context) error {
 	// Supervisor
 	super := suture.New("root", suture.Spec{
 		EventHook: sutureext.EventHook(),

@@ -22,9 +22,9 @@ type Context struct {
 var mainCmd struct {
 	Debug bool `help:"Enable debug mode."`
 
-	Web  CmdWeb  `cmd:"" help:"Start web server."`
-	Scan CmdScan `cmd:"" help:"Scan files on cameras."`
-	RPC  CmdRPC  `cmd:"" help:"Run RPC on cameras."`
+	Serve CmdServe `cmd:"" help:"Start application."`
+	Scan  CmdScan  `cmd:"" help:"Scan files on cameras."`
+	RPC   CmdRPC   `cmd:"" help:"Run RPC on cameras."`
 }
 
 func main() {

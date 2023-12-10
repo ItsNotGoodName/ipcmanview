@@ -13,23 +13,20 @@ clean:
 
 # Preview
 
-preview-web:
-	cd internal/web && pnpm run build && cd ../.. && go run ./cmd/ipcmanview web
+preview:
+	cd internal/web && pnpm run build && cd ../.. && go run ./cmd/ipcmanview serve
 
 # Run
 
-run-web:
-	go run ./cmd/ipcmanview web
+run:
+	go run ./cmd/ipcmanview serve
 
 # Dev
 
-dev-gateway:
+dev:
 	air
 
-dev-web:
-	air -build.cmd "go build -o ./tmp/main -tags dev ./cmd/ipcmanview" -build.args_bin web
-
-dev-web-assets:
+dev-assets:
 	cd internal/web && pnpm install && pnpm run dev
 
 # Gen

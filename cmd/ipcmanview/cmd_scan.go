@@ -9,7 +9,7 @@ import (
 
 type CmdScan struct {
 	Shared
-	Full  bool `help:"Run full scan."`
+	Full  bool `help:"Run full file scan."`
 	Reset bool `help:"Reset all file cursors."`
 }
 
