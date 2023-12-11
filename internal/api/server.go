@@ -12,7 +12,7 @@ import (
 type DahuaRepo interface {
 	GetConn(ctx context.Context, id int64) (models.DahuaConn, bool, error)
 	ListConn(ctx context.Context) ([]models.DahuaConn, error)
-	GetFileByFilePath(ctx context.Context, filePath string) (models.DahuaFile, error)
+	GetFileByFilePath(ctx context.Context, cameraID int64, filePath string) (models.DahuaFile, error)
 }
 
 type DahuaFileCache interface {

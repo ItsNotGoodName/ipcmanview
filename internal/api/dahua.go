@@ -360,7 +360,7 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 
 	filePath := c.Param("*")
 
-	dahuaFile, err := s.dahuaRepo.GetFileByFilePath(ctx, filePath)
+	dahuaFile, err := s.dahuaRepo.GetFileByFilePath(ctx, conn.Camera.ID, filePath)
 	if err != nil {
 		return err
 	}

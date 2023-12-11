@@ -238,11 +238,16 @@ func (q *Queries) GetDahuaEventData(ctx context.Context, id int64) (json.RawMess
 const getDahuaFileByFilePath = `-- name: GetDahuaFileByFilePath :one
 SELECT id, camera_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at
 FROM dahua_files
-WHERE file_path = ?
+WHERE camera_id = ? and file_path = ?
 `
 
-func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, filePath string) (DahuaFile, error) {
-	row := q.db.QueryRowContext(ctx, getDahuaFileByFilePath, filePath)
+type GetDahuaFileByFilePathParams struct {
+	CameraID int64
+	FilePath string
+}
+
+func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileByFilePathParams) (DahuaFile, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaFileByFilePath, arg.CameraID, arg.FilePath)
 	var i DahuaFile
 	err := row.Scan(
 		&i.ID,

@@ -56,8 +56,11 @@ type Repo struct {
 	db repo.DB
 }
 
-func (r Repo) GetFileByFilePath(ctx context.Context, filePath string) (models.DahuaFile, error) {
-	file, err := r.db.GetDahuaFileByFilePath(ctx, filePath)
+func (r Repo) GetFileByFilePath(ctx context.Context, cameraID int64, filePath string) (models.DahuaFile, error) {
+	file, err := r.db.GetDahuaFileByFilePath(ctx, repo.GetDahuaFileByFilePathParams{
+		CameraID: cameraID,
+		FilePath: filePath,
+	})
 	if err != nil {
 		return models.DahuaFile{}, err
 	}
