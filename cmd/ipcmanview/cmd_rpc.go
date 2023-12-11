@@ -13,7 +13,7 @@ import (
 )
 
 type CmdRPC struct {
-	Shared
+	SharedDB
 	SharedCameras
 	Method string `help:"Set RPC method."`
 	Params bool   `help:"Set RPC params by reading from stdin as JSON."`
@@ -30,7 +30,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 		}
 	}
 
-	db, err := useDB(ctx, c.DBPath)
+	db, err := c.useDB(ctx)
 	if err != nil {
 		return err
 	}
@@ -43,8 +43,8 @@ func (c *CmdRPC) Run(ctx *Context) error {
 	wg := sync.WaitGroup{}
 	for _, camera := range cameras {
 		wg.Add(1)
-		go func(camera models.DahuaCameraInfo) {
-			conn := dahua.NewConn(camera.DahuaCamera)
+		go func(camera models.DahuaCameraConn) {
+			conn := dahua.NewConn(camera.DahuaConn)
 
 			res, err := func() (string, error) {
 				rpc, err := conn.RPC.RPC(ctx)
@@ -69,7 +69,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 
 				return string(b), nil
 			}()
-			prefix := fmt.Sprintf("id=%d name=%s", camera.ID, camera.Name)
+			prefix := fmt.Sprintf("id=%d name=%s", camera.DahuaCamera.ID, camera.Name)
 			if err != nil {
 				fmt.Println(prefix, err)
 			} else {

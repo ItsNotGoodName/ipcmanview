@@ -9,11 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func cameraEqual(lhs, rhs models.DahuaCamera) bool {
+func cameraEqual(lhs, rhs models.DahuaConn) bool {
 	return lhs.Address == rhs.Address && lhs.Username == rhs.Username && lhs.Password == rhs.Password
 }
 
-func newStoreClient(camera models.DahuaCamera, lastAccessed time.Time) storeClient {
+func newStoreClient(camera models.DahuaConn, lastAccessed time.Time) storeClient {
 	return storeClient{
 		LastAccessed: lastAccessed,
 		Conn:         NewConn(camera),
@@ -86,7 +86,7 @@ func (s *Store) Serve(ctx context.Context) error {
 	}
 }
 
-func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaCamera) Conn {
+func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaConn) Conn {
 	client, ok := s.clients[camera.ID]
 	if !ok {
 		// Not found
@@ -111,7 +111,7 @@ func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaCamera
 	return client.Conn
 }
 
-func (s *Store) ConnList(ctx context.Context, cameras []models.DahuaCamera) []Conn {
+func (s *Store) ConnList(ctx context.Context, cameras []models.DahuaConn) []Conn {
 	clients := make([]Conn, 0, len(cameras))
 
 	s.clientsMu.Lock()
@@ -123,7 +123,7 @@ func (s *Store) ConnList(ctx context.Context, cameras []models.DahuaCamera) []Co
 	return clients
 }
 
-func (s *Store) Conn(ctx context.Context, camera models.DahuaCamera) Conn {
+func (s *Store) Conn(ctx context.Context, camera models.DahuaConn) Conn {
 	s.clientsMu.Lock()
 	client := s.getOrCreateCamera(ctx, camera)
 	s.clientsMu.Unlock()

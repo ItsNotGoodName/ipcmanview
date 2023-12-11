@@ -18,7 +18,7 @@ type EventHooks interface {
 	CameraEvent(ctx context.Context, event models.DahuaEvent)
 }
 
-func newEventWorker(camera models.DahuaCamera, hooks EventHooks) eventWorker {
+func newEventWorker(camera models.DahuaConn, hooks EventHooks) eventWorker {
 	return eventWorker{
 		Camera: camera,
 		hooks:  hooks,
@@ -26,7 +26,7 @@ func newEventWorker(camera models.DahuaCamera, hooks EventHooks) eventWorker {
 }
 
 type eventWorker struct {
-	Camera models.DahuaCamera
+	Camera models.DahuaConn
 	hooks  EventHooks
 }
 
@@ -84,7 +84,7 @@ func NewEventWorkerStore(super *suture.Supervisor, hooks EventHooks) *EventWorke
 	}
 }
 
-func (s *EventWorkerStore) Create(camera models.DahuaCamera) error {
+func (s *EventWorkerStore) Create(camera models.DahuaConn) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 
@@ -101,7 +101,7 @@ func (s *EventWorkerStore) Create(camera models.DahuaCamera) error {
 	return nil
 }
 
-func (s *EventWorkerStore) Update(camera models.DahuaCamera) error {
+func (s *EventWorkerStore) Update(camera models.DahuaConn) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 

@@ -47,7 +47,7 @@ func (b *Bus) OnCameraEvent(h func(ctx context.Context, evt models.EventDahuaCam
 	b.onCameraEvent = append(b.onCameraEvent, h)
 }
 
-func (b *Bus) CameraCreated(camera models.DahuaCamera) {
+func (b *Bus) CameraCreated(camera models.DahuaConn) {
 	for _, v := range b.onCameraCreated {
 		busLogErr(v(context.TODO(), models.EventDahuaCameraCreated{
 			Camera: camera,
@@ -55,7 +55,7 @@ func (b *Bus) CameraCreated(camera models.DahuaCamera) {
 	}
 }
 
-func (b *Bus) CameraUpdated(camera models.DahuaCamera) {
+func (b *Bus) CameraUpdated(camera models.DahuaConn) {
 	for _, v := range b.onCameraUpdated {
 		busLogErr(v(context.TODO(), models.EventDahuaCameraUpdated{
 			Camera: camera,

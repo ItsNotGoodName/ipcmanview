@@ -82,7 +82,7 @@ func ScanReset(ctx context.Context, db repo.DB, id int64) error {
 }
 
 // Scan should only be called once per camera.
-func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, camera models.DahuaCamera, scanType ScanType) error {
+func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, camera models.DahuaConn, scanType ScanType) error {
 	fileCursor, err := db.GetDahuaFileCursor(ctx, camera.ID)
 	if err != nil {
 		return err

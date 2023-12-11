@@ -13,7 +13,6 @@ type DahuaStatus struct {
 	Username     string    `json:"username"`
 	Location     string    `json:"location"`
 	Seed         int       `json:"seed"`
-	CreatedAt    time.Time `json:"created_at"`
 	RPCError     string    `json:"rpc_error"`
 	RPCState     string    `json:"rpc_state"`
 	RPCLastLogin time.Time `json:"rpc_last_login"`
@@ -21,18 +20,27 @@ type DahuaStatus struct {
 
 type DahuaCamera struct {
 	ID        int64
+	Name      string
 	Address   string `validate:"address"`
 	Username  string
 	Password  string
 	Location  types.Location
-	Seed      int
 	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-type DahuaCameraInfo struct {
+type DahuaConn struct {
+	ID       int64
+	Address  string
+	Username string
+	Password string
+	Location types.Location
+	Seed     int
+}
+
+type DahuaCameraConn struct {
 	DahuaCamera
-	Name      string
-	UpdatedAt time.Time
+	DahuaConn
 }
 
 type DahuaDetail struct {

@@ -26,7 +26,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 		coaxialcontrolStatus []models.DahuaCoaxialStatus
 	}
 
-	cameras := make([]models.DahuaCamera, 0, len(dbCameras))
+	cameras := make([]models.DahuaConn, 0, len(dbCameras))
 	for _, row := range dbCameras {
 		cameras = append(cameras, row.Convert())
 	}

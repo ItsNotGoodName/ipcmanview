@@ -56,29 +56,25 @@ type CameraStore struct {
 	db repo.DB
 }
 
-func (s CameraStore) Save(ctx context.Context, camera ...models.DahuaCamera) error {
-	return errors.ErrUnsupported
-}
-
-func (s CameraStore) Get(ctx context.Context, id int64) (models.DahuaCamera, bool, error) {
+func (s CameraStore) Get(ctx context.Context, id int64) (models.DahuaConn, bool, error) {
 	dbCamera, err := s.db.GetDahuaCamera(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.DahuaCamera{}, false, nil
+			return models.DahuaConn{}, false, nil
 		}
-		return models.DahuaCamera{}, false, err
+		return models.DahuaConn{}, false, err
 	}
 
 	return dbCamera.Convert(), true, nil
 }
 
-func (s CameraStore) List(ctx context.Context) ([]models.DahuaCamera, error) {
+func (s CameraStore) List(ctx context.Context) ([]models.DahuaConn, error) {
 	dbCameras, err := s.db.ListDahuaCamera(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	cameras := make([]models.DahuaCamera, 0, len(dbCameras))
+	cameras := make([]models.DahuaConn, 0, len(dbCameras))
 	for _, row := range dbCameras {
 		cameras = append(cameras, row.Convert())
 	}

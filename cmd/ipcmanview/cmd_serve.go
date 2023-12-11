@@ -13,7 +13,7 @@ import (
 )
 
 type CmdServe struct {
-	Shared
+	SharedDB
 	HTTPHost     string `env:"HTTP_HOST" help:"HTTP host to listen on."`
 	HTTPPort     string `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
 	MQTTAddress  string `env:"MQTT_ADDRESS" help:"MQTT broker to publish events."`
@@ -29,7 +29,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	})
 
 	// Database
-	db, err := useDB(ctx, c.DBPath)
+	db, err := c.useDB(ctx)
 	if err != nil {
 		return err
 	}

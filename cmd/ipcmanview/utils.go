@@ -9,12 +9,12 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 )
 
-type Shared struct {
+type SharedDB struct {
 	DBPath string `default:"sqlite.db" env:"DB_PATH" help:"Path to SQLite database."`
 }
 
-func useDB(ctx *Context, path string) (repo.DB, error) {
-	sqlDB, err := sqlite.New(path)
+func (c SharedDB) useDB(ctx *Context) (repo.DB, error) {
+	sqlDB, err := sqlite.New(c.DBPath)
 	if err != nil {
 		return repo.DB{}, err
 	}
@@ -32,8 +32,8 @@ type SharedCameras struct {
 	All bool    `help:"Run on all cameras."`
 }
 
-func (c SharedCameras) useCameras(ctx context.Context, db repo.DB) ([]models.DahuaCameraInfo, error) {
-	var cameras []models.DahuaCameraInfo
+func (c SharedCameras) useCameras(ctx context.Context, db repo.DB) ([]models.DahuaCameraConn, error) {
+	var cameras []models.DahuaCameraConn
 	if c.All {
 		dbCameras, err := db.ListDahuaCamera(ctx)
 		if err != nil {
@@ -41,10 +41,8 @@ func (c SharedCameras) useCameras(ctx context.Context, db repo.DB) ([]models.Dah
 		}
 
 		for _, dbCamera := range dbCameras {
-			cameras = append(cameras, models.DahuaCameraInfo{
-				DahuaCamera: dbCamera.Convert(),
-				Name:        dbCamera.Name,
-				UpdatedAt:   dbCamera.UpdatedAt.Time,
+			cameras = append(cameras, models.DahuaCameraConn{
+				DahuaConn: dbCamera.Convert(),
 			})
 		}
 	} else {
@@ -54,10 +52,8 @@ func (c SharedCameras) useCameras(ctx context.Context, db repo.DB) ([]models.Dah
 		}
 
 		for _, dbCamera := range dbCameras {
-			cameras = append(cameras, models.DahuaCameraInfo{
-				DahuaCamera: dbCamera.Convert(),
-				Name:        dbCamera.Name,
-				UpdatedAt:   dbCamera.UpdatedAt.Time,
+			cameras = append(cameras, models.DahuaCameraConn{
+				DahuaConn: dbCamera.Convert(),
 			})
 		}
 	}

@@ -11,7 +11,6 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
@@ -19,10 +18,9 @@ import (
 	echo "github.com/labstack/echo/v4"
 )
 
-type DahuaCameraStore interface {
-	Get(ctx context.Context, id int64) (models.DahuaCamera, bool, error)
-	List(ctx context.Context) ([]models.DahuaCamera, error)
-	Save(ctx context.Context, camera ...models.DahuaCamera) error
+type DahuaConnStore interface {
+	Get(ctx context.Context, id int64) (models.DahuaConn, bool, error)
+	List(ctx context.Context) ([]models.DahuaConn, error)
 }
 
 func RegisterDahuaRoutes(e *echo.Echo, s *DahuaServer) {
@@ -42,13 +40,12 @@ func RegisterDahuaRoutes(e *echo.Echo, s *DahuaServer) {
 	e.GET("/v1/dahua/:id/storage", s.GETIDStorage)
 	e.GET("/v1/dahua/:id/users", s.GETIDUsers)
 
-	e.POST("/v1/dahua", s.POST)
 	e.POST("/v1/dahua/:id", s.POSTID)
 	e.POST("/v1/dahua/:id/ptz/preset", s.POSTIDPTZPreset)
 	e.POST("/v1/dahua/:id/rpc", s.POSTIDRPC)
 }
 
-func useDahuaConn(c echo.Context, cameraStore DahuaCameraStore, store *dahua.Store) (dahua.Conn, error) {
+func useDahuaConn(c echo.Context, connStore DahuaConnStore, store *dahua.Store) (dahua.Conn, error) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return dahua.Conn{}, echo.ErrBadRequest.WithInternal(err)
@@ -56,7 +53,7 @@ func useDahuaConn(c echo.Context, cameraStore DahuaCameraStore, store *dahua.Sto
 
 	ctx := c.Request().Context()
 
-	camera, found, err := cameraStore.Get(ctx, id)
+	camera, found, err := connStore.Get(ctx, id)
 	if err != nil {
 		return dahua.Conn{}, err
 	}
@@ -69,24 +66,24 @@ func useDahuaConn(c echo.Context, cameraStore DahuaCameraStore, store *dahua.Sto
 	return client, nil
 }
 
-func NewDahuaServer(pub pubsub.Pub, dahuaStore *dahua.Store, dahuaCameraStore DahuaCameraStore) *DahuaServer {
+func NewDahuaServer(pub pubsub.Pub, store *dahua.Store, connStore DahuaConnStore) *DahuaServer {
 	return &DahuaServer{
-		pub:         pub,
-		store:       dahuaStore,
-		cameraStore: dahuaCameraStore,
+		pub:       pub,
+		store:     store,
+		connStore: connStore,
 	}
 }
 
 type DahuaServer struct {
-	pub         pubsub.Pub
-	store       *dahua.Store
-	cameraStore DahuaCameraStore
+	pub       pubsub.Pub
+	store     *dahua.Store
+	connStore DahuaConnStore
 }
 
 func (s *DahuaServer) GET(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	cameras, err := s.cameraStore.List(ctx)
+	cameras, err := s.connStore.List(ctx)
 	if err != nil {
 		return err
 	}
@@ -101,48 +98,8 @@ func (s *DahuaServer) GET(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
-func (s *DahuaServer) POST(c echo.Context) error {
-	type reqCamera struct {
-		Address  string         `json:"address"`
-		Location types.Location `json:"location"`
-		Username string         `json:"username"`
-		Password string         `json:"password"`
-		Seed     int            `json:"seed"`
-	}
-
-	var req map[int64]reqCamera
-	err := c.Bind(&req)
-	if err != nil {
-		return echo.ErrBadRequest.WithInternal(err)
-	}
-
-	cameras := make([]models.DahuaCamera, 0, len(req))
-	for id, body := range req {
-		camera, err := dahua.NewDahuaCamera(models.DahuaCamera{
-			ID:       id,
-			Address:  body.Address,
-			Location: body.Location,
-			Username: body.Username,
-			Password: body.Password,
-			Seed:     body.Seed,
-		})
-		if err != nil {
-			return echo.ErrBadRequest.WithInternal(err)
-		}
-
-		cameras = append(cameras, camera)
-	}
-
-	err = s.cameraStore.Save(c.Request().Context(), cameras...)
-	if err != nil {
-		return err
-	}
-
-	return s.GET(c)
-}
-
 func (s *DahuaServer) POSTID(c echo.Context) error {
-	_, err := useDahuaConn(c, s.cameraStore, s.store)
+	_, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -151,7 +108,7 @@ func (s *DahuaServer) POSTID(c echo.Context) error {
 }
 
 func (s *DahuaServer) POSTIDRPC(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -186,7 +143,7 @@ func (s *DahuaServer) POSTIDRPC(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDDetail(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -200,7 +157,7 @@ func (s *DahuaServer) GETIDDetail(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDSoftware(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -214,7 +171,7 @@ func (s *DahuaServer) GETIDSoftware(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDLicenses(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -228,7 +185,7 @@ func (s *DahuaServer) GETIDLicenses(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDError(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -239,7 +196,7 @@ func (s *DahuaServer) GETIDError(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDSnapshot(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -267,7 +224,7 @@ func (s *DahuaServer) GETIDSnapshot(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDEvents(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -355,7 +312,7 @@ func (s *DahuaServer) GETEvents(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDFiles(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -410,7 +367,7 @@ func (s *DahuaServer) GETIDFiles(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDFilesPath(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -444,7 +401,7 @@ func (s *DahuaServer) GETIDFilesPath(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDAudio(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -470,7 +427,7 @@ func (s *DahuaServer) GETIDAudio(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDCoaxialStatus(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -489,7 +446,7 @@ func (s *DahuaServer) GETIDCoaxialStatus(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDCoaxialCaps(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -508,7 +465,7 @@ func (s *DahuaServer) GETIDCoaxialCaps(c echo.Context) error {
 }
 
 func (s *DahuaServer) POSTIDPTZPreset(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -532,7 +489,7 @@ func (s *DahuaServer) POSTIDPTZPreset(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDStorage(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}
@@ -546,7 +503,7 @@ func (s *DahuaServer) GETIDStorage(c echo.Context) error {
 }
 
 func (s *DahuaServer) GETIDUsers(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.cameraStore, s.store)
+	conn, err := useDahuaConn(c, s.connStore, s.store)
 	if err != nil {
 		return err
 	}

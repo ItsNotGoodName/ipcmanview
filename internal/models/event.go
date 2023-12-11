@@ -1,11 +1,11 @@
 package models
 
 type EventDahuaCameraCreated struct {
-	Camera DahuaCamera
+	Camera DahuaConn
 }
 
 type EventDahuaCameraUpdated struct {
-	Camera DahuaCamera
+	Camera DahuaConn
 }
 
 type EventDahuaCameraDeleted struct {

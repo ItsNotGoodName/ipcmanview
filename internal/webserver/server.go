@@ -271,6 +271,8 @@ func (s Server) DahuaCamerasCreate(c echo.Context) error {
 }
 
 func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	var form struct {
 		Name     string
 		Address  string
@@ -292,23 +294,22 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	camera, err := dahua.NewDahuaCamera(models.DahuaCamera{
+	create, err := dahua.NewDahuaCamera(models.DahuaCamera{
+		Name:     form.Name,
 		Address:  form.Address,
 		Username: form.Username,
 		Password: form.Password,
 		Location: location,
 	})
 
-	ctx := c.Request().Context()
-
 	id, err := s.db.CreateDahuaCamera(ctx, repo.CreateDahuaCameraParams{
-		Name:      form.Name,
-		Username:  camera.Username,
-		Password:  camera.Password,
-		Address:   camera.Address,
-		Location:  camera.Location,
-		CreatedAt: types.NewTime(camera.CreatedAt),
-		UpdatedAt: types.NewTime(camera.CreatedAt),
+		Name:      create.Name,
+		Username:  create.Username,
+		Password:  create.Password,
+		Address:   create.Address,
+		Location:  create.Location,
+		CreatedAt: types.NewTime(create.CreatedAt),
+		UpdatedAt: types.NewTime(create.UpdatedAt),
 	}, dahuaweb.NewFileCursor())
 	if err != nil {
 		return err
@@ -335,6 +336,8 @@ func (s Server) DahuaCamerasUpdate(c echo.Context) error {
 }
 
 func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	camera, err := useDahuaCamera(c, s.db)
 	if err != nil {
 		return err
@@ -358,27 +361,28 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		form.Password = camera.Password
 	}
 
-	dto, err := dahua.UpdateDahuaCamera(models.DahuaCamera{
-		ID:       camera.ID,
-		Address:  form.Address,
-		Username: form.Username,
-		Password: form.Password,
-		Location: location,
+	update, err := dahua.UpdateDahuaCamera(models.DahuaCamera{
+		ID:        camera.ID,
+		Name:      form.Name,
+		Address:   form.Address,
+		Username:  form.Username,
+		Password:  form.Password,
+		Location:  location,
+		CreatedAt: camera.CreatedAt.Time,
+		UpdatedAt: camera.UpdatedAt.Time,
 	})
 	if err != nil {
 		return err
 	}
 
-	ctx := c.Request().Context()
-
 	_, err = s.db.UpdateDahuaCamera(ctx, repo.UpdateDahuaCameraParams{
-		ID:        dto.ID,
+		ID:        update.ID,
 		Name:      form.Name,
-		Username:  dto.Username,
-		Password:  dto.Password,
-		Address:   dto.Address,
-		Location:  dto.Location,
-		UpdatedAt: types.NewTime(time.Now()),
+		Username:  update.Username,
+		Password:  update.Password,
+		Address:   update.Address,
+		Location:  update.Location,
+		UpdatedAt: types.NewTime(update.UpdatedAt),
 	})
 	if err != nil {
 		return err

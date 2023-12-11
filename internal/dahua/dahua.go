@@ -25,7 +25,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func NewConn(camera models.DahuaCamera) Conn {
+func NewConn(camera models.DahuaConn) Conn {
 	address := NewHTTPAddress(camera.Address)
 	rpcHTTPClient := &http.Client{
 		Timeout: 5 * time.Second,
@@ -45,7 +45,7 @@ func NewConn(camera models.DahuaCamera) Conn {
 }
 
 type Conn struct {
-	Camera models.DahuaCamera
+	Camera models.DahuaConn
 	RPC    auth.Client
 	PTZ    *ptz.Client
 	CGI    dahuacgi.Client
@@ -335,15 +335,17 @@ func NewDahuaCamera(c models.DahuaCamera) (models.DahuaCamera, error) {
 		c.Location = types.Location{Location: time.Local}
 	}
 	c.CreatedAt = time.Now()
+	c.UpdatedAt = time.Now()
 
 	return c, validate.Validate.Struct(c)
 }
 
 func UpdateDahuaCamera(c models.DahuaCamera) (models.DahuaCamera, error) {
+	c.UpdatedAt = time.Now()
 	return c, validate.Validate.Struct(c)
 }
 
-func GetSeed(c models.DahuaCamera) int {
+func GetSeed(c models.DahuaConn) int {
 	if c.Seed != 0 {
 		return c.Seed
 	}
@@ -355,7 +357,7 @@ func NewHTTPAddress(address string) string {
 	return "http://" + address
 }
 
-func GetDahuaStatus(camera models.DahuaCamera, rpcClient auth.Client) models.DahuaStatus {
+func GetDahuaStatus(camera models.DahuaConn, rpcClient auth.Client) models.DahuaStatus {
 	rpcData := rpcClient.Data()
 	var rpcError string
 	if rpcData.Error != nil {
@@ -367,7 +369,6 @@ func GetDahuaStatus(camera models.DahuaCamera, rpcClient auth.Client) models.Dah
 		Username:     camera.Username,
 		Location:     camera.Location.String(),
 		Seed:         camera.Seed,
-		CreatedAt:    camera.CreatedAt,
 		RPCError:     rpcError,
 		RPCState:     rpcData.State.String(),
 		RPCLastLogin: rpcData.LastLogin,
@@ -382,7 +383,7 @@ func SetPreset(ctx context.Context, clientPTZ *ptz.Client, channel, index int) e
 }
 
 type CameraStore interface {
-	List(ctx context.Context) ([]models.DahuaCamera, error)
+	List(ctx context.Context) ([]models.DahuaConn, error)
 }
 
 func Bootstrap(ctx context.Context, cameraStore CameraStore, store *Store, eventWorkerStore *EventWorkerStore) error {
