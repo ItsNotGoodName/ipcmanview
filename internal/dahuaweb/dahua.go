@@ -44,20 +44,29 @@ func (p EventHooksProxy) CameraEvent(ctx context.Context, evt models.DahuaEvent)
 	p.hooks.CameraEvent(ctx, evt)
 }
 
-// ---------- CameraStore
+// ---------- Repo
 
-func NewCameraStore(db repo.DB) CameraStore {
-	return CameraStore{
+func NewRepo(db repo.DB) Repo {
+	return Repo{
 		db: db,
 	}
 }
 
-type CameraStore struct {
+type Repo struct {
 	db repo.DB
 }
 
-func (s CameraStore) Get(ctx context.Context, id int64) (models.DahuaConn, bool, error) {
-	dbCamera, err := s.db.GetDahuaCamera(ctx, id)
+func (r Repo) GetFileByFilePath(ctx context.Context, filePath string) (models.DahuaFile, error) {
+	file, err := r.db.GetDahuaFileByFilePath(ctx, filePath)
+	if err != nil {
+		return models.DahuaFile{}, err
+	}
+
+	return file.Convert(), nil
+}
+
+func (r Repo) GetConn(ctx context.Context, id int64) (models.DahuaConn, bool, error) {
+	dbCamera, err := r.db.GetDahuaCamera(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.DahuaConn{}, false, nil
@@ -68,8 +77,8 @@ func (s CameraStore) Get(ctx context.Context, id int64) (models.DahuaConn, bool,
 	return dbCamera.Convert(), true, nil
 }
 
-func (s CameraStore) List(ctx context.Context) ([]models.DahuaConn, error) {
-	dbCameras, err := s.db.ListDahuaCamera(ctx)
+func (r Repo) ListConn(ctx context.Context) ([]models.DahuaConn, error) {
+	dbCameras, err := r.db.ListDahuaCamera(ctx)
 	if err != nil {
 		return nil, err
 	}

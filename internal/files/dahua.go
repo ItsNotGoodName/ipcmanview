@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
 
 type DahuaFile struct {
@@ -49,7 +49,7 @@ func fromDahuaFileName(fileName string) (DahuaFile, error) {
 	}, nil
 }
 
-func toDahuaFileName(file repo.DahuaFile) string {
+func toDahuaFileName(file models.DahuaFile) string {
 	return fmt.Sprintf("%s-%d-%d.%s", file.StartTime.UTC().Format("2006-01-02-15-04-05"), file.CameraID, file.ID, file.Type)
 }
 
@@ -63,11 +63,11 @@ func NewDahuaFileStore(dir string) DahuaFileStore {
 	}
 }
 
-func (s DahuaFileStore) filePath(file repo.DahuaFile) string {
+func (s DahuaFileStore) filePath(file models.DahuaFile) string {
 	return path.Join(s.dir, toDahuaFileName(file))
 }
 
-func (s DahuaFileStore) Exists(ctx context.Context, file repo.DahuaFile) (bool, error) {
+func (s DahuaFileStore) Exists(ctx context.Context, file models.DahuaFile) (bool, error) {
 	if _, err := os.Stat(s.filePath(file)); err == nil {
 		return true, nil
 	} else if errors.Is(err, os.ErrNotExist) {
@@ -77,7 +77,7 @@ func (s DahuaFileStore) Exists(ctx context.Context, file repo.DahuaFile) (bool, 
 	}
 }
 
-func (s DahuaFileStore) Save(ctx context.Context, file repo.DahuaFile, r io.ReadCloser) error {
+func (s DahuaFileStore) Save(ctx context.Context, file models.DahuaFile, r io.ReadCloser) error {
 	filePath := s.filePath(file)
 	filePathSwap := filePath + ".swap"
 	f, err := os.OpenFile(filePathSwap, os.O_CREATE|os.O_RDWR, 0777)
@@ -92,11 +92,11 @@ func (s DahuaFileStore) Save(ctx context.Context, file repo.DahuaFile, r io.Read
 	return os.Rename(filePathSwap, filePath)
 }
 
-func (s DahuaFileStore) Get(ctx context.Context, file repo.DahuaFile) (io.ReadCloser, error) {
+func (s DahuaFileStore) Get(ctx context.Context, file models.DahuaFile) (io.ReadCloser, error) {
 	return os.Open(s.filePath(file))
 }
 
-func (s DahuaFileStore) Remove(ctx context.Context, file repo.DahuaFile) error {
+func (s DahuaFileStore) Remove(ctx context.Context, file models.DahuaFile) error {
 	err := os.Remove(s.filePath(file))
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return err

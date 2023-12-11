@@ -40,7 +40,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	dahuaBus := dahua.NewBus()
 	dahuaBus.Register(pub)
 
-	dahuaCameraStore := dahuaweb.NewCameraStore(db)
+	dahuaRepo := dahuaweb.NewRepo(db)
 
 	dahuaStore := dahua.NewStore()
 	super.Add(dahuaStore)
@@ -55,7 +55,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 		mqttPublisher.Register(dahuaBus)
 	}
 
-	if err := dahua.Bootstrap(ctx, dahuaCameraStore, dahuaStore, eventWorkerStore); err != nil {
+	if err := dahua.Bootstrap(ctx, dahuaRepo, dahuaStore, eventWorkerStore); err != nil {
 		return err
 	}
 
@@ -74,7 +74,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	webserver.RegisterMiddleware(httpRouter)
 
 	// HTTP API
-	apiServer := api.NewServer(pub, db, dahuaStore, dahuaCameraStore, dahuaFileStore)
+	apiServer := api.NewServer(pub, dahuaStore, dahuaRepo, dahuaFileStore)
 	apiServer.RegisterDahuaRoutes(httpRouter)
 
 	// HTTP Web

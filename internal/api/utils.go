@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -17,12 +16,6 @@ import (
 	"github.com/gorilla/schema"
 	"github.com/labstack/echo/v4"
 )
-
-var ErrSubscriptionClosed = errors.New("subscription closed")
-
-type PubSub interface {
-	SubscribeDahuaEvents(ctx context.Context, cameraIDs []int64) (<-chan models.EventDahuaCameraEvent, error)
-}
 
 // ---------- Stream
 

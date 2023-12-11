@@ -382,11 +382,11 @@ func SetPreset(ctx context.Context, clientPTZ *ptz.Client, channel, index int) e
 }
 
 type CameraStore interface {
-	List(ctx context.Context) ([]models.DahuaConn, error)
+	ListConn(ctx context.Context) ([]models.DahuaConn, error)
 }
 
 func Bootstrap(ctx context.Context, cameraStore CameraStore, store *Store, eventWorkerStore *EventWorkerStore) error {
-	cameras, err := cameraStore.List(ctx)
+	cameras, err := cameraStore.ListConn(ctx)
 	if err != nil {
 		return err
 	}

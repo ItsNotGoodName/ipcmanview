@@ -34,3 +34,27 @@ func (c ListDahuaCameraRow) Convert() models.DahuaConn {
 		Seed:     int(c.Seed),
 	}
 }
+
+func (c DahuaFile) Convert() models.DahuaFile {
+	return models.DahuaFile{
+		ID:          c.ID,
+		CameraID:    c.CameraID,
+		Channel:     int(c.Channel),
+		StartTime:   c.StartTime.Time,
+		EndTime:     c.EndTime.Time,
+		Length:      int(c.Length),
+		Type:        c.Type,
+		FilePath:    c.FilePath,
+		Duration:    int(c.Duration),
+		Disk:        int(c.Disk),
+		VideoStream: c.VideoStream,
+		Flags:       c.Flags.Slice,
+		Events:      c.Events.Slice,
+		Cluster:     int(c.Cluster),
+		Partition:   int(c.Partition),
+		PicIndex:    int(c.PicIndex),
+		Repeat:      int(c.Repeat),
+		WorkDir:     c.WorkDir,
+		WorkDirSN:   int(c.WorkDirSn),
+	}
+}

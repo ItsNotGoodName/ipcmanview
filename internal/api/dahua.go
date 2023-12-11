@@ -39,7 +39,7 @@ func (s *Server) RegisterDahuaRoutes(e *echo.Echo) {
 	e.POST("/v1/dahua/:id/rpc", s.DahuaIDRPCPOST)
 }
 
-func useDahuaConn(c echo.Context, connStore DahuaConnStore, store *dahua.Store) (dahua.Conn, error) {
+func useDahuaConn(c echo.Context, repo DahuaRepo, store *dahua.Store) (dahua.Conn, error) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return dahua.Conn{}, echo.ErrBadRequest.WithInternal(err)
@@ -47,7 +47,7 @@ func useDahuaConn(c echo.Context, connStore DahuaConnStore, store *dahua.Store) 
 
 	ctx := c.Request().Context()
 
-	camera, found, err := connStore.Get(ctx, id)
+	camera, found, err := repo.GetConn(ctx, id)
 	if err != nil {
 		return dahua.Conn{}, err
 	}
@@ -63,7 +63,7 @@ func useDahuaConn(c echo.Context, connStore DahuaConnStore, store *dahua.Store) 
 func (s *Server) Dahua(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	cameras, err := s.dahuaConnStore.List(ctx)
+	cameras, err := s.dahuaRepo.ListConn(ctx)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (s *Server) Dahua(c echo.Context) error {
 func (s *Server) DahuaIDRPCPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (s *Server) DahuaIDRPCPOST(c echo.Context) error {
 func (s *Server) DahuaIDDetail(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -132,7 +132,7 @@ func (s *Server) DahuaIDDetail(c echo.Context) error {
 func (s *Server) DahuaIDSoftware(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ func (s *Server) DahuaIDSoftware(c echo.Context) error {
 func (s *Server) DahuaIDLicenses(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (s *Server) DahuaIDLicenses(c echo.Context) error {
 }
 
 func (s *Server) DahuaIDError(c echo.Context) error {
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (s *Server) DahuaIDError(c echo.Context) error {
 func (s *Server) DahuaIDSnapshot(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func (s *Server) DahuaIDSnapshot(c echo.Context) error {
 func (s *Server) DahuaIDEvents(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -296,7 +296,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 func (s *Server) DahuaIDFiles(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -353,14 +353,14 @@ func (s *Server) DahuaIDFiles(c echo.Context) error {
 func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
 
 	filePath := c.Param("*")
 
-	dahuaFile, err := s.db.GetDahuaFileByFilePath(ctx, filePath)
+	dahuaFile, err := s.dahuaRepo.GetFileByFilePath(ctx, filePath)
 	if err != nil {
 		return err
 	}
@@ -405,7 +405,7 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 func (s *Server) DahuaIDAudio(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -433,7 +433,7 @@ func (s *Server) DahuaIDAudio(c echo.Context) error {
 func (s *Server) DahuaIDCoaxialStatus(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -454,7 +454,7 @@ func (s *Server) DahuaIDCoaxialStatus(c echo.Context) error {
 func (s *Server) DahuaIDCoaxialCaps(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -475,7 +475,7 @@ func (s *Server) DahuaIDCoaxialCaps(c echo.Context) error {
 func (s *Server) DahuaIDPTZPresetPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -501,7 +501,7 @@ func (s *Server) DahuaIDPTZPresetPOST(c echo.Context) error {
 func (s *Server) DahuaIDStorage(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -517,7 +517,7 @@ func (s *Server) DahuaIDStorage(c echo.Context) error {
 func (s *Server) DahuaIDUsers(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.dahuaConnStore, s.dahuaStore)
+	conn, err := useDahuaConn(c, s.dahuaRepo, s.dahuaStore)
 	if err != nil {
 		return err
 	}

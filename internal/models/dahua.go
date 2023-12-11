@@ -90,6 +90,7 @@ type DahuaCoaxialCaps struct {
 }
 
 type DahuaFile struct {
+	ID          int64     `json:"id"`
 	CameraID    int64     `json:"camera_id"`
 	Channel     int       `json:"channel"`
 	StartTime   time.Time `json:"start_time"`
