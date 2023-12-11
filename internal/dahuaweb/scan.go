@@ -93,7 +93,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, camera model
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
 
 	for scanPeriod, ok := iterator.Next(); ok; scanPeriod, ok = iterator.Next() {
-		errC := dahua.Scan(ctx, rpcClient, scanPeriod, camera.Location.Location, mediaFilesC)
+		errC := dahua.Scan(ctx, rpcClient, scanPeriod, camera.Location, mediaFilesC)
 
 	inner:
 		for {
@@ -106,7 +106,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, camera model
 				}
 				break inner
 			case mediaFiles := <-mediaFilesC:
-				files, err := dahua.NewDahuaFiles(camera.ID, mediaFiles, int(camera.Seed), camera.Location.Location)
+				files, err := dahua.NewDahuaFiles(camera.ID, mediaFiles, int(camera.Seed), camera.Location)
 				if err != nil {
 					return err
 				}

@@ -8,7 +8,7 @@ func (c ListDahuaCameraByIDsRow) Convert() models.DahuaConn {
 		Address:  c.Address,
 		Username: c.Username,
 		Password: c.Password,
-		Location: c.Location,
+		Location: c.Location.Location,
 		Seed:     int(c.Seed),
 	}
 }
@@ -19,7 +19,7 @@ func (c GetDahuaCameraRow) Convert() models.DahuaConn {
 		Address:  c.Address,
 		Username: c.Username,
 		Password: c.Password,
-		Location: c.Location,
+		Location: c.Location.Location,
 		Seed:     int(c.Seed),
 	}
 }
@@ -30,7 +30,7 @@ func (c ListDahuaCameraRow) Convert() models.DahuaConn {
 		Address:  c.Address,
 		Username: c.Username,
 		Password: c.Password,
-		Location: c.Location,
+		Location: c.Location.Location,
 		Seed:     int(c.Seed),
 	}
 }

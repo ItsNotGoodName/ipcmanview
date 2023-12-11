@@ -299,7 +299,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Address:  form.Address,
 		Username: form.Username,
 		Password: form.Password,
-		Location: location,
+		Location: location.Location,
 	})
 
 	id, err := s.db.CreateDahuaCamera(ctx, repo.CreateDahuaCameraParams{
@@ -307,7 +307,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Username:  create.Username,
 		Password:  create.Password,
 		Address:   create.Address,
-		Location:  create.Location,
+		Location:  types.NewLocation(create.Location),
 		CreatedAt: types.NewTime(create.CreatedAt),
 		UpdatedAt: types.NewTime(create.UpdatedAt),
 	}, dahuaweb.NewFileCursor())
@@ -367,7 +367,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		Address:   form.Address,
 		Username:  form.Username,
 		Password:  form.Password,
-		Location:  location,
+		Location:  location.Location,
 		CreatedAt: camera.CreatedAt.Time,
 		UpdatedAt: camera.UpdatedAt.Time,
 	})
@@ -381,7 +381,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		Username:  update.Username,
 		Password:  update.Password,
 		Address:   update.Address,
-		Location:  update.Location,
+		Location:  types.NewLocation(update.Location),
 		UpdatedAt: types.NewTime(update.UpdatedAt),
 	})
 	if err != nil {

@@ -322,7 +322,7 @@ func (s *Server) DahuaIDFiles(c echo.Context) error {
 	defer cancel()
 
 	for period, ok := iter.Next(); ok; period, ok = iter.Next() {
-		errC := dahua.Scan(ctx, conn.RPC, period, conn.Camera.Location.Location, filesC)
+		errC := dahua.Scan(ctx, conn.RPC, period, conn.Camera.Location, filesC)
 
 	inner:
 		for {
@@ -335,7 +335,7 @@ func (s *Server) DahuaIDFiles(c echo.Context) error {
 				}
 				break inner
 			case files := <-filesC:
-				res, err := dahua.NewDahuaFiles(conn.Camera.ID, files, dahua.GetSeed(conn.Camera), conn.Camera.Location.Location)
+				res, err := dahua.NewDahuaFiles(conn.Camera.ID, files, dahua.GetSeed(conn.Camera), conn.Camera.Location)
 				if err != nil {
 					return sendStreamError(c, stream, err)
 				}
@@ -506,7 +506,7 @@ func (s *Server) DahuaIDUsers(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahua.GetUsers(ctx, conn.Camera.ID, conn.RPC, conn.Camera.Location.Location)
+	res, err := dahua.GetUsers(ctx, conn.Camera.ID, conn.RPC, conn.Camera.Location)
 	if err != nil {
 		return err
 	}

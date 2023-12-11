@@ -10,6 +10,15 @@ type Location struct {
 	*time.Location
 }
 
+func NewLocation(loc *time.Location) Location {
+	if loc == nil {
+		loc = time.Local
+	}
+	return Location{
+		Location: loc,
+	}
+}
+
 func (l *Location) MarshalJSON() ([]byte, error) {
 	return []byte(l.Location.String()), nil
 }
