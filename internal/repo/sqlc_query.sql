@@ -111,6 +111,11 @@ INSERT INTO dahua_files (
   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
 ) RETURNING id;
 
+-- name: GetDahuaFileByFilePath :one
+SELECT *
+FROM dahua_files
+WHERE file_path = ?;
+
 -- name: UpdateDahuaFile :one
 UPDATE dahua_files 
 SET 

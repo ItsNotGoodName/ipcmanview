@@ -235,6 +235,40 @@ func (q *Queries) GetDahuaEventData(ctx context.Context, id int64) (json.RawMess
 	return data, err
 }
 
+const getDahuaFileByFilePath = `-- name: GetDahuaFileByFilePath :one
+SELECT id, camera_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at
+FROM dahua_files
+WHERE file_path = ?
+`
+
+func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, filePath string) (DahuaFile, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaFileByFilePath, filePath)
+	var i DahuaFile
+	err := row.Scan(
+		&i.ID,
+		&i.CameraID,
+		&i.Channel,
+		&i.StartTime,
+		&i.EndTime,
+		&i.Length,
+		&i.Type,
+		&i.FilePath,
+		&i.Duration,
+		&i.Disk,
+		&i.VideoStream,
+		&i.Flags,
+		&i.Events,
+		&i.Cluster,
+		&i.Partition,
+		&i.PicIndex,
+		&i.Repeat,
+		&i.WorkDir,
+		&i.WorkDirSn,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getDahuaFileCursor = `-- name: GetDahuaFileCursor :one
 SELECT camera_id, quick_cursor, full_cursor, full_epoch, full_complete FROM dahua_file_cursors 
 WHERE camera_id = ?

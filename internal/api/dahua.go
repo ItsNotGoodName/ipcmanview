@@ -358,27 +358,43 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 		return err
 	}
 
-	path := c.Param("*")
+	filePath := c.Param("*")
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(dahua.NewHTTPAddress(conn.Camera.Address), path), nil)
+	dahuaFile, err := s.db.GetDahuaFileByFilePath(ctx, filePath)
 	if err != nil {
 		return err
 	}
 
-	session, err := conn.RPC.RPCSession(ctx)
-	if err != nil {
+	var rd io.ReadCloser
+	if exists, err := s.dahuaFileCache.Exists(ctx, dahuaFile); err != nil {
 		return err
+	} else if !exists {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(dahua.NewHTTPAddress(conn.Camera.Address), filePath), nil)
+		if err != nil {
+			return err
+		}
+
+		session, err := conn.RPC.RPCSession(ctx)
+		if err != nil {
+			return err
+		}
+
+		req.Header.Add("Cookie", dahuarpc.Cookie(session))
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return err
+		}
+		rd = resp.Body
+	} else {
+		rd, err = s.dahuaFileCache.Get(ctx, dahuaFile)
+		if err != nil {
+			return err
+		}
 	}
+	defer rd.Close()
 
-	req.Header.Add("Cookie", dahuarpc.Cookie(session))
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	_, err = io.Copy(c.Response().Writer, resp.Body)
+	_, err = io.Copy(c.Response().Writer, rd)
 	if err != nil {
 		return err
 	}

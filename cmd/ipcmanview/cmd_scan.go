@@ -8,7 +8,7 @@ import (
 )
 
 type CmdScan struct {
-	SharedDB
+	Shared
 	SharedCameras
 	Full  bool `help:"Run full file scan."`
 	Reset bool `help:"Reset all file cursors."`

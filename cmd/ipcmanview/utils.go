@@ -2,19 +2,35 @@ package main
 
 import (
 	"context"
+	"os"
+	"path"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/files"
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 )
 
-type SharedDB struct {
-	DBPath string `default:"sqlite.db" env:"DB_PATH" help:"Path to SQLite database."`
+type Shared struct {
+	Dir string `default:"ipcmanview_data" env:"DIR" help:"Directory for data."`
 }
 
-func (c SharedDB) useDB(ctx *Context) (repo.DB, error) {
-	sqlDB, err := sqlite.New(c.DBPath)
+func useDir(dir string) error {
+	return os.MkdirAll(dir, 0755)
+}
+
+func (c Shared) useDahuaFileStore() (files.DahuaFileStore, error) {
+	dir := path.Join(c.Dir, "dahua-files")
+	return files.NewDahuaFileStore(dir), useDir(dir)
+}
+
+func (c Shared) useDB(ctx *Context) (repo.DB, error) {
+	if err := useDir(c.Dir); err != nil {
+		return repo.DB{}, err
+	}
+
+	sqlDB, err := sqlite.New(path.Join(c.Dir, "sqlite.db"))
 	if err != nil {
 		return repo.DB{}, err
 	}

@@ -13,7 +13,7 @@ import (
 )
 
 type CmdServe struct {
-	SharedDB
+	Shared
 	HTTPHost     string `env:"HTTP_HOST" help:"HTTP host to listen on."`
 	HTTPPort     string `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
 	MQTTAddress  string `env:"MQTT_ADDRESS" help:"MQTT broker to publish events."`
@@ -59,6 +59,11 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
+	dahuaFileStore, err := c.useDahuaFileStore()
+	if err != nil {
+		return err
+	}
+
 	// HTTP Router
 	httpRouter := http.NewRouter()
 	if err := webserver.RegisterRenderer(httpRouter); err != nil {
@@ -69,7 +74,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	webserver.RegisterMiddleware(httpRouter)
 
 	// HTTP API
-	apiServer := api.NewServer(pub, dahuaStore, dahuaCameraStore)
+	apiServer := api.NewServer(pub, db, dahuaStore, dahuaCameraStore, dahuaFileStore)
 	apiServer.RegisterDahuaRoutes(httpRouter)
 
 	// HTTP Web

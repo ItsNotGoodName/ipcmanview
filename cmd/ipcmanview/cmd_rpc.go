@@ -13,7 +13,7 @@ import (
 )
 
 type CmdRPC struct {
-	SharedDB
+	Shared
 	SharedCameras
 	Method string `help:"Set RPC method."`
 	Params bool   `help:"Set RPC params by reading from stdin as JSON."`

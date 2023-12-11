@@ -152,3 +152,70 @@ func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (List
 		Data:       res,
 	}, nil
 }
+
+type ListDahuaFileParams struct {
+	pagination.Page
+	Type      []string
+	CameraID  []int64
+	Start     types.Time
+	End       types.Time
+	Ascending bool
+}
+
+type ListDahuaFileResult struct {
+	pagination.PageResult
+	Data []DahuaFile
+}
+
+func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDahuaFileResult, error) {
+	where := sq.And{}
+
+	eq := sq.Eq{}
+	if len(arg.Type) != 0 {
+		eq["type"] = arg.Type
+	}
+	if len(arg.CameraID) != 0 {
+		eq["camera_id"] = arg.CameraID
+	}
+	where = append(where, eq)
+
+	and := sq.And{}
+	if !arg.Start.IsZero() {
+		and = append(and, sq.GtOrEq{"start_time": arg.Start})
+	}
+	if !arg.End.IsZero() {
+		and = append(and, sq.Lt{"start_time": arg.End})
+	}
+	where = append(where, and)
+
+	order := "start_time DESC"
+	if arg.Ascending {
+		order = "start_time ASC"
+	}
+
+	var res []DahuaFile
+	err := ssq.Query(ctx, db, &res, sq.
+		Select("*").
+		From("dahua_files").
+		Where(where).
+		OrderBy(order).
+		Limit(uint64(arg.Page.Limit())).
+		Offset(uint64(arg.Page.Offset())))
+	if err != nil {
+		return ListDahuaFileResult{}, err
+	}
+
+	var count int
+	err = ssq.QueryOne(ctx, db, &count, sq.
+		Select("COUNT(*)").
+		From("dahua_files").
+		Where(where))
+	if err != nil {
+		return ListDahuaFileResult{}, err
+	}
+
+	return ListDahuaFileResult{
+		PageResult: arg.Page.Result(count),
+		Data:       res,
+	}, nil
+}
