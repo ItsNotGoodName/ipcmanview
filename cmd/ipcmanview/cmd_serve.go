@@ -69,8 +69,8 @@ func (c *CmdServe) Run(ctx *Context) error {
 	webserver.RegisterMiddleware(httpRouter)
 
 	// HTTP API
-	apiDahuaServer := api.NewDahuaServer(pub, dahuaStore, dahuaCameraStore)
-	api.RegisterDahuaRoutes(httpRouter, apiDahuaServer)
+	apiServer := api.NewServer(pub, dahuaStore, dahuaCameraStore)
+	apiServer.RegisterDahuaRoutes(httpRouter)
 
 	// HTTP Web
 	webServer := webserver.New(db, pub, dahuaStore, dahuaBus)
