@@ -14,7 +14,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	echo "github.com/labstack/echo/v4"
 )
 
@@ -246,23 +245,31 @@ func (s *Server) DahuaIDEvents(c echo.Context) error {
 	} else {
 		// Get events from PubSub
 
-		ctx := ctx
-		stream := useStream(c)
-
-		sub, err := s.pub.Subscribe(ctx, func(event pubsub.Event) error {
-			evt, ok := event.(models.EventDahuaCameraEvent)
-			if !ok {
-				return nil
-			}
-
-			return sendStream(c, stream, evt.Event)
-		}, models.EventDahuaCameraEvent{})
+		sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaCameraEvent{})
 		if err != nil {
 			return err
 		}
 		defer sub.Close()
 
-		return sub.Wait(ctx)
+		stream := useStream(c)
+
+		for event := range eventsC {
+			evt, ok := event.(models.EventDahuaCameraEvent)
+			if !ok {
+				continue
+			}
+
+			err := sendStream(c, stream, evt.Event)
+			if err != nil {
+				return sendStreamError(c, stream, err)
+			}
+		}
+
+		if err := sub.Error(); err != nil {
+			return sendStreamError(c, stream, err)
+		}
+
+		return nil
 	}
 }
 
@@ -274,23 +281,34 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
+	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaCameraEvent{})
+	if err != nil {
+		return err
+	}
+	defer sub.Close()
+
 	stream := useStream(c)
 
-	sub, err := s.pub.Subscribe(ctx, func(event pubsub.Event) error {
+	for event := range eventsC {
 		evt, ok := event.(models.EventDahuaCameraEvent)
 		if !ok {
-			return nil
+			continue
 		}
 
 		if len(ids) != 0 && !slices.Contains(ids, evt.Event.CameraID) {
-			return nil
+			continue
 		}
 
-		return sendStream(c, stream, evt.Event)
-	}, models.EventDahuaCameraEvent{})
-	defer sub.Close()
+		if err := sendStream(c, stream, evt.Event); err != nil {
+			return sendStreamError(c, stream, err)
+		}
+	}
 
-	return sub.Wait(ctx)
+	if err := sub.Error(); err != nil {
+		return sendStreamError(c, stream, err)
+	}
+
+	return nil
 }
 
 func (s *Server) DahuaIDFiles(c echo.Context) error {

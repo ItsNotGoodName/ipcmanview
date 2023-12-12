@@ -184,6 +184,13 @@ func (s Server) DahuaEventsLive(c echo.Context) error {
 
 func (s Server) DahuaEventStream(c echo.Context) error {
 	ctx := c.Request().Context()
+
+	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaCameraEvent{})
+	if err != nil {
+		return err
+	}
+	defer sub.Close()
+
 	w := c.Response()
 
 	w.Header().Set(echo.HeaderContentType, "text/event-stream")
@@ -191,10 +198,11 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	w.Header().Set(echo.HeaderConnection, "keep-alive")
 
 	buf := new(bytes.Buffer)
-	sub, err := s.pub.Subscribe(ctx, func(event pubsub.Event) error {
+
+	for event := range eventsC {
 		evt, ok := event.(models.EventDahuaCameraEvent)
 		if !ok {
-			return nil
+			continue
 		}
 
 		if err := c.Echo().Renderer.Render(buf, "dahua-events-live", TemplateBlock{
@@ -211,14 +219,9 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 		}
 		buf.Reset()
 		w.Flush()
-		return nil
-	}, models.EventDahuaCameraEvent{})
-	if err != nil {
-		return err
 	}
-	defer sub.Close()
 
-	return sub.Wait(ctx)
+	return sub.Error()
 }
 
 func (s Server) DahuaCamerasIDDelete(c echo.Context) error {

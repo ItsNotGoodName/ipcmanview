@@ -20,7 +20,7 @@ func (e EventName) EventName() string {
 	return string(e)
 }
 
-type HandleFunc func(event Event) error
+type HandleFunc func(ctx context.Context, event Event) error
 
 type Pub struct {
 	commandC chan any
@@ -39,7 +39,7 @@ func NewPub() Pub {
 type sub struct {
 	id     int
 	topics []string
-	handle func(event Event) error
+	handle HandleFunc
 	doneC  chan<- struct{}
 	errC   chan<- error
 	closed bool
@@ -72,6 +72,12 @@ func (p Pub) Serve(ctx context.Context) error {
 
 	var lastID int
 	var subs []sub
+	defer func() {
+		for i := range subs {
+			subs[i].errC <- ErrPubSubClosed
+			close(subs[i].doneC)
+		}
+	}()
 
 	for {
 		select {
@@ -113,7 +119,7 @@ func (p Pub) Serve(ctx context.Context) error {
 						continue
 					}
 
-					err := subs[i].handle(command)
+					err := subs[i].handle(ctx, command)
 					if err != nil {
 						subs[i].errC <- err
 						close(subs[i].doneC)
