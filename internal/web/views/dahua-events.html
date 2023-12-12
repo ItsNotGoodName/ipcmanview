@@ -18,7 +18,7 @@
     {{ block "htmx" . }}
       <form
         class="i flex flex-col items-end gap-4 md:flex-row"
-        hx-get="/dahua/events"
+        hx-get="{{ .URL.Path }}"
       >
         <input type="hidden" name="Data" value="{{ .Data.Params.Data }}" />
 
@@ -108,9 +108,23 @@
         </div>
 
         <div class="flex w-full flex-col gap-2 md:w-auto">
-          <a class="btn flex-1" href="{{ .URL.Path }}" hx-get="{{ .URL.Path }}">
-            Reset
-          </a>
+          {{ if .Data.Params.Data }}
+            <a
+              class="btn"
+              {{ $url := URLQuery .URL.Path .Data.Params `Data` false }}
+              href="{{ $url }}"
+              hx-get="{{ $url }}"
+              >Hide Data</a
+            >
+          {{ else }}
+            <a
+              class="btn"
+              {{ $url := URLQuery .URL.Path .Data.Params `Data` true }}
+              href="{{ $url }}"
+              hx-get="{{ $url }}"
+              >Show Data</a
+            >
+          {{ end }}
           <button class="btn btn-info flex-1" type="submit">Apply</button>
         </div>
       </form>
@@ -162,9 +176,7 @@
                   <tr>
                     <td colspan="5" class="p-0">
                       {{ if $.Data.Params.Data }}
-                        {{ block "hx-event-data" . }}
-                          <x-json json="{{ .Data | toPrettyJson }}" />
-                        {{ end }}
+                        {{ template "dahua-events-data-json" . }}
                       {{ else }}
                         <button
                           class="btn btn-sm no-animation w-full"
@@ -201,7 +213,7 @@
         {{ .Data.Events.TotalItems }}
       </div>
 
-      <form hx-get="/dahua/events" hx-trigger="change" class="flex gap-4">
+      <form hx-get="{{ .URL.Path }}" hx-trigger="change" class="flex gap-4">
         {{ range .Data.Params.Code }}
           <input type="hidden" name="Code" value="{{ . }}" />
         {{ end }}
@@ -231,8 +243,10 @@
           </select>
         </div>
       </form>
+    </div>
 
-      {{ $url := list .URL.Path (Query .Data.Params `Ascending` (not .Data.Params.Ascending)) | join `?` }}
+    <div class="flex justify-end gap-4">
+      {{ $url := URLQuery .URL.Path .Data.Params `Ascending` (not .Data.Params.Ascending) }}
       <a class="btn" href="{{ $url }}" hx-get="{{ $url }}">
         {{ if .Data.Params.Ascending }}
           ASC
@@ -240,31 +254,11 @@
           DESC
         {{ end }}
       </a>
-    </div>
-
-    <div class="flex justify-end gap-4">
-      {{ if .Data.Params.Data }}
-        <a
-          class="btn"
-          {{ $url := list .URL.Path (Query .Data.Params `Data` false) | join `?` }}
-          href="{{ $url }}"
-          hx-get="{{ $url }}"
-          >Hide Data</a
-        >
-      {{ else }}
-        <a
-          class="btn"
-          {{ $url := list .URL.Path (Query .Data.Params `Data` true) | join `?` }}
-          href="{{ $url }}"
-          hx-get="{{ $url }}"
-          >Show Data</a
-        >
-      {{ end }}
       <div class="join">
         <a
           class="join-item btn"
           {{ if .Data.Events.HasPrevious }}
-            {{ $url:= list .URL.Path (Query .Data.Params `Page` .Data.Events.Previous) | join `?` }}
+            {{ $url:= URLQuery .URL.Path .Data.Params `Page` .Data.Events.Previous }}
             hx-get="{{ $url }}" href="{{ $url }}"
           {{ else }}
             disabled
@@ -275,7 +269,7 @@
         <a
           class="join-item btn"
           {{ if .Data.Events.HasNext }}
-            {{ $url:= list .URL.Path (Query .Data.Params `Page` .Data.Events.Next) | join `?` }}
+            {{ $url:= URLQuery .URL.Path .Data.Params `Page` .Data.Events.Next }}
             hx-get="{{ $url }}" href="{{ $url }}"
           {{ else }}
             disabled

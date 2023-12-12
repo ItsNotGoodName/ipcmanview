@@ -323,7 +323,7 @@ func (s *Server) DahuaIDFiles(c echo.Context) error {
 		Start string
 		End   string
 	}
-	if err := ParseQuery(c, &form); err != nil {
+	if err := DecodeQuery(c, &form); err != nil {
 		return err
 	}
 

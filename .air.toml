@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = ["serve", "--debug"]
   bin = "./tmp/main"
-  cmd = "go build -o ./tmp/main ./cmd/ipcmanview"
+  cmd = "go build -o ./tmp/main -tags dev ./cmd/ipcmanview"
   delay = 100
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []

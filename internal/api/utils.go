@@ -153,12 +153,21 @@ func ParseLocation(location string) (*time.Location, error) {
 	return loc, nil
 }
 
-func ParseQuery(c echo.Context, query any) error {
-	if err := decoder.Decode(query, c.Request().URL.Query()); err != nil {
+func DecodeQuery(c echo.Context, dst any) error {
+	if err := decoder.Decode(dst, c.Request().URL.Query()); err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
 	return nil
+}
+
+func EncodeQuery(src any) url.Values {
+	query := make(url.Values)
+	err := encoder.Encode(src, query)
+	if err != nil {
+		panic(err)
+	}
+	return query
 }
 
 func ValidateStruct(src any) error {
@@ -167,15 +176,6 @@ func ValidateStruct(src any) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 	return err
-}
-
-func NewQuery(src any) url.Values {
-	query := make(url.Values)
-	err := encoder.Encode(src, query)
-	if err != nil {
-		panic(err)
-	}
-	return query
 }
 
 func FormatSSE(event string, data string) []byte {

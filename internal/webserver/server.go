@@ -3,6 +3,7 @@ package webserver
 import (
 	"bytes"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
@@ -86,7 +87,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		Page:    1,
 		PerPage: 10,
 	}
-	if err := api.ParseQuery(c, &params); err != nil {
+	if err := api.DecodeQuery(c, &params); err != nil {
 		return err
 	}
 	if err := api.ValidateStruct(params); err != nil {
@@ -150,7 +151,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 	}
 
 	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
-		htmx.SetReplaceURL(c.Response(), "/dahua/events?"+api.NewQuery(params).Encode())
+		htmx.SetReplaceURL(c.Response(), c.Request().URL.Path+"?"+api.EncodeQuery(params).Encode())
 		return c.Render(http.StatusOK, "dahua-events", TemplateBlock{"htmx", data})
 	}
 
@@ -169,7 +170,7 @@ func (s Server) DahuaEventsIDData(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "dahua-events", TemplateBlock{
-		"hx-event-data",
+		"dahua-events-data-json",
 		data,
 	})
 }
@@ -179,11 +180,60 @@ func (s Server) DahuaFiles(c echo.Context) error {
 }
 
 func (s Server) DahuaEventsLive(c echo.Context) error {
-	return c.Render(http.StatusOK, "dahua-events-live", nil)
+	ctx := c.Request().Context()
+
+	params := struct {
+		CameraID []int64
+		Code     []string
+		Action   []string
+		Data     bool
+	}{}
+	if err := api.DecodeQuery(c, &params); err != nil {
+		return err
+	}
+
+	eventCodes, err := s.db.ListDahuaEventCodes(ctx)
+	if err != nil {
+		return err
+	}
+
+	eventActions, err := s.db.ListDahuaEventActions(ctx)
+	if err != nil {
+		return err
+	}
+
+	cameras, err := s.db.ListDahuaCamera(ctx)
+	if err != nil {
+		return err
+	}
+
+	data := Data{
+		"Params":      params,
+		"Cameras":     cameras,
+		"EventCodes":  eventCodes,
+		"EventAction": eventActions,
+	}
+
+	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+		htmx.SetReplaceURL(c.Response(), c.Request().URL.Path+"?"+api.EncodeQuery(params).Encode())
+		return c.Render(http.StatusOK, "dahua-events-live", TemplateBlock{"htmx", data})
+	}
+
+	return c.Render(http.StatusOK, "dahua-events-live", data)
 }
 
 func (s Server) DahuaEventStream(c echo.Context) error {
 	ctx := c.Request().Context()
+
+	params := struct {
+		CameraID []int64
+		Code     []string
+		Action   []string
+		Data     bool
+	}{}
+	if err := api.DecodeQuery(c, &params); err != nil {
+		return err
+	}
 
 	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaCameraEvent{})
 	if err != nil {
@@ -204,11 +254,21 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 		if !ok {
 			continue
 		}
+		if len(params.CameraID) > 0 && !slices.Contains(params.CameraID, evt.Event.CameraID) {
+			continue
+		}
+		if len(params.Code) > 0 && !slices.Contains(params.Code, evt.Event.Code) {
+			continue
+		}
+		if len(params.Action) > 0 && !slices.Contains(params.Action, evt.Event.Action) {
+			continue
+		}
 
 		if err := c.Echo().Renderer.Render(buf, "dahua-events-live", TemplateBlock{
 			"event-row",
 			Data{
-				"Event": evt.Event,
+				"Event":  evt.Event,
+				"Params": params,
 			},
 		}, c); err != nil {
 			return err

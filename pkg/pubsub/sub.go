@@ -122,6 +122,7 @@ func (p Pub) SubscribeChan(ctx context.Context, size int, events ...Event) (Sub,
 			sub.Close()
 			<-sub.doneC
 		case <-sub.doneC:
+		case <-p.doneC:
 		}
 		// This assumes the publisher will not call the handle function after the subscription is fully closed
 		close(eventsC)

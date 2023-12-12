@@ -14,25 +14,124 @@
   {{ template "dahua-events-header.html" . }}
 
 
-  <main class="px-4 min-h-screen">
-    <div class="flex flex-col gap-4">
-      <div class="overflow-x-auto">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Camera ID</th>
-              <th>Code</th>
-              <th>Action</th>
-              <th>Created At</th>
-            </tr>
-          </thead>
-          <tbody hx-ext="sse" sse-connect="/dahua/events/stream">
-            <tr class="hidden" sse-swap="message" hx-swap="afterend"></tr>
-          </tbody>
-        </table>
+  <main class="flex min-h-screen flex-col px-4">
+    {{ block "htmx" . }}
+      <form
+        class="i flex flex-col items-end gap-4 md:flex-row"
+        hx-get="{{ .URL.Path }}"
+        hx-target="closest main"
+      >
+        <input type="hidden" name="Data" value="{{ .Data.Params.Data }}" />
+
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Cameras</span>
+          </label>
+
+          <select name="CameraID" class="select select-bordered" multiple>
+            <option
+              value=""
+              {{ if eq (len $.Data.Params.CameraID) 0 }}selected{{ end }}
+            >
+              All
+            </option>
+            {{ range .Data.Cameras }}
+              <option
+                {{ if has .ID $.Data.Params.CameraID }}selected{{ end }}
+                value="{{ .ID }}"
+              >
+                {{ .Name }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Event Codes</span>
+          </label>
+
+          <select name="Code" class="select select-bordered" multiple>
+            <option
+              value=""
+              {{ if eq (len $.Data.Params.Code) 0 }}selected{{ end }}
+            >
+              All
+            </option>
+            {{ range .Data.EventCodes }}
+              <option {{ if has . $.Data.Params.Code }}selected{{ end }}>
+                {{ . }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Event Actions</span>
+          </label>
+
+          <select name="Action" class="select select-bordered" multiple>
+            <option
+              value=""
+              {{ if eq (len $.Data.Params.Action) 0 }}selected{{ end }}
+            >
+              All
+            </option>
+            {{ range .Data.EventAction }}
+              <option {{ if has . $.Data.Params.Action }}selected{{ end }}>
+                {{ . }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
+
+        <div class="flex w-full flex-col gap-2 md:w-auto">
+          {{ if .Data.Params.Data }}
+            <a
+              class="btn"
+              {{ $url := URLQuery .URL.Path .Data.Params `Data` false }}
+              href="{{ $url }}"
+              hx-get="{{ $url }}"
+              >Hide Data</a
+            >
+          {{ else }}
+            <a
+              class="btn"
+              {{ $url := URLQuery .URL.Path .Data.Params `Data` true }}
+              href="{{ $url }}"
+              hx-get="{{ $url }}"
+              >Show Data</a
+            >
+          {{ end }}
+          <button class="btn btn-info flex-1" type="submit">Apply</button>
+        </div>
+      </form>
+
+      <div class="divider"></div>
+
+      <div class="flex flex-col gap-4">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Camera ID</th>
+                <th>Code</th>
+                <th>Action</th>
+                <th>Created At</th>
+              </tr>
+            </thead>
+            <tbody
+              hx-ext="sse"
+              sse-connect="{{ URLQuery `/dahua/events/stream` .Data.Params }}"
+            >
+              <tr class="hidden" sse-swap="message" hx-swap="afterend"></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    {{ end }}
   </main>
 
   {{ template "footer.html" . }}
@@ -61,7 +160,18 @@
     </tr>
     <tr>
       <td colspan="5" class="p-0">
-        <x-json json="{{ .Data | toPrettyJson }}" />
+        {{ if $.Data.Params.Data }}
+          {{ template "dahua-events-data-json" . }}
+        {{ else }}
+          <button
+            class="btn btn-sm no-animation w-full"
+            hx-get="/dahua/events/{{ .ID }}/data"
+            hx-swap="outerHTML"
+            hx-target="this"
+          >
+            Show Data
+          </button>
+        {{ end }}
       </td>
     </tr>
   {{ end }}

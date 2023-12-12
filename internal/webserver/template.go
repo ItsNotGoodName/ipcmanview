@@ -68,21 +68,29 @@ func parseTemplate(name string) (*template.Template, error) {
 				}
 				return template.HTML(fmt.Sprintf(`<sl-format-date month="numeric" day="numeric" year="numeric" hour="numeric" minute="numeric" hour-format="12" second="numeric" date="%s"></sl-format-date>`, t.Format(time.RFC3339)))
 			},
-			"Query": func(params any, vals ...any) template.URL {
+			"URLQuery": func(url string, params any, vals ...any) template.URL {
 				length := len(vals)
-				query := api.NewQuery(params)
+				query := api.EncodeQuery(params)
 				for i := 0; i < length; i += 2 {
 					query.Set(vals[i].(string), fmt.Sprint(vals[i+1]))
 				}
-				return template.URL(query.Encode())
+				return template.URL(url + "?" + query.Encode())
 			},
-			"QueryDelete": func(params any, vals ...string) template.URL {
-				query := api.NewQuery(params)
-				for _, v := range vals {
-					query.Del(v)
-				}
-				return template.URL(query.Encode())
-			},
+			// "Query": func(params any, vals ...any) template.URL {
+			// 	length := len(vals)
+			// 	query := api.EncodeQuery(params)
+			// 	for i := 0; i < length; i += 2 {
+			// 		query.Set(vals[i].(string), fmt.Sprint(vals[i+1]))
+			// 	}
+			// 	return template.URL(query.Encode())
+			// },
+			// "QueryDelete": func(params any, vals ...string) template.URL {
+			// 	query := api.EncodeQuery(params)
+			// 	for _, v := range vals {
+			// 		query.Del(v)
+			// 	}
+			// 	return template.URL(query.Encode())
+			// },
 			"FormFormatDate": func(date any) string {
 				var t time.Time
 				switch date := date.(type) {
