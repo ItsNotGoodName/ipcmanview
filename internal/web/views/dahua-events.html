@@ -14,10 +14,10 @@
   {{ template "dahua-events-header.html" . }}
 
 
-  <main class="flex min-h-screen flex-col px-4" hx-target="this">
+  <main class="min-h-screen" hx-target="this">
     {{ block "htmx" . }}
       <form
-        class="i flex flex-col items-end gap-4 md:flex-row"
+        class="flex flex-col items-end gap-4 px-4 md:flex-row"
         hx-get="{{ .URL.Path }}"
       >
         <input type="hidden" name="Data" value="{{ .Data.Params.Data }}" />
@@ -88,7 +88,7 @@
         <div class="form-control w-full gap-4">
           <div class="form-control w-full flex-col">
             <label class="label">
-              <span class="label-text">Datetime Range</span>
+              <span class="label-text">Time Range</span>
             </label>
             <input
               class="input input-bordered input-sm"
@@ -131,7 +131,7 @@
 
       <div class="divider"></div>
 
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4 px-4">
         {{ template "pagination" . }}
 
 

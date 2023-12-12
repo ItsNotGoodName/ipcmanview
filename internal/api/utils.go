@@ -209,3 +209,31 @@ func QueryInt(c echo.Context, key string) (int64, error) {
 
 	return number, nil
 }
+
+func UseTimeRange(start, end string) (models.TimeRange, error) {
+	var startTime, endTime time.Time
+	if start != "" {
+		var err error
+		startTime, err = time.ParseInLocation("2006-01-02T15:04", start, time.Local)
+		if err != nil {
+			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+		}
+	}
+
+	if end != "" {
+		var err error
+		endTime, err = time.ParseInLocation("2006-01-02T15:04", end, time.Local)
+		if err != nil {
+			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+		}
+	} else if start != "" {
+		endTime = time.Now()
+	}
+
+	r, err := core.NewTimeRange(startTime, endTime)
+	if err != nil {
+		return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return r, nil
+}

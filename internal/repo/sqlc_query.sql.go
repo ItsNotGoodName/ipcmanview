@@ -517,6 +517,34 @@ func (q *Queries) ListDahuaFileCursor(ctx context.Context) ([]ListDahuaFileCurso
 	return items, nil
 }
 
+const listDahuaFileTypes = `-- name: ListDahuaFileTypes :many
+SELECT DISTINCT type
+FROM dahua_files
+`
+
+func (q *Queries) ListDahuaFileTypes(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaFileTypes)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var type_ string
+		if err := rows.Scan(&type_); err != nil {
+			return nil, err
+		}
+		items = append(items, type_)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateDahuaCamera = `-- name: UpdateDahuaCamera :one
 UPDATE dahua_cameras 
 SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?

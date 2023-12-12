@@ -12,8 +12,8 @@
   {{ template "header.html" . }}
 
 
-  <main class="flex min-h-screen flex-col gap-4 px-4">
-    <section class="flex flex-col gap-4">
+  <main class="min-h-screen">
+    <section class="flex flex-col gap-4 px-4">
       <div class="border-b-base-content flex justify-between gap-4">
         <div class="card-title" id="cameras">
           <a href="#cameras"> Cameras </a>
@@ -88,7 +88,9 @@
       </div>
     </section>
 
-    <section class="flex flex-col gap-4">
+    <div class="divider"></div>
+
+    <section class="flex flex-col gap-4 px-4">
       <div class="border-b-base-content flex justify-between gap-4">
         <div class="card-title" id="file-cursors">
           <a href="#file-cursors"> File Cursors </a>
@@ -126,6 +128,8 @@
       </div>
     </section>
 
+    <div class="divider"></div>
+
     <div
       class="flex justify-center"
       hx-get="/dahua/cameras"
@@ -145,7 +149,7 @@
 
 {{ define "tables" }}
 
-  <section class="flex flex-col gap-4">
+  <section class="flex flex-col gap-4 px-4">
     <div class="border-b-base-content flex justify-between gap-4">
       <div class="card-title" id="status">
         <a href="#status"> Status </a>
@@ -179,7 +183,9 @@
     </div>
   </section>
 
-  <section class="flex flex-col gap-4">
+  <div class="divider"></div>
+
+  <section class="flex flex-col gap-4 px-4">
     <div class="border-b-base-content flex justify-between gap-4">
       <div class="card-title" id="details">
         <a href="#details"> Details </a>
@@ -231,7 +237,9 @@
     </div>
   </section>
 
-  <section class="flex flex-col gap-4">
+  <div class="divider"></div>
+
+  <section class="flex flex-col gap-4 px-4">
     <div class="border-b-base-content flex justify-between gap-4">
       <div class="card-title" id="software-versions">
         <a href="#software-versions"> Software Versions </a>
@@ -269,7 +277,9 @@
     </div>
   </section>
 
-  <section class="flex flex-col gap-4">
+  <div class="divider"></div>
+
+  <section class="flex flex-col gap-4 px-4">
     <div class="border-b-base-content flex justify-between gap-4">
       <div class="card-title" id="storage">
         <a href="#storage"> Storage </a>
@@ -311,7 +321,9 @@
     </div>
   </section>
 
-  <section class="flex flex-col gap-4">
+  <div class="divider"></div>
+
+  <section class="flex flex-col gap-4 px-4">
     <div class="border-b-base-content flex justify-between gap-4">
       <div class="card-title" id="licenses">
         <a href="#licenses"> Licenses </a>
@@ -364,7 +376,9 @@
     </div>
   </section>
 
-  <section class="flex flex-col gap-4">
+  <div class="divider"></div>
+
+  <section class="flex flex-col gap-4 px-4">
     <div class="border-b-base-content flex justify-between gap-4">
       <div class="card-title" id="coaxial-status">
         <a href="#coaxial-status"> Coaxial Status </a>

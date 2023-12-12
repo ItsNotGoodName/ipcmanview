@@ -12,10 +12,195 @@
   {{ template "header.html" . }}
 
 
-  <main class="min-h-screen">
-    Template:
-    {{ .Template }}
+  <main class="min-h-screen" hx-target="this">
+    {{ block "htmx" . }}
+      <div class="border-b-base-content flex justify-between gap-4 px-4">
+        <div class="card-title">Files</div>
+      </div>
+      <form
+        class="flex flex-col items-end gap-4 px-4 md:flex-row"
+        hx-get="{{ .URL.Path }}"
+      >
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Cameras</span>
+          </label>
+
+          <select name="CameraID" class="select select-bordered" multiple>
+            <option
+              value=""
+              {{ if eq (len $.Data.Params.CameraID) 0 }}selected{{ end }}
+            >
+              All
+            </option>
+            {{ range .Data.Cameras }}
+              <option
+                {{ if has .ID $.Data.Params.CameraID }}selected{{ end }}
+                value="{{ .ID }}"
+              >
+                {{ .Name }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
+
+        <div class="form-control w-full">
+          <label class="label">
+            <span class="label-text">Types</span>
+          </label>
+
+          <select name="Type" class="select select-bordered" multiple>
+            <option
+              value=""
+              {{ if eq (len $.Data.Params.Type) 0 }}selected{{ end }}
+            >
+              All
+            </option>
+            {{ range .Data.Types }}
+              <option {{ if has . $.Data.Params.Type }}selected{{ end }}>
+                {{ . }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
+
+        <div class="form-control w-full gap-4">
+          <div class="form-control w-full flex-col">
+            <label class="label">
+              <span class="label-text">Time Range</span>
+            </label>
+            <input
+              class="input input-bordered input-sm"
+              type="datetime-local"
+              name="Start"
+              value="{{ .Data.Params.Start }}"
+            />
+          </div>
+          <div class="form-control w-full flex-col">
+            <input
+              class="input input-bordered input-sm"
+              type="datetime-local"
+              name="End"
+              value="{{ .Data.Params.End }}"
+            />
+          </div>
+        </div>
+
+        <div class="flex w-full flex-col gap-2 md:w-auto">
+          <button class="btn btn-info flex-1" type="submit">Apply</button>
+        </div>
+      </form>
+
+      <div class="divider"></div>
+
+      <div class="flex flex-col gap-4 px-4">
+        {{ template "pagination" . }}
+
+
+        <div class="flex flex-wrap justify-center gap-4">
+          {{ range .Data.Files.Data }}
+            <div class="card card-compact bg-base-100 w-full shadow-xl sm:w-64">
+              <figure>
+                {{ if eq .Type "jpg" }}
+                  <img src="/v1/dahua/{{ .CameraID }}/files/{{ .FilePath }}" />
+                {{ else }}
+                  <img
+                    src="https://daisyui.com/images/stock/photo-1606107557195-0e29a4b5b4aa.jpg"
+                  />
+                {{ end }}
+              </figure>
+              <div class="card-body">
+                <div class="flex justify-between gap-4">
+                  <div class="tooltip" data-tip="{{ TimeHumanize .StartTime }}">
+                    {{ SLFormatDate .StartTime }}
+                  </div>
+                  <div>
+                    {{ .Type }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {{ end }}
+        </div>
+
+        {{ if gt (len .Data.Files.Data) 0 }}
+          {{ template "pagination" . }}
+        {{ end }}
+      </div>
+    {{ end }}
   </main>
 
   {{ template "footer.html" . }}
+{{ end }}
+
+{{ define "pagination" }}
+  <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div class="flex flex-1 items-center gap-4 sm:justify-start">
+      <div class="whitespace-nowrap">
+        {{ .Data.Files.Seen }} of
+        {{ .Data.Files.TotalItems }}
+      </div>
+
+      <form hx-get="{{ .URL.Path }}" hx-trigger="change" class="flex gap-4">
+        {{ range .Data.Params.CameraID }}
+          <input type="hidden" name="CameraID" value="{{ . }}" />
+        {{ end }}
+        {{ range .Data.Params.Type }}
+          <input type="hidden" name="Type" value="{{ . }}" />
+        {{ end }}
+        <input type="hidden" name="Start" value="{{ .Data.Params.Start }}" />
+        <input type="hidden" name="End" value="{{ .Data.Params.End }}" />
+        <input
+          type="hidden"
+          name="Ascending"
+          value="{{ .Data.Params.Ascending }}"
+        />
+
+        <div class="form-control w-full">
+          <select name="PerPage" class="select select-bordered">
+            <option disabled>Per Page</option>
+            {{ range list 10 25 100 }}
+              <option {{ if eq . $.Data.Params.PerPage }}selected{{ end }}>
+                {{ . }}
+              </option>
+            {{ end }}
+          </select>
+        </div>
+      </form>
+    </div>
+
+    <div class="flex justify-end gap-4">
+      {{ $url := URLQuery .URL.Path .Data.Params `Ascending` (not .Data.Params.Ascending) }}
+      <a class="btn" href="{{ $url }}" hx-get="{{ $url }}">
+        {{ if .Data.Params.Ascending }}
+          ASC
+        {{ else }}
+          DESC
+        {{ end }}
+      </a>
+      <div class="join">
+        <a
+          class="join-item btn"
+          {{ if .Data.Files.HasPrevious }}
+            {{ $url:= URLQuery .URL.Path .Data.Params `Page` .Data.Files.Previous }}
+            hx-get="{{ $url }}" href="{{ $url }}"
+          {{ else }}
+            disabled
+          {{ end }}
+          >«</a
+        >
+        <button class="join-item btn">Page {{ .Data.Files.Page }}</button>
+        <a
+          class="join-item btn"
+          {{ if .Data.Files.HasNext }}
+            {{ $url:= URLQuery .URL.Path .Data.Params `Page` .Data.Files.Next }}
+            hx-get="{{ $url }}" href="{{ $url }}"
+          {{ else }}
+            disabled
+          {{ end }}
+          >»</a
+        >
+      </div>
+    </div>
+  </div>
 {{ end }}

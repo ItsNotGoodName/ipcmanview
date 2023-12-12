@@ -14,12 +14,11 @@
   {{ template "dahua-events-header.html" . }}
 
 
-  <main class="flex min-h-screen flex-col px-4">
+  <main class="min-h-screen" hx-target="this">
     {{ block "htmx" . }}
       <form
-        class="i flex flex-col items-end gap-4 md:flex-row"
+        class="flex flex-col items-end gap-4 px-4 md:flex-row"
         hx-get="{{ .URL.Path }}"
-        hx-target="closest main"
       >
         <input type="hidden" name="Data" value="{{ .Data.Params.Data }}" />
 
@@ -110,7 +109,7 @@
 
       <div class="divider"></div>
 
-      <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-4 px-4">
         <div class="overflow-x-auto">
           <table class="table">
             <thead>
@@ -125,6 +124,7 @@
             <tbody
               hx-ext="sse"
               sse-connect="{{ URLQuery `/dahua/events/stream` .Data.Params }}"
+              hx-target="this"
             >
               <tr class="hidden" sse-swap="message" hx-swap="afterend"></tr>
             </tbody>

@@ -86,6 +86,10 @@ INSERT INTO dahua_file_cursors (
   ?, ?, ?, ?
 );
 
+-- name: ListDahuaFileTypes :many
+SELECT DISTINCT type
+FROM dahua_files;
+
 -- name: CreateDahuaFile :one
 INSERT INTO dahua_files (
   camera_id,

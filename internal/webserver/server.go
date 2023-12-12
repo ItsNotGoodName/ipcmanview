@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"net/http"
 	"slices"
-	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -94,21 +93,9 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
-	var start, end time.Time
-	if params.Start != "" {
-		var err error
-		start, err = time.ParseInLocation("2006-01-02T15:04", params.Start, time.Local)
-		if err != nil {
-			return echo.ErrBadRequest.WithInternal(err)
-		}
-	}
-
-	if params.End != "" {
-		var err error
-		end, err = time.ParseInLocation("2006-01-02T15:04", params.End, time.Local)
-		if err != nil {
-			return echo.ErrBadRequest.WithInternal(err)
-		}
+	timeRange, err := api.UseTimeRange(params.Start, params.End)
+	if err != nil {
+		return err
 	}
 
 	events, err := s.db.ListDahuaEvent(ctx, repo.ListDahuaEventParams{
@@ -119,8 +106,8 @@ func (s Server) DahuaEvents(c echo.Context) error {
 			Page:    int(params.Page),
 			PerPage: int(params.PerPage),
 		},
-		Start:     types.NewTime(start),
-		End:       types.NewTime(end),
+		Start:     types.NewTime(timeRange.Start),
+		End:       types.NewTime(timeRange.End),
 		Ascending: params.Ascending,
 	})
 	if err != nil {
@@ -176,7 +163,70 @@ func (s Server) DahuaEventsIDData(c echo.Context) error {
 }
 
 func (s Server) DahuaFiles(c echo.Context) error {
-	return c.Render(http.StatusOK, "dahua-files", nil)
+	ctx := c.Request().Context()
+
+	params := struct {
+		CameraID  []int64
+		Type      []string
+		Page      int64 `validate:"gt=0"`
+		PerPage   int64
+		Start     string
+		End       string
+		Ascending bool
+	}{
+		Page:    1,
+		PerPage: 10,
+	}
+	if err := api.DecodeQuery(c, &params); err != nil {
+		return err
+	}
+	if err := api.ValidateStruct(params); err != nil {
+		return err
+	}
+
+	timeRange, err := api.UseTimeRange(params.Start, params.End)
+	if err != nil {
+		return err
+	}
+
+	files, err := s.db.ListDahuaFile(ctx, repo.ListDahuaFileParams{
+		Page: pagination.Page{
+			Page:    int(params.Page),
+			PerPage: int(params.PerPage),
+		},
+		Type:      params.Type,
+		CameraID:  params.CameraID,
+		Start:     types.NewTime(timeRange.Start),
+		End:       types.NewTime(timeRange.End),
+		Ascending: params.Ascending,
+	})
+	if err != nil {
+		return err
+	}
+
+	cameras, err := s.db.ListDahuaCamera(ctx)
+	if err != nil {
+		return err
+	}
+
+	types, err := s.db.ListDahuaFileTypes(ctx)
+	if err != nil {
+		return err
+	}
+
+	data := Data{
+		"Params":  params,
+		"Files":   files,
+		"Cameras": cameras,
+		"Types":   types,
+	}
+
+	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+		htmx.SetReplaceURL(c.Response(), c.Request().URL.Path+"?"+api.EncodeQuery(params).Encode())
+		return c.Render(http.StatusOK, "dahua-files", TemplateBlock{"htmx", data})
+	}
+
+	return c.Render(http.StatusOK, "dahua-files", data)
 }
 
 func (s Server) DahuaEventsLive(c echo.Context) error {
