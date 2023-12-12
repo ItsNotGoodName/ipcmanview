@@ -1,15 +1,13 @@
-export DB_PATH=sqlite.db
+export DIR=ipcmanview_data
 export VITE_HOST=127.0.0.1
 
 -include .env
 
 migrate:
-	goose -dir migrations/sql sqlite3 "$(DB_PATH)" up
+	goose -dir migrations/sql sqlite3 "$(DIR)/sqlite.db" up
 
 clean:
-	rm ${DB_PATH}
-	rm ${DB_PATH}-shm
-	rm ${DB_PATH}-wal
+	rm -rf $(DIR)
 
 # Preview
 

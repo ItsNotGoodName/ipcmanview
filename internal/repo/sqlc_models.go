@@ -32,6 +32,21 @@ type DahuaEvent struct {
 	CreatedAt types.Time
 }
 
+type DahuaEventDefaultRule struct {
+	Code       string
+	IgnoreDb   bool
+	IgnoreLive bool
+	IgnoreMqtt bool
+}
+
+type DahuaEventRule struct {
+	CameraID   int64
+	Code       string
+	IgnoreDb   bool
+	IgnoreLive bool
+	IgnoreMqtt bool
+}
+
 type DahuaFile struct {
 	ID          int64
 	CameraID    int64

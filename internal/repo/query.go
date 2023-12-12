@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
@@ -217,5 +218,24 @@ func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDa
 	return ListDahuaFileResult{
 		PageResult: arg.Page.Result(count),
 		Data:       res,
+	}, nil
+}
+
+func (db DB) GetDahuaEventRule(ctx context.Context, event models.DahuaEvent) (models.DahuaEventRule, error) {
+	res, err := db.getDahuaEventRule(ctx, getDahuaEventRuleParams{
+		CameraID: event.CameraID,
+		Code:     event.Code,
+	})
+	if err != nil {
+		return models.DahuaEventRule{}, err
+	}
+	if len(res) == 0 {
+		return models.DahuaEventRule{}, nil
+	}
+
+	return models.DahuaEventRule{
+		IgnoreDB:   res[0].IgnoreDb,
+		IgnoreLive: res[0].IgnoreLive,
+		IgnoreMQTT: res[0].IgnoreMqtt,
 	}, nil
 }

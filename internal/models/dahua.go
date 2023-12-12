@@ -122,9 +122,9 @@ type DahuaEvent struct {
 }
 
 type DahuaEventRule struct {
-	IgnoreMQTT bool
 	IgnoreDB   bool
 	IgnoreLive bool
+	IgnoreMQTT bool
 }
 
 type DahuaStorage struct {

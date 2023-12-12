@@ -171,3 +171,18 @@ SELECT DISTINCT action FROM dahua_events;
 
 -- name: GetDahuaEventData :one
 SELECT data FROM dahua_events WHERE id = ?;
+
+-- name: getDahuaEventRule :many
+SELECT 
+  ignore_db,
+  ignore_live,
+  ignore_mqtt
+FROM dahua_event_rules 
+WHERE camera_id = sqlc.arg('camera_id') AND (dahua_event_rules.code = sqlc.arg('code') OR dahua_event_rules.code = '')
+UNION ALL
+SELECT 
+  ignore_db,
+  ignore_live,
+  ignore_mqtt
+FROM dahua_event_default_rules
+WHERE dahua_event_default_rules.code = sqlc.arg('code') OR dahua_event_default_rules.code = '';

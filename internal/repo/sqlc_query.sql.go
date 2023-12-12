@@ -777,3 +777,53 @@ func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFile
 	)
 	return err
 }
+
+const getDahuaEventRule = `-- name: getDahuaEventRule :many
+SELECT 
+  ignore_db,
+  ignore_live,
+  ignore_mqtt
+FROM dahua_event_rules 
+WHERE camera_id = ?1 AND (dahua_event_rules.code = ?2 OR dahua_event_rules.code = '')
+UNION ALL
+SELECT 
+  ignore_db,
+  ignore_live,
+  ignore_mqtt
+FROM dahua_event_default_rules
+WHERE dahua_event_default_rules.code = ?2 OR dahua_event_default_rules.code = ''
+`
+
+type getDahuaEventRuleParams struct {
+	CameraID int64
+	Code     string
+}
+
+type getDahuaEventRuleRow struct {
+	IgnoreDb   bool
+	IgnoreLive bool
+	IgnoreMqtt bool
+}
+
+func (q *Queries) getDahuaEventRule(ctx context.Context, arg getDahuaEventRuleParams) ([]getDahuaEventRuleRow, error) {
+	rows, err := q.db.QueryContext(ctx, getDahuaEventRule, arg.CameraID, arg.Code)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []getDahuaEventRuleRow
+	for rows.Next() {
+		var i getDahuaEventRuleRow
+		if err := rows.Scan(&i.IgnoreDb, &i.IgnoreLive, &i.IgnoreMqtt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

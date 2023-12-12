@@ -12,10 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func getEventRule(db repo.DB, evt models.DahuaEvent) (models.DahuaEventRule, error) {
-	return models.DahuaEventRule{}, nil
-}
-
 // ---------- EventHooksProxy
 
 func NewEventHooksProxy(bus *dahua.Bus, db repo.DB) EventHooksProxy {
@@ -32,7 +28,7 @@ type EventHooksProxy struct {
 }
 
 func (p EventHooksProxy) CameraEvent(ctx context.Context, event models.DahuaEvent) {
-	eventRule, err := getEventRule(p.db, event)
+	eventRule, err := p.db.GetDahuaEventRule(ctx, event)
 	if err != nil {
 		log.Err(err).Msg("Failed to get DahuaEventRule")
 		return
