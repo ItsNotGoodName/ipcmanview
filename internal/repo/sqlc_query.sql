@@ -1,15 +1,14 @@
--- name: createDahuaCamera :one
+-- name: createDahuaCamera :execlastid
 INSERT INTO dahua_cameras (
   name, address, username, password, location, created_at, updated_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?
-) RETURNING id;
+);
 
--- name: UpdateDahuaCamera :one
+-- name: UpdateDahuaCamera :execlastid
 UPDATE dahua_cameras 
 SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?
-WHERE id = ?
-RETURNING id;
+WHERE id = ?;
 
 -- name: GetDahuaCamera :one
 SELECT dahua_cameras.*, coalesce(seed, id) FROM dahua_cameras 
@@ -90,7 +89,7 @@ INSERT INTO dahua_file_cursors (
 SELECT DISTINCT type
 FROM dahua_files;
 
--- name: CreateDahuaFile :one
+-- name: CreateDahuaFile :execlastid
 INSERT INTO dahua_files (
   camera_id,
   channel,
@@ -113,14 +112,14 @@ INSERT INTO dahua_files (
   updated_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
-) RETURNING id;
+);
 
 -- name: GetDahuaFileByFilePath :one
 SELECT *
 FROM dahua_files
 WHERE camera_id = ? and file_path = ?;
 
--- name: UpdateDahuaFile :one
+-- name: UpdateDahuaFile :execlastid
 UPDATE dahua_files 
 SET 
   channel = ?,
@@ -140,8 +139,7 @@ SET
   work_dir = ?,
   work_dir_sn = ?,
   updated_at = ?
-WHERE camera_id = ? AND file_path = ?
-RETURNING id;
+WHERE camera_id = ? AND file_path = ?;
 
 -- name: DeleteDahuaFile :exec
 DELETE FROM dahua_files
@@ -151,7 +149,7 @@ WHERE
   start_time <= sqlc.arg('end') AND
   sqlc.arg('start') < start_time;
 
--- name: CreateDahuaEvent :one
+-- name: CreateDahuaEvent :execlastid
 INSERT INTO dahua_events (
   camera_id,
   code,
@@ -161,7 +159,7 @@ INSERT INTO dahua_events (
   created_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?
-) RETURNING id;
+);
 
 -- name: ListDahuaEventCodes :many
 SELECT DISTINCT code FROM dahua_events;
@@ -186,3 +184,35 @@ SELECT
   ignore_mqtt
 FROM dahua_event_default_rules
 WHERE dahua_event_default_rules.code = sqlc.arg('code') OR dahua_event_default_rules.code = '';
+
+-- name: GetDahuaEventDefaultRule :one
+SELECT * FROM dahua_event_default_rules
+WHERE id = ?;
+
+-- name: ListDahuaEventDefaultRule :many
+SELECT * FROM dahua_event_default_rules;
+
+-- name: UpdateDahuaEventDefaultRule :exec
+UPDATE dahua_event_default_rules 
+SET 
+  code = ?,
+  ignore_db = ?,
+  ignore_live = ?,
+  ignore_mqtt = ?
+WHERE id = ?;
+
+-- name: CreateDahuaEventDefaultRule :exec
+INSERT INTO dahua_event_default_rules(
+  code,
+  ignore_db,
+  ignore_live,
+  ignore_mqtt
+) VALUES(
+  ?,
+  ?,
+  ?,
+  ?
+);
+
+-- name: DeleteDahuaEventDefaultRule :exec
+DELETE FROM dahua_event_default_rules WHERE id = ?;

@@ -158,21 +158,31 @@
         {{ SLFormatDate .CreatedAt }}
       </td>
     </tr>
-    <tr>
-      <td colspan="5" class="p-0">
-        {{ if $.Data.Params.Data }}
-          {{ template "dahua-events-data-json" . }}
-        {{ else }}
-          <button
-            class="btn btn-sm no-animation w-full"
-            hx-get="/dahua/events/{{ .ID }}/data"
-            hx-swap="outerHTML"
-            hx-target="this"
-          >
-            Show Data
-          </button>
-        {{ end }}
-      </td>
-    </tr>
+    {{ if .ID }}
+      <tr>
+        <td colspan="5" class="p-0">
+          {{ if $.Data.Params.Data }}
+            {{ template "dahua-events-data-json" . }}
+          {{ else }}
+            <button
+              class="btn btn-sm no-animation w-full"
+              hx-get="/dahua/events/{{ .ID }}/data"
+              hx-swap="outerHTML"
+              hx-target="this"
+            >
+              Show Data
+            </button>
+          {{ end }}
+        </td>
+      </tr>
+    {{ else }}
+      <tr>
+        <td colspan="5" class="p-0">
+          {{ if $.Data.Params.Data }}
+            {{ template "dahua-events-data-json" . }}
+          {{ end }}
+        </td>
+      </tr>
+    {{ end }}
   {{ end }}
 {{ end }}

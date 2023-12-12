@@ -33,6 +33,7 @@ type DahuaEvent struct {
 }
 
 type DahuaEventDefaultRule struct {
+	ID         int64
 	Code       string
 	IgnoreDb   bool
 	IgnoreLive bool

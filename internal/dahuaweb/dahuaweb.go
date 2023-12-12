@@ -12,6 +12,26 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func UpdateDahuaDefaultEvent(ctx context.Context, db repo.DB, arg repo.UpdateDahuaEventDefaultRuleParams) error {
+	rule, err := db.GetDahuaEventDefaultRule(ctx, arg.ID)
+	if err != nil {
+		return err
+	}
+	if rule.Code == "" {
+		arg.Code = rule.Code
+	}
+
+	return db.UpdateDahuaEventDefaultRule(ctx, arg)
+}
+
+func DeleteDahuaDefaultEvent(ctx context.Context, db repo.DB, rule repo.DahuaEventDefaultRule) error {
+	if rule.Code == "" {
+		return errors.New("cannot delete default rule")
+	}
+
+	return db.DeleteDahuaEventDefaultRule(ctx, rule.ID)
+}
+
 // ---------- EventHooksProxy
 
 func NewEventHooksProxy(bus *dahua.Bus, db repo.DB) EventHooksProxy {

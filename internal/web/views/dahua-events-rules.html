@@ -1,0 +1,146 @@
+{{ template "base.html" . }}
+
+{{ define "body" }}
+  {{ template "dahua-base.html" . }}
+{{ end }}
+
+{{ define "header-navbar-start" }}
+  {{ template "dahua-base-drawer-button" . }}
+{{ end }}
+
+{{ define "dahua-base-body" }}
+  {{ template "header.html" . }}
+
+  {{ template "dahua-events-header.html" . }}
+
+
+  <main class="min-h-screen">
+    <div id="htmx" class="flex flex-col gap-4">
+      {{ block "htmx" . }}
+        <div class="border-b-base-content flex justify-between gap-4 px-4 pt-4">
+          <div class="card-title">Default Rules</div>
+        </div>
+        <form
+          class="flex flex-col gap-4"
+          hx-post="{{ .URL.Path }}"
+          hx-target="#htmx"
+        >
+          <div class="overflow-x-auto">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th class="w-0"></th>
+                  <th class="w-0">DB</th>
+                  <th class="w-0">Live</th>
+                  <th class="w-0">MQTT</th>
+                </tr>
+              </thead>
+              <tbody>
+                {{ range $index, $val := .Data.Rules }}
+                  <tr>
+                    <td>
+                      <input
+                        type="hidden"
+                        name="Rules.{{ $index }}.ID"
+                        value="{{ .ID }}"
+                      />
+                      {{ if .Code }}
+                        <input
+                          type="text"
+                          class="input input-sm w-full"
+                          size="20"
+                          name="Rules.{{ $index }}.Code"
+                          value="{{ .Code }}"
+                        />
+                      {{ else }}
+                        <input
+                          type="text"
+                          class="input input-sm w-full"
+                          name="Rules.{{ $index }}.Code"
+                          value="{{ .Code }}"
+                          placeholder="All"
+                          disabled
+                        />
+                      {{ end }}
+                    </td>
+                    <td>
+                      {{ if .Code }}
+                        <button
+                          class="btn btn-xs btn-error"
+                          hx-delete="/dahua/events/rules/{{ .ID }}"
+                          hx-target="closest tr"
+                          hx-confirm="Are you sure you wish to delete rule '{{ .Code }}'?"
+                        >
+                          Delete
+                        </button>
+                      {{ end }}
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        name="Rules.{{ $index }}.DB"
+                        {{ if not .IgnoreDb }}checked="checked"{{ end }}
+                        class="checkbox checkbox-sm"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        name="Rules.{{ $index }}.Live"
+                        {{ if not .IgnoreLive }}checked="checked"{{ end }}
+                        class="checkbox checkbox-sm"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="checkbox"
+                        name="Rules.{{ $index }}.MQTT"
+                        {{ if not .IgnoreMqtt }}checked="checked"{{ end }}
+                        class="checkbox checkbox-sm"
+                      />
+                    </td>
+                  </tr>
+                {{ end }}
+              </tbody>
+            </table>
+          </div>
+          <div class="px-4">
+            <button class="btn btn-primary no-animation w-full" type="submit">
+              Update
+            </button>
+          </div>
+        </form>
+      {{ end }}
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="flex flex-col gap-4 px-4">
+      <div class="border-b-base-content flex justify-between gap-4">
+        <div class="card-title">Create Rule</div>
+      </div>
+
+      <form hx-post="{{ .URL.Path }}/create" hx-target="#htmx">
+        <label class="form-control">
+          <div class="label">
+            <span class="label-text">Code</span>
+          </div>
+          <div class="flex gap-4">
+            <input
+              type="text"
+              class="input input-bordered w-full"
+              name="Code"
+              placeholder="Code"
+            />
+            <button class="btn btn-primary no-animation" type="submit">
+              Create
+            </button>
+          </div>
+        </label>
+      </form>
+    </div>
+  </main>
+
+  {{ template "footer.html". }}
+{{ end }}

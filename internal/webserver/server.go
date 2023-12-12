@@ -37,12 +37,17 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 	e.GET("/dahua/events", w.DahuaEvents)
 	e.GET("/dahua/events/live", w.DahuaEventsLive)
 	e.GET("/dahua/events/stream", w.DahuaEventStream)
+	e.GET("/dahua/events/rules", w.DahuaEventsRules)
 	e.GET("/dahua/events/:id/data", w.DahuaEventsIDData)
 	e.GET("/dahua/files", w.DahuaFiles)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
 
 	e.POST("/dahua/cameras/create", w.DahuaCamerasCreatePOST)
 	e.POST("/dahua/cameras/:id/update", w.DahuaCamerasUpdatePOST)
+	e.POST("/dahua/events/rules", w.DahuaEventsRulePOST)
+	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
+
+	e.DELETE("/dahua/events/rules/:id", w.DahuaEventsRulesIDDelete)
 }
 
 type Server struct {
@@ -514,4 +519,98 @@ func (s Server) DahuaSnapshots(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-snapshots", Data{
 		"Cameras": cameras,
 	})
+}
+
+func (s Server) DahuaEventsRulesCreatePOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var form struct {
+		Code string
+	}
+	if err := api.ParseForm(c, &form); err != nil {
+		return err
+	}
+
+	err := s.db.CreateDahuaEventDefaultRule(ctx, repo.CreateDahuaEventDefaultRuleParams{
+		Code:       form.Code,
+		IgnoreDb:   true,
+		IgnoreLive: true,
+		IgnoreMqtt: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	return s.DahuaEventsRules(c)
+}
+
+func (s Server) DahuaEventsRulePOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var form struct {
+		Rules []struct {
+			ID   int64
+			Code string
+			DB   bool
+			Live bool
+			MQTT bool
+		}
+	}
+	if err := api.ParseForm(c, &form); err != nil {
+		return err
+	}
+
+	for _, rule := range form.Rules {
+		err := dahuaweb.UpdateDahuaDefaultEvent(ctx, s.db, repo.UpdateDahuaEventDefaultRuleParams{
+			Code:       rule.Code,
+			IgnoreDb:   !rule.DB,
+			IgnoreLive: !rule.Live,
+			IgnoreMqtt: !rule.MQTT,
+			ID:         rule.ID,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return s.DahuaEventsRules(c)
+}
+
+func (s Server) DahuaEventsRules(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	rules, err := s.db.ListDahuaEventDefaultRule(ctx)
+	if err != nil {
+		return err
+	}
+
+	data := Data{
+		"Rules": rules,
+	}
+
+	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+		return c.Render(http.StatusOK, "dahua-events-rules", TemplateBlock{"htmx", data})
+	}
+
+	return c.Render(http.StatusOK, "dahua-events-rules", data)
+}
+
+func (s Server) DahuaEventsRulesIDDelete(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := api.PathID(c)
+	if err != nil {
+		return err
+	}
+
+	rule, err := s.db.GetDahuaEventDefaultRule(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	if err := dahuaweb.DeleteDahuaDefaultEvent(ctx, s.db, rule); err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusOK)
 }

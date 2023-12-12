@@ -34,6 +34,7 @@ CREATE TABLE dahua_events (
 );
 
 CREATE TABLE dahua_event_default_rules(
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   code TEXT NOT NULL UNIQUE DEFAULT '',
   ignore_db BOOLEAN NOT NULL DEFAULT false,
   ignore_live BOOLEAN NOT NULL DEFAULT false,
