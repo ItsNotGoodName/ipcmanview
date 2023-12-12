@@ -301,16 +301,11 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 
 	for event := range eventsC {
 		evt, ok := event.(models.EventDahuaCameraEvent)
-		if !ok {
-			continue
-		}
-		if len(params.CameraID) > 0 && !slices.Contains(params.CameraID, evt.Event.CameraID) {
-			continue
-		}
-		if len(params.Code) > 0 && !slices.Contains(params.Code, evt.Event.Code) {
-			continue
-		}
-		if len(params.Action) > 0 && !slices.Contains(params.Action, evt.Event.Action) {
+		if !ok ||
+			evt.EventRule.IgnoreLive ||
+			(len(params.CameraID) > 0 && !slices.Contains(params.CameraID, evt.Event.CameraID)) ||
+			(len(params.Code) > 0 && !slices.Contains(params.Code, evt.Event.Code)) ||
+			(len(params.Action) > 0 && !slices.Contains(params.Action, evt.Event.Action)) {
 			continue
 		}
 

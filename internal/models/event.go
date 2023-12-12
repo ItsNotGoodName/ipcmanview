@@ -13,7 +13,8 @@ type EventDahuaCameraDeleted struct {
 }
 
 type EventDahuaCameraEvent struct {
-	Event DahuaEvent
+	Event     DahuaEvent
+	EventRule DahuaEventRule
 }
 
 // TODO: these should be generated

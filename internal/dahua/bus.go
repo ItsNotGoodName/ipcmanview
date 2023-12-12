@@ -5,6 +5,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 )
 
@@ -15,10 +16,13 @@ func busLogErr(err error) {
 }
 
 func NewBus() *Bus {
-	return &Bus{}
+	return &Bus{
+		Context: sutureext.NewCtx("dahua.bus"),
+	}
 }
 
 type Bus struct {
+	sutureext.Context
 	onCameraCreated []func(ctx context.Context, evt models.EventDahuaCameraCreated) error
 	onCameraUpdated []func(ctx context.Context, evt models.EventDahuaCameraUpdated) error
 	onCameraDeleted []func(ctx context.Context, evt models.EventDahuaCameraDeleted) error
@@ -49,7 +53,7 @@ func (b *Bus) OnCameraEvent(h func(ctx context.Context, evt models.EventDahuaCam
 
 func (b *Bus) CameraCreated(camera models.DahuaConn) {
 	for _, v := range b.onCameraCreated {
-		busLogErr(v(context.TODO(), models.EventDahuaCameraCreated{
+		busLogErr(v(b.Ctx(), models.EventDahuaCameraCreated{
 			Camera: camera,
 		}))
 	}
@@ -57,7 +61,7 @@ func (b *Bus) CameraCreated(camera models.DahuaConn) {
 
 func (b *Bus) CameraUpdated(camera models.DahuaConn) {
 	for _, v := range b.onCameraUpdated {
-		busLogErr(v(context.TODO(), models.EventDahuaCameraUpdated{
+		busLogErr(v(b.Ctx(), models.EventDahuaCameraUpdated{
 			Camera: camera,
 		}))
 	}
@@ -65,16 +69,17 @@ func (b *Bus) CameraUpdated(camera models.DahuaConn) {
 
 func (b *Bus) CameraDeleted(id int64) {
 	for _, v := range b.onCameraDeleted {
-		busLogErr(v(context.TODO(), models.EventDahuaCameraDeleted{
+		busLogErr(v(b.Ctx(), models.EventDahuaCameraDeleted{
 			CameraID: id,
 		}))
 	}
 }
 
-func (b *Bus) CameraEvent(ctx context.Context, event models.DahuaEvent) {
+func (b *Bus) CameraEvent(ctx context.Context, event models.DahuaEvent, eventRule models.DahuaEventRule) {
 	for _, v := range b.onCameraEvent {
-		busLogErr(v(context.TODO(), models.EventDahuaCameraEvent{
-			Event: event,
+		busLogErr(v(b.Ctx(), models.EventDahuaCameraEvent{
+			Event:     event,
+			EventRule: eventRule,
 		}))
 	}
 }

@@ -12,36 +12,49 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func getEventRule(db repo.DB, evt models.DahuaEvent) (models.DahuaEventRule, error) {
+	return models.DahuaEventRule{}, nil
+}
+
 // ---------- EventHooksProxy
 
-func NewEventHooksProxy(hooks dahua.EventHooks, db repo.DB) EventHooksProxy {
+func NewEventHooksProxy(bus *dahua.Bus, db repo.DB) EventHooksProxy {
 	return EventHooksProxy{
-		hooks: hooks,
-		db:    db,
+		bus: bus,
+		db:  db,
 	}
 }
 
 // EventHooksProxy saves events into database.
 type EventHooksProxy struct {
-	hooks dahua.EventHooks
-	db    repo.DB
+	bus *dahua.Bus
+	db  repo.DB
 }
 
-func (p EventHooksProxy) CameraEvent(ctx context.Context, evt models.DahuaEvent) {
-	id, err := p.db.CreateDahuaEvent(ctx, repo.CreateDahuaEventParams{
-		CameraID:  evt.CameraID,
-		Code:      evt.Code,
-		Action:    evt.Action,
-		Index:     int64(evt.Index),
-		Data:      evt.Data,
-		CreatedAt: types.NewTime(evt.CreatedAt),
-	})
+func (p EventHooksProxy) CameraEvent(ctx context.Context, event models.DahuaEvent) {
+	eventRule, err := getEventRule(p.db, event)
 	if err != nil {
-		log.Err(err).Msg("Failed to save DahuaEvent")
+		log.Err(err).Msg("Failed to get DahuaEventRule")
 		return
 	}
-	evt.ID = id
-	p.hooks.CameraEvent(ctx, evt)
+
+	if !eventRule.IgnoreDB {
+		id, err := p.db.CreateDahuaEvent(ctx, repo.CreateDahuaEventParams{
+			CameraID:  event.CameraID,
+			Code:      event.Code,
+			Action:    event.Action,
+			Index:     int64(event.Index),
+			Data:      event.Data,
+			CreatedAt: types.NewTime(event.CreatedAt),
+		})
+		if err != nil {
+			log.Err(err).Msg("Failed to save DahuaEvent")
+			return
+		}
+		event.ID = id
+	}
+
+	p.bus.CameraEvent(ctx, event, eventRule)
 }
 
 // ---------- Repo

@@ -121,6 +121,12 @@ type DahuaEvent struct {
 	CreatedAt time.Time       `json:"created_at"`
 }
 
+type DahuaEventRule struct {
+	IgnoreMQTT bool
+	IgnoreDB   bool
+	IgnoreLive bool
+}
+
 type DahuaStorage struct {
 	CameraID   int64  `json:"camera_id"`
 	Name       string `json:"name"`

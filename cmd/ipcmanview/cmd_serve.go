@@ -39,20 +39,21 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	dahuaBus := dahua.NewBus()
 	dahuaBus.Register(pub)
+	super.Add(dahuaBus)
 
 	dahuaRepo := dahuaweb.NewRepo(db)
 
 	dahuaStore := dahua.NewStore()
-	super.Add(dahuaStore)
 	dahuaStore.Register(dahuaBus)
+	super.Add(dahuaStore)
 
 	eventWorkerStore := dahua.NewEventWorkerStore(super, dahuaweb.NewEventHooksProxy(dahuaBus, db))
 	eventWorkerStore.Register(dahuaBus)
 
 	if c.MQTTAddress != "" {
 		mqttPublisher := mqtt.NewPublisher(c.MQTTPrefix, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
-		super.Add(mqttPublisher)
 		mqttPublisher.Register(dahuaBus)
+		super.Add(mqttPublisher)
 	}
 
 	if err := dahua.Bootstrap(ctx, dahuaRepo, dahuaStore, eventWorkerStore); err != nil {

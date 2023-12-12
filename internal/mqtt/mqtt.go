@@ -56,6 +56,10 @@ func (h Publisher) Serve(ctx context.Context) error {
 
 func (h Publisher) Register(bus *dahua.Bus) error {
 	bus.OnCameraEvent(func(ctx context.Context, evt models.EventDahuaCameraEvent) error {
+		if evt.EventRule.IgnoreMQTT {
+			return nil
+		}
+
 		b, err := json.Marshal(evt.Event)
 		if err != nil {
 			return err
