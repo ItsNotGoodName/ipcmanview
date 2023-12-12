@@ -1,6 +1,8 @@
 package pubsub
 
-import "context"
+import (
+	"context"
+)
 
 type Sub struct {
 	doneC <-chan struct{}
@@ -10,7 +12,7 @@ type Sub struct {
 }
 
 // Wait blocks until the subscription is closed.
-func (s *Sub) Wait(ctx context.Context) error {
+func (s Sub) Wait(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -24,7 +26,7 @@ func (s *Sub) Wait(ctx context.Context) error {
 }
 
 // Error should only be called after subscription is closed.
-func (s *Sub) Error() error {
+func (s Sub) Error() error {
 	select {
 	case <-s.doneC:
 		err := <-s.errC
@@ -91,6 +93,7 @@ func (p Pub) Subscribe(ctx context.Context, handle HandleFunc, events ...Event) 
 			doneC: doneC,
 			pub:   p,
 			id:    id,
+			errC:  errC,
 		}, nil
 	}
 }

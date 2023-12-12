@@ -74,8 +74,11 @@ func (p Pub) Serve(ctx context.Context) error {
 	var subs []sub
 	defer func() {
 		for i := range subs {
-			subs[i].errC <- ErrPubSubClosed
-			close(subs[i].doneC)
+			if !subs[i].closed {
+				subs[i].errC <- ErrPubSubClosed
+				close(subs[i].doneC)
+				subs[i].closed = true
+			}
 		}
 	}()
 
