@@ -41,7 +41,21 @@ type sub struct {
 	topics []string
 	handle func(event Event) error
 	doneC  chan<- struct{}
+	errC   chan<- error
 	closed bool
+}
+
+type subscribe struct {
+	topics []string
+	handle HandleFunc
+	doneC  chan<- struct{}
+	errC   chan<- error
+
+	resC chan int
+}
+
+type unsubscribe struct {
+	id int
 }
 
 // Serve starts the publisher and blocks until context is canceled.
@@ -64,7 +78,12 @@ func (p Pub) Serve(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-t.C:
-			subs = slices.DeleteFunc(subs, func(s sub) bool { return s.closed })
+			for i := range subs {
+				if subs[i].closed {
+					subs = slices.DeleteFunc(subs, func(s sub) bool { return s.closed })
+					break
+				}
+			}
 		case command := <-p.commandC:
 			switch command := command.(type) {
 			case subscribe:
@@ -74,6 +93,7 @@ func (p Pub) Serve(ctx context.Context) error {
 					topics: command.topics,
 					handle: command.handle,
 					doneC:  command.doneC,
+					errC:   command.errC,
 					closed: false,
 				}
 				subs = append(subs, sub)
@@ -81,6 +101,7 @@ func (p Pub) Serve(ctx context.Context) error {
 			case unsubscribe:
 				for i := range subs {
 					if subs[i].id == command.id {
+						subs[i].errC <- nil
 						close(subs[i].doneC)
 						subs[i].closed = true
 					}
@@ -94,61 +115,14 @@ func (p Pub) Serve(ctx context.Context) error {
 
 					err := subs[i].handle(command)
 					if err != nil {
+						subs[i].errC <- err
 						close(subs[i].doneC)
 						subs[i].closed = true
-						// TODO: handle error
 					}
 				}
 			}
 		}
 	}
-}
-
-type subscribe struct {
-	topics []string
-	handle HandleFunc
-	doneC  chan<- struct{}
-
-	resC chan int
-}
-
-func (p Pub) Subscribe(ctx context.Context, handle HandleFunc, events ...Event) (Sub, error) {
-	var topics []string
-	for _, e := range events {
-		topics = append(topics, e.EventName())
-	}
-
-	doneC := make(chan struct{})
-	resC := make(chan int, 1)
-	select {
-	case <-ctx.Done():
-		return Sub{}, ctx.Err()
-	case <-p.doneC:
-		return Sub{}, ErrPubSubClosed
-	case p.commandC <- subscribe{
-		topics: topics,
-		handle: handle,
-		resC:   resC,
-		doneC:  doneC,
-	}:
-	}
-
-	select {
-	case <-ctx.Done():
-		return Sub{}, ctx.Err()
-	case <-p.doneC:
-		return Sub{}, ErrPubSubClosed
-	case id := <-resC:
-		return Sub{
-			doneC: doneC,
-			pub:   p,
-			id:    id,
-		}, nil
-	}
-}
-
-type unsubscribe struct {
-	id int
 }
 
 func (p Pub) Publish(ctx context.Context, event Event) error {
@@ -158,39 +132,6 @@ func (p Pub) Publish(ctx context.Context, event Event) error {
 	case <-p.doneC:
 		return ErrPubSubClosed
 	case p.commandC <- event:
-		return nil
-	}
-}
-
-type Sub struct {
-	doneC <-chan struct{}
-	pub   Pub
-	id    int
-}
-
-// Wait blocks until the subscription is closed.
-func (s *Sub) Wait(ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-s.pub.doneC:
-		return ErrPubSubClosed
-	case <-s.doneC:
-		return nil
-	}
-}
-
-func (s Sub) Close() error {
-	return s.close(context.Background())
-}
-
-func (s Sub) close(ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-s.pub.doneC:
-		return ErrPubSubClosed
-	case s.pub.commandC <- unsubscribe{id: s.id}:
 		return nil
 	}
 }
