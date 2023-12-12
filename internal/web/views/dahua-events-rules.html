@@ -18,15 +18,15 @@
     <div id="htmx" class="flex flex-col gap-4">
       {{ block "htmx" . }}
         <div class="border-b-base-content flex justify-between gap-4 px-4 pt-4">
-          <div class="card-title">Default Rules</div>
+          <div class="card-title">Event Rules</div>
         </div>
         <form
-          class="flex flex-col gap-4"
+          class="flex flex-col gap-4 px-4"
           hx-post="{{ .URL.Path }}"
           hx-target="#htmx"
         >
           <div class="overflow-x-auto">
-            <table class="table">
+            <table class="table table-xs">
               <thead>
                 <tr>
                   <th>Code</th>
@@ -38,7 +38,7 @@
               </thead>
               <tbody>
                 {{ range $index, $val := .Data.Rules }}
-                  <tr>
+                  <tr {{ if not .Code }}class="bg-base-200"{{ end }}>
                     <td>
                       <input
                         type="hidden"
@@ -55,13 +55,11 @@
                         />
                       {{ else }}
                         <input
-                          type="text"
-                          class="input input-sm w-full"
+                          type="hidden"
                           name="Rules.{{ $index }}.Code"
                           value="{{ .Code }}"
-                          placeholder="All"
-                          disabled
                         />
+                        <div class="px-4">All</div>
                       {{ end }}
                     </td>
                     <td>
@@ -105,11 +103,9 @@
               </tbody>
             </table>
           </div>
-          <div class="px-4">
-            <button class="btn btn-primary no-animation w-full" type="submit">
-              Update
-            </button>
-          </div>
+          <button class="btn btn-primary no-animation" type="submit">
+            Update
+          </button>
         </form>
       {{ end }}
     </div>
@@ -118,7 +114,7 @@
 
     <div class="flex flex-col gap-4 px-4">
       <div class="border-b-base-content flex justify-between gap-4">
-        <div class="card-title">Create Rule</div>
+        <div class="card-title">Create Event Rule</div>
       </div>
 
       <form hx-post="{{ .URL.Path }}/create" hx-target="#htmx">

@@ -32,7 +32,10 @@ func (c *CmdScan) Run(ctx *Context) error {
 
 	if c.Reset {
 		for _, camera := range cameras {
-			dahuaweb.ScanReset(ctx, db, camera.DahuaCamera.ID)
+			err := dahuaweb.ScanReset(ctx, db, camera.DahuaCamera.ID)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

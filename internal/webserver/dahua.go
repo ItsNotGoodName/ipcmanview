@@ -28,7 +28,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 
 	cameras := make([]models.DahuaConn, 0, len(dbCameras))
 	for _, row := range dbCameras {
-		cameras = append(cameras, row.Convert())
+		cameras = append(cameras, row.Convert().DahuaConn)
 	}
 	conns := dahuaStore.ConnList(ctx, cameras)
 

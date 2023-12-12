@@ -1,14 +1,15 @@
--- name: createDahuaCamera :execlastid
+-- name: createDahuaCamera :one
 INSERT INTO dahua_cameras (
   name, address, username, password, location, created_at, updated_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?
-);
+) RETURNING id;
 
--- name: UpdateDahuaCamera :execlastid
+-- name: UpdateDahuaCamera :one
 UPDATE dahua_cameras 
 SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?
-WHERE id = ?;
+WHERE id = ?
+RETURNING id;
 
 -- name: GetDahuaCamera :one
 SELECT dahua_cameras.*, coalesce(seed, id) FROM dahua_cameras 
@@ -89,7 +90,7 @@ INSERT INTO dahua_file_cursors (
 SELECT DISTINCT type
 FROM dahua_files;
 
--- name: CreateDahuaFile :execlastid
+-- name: CreateDahuaFile :one
 INSERT INTO dahua_files (
   camera_id,
   channel,
@@ -112,14 +113,14 @@ INSERT INTO dahua_files (
   updated_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
-);
+) RETURNING id;
 
 -- name: GetDahuaFileByFilePath :one
 SELECT *
 FROM dahua_files
 WHERE camera_id = ? and file_path = ?;
 
--- name: UpdateDahuaFile :execlastid
+-- name: UpdateDahuaFile :one
 UPDATE dahua_files 
 SET 
   channel = ?,
@@ -139,7 +140,8 @@ SET
   work_dir = ?,
   work_dir_sn = ?,
   updated_at = ?
-WHERE camera_id = ? AND file_path = ?;
+WHERE camera_id = ? AND file_path = ?
+RETURNING id;
 
 -- name: DeleteDahuaFile :exec
 DELETE FROM dahua_files
@@ -149,7 +151,7 @@ WHERE
   start_time <= sqlc.arg('end') AND
   sqlc.arg('start') < start_time;
 
--- name: CreateDahuaEvent :execlastid
+-- name: CreateDahuaEvent :one
 INSERT INTO dahua_events (
   camera_id,
   code,
@@ -159,7 +161,7 @@ INSERT INTO dahua_events (
   created_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?
-);
+) RETURNING id;
 
 -- name: ListDahuaEventCodes :many
 SELECT DISTINCT code FROM dahua_events;
@@ -174,16 +176,19 @@ SELECT data FROM dahua_events WHERE id = ?;
 SELECT 
   ignore_db,
   ignore_live,
-  ignore_mqtt
+  ignore_mqtt,
+  code
 FROM dahua_event_rules 
 WHERE camera_id = sqlc.arg('camera_id') AND (dahua_event_rules.code = sqlc.arg('code') OR dahua_event_rules.code = '')
 UNION ALL
 SELECT 
   ignore_db,
   ignore_live,
-  ignore_mqtt
+  ignore_mqtt,
+  code
 FROM dahua_event_default_rules
-WHERE dahua_event_default_rules.code = sqlc.arg('code') OR dahua_event_default_rules.code = '';
+WHERE dahua_event_default_rules.code = sqlc.arg('code') OR dahua_event_default_rules.code = ''
+ORDER BY code DESC;
 
 -- name: GetDahuaEventDefaultRule :one
 SELECT * FROM dahua_event_default_rules

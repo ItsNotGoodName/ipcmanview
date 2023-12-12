@@ -431,7 +431,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	s.dahuaBus.CameraCreated(dbCamera.Convert())
+	s.dahuaBus.CameraCreated(dbCamera.Convert().DahuaConn)
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
 }
@@ -505,7 +505,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	s.dahuaBus.CameraUpdated(dbCamera.Convert())
+	s.dahuaBus.CameraUpdated(dbCamera.Convert().DahuaConn)
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
 }
@@ -531,7 +531,7 @@ func (s Server) DahuaEventsRulesCreatePOST(c echo.Context) error {
 		return err
 	}
 
-	err := s.db.CreateDahuaEventDefaultRule(ctx, repo.CreateDahuaEventDefaultRuleParams{
+	err := dahuaweb.CreateEventDefaultRule(ctx, s.db, repo.CreateDahuaEventDefaultRuleParams{
 		Code:       form.Code,
 		IgnoreDb:   true,
 		IgnoreLive: true,
@@ -561,7 +561,7 @@ func (s Server) DahuaEventsRulePOST(c echo.Context) error {
 	}
 
 	for _, rule := range form.Rules {
-		err := dahuaweb.UpdateDahuaDefaultEvent(ctx, s.db, repo.UpdateDahuaEventDefaultRuleParams{
+		err := dahuaweb.UpdateEventDefaultRule(ctx, s.db, repo.UpdateDahuaEventDefaultRuleParams{
 			Code:       rule.Code,
 			IgnoreDb:   !rule.DB,
 			IgnoreLive: !rule.Live,
@@ -608,7 +608,7 @@ func (s Server) DahuaEventsRulesIDDelete(c echo.Context) error {
 		return err
 	}
 
-	if err := dahuaweb.DeleteDahuaDefaultEvent(ctx, s.db, rule); err != nil {
+	if err := dahuaweb.DeleteEventDefaultRule(ctx, s.db, rule); err != nil {
 		return err
 	}
 

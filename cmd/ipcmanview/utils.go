@@ -57,9 +57,7 @@ func (c SharedCameras) useCameras(ctx context.Context, db repo.DB) ([]models.Dah
 		}
 
 		for _, dbCamera := range dbCameras {
-			cameras = append(cameras, models.DahuaCameraConn{
-				DahuaConn: dbCamera.Convert(),
-			})
+			cameras = append(cameras, dbCamera.Convert())
 		}
 	} else {
 		dbCameras, err := db.ListDahuaCameraByIDs(ctx, c.ID)
@@ -68,9 +66,7 @@ func (c SharedCameras) useCameras(ctx context.Context, db repo.DB) ([]models.Dah
 		}
 
 		for _, dbCamera := range dbCameras {
-			cameras = append(cameras, models.DahuaCameraConn{
-				DahuaConn: dbCamera.Convert(),
-			})
+			cameras = append(cameras, dbCamera.Convert())
 		}
 	}
 	return cameras, nil

@@ -14,7 +14,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-const createDahuaEvent = `-- name: CreateDahuaEvent :execlastid
+const createDahuaEvent = `-- name: CreateDahuaEvent :one
 INSERT INTO dahua_events (
   camera_id,
   code,
@@ -24,7 +24,7 @@ INSERT INTO dahua_events (
   created_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?
-)
+) RETURNING id
 `
 
 type CreateDahuaEventParams struct {
@@ -37,7 +37,7 @@ type CreateDahuaEventParams struct {
 }
 
 func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventParams) (int64, error) {
-	result, err := q.db.ExecContext(ctx, createDahuaEvent,
+	row := q.db.QueryRowContext(ctx, createDahuaEvent,
 		arg.CameraID,
 		arg.Code,
 		arg.Action,
@@ -45,10 +45,9 @@ func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventPara
 		arg.Data,
 		arg.CreatedAt,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return result.LastInsertId()
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const createDahuaEventDefaultRule = `-- name: CreateDahuaEventDefaultRule :exec
@@ -82,7 +81,7 @@ func (q *Queries) CreateDahuaEventDefaultRule(ctx context.Context, arg CreateDah
 	return err
 }
 
-const createDahuaFile = `-- name: CreateDahuaFile :execlastid
+const createDahuaFile = `-- name: CreateDahuaFile :one
 INSERT INTO dahua_files (
   camera_id,
   channel,
@@ -105,7 +104,7 @@ INSERT INTO dahua_files (
   updated_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
-)
+) RETURNING id
 `
 
 type CreateDahuaFileParams struct {
@@ -131,7 +130,7 @@ type CreateDahuaFileParams struct {
 }
 
 func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams) (int64, error) {
-	result, err := q.db.ExecContext(ctx, createDahuaFile,
+	row := q.db.QueryRowContext(ctx, createDahuaFile,
 		arg.CameraID,
 		arg.Channel,
 		arg.StartTime,
@@ -152,10 +151,9 @@ func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams
 		arg.WorkDirSn,
 		arg.UpdatedAt,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return result.LastInsertId()
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const createDahuaFileScanLock = `-- name: CreateDahuaFileScanLock :one
@@ -638,10 +636,11 @@ func (q *Queries) ListDahuaFileTypes(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
-const updateDahuaCamera = `-- name: UpdateDahuaCamera :execlastid
+const updateDahuaCamera = `-- name: UpdateDahuaCamera :one
 UPDATE dahua_cameras 
 SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?
 WHERE id = ?
+RETURNING id
 `
 
 type UpdateDahuaCameraParams struct {
@@ -655,7 +654,7 @@ type UpdateDahuaCameraParams struct {
 }
 
 func (q *Queries) UpdateDahuaCamera(ctx context.Context, arg UpdateDahuaCameraParams) (int64, error) {
-	result, err := q.db.ExecContext(ctx, updateDahuaCamera,
+	row := q.db.QueryRowContext(ctx, updateDahuaCamera,
 		arg.Name,
 		arg.Address,
 		arg.Username,
@@ -664,10 +663,9 @@ func (q *Queries) UpdateDahuaCamera(ctx context.Context, arg UpdateDahuaCameraPa
 		arg.UpdatedAt,
 		arg.ID,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return result.LastInsertId()
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateDahuaEventDefaultRule = `-- name: UpdateDahuaEventDefaultRule :exec
@@ -699,7 +697,7 @@ func (q *Queries) UpdateDahuaEventDefaultRule(ctx context.Context, arg UpdateDah
 	return err
 }
 
-const updateDahuaFile = `-- name: UpdateDahuaFile :execlastid
+const updateDahuaFile = `-- name: UpdateDahuaFile :one
 UPDATE dahua_files 
 SET 
   channel = ?,
@@ -720,6 +718,7 @@ SET
   work_dir_sn = ?,
   updated_at = ?
 WHERE camera_id = ? AND file_path = ?
+RETURNING id
 `
 
 type UpdateDahuaFileParams struct {
@@ -745,7 +744,7 @@ type UpdateDahuaFileParams struct {
 }
 
 func (q *Queries) UpdateDahuaFile(ctx context.Context, arg UpdateDahuaFileParams) (int64, error) {
-	result, err := q.db.ExecContext(ctx, updateDahuaFile,
+	row := q.db.QueryRowContext(ctx, updateDahuaFile,
 		arg.Channel,
 		arg.StartTime,
 		arg.EndTime,
@@ -766,10 +765,9 @@ func (q *Queries) UpdateDahuaFile(ctx context.Context, arg UpdateDahuaFileParams
 		arg.CameraID,
 		arg.FilePath,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return result.LastInsertId()
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateDahuaFileCursor = `-- name: UpdateDahuaFileCursor :one
@@ -839,12 +837,12 @@ func (q *Queries) allocateDahuaSeed(ctx context.Context, cameraID sql.NullInt64)
 	return err
 }
 
-const createDahuaCamera = `-- name: createDahuaCamera :execlastid
+const createDahuaCamera = `-- name: createDahuaCamera :one
 INSERT INTO dahua_cameras (
   name, address, username, password, location, created_at, updated_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?
-)
+) RETURNING id
 `
 
 type createDahuaCameraParams struct {
@@ -858,7 +856,7 @@ type createDahuaCameraParams struct {
 }
 
 func (q *Queries) createDahuaCamera(ctx context.Context, arg createDahuaCameraParams) (int64, error) {
-	result, err := q.db.ExecContext(ctx, createDahuaCamera,
+	row := q.db.QueryRowContext(ctx, createDahuaCamera,
 		arg.Name,
 		arg.Address,
 		arg.Username,
@@ -867,10 +865,9 @@ func (q *Queries) createDahuaCamera(ctx context.Context, arg createDahuaCameraPa
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
-	if err != nil {
-		return 0, err
-	}
-	return result.LastInsertId()
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const createDahuaFileCursor = `-- name: createDahuaFileCursor :exec
@@ -905,16 +902,19 @@ const getDahuaEventRule = `-- name: getDahuaEventRule :many
 SELECT 
   ignore_db,
   ignore_live,
-  ignore_mqtt
+  ignore_mqtt,
+  code
 FROM dahua_event_rules 
 WHERE camera_id = ?1 AND (dahua_event_rules.code = ?2 OR dahua_event_rules.code = '')
 UNION ALL
 SELECT 
   ignore_db,
   ignore_live,
-  ignore_mqtt
+  ignore_mqtt,
+  code
 FROM dahua_event_default_rules
 WHERE dahua_event_default_rules.code = ?2 OR dahua_event_default_rules.code = ''
+ORDER BY code DESC
 `
 
 type getDahuaEventRuleParams struct {
@@ -926,6 +926,7 @@ type getDahuaEventRuleRow struct {
 	IgnoreDb   bool
 	IgnoreLive bool
 	IgnoreMqtt bool
+	Code       string
 }
 
 func (q *Queries) getDahuaEventRule(ctx context.Context, arg getDahuaEventRuleParams) ([]getDahuaEventRuleRow, error) {
@@ -937,7 +938,12 @@ func (q *Queries) getDahuaEventRule(ctx context.Context, arg getDahuaEventRulePa
 	var items []getDahuaEventRuleRow
 	for rows.Next() {
 		var i getDahuaEventRuleRow
-		if err := rows.Scan(&i.IgnoreDb, &i.IgnoreLive, &i.IgnoreMqtt); err != nil {
+		if err := rows.Scan(
+			&i.IgnoreDb,
+			&i.IgnoreLive,
+			&i.IgnoreMqtt,
+			&i.Code,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

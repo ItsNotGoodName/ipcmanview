@@ -12,7 +12,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func UpdateDahuaDefaultEvent(ctx context.Context, db repo.DB, arg repo.UpdateDahuaEventDefaultRuleParams) error {
+func CreateEventDefaultRule(ctx context.Context, db repo.DB, arg repo.CreateDahuaEventDefaultRuleParams) error {
+	if arg.Code == "" {
+		return errors.New("code cannot be empty")
+	}
+	return db.CreateDahuaEventDefaultRule(ctx, arg)
+}
+
+func UpdateEventDefaultRule(ctx context.Context, db repo.DB, arg repo.UpdateDahuaEventDefaultRuleParams) error {
 	rule, err := db.GetDahuaEventDefaultRule(ctx, arg.ID)
 	if err != nil {
 		return err
@@ -20,15 +27,13 @@ func UpdateDahuaDefaultEvent(ctx context.Context, db repo.DB, arg repo.UpdateDah
 	if rule.Code == "" {
 		arg.Code = rule.Code
 	}
-
 	return db.UpdateDahuaEventDefaultRule(ctx, arg)
 }
 
-func DeleteDahuaDefaultEvent(ctx context.Context, db repo.DB, rule repo.DahuaEventDefaultRule) error {
+func DeleteEventDefaultRule(ctx context.Context, db repo.DB, rule repo.DahuaEventDefaultRule) error {
 	if rule.Code == "" {
-		return errors.New("cannot delete default rule")
+		return errors.New("code cannot be empty")
 	}
-
 	return db.DeleteDahuaEventDefaultRule(ctx, rule.ID)
 }
 
@@ -106,7 +111,7 @@ func (r Repo) GetConn(ctx context.Context, id int64) (models.DahuaConn, bool, er
 		return models.DahuaConn{}, false, err
 	}
 
-	return dbCamera.Convert(), true, nil
+	return dbCamera.Convert().DahuaConn, true, nil
 }
 
 func (r Repo) ListConn(ctx context.Context) ([]models.DahuaConn, error) {
@@ -117,7 +122,7 @@ func (r Repo) ListConn(ctx context.Context) ([]models.DahuaConn, error) {
 
 	cameras := make([]models.DahuaConn, 0, len(dbCameras))
 	for _, row := range dbCameras {
-		cameras = append(cameras, row.Convert())
+		cameras = append(cameras, row.Convert().DahuaConn)
 	}
 
 	return cameras, nil
