@@ -219,36 +219,20 @@
         {{ .Data.Events.TotalItems }}
       </div>
 
-      <form hx-get="{{ .URL.Path }}" hx-trigger="change" class="flex gap-4">
-        {{ range .Data.Params.Code }}
-          <input type="hidden" name="Code" value="{{ . }}" />
-        {{ end }}
-        {{ range .Data.Params.Action }}
-          <input type="hidden" name="Action" value="{{ . }}" />
-        {{ end }}
-        {{ range .Data.Params.CameraID }}
-          <input type="hidden" name="CameraID" value="{{ . }}" />
-        {{ end }}
-        <input type="hidden" name="Data" value="{{ .Data.Params.Data }}" />
-        <input type="hidden" name="Start" value="{{ .Data.Params.Start }}" />
-        <input type="hidden" name="End" value="{{ .Data.Params.End }}" />
-        <input
-          type="hidden"
-          name="Ascending"
-          value="{{ .Data.Params.Ascending }}"
-        />
-
-        <div class="form-control w-full">
-          <select name="PerPage" class="select select-bordered">
-            <option disabled>Per Page</option>
-            {{ range list 10 25 100 }}
-              <option {{ if eq . $.Data.Params.PerPage }}selected{{ end }}>
-                {{ . }}
-              </option>
-            {{ end }}
-          </select>
-        </div>
-      </form>
+      <div class="form-control">
+        <select
+          hx-get="{{ URLQuery .URL.Path .Data.Params }}"
+          name="PerPage"
+          class="select select-bordered"
+        >
+          <option disabled>Per Page</option>
+          {{ range list 10 25 100 }}
+            <option {{ if eq . $.Data.Params.PerPage }}selected{{ end }}>
+              {{ . }}
+            </option>
+          {{ end }}
+        </select>
+      </div>
     </div>
 
     <div class="flex justify-end gap-4">

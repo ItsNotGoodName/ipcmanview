@@ -139,6 +139,7 @@
       <form
         class="flex flex-col gap-4 px-4"
         method="post"
+        action="/dahua/cameras/file-cursors"
         hx-post="/dahua/cameras/file-cursors"
       >
         {{ block "htmx-file-cursors" . }}
@@ -149,6 +150,7 @@
             <div class="join">
               <button
                 class="btn btn-sm join-item"
+                type="submit"
                 hx-get="/dahua/cameras/file-cursors"
                 hx-target="closest form"
               >

@@ -25,7 +25,12 @@
         <div class="card-title">Create Event Rule</div>
       </div>
 
-      <form hx-post="{{ .URL.Path }}/create" hx-target="#htmx">
+      <form
+        method="post"
+        action="/dahua/events/rules/create"
+        hx-post="/dahua/events/rules/create"
+        hx-target="#htmx"
+      >
         <label class="form-control">
           <div class="label">
             <span class="label-text">Code</span>
@@ -51,6 +56,7 @@
       {{ block "htmx" . }}
         <form
           class="mx-auto flex w-full max-w-xl flex-col gap-4 px-4"
+          method="post"
           hx-post="/dahua/events/rules"
           hx-target="#htmx"
         >

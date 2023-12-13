@@ -48,9 +48,6 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 	e.POST("/dahua/cameras/file-cursors", w.DahuaCamerasFileCursorsPOST)
 	e.POST("/dahua/events/rules", w.DahuaEventsRulePOST)
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
-
-	// e.DELETE("/dahua/cameras/:id", w.DahuaCamerasIDDelete)
-	// e.DELETE("/dahua/events/rules/:id", w.DahuaEventsRulesIDDelete)
 }
 
 type Server struct {
@@ -336,21 +333,6 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 
 	return sub.Error()
 }
-
-// func (s Server) DahuaCamerasIDDelete(c echo.Context) error {
-// 	ctx := c.Request().Context()
-//
-// 	id, err := api.PathID(c)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	if err := dahua.DeleteCamera(ctx, id, s.db, s.dahuaBus); err != nil {
-// 		return err
-// 	}
-//
-// 	return c.NoContent(http.StatusOK)
-// }
 
 func (s Server) DahuaCamerasPOST(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -655,6 +637,10 @@ func (s Server) DahuaEventsRulesCreatePOST(c echo.Context) error {
 		return err
 	}
 
+	if !isHTMX(c) {
+		return c.Redirect(http.StatusSeeOther, "/dahua/events/rules")
+	}
+
 	return s.DahuaEventsRules(c)
 }
 
@@ -676,7 +662,8 @@ func (s Server) DahuaEventsRulePOST(c echo.Context) error {
 		return err
 	}
 
-	if form.Action == "Update" {
+	switch form.Action {
+	case "Update":
 		for _, rule := range form.Rules {
 			r, err := s.db.GetDahuaEventRule(ctx, rule.ID)
 			if err != nil {
@@ -697,7 +684,7 @@ func (s Server) DahuaEventsRulePOST(c echo.Context) error {
 				return err
 			}
 		}
-	} else {
+	case "Delete":
 		for _, rule := range form.Rules {
 			if !rule.Selected {
 				continue
@@ -738,23 +725,3 @@ func (s Server) DahuaEventsRules(c echo.Context) error {
 
 	return c.Render(http.StatusOK, "dahua-events-rules", data)
 }
-
-// func (s Server) DahuaEventsRulesIDDelete(c echo.Context) error {
-// 	ctx := c.Request().Context()
-//
-// 	id, err := api.PathID(c)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	rule, err := s.db.GetDahuaEventRule(ctx, id)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	if err := dahua.DeleteEventRule(ctx, s.db, rule); err != nil {
-// 		return err
-// 	}
-//
-// 	return c.NoContent(http.StatusOK)
-// }

@@ -12,11 +12,11 @@ import Toastify from 'toastify-js'
 document.body.addEventListener('htmx:afterRequest', function(evt: any) {
   if (evt.detail.failed) {
     const content = document.createElement("div")
-    content.textContent = evt.detail.xhr.responseText || evt.detail.xhr.statusText
+    content.textContent = JSON.parse(evt.detail.xhr.responseText).message // evt.detail.xhr.responseText || evt.detail.xhr.statusText
     content.className = "flex-1"
 
     Toastify({
-      text: evt.detail.xhr.responseText || evt.detail.xhr.statusText,
+      text: JSON.parse(evt.detail.xhr.responseText).message, // evt.detail.xhr.responseText || evt.detail.xhr.statusText,
       node: content,
       duration: 3000,
       close: true,

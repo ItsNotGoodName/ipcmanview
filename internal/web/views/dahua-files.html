@@ -153,32 +153,20 @@
         {{ .Data.Files.TotalItems }}
       </div>
 
-      <form hx-get="{{ .URL.Path }}" hx-trigger="change" class="flex gap-4">
-        {{ range .Data.Params.CameraID }}
-          <input type="hidden" name="CameraID" value="{{ . }}" />
-        {{ end }}
-        {{ range .Data.Params.Type }}
-          <input type="hidden" name="Type" value="{{ . }}" />
-        {{ end }}
-        <input type="hidden" name="Start" value="{{ .Data.Params.Start }}" />
-        <input type="hidden" name="End" value="{{ .Data.Params.End }}" />
-        <input
-          type="hidden"
-          name="Ascending"
-          value="{{ .Data.Params.Ascending }}"
-        />
-
-        <div class="form-control w-full">
-          <select name="PerPage" class="select select-bordered">
-            <option disabled>Per Page</option>
-            {{ range list 10 25 100 }}
-              <option {{ if eq . $.Data.Params.PerPage }}selected{{ end }}>
-                {{ . }}
-              </option>
-            {{ end }}
-          </select>
-        </div>
-      </form>
+      <div class="form-control">
+        <select
+          hx-get="{{ URLQuery .URL.Path .Data.Params }}"
+          name="PerPage"
+          class="select select-bordered"
+        >
+          <option disabled>Per Page</option>
+          {{ range list 10 25 100 }}
+            <option {{ if eq . $.Data.Params.PerPage }}selected{{ end }}>
+              {{ . }}
+            </option>
+          {{ end }}
+        </select>
+      </div>
     </div>
 
     <div class="flex justify-end gap-4">
