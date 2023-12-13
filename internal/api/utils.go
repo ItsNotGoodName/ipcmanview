@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -130,6 +129,8 @@ func queryDahuaScanRange(startStr, endStr string) (models.TimeRange, error) {
 	return res, nil
 }
 
+// ---------- Shared
+
 var encoder = schema.NewEncoder()
 
 var decoder = schema.NewDecoder()
@@ -145,13 +146,13 @@ func ParseForm(c echo.Context, form any) error {
 	return nil
 }
 
-func ParseLocation(location string) (*time.Location, error) {
-	loc, err := time.LoadLocation(location)
-	if err != nil {
-		return nil, echo.ErrBadRequest.WithInternal(err)
-	}
-	return loc, nil
-}
+// func ParseLocation(location string) (*time.Location, error) {
+// 	loc, err := time.LoadLocation(location)
+// 	if err != nil {
+// 		return nil, echo.ErrBadRequest.WithInternal(err)
+// 	}
+// 	return loc, nil
+// }
 
 func DecodeQuery(c echo.Context, dst any) error {
 	if err := decoder.Decode(dst, c.Request().URL.Query()); err != nil {
@@ -178,15 +179,6 @@ func ValidateStruct(src any) error {
 	return err
 }
 
-func FormatSSE(event string, data string) []byte {
-	eventPayload := "event: " + event + "\n"
-	dataLines := strings.Split(data, "\n")
-	for _, line := range dataLines {
-		eventPayload = eventPayload + "data: " + line + "\n"
-	}
-	return []byte(eventPayload + "\n")
-}
-
 func PathID(c echo.Context) (int64, error) {
 	number, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -196,19 +188,19 @@ func PathID(c echo.Context) (int64, error) {
 	return number, nil
 }
 
-func QueryInt(c echo.Context, key string) (int64, error) {
-	str := c.QueryParam(key)
-	if str == "" {
-		return 0, echo.ErrBadRequest
-	}
-
-	number, err := strconv.ParseInt(str, 10, 64)
-	if err != nil {
-		return 0, echo.ErrBadRequest.WithInternal(err)
-	}
-
-	return number, nil
-}
+// func QueryInt(c echo.Context, key string) (int64, error) {
+// 	str := c.QueryParam(key)
+// 	if str == "" {
+// 		return 0, echo.ErrBadRequest
+// 	}
+//
+// 	number, err := strconv.ParseInt(str, 10, 64)
+// 	if err != nil {
+// 		return 0, echo.ErrBadRequest.WithInternal(err)
+// 	}
+//
+// 	return number, nil
+// }
 
 func UseTimeRange(start, end string) (models.TimeRange, error) {
 	var startTime, endTime time.Time

@@ -2,6 +2,8 @@ package repo
 
 import "github.com/ItsNotGoodName/ipcmanview/internal/models"
 
+// this is stupid
+
 func (c ListDahuaCameraByIDsRow) Convert() models.DahuaCameraConn {
 	return models.DahuaCameraConn{
 		DahuaCamera: models.DahuaCamera{

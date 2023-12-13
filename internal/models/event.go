@@ -19,18 +19,18 @@ type EventDahuaCameraEvent struct {
 
 // TODO: these should be generated
 
-func (EventDahuaCameraDeleted) EventName() string {
+func (EventDahuaCameraDeleted) EventTopic() string {
 	return "EventDahuaCameraDeleted"
 }
 
-func (EventDahuaCameraCreated) EventName() string {
+func (EventDahuaCameraCreated) EventTopic() string {
 	return "EventDahuaCameraCreated"
 }
 
-func (EventDahuaCameraUpdated) EventName() string {
+func (EventDahuaCameraUpdated) EventTopic() string {
 	return "EventDahuaCameraUpdated"
 }
 
-func (e EventDahuaCameraEvent) EventName() string {
+func (e EventDahuaCameraEvent) EventTopic() string {
 	return "EventDahuaCameraEvent"
 }

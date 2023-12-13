@@ -63,7 +63,7 @@ func (s Sub) close(ctx context.Context) error {
 func (p Pub) Subscribe(ctx context.Context, handle HandleFunc, events ...Event) (Sub, error) {
 	var topics []string
 	for _, e := range events {
-		topics = append(topics, e.EventName())
+		topics = append(topics, e.EventTopic())
 	}
 
 	resC := make(chan int, 1)

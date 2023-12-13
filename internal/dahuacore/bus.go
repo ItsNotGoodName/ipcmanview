@@ -17,12 +17,12 @@ func busLogErr(err error) {
 
 func NewBus() *Bus {
 	return &Bus{
-		ContextService: sutureext.NewContext("dahuacore.Bus"),
+		ServiceContext: sutureext.NewServiceContext("dahuacore.Bus"),
 	}
 }
 
 type Bus struct {
-	sutureext.ContextService
+	sutureext.ServiceContext
 	onCameraCreated []func(ctx context.Context, evt models.EventDahuaCameraCreated) error
 	onCameraUpdated []func(ctx context.Context, evt models.EventDahuaCameraUpdated) error
 	onCameraDeleted []func(ctx context.Context, evt models.EventDahuaCameraDeleted) error

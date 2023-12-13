@@ -11,12 +11,12 @@ import (
 var ErrPubSubClosed = errors.New("pub sub closed")
 
 type Event interface {
-	EventName() string
+	EventTopic() string
 }
 
-type EventName string
+type EventTopic string
 
-func (e EventName) EventName() string {
+func (e EventTopic) EventName() string {
 	return string(e)
 }
 
@@ -116,9 +116,9 @@ func (p Pub) Serve(ctx context.Context) error {
 					}
 				}
 			case Event:
-				eventName := command.EventName()
+				eventTopic := command.EventTopic()
 				for i := range subs {
-					if subs[i].closed || !slices.Contains(subs[i].topics, eventName) {
+					if subs[i].closed || !slices.Contains(subs[i].topics, eventTopic) {
 						continue
 					}
 

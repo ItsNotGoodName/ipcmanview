@@ -161,10 +161,7 @@ func (s Server) DahuaEventsIDData(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-events", TemplateBlock{
-		"dahua-events-data-json",
-		data,
-	})
+	return c.Render(http.StatusOK, "dahua-events", TemplateBlock{"dahua-events-data-json", data})
 }
 
 func (s Server) DahuaFiles(c echo.Context) error {
@@ -296,12 +293,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	}
 	defer sub.Close()
 
-	w := c.Response()
-
-	w.Header().Set(echo.HeaderContentType, "text/event-stream")
-	w.Header().Set(echo.HeaderCacheControl, "no-cache")
-	w.Header().Set(echo.HeaderConnection, "keep-alive")
-
+	w := useEventStream(c)
 	buf := new(bytes.Buffer)
 
 	for event := range eventsC {
@@ -314,21 +306,19 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 			continue
 		}
 
-		if err := c.Echo().Renderer.Render(buf, "dahua-events-live", TemplateBlock{
-			"event-row",
-			Data{
-				"Event":  evt.Event,
-				"Params": params,
-			},
-		}, c); err != nil {
+		if err := c.Echo().Renderer.Render(buf, "dahua-events-live", TemplateBlock{"event-row", Data{
+			"Event":  evt.Event,
+			"Params": params,
+		}}, c); err != nil {
 			return err
 		}
-		_, err := w.Write(api.FormatSSE("message", buf.String()))
+
+		err := sendEventStream(w, formatEventStream("message", buf.String()))
 		if err != nil {
 			return err
 		}
+
 		buf.Reset()
-		w.Flush()
 	}
 
 	return sub.Error()
@@ -380,10 +370,7 @@ func (s Server) DahuaCameras(c echo.Context) error {
 			return err
 		}
 
-		return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{
-			"htmx",
-			tables,
-		})
+		return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{"htmx", tables})
 	}
 
 	cameras, err := s.db.ListDahuaCamera(c.Request().Context())
