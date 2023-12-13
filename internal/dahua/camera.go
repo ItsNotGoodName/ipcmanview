@@ -7,7 +7,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-func DeleteCamera(ctx context.Context, id int64, db repo.DB, dahuaBus *dahuacore.Bus) error {
+func DeleteCamera(ctx context.Context, db repo.DB, dahuaBus *dahuacore.Bus, id int64) error {
 	if err := db.DeleteDahuaCamera(ctx, id); err != nil {
 		return err
 	}

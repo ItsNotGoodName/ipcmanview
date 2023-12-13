@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"slices"
 
@@ -27,12 +28,12 @@ func RegisterMiddleware(e *echo.Echo) {
 }
 
 func RegisterRoutes(e *echo.Echo, w Server) {
-
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
 	e.GET("/dahua/cameras", w.DahuaCameras)
 	e.GET("/dahua/cameras/:id/update", w.DahuaCamerasUpdate)
 	e.GET("/dahua/cameras/create", w.DahuaCamerasCreate)
+	e.GET("/dahua/cameras/file-cursors", w.DahuaCamerasFileCursors)
 	e.GET("/dahua/events", w.DahuaEvents)
 	e.GET("/dahua/events/:id/data", w.DahuaEventsIDData)
 	e.GET("/dahua/events/live", w.DahuaEventsLive)
@@ -44,6 +45,7 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 	e.POST("/dahua/cameras", w.DahuaCamerasPOST)
 	e.POST("/dahua/cameras/:id/update", w.DahuaCamerasUpdatePOST)
 	e.POST("/dahua/cameras/create", w.DahuaCamerasCreatePOST)
+	e.POST("/dahua/cameras/file-cursors", w.DahuaCamerasFileCursorsPOST)
 	e.POST("/dahua/events/rules", w.DahuaEventsRulePOST)
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
 
@@ -369,7 +371,7 @@ func (s Server) DahuaCamerasPOST(c echo.Context) error {
 			if !camera.Selected {
 				continue
 			}
-			if err := dahua.DeleteCamera(ctx, camera.ID, s.db, s.dahuaBus); err != nil {
+			if err := dahua.DeleteCamera(ctx, s.db, s.dahuaBus, camera.ID); err != nil {
 				return err
 			}
 		}
@@ -475,6 +477,77 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 	s.dahuaBus.CameraCreated(dbCamera.Convert().DahuaConn)
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
+}
+
+func (s Server) DahuaCamerasFileCursorsPOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var form struct {
+		Action      string
+		FileCursors []struct {
+			Selected bool
+			CameraID int64
+		}
+	}
+	if err := api.ParseForm(c, &form); err != nil {
+		return err
+	}
+
+	switch form.Action {
+	case "Reset":
+		for _, v := range form.FileCursors {
+			if !v.Selected {
+				continue
+			}
+
+			err := dahua.ScanReset(ctx, s.db, v.CameraID)
+			if err != nil {
+				if repo.IsNotFound(err) {
+					continue
+				}
+				return err
+			}
+		}
+	case "Quick", "Full":
+		scanType := dahua.ScanTypeQuick
+		if form.Action == "Full" {
+			scanType = dahua.ScanTypeFull
+		}
+
+		for _, v := range form.FileCursors {
+			if !v.Selected {
+				continue
+			}
+
+			camera, err := s.db.GetDahuaCamera(ctx, v.CameraID)
+			if err != nil {
+				if repo.IsNotFound(err) {
+					continue
+				}
+				return err
+			}
+			conn := s.dahuaStore.Conn(ctx, camera.Convert().DahuaConn)
+
+			go dahua.Scan(context.Background(), s.db, conn.RPC, conn.Camera, scanType)
+		}
+	}
+
+	return s.DahuaCamerasFileCursors(c)
+}
+
+func (s Server) DahuaCamerasFileCursors(c echo.Context) error {
+	if !isHTMX(c) {
+		return c.Redirect(http.StatusSeeOther, "/dahua/cameras#file-cursors")
+	}
+
+	fileCursors, err := s.db.ListDahuaFileCursor(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{"htmx-file-cursors", Data{
+		"FileCursors": fileCursors,
+	}})
 }
 
 func (s Server) DahuaCamerasUpdate(c echo.Context) error {
@@ -605,7 +678,15 @@ func (s Server) DahuaEventsRulePOST(c echo.Context) error {
 
 	if form.Action == "Update" {
 		for _, rule := range form.Rules {
-			err := dahua.UpdateEventRule(ctx, s.db, repo.UpdateDahuaEventRuleParams{
+			r, err := s.db.GetDahuaEventRule(ctx, rule.ID)
+			if err != nil {
+				if repo.IsNotFound(err) {
+					continue
+				}
+				return err
+			}
+
+			err = dahua.UpdateEventRule(ctx, s.db, r, repo.UpdateDahuaEventRuleParams{
 				Code:       rule.Code,
 				IgnoreDb:   !rule.DB,
 				IgnoreLive: !rule.Live,
@@ -624,6 +705,9 @@ func (s Server) DahuaEventsRulePOST(c echo.Context) error {
 
 			rule, err := s.db.GetDahuaEventRule(ctx, rule.ID)
 			if err != nil {
+				if repo.IsNotFound(err) {
+					continue
+				}
 				return err
 			}
 
