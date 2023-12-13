@@ -3,6 +3,7 @@ package webserver
 import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/labstack/echo/v4"
 )
 
@@ -20,4 +21,9 @@ func useDahuaCamera(c echo.Context, db repo.DB) (repo.GetDahuaCameraRow, error) 
 	}
 
 	return camera, nil
+}
+
+// isHTMX checks if request is an htmx request but not a boosted htmx request.
+func isHTMX(c echo.Context) bool {
+	return htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request())
 }

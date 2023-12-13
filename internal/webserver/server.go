@@ -27,7 +27,6 @@ func RegisterMiddleware(e *echo.Echo) {
 }
 
 func RegisterRoutes(e *echo.Echo, w Server) {
-	e.DELETE("/dahua/cameras/:id", w.DahuaCamerasIDDelete)
 
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
@@ -35,19 +34,21 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 	e.GET("/dahua/cameras/:id/update", w.DahuaCamerasUpdate)
 	e.GET("/dahua/cameras/create", w.DahuaCamerasCreate)
 	e.GET("/dahua/events", w.DahuaEvents)
-	e.GET("/dahua/events/live", w.DahuaEventsLive)
-	e.GET("/dahua/events/stream", w.DahuaEventStream)
-	e.GET("/dahua/events/rules", w.DahuaEventsRules)
 	e.GET("/dahua/events/:id/data", w.DahuaEventsIDData)
+	e.GET("/dahua/events/live", w.DahuaEventsLive)
+	e.GET("/dahua/events/rules", w.DahuaEventsRules)
+	e.GET("/dahua/events/stream", w.DahuaEventStream)
 	e.GET("/dahua/files", w.DahuaFiles)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
 
-	e.POST("/dahua/cameras/create", w.DahuaCamerasCreatePOST)
+	e.POST("/dahua/cameras", w.DahuaCamerasPOST)
 	e.POST("/dahua/cameras/:id/update", w.DahuaCamerasUpdatePOST)
+	e.POST("/dahua/cameras/create", w.DahuaCamerasCreatePOST)
 	e.POST("/dahua/events/rules", w.DahuaEventsRulePOST)
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
 
-	e.DELETE("/dahua/events/rules/:id", w.DahuaEventsRulesIDDelete)
+	// e.DELETE("/dahua/cameras/:id", w.DahuaCamerasIDDelete)
+	// e.DELETE("/dahua/events/rules/:id", w.DahuaEventsRulesIDDelete)
 }
 
 type Server struct {
@@ -142,7 +143,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		"EventAction": eventActions,
 	}
 
-	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+	if isHTMX(c) {
 		htmx.SetReplaceURL(c.Response(), c.Request().URL.Path+"?"+api.EncodeQuery(params).Encode())
 		return c.Render(http.StatusOK, "dahua-events", TemplateBlock{"htmx", data})
 	}
@@ -226,7 +227,7 @@ func (s Server) DahuaFiles(c echo.Context) error {
 		"Types":   types,
 	}
 
-	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+	if isHTMX(c) {
 		htmx.SetReplaceURL(c.Response(), c.Request().URL.Path+"?"+api.EncodeQuery(params).Encode())
 		return c.Render(http.StatusOK, "dahua-files", TemplateBlock{"htmx", data})
 	}
@@ -269,7 +270,7 @@ func (s Server) DahuaEventsLive(c echo.Context) error {
 		"EventAction": eventActions,
 	}
 
-	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+	if isHTMX(c) {
 		htmx.SetReplaceURL(c.Response(), c.Request().URL.Path+"?"+api.EncodeQuery(params).Encode())
 		return c.Render(http.StatusOK, "dahua-events-live", TemplateBlock{"htmx", data})
 	}
@@ -334,22 +335,62 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	return sub.Error()
 }
 
-func (s Server) DahuaCamerasIDDelete(c echo.Context) error {
-	id, err := api.PathID(c)
-	if err != nil {
+// func (s Server) DahuaCamerasIDDelete(c echo.Context) error {
+// 	ctx := c.Request().Context()
+//
+// 	id, err := api.PathID(c)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	if err := dahua.DeleteCamera(ctx, id, s.db, s.dahuaBus); err != nil {
+// 		return err
+// 	}
+//
+// 	return c.NoContent(http.StatusOK)
+// }
+
+func (s Server) DahuaCamerasPOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var form struct {
+		Action  string
+		Cameras []struct {
+			Selected bool
+			ID       int64
+		}
+	}
+	if err := api.ParseForm(c, &form); err != nil {
 		return err
 	}
 
-	if err := s.db.DeleteDahuaCamera(c.Request().Context(), id); err != nil {
-		return err
+	if form.Action == "Delete" {
+		for _, camera := range form.Cameras {
+			if !camera.Selected {
+				continue
+			}
+			if err := dahua.DeleteCamera(ctx, camera.ID, s.db, s.dahuaBus); err != nil {
+				return err
+			}
+		}
 	}
-	s.dahuaBus.CameraDeleted(id)
 
-	return c.NoContent(http.StatusOK)
+	if isHTMX(c) {
+		cameras, err := s.db.ListDahuaCamera(c.Request().Context())
+		if err != nil {
+			return err
+		}
+
+		return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{"htmx-cameras", Data{
+			"Cameras": cameras,
+		}})
+	}
+
+	return s.DahuaCameras(c)
 }
 
 func (s Server) DahuaCameras(c echo.Context) error {
-	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+	if isHTMX(c) {
 		tables, err := useDahuaTables(c.Request().Context(), s.db, s.dahuaStore)
 		if err != nil {
 			return err
@@ -531,7 +572,7 @@ func (s Server) DahuaEventsRulesCreatePOST(c echo.Context) error {
 		return err
 	}
 
-	err := dahua.CreateEventDefaultRule(ctx, s.db, repo.CreateDahuaEventDefaultRuleParams{
+	err := dahua.CreateEventRule(ctx, s.db, repo.CreateDahuaEventRuleParams{
 		Code:       form.Code,
 		IgnoreDb:   true,
 		IgnoreLive: true,
@@ -548,28 +589,47 @@ func (s Server) DahuaEventsRulePOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var form struct {
-		Rules []struct {
-			ID   int64
-			Code string
-			DB   bool
-			Live bool
-			MQTT bool
+		Action string
+		Rules  []struct {
+			Selected bool
+			ID       int64
+			Code     string
+			DB       bool
+			Live     bool
+			MQTT     bool
 		}
 	}
 	if err := api.ParseForm(c, &form); err != nil {
 		return err
 	}
 
-	for _, rule := range form.Rules {
-		err := dahua.UpdateEventDefaultRule(ctx, s.db, repo.UpdateDahuaEventDefaultRuleParams{
-			Code:       rule.Code,
-			IgnoreDb:   !rule.DB,
-			IgnoreLive: !rule.Live,
-			IgnoreMqtt: !rule.MQTT,
-			ID:         rule.ID,
-		})
-		if err != nil {
-			return err
+	if form.Action == "Update" {
+		for _, rule := range form.Rules {
+			err := dahua.UpdateEventRule(ctx, s.db, repo.UpdateDahuaEventRuleParams{
+				Code:       rule.Code,
+				IgnoreDb:   !rule.DB,
+				IgnoreLive: !rule.Live,
+				IgnoreMqtt: !rule.MQTT,
+				ID:         rule.ID,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		for _, rule := range form.Rules {
+			if !rule.Selected {
+				continue
+			}
+
+			rule, err := s.db.GetDahuaEventRule(ctx, rule.ID)
+			if err != nil {
+				return err
+			}
+
+			if err := dahua.DeleteEventRule(ctx, s.db, rule); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -579,7 +639,7 @@ func (s Server) DahuaEventsRulePOST(c echo.Context) error {
 func (s Server) DahuaEventsRules(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	rules, err := s.db.ListDahuaEventDefaultRule(ctx)
+	rules, err := s.db.ListDahuaEventRule(ctx)
 	if err != nil {
 		return err
 	}
@@ -588,29 +648,29 @@ func (s Server) DahuaEventsRules(c echo.Context) error {
 		"Rules": rules,
 	}
 
-	if htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request()) {
+	if isHTMX(c) {
 		return c.Render(http.StatusOK, "dahua-events-rules", TemplateBlock{"htmx", data})
 	}
 
 	return c.Render(http.StatusOK, "dahua-events-rules", data)
 }
 
-func (s Server) DahuaEventsRulesIDDelete(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	id, err := api.PathID(c)
-	if err != nil {
-		return err
-	}
-
-	rule, err := s.db.GetDahuaEventDefaultRule(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	if err := dahua.DeleteEventDefaultRule(ctx, s.db, rule); err != nil {
-		return err
-	}
-
-	return c.NoContent(http.StatusOK)
-}
+// func (s Server) DahuaEventsRulesIDDelete(c echo.Context) error {
+// 	ctx := c.Request().Context()
+//
+// 	id, err := api.PathID(c)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	rule, err := s.db.GetDahuaEventRule(ctx, id)
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	if err := dahua.DeleteEventRule(ctx, s.db, rule); err != nil {
+// 		return err
+// 	}
+//
+// 	return c.NoContent(http.StatusOK)
+// }

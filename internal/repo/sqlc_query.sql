@@ -172,33 +172,33 @@ SELECT DISTINCT action FROM dahua_events;
 -- name: GetDahuaEventData :one
 SELECT data FROM dahua_events WHERE id = ?;
 
--- name: getDahuaEventRule :many
+-- name: getDahuaEventRuleByEvent :many
 SELECT 
   ignore_db,
   ignore_live,
   ignore_mqtt,
   code
-FROM dahua_event_rules 
-WHERE camera_id = sqlc.arg('camera_id') AND (dahua_event_rules.code = sqlc.arg('code') OR dahua_event_rules.code = '')
+FROM dahua_event_camera_rules 
+WHERE camera_id = sqlc.arg('camera_id') AND (dahua_event_camera_rules.code = sqlc.arg('code') OR dahua_event_camera_rules.code = '')
 UNION ALL
 SELECT 
   ignore_db,
   ignore_live,
   ignore_mqtt,
   code
-FROM dahua_event_default_rules
-WHERE dahua_event_default_rules.code = sqlc.arg('code') OR dahua_event_default_rules.code = ''
+FROM dahua_event_rules
+WHERE dahua_event_rules.code = sqlc.arg('code') OR dahua_event_rules.code = ''
 ORDER BY code DESC;
 
--- name: GetDahuaEventDefaultRule :one
-SELECT * FROM dahua_event_default_rules
+-- name: GetDahuaEventRule :one
+SELECT * FROM dahua_event_rules
 WHERE id = ?;
 
--- name: ListDahuaEventDefaultRule :many
-SELECT * FROM dahua_event_default_rules;
+-- name: ListDahuaEventRule :many
+SELECT * FROM dahua_event_rules;
 
--- name: UpdateDahuaEventDefaultRule :exec
-UPDATE dahua_event_default_rules 
+-- name: UpdateDahuaEventRule :exec
+UPDATE dahua_event_rules 
 SET 
   code = ?,
   ignore_db = ?,
@@ -206,8 +206,8 @@ SET
   ignore_mqtt = ?
 WHERE id = ?;
 
--- name: CreateDahuaEventDefaultRule :exec
-INSERT INTO dahua_event_default_rules(
+-- name: CreateDahuaEventRule :exec
+INSERT INTO dahua_event_rules(
   code,
   ignore_db,
   ignore_live,
@@ -219,5 +219,5 @@ INSERT INTO dahua_event_default_rules(
   ?
 );
 
--- name: DeleteDahuaEventDefaultRule :exec
-DELETE FROM dahua_event_default_rules WHERE id = ?;
+-- name: DeleteDahuaEventRule :exec
+DELETE FROM dahua_event_rules WHERE id = ?;

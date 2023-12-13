@@ -32,8 +32,8 @@ type DahuaEvent struct {
 	CreatedAt types.Time
 }
 
-type DahuaEventDefaultRule struct {
-	ID         int64
+type DahuaEventCameraRule struct {
+	CameraID   int64
 	Code       string
 	IgnoreDb   bool
 	IgnoreLive bool
@@ -41,7 +41,7 @@ type DahuaEventDefaultRule struct {
 }
 
 type DahuaEventRule struct {
-	CameraID   int64
+	ID         int64
 	Code       string
 	IgnoreDb   bool
 	IgnoreLive bool

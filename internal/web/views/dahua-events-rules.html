@@ -15,22 +15,74 @@
 
 
   <main class="min-h-screen">
+    <div class="mx-auto flex w-full max-w-xl flex-col gap-4 px-4">
+      <div class="border-b-base-content flex justify-between gap-4">
+        <div class="card-title">Create Event Rule</div>
+      </div>
+
+      <form hx-post="{{ .URL.Path }}/create" hx-target="#htmx">
+        <label class="form-control">
+          <div class="label">
+            <span class="label-text">Code</span>
+          </div>
+          <div class="flex gap-4">
+            <input
+              type="text"
+              class="input input-bordered w-full"
+              name="Code"
+              placeholder="Code"
+            />
+            <button class="btn btn-primary no-animation" type="submit">
+              Create
+            </button>
+          </div>
+        </label>
+      </form>
+    </div>
+
+    <div class="divider"></div>
+
     <div id="htmx" class="flex flex-col gap-4">
       {{ block "htmx" . }}
-        <div class="border-b-base-content flex justify-between gap-4 px-4 pt-4">
-          <div class="card-title">Event Rules</div>
-        </div>
         <form
-          class="flex flex-col gap-4 px-4"
-          hx-post="{{ .URL.Path }}"
+          class="mx-auto flex w-full max-w-xl flex-col gap-4 px-4"
+          hx-post="/dahua/events/rules"
           hx-target="#htmx"
         >
+          <div class="border-b-base-content flex justify-between gap-4">
+            <div class="card-title">Event Rules</div>
+            <div class="join">
+              <button class="btn btn-sm join-item" hx-get="/dahua/events/rules">
+                Refresh
+              </button>
+              <button
+                class="btn btn-sm join-item btn-primary"
+                type="submit"
+                name="Action"
+                value="Update"
+              >
+                Update
+              </button>
+              <button
+                class="btn btn-sm join-item btn-error"
+                type="submit"
+                name="Action"
+                value="Delete"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
           <div class="overflow-x-auto">
-            <table class="table table-xs">
+            <table class="table-xs table">
               <thead>
                 <tr>
+                  <th class="w-0">
+                    <label>
+                      <input type="checkbox" class="checkbox" />
+                    </label>
+                  </th>
                   <th>Code</th>
-                  <th class="w-0"></th>
                   <th class="w-0">DB</th>
                   <th class="w-0">Live</th>
                   <th class="w-0">MQTT</th>
@@ -39,12 +91,22 @@
               <tbody>
                 {{ range $index, $val := .Data.Rules }}
                   <tr {{ if not .Code }}class="bg-base-200"{{ end }}>
+                    <th>
+                      <label>
+                        <input
+                          type="hidden"
+                          name="Rules.{{ $index }}.ID"
+                          value="{{ .ID }}"
+                        />
+                        <input
+                          name="Rules.{{ $index }}.Selected"
+                          type="checkbox"
+                          class="checkbox"
+                          {{ if not .Code }}disabled{{ end }}
+                        />
+                      </label>
+                    </th>
                     <td>
-                      <input
-                        type="hidden"
-                        name="Rules.{{ $index }}.ID"
-                        value="{{ .ID }}"
-                      />
                       {{ if .Code }}
                         <input
                           type="text"
@@ -59,19 +121,7 @@
                           name="Rules.{{ $index }}.Code"
                           value="{{ .Code }}"
                         />
-                        <div class="px-4">All</div>
-                      {{ end }}
-                    </td>
-                    <td>
-                      {{ if .Code }}
-                        <button
-                          class="btn btn-xs btn-error"
-                          hx-delete="/dahua/events/rules/{{ .ID }}"
-                          hx-target="closest tr"
-                          hx-confirm="Are you sure you wish to delete rule '{{ .Code }}'?"
-                        >
-                          Delete
-                        </button>
+                        <div class="px-4 font-bold">All</div>
                       {{ end }}
                     </td>
                     <td>
@@ -103,38 +153,8 @@
               </tbody>
             </table>
           </div>
-          <button class="btn btn-primary no-animation" type="submit">
-            Update
-          </button>
         </form>
       {{ end }}
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="flex flex-col gap-4 px-4">
-      <div class="border-b-base-content flex justify-between gap-4">
-        <div class="card-title">Create Event Rule</div>
-      </div>
-
-      <form hx-post="{{ .URL.Path }}/create" hx-target="#htmx">
-        <label class="form-control">
-          <div class="label">
-            <span class="label-text">Code</span>
-          </div>
-          <div class="flex gap-4">
-            <input
-              type="text"
-              class="input input-bordered w-full"
-              name="Code"
-              placeholder="Code"
-            />
-            <button class="btn btn-primary no-animation" type="submit">
-              Create
-            </button>
-          </div>
-        </label>
-      </form>
     </div>
   </main>
 

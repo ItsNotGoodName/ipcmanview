@@ -221,8 +221,8 @@ func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDa
 	}, nil
 }
 
-func (db DB) GetDahuaEventRule(ctx context.Context, event models.DahuaEvent) (models.DahuaEventRule, error) {
-	res, err := db.getDahuaEventRule(ctx, getDahuaEventRuleParams{
+func (db DB) GetDahuaEventRuleByEvent(ctx context.Context, event models.DahuaEvent) (models.DahuaEventRule, error) {
+	res, err := db.getDahuaEventRuleByEvent(ctx, getDahuaEventRuleByEventParams{
 		CameraID: event.CameraID,
 		Code:     event.Code,
 	})

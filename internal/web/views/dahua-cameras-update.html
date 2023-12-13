@@ -25,77 +25,78 @@
       </ul>
     </div>
 
-    <div class="flex justify-center px-4">
-      <form method="post" class="flex max-w-md flex-1 flex-col gap-4">
-        <div class="card-title">Update Camera</div>
-        <div class="form-control w-full">
-          <label for="name" class="label">
-            <span class="label-text">Name</span>
-          </label>
-          <input
-            id="name"
-            name="name"
-            type="text"
-            placeholder="Name"
-            class="input input-bordered w-full"
-            value="{{ .Data.Camera.Name }}"
-          />
-        </div>
-        <div class="form-control w-full">
-          <label for="address" class="label">
-            <span class="label-text">Address</span>
-          </label>
-          <input
-            id="address"
-            name="address"
-            type="text"
-            placeholder="Username"
-            class="input input-bordered w-full"
-            value="{{ .Data.Camera.Address }}"
-          />
-        </div>
-        <div class="form-control w-full">
-          <label for="username" class="label">
-            <span class="label-text">Username</span>
-          </label>
-          <input
-            id="username"
-            name="username"
-            type="text"
-            placeholder="admin"
-            class="input input-bordered w-full"
-            value="{{ .Data.Camera.Username }}"
-          />
-        </div>
-        <div class="form-control w-full">
-          <label for="password" class="label">
-            <span class="label-text">Password</span>
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            placeholder="Password"
-            class="input input-bordered w-full"
-          />
-        </div>
-        <div class="form-control w-full">
-          <label class="label">
-            <span class="label-text">Location</span>
-          </label>
-          <select id="location" name="location" class="select select-bordered">
-            {{ range .Data.Locations }}
-              <option
-                {{ if eq . $.Data.Camera.Location.String }}selected{{ end }}
-              >
-                {{ . }}
-              </option>
-            {{ end }}
-          </select>
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-      </form>
-    </div>
+    <form
+      method="post"
+      class="mx-auto flex w-full max-w-md flex-col gap-4 px-4"
+    >
+      <div class="card-title">Update Camera</div>
+      <div class="form-control w-full">
+        <label for="name" class="label">
+          <span class="label-text">Name</span>
+        </label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          placeholder="Name"
+          class="input input-bordered w-full"
+          value="{{ .Data.Camera.Name }}"
+        />
+      </div>
+      <div class="form-control w-full">
+        <label for="address" class="label">
+          <span class="label-text">Address</span>
+        </label>
+        <input
+          id="address"
+          name="address"
+          type="text"
+          placeholder="Username"
+          class="input input-bordered w-full"
+          value="{{ .Data.Camera.Address }}"
+        />
+      </div>
+      <div class="form-control w-full">
+        <label for="username" class="label">
+          <span class="label-text">Username</span>
+        </label>
+        <input
+          id="username"
+          name="username"
+          type="text"
+          placeholder="admin"
+          class="input input-bordered w-full"
+          value="{{ .Data.Camera.Username }}"
+        />
+      </div>
+      <div class="form-control w-full">
+        <label for="password" class="label">
+          <span class="label-text">Password</span>
+        </label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          placeholder="Password"
+          class="input input-bordered w-full"
+        />
+      </div>
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text">Location</span>
+        </label>
+        <select id="location" name="location" class="select select-bordered">
+          {{ range .Data.Locations }}
+            <option
+              {{ if eq . $.Data.Camera.Location.String }}selected{{ end }}
+            >
+              {{ . }}
+            </option>
+          {{ end }}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
   </main>
 
   {{ template "footer.html" . }}

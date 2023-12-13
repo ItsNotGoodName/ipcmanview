@@ -28,7 +28,7 @@ type EventHooksProxy struct {
 }
 
 func (p EventHooksProxy) CameraEvent(ctx context.Context, event models.DahuaEvent) {
-	eventRule, err := p.db.GetDahuaEventRule(ctx, event)
+	eventRule, err := p.db.GetDahuaEventRuleByEvent(ctx, event)
 	if err != nil {
 		log.Err(err).Msg("Failed to get DahuaEventRule")
 		return

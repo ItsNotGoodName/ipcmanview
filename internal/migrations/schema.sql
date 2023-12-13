@@ -33,17 +33,17 @@ CREATE TABLE dahua_events (
   FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE dahua_event_default_rules(
+CREATE TABLE dahua_event_rules(
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  code TEXT NOT NULL UNIQUE DEFAULT '',
+  code TEXT NOT NULL UNIQUE,
   ignore_db BOOLEAN NOT NULL DEFAULT false,
   ignore_live BOOLEAN NOT NULL DEFAULT false,
   ignore_mqtt BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE TABLE dahua_event_rules(
+CREATE TABLE dahua_event_camera_rules(
   camera_id INTEGER NOT NULL,
-  code TEXT NOT NULL DEFAULT '',
+  code TEXT NOT NULL,
   ignore_db BOOLEAN NOT NULL DEFAULT false,
   ignore_live BOOLEAN NOT NULL DEFAULT false,
   ignore_mqtt BOOLEAN NOT NULL DEFAULT false,

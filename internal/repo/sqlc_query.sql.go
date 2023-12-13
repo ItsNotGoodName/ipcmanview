@@ -50,8 +50,8 @@ func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventPara
 	return id, err
 }
 
-const createDahuaEventDefaultRule = `-- name: CreateDahuaEventDefaultRule :exec
-INSERT INTO dahua_event_default_rules(
+const createDahuaEventRule = `-- name: CreateDahuaEventRule :exec
+INSERT INTO dahua_event_rules(
   code,
   ignore_db,
   ignore_live,
@@ -64,15 +64,15 @@ INSERT INTO dahua_event_default_rules(
 )
 `
 
-type CreateDahuaEventDefaultRuleParams struct {
+type CreateDahuaEventRuleParams struct {
 	Code       string
 	IgnoreDb   bool
 	IgnoreLive bool
 	IgnoreMqtt bool
 }
 
-func (q *Queries) CreateDahuaEventDefaultRule(ctx context.Context, arg CreateDahuaEventDefaultRuleParams) error {
-	_, err := q.db.ExecContext(ctx, createDahuaEventDefaultRule,
+func (q *Queries) CreateDahuaEventRule(ctx context.Context, arg CreateDahuaEventRuleParams) error {
+	_, err := q.db.ExecContext(ctx, createDahuaEventRule,
 		arg.Code,
 		arg.IgnoreDb,
 		arg.IgnoreLive,
@@ -185,12 +185,12 @@ func (q *Queries) DeleteDahuaCamera(ctx context.Context, id int64) error {
 	return err
 }
 
-const deleteDahuaEventDefaultRule = `-- name: DeleteDahuaEventDefaultRule :exec
-DELETE FROM dahua_event_default_rules WHERE id = ?
+const deleteDahuaEventRule = `-- name: DeleteDahuaEventRule :exec
+DELETE FROM dahua_event_rules WHERE id = ?
 `
 
-func (q *Queries) DeleteDahuaEventDefaultRule(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteDahuaEventDefaultRule, id)
+func (q *Queries) DeleteDahuaEventRule(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteDahuaEventRule, id)
 	return err
 }
 
@@ -275,14 +275,14 @@ func (q *Queries) GetDahuaEventData(ctx context.Context, id int64) (json.RawMess
 	return data, err
 }
 
-const getDahuaEventDefaultRule = `-- name: GetDahuaEventDefaultRule :one
-SELECT id, code, ignore_db, ignore_live, ignore_mqtt FROM dahua_event_default_rules
+const getDahuaEventRule = `-- name: GetDahuaEventRule :one
+SELECT id, code, ignore_db, ignore_live, ignore_mqtt FROM dahua_event_rules
 WHERE id = ?
 `
 
-func (q *Queries) GetDahuaEventDefaultRule(ctx context.Context, id int64) (DahuaEventDefaultRule, error) {
-	row := q.db.QueryRowContext(ctx, getDahuaEventDefaultRule, id)
-	var i DahuaEventDefaultRule
+func (q *Queries) GetDahuaEventRule(ctx context.Context, id int64) (DahuaEventRule, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaEventRule, id)
+	var i DahuaEventRule
 	err := row.Scan(
 		&i.ID,
 		&i.Code,
@@ -527,19 +527,19 @@ func (q *Queries) ListDahuaEventCodes(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
-const listDahuaEventDefaultRule = `-- name: ListDahuaEventDefaultRule :many
-SELECT id, code, ignore_db, ignore_live, ignore_mqtt FROM dahua_event_default_rules
+const listDahuaEventRule = `-- name: ListDahuaEventRule :many
+SELECT id, code, ignore_db, ignore_live, ignore_mqtt FROM dahua_event_rules
 `
 
-func (q *Queries) ListDahuaEventDefaultRule(ctx context.Context) ([]DahuaEventDefaultRule, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaEventDefaultRule)
+func (q *Queries) ListDahuaEventRule(ctx context.Context) ([]DahuaEventRule, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaEventRule)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []DahuaEventDefaultRule
+	var items []DahuaEventRule
 	for rows.Next() {
-		var i DahuaEventDefaultRule
+		var i DahuaEventRule
 		if err := rows.Scan(
 			&i.ID,
 			&i.Code,
@@ -668,8 +668,8 @@ func (q *Queries) UpdateDahuaCamera(ctx context.Context, arg UpdateDahuaCameraPa
 	return id, err
 }
 
-const updateDahuaEventDefaultRule = `-- name: UpdateDahuaEventDefaultRule :exec
-UPDATE dahua_event_default_rules 
+const updateDahuaEventRule = `-- name: UpdateDahuaEventRule :exec
+UPDATE dahua_event_rules 
 SET 
   code = ?,
   ignore_db = ?,
@@ -678,7 +678,7 @@ SET
 WHERE id = ?
 `
 
-type UpdateDahuaEventDefaultRuleParams struct {
+type UpdateDahuaEventRuleParams struct {
 	Code       string
 	IgnoreDb   bool
 	IgnoreLive bool
@@ -686,8 +686,8 @@ type UpdateDahuaEventDefaultRuleParams struct {
 	ID         int64
 }
 
-func (q *Queries) UpdateDahuaEventDefaultRule(ctx context.Context, arg UpdateDahuaEventDefaultRuleParams) error {
-	_, err := q.db.ExecContext(ctx, updateDahuaEventDefaultRule,
+func (q *Queries) UpdateDahuaEventRule(ctx context.Context, arg UpdateDahuaEventRuleParams) error {
+	_, err := q.db.ExecContext(ctx, updateDahuaEventRule,
 		arg.Code,
 		arg.IgnoreDb,
 		arg.IgnoreLive,
@@ -898,46 +898,46 @@ func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFile
 	return err
 }
 
-const getDahuaEventRule = `-- name: getDahuaEventRule :many
+const getDahuaEventRuleByEvent = `-- name: getDahuaEventRuleByEvent :many
 SELECT 
   ignore_db,
   ignore_live,
   ignore_mqtt,
   code
-FROM dahua_event_rules 
-WHERE camera_id = ?1 AND (dahua_event_rules.code = ?2 OR dahua_event_rules.code = '')
+FROM dahua_event_camera_rules 
+WHERE camera_id = ?1 AND (dahua_event_camera_rules.code = ?2 OR dahua_event_camera_rules.code = '')
 UNION ALL
 SELECT 
   ignore_db,
   ignore_live,
   ignore_mqtt,
   code
-FROM dahua_event_default_rules
-WHERE dahua_event_default_rules.code = ?2 OR dahua_event_default_rules.code = ''
+FROM dahua_event_rules
+WHERE dahua_event_rules.code = ?2 OR dahua_event_rules.code = ''
 ORDER BY code DESC
 `
 
-type getDahuaEventRuleParams struct {
+type getDahuaEventRuleByEventParams struct {
 	CameraID int64
 	Code     string
 }
 
-type getDahuaEventRuleRow struct {
+type getDahuaEventRuleByEventRow struct {
 	IgnoreDb   bool
 	IgnoreLive bool
 	IgnoreMqtt bool
 	Code       string
 }
 
-func (q *Queries) getDahuaEventRule(ctx context.Context, arg getDahuaEventRuleParams) ([]getDahuaEventRuleRow, error) {
-	rows, err := q.db.QueryContext(ctx, getDahuaEventRule, arg.CameraID, arg.Code)
+func (q *Queries) getDahuaEventRuleByEvent(ctx context.Context, arg getDahuaEventRuleByEventParams) ([]getDahuaEventRuleByEventRow, error) {
+	rows, err := q.db.QueryContext(ctx, getDahuaEventRuleByEvent, arg.CameraID, arg.Code)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []getDahuaEventRuleRow
+	var items []getDahuaEventRuleByEventRow
 	for rows.Next() {
-		var i getDahuaEventRuleRow
+		var i getDahuaEventRuleByEventRow
 		if err := rows.Scan(
 			&i.IgnoreDb,
 			&i.IgnoreLive,
