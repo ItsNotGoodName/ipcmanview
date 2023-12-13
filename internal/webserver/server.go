@@ -8,7 +8,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuaweb"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -53,11 +53,11 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 type Server struct {
 	db         repo.DB
 	pub        pubsub.Pub
-	dahuaStore *dahua.Store
-	dahuaBus   *dahua.Bus
+	dahuaStore *dahuacore.Store
+	dahuaBus   *dahuacore.Bus
 }
 
-func New(db repo.DB, pub pubsub.Pub, dahuaStore *dahua.Store, dahuaBus *dahua.Bus) Server {
+func New(db repo.DB, pub pubsub.Pub, dahuaStore *dahuacore.Store, dahuaBus *dahuacore.Bus) Server {
 	return Server{
 		db:         db,
 		pub:        pub,
@@ -379,7 +379,7 @@ func (s Server) DahuaCameras(c echo.Context) error {
 
 func (s Server) DahuaCamerasCreate(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-cameras-create", Data{
-		"Locations": dahuaweb.Locations,
+		"Locations": dahua.Locations,
 	})
 }
 
@@ -407,7 +407,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	create, err := dahua.NewDahuaCamera(models.DahuaCamera{
+	create, err := dahuacore.NewDahuaCamera(models.DahuaCamera{
 		Name:     form.Name,
 		Address:  form.Address,
 		Username: form.Username,
@@ -423,7 +423,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Location:  types.NewLocation(create.Location),
 		CreatedAt: types.NewTime(create.CreatedAt),
 		UpdatedAt: types.NewTime(create.UpdatedAt),
-	}, dahuaweb.NewFileCursor())
+	}, dahua.NewFileCursor())
 	if err != nil {
 		return err
 	}
@@ -443,7 +443,7 @@ func (s Server) DahuaCamerasUpdate(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "dahua-cameras-update", Data{
-		"Locations": dahuaweb.Locations,
+		"Locations": dahua.Locations,
 		"Camera":    camera,
 	})
 }
@@ -474,7 +474,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		form.Password = camera.Password
 	}
 
-	update, err := dahua.UpdateDahuaCamera(models.DahuaCamera{
+	update, err := dahuacore.UpdateDahuaCamera(models.DahuaCamera{
 		ID:        camera.ID,
 		Name:      form.Name,
 		Address:   form.Address,
@@ -531,7 +531,7 @@ func (s Server) DahuaEventsRulesCreatePOST(c echo.Context) error {
 		return err
 	}
 
-	err := dahuaweb.CreateEventDefaultRule(ctx, s.db, repo.CreateDahuaEventDefaultRuleParams{
+	err := dahua.CreateEventDefaultRule(ctx, s.db, repo.CreateDahuaEventDefaultRuleParams{
 		Code:       form.Code,
 		IgnoreDb:   true,
 		IgnoreLive: true,
@@ -561,7 +561,7 @@ func (s Server) DahuaEventsRulePOST(c echo.Context) error {
 	}
 
 	for _, rule := range form.Rules {
-		err := dahuaweb.UpdateEventDefaultRule(ctx, s.db, repo.UpdateDahuaEventDefaultRuleParams{
+		err := dahua.UpdateEventDefaultRule(ctx, s.db, repo.UpdateDahuaEventDefaultRuleParams{
 			Code:       rule.Code,
 			IgnoreDb:   !rule.DB,
 			IgnoreLive: !rule.Live,
@@ -608,7 +608,7 @@ func (s Server) DahuaEventsRulesIDDelete(c echo.Context) error {
 		return err
 	}
 
-	if err := dahuaweb.DeleteEventDefaultRule(ctx, s.db, rule); err != nil {
+	if err := dahua.DeleteEventDefaultRule(ctx, s.db, rule); err != nil {
 		return err
 	}
 

@@ -1,4 +1,4 @@
-package dahua
+package dahuacore
 
 import (
 	"context"

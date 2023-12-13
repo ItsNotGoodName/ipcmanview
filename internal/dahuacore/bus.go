@@ -1,4 +1,4 @@
-package dahua
+package dahuacore
 
 import (
 	"context"
@@ -11,18 +11,18 @@ import (
 
 func busLogErr(err error) {
 	if err != nil {
-		log.Err(err).Msg("Failed to handle event")
+		log.Err(err).Str("package", "dahuacore").Msg("Failed to handle event")
 	}
 }
 
 func NewBus() *Bus {
 	return &Bus{
-		Context: sutureext.NewCtx("dahua.bus"),
+		ContextService: sutureext.NewContext("dahuacore.Bus"),
 	}
 }
 
 type Bus struct {
-	sutureext.Context
+	sutureext.ContextService
 	onCameraCreated []func(ctx context.Context, evt models.EventDahuaCameraCreated) error
 	onCameraUpdated []func(ctx context.Context, evt models.EventDahuaCameraUpdated) error
 	onCameraDeleted []func(ctx context.Context, evt models.EventDahuaCameraDeleted) error
@@ -53,7 +53,7 @@ func (b *Bus) OnCameraEvent(h func(ctx context.Context, evt models.EventDahuaCam
 
 func (b *Bus) CameraCreated(camera models.DahuaConn) {
 	for _, v := range b.onCameraCreated {
-		busLogErr(v(b.Ctx(), models.EventDahuaCameraCreated{
+		busLogErr(v(b.Context(), models.EventDahuaCameraCreated{
 			Camera: camera,
 		}))
 	}
@@ -61,7 +61,7 @@ func (b *Bus) CameraCreated(camera models.DahuaConn) {
 
 func (b *Bus) CameraUpdated(camera models.DahuaConn) {
 	for _, v := range b.onCameraUpdated {
-		busLogErr(v(b.Ctx(), models.EventDahuaCameraUpdated{
+		busLogErr(v(b.Context(), models.EventDahuaCameraUpdated{
 			Camera: camera,
 		}))
 	}
@@ -69,7 +69,7 @@ func (b *Bus) CameraUpdated(camera models.DahuaConn) {
 
 func (b *Bus) CameraDeleted(id int64) {
 	for _, v := range b.onCameraDeleted {
-		busLogErr(v(b.Ctx(), models.EventDahuaCameraDeleted{
+		busLogErr(v(b.Context(), models.EventDahuaCameraDeleted{
 			CameraID: id,
 		}))
 	}
@@ -77,7 +77,7 @@ func (b *Bus) CameraDeleted(id int64) {
 
 func (b *Bus) CameraEvent(ctx context.Context, event models.DahuaEvent, eventRule models.DahuaEventRule) {
 	for _, v := range b.onCameraEvent {
-		busLogErr(v(b.Ctx(), models.EventDahuaCameraEvent{
+		busLogErr(v(b.Context(), models.EventDahuaCameraEvent{
 			Event:     event,
 			EventRule: eventRule,
 		}))

@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
@@ -44,7 +44,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 	for _, camera := range cameras {
 		wg.Add(1)
 		go func(camera models.DahuaCameraConn) {
-			conn := dahua.NewConn(camera.DahuaConn)
+			conn := dahuacore.NewConn(camera.DahuaConn)
 
 			res, err := func() (string, error) {
 				rpc, err := conn.RPC.RPC(ctx)

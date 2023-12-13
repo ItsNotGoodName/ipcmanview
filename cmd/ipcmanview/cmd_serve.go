@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuaweb"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/webserver"
@@ -37,17 +37,17 @@ func (c *CmdServe) Run(ctx *Context) error {
 	pub := pubsub.NewPub()
 	super.Add(pub)
 
-	dahuaBus := dahua.NewBus()
+	dahuaBus := dahuacore.NewBus()
 	dahuaBus.Register(pub)
 	super.Add(dahuaBus)
 
-	dahuaRepo := dahuaweb.NewRepo(db)
+	dahuaRepo := dahua.NewRepo(db)
 
-	dahuaStore := dahua.NewStore()
+	dahuaStore := dahuacore.NewStore()
 	dahuaStore.Register(dahuaBus)
 	super.Add(dahuaStore)
 
-	eventWorkerStore := dahua.NewEventWorkerStore(super, dahuaweb.NewEventHooksProxy(dahuaBus, db))
+	eventWorkerStore := dahuacore.NewEventWorkerStore(super, dahua.NewEventHooksProxy(dahuaBus, db))
 	eventWorkerStore.Register(dahuaBus)
 
 	if c.MQTTAddress != "" {
@@ -56,7 +56,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 		super.Add(mqttPublisher)
 	}
 
-	if err := dahua.Bootstrap(ctx, dahuaRepo, dahuaStore, eventWorkerStore); err != nil {
+	if err := dahuacore.Bootstrap(ctx, dahuaRepo, dahuaStore, eventWorkerStore); err != nil {
 		return err
 	}
 

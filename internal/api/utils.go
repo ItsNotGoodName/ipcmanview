@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/gorilla/schema"
@@ -105,7 +105,7 @@ func queryBoolOptional(c echo.Context, key string) (bool, error) {
 
 func queryDahuaScanRange(startStr, endStr string) (models.TimeRange, error) {
 	end := time.Now()
-	start := end.Add(-dahua.MaxScanPeriod)
+	start := end.Add(-dahuacore.MaxScanPeriod)
 	var err error
 
 	if startStr != "" {

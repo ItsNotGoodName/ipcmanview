@@ -4,7 +4,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 )
@@ -23,7 +23,7 @@ type DahuaFileCache interface {
 
 func NewServer(
 	pub pubsub.Pub,
-	dahuaStore *dahua.Store,
+	dahuaStore *dahuacore.Store,
 	dahuaRepo DahuaRepo,
 	dahuaFileCache DahuaFileCache,
 ) *Server {
@@ -37,7 +37,7 @@ func NewServer(
 
 type Server struct {
 	pub            pubsub.Pub
-	dahuaStore     *dahua.Store
+	dahuaStore     *dahuacore.Store
 	dahuaRepo      DahuaRepo
 	dahuaFileCache DahuaFileCache
 }

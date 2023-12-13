@@ -1,4 +1,4 @@
-package dahua
+package dahuacore
 
 import (
 	"context"
@@ -31,7 +31,7 @@ type eventWorker struct {
 }
 
 func (w eventWorker) String() string {
-	return fmt.Sprintf("dahua.eventWorker(id=%d)", w.Camera.ID)
+	return fmt.Sprintf("dahuacore.eventWorker(id=%d)", w.Camera.ID)
 }
 
 func (w eventWorker) Serve(ctx context.Context) error {

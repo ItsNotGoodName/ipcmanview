@@ -6,13 +6,13 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/rs/zerolog/log"
 )
 
-func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (any, error) {
+func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store) (any, error) {
 	dbCameras, err := db.ListDahuaCamera(ctx)
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 	wg := sync.WaitGroup{}
 	for _, conn := range conns {
 		wg.Add(1)
-		go func(conn dahua.Conn) {
+		go func(conn dahuacore.Conn) {
 			defer wg.Done()
 
 			log := log.With().Int64("id", conn.Camera.ID).Logger()
@@ -44,7 +44,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 			var data cameraData
 
 			{
-				res, err := dahua.GetDahuaDetail(ctx, conn.Camera.ID, conn.RPC)
+				res, err := dahuacore.GetDahuaDetail(ctx, conn.Camera.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get detail")
 					return
@@ -54,7 +54,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 			}
 
 			{
-				res, err := dahua.GetSoftwareVersion(ctx, conn.Camera.ID, conn.RPC)
+				res, err := dahuacore.GetSoftwareVersion(ctx, conn.Camera.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get software version")
 					return
@@ -64,7 +64,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 			}
 
 			{
-				res, err := dahua.GetLicenseList(ctx, conn.Camera.ID, conn.RPC)
+				res, err := dahuacore.GetLicenseList(ctx, conn.Camera.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get licenses")
 					return
@@ -74,7 +74,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 			}
 
 			{
-				res, err := dahua.GetStorage(ctx, conn.Camera.ID, conn.RPC)
+				res, err := dahuacore.GetStorage(ctx, conn.Camera.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get storage")
 				}
@@ -83,14 +83,14 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 			}
 
 			{
-				caps, err := dahua.GetCoaxialCaps(ctx, conn.Camera.ID, conn.RPC, 0)
+				caps, err := dahuacore.GetCoaxialCaps(ctx, conn.Camera.ID, conn.RPC, 0)
 				if err != nil {
 					log.Err(err).Msg("Failed to get coaxial caps")
 					return
 				}
 
 				if caps.SupportControlLight || caps.SupportControlSpeaker || caps.SupportControlFullcolorLight {
-					res, err := dahua.GetCoaxialStatus(ctx, conn.Camera.ID, conn.RPC, 0)
+					res, err := dahuacore.GetCoaxialStatus(ctx, conn.Camera.ID, conn.RPC, 0)
 					if err != nil {
 						log.Err(err).Msg("Failed to get coaxial status")
 						return
@@ -108,7 +108,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 
 	status := make([]models.DahuaStatus, 0, len(conns))
 	for _, conn := range conns {
-		status = append(status, dahua.GetDahuaStatus(conn.Camera, conn.RPC))
+		status = append(status, dahuacore.GetDahuaStatus(conn.Camera, conn.RPC))
 	}
 
 	details := make([]models.DahuaDetail, 0, len(dbCameras))

@@ -14,11 +14,11 @@ CREATE UNIQUE INDEX `dahua_seeds_camera_id` ON `dahua_seeds` (`camera_id`);
 -- create "dahua_events" table
 CREATE TABLE `dahua_events` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `camera_id` integer NOT NULL, `code` text NOT NULL, `action` text NOT NULL, `index` integer NOT NULL, `data` json NOT NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`camera_id`) REFERENCES `dahua_cameras` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create "dahua_event_default_rules" table
-CREATE TABLE `dahua_event_default_rules` (`code` text NOT NULL, `ignore_db` boolean NOT NULL DEFAULT false, `ignore_live` boolean NOT NULL DEFAULT false, `ignore_mqtt` boolean NOT NULL DEFAULT false);
+CREATE TABLE `dahua_event_default_rules` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `code` text NOT NULL DEFAULT '', `ignore_db` boolean NOT NULL DEFAULT false, `ignore_live` boolean NOT NULL DEFAULT false, `ignore_mqtt` boolean NOT NULL DEFAULT false);
 -- create index "dahua_event_default_rules_code" to table: "dahua_event_default_rules"
 CREATE UNIQUE INDEX `dahua_event_default_rules_code` ON `dahua_event_default_rules` (`code`);
 -- create "dahua_event_rules" table
-CREATE TABLE `dahua_event_rules` (`camera_id` integer NOT NULL, `code` text NOT NULL, `ignore_db` boolean NOT NULL DEFAULT false, `ignore_live` boolean NOT NULL DEFAULT false, `ignore_mqtt` boolean NOT NULL DEFAULT false, CONSTRAINT `0` FOREIGN KEY (`camera_id`) REFERENCES `dahua_cameras` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+CREATE TABLE `dahua_event_rules` (`camera_id` integer NOT NULL, `code` text NOT NULL DEFAULT '', `ignore_db` boolean NOT NULL DEFAULT false, `ignore_live` boolean NOT NULL DEFAULT false, `ignore_mqtt` boolean NOT NULL DEFAULT false, CONSTRAINT `0` FOREIGN KEY (`camera_id`) REFERENCES `dahua_cameras` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "dahua_event_rules_camera_id_code" to table: "dahua_event_rules"
 CREATE UNIQUE INDEX `dahua_event_rules_camera_id_code` ON `dahua_event_rules` (`camera_id`, `code`);
 -- create "dahua_files" table
@@ -35,6 +35,13 @@ CREATE UNIQUE INDEX `dahua_file_cursors_camera_id` ON `dahua_file_cursors` (`cam
 CREATE TABLE `dahua_file_scan_locks` (`camera_id` integer NOT NULL, `created_at` datetime NOT NULL);
 -- create index "dahua_file_scan_locks_camera_id" to table: "dahua_file_scan_locks"
 CREATE UNIQUE INDEX `dahua_file_scan_locks_camera_id` ON `dahua_file_scan_locks` (`camera_id`);
+
+WITH RECURSIVE generate_series(value) AS (
+  SELECT 1
+  UNION ALL
+  SELECT value+1 FROM generate_series WHERE value+1<=999
+)
+INSERT INTO dahua_seeds (seed) SELECT value from generate_series;
 
 -- +goose Down
 -- reverse: create index "dahua_file_scan_locks_camera_id" to table: "dahua_file_scan_locks"
@@ -73,3 +80,11 @@ DROP INDEX `dahua_cameras_name`;
 DROP TABLE `dahua_cameras`;
 -- reverse: create "settings" table
 DROP TABLE `settings`;
+
+WITH RECURSIVE generate_series(value) AS (
+  SELECT 1
+  UNION ALL
+  SELECT value+1 FROM generate_series WHERE value+1<=999
+)
+DELETE FROM dahua_seeds WHERE seed IN (SELECT value from generate_series);
+

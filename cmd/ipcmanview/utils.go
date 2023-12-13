@@ -37,10 +37,15 @@ func (c Shared) useDB(ctx *Context) (repo.DB, error) {
 	if err := migrations.Migrate(sqlDB); err != nil {
 		return repo.DB{}, err
 	}
+
+	var db repo.DB
 	if ctx.Debug {
-		return repo.NewDB(sqlite.NewDebugDB(sqlDB)), nil
+		db = repo.NewDB(sqlite.NewDebugDB(sqlDB))
+	} else {
+		db = repo.NewDB(sqlite.NewDB(sqlDB))
 	}
-	return repo.NewDB(sqlite.NewDB(sqlDB)), nil
+
+	return db, nil
 }
 
 type SharedCameras struct {

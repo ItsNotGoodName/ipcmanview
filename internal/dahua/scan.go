@@ -4,160 +4,161 @@ import (
 	"context"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
 )
 
-func init() {
-	var err error
-	ScanEpoch, err = time.ParseInLocation(time.DateTime, "2009-12-31 00:00:00", time.UTC)
-	if err != nil {
-		panic(err)
-	}
-}
+type ScanType string
 
-const (
-	// MaxScanPeriod is longest allowed time range for a mediafilefind query because some cameras give invalid data past the MaxScanPeriod.
-	MaxScanPeriod = 30 * 24 * time.Hour
+var (
+	ScanTypeFull  ScanType = "full"
+	ScanTypeQuick ScanType = "quick"
 )
 
-// ScanEpoch is the oldest time a camera file can exist.
-var ScanEpoch time.Time
+const scanVolatileDuration = 8 * time.Hour
 
-// ScanPeriod is INCLUSIVE Start and EXCLUSIVE End.
-type ScanPeriod struct {
-	Start time.Time
-	End   time.Time
-}
-
-// ScanPeriodIterator generates scan periods that are equal to or less than MaxScanPeriod.
-type ScanPeriodIterator struct {
-	start  time.Time
-	end    time.Time
-	cursor time.Time
-}
-
-func NewScanPeriodIterator(scanRange models.TimeRange) *ScanPeriodIterator {
-	return &ScanPeriodIterator{
-		start:  scanRange.Start,
-		end:    scanRange.End,
-		cursor: scanRange.End,
+func NewFileCursor() repo.CreateDahuaFileCursorParams {
+	now := time.Now()
+	return repo.CreateDahuaFileCursorParams{
+		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
+		FullCursor:  types.NewTime(now),
+		FullEpoch:   types.NewTime(dahuacore.ScanEpoch),
 	}
 }
 
-func (s *ScanPeriodIterator) Next() (ScanPeriod, bool) {
-	if s.start.Equal(s.cursor) {
-		return ScanPeriod{}, false
-	}
-
-	var (
-		start  time.Time
-		end    time.Time
-		cursor time.Time
-	)
-	{
-		end = s.cursor
-		maybe_start := s.cursor.Add(-MaxScanPeriod)
-		if maybe_start.Before(s.start) {
-			cursor = s.start
-			start = s.start
+func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod dahuacore.ScanPeriod, scanType ScanType) repo.DahuaFileCursor {
+	switch scanType {
+	case ScanTypeFull:
+		// Update FullCursor
+		if scanPeriod.Start.Before(fileCursor.FullCursor.Time) {
+			fileCursor.FullCursor = types.NewTime(scanPeriod.Start)
+		}
+	case ScanTypeQuick:
+		// Update QuickCursor
+		quickCursor := time.Now().Add(-scanVolatileDuration)
+		if scanPeriod.End.Before(quickCursor) {
+			fileCursor.QuickCursor = types.NewTime(scanPeriod.End)
 		} else {
-			cursor = maybe_start
-			start = maybe_start
+			fileCursor.QuickCursor = types.NewTime(quickCursor)
 		}
+	default:
+		panic("unknown type")
 	}
 
-	// Only mutation in this struct
-	s.cursor = cursor
-
-	return ScanPeriod{Start: start, End: end}, true
+	return fileCursor
 }
 
-func (s *ScanPeriodIterator) Percent() float64 {
-	return (s.end.Sub(s.cursor).Hours() / s.end.Sub(s.start).Hours()) * 100
-}
-
-func (s *ScanPeriodIterator) Cursor() time.Time {
-	return s.cursor
-}
-
-func Scan(
-	ctx context.Context,
-	rpcClient dahuarpc.Conn,
-	scanPeriod ScanPeriod,
-	location *time.Location,
-	resC chan<- []mediafilefind.FindNextFileInfo,
-) <-chan error {
-	errC := make(chan error, 1)
-
-	go func() {
-		err := scan(ctx, rpcClient, scanPeriod, location, resC)
-		errC <- err
-	}()
-
-	return errC
-}
-
-func scan(
-	ctx context.Context,
-	rpcClient dahuarpc.Conn,
-	scanPeriod ScanPeriod,
-	location *time.Location,
-	resC chan<- []mediafilefind.FindNextFileInfo,
-) error {
-	baseCondition := mediafilefind.NewCondtion(
-		dahuarpc.NewTimestamp(scanPeriod.Start, location),
-		dahuarpc.NewTimestamp(scanPeriod.End, location),
-	)
-
-	// Pictures
-	{
-		pictureStream, err := mediafilefind.NewStream(ctx, rpcClient, baseCondition.Picture())
-		if err != nil {
-			return err
+func getScanRange(fileCursor repo.DahuaFileCursor, scanType ScanType) models.TimeRange {
+	switch scanType {
+	case ScanTypeFull:
+		return models.TimeRange{
+			Start: fileCursor.FullEpoch.Time,
+			End:   fileCursor.FullCursor.Time,
 		}
-		defer pictureStream.Close(rpcClient)
+	case ScanTypeQuick:
+		return models.TimeRange{
+			Start: fileCursor.QuickCursor.Time,
+			End:   time.Now(),
+		}
+	default:
+		panic("unknown type")
+	}
+}
 
+// ScanReset should only be called once per camera.
+func ScanReset(ctx context.Context, db repo.DB, id int64) error {
+	fileCursor := NewFileCursor()
+	_, err := db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
+		QuickCursor: fileCursor.QuickCursor,
+		FullCursor:  fileCursor.FullCursor,
+		FullEpoch:   fileCursor.FullEpoch,
+		CameraID:    id,
+	})
+	return err
+}
+
+// Scan should only be called once per camera.
+func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, camera models.DahuaConn, scanType ScanType) error {
+	fileCursor, err := db.GetDahuaFileCursor(ctx, camera.ID)
+	if err != nil {
+		return err
+	}
+
+	updated_at := types.NewTime(time.Now())
+	iterator := dahuacore.NewScanPeriodIterator(getScanRange(fileCursor, scanType))
+	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
+
+	for scanPeriod, ok := iterator.Next(); ok; scanPeriod, ok = iterator.Next() {
+		errC := dahuacore.Scan(ctx, rpcClient, scanPeriod, camera.Location, mediaFilesC)
+
+	inner:
 		for {
-			files, err := pictureStream.Next(ctx, rpcClient)
-			if err != nil {
-				return err
-			}
-			if files == nil {
-				break
-			}
-
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
-			case resC <- files:
+			case err := <-errC:
+				if err != nil {
+					return err
+				}
+				break inner
+			case mediaFiles := <-mediaFilesC:
+				files, err := dahuacore.NewDahuaFiles(camera.ID, mediaFiles, int(camera.Seed), camera.Location)
+				if err != nil {
+					return err
+				}
+
+				for _, f := range files {
+					_, err := db.UpsertDahuaFiles(ctx, repo.CreateDahuaFileParams{
+						CameraID:    camera.ID,
+						Channel:     int64(f.Channel),
+						StartTime:   types.NewTime(f.StartTime),
+						EndTime:     types.NewTime(f.EndTime),
+						Length:      int64(f.Length),
+						Type:        f.Type,
+						FilePath:    f.FilePath,
+						Duration:    int64(f.Duration),
+						Disk:        int64(f.Disk),
+						VideoStream: f.VideoStream,
+						Flags:       types.StringSlice{Slice: f.Flags},
+						Events:      types.StringSlice{Slice: f.Events},
+						Cluster:     int64(f.Cluster),
+						Partition:   int64(f.Partition),
+						PicIndex:    int64(f.PicIndex),
+						Repeat:      int64(f.Repeat),
+						WorkDir:     f.WorkDir,
+						WorkDirSn:   int64(f.WorkDirSN),
+						UpdatedAt:   updated_at,
+					})
+					if err != nil {
+						return err
+					}
+				}
 			}
 		}
-	}
 
-	// Videos
-	{
-		videoStream, err := mediafilefind.NewStream(ctx, rpcClient, baseCondition.Video())
+		err := db.DeleteDahuaFile(ctx, repo.DeleteDahuaFileParams{
+			UpdatedAt: updated_at,
+			CameraID:  camera.ID,
+			Start:     types.NewTime(scanPeriod.Start.UTC()),
+			End:       types.NewTime(scanPeriod.End.UTC()),
+		})
 		if err != nil {
 			return err
 		}
-		defer videoStream.Close(rpcClient)
 
-		for {
-			files, err := videoStream.Next(ctx, rpcClient)
-			if err != nil {
-				return err
-			}
-			if files == nil {
-				break
-			}
-
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case resC <- files:
-			}
+		fileCursor = updateFileCursor(fileCursor, scanPeriod, scanType)
+		fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
+			QuickCursor: fileCursor.QuickCursor,
+			FullCursor:  fileCursor.FullCursor,
+			FullEpoch:   fileCursor.FullEpoch,
+			CameraID:    camera.ID,
+		})
+		if err != nil {
+			return err
 		}
 	}
 

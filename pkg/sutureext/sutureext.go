@@ -75,25 +75,25 @@ func OneShotFunc(fn func(ctx context.Context) error) func(ctx context.Context) e
 	}
 }
 
-func NewCtx(name string) Context {
-	return Context{
+func NewContext(name string) ContextService {
+	return ContextService{
 		name:  name,
 		doneC: make(chan struct{}),
 		ctxC:  make(chan context.Context),
 	}
 }
 
-type Context struct {
+type ContextService struct {
 	name  string
 	doneC chan struct{}
 	ctxC  chan context.Context
 }
 
-func (b Context) String() string {
+func (b ContextService) String() string {
 	return b.name
 }
 
-func (b Context) Serve(ctx context.Context) error {
+func (b ContextService) Serve(ctx context.Context) error {
 	select {
 	case <-b.doneC:
 		return suture.ErrDoNotRestart
@@ -110,7 +110,7 @@ func (b Context) Serve(ctx context.Context) error {
 	}
 }
 
-func (b Context) Ctx() context.Context {
+func (b ContextService) Context() context.Context {
 	select {
 	case <-b.doneC:
 		return context.Background()

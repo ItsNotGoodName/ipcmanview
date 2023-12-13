@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog/log"
@@ -33,7 +33,7 @@ func NewPublisher(prefix, address, username, password string) Publisher {
 }
 
 func (h Publisher) String() string {
-	return "mqtt.Handler"
+	return "mqtt.Publisher"
 }
 
 func (h Publisher) Serve(ctx context.Context) error {
@@ -54,7 +54,7 @@ func (h Publisher) Serve(ctx context.Context) error {
 	return ctx.Err()
 }
 
-func (h Publisher) Register(bus *dahua.Bus) error {
+func (h Publisher) Register(bus *dahuacore.Bus) error {
 	bus.OnCameraEvent(func(ctx context.Context, evt models.EventDahuaCameraEvent) error {
 		if evt.EventRule.IgnoreMQTT {
 			return nil
