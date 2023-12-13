@@ -11,10 +11,15 @@
 {{ define "dahua-base-body" }}
   {{ template "header.html" . }}
 
-  {{ template "dahua-events-header.html" . }}
-
 
   <main class="min-h-screen">
+    <div class="breadcrumbs px-4 text-sm">
+      <ul>
+        <li><a href="/dahua/events">Events</a></li>
+        <li>Rules</li>
+      </ul>
+    </div>
+
     <div class="mx-auto flex w-full max-w-xl flex-col gap-4 px-4">
       <div class="border-b-base-content flex justify-between gap-4">
         <div class="card-title">Create Event Rule</div>

@@ -13,6 +13,12 @@
 
 
   <main class="min-h-screen">
+    <div class="breadcrumbs px-4 text-sm">
+      <ul>
+        <li>Cameras</li>
+      </ul>
+    </div>
+
     <section>
       <form
         class="flex flex-col gap-4 px-4"
@@ -103,12 +109,20 @@
                       </div>
                     </td>
                     <td>
-                      <a
-                        class="btn-xs btn btn-primary"
-                        href="/dahua/cameras/{{ $val.ID }}/update"
-                      >
-                        Update
-                      </a>
+                      <div class="join">
+                        <a
+                          class="btn-xs join-item btn"
+                          href="/dahua/cameras/{{ $val.ID }}"
+                        >
+                          View
+                        </a>
+                        <a
+                          class="btn-xs btn join-item btn-primary"
+                          href="/dahua/cameras/{{ $val.ID }}/update"
+                        >
+                          Update
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 {{ end }}

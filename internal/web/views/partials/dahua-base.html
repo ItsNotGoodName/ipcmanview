@@ -63,10 +63,34 @@
         <a
           hx-boost="true"
           href="/dahua/events"
-          {{ if hasPrefix "/dahua/events" .URL.Path }}class="active"{{ end }}
+          {{ if eq "/dahua/events" .URL.Path }}class="active"{{ end }}
         >
           Events
         </a>
+        <ul>
+          <li>
+            <a
+              hx-boost="true"
+              href="/dahua/events/live"
+              {{ if eq "/dahua/events/live" .URL.Path }}
+                class="active"
+              {{ end }}
+            >
+              Live
+            </a>
+          </li>
+          <li>
+            <a
+              hx-boost="true"
+              href="/dahua/events/rules"
+              {{ if eq "/dahua/events/rules" .URL.Path }}
+                class="active"
+              {{ end }}
+            >
+              Rules
+            </a>
+          </li>
+        </ul>
       </li>
       <li>
         <a
