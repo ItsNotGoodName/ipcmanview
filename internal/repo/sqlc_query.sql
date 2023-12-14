@@ -63,9 +63,12 @@ UPDATE dahua_file_scan_locks
 SET touched_at = ?
 WHERE camera_id = ?;
 
--- name: GetDahuaFileCursor :one
-SELECT * FROM dahua_file_cursors 
-WHERE camera_id = ?;
+-- name: UpdateDahuaFileCursorPercent :one
+UPDATE dahua_file_cursors 
+SET
+  percent = ?
+WHERE camera_id = ?
+RETURNING *;
 
 -- name: ListDahuaFileCursor :many
 SELECT 
@@ -82,7 +85,8 @@ UPDATE dahua_file_cursors
 SET 
   quick_cursor = ?,
   full_cursor = ?,
-  full_epoch = ?
+  full_epoch = ?,
+  percent = ?
 WHERE camera_id = ?
 RETURNING *;
 
@@ -91,9 +95,10 @@ INSERT INTO dahua_file_cursors (
   camera_id,
   quick_cursor,
   full_cursor,
-  full_epoch
+  full_epoch,
+  percent
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?, ?, ?
 );
 
 -- name: ListDahuaFileTypes :many
@@ -231,3 +236,19 @@ INSERT INTO dahua_event_rules(
 
 -- name: DeleteDahuaEventRule :exec
 DELETE FROM dahua_event_rules WHERE id = ?;
+
+-- name: CreateDahuaEventWorkerState :exec
+INSERT INTO dahua_event_worker_states(
+  camera_id,
+  state,
+  error,
+  created_at
+) VALUES(
+  ?,
+  ?,
+  ?,
+  ?
+);
+
+-- name: ListDahuaEventWorkerState :many
+SELECT *,max(created_at) FROM dahua_event_worker_states GROUP BY camera_id;

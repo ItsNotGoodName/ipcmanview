@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
-	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -236,7 +235,7 @@ func (s *Server) DahuaIDEvents(c echo.Context) error {
 				return sendStreamError(c, stream, err)
 			}
 
-			data := dahuacore.NewDahuaEvent(conn.Camera.ID, event, time.Now())
+			data := dahuacore.NewDahuaEvent(conn.Camera.ID, event)
 
 			if err := sendStream(c, stream, data); err != nil {
 				return err

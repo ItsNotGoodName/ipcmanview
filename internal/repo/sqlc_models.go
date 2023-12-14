@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
@@ -48,6 +49,14 @@ type DahuaEventRule struct {
 	IgnoreMqtt bool
 }
 
+type DahuaEventWorkerState struct {
+	ID        int64
+	CameraID  int64
+	State     models.DahuaEventWorkerState
+	Error     sql.NullString
+	CreatedAt types.Time
+}
+
 type DahuaFile struct {
 	ID          int64
 	CameraID    int64
@@ -77,6 +86,7 @@ type DahuaFileCursor struct {
 	FullCursor   types.Time
 	FullEpoch    types.Time
 	FullComplete bool
+	Percent      float64
 }
 
 type DahuaFileScanLock struct {

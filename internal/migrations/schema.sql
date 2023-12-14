@@ -84,6 +84,7 @@ CREATE TABLE dahua_file_cursors (
   full_cursor DATETIME NOT NULL,  -- (not scanned) <- full_cursor -> (scanned)
   full_epoch DATETIME NOT NULL,
   full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED,
+  percent REAL NOT NULL,
 
   FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
@@ -91,6 +92,16 @@ CREATE TABLE dahua_file_cursors (
 CREATE TABLE dahua_file_scan_locks (
   camera_id INTEGER NOT NULL UNIQUE,
   touched_at DATETIME NOT NULL, 
+
+  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE dahua_event_worker_states (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  camera_id INTEGER NOT NULL,
+  state TEXT NOT NULL,
+  error TEXT,
+  created_at DATETIME NOT NULL,
 
   FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
 );

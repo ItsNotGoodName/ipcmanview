@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
@@ -77,6 +78,37 @@ func (q *Queries) CreateDahuaEventRule(ctx context.Context, arg CreateDahuaEvent
 		arg.IgnoreDb,
 		arg.IgnoreLive,
 		arg.IgnoreMqtt,
+	)
+	return err
+}
+
+const createDahuaEventWorkerState = `-- name: CreateDahuaEventWorkerState :exec
+INSERT INTO dahua_event_worker_states(
+  camera_id,
+  state,
+  error,
+  created_at
+) VALUES(
+  ?,
+  ?,
+  ?,
+  ?
+)
+`
+
+type CreateDahuaEventWorkerStateParams struct {
+	CameraID  int64
+	State     models.DahuaEventWorkerState
+	Error     sql.NullString
+	CreatedAt types.Time
+}
+
+func (q *Queries) CreateDahuaEventWorkerState(ctx context.Context, arg CreateDahuaEventWorkerStateParams) error {
+	_, err := q.db.ExecContext(ctx, createDahuaEventWorkerState,
+		arg.CameraID,
+		arg.State,
+		arg.Error,
+		arg.CreatedAt,
 	)
 	return err
 }
@@ -341,24 +373,6 @@ func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileBy
 	return i, err
 }
 
-const getDahuaFileCursor = `-- name: GetDahuaFileCursor :one
-SELECT camera_id, quick_cursor, full_cursor, full_epoch, full_complete FROM dahua_file_cursors 
-WHERE camera_id = ?
-`
-
-func (q *Queries) GetDahuaFileCursor(ctx context.Context, cameraID int64) (DahuaFileCursor, error) {
-	row := q.db.QueryRowContext(ctx, getDahuaFileCursor, cameraID)
-	var i DahuaFileCursor
-	err := row.Scan(
-		&i.CameraID,
-		&i.QuickCursor,
-		&i.FullCursor,
-		&i.FullEpoch,
-		&i.FullComplete,
-	)
-	return i, err
-}
-
 const getSettings = `-- name: GetSettings :one
 SELECT site_name, default_location FROM settings
 LIMIT 1
@@ -569,9 +583,52 @@ func (q *Queries) ListDahuaEventRule(ctx context.Context) ([]DahuaEventRule, err
 	return items, nil
 }
 
+const listDahuaEventWorkerState = `-- name: ListDahuaEventWorkerState :many
+SELECT id, camera_id, state, error, created_at,max(created_at) FROM dahua_event_worker_states GROUP BY camera_id
+`
+
+type ListDahuaEventWorkerStateRow struct {
+	ID        int64
+	CameraID  int64
+	State     models.DahuaEventWorkerState
+	Error     sql.NullString
+	CreatedAt types.Time
+	Max       interface{}
+}
+
+func (q *Queries) ListDahuaEventWorkerState(ctx context.Context) ([]ListDahuaEventWorkerStateRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaEventWorkerState)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListDahuaEventWorkerStateRow
+	for rows.Next() {
+		var i ListDahuaEventWorkerStateRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.CameraID,
+			&i.State,
+			&i.Error,
+			&i.CreatedAt,
+			&i.Max,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listDahuaFileCursor = `-- name: ListDahuaFileCursor :many
 SELECT 
-  c.camera_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete,
+  c.camera_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete, c.percent,
   count(f.camera_id) AS files,
   coalesce(l.touched_at > ?, false) AS locked
 FROM dahua_file_cursors AS c
@@ -586,6 +643,7 @@ type ListDahuaFileCursorRow struct {
 	FullCursor   types.Time
 	FullEpoch    types.Time
 	FullComplete bool
+	Percent      float64
 	Files        int64
 	Locked       interface{}
 }
@@ -605,6 +663,7 @@ func (q *Queries) ListDahuaFileCursor(ctx context.Context, touchedAt types.Time)
 			&i.FullCursor,
 			&i.FullEpoch,
 			&i.FullComplete,
+			&i.Percent,
 			&i.Files,
 			&i.Locked,
 		); err != nil {
@@ -804,15 +863,17 @@ UPDATE dahua_file_cursors
 SET 
   quick_cursor = ?,
   full_cursor = ?,
-  full_epoch = ?
+  full_epoch = ?,
+  percent = ?
 WHERE camera_id = ?
-RETURNING camera_id, quick_cursor, full_cursor, full_epoch, full_complete
+RETURNING camera_id, quick_cursor, full_cursor, full_epoch, full_complete, percent
 `
 
 type UpdateDahuaFileCursorParams struct {
 	QuickCursor types.Time
 	FullCursor  types.Time
 	FullEpoch   types.Time
+	Percent     float64
 	CameraID    int64
 }
 
@@ -821,6 +882,7 @@ func (q *Queries) UpdateDahuaFileCursor(ctx context.Context, arg UpdateDahuaFile
 		arg.QuickCursor,
 		arg.FullCursor,
 		arg.FullEpoch,
+		arg.Percent,
 		arg.CameraID,
 	)
 	var i DahuaFileCursor
@@ -830,6 +892,34 @@ func (q *Queries) UpdateDahuaFileCursor(ctx context.Context, arg UpdateDahuaFile
 		&i.FullCursor,
 		&i.FullEpoch,
 		&i.FullComplete,
+		&i.Percent,
+	)
+	return i, err
+}
+
+const updateDahuaFileCursorPercent = `-- name: UpdateDahuaFileCursorPercent :one
+UPDATE dahua_file_cursors 
+SET
+  percent = ?
+WHERE camera_id = ?
+RETURNING camera_id, quick_cursor, full_cursor, full_epoch, full_complete, percent
+`
+
+type UpdateDahuaFileCursorPercentParams struct {
+	Percent  float64
+	CameraID int64
+}
+
+func (q *Queries) UpdateDahuaFileCursorPercent(ctx context.Context, arg UpdateDahuaFileCursorPercentParams) (DahuaFileCursor, error) {
+	row := q.db.QueryRowContext(ctx, updateDahuaFileCursorPercent, arg.Percent, arg.CameraID)
+	var i DahuaFileCursor
+	err := row.Scan(
+		&i.CameraID,
+		&i.QuickCursor,
+		&i.FullCursor,
+		&i.FullEpoch,
+		&i.FullComplete,
+		&i.Percent,
 	)
 	return i, err
 }
@@ -904,9 +994,10 @@ INSERT INTO dahua_file_cursors (
   camera_id,
   quick_cursor,
   full_cursor,
-  full_epoch
+  full_epoch,
+  percent
 ) VALUES (
-  ?, ?, ?, ?
+  ?, ?, ?, ?, ?
 )
 `
 
@@ -915,6 +1006,7 @@ type createDahuaFileCursorParams struct {
 	QuickCursor types.Time
 	FullCursor  types.Time
 	FullEpoch   types.Time
+	Percent     float64
 }
 
 func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFileCursorParams) error {
@@ -923,6 +1015,7 @@ func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFile
 		arg.QuickCursor,
 		arg.FullCursor,
 		arg.FullEpoch,
+		arg.Percent,
 	)
 	return err
 }

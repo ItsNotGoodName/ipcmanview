@@ -5,53 +5,9 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/rs/zerolog/log"
 )
-
-// ---------- EventHooksProxy
-
-func NewEventHooksProxy(bus *dahuacore.Bus, db repo.DB) EventHooksProxy {
-	return EventHooksProxy{
-		bus: bus,
-		db:  db,
-	}
-}
-
-// EventHooksProxy saves events into database.
-type EventHooksProxy struct {
-	bus *dahuacore.Bus
-	db  repo.DB
-}
-
-func (p EventHooksProxy) CameraEvent(ctx context.Context, event models.DahuaEvent) {
-	eventRule, err := p.db.GetDahuaEventRuleByEvent(ctx, event)
-	if err != nil {
-		log.Err(err).Msg("Failed to get DahuaEventRule")
-		return
-	}
-
-	if !eventRule.IgnoreDB {
-		id, err := p.db.CreateDahuaEvent(ctx, repo.CreateDahuaEventParams{
-			CameraID:  event.CameraID,
-			Code:      event.Code,
-			Action:    event.Action,
-			Index:     int64(event.Index),
-			Data:      event.Data,
-			CreatedAt: types.NewTime(event.CreatedAt),
-		})
-		if err != nil {
-			log.Err(err).Msg("Failed to save DahuaEvent")
-			return
-		}
-		event.ID = id
-	}
-
-	p.bus.CameraEvent(ctx, event, eventRule)
-}
 
 // ---------- Repo
 

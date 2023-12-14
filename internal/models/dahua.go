@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+type DahuaEventWorkerState string
+
+const (
+	DahuaEventWorkerStateConnecting   DahuaEventWorkerState = "connecting"
+	DahuaEventWorkerStateConnected    DahuaEventWorkerState = "connected"
+	DahuaEventWorkerStateDisconnected DahuaEventWorkerState = "disconnected"
+)
+
 type DahuaStatus struct {
 	CameraID     int64     `json:"camera_id"`
 	Address      string    `json:"address"`

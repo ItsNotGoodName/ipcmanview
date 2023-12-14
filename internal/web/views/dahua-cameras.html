@@ -193,6 +193,7 @@
                   </th>
                   <th>Camera ID</th>
                   <th>Files</th>
+                  <th>Percent</th>
                   <th>Quick Cursor</th>
                   <th>Full Cursor</th>
                   <th>Full Epoch</th>
@@ -209,24 +210,30 @@
                           name="FileCursors.{{ $index }}.CameraID"
                           value="{{ .CameraID }}"
                         />
-                        <input
-                          {{ if .Locked }}disabled{{ end }}
-                          name="FileCursors.{{ $index }}.Selected"
-                          type="checkbox"
-                          class="checkbox"
-                        />
+                        {{ if .Locked }}
+                          <span
+                            class="loading loading-spinner loading-sm"
+                          ></span>
+                        {{ else }}
+                          <input
+                            name="FileCursors.{{ $index }}.Selected"
+                            type="checkbox"
+                            class="checkbox"
+                          />
+                        {{ end }}
                       </label>
                     </th>
                     <th>
-                      <a href="#camera-{{ $val.CameraID }}">
-                        {{ $val.CameraID }}
+                      <a href="#camera-{{ .CameraID }}">
+                        {{ .CameraID }}
                       </a>
                     </th>
-                    <td>{{ $val.Files }}</td>
-                    <td>{{ SLFormatDate $val.QuickCursor }}</td>
-                    <td>{{ SLFormatDate $val.FullCursor }}</td>
-                    <td>{{ SLFormatDate $val.FullEpoch }}</td>
-                    <td>{{ $val.FullComplete }}</td>
+                    <td>{{ .Files }}</td>
+                    <td>{{ round .Percent 2 }}%</td>
+                    <td>{{ SLFormatDate .QuickCursor }}</td>
+                    <td>{{ SLFormatDate .FullCursor }}</td>
+                    <td>{{ SLFormatDate .FullEpoch }}</td>
+                    <td>{{ .FullComplete }}</td>
                   </tr>
                 {{ end }}
               </tbody>
@@ -234,6 +241,44 @@
           </div>
         {{ end }}
       </form>
+    </section>
+
+    <div class="divider"></div>
+
+    <section class="flex flex-col gap-4 px-4">
+      <div class="border-b-base-content flex justify-between gap-4">
+        <div class="card-title" id="event-workers">
+          <a href="#event-workers">Event Workers</a>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Camera ID</th>
+              <th>State</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range $index, $val := .Data.EventWorkers }}
+              <tr>
+                <th>
+                  <a href="#camera-{{ .CameraID }}">
+                    {{ .CameraID }}
+                  </a>
+                </th>
+                <td>{{ .State }}</td>
+                <td>
+                  <div class="tooltip" data-tip="{{ TimeHumanize .CreatedAt }}">
+                    {{ SLFormatDate .CreatedAt }}
+                  </div>
+                </td>
+              </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
     </section>
 
     <div class="divider"></div>

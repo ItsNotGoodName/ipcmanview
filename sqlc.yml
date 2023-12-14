@@ -23,3 +23,5 @@ sql:
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.StringSlice"
           - column: "dahua_files.events"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.StringSlice"
+          - column: "dahua_event_worker_states.state"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.DahuaEventWorkerState"

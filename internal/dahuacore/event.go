@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"sync"
-	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
@@ -15,7 +15,10 @@ import (
 )
 
 type EventHooks interface {
-	CameraEvent(ctx context.Context, event models.DahuaEvent)
+	Connecting(ctx context.Context, cameraID int64)
+	Connected(ctx context.Context, cameraID int64)
+	Disconnect(cameraID int64, err error)
+	Event(ctx context.Context, event models.DahuaEvent)
 }
 
 func newEventWorker(camera models.DahuaConn, hooks EventHooks) eventWorker {
@@ -35,12 +38,23 @@ func (w eventWorker) String() string {
 }
 
 func (w eventWorker) Serve(ctx context.Context) error {
+	w.hooks.Connecting(ctx, w.Camera.ID)
+	err := w.serve(ctx)
+	w.hooks.Disconnect(w.Camera.ID, err)
+	return err
+}
+
+func (w eventWorker) serve(ctx context.Context) error {
 	c := dahuacgi.NewClient(http.Client{}, NewHTTPAddress(w.Camera.Address), w.Camera.Username, w.Camera.Password)
 
 	manager, err := dahuacgi.EventManagerGet(ctx, c, 0)
 	if err != nil {
 		var httpErr dahuacgi.HTTPError
-		if errors.As(err, &httpErr) && httpErr.StatusCode == http.StatusUnauthorized {
+		if errors.As(err, &httpErr) && slices.Contains([]int{
+			http.StatusUnauthorized,
+			http.StatusForbidden,
+			http.StatusNotFound,
+		}, httpErr.StatusCode) {
 			log.Err(err).Str("service", w.String()).Msg("Failed to get EventManager")
 			return errors.Join(suture.ErrDoNotRestart, err)
 		}
@@ -49,9 +63,9 @@ func (w eventWorker) Serve(ctx context.Context) error {
 	}
 	defer manager.Close()
 
-	reader := manager.Reader()
+	w.hooks.Connected(ctx, w.Camera.ID)
 
-	for {
+	for reader := manager.Reader(); ; {
 		if err := reader.Poll(); err != nil {
 			return err
 		}
@@ -61,9 +75,9 @@ func (w eventWorker) Serve(ctx context.Context) error {
 			return err
 		}
 
-		event := NewDahuaEvent(w.Camera.ID, rawEvent, time.Now())
+		event := NewDahuaEvent(w.Camera.ID, rawEvent)
 
-		w.hooks.CameraEvent(ctx, event)
+		w.hooks.Event(ctx, event)
 	}
 }
 

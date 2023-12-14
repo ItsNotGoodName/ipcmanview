@@ -47,7 +47,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	dahuaStore.Register(dahuaBus)
 	super.Add(dahuaStore)
 
-	eventWorkerStore := dahuacore.NewEventWorkerStore(super, dahua.NewEventHooksProxy(dahuaBus, db))
+	eventWorkerStore := dahuacore.NewEventWorkerStore(super, dahua.NewEventHooks(dahuaBus, db))
 	eventWorkerStore.Register(dahuaBus)
 
 	if c.MQTTAddress != "" {

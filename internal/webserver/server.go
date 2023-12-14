@@ -384,9 +384,15 @@ func (s Server) DahuaCameras(c echo.Context) error {
 		return err
 	}
 
+	eventWorkers, err := s.db.ListDahuaEventWorkerState(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
 	return c.Render(http.StatusOK, "dahua-cameras", Data{
-		"Cameras":     cameras,
-		"FileCursors": fileCursors,
+		"Cameras":      cameras,
+		"FileCursors":  fileCursors,
+		"EventWorkers": eventWorkers,
 	})
 }
 

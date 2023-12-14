@@ -24,9 +24,11 @@ const scanVolatileDuration = 8 * time.Hour
 func NewFileCursor() repo.CreateDahuaFileCursorParams {
 	now := time.Now()
 	return repo.CreateDahuaFileCursorParams{
+		CameraID:    0,
 		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
 		FullCursor:  types.NewTime(now),
 		FullEpoch:   types.NewTime(dahuacore.ScanEpoch),
+		Percent:     0,
 	}
 }
 
@@ -77,13 +79,17 @@ func ScanReset(ctx context.Context, db repo.DB, id int64) error {
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
 		CameraID:    id,
+		Percent:     0,
 	})
 	return err
 }
 
 // Scan should only be called once per camera.
 func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, camera models.DahuaConn, scanType ScanType) error {
-	fileCursor, err := db.GetDahuaFileCursor(ctx, camera.ID)
+	fileCursor, err := db.UpdateDahuaFileCursorPercent(ctx, repo.UpdateDahuaFileCursorPercentParams{
+		CameraID: camera.ID,
+		Percent:  0,
+	})
 	if err != nil {
 		return err
 	}
@@ -156,6 +162,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, camera model
 			FullCursor:  fileCursor.FullCursor,
 			FullEpoch:   fileCursor.FullEpoch,
 			CameraID:    camera.ID,
+			Percent:     iterator.Percent(),
 		})
 		if err != nil {
 			return err

@@ -28,13 +28,15 @@ CREATE UNIQUE INDEX `dahua_files_start_time` ON `dahua_files` (`start_time`);
 -- create index "dahua_files_camera_id_file_path" to table: "dahua_files"
 CREATE UNIQUE INDEX `dahua_files_camera_id_file_path` ON `dahua_files` (`camera_id`, `file_path`);
 -- create "dahua_file_cursors" table
-CREATE TABLE `dahua_file_cursors` (`camera_id` integer NOT NULL, `quick_cursor` datetime NOT NULL, `full_cursor` datetime NOT NULL, `full_epoch` datetime NOT NULL, `full_complete` boolean NOT NULL AS (full_cursor <= full_epoch) STORED, CONSTRAINT `0` FOREIGN KEY (`camera_id`) REFERENCES `dahua_cameras` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+CREATE TABLE `dahua_file_cursors` (`camera_id` integer NOT NULL, `quick_cursor` datetime NOT NULL, `full_cursor` datetime NOT NULL, `full_epoch` datetime NOT NULL, `full_complete` boolean NOT NULL AS (full_cursor <= full_epoch) STORED, `percent` real NOT NULL, CONSTRAINT `0` FOREIGN KEY (`camera_id`) REFERENCES `dahua_cameras` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "dahua_file_cursors_camera_id" to table: "dahua_file_cursors"
 CREATE UNIQUE INDEX `dahua_file_cursors_camera_id` ON `dahua_file_cursors` (`camera_id`);
 -- create "dahua_file_scan_locks" table
-CREATE TABLE `dahua_file_scan_locks` (`camera_id` integer NOT NULL, `created_at` datetime NOT NULL);
+CREATE TABLE `dahua_file_scan_locks` (`camera_id` integer NOT NULL, `touched_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`camera_id`) REFERENCES `dahua_cameras` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "dahua_file_scan_locks_camera_id" to table: "dahua_file_scan_locks"
 CREATE UNIQUE INDEX `dahua_file_scan_locks_camera_id` ON `dahua_file_scan_locks` (`camera_id`);
+-- create "dahua_event_worker_states" table
+CREATE TABLE `dahua_event_worker_states` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `camera_id` integer NOT NULL, `action` text NOT NULL, `error` text NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`camera_id`) REFERENCES `dahua_cameras` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 
 WITH RECURSIVE generate_series(value) AS (
   SELECT 1
@@ -45,6 +47,8 @@ INSERT INTO dahua_seeds (seed) SELECT value from generate_series;
 INSERT INTO dahua_event_rules (code) VALUES ('');
 
 -- +goose Down
+-- reverse: create "dahua_event_worker_states" table
+DROP TABLE `dahua_event_worker_states`;
 -- reverse: create index "dahua_file_scan_locks_camera_id" to table: "dahua_file_scan_locks"
 DROP INDEX `dahua_file_scan_locks_camera_id`;
 -- reverse: create "dahua_file_scan_locks" table
