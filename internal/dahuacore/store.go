@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/rs/zerolog/log"
 )
@@ -144,8 +145,8 @@ func (s *Store) ConnDelete(ctx context.Context, id int64) {
 	}
 }
 
-func (store *Store) Register(bus *Bus) {
-	bus.OnCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
+func (store *Store) Register(bus *core.Bus) {
+	bus.OnDahuaCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
 		store.ConnDelete(ctx, evt.CameraID)
 		return nil
 	})

@@ -17,6 +17,19 @@ type EventDahuaCameraEvent struct {
 	EventRule DahuaEventRule
 }
 
+type EventDahuaEventWorkerConnecting struct {
+	CameraID int64
+}
+
+type EventDahuaEventWorkerConnect struct {
+	CameraID int64
+}
+
+type EventDahuaEventWorkerDisconnect struct {
+	CameraID int64
+	Error    error
+}
+
 // TODO: these should be generated
 
 func (EventDahuaCameraDeleted) EventTopic() string {

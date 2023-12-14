@@ -54,16 +54,16 @@ func RegisterRoutes(e *echo.Echo, w Server) {
 type Server struct {
 	db         repo.DB
 	pub        pubsub.Pub
+	bus        *core.Bus
 	dahuaStore *dahuacore.Store
-	dahuaBus   *dahuacore.Bus
 }
 
-func New(db repo.DB, pub pubsub.Pub, dahuaStore *dahuacore.Store, dahuaBus *dahuacore.Bus) Server {
+func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, dahuaStore *dahuacore.Store) Server {
 	return Server{
 		db:         db,
 		pub:        pub,
+		bus:        bus,
 		dahuaStore: dahuaStore,
-		dahuaBus:   dahuaBus,
 	}
 }
 
@@ -344,7 +344,7 @@ func (s Server) DahuaCamerasPOST(c echo.Context) error {
 			if !camera.Selected {
 				continue
 			}
-			if err := dahua.DeleteCamera(ctx, s.db, s.dahuaBus, camera.ID); err != nil {
+			if err := dahua.DeleteCamera(ctx, s.db, s.bus, camera.ID); err != nil {
 				return err
 			}
 		}
@@ -450,7 +450,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	s.dahuaBus.CameraCreated(dbCamera.Convert().DahuaConn)
+	s.bus.DahuaCameraCreated(dbCamera.Convert().DahuaConn)
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
 }
@@ -615,7 +615,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	s.dahuaBus.CameraUpdated(dbCamera.Convert().DahuaConn)
+	s.bus.DahuaCameraUpdated(dbCamera.Convert().DahuaConn)
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
 }

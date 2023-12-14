@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
@@ -34,35 +37,43 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
+	// Pub sub
 	pub := pubsub.NewPub()
 	super.Add(pub)
 
-	dahuaBus := dahuacore.NewBus()
-	dahuaBus.Register(pub)
-	super.Add(dahuaBus)
+	// Bus
+	bus := core.NewBus()
+	bus.Register(pub)
+	super.Add(bus)
+
+	// Dahua
 
 	dahuaRepo := dahua.NewRepo(db)
 
 	dahuaStore := dahuacore.NewStore()
-	dahuaStore.Register(dahuaBus)
+	dahuaStore.Register(bus)
 	super.Add(dahuaStore)
 
-	eventWorkerStore := dahuacore.NewEventWorkerStore(super, dahua.NewEventHooks(dahuaBus, db))
-	eventWorkerStore.Register(dahuaBus)
+	dahuaEventHooks := dahua.NewEventHooks(bus, db)
+	super.Add(dahuaEventHooks)
 
-	if c.MQTTAddress != "" {
-		mqttPublisher := mqtt.NewPublisher(c.MQTTPrefix, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
-		mqttPublisher.Register(dahuaBus)
-		super.Add(mqttPublisher)
-	}
-
-	if err := dahuacore.Bootstrap(ctx, dahuaRepo, dahuaStore, eventWorkerStore); err != nil {
-		return err
-	}
+	dahuaEventWorkerStore := dahuacore.NewEventWorkerStore(super, dahuaEventHooks)
+	dahuaEventWorkerStore.Register(bus)
 
 	dahuaFileStore, err := c.useDahuaFileStore()
 	if err != nil {
 		return err
+	}
+
+	super.Add(sutureext.NewServiceFunc("dahua.bootstrap", sutureext.OneShotFunc(func(ctx context.Context) error {
+		return dahuacore.Bootstrap(ctx, dahuaRepo, dahuaStore, dahuaEventWorkerStore)
+	})))
+
+	// MQTT
+	if c.MQTTAddress != "" {
+		mqttPublisher := mqtt.NewPublisher(c.MQTTPrefix, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
+		mqttPublisher.Register(bus)
+		super.Add(mqttPublisher)
 	}
 
 	// HTTP Router
@@ -79,7 +90,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	apiServer.RegisterDahuaRoutes(httpRouter)
 
 	// HTTP Web
-	webServer := webserver.New(db, pub, dahuaStore, dahuaBus)
+	webServer := webserver.New(db, pub, bus, dahuaStore)
 	webserver.RegisterRoutes(httpRouter, webServer)
 
 	// HTTP Server

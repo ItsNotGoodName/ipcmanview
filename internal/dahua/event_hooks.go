@@ -4,54 +4,60 @@ import (
 	"context"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 )
 
-func NewEventHooks(bus *dahuacore.Bus, db repo.DB) EventHooks {
+func NewEventHooks(bus *core.Bus, db repo.DB) EventHooks {
 	return EventHooks{
-		bus: bus,
-		db:  db,
+		ServiceContext: sutureext.NewServiceContext("dahua.EventHooks"),
+		bus:            bus,
+		db:             db,
 	}
 }
 
 type EventHooks struct {
-	bus *dahuacore.Bus
+	sutureext.ServiceContext
+	bus *core.Bus
 	db  repo.DB
 }
 
-func (EventHooks) logErr(err error) {
+func (e EventHooks) logErr(err error) {
 	if err != nil {
-		log.Err(err).Str("package", "dahuacore").Msg("Failed to handle event")
+		log.Err(err).Str("service", e.String()).Send()
 	}
 }
 
 func (e EventHooks) Connecting(ctx context.Context, cameraID int64) {
-	e.logErr(e.db.CreateDahuaEventWorkerState(context.Background(), repo.CreateDahuaEventWorkerStateParams{
+	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
 		CameraID:  cameraID,
 		State:     models.DahuaEventWorkerStateConnecting,
 		CreatedAt: types.NewTime(time.Now()),
 	}))
+	e.bus.DahuaEventWorkerConnecting(cameraID)
 }
 
-func (e EventHooks) Connected(ctx context.Context, cameraID int64) {
-	e.logErr(e.db.CreateDahuaEventWorkerState(context.Background(), repo.CreateDahuaEventWorkerStateParams{
+func (e EventHooks) Connect(ctx context.Context, cameraID int64) {
+	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
 		CameraID:  cameraID,
 		State:     models.DahuaEventWorkerStateConnected,
 		CreatedAt: types.NewTime(time.Now()),
 	}))
+	e.bus.DahuaEventWorkerConnect(cameraID)
 }
 
 func (e EventHooks) Disconnect(cameraID int64, err error) {
-	e.logErr(e.db.CreateDahuaEventWorkerState(context.Background(), repo.CreateDahuaEventWorkerStateParams{
+	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
 		CameraID:  cameraID,
 		State:     models.DahuaEventWorkerStateDisconnected,
 		Error:     repo.ErrorToNullString(err),
 		CreatedAt: types.NewTime(time.Now()),
 	}))
+	e.bus.DahuaEventWorkerDisconnect(cameraID, err)
 }
 
 func (e EventHooks) Event(ctx context.Context, event models.DahuaEvent) {
@@ -77,5 +83,5 @@ func (e EventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 		event.ID = id
 	}
 
-	e.bus.CameraEvent(ctx, event, eventRule)
+	e.bus.DahuaCameraEvent(ctx, event, eventRule)
 }

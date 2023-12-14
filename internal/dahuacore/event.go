@@ -8,6 +8,7 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/rs/zerolog/log"
@@ -16,7 +17,7 @@ import (
 
 type EventHooks interface {
 	Connecting(ctx context.Context, cameraID int64)
-	Connected(ctx context.Context, cameraID int64)
+	Connect(ctx context.Context, cameraID int64)
 	Disconnect(cameraID int64, err error)
 	Event(ctx context.Context, event models.DahuaEvent)
 }
@@ -63,7 +64,7 @@ func (w eventWorker) serve(ctx context.Context) error {
 	}
 	defer manager.Close()
 
-	w.hooks.Connected(ctx, w.Camera.ID)
+	w.hooks.Connect(ctx, w.Camera.ID)
 
 	for reader := manager.Reader(); ; {
 		if err := reader.Poll(); err != nil {
@@ -143,14 +144,14 @@ func (s *EventWorkerStore) Delete(id int64) {
 	s.workersMu.Unlock()
 }
 
-func (e *EventWorkerStore) Register(bus *Bus) {
-	bus.OnCameraCreated(func(ctx context.Context, evt models.EventDahuaCameraCreated) error {
+func (e *EventWorkerStore) Register(bus *core.Bus) {
+	bus.OnDahuaCameraCreated(func(ctx context.Context, evt models.EventDahuaCameraCreated) error {
 		return e.Create(evt.Camera)
 	})
-	bus.OnCameraUpdated(func(ctx context.Context, evt models.EventDahuaCameraUpdated) error {
+	bus.OnDahuaCameraUpdated(func(ctx context.Context, evt models.EventDahuaCameraUpdated) error {
 		return e.Update(evt.Camera)
 	})
-	bus.OnCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
+	bus.OnDahuaCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
 		e.Delete(evt.CameraID)
 		return nil
 	})
