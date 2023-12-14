@@ -210,6 +210,7 @@
                           value="{{ .CameraID }}"
                         />
                         <input
+                          {{ if .Locked }}disabled{{ end }}
                           name="FileCursors.{{ $index }}.Selected"
                           type="checkbox"
                           class="checkbox"

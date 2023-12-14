@@ -90,5 +90,7 @@ CREATE TABLE dahua_file_cursors (
 
 CREATE TABLE dahua_file_scan_locks (
   camera_id INTEGER NOT NULL UNIQUE,
-  created_at DATETIME NOT NULL
+  touched_at DATETIME NOT NULL, 
+
+  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
 );

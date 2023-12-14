@@ -30,16 +30,21 @@ func (c *CmdScan) Run(ctx *Context) error {
 		scanType = dahua.ScanTypeFull
 	}
 
-	if c.Reset {
-		for _, camera := range cameras {
+	for _, camera := range cameras {
+		err := dahua.ScanLockCreate(ctx, db, camera.DahuaConn.ID)
+		if err != nil {
+			return err
+		}
+		cancel := dahua.ScanLockHeartbeat(ctx, db, camera.DahuaConn.ID)
+		defer cancel()
+
+		if c.Reset {
 			err := dahua.ScanReset(ctx, db, camera.DahuaCamera.ID)
 			if err != nil {
 				return err
 			}
 		}
-	}
 
-	for _, camera := range cameras {
 		conn := dahuacore.NewConn(camera.DahuaConn)
 		defer conn.RPC.Close(context.Background())
 
@@ -48,6 +53,7 @@ func (c *CmdScan) Run(ctx *Context) error {
 			return err
 		}
 
+		cancel()
 		conn.RPC.Close(context.Background())
 	}
 

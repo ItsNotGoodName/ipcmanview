@@ -158,21 +158,21 @@ func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams
 
 const createDahuaFileScanLock = `-- name: CreateDahuaFileScanLock :one
 INSERT INTO dahua_file_scan_locks (
-  camera_id, created_at
+  camera_id, touched_at
 ) VALUES (
   ?, ?
-) RETURNING camera_id, created_at
+) RETURNING camera_id, touched_at
 `
 
 type CreateDahuaFileScanLockParams struct {
 	CameraID  int64
-	CreatedAt types.Time
+	TouchedAt types.Time
 }
 
 func (q *Queries) CreateDahuaFileScanLock(ctx context.Context, arg CreateDahuaFileScanLockParams) (DahuaFileScanLock, error) {
-	row := q.db.QueryRowContext(ctx, createDahuaFileScanLock, arg.CameraID, arg.CreatedAt)
+	row := q.db.QueryRowContext(ctx, createDahuaFileScanLock, arg.CameraID, arg.TouchedAt)
 	var i DahuaFileScanLock
-	err := row.Scan(&i.CameraID, &i.CreatedAt)
+	err := row.Scan(&i.CameraID, &i.TouchedAt)
 	return i, err
 }
 
@@ -226,6 +226,15 @@ DELETE FROM dahua_file_scan_locks WHERE camera_id = ?
 
 func (q *Queries) DeleteDahuaFileScanLock(ctx context.Context, cameraID int64) error {
 	_, err := q.db.ExecContext(ctx, deleteDahuaFileScanLock, cameraID)
+	return err
+}
+
+const deleteDahuaFileScanLockByAge = `-- name: DeleteDahuaFileScanLockByAge :exec
+DELETE FROM dahua_file_scan_locks WHERE touched_at < ?
+`
+
+func (q *Queries) DeleteDahuaFileScanLockByAge(ctx context.Context, touchedAt types.Time) error {
+	_, err := q.db.ExecContext(ctx, deleteDahuaFileScanLockByAge, touchedAt)
 	return err
 }
 
@@ -563,9 +572,11 @@ func (q *Queries) ListDahuaEventRule(ctx context.Context) ([]DahuaEventRule, err
 const listDahuaFileCursor = `-- name: ListDahuaFileCursor :many
 SELECT 
   c.camera_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete,
-  count(f.camera_id) as files
+  count(f.camera_id) AS files,
+  coalesce(l.touched_at > ?, false) AS locked
 FROM dahua_file_cursors AS c
-LEFT JOIN dahua_files as f ON f.camera_id = c.camera_id
+LEFT JOIN dahua_files AS f ON f.camera_id = c.camera_id
+LEFT JOIN dahua_file_scan_locks AS l ON l.camera_id = c.camera_id
 GROUP BY c.camera_id
 `
 
@@ -576,10 +587,11 @@ type ListDahuaFileCursorRow struct {
 	FullEpoch    types.Time
 	FullComplete bool
 	Files        int64
+	Locked       interface{}
 }
 
-func (q *Queries) ListDahuaFileCursor(ctx context.Context) ([]ListDahuaFileCursorRow, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaFileCursor)
+func (q *Queries) ListDahuaFileCursor(ctx context.Context, touchedAt types.Time) ([]ListDahuaFileCursorRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaFileCursor, touchedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -594,6 +606,7 @@ func (q *Queries) ListDahuaFileCursor(ctx context.Context) ([]ListDahuaFileCurso
 			&i.FullEpoch,
 			&i.FullComplete,
 			&i.Files,
+			&i.Locked,
 		); err != nil {
 			return nil, err
 		}
@@ -634,6 +647,22 @@ func (q *Queries) ListDahuaFileTypes(ctx context.Context) ([]string, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const touchDahuaFileScanLock = `-- name: TouchDahuaFileScanLock :exec
+UPDATE dahua_file_scan_locks
+SET touched_at = ?
+WHERE camera_id = ?
+`
+
+type TouchDahuaFileScanLockParams struct {
+	TouchedAt types.Time
+	CameraID  int64
+}
+
+func (q *Queries) TouchDahuaFileScanLock(ctx context.Context, arg TouchDahuaFileScanLockParams) error {
+	_, err := q.db.ExecContext(ctx, touchDahuaFileScanLock, arg.TouchedAt, arg.CameraID)
+	return err
 }
 
 const updateDahuaCamera = `-- name: UpdateDahuaCamera :one

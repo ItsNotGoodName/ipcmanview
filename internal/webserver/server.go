@@ -19,6 +19,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/rs/zerolog/log"
 )
 
 func RegisterMiddleware(e *echo.Echo) {
@@ -378,7 +379,7 @@ func (s Server) DahuaCameras(c echo.Context) error {
 		return err
 	}
 
-	fileCursors, err := s.db.ListDahuaFileCursor(c.Request().Context())
+	fileCursors, err := s.db.ListDahuaFileCursor(c.Request().Context(), dahua.ScanLockStaleTime())
 	if err != nil {
 		return err
 	}
@@ -469,7 +470,15 @@ func (s Server) DahuaCamerasFileCursorsPOST(c echo.Context) error {
 				continue
 			}
 
-			err := dahua.ScanReset(ctx, s.db, v.CameraID)
+			err := dahua.ScanLockCreate(ctx, s.db, v.CameraID)
+			if err != nil {
+				return err
+			}
+
+			err = dahua.ScanReset(ctx, s.db, v.CameraID)
+
+			dahua.ScanLockDelete(s.db, v.CameraID)
+
 			if err != nil {
 				if repo.IsNotFound(err) {
 					continue
@@ -497,7 +506,19 @@ func (s Server) DahuaCamerasFileCursorsPOST(c echo.Context) error {
 			}
 			conn := s.dahuaStore.Conn(ctx, camera.Convert().DahuaConn)
 
-			go dahua.Scan(context.Background(), s.db, conn.RPC, conn.Camera, scanType)
+			if err := dahua.ScanLockCreate(ctx, s.db, v.CameraID); err != nil {
+				return err
+			}
+			go func(conn dahuacore.Conn) {
+				ctx := context.Background()
+				cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Camera.ID)
+				defer cancel()
+
+				err := dahua.Scan(ctx, s.db, conn.RPC, conn.Camera, scanType)
+				if err != nil {
+					log.Err(err).Msg("Scan error")
+				}
+			}(conn)
 		}
 	}
 
@@ -509,7 +530,7 @@ func (s Server) DahuaCamerasFileCursors(c echo.Context) error {
 		return c.Redirect(http.StatusSeeOther, "/dahua/cameras#file-cursors")
 	}
 
-	fileCursors, err := s.db.ListDahuaFileCursor(c.Request().Context())
+	fileCursors, err := s.db.ListDahuaFileCursor(c.Request().Context(), dahua.ScanLockStaleTime())
 	if err != nil {
 		return err
 	}

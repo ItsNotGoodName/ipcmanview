@@ -47,13 +47,21 @@ WHERE seed = (SELECT seed FROM dahua_seeds WHERE camera_id = ?1 OR camera_id IS 
 
 -- name: CreateDahuaFileScanLock :one
 INSERT INTO dahua_file_scan_locks (
-  camera_id, created_at
+  camera_id, touched_at
 ) VALUES (
   ?, ?
 ) RETURNING *;
 
 -- name: DeleteDahuaFileScanLock :exec
 DELETE FROM dahua_file_scan_locks WHERE camera_id = ?;
+
+-- name: DeleteDahuaFileScanLockByAge :exec
+DELETE FROM dahua_file_scan_locks WHERE touched_at < ?;
+
+-- name: TouchDahuaFileScanLock :exec
+UPDATE dahua_file_scan_locks
+SET touched_at = ?
+WHERE camera_id = ?;
 
 -- name: GetDahuaFileCursor :one
 SELECT * FROM dahua_file_cursors 
@@ -62,9 +70,11 @@ WHERE camera_id = ?;
 -- name: ListDahuaFileCursor :many
 SELECT 
   c.*,
-  count(f.camera_id) as files
+  count(f.camera_id) AS files,
+  coalesce(l.touched_at > ?, false) AS locked
 FROM dahua_file_cursors AS c
-LEFT JOIN dahua_files as f ON f.camera_id = c.camera_id
+LEFT JOIN dahua_files AS f ON f.camera_id = c.camera_id
+LEFT JOIN dahua_file_scan_locks AS l ON l.camera_id = c.camera_id
 GROUP BY c.camera_id;
 
 -- name: UpdateDahuaFileCursor :one

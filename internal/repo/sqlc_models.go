@@ -81,7 +81,7 @@ type DahuaFileCursor struct {
 
 type DahuaFileScanLock struct {
 	CameraID  int64
-	CreatedAt types.Time
+	TouchedAt types.Time
 }
 
 type DahuaSeed struct {

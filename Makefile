@@ -4,7 +4,7 @@ export VITE_HOST=127.0.0.1
 -include .env
 
 migrate:
-	goose -dir migrations/sql sqlite3 "$(DIR)/sqlite.db" up
+	goose -dir internal/migrations/sql sqlite3 "$(DIR)/sqlite.db" up
 
 clean:
 	rm -rf $(DIR)
