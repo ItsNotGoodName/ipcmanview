@@ -11,12 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func eventLogErr(err error) {
-	if err != nil {
-		log.Err(err).Str("package", "dahuacore").Msg("Failed to handle event")
-	}
-}
-
 func NewEventHooks(bus *dahuacore.Bus, db repo.DB) EventHooks {
 	return EventHooks{
 		bus: bus,
@@ -24,14 +18,19 @@ func NewEventHooks(bus *dahuacore.Bus, db repo.DB) EventHooks {
 	}
 }
 
-// EventHooks saves events into database.
 type EventHooks struct {
 	bus *dahuacore.Bus
 	db  repo.DB
 }
 
+func (EventHooks) logErr(err error) {
+	if err != nil {
+		log.Err(err).Str("package", "dahuacore").Msg("Failed to handle event")
+	}
+}
+
 func (e EventHooks) Connecting(ctx context.Context, cameraID int64) {
-	eventLogErr(e.db.CreateDahuaEventWorkerState(context.Background(), repo.CreateDahuaEventWorkerStateParams{
+	e.logErr(e.db.CreateDahuaEventWorkerState(context.Background(), repo.CreateDahuaEventWorkerStateParams{
 		CameraID:  cameraID,
 		State:     models.DahuaEventWorkerStateConnecting,
 		CreatedAt: types.NewTime(time.Now()),
@@ -39,7 +38,7 @@ func (e EventHooks) Connecting(ctx context.Context, cameraID int64) {
 }
 
 func (e EventHooks) Connected(ctx context.Context, cameraID int64) {
-	eventLogErr(e.db.CreateDahuaEventWorkerState(context.Background(), repo.CreateDahuaEventWorkerStateParams{
+	e.logErr(e.db.CreateDahuaEventWorkerState(context.Background(), repo.CreateDahuaEventWorkerStateParams{
 		CameraID:  cameraID,
 		State:     models.DahuaEventWorkerStateConnected,
 		CreatedAt: types.NewTime(time.Now()),
@@ -47,10 +46,10 @@ func (e EventHooks) Connected(ctx context.Context, cameraID int64) {
 }
 
 func (e EventHooks) Disconnect(cameraID int64, err error) {
-	eventLogErr(e.db.CreateDahuaEventWorkerState(context.Background(), repo.CreateDahuaEventWorkerStateParams{
+	e.logErr(e.db.CreateDahuaEventWorkerState(context.Background(), repo.CreateDahuaEventWorkerStateParams{
 		CameraID:  cameraID,
 		State:     models.DahuaEventWorkerStateDisconnected,
-		Error:     errorToNullString(err),
+		Error:     repo.ErrorToNullString(err),
 		CreatedAt: types.NewTime(time.Now()),
 	}))
 }

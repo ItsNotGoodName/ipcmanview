@@ -9,8 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-// ---------- Repo
-
 func NewRepo(db repo.DB) Repo {
 	return Repo{
 		db: db,
