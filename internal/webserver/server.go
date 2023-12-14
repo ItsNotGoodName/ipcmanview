@@ -152,7 +152,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 }
 
 func (s Server) DahuaEventsIDData(c echo.Context) error {
-	id, err := api.PathID(c)
+	id, err := api.ParamID(c)
 	if err != nil {
 		return err
 	}

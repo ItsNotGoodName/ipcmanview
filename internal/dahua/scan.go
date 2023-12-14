@@ -99,7 +99,8 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, camera model
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
 
 	for scanPeriod, ok := iterator.Next(); ok; scanPeriod, ok = iterator.Next() {
-		errC := dahuacore.Scan(ctx, rpcClient, scanPeriod, camera.Location, mediaFilesC)
+		cancel, errC := dahuacore.Scan(ctx, rpcClient, scanPeriod, camera.Location, mediaFilesC)
+		defer cancel()
 
 	inner:
 		for {

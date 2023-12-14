@@ -88,15 +88,16 @@ func Scan(
 	scanPeriod ScanPeriod,
 	location *time.Location,
 	resC chan<- []mediafilefind.FindNextFileInfo,
-) <-chan error {
+) (context.CancelFunc, <-chan error) {
+	ctx, cancel := context.WithCancel(ctx)
 	errC := make(chan error, 1)
 
 	go func() {
-		err := scan(ctx, rpcClient, scanPeriod, location, resC)
-		errC <- err
+		errC <- scan(ctx, rpcClient, scanPeriod, location, resC)
+		cancel()
 	}()
 
-	return errC
+	return cancel, errC
 }
 
 func scan(

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -326,20 +325,19 @@ func (s *Server) DahuaIDFiles(c echo.Context) error {
 		return err
 	}
 
-	scanRange, err := queryDahuaScanRange(form.Start, form.End)
+	timeRange, err := UseTimeRange(form.Start, form.End)
 	if err != nil {
 		return err
 	}
 
-	iter := dahuacore.NewScanPeriodIterator(scanRange)
+	iterator := dahuacore.NewScanPeriodIterator(timeRange)
 
 	filesC := make(chan []mediafilefind.FindNextFileInfo)
 	stream := useStream(c)
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
-	for period, ok := iter.Next(); ok; period, ok = iter.Next() {
-		errC := dahuacore.Scan(ctx, conn.RPC, period, conn.Camera.Location, filesC)
+	for period, ok := iterator.Next(); ok; period, ok = iterator.Next() {
+		cancel, errC := dahuacore.Scan(ctx, conn.RPC, period, conn.Camera.Location, filesC)
+		defer cancel()
 
 	inner:
 		for {

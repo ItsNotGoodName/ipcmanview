@@ -11,7 +11,3 @@ type TimeRange struct {
 func (t TimeRange) Null() bool {
 	return t.Start.IsZero() && t.End.IsZero()
 }
-
-type Error struct {
-	Error string `json:"error"`
-}

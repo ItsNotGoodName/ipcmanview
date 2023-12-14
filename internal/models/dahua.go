@@ -13,6 +13,10 @@ const (
 	DahuaEventWorkerStateDisconnected DahuaEventWorkerState = "disconnected"
 )
 
+type DahuaError struct {
+	Error string `json:"error"`
+}
+
 type DahuaStatus struct {
 	CameraID     int64     `json:"camera_id"`
 	Address      string    `json:"address"`

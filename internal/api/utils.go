@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/gorilla/schema"
@@ -102,33 +101,6 @@ func queryBoolOptional(c echo.Context, key string) (bool, error) {
 	return bool, nil
 }
 
-func queryDahuaScanRange(startStr, endStr string) (models.TimeRange, error) {
-	end := time.Now()
-	start := end.Add(-dahuacore.MaxScanPeriod)
-	var err error
-
-	if startStr != "" {
-		start, err = time.Parse(time.RFC3339, startStr)
-		if err != nil {
-			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
-		}
-	}
-
-	if endStr != "" {
-		end, err = time.Parse(time.RFC3339, endStr)
-		if err != nil {
-			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
-		}
-	}
-
-	res, err := core.NewTimeRange(start, end)
-	if err != nil {
-		return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
-	}
-
-	return res, nil
-}
-
 // ---------- Shared
 
 var encoder = schema.NewEncoder()
@@ -179,7 +151,7 @@ func ValidateStruct(src any) error {
 	return err
 }
 
-func PathID(c echo.Context) (int64, error) {
+func ParamID(c echo.Context) (int64, error) {
 	number, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return 0, echo.ErrBadRequest.WithInternal(err)

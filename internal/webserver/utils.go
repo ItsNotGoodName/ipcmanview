@@ -13,7 +13,7 @@ type Data map[string]any
 
 // TODO: remove this
 func useDahuaCamera(c echo.Context, db repo.DB) (repo.GetDahuaCameraRow, error) {
-	id, err := api.PathID(c)
+	id, err := api.ParamID(c)
 	if err != nil {
 		return repo.GetDahuaCameraRow{}, err
 	}

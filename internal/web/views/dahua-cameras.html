@@ -275,6 +275,11 @@
                   </div>
                 </td>
               </tr>
+              {{ if .Error.Value }}
+                <tr class="bg-error text-error-content">
+                  <td colspan="3">{{ .Error.Value }}</td>
+                </tr>
+              {{ end }}
             {{ end }}
           </tbody>
         </table>

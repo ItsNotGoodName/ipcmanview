@@ -203,13 +203,13 @@ func GetStorage(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn) ([
 
 }
 
-func GetError(conn auth.Client) models.Error {
+func GetError(conn auth.Client) models.DahuaError {
 	err := conn.Data().Error
 	if err == nil {
-		return models.Error{}
+		return models.DahuaError{}
 	}
 
-	return models.Error{
+	return models.DahuaError{
 		Error: err.Error(),
 	}
 }
