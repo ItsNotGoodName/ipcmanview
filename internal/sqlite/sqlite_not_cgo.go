@@ -8,8 +8,8 @@ import (
 )
 
 func connect(dbPath string) (*sql.DB, error) {
-	// https://www.youtube.com/watch?v=XcAYkriuQ1o
-	db, err := sql.Open("sqlite", dbPath+"?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=foreign_keys(ON)")
+	pragmas := "?_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)&_pragma=foreign_keys(ON)"
+	db, err := sql.Open("sqlite", dbPath+pragmas)
 	if err != nil {
 		return nil, err
 	}

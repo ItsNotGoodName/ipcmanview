@@ -9,16 +9,8 @@ import (
 )
 
 func connect(dbPath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = db.Exec(`
-		PRAGMA busy_timeout       = 5000;
-		PRAGMA journal_mode       = WAL;
-		PRAGMA foreign_keys       = ON;
-	`, nil)
+	pragmas := "?_busy_timeout=10000&_journal_mode=WAL&_synchronous=NORMAL&_foreign_keys=on"
+	db, err := sql.Open("sqlite3", dbPath+pragmas)
 	if err != nil {
 		return nil, err
 	}
