@@ -16,11 +16,21 @@ type Event interface {
 
 type EventTopic string
 
-func (e EventTopic) EventName() string {
+func (e EventTopic) EventTopic() string {
 	return string(e)
 }
 
 type HandleFunc func(ctx context.Context, event Event) error
+
+type StateSubscriber struct {
+	Topics []string
+}
+
+type State struct {
+	SubscriberCount int
+	Subscribers     []StateSubscriber
+	LastGC          time.Time
+}
 
 type Pub struct {
 	commandC chan any
@@ -51,11 +61,15 @@ type subscribe struct {
 	doneC  chan<- struct{}
 	errC   chan<- error
 
-	resC chan int
+	resC chan<- int
 }
 
 type unsubscribe struct {
 	id int
+}
+
+type state struct {
+	resC chan<- State
 }
 
 // Serve starts the publisher and blocks until context is canceled.
@@ -82,6 +96,8 @@ func (p Pub) Serve(ctx context.Context) error {
 		}
 	}()
 
+	var lastGC time.Time
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -93,6 +109,7 @@ func (p Pub) Serve(ctx context.Context) error {
 					break
 				}
 			}
+			lastGC = time.Now()
 		case command := <-p.commandC:
 			switch command := command.(type) {
 			case subscribe:
@@ -115,6 +132,24 @@ func (p Pub) Serve(ctx context.Context) error {
 						subs[i].closed = true
 					}
 				}
+			case state:
+				stateSubs := make([]StateSubscriber, 0, len(subs))
+				stateSubCount := 0
+				for i := range subs {
+					if subs[i].closed {
+						continue
+					}
+					stateSubCount++
+					stateSubs = append(stateSubs, StateSubscriber{
+						Topics: subs[i].topics,
+					})
+				}
+				s := State{
+					SubscriberCount: stateSubCount,
+					Subscribers:     stateSubs,
+					LastGC:          lastGC,
+				}
+				command.resC <- s
 			case Event:
 				eventTopic := command.EventTopic()
 				for i := range subs {
@@ -142,5 +177,26 @@ func (p Pub) Publish(ctx context.Context, event Event) error {
 		return ErrPubSubClosed
 	case p.commandC <- event:
 		return nil
+	}
+}
+
+func (p Pub) State(ctx context.Context) (State, error) {
+	resC := make(chan State, 1)
+
+	select {
+	case <-ctx.Done():
+		return State{}, ctx.Err()
+	case <-p.doneC:
+		return State{}, ErrPubSubClosed
+	case p.commandC <- state{resC: resC}:
+	}
+
+	select {
+	case <-ctx.Done():
+		return State{}, ctx.Err()
+	case <-p.doneC:
+		return State{}, ErrPubSubClosed
+	case s := <-resC:
+		return s, nil
 	}
 }
