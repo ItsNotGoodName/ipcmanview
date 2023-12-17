@@ -38,7 +38,9 @@ func (e EventHooks) Connecting(ctx context.Context, cameraID int64) {
 		State:     models.DahuaEventWorkerStateConnecting,
 		CreatedAt: types.NewTime(time.Now()),
 	}))
-	e.bus.DahuaEventWorkerConnecting(cameraID)
+	e.bus.EventDahuaEventWorkerConnecting(models.EventDahuaEventWorkerConnecting{
+		CameraID: cameraID,
+	})
 }
 
 func (e EventHooks) Connect(ctx context.Context, cameraID int64) {
@@ -47,7 +49,9 @@ func (e EventHooks) Connect(ctx context.Context, cameraID int64) {
 		State:     models.DahuaEventWorkerStateConnected,
 		CreatedAt: types.NewTime(time.Now()),
 	}))
-	e.bus.DahuaEventWorkerConnect(cameraID)
+	e.bus.EventDahuaEventWorkerConnect(models.EventDahuaEventWorkerConnect{
+		CameraID: cameraID,
+	})
 }
 
 func (e EventHooks) Disconnect(cameraID int64, err error) {
@@ -57,7 +61,10 @@ func (e EventHooks) Disconnect(cameraID int64, err error) {
 		Error:     repo.ErrorToNullString(err),
 		CreatedAt: types.NewTime(time.Now()),
 	}))
-	e.bus.DahuaEventWorkerDisconnect(cameraID, err)
+	e.bus.EventDahuaEventWorkerDisconnect(models.EventDahuaEventWorkerDisconnect{
+		CameraID: cameraID,
+		Error:    err,
+	})
 }
 
 func (e EventHooks) Event(ctx context.Context, event models.DahuaEvent) {
@@ -83,5 +90,8 @@ func (e EventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 		event.ID = id
 	}
 
-	e.bus.DahuaCameraEvent(ctx, event, eventRule)
+	e.bus.EventDahuaCameraEvent(models.EventDahuaCameraEvent{
+		Event:     event,
+		EventRule: eventRule,
+	})
 }

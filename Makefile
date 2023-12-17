@@ -29,10 +29,16 @@ dev-assets:
 
 # Gen
 
-gen: gen-sqlc
+gen: gen-sqlc gen-pubsub gen-bus
 
 gen-sqlc:
 	sqlc generate
+
+gen-pubsub:
+	sh ./scripts/generate-pubsub-events.sh ./internal/models/event.go
+
+gen-bus:
+	go run ./scripts/generate-bus.go -input ./internal/models/event.go -output ./internal/core/bus.gen.go
 
 # Database
 

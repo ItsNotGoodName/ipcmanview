@@ -5,6 +5,9 @@ INSERT INTO dahua_cameras (
   ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id;
 
+-- name: dahuaCameraExists :one
+SELECT COUNT(id) FROM dahua_cameras WHERE id = ?;
+
 -- name: UpdateDahuaCamera :one
 UPDATE dahua_cameras 
 SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?

@@ -1020,6 +1020,17 @@ func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFile
 	return err
 }
 
+const dahuaCameraExists = `-- name: dahuaCameraExists :one
+SELECT COUNT(id) FROM dahua_cameras WHERE id = ?
+`
+
+func (q *Queries) dahuaCameraExists(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, dahuaCameraExists, id)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getDahuaEventRuleByEvent = `-- name: getDahuaEventRuleByEvent :many
 SELECT 
   ignore_db,

@@ -145,13 +145,13 @@ func (s *EventWorkerStore) Delete(id int64) {
 }
 
 func (e *EventWorkerStore) Register(bus *core.Bus) {
-	bus.OnDahuaCameraCreated(func(ctx context.Context, evt models.EventDahuaCameraCreated) error {
+	bus.OnEventDahuaCameraCreated(func(ctx context.Context, evt models.EventDahuaCameraCreated) error {
 		return e.Create(evt.Camera)
 	})
-	bus.OnDahuaCameraUpdated(func(ctx context.Context, evt models.EventDahuaCameraUpdated) error {
+	bus.OnEventDahuaCameraUpdated(func(ctx context.Context, evt models.EventDahuaCameraUpdated) error {
 		return e.Update(evt.Camera)
 	})
-	bus.OnDahuaCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
+	bus.OnEventDahuaCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
 		e.Delete(evt.CameraID)
 		return nil
 	})

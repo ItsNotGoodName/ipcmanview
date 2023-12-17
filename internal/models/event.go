@@ -29,21 +29,3 @@ type EventDahuaEventWorkerDisconnect struct {
 	CameraID int64
 	Error    error
 }
-
-// TODO: these should be generated
-
-func (EventDahuaCameraDeleted) EventTopic() string {
-	return "EventDahuaCameraDeleted"
-}
-
-func (EventDahuaCameraCreated) EventTopic() string {
-	return "EventDahuaCameraCreated"
-}
-
-func (EventDahuaCameraUpdated) EventTopic() string {
-	return "EventDahuaCameraUpdated"
-}
-
-func (e EventDahuaCameraEvent) EventTopic() string {
-	return "EventDahuaCameraEvent"
-}

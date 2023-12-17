@@ -7,6 +7,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
+	"github.com/ItsNotGoodName/ipcmanview/internal/hass"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/webserver"
@@ -17,12 +18,14 @@ import (
 
 type CmdServe struct {
 	Shared
-	HTTPHost     string `env:"HTTP_HOST" help:"HTTP host to listen on."`
-	HTTPPort     string `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
-	MQTTAddress  string `env:"MQTT_ADDRESS" help:"MQTT broker to publish events."`
-	MQTTPrefix   string `env:"MQTT_PREFIX" default:"ipcmanview/" help:"MQTT broker topic prefix"`
-	MQTTUsername string `env:"MQTT_USERNAME" help:"MQTT broker username."`
-	MQTTPassword string `env:"MQTT_PASSWORD" help:"MQTT broker password."`
+	HTTPHost      string     `env:"HTTP_HOST" help:"HTTP host to listen on."`
+	HTTPPort      string     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
+	MQTTAddress   string     `env:"MQTT_ADDRESS" help:"MQTT broker to publish events."`
+	MQTTTopic     mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT broker topic."`
+	MQTTUsername  string     `env:"MQTT_USERNAME" help:"MQTT broker username."`
+	MQTTPassword  string     `env:"MQTT_PASSWORD" help:"MQTT broker password."`
+	MQTTHass      bool       `env:"MQTT_HASS" help:"Enable HomeAssistant MQTT discovery"`
+	MQTTHassTopic mqtt.Topic `env:"MQTT_HASS_TOPIC" default:"homeassistant" help:"HomeAssistant MQTT discovery topic"`
 }
 
 func (c *CmdServe) Run(ctx *Context) error {
@@ -71,9 +74,12 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// MQTT
 	if c.MQTTAddress != "" {
-		mqttPublisher := mqtt.NewPublisher(c.MQTTPrefix, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
-		mqttPublisher.Register(bus)
-		super.Add(mqttPublisher)
+		mqttConn := mqtt.NewConn(c.MQTTTopic, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
+		mqtt.Register(mqttConn, bus)
+		super.Add(mqttConn)
+
+		hassConn := hass.NewConn(mqttConn, db, c.MQTTHassTopic)
+		super.Add(hassConn)
 	}
 
 	// HTTP Router

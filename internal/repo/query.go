@@ -12,6 +12,14 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
+func (db DB) DahuaCameraExists(ctx context.Context, id int64) (bool, error) {
+	count, err := db.dahuaCameraExists(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 type CreateDahuaCameraParams = createDahuaCameraParams
 
 type CreateDahuaFileCursorParams = createDahuaFileCursorParams

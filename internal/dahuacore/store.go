@@ -146,7 +146,7 @@ func (s *Store) ConnDelete(ctx context.Context, id int64) {
 }
 
 func (store *Store) Register(bus *core.Bus) {
-	bus.OnDahuaCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
+	bus.OnEventDahuaCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
 		store.ConnDelete(ctx, evt.CameraID)
 		return nil
 	})
