@@ -72,6 +72,10 @@ type state struct {
 	resC chan<- State
 }
 
+func (Pub) String() string {
+	return "pubsub.Pub"
+}
+
 // Serve starts the publisher and blocks until context is canceled.
 func (p Pub) Serve(ctx context.Context) error {
 	select {

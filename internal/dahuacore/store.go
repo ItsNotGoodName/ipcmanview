@@ -40,6 +40,10 @@ func NewStore() *Store {
 	}
 }
 
+func (*Store) String() string {
+	return "dahuacore.Store"
+}
+
 func (s *Store) Serve(ctx context.Context) error {
 	t := time.NewTicker(5 * time.Minute)
 	defer t.Stop()

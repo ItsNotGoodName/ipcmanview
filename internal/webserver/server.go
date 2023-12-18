@@ -28,7 +28,7 @@ func RegisterMiddleware(e *echo.Echo) {
 	}))
 }
 
-func RegisterRoutes(e *echo.Echo, w Server) {
+func (w Server) RegisterRoutes(e *echo.Echo) {
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
 	e.GET("/dahua/cameras", w.DahuaCameras)

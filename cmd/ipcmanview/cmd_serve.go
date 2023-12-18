@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -10,7 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/webserver"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
@@ -23,7 +21,7 @@ type CmdServe struct {
 	HTTPHost     string     `env:"HTTP_HOST" help:"HTTP host to listen on."`
 	HTTPPort     string     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
 	MQTTAddress  string     `env:"MQTT_ADDRESS" help:"MQTT broker to publish events."`
-	MQTTTopic    mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT broker topic."`
+	MQTTTopic    mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT broker publish topic."`
 	MQTTUsername string     `env:"MQTT_USERNAME" help:"MQTT broker username."`
 	MQTTPassword string     `env:"MQTT_PASSWORD" help:"MQTT broker password."`
 	MQTTHa       bool       `env:"MQTT_HA" help:"Enable HomeAssistant MQTT discovery."`
@@ -64,14 +62,9 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	dahuaWorkerStore := dahuacore.NewWorkerStore(super, dahuacore.DefaultWorkerBuilder(dahuaEventHooks, bus, dahuaStore))
 	dahuaWorkerStore.Register(bus)
-	super.Add(sutureext.NewServiceFunc("dahua.WorkerStore", sutureext.OneShotFunc(func(ctx context.Context) error {
+	super.Add(sutureext.NewServiceFunc("dahua.WorkerStore.Bootstrap", sutureext.OneShotFunc(func(ctx context.Context) error {
 		return dahuaWorkerStore.Bootstrap(ctx, dahuaRepo, dahuaStore)
 	})))
-
-	bus.OnEventDahuaCoaxialStatus(func(ctx context.Context, event models.EventDahuaCoaxialStatus) error {
-		fmt.Println(event)
-		return nil
-	})
 
 	dahuaFileStore, err := c.useDahuaFileStore()
 	if err != nil {
@@ -88,24 +81,20 @@ func (c *CmdServe) Run(ctx *Context) error {
 		super.Add(dahuaMQTTConn)
 	}
 
-	// HTTP Router
+	// HTTP router
 	httpRouter := http.NewRouter()
 	if err := webserver.RegisterRenderer(httpRouter); err != nil {
 		return err
 	}
 
-	// HTTP Middleware
+	// HTTP middleware
 	webserver.RegisterMiddleware(httpRouter)
 
-	// HTTP API
-	apiServer := api.NewServer(pub, dahuaStore, dahuaRepo, dahuaFileStore)
-	apiServer.RegisterDahuaRoutes(httpRouter)
+	// HTTP handlers
+	api.NewDahuaServer(pub, dahuaStore, dahuaRepo, dahuaFileStore).RegisterRoutes(httpRouter)
+	webserver.New(db, pub, bus, dahuaStore).RegisterRoutes(httpRouter)
 
-	// HTTP Web
-	webServer := webserver.New(db, pub, bus, dahuaStore)
-	webserver.RegisterRoutes(httpRouter, webServer)
-
-	// HTTP Server
+	// HTTP server
 	httpServer := http.NewServer(httpRouter, c.HTTPHost+":"+c.HTTPPort)
 	super.Add(httpServer)
 
