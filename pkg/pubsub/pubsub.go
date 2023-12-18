@@ -33,16 +33,22 @@ type State struct {
 }
 
 type Pub struct {
-	commandC chan any
-	doneC    chan struct{}
-	subsGC   time.Duration
+	subscribeC   chan subscribe
+	unsubscribeC chan unsubscribe
+	stateC       chan state
+	eventC       chan Event
+	doneC        chan struct{}
+	subsGC       time.Duration
 }
 
 func NewPub() Pub {
 	return Pub{
-		commandC: make(chan any),
-		doneC:    make(chan struct{}),
-		subsGC:   1 * time.Minute,
+		subscribeC:   make(chan subscribe),
+		unsubscribeC: make(chan unsubscribe),
+		stateC:       make(chan state),
+		eventC:       make(chan Event),
+		doneC:        make(chan struct{}),
+		subsGC:       1 * time.Minute,
 	}
 }
 
@@ -114,59 +120,56 @@ func (p Pub) Serve(ctx context.Context) error {
 				}
 			}
 			lastGC = time.Now()
-		case command := <-p.commandC:
-			switch command := command.(type) {
-			case subscribe:
-				lastID++
-				sub := sub{
-					id:     lastID,
-					topics: command.topics,
-					handle: command.handle,
-					doneC:  command.doneC,
-					errC:   command.errC,
-					closed: false,
+		case command := <-p.subscribeC:
+			lastID++
+			sub := sub{
+				id:     lastID,
+				topics: command.topics,
+				handle: command.handle,
+				doneC:  command.doneC,
+				errC:   command.errC,
+				closed: false,
+			}
+			subs = append(subs, sub)
+			command.resC <- sub.id
+		case command := <-p.unsubscribeC:
+			for i := range subs {
+				if subs[i].id == command.id {
+					subs[i].errC <- nil
+					close(subs[i].doneC)
+					subs[i].closed = true
 				}
-				subs = append(subs, sub)
-				command.resC <- sub.id
-			case unsubscribe:
-				for i := range subs {
-					if subs[i].id == command.id {
-						subs[i].errC <- nil
-						close(subs[i].doneC)
-						subs[i].closed = true
-					}
+			}
+		case command := <-p.stateC:
+			stateSubs := make([]StateSubscriber, 0, len(subs))
+			stateSubCount := 0
+			for i := range subs {
+				if subs[i].closed {
+					continue
 				}
-			case state:
-				stateSubs := make([]StateSubscriber, 0, len(subs))
-				stateSubCount := 0
-				for i := range subs {
-					if subs[i].closed {
-						continue
-					}
-					stateSubCount++
-					stateSubs = append(stateSubs, StateSubscriber{
-						Topics: subs[i].topics,
-					})
+				stateSubCount++
+				stateSubs = append(stateSubs, StateSubscriber{
+					Topics: subs[i].topics,
+				})
+			}
+			s := State{
+				SubscriberCount: stateSubCount,
+				Subscribers:     stateSubs,
+				LastGC:          lastGC,
+			}
+			command.resC <- s
+		case command := <-p.eventC:
+			eventTopic := command.EventTopic()
+			for i := range subs {
+				if subs[i].closed || !slices.Contains(subs[i].topics, eventTopic) {
+					continue
 				}
-				s := State{
-					SubscriberCount: stateSubCount,
-					Subscribers:     stateSubs,
-					LastGC:          lastGC,
-				}
-				command.resC <- s
-			case Event:
-				eventTopic := command.EventTopic()
-				for i := range subs {
-					if subs[i].closed || !slices.Contains(subs[i].topics, eventTopic) {
-						continue
-					}
 
-					err := subs[i].handle(ctx, command)
-					if err != nil {
-						subs[i].errC <- err
-						close(subs[i].doneC)
-						subs[i].closed = true
-					}
+				err := subs[i].handle(ctx, command)
+				if err != nil {
+					subs[i].errC <- err
+					close(subs[i].doneC)
+					subs[i].closed = true
 				}
 			}
 		}
@@ -179,7 +182,7 @@ func (p Pub) Publish(ctx context.Context, event Event) error {
 		return ctx.Err()
 	case <-p.doneC:
 		return ErrPubSubClosed
-	case p.commandC <- event:
+	case p.eventC <- event:
 		return nil
 	}
 }
@@ -192,7 +195,7 @@ func (p Pub) State(ctx context.Context) (State, error) {
 		return State{}, ctx.Err()
 	case <-p.doneC:
 		return State{}, ErrPubSubClosed
-	case p.commandC <- state{resC: resC}:
+	case p.stateC <- state{resC: resC}:
 	}
 
 	select {

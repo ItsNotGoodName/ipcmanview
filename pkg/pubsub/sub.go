@@ -55,7 +55,7 @@ func (s Sub) close(ctx context.Context) error {
 		return ErrPubSubClosed
 	case <-s.doneC:
 		return nil
-	case s.pub.commandC <- unsubscribe{id: s.id}:
+	case s.pub.unsubscribeC <- unsubscribe{id: s.id}:
 		return nil
 	}
 }
@@ -74,7 +74,7 @@ func (p Pub) Subscribe(ctx context.Context, handle HandleFunc, events ...Event) 
 		return Sub{}, ctx.Err()
 	case <-p.doneC:
 		return Sub{}, ErrPubSubClosed
-	case p.commandC <- subscribe{
+	case p.subscribeC <- subscribe{
 		topics: topics,
 		handle: handle,
 		resC:   resC,
