@@ -70,7 +70,7 @@ func (e EventHooks) Disconnect(cameraID int64, err error) {
 func (e EventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 	eventRule, err := e.db.GetDahuaEventRuleByEvent(ctx, event)
 	if err != nil {
-		log.Err(err).Msg("Failed to get DahuaEventRule")
+		e.logErr(err)
 		return
 	}
 
@@ -84,7 +84,7 @@ func (e EventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 			CreatedAt: types.NewTime(event.CreatedAt),
 		})
 		if err != nil {
-			log.Err(err).Msg("Failed to save DahuaEvent")
+			e.logErr(err)
 			return
 		}
 		event.ID = id

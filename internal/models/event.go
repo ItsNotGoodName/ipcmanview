@@ -1,11 +1,11 @@
 package models
 
 type EventDahuaCameraCreated struct {
-	Camera DahuaConn
+	Camera DahuaCameraConn
 }
 
 type EventDahuaCameraUpdated struct {
-	Camera DahuaConn
+	Camera DahuaCameraConn
 }
 
 type EventDahuaCameraDeleted struct {
@@ -28,4 +28,9 @@ type EventDahuaEventWorkerConnect struct {
 type EventDahuaEventWorkerDisconnect struct {
 	CameraID int64
 	Error    error
+}
+
+type EventDahuaCoaxialStatus struct {
+	Channel       int
+	CoaxialStatus DahuaCoaxialStatus
 }

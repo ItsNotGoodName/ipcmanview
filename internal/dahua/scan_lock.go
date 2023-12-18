@@ -60,7 +60,6 @@ func ScanLockHeartbeat(ctx context.Context, db repo.DB, cameraID int64) context.
 		}
 	}()
 	return cancel
-
 }
 
 func ScanLockDelete(db repo.DB, cameraID int64) {

@@ -10,10 +10,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func cameraEqual(lhs, rhs models.DahuaConn) bool {
-	return lhs.Address == rhs.Address && lhs.Username == rhs.Username && lhs.Password == rhs.Password
-}
-
 func newStoreClient(camera models.DahuaConn, lastAccessed time.Time) storeClient {
 	return storeClient{
 		LastAccessed: lastAccessed,
@@ -94,7 +90,7 @@ func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaConn) 
 
 		client = newStoreClient(camera, time.Now())
 		s.clients[camera.ID] = client
-	} else if !cameraEqual(client.Conn.Camera, camera) {
+	} else if !ConnEqual(client.Conn.Camera, camera) {
 		// Found but not equal
 
 		// Closing camera connection should not block that store

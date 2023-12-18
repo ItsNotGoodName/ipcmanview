@@ -451,7 +451,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		return err
 	}
 	s.bus.EventDahuaCameraCreated(models.EventDahuaCameraCreated{
-		Camera: dbCamera.Convert().DahuaConn,
+		Camera: dbCamera.Convert(),
 	})
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
@@ -618,7 +618,7 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		return err
 	}
 	s.bus.EventDahuaCameraUpdated(models.EventDahuaCameraUpdated{
-		Camera: dbCamera.Convert().DahuaConn,
+		Camera: dbCamera.Convert(),
 	})
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")

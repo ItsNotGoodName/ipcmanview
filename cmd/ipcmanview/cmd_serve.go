@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
-	"github.com/ItsNotGoodName/ipcmanview/internal/hass"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/webserver"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
@@ -18,14 +20,14 @@ import (
 
 type CmdServe struct {
 	Shared
-	HTTPHost      string     `env:"HTTP_HOST" help:"HTTP host to listen on."`
-	HTTPPort      string     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
-	MQTTAddress   string     `env:"MQTT_ADDRESS" help:"MQTT broker to publish events."`
-	MQTTTopic     mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT broker topic."`
-	MQTTUsername  string     `env:"MQTT_USERNAME" help:"MQTT broker username."`
-	MQTTPassword  string     `env:"MQTT_PASSWORD" help:"MQTT broker password."`
-	MQTTHass      bool       `env:"MQTT_HASS" help:"Enable HomeAssistant MQTT discovery"`
-	MQTTHassTopic mqtt.Topic `env:"MQTT_HASS_TOPIC" default:"homeassistant" help:"HomeAssistant MQTT discovery topic"`
+	HTTPHost     string     `env:"HTTP_HOST" help:"HTTP host to listen on."`
+	HTTPPort     string     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
+	MQTTAddress  string     `env:"MQTT_ADDRESS" help:"MQTT broker to publish events."`
+	MQTTTopic    mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT broker topic."`
+	MQTTUsername string     `env:"MQTT_USERNAME" help:"MQTT broker username."`
+	MQTTPassword string     `env:"MQTT_PASSWORD" help:"MQTT broker password."`
+	MQTTHa       bool       `env:"MQTT_HA" help:"Enable HomeAssistant MQTT discovery."`
+	MQTTHaTopic  mqtt.Topic `env:"MQTT_HA_TOPIC" default:"homeassistant" help:"HomeAssistant MQTT discovery topic."`
 }
 
 func (c *CmdServe) Run(ctx *Context) error {
@@ -60,26 +62,30 @@ func (c *CmdServe) Run(ctx *Context) error {
 	dahuaEventHooks := dahua.NewEventHooks(bus, db)
 	super.Add(dahuaEventHooks)
 
-	dahuaEventWorkerStore := dahuacore.NewEventWorkerStore(super, dahuaEventHooks)
-	dahuaEventWorkerStore.Register(bus)
+	dahuaWorkerStore := dahuacore.NewWorkerStore(super, dahuacore.DefaultWorkerBuilder(dahuaEventHooks, bus, dahuaStore))
+	dahuaWorkerStore.Register(bus)
+	super.Add(sutureext.NewServiceFunc("dahua.WorkerStore", sutureext.OneShotFunc(func(ctx context.Context) error {
+		return dahuaWorkerStore.Bootstrap(ctx, dahuaRepo, dahuaStore)
+	})))
+
+	bus.OnEventDahuaCoaxialStatus(func(ctx context.Context, event models.EventDahuaCoaxialStatus) error {
+		fmt.Println(event)
+		return nil
+	})
 
 	dahuaFileStore, err := c.useDahuaFileStore()
 	if err != nil {
 		return err
 	}
 
-	super.Add(sutureext.NewServiceFunc("dahua.bootstrap", sutureext.OneShotFunc(func(ctx context.Context) error {
-		return dahuacore.Bootstrap(ctx, dahuaRepo, dahuaStore, dahuaEventWorkerStore)
-	})))
-
 	// MQTT
 	if c.MQTTAddress != "" {
 		mqttConn := mqtt.NewConn(c.MQTTTopic, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
-		mqtt.Register(mqttConn, bus)
 		super.Add(mqttConn)
 
-		hassConn := hass.NewConn(mqttConn, db, c.MQTTHassTopic)
-		super.Add(hassConn)
+		dahuaMQTTConn := dahuamqtt.NewConn(mqttConn, db, dahuaStore, c.MQTTHa, c.MQTTHaTopic)
+		dahuaMQTTConn.Register(bus)
+		super.Add(dahuaMQTTConn)
 	}
 
 	// HTTP Router

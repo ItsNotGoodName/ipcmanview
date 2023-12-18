@@ -29,3 +29,7 @@ func (e EventDahuaEventWorkerDisconnect) EventTopic() string {
 	return "EventDahuaEventWorkerDisconnect"
 }
 
+func (e EventDahuaCoaxialStatus) EventTopic() string {
+	return "EventDahuaCoaxialStatus"
+}
+

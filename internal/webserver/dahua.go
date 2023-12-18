@@ -83,14 +83,14 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 			}
 
 			{
-				caps, err := dahuacore.GetCoaxialCaps(ctx, conn.Camera.ID, conn.RPC, 0)
+				caps, err := dahuacore.GetCoaxialCaps(ctx, conn.Camera.ID, conn.RPC, 1)
 				if err != nil {
 					log.Err(err).Msg("Failed to get coaxial caps")
 					return
 				}
 
 				if caps.SupportControlLight || caps.SupportControlSpeaker || caps.SupportControlFullcolorLight {
-					res, err := dahuacore.GetCoaxialStatus(ctx, conn.Camera.ID, conn.RPC, 0)
+					res, err := dahuacore.GetCoaxialStatus(ctx, conn.Camera.ID, conn.RPC, 1)
 					if err != nil {
 						log.Err(err).Msg("Failed to get coaxial status")
 						return

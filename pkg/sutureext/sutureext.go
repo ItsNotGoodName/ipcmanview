@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -117,4 +118,68 @@ func (b ServiceContext) Context() context.Context {
 	case ctx := <-b.ctxC:
 		return ctx
 	}
+}
+
+type WorkerStore struct {
+	super *suture.Supervisor
+
+	workersMu sync.Mutex
+	workers   map[int64]suture.ServiceToken
+}
+
+func NewWorkerStore(super *suture.Supervisor) *WorkerStore {
+	return &WorkerStore{
+		super:     super,
+		workersMu: sync.Mutex{},
+		workers:   make(map[int64]suture.ServiceToken),
+	}
+}
+
+func (s *WorkerStore) Create(id int64, create func() (suture.Service, error)) error {
+	s.workersMu.Lock()
+	defer s.workersMu.Unlock()
+
+	token, found := s.workers[id]
+	if found {
+		return fmt.Errorf("create failed: service already exists: %d", id)
+	}
+
+	worker, err := create()
+	if err != nil {
+		return err
+	}
+	token = s.super.Add(worker)
+	s.workers[id] = token
+
+	return nil
+}
+
+func (s *WorkerStore) Update(id int64, create func() (suture.Service, error)) error {
+	s.workersMu.Lock()
+	defer s.workersMu.Unlock()
+
+	token, found := s.workers[id]
+	if !found {
+		return fmt.Errorf("update failed: service already exists: %d", id)
+	}
+
+	s.super.Remove(token)
+	worker, err := create()
+	if err != nil {
+		return err
+	}
+	token = s.super.Add(worker)
+	s.workers[id] = token
+
+	return nil
+}
+
+func (s *WorkerStore) Delete(id int64) {
+	s.workersMu.Lock()
+	token, found := s.workers[id]
+	if found {
+		s.super.Remove(token)
+	}
+	delete(s.workers, id)
+	s.workersMu.Unlock()
 }

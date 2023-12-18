@@ -9,10 +9,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func busLogError(err error) {
+func busLogError(err error) bool {
 	if err != nil {
 		log.Err(err).Str("package", "core").Msg("Failed to handle event")
+		return true
 	}
+	return false
 }
 
 func NewBus() *Bus {
@@ -30,6 +32,7 @@ type Bus struct {
 	onEventDahuaEventWorkerConnecting []func(ctx context.Context, event models.EventDahuaEventWorkerConnecting) error
 	onEventDahuaEventWorkerConnect []func(ctx context.Context, event models.EventDahuaEventWorkerConnect) error
 	onEventDahuaEventWorkerDisconnect []func(ctx context.Context, event models.EventDahuaEventWorkerDisconnect) error
+	onEventDahuaCoaxialStatus []func(ctx context.Context, event models.EventDahuaCoaxialStatus) error
 }
 
 func (b *Bus) Register(pub pubsub.Pub) {
@@ -52,6 +55,9 @@ func (b *Bus) Register(pub pubsub.Pub) {
 		return pub.Publish(ctx, event)
 	})
 	b.OnEventDahuaEventWorkerDisconnect(func(ctx context.Context, event models.EventDahuaEventWorkerDisconnect) error {
+		return pub.Publish(ctx, event)
+	})
+	b.OnEventDahuaCoaxialStatus(func(ctx context.Context, event models.EventDahuaCoaxialStatus) error {
 		return pub.Publish(ctx, event)
 	})
 }
@@ -83,6 +89,10 @@ func (b *Bus) OnEventDahuaEventWorkerConnect(h func(ctx context.Context, event m
 
 func (b *Bus) OnEventDahuaEventWorkerDisconnect(h func(ctx context.Context, event models.EventDahuaEventWorkerDisconnect) error) {
 	b.onEventDahuaEventWorkerDisconnect = append(b.onEventDahuaEventWorkerDisconnect, h)
+}
+
+func (b *Bus) OnEventDahuaCoaxialStatus(h func(ctx context.Context, event models.EventDahuaCoaxialStatus) error) {
+	b.onEventDahuaCoaxialStatus = append(b.onEventDahuaCoaxialStatus, h)
 }
 
 
@@ -125,6 +135,12 @@ func (b *Bus) EventDahuaEventWorkerConnect(event models.EventDahuaEventWorkerCon
 
 func (b *Bus) EventDahuaEventWorkerDisconnect(event models.EventDahuaEventWorkerDisconnect) {
 	for _, v := range b.onEventDahuaEventWorkerDisconnect {
+		busLogError(v(b.Context(), event))
+	}
+}
+
+func (b *Bus) EventDahuaCoaxialStatus(event models.EventDahuaCoaxialStatus) {
+	for _, v := range b.onEventDahuaCoaxialStatus {
 		busLogError(v(b.Context(), event))
 	}
 }

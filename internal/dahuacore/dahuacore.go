@@ -24,6 +24,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func ConnEqual(lhs, rhs models.DahuaConn) bool {
+	return lhs.Address == rhs.Address && lhs.Username == rhs.Username && lhs.Password == rhs.Password
+}
+
 func NewConn(camera models.DahuaConn) Conn {
 	address := NewHTTPAddress(camera.Address)
 	rpcHTTPClient := &http.Client{
@@ -215,12 +219,8 @@ func GetError(conn auth.Client) models.DahuaError {
 }
 
 func GetCoaxialStatus(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialStatus, error) {
-	if channel == 0 {
-		channel = 1
-	}
-
 	status, err := coaxialcontrolio.GetStatus(ctx, rpcClient, channel)
-	if err != nil {
+	if err != nil && !ignorableError(err) {
 		return models.DahuaCoaxialStatus{}, err
 	}
 
@@ -232,12 +232,8 @@ func GetCoaxialStatus(ctx context.Context, cameraID int64, rpcClient dahuarpc.Co
 }
 
 func GetCoaxialCaps(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialCaps, error) {
-	if channel == 0 {
-		channel = 1
-	}
-
 	caps, err := coaxialcontrolio.GetCaps(ctx, rpcClient, channel)
-	if err != nil {
+	if err != nil && !ignorableError(err) {
 		return models.DahuaCoaxialCaps{}, err
 	}
 
@@ -379,22 +375,4 @@ func SetPreset(ctx context.Context, clientPTZ *ptz.Client, channel, index int) e
 		Code: "GotoPreset",
 		Arg1: index,
 	})
-}
-
-type CameraStore interface {
-	ListConn(ctx context.Context) ([]models.DahuaConn, error)
-}
-
-func Bootstrap(ctx context.Context, cameraStore CameraStore, store *Store, eventWorkerStore *EventWorkerStore) error {
-	cameras, err := cameraStore.ListConn(ctx)
-	if err != nil {
-		return err
-	}
-	conns := store.ConnList(ctx, cameras)
-	for _, conn := range conns {
-		if err := eventWorkerStore.Create(conn.Camera); err != nil {
-			return err
-		}
-	}
-	return err
 }
