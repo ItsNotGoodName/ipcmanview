@@ -12,13 +12,13 @@ type Snapshot struct {
 }
 
 func SnapshotGet(ctx context.Context, c Conn, channel int) (Snapshot, error) {
-	req := NewRequest("snapshot.cgi")
+	req := New("snapshot.cgi")
 
 	if channel != 0 {
 		req.QueryInt("channel", channel)
 	}
 
-	res, err := OK(c.CGIGet(ctx, req))
+	res, err := OK(c.Do(ctx, req))
 	if err != nil {
 		return Snapshot{}, err
 	}

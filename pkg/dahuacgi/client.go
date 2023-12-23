@@ -28,7 +28,7 @@ func NewClient(httpClient http.Client, httpAddress, username, password string) C
 	}
 }
 
-func (c Client) CGIGet(ctx context.Context, r *Request) (*http.Response, error) {
+func (c Client) Do(ctx context.Context, r *Request) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, r.URL(c.baseURL), nil)
 	if err != nil {
 		return nil, err

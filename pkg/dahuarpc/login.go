@@ -23,7 +23,7 @@ func Login(ctx context.Context, conn LoginConn, username, password string) error
 		return fmt.Errorf("FirstLogin has invalid error code: %d", firstLogin.Error.Code)
 	}
 
-	// Update session
+	// Set session
 	conn.SetSession(firstLogin.Session.String())
 
 	// Magic

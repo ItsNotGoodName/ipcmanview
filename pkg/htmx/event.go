@@ -5,8 +5,6 @@ import (
 	"net/http"
 )
 
-// Event
-
 type Event struct {
 	Key   string
 	Value any

@@ -76,7 +76,7 @@ func (c *client) DoRaw(ctx context.Context, rb RequestBuilder) (io.ReadCloser, e
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(b))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(b))
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (c *client) DoRaw(ctx context.Context, rb RequestBuilder) (io.ReadCloser, e
 	return resp.Body, nil
 }
 
-func (c *client) fill(rb RequestBuilder) RequestBuilder {
+func (c *client) sessionID(rb RequestBuilder) RequestBuilder {
 	c.lastID++
 	rb = rb.ID(c.lastID).Session(c.session)
 	if arrs, ok := rb.Request.Params.([]RequestBuilder); ok {
@@ -105,7 +105,7 @@ type clientLogin struct {
 }
 
 func (c clientLogin) Do(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error) {
-	return c.client.DoRaw(ctx, c.client.fill(rb))
+	return c.client.DoRaw(ctx, c.client.sessionID(rb))
 }
 
 func (c clientLogin) SetSession(session string) {
@@ -115,6 +115,12 @@ func (c clientLogin) SetSession(session string) {
 func NewClient(httpClient *http.Client, httpAddress, username, password string) Client {
 	return Client{
 		client: &client{
+			Client:      httpClient,
+			Username:    username,
+			Password:    password,
+			RPCURL:      URL(httpAddress),
+			RPCLoginURL: LoginURL(httpAddress),
+			Mutex:       sync.Mutex{},
 			clientState: clientState{
 				lastID:    0,
 				state:     StateLogout,
@@ -122,11 +128,6 @@ func NewClient(httpClient *http.Client, httpAddress, username, password string) 
 				error:     nil,
 				lastLogin: time.Time{},
 			},
-			Client:      httpClient,
-			Username:    username,
-			Password:    password,
-			RPCURL:      URL(httpAddress),
-			RPCLoginURL: LoginURL(httpAddress),
 		},
 	}
 }
@@ -167,7 +168,7 @@ func (c Client) Do(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error
 		c.client.Unlock()
 		return nil, err
 	}
-	rb = c.client.fill(rb)
+	rb = c.client.sessionID(rb)
 	c.client.Unlock()
 
 	return c.client.DoRaw(ctx, rb)

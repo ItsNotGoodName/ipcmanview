@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func newHTPError(r *http.Response) HTTPError {
+func newHTTPError(r *http.Response) HTTPError {
 	return HTTPError{
 		StatusCode: r.StatusCode,
 		Status:     r.Status,
@@ -27,7 +27,7 @@ func (e HTTPError) Error() string {
 }
 
 type Conn interface {
-	CGIGet(ctx context.Context, req *Request) (*http.Response, error)
+	Do(ctx context.Context, req *Request) (*http.Response, error)
 }
 
 type Request struct {
@@ -36,7 +36,7 @@ type Request struct {
 	Header http.Header
 }
 
-func NewRequest(method string) *Request {
+func New(method string) *Request {
 	return &Request{
 		method: method,
 		query:  url.Values{},
@@ -80,7 +80,7 @@ func OK(res *http.Response, err error) (*http.Response, error) {
 	// OK
 	if res.StatusCode < 200 || res.StatusCode > 299 {
 		res.Body.Close()
-		return nil, newHTPError(res)
+		return nil, newHTTPError(res)
 	}
 
 	return res, nil
@@ -101,7 +101,7 @@ func OKTable(res *http.Response, err error) (Table, error) {
 
 	// OK
 	if res.StatusCode < 200 || res.StatusCode > 299 {
-		return nil, newHTPError(res)
+		return nil, newHTTPError(res)
 	}
 
 	// Table

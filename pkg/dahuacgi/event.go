@@ -21,7 +21,7 @@ type EventManager struct {
 }
 
 func EventManagerGet(ctx context.Context, c Conn, heartbeat int) (EventManager, error) {
-	req := NewRequest("eventManager.cgi").
+	req := New("eventManager.cgi").
 		QueryString("action", "attach").
 		QueryString("codes", "[All]")
 
@@ -29,7 +29,7 @@ func EventManagerGet(ctx context.Context, c Conn, heartbeat int) (EventManager, 
 		req.QueryInt("heartbeat", heartbeat)
 	}
 
-	res, err := OK(c.CGIGet(ctx, req))
+	res, err := OK(c.Do(ctx, req))
 	if err != nil {
 		return EventManager{}, err
 	}

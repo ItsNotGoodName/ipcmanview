@@ -7,10 +7,10 @@ import (
 )
 
 func AudioInputChannelCount(ctx context.Context, c Conn) (int, error) {
-	req := NewRequest("devAudioInput.cgi").
+	req := New("devAudioInput.cgi").
 		QueryString("action", "getCollect")
 
-	table, err := OKTable(c.CGIGet(ctx, req))
+	table, err := OKTable(c.Do(ctx, req))
 	if err != nil {
 		return 0, err
 	}
@@ -19,10 +19,10 @@ func AudioInputChannelCount(ctx context.Context, c Conn) (int, error) {
 }
 
 func AudioOutputChannelCount(ctx context.Context, c Conn) (int, error) {
-	req := NewRequest("devAudioOutput.cgi").
+	req := New("devAudioOutput.cgi").
 		QueryString("action", "getCollect")
 
-	table, err := OKTable(c.CGIGet(ctx, req))
+	table, err := OKTable(c.Do(ctx, req))
 	if err != nil {
 		return 0, err
 	}
@@ -47,12 +47,12 @@ func AudioStreamGet(ctx context.Context, c Conn, channel int, httpType HTTPType)
 		channel = 1
 	}
 
-	req := NewRequest("audio.cgi").
+	req := New("audio.cgi").
 		QueryString("action", "getAudio").
 		QueryInt("channel", channel).
 		QueryString("httptype", string(httpType))
 
-	res, err := OK(c.CGIGet(ctx, req))
+	res, err := OK(c.Do(ctx, req))
 	if err != nil {
 		return AudioStream{}, err
 	}
