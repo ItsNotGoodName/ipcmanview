@@ -203,7 +203,6 @@ func GetStorage(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn) ([
 	}
 
 	return res, nil
-
 }
 
 func GetError(conn dahuarpc.Client) models.DahuaError {

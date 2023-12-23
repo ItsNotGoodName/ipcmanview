@@ -127,11 +127,11 @@ func (e *WorkerStore) Register(bus *core.Bus) {
 	})
 }
 
-type deviceStore interface {
+type DeviceStore interface {
 	ListConn(ctx context.Context) ([]models.DahuaConn, error)
 }
 
-func (w *WorkerStore) Bootstrap(ctx context.Context, deviceStore deviceStore, store *Store) error {
+func (w *WorkerStore) Bootstrap(ctx context.Context, deviceStore DeviceStore, store *Store) error {
 	devices, err := deviceStore.ListConn(ctx)
 	if err != nil {
 		return err

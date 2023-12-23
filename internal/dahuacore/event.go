@@ -27,6 +27,7 @@ func NewEventWorker(device models.DahuaConn, hooks EventHooks) EventWorker {
 	}
 }
 
+// EventWorker subscribes to events.
 type EventWorker struct {
 	device models.DahuaConn
 	hooks  EventHooks

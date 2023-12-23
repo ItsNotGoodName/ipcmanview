@@ -437,7 +437,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 		Feature:  dahua.FeatureFromStrings(form.Features),
 	})
 
-	id, err := s.db.CreateDahuaDevice(ctx, repo.CreateDahuaDeviceParams{
+	err = dahua.CreateDevice(ctx, s.db, s.bus, repo.CreateDahuaDeviceParams{
 		Name:      create.Name,
 		Username:  create.Username,
 		Password:  create.Password,
@@ -446,17 +446,10 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 		Feature:   create.Feature,
 		CreatedAt: types.NewTime(create.CreatedAt),
 		UpdatedAt: types.NewTime(create.UpdatedAt),
-	}, dahua.NewFileCursor())
-	if err != nil {
-		return err
-	}
-	dbDevice, err := s.db.GetDahuaDevice(ctx, id)
-	if err != nil {
-		return err
-	}
-	s.bus.EventDahuaDeviceCreated(models.EventDahuaDeviceCreated{
-		Device: dbDevice.Convert(),
 	})
+	if err != nil {
+		return err
+	}
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/devices")
 }
@@ -607,7 +600,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 		return err
 	}
 
-	_, err = s.db.UpdateDahuaDevice(ctx, repo.UpdateDahuaDeviceParams{
+	err = dahua.UpdateDevice(ctx, s.db, s.bus, repo.UpdateDahuaDeviceParams{
 		ID:        update.ID,
 		Name:      form.Name,
 		Username:  update.Username,
@@ -620,14 +613,6 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
-	dbDevice, err := s.db.GetDahuaDevice(ctx, device.ID)
-	if err != nil {
-		return err
-	}
-	s.bus.EventDahuaDeviceUpdated(models.EventDahuaDeviceUpdated{
-		Device: dbDevice.Convert(),
-	})
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/devices")
 }

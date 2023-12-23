@@ -19,6 +19,7 @@ func NewCoaxialWorker(bus *core.Bus, deviceID int64, rpcConn dahuarpc.Conn) Coax
 	}
 }
 
+// CoaxialWorker publishes coaxial status to the bus.
 type CoaxialWorker struct {
 	bus      *core.Bus
 	deviceID int64
