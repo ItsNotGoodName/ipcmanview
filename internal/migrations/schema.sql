@@ -10,6 +10,7 @@ CREATE TABLE dahua_devices (
   username TEXT NOT NULL,
   password TEXT NOT NULL,
   location TEXT NOT NULL,
+  feature INTEGER NOT NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL
 );

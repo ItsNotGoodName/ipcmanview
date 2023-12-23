@@ -271,7 +271,7 @@ func (q *Queries) DeleteDahuaFileScanLockByAge(ctx context.Context, touchedAt ty
 }
 
 const getDahuaDevice = `-- name: GetDahuaDevice :one
-SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
+SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
 LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 WHERE id = ? LIMIT 1
 `
@@ -283,6 +283,7 @@ type GetDahuaDeviceRow struct {
 	Username  string
 	Password  string
 	Location  types.Location
+	Feature   models.DahuaFeature
 	CreatedAt types.Time
 	UpdatedAt types.Time
 	Seed      int64
@@ -298,6 +299,7 @@ func (q *Queries) GetDahuaDevice(ctx context.Context, id int64) (GetDahuaDeviceR
 		&i.Username,
 		&i.Password,
 		&i.Location,
+		&i.Feature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Seed,
@@ -386,7 +388,7 @@ func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 }
 
 const listDahuaDevice = `-- name: ListDahuaDevice :many
-SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
+SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
 LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 `
 
@@ -397,6 +399,7 @@ type ListDahuaDeviceRow struct {
 	Username  string
 	Password  string
 	Location  types.Location
+	Feature   models.DahuaFeature
 	CreatedAt types.Time
 	UpdatedAt types.Time
 	Seed      int64
@@ -418,6 +421,7 @@ func (q *Queries) ListDahuaDevice(ctx context.Context) ([]ListDahuaDeviceRow, er
 			&i.Username,
 			&i.Password,
 			&i.Location,
+			&i.Feature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Seed,
@@ -436,7 +440,7 @@ func (q *Queries) ListDahuaDevice(ctx context.Context) ([]ListDahuaDeviceRow, er
 }
 
 const listDahuaDeviceByIDs = `-- name: ListDahuaDeviceByIDs :many
-SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
+SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
 LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 WHERE id IN (/*SLICE:ids*/?)
 `
@@ -448,6 +452,7 @@ type ListDahuaDeviceByIDsRow struct {
 	Username  string
 	Password  string
 	Location  types.Location
+	Feature   models.DahuaFeature
 	CreatedAt types.Time
 	UpdatedAt types.Time
 	Seed      int64
@@ -479,6 +484,7 @@ func (q *Queries) ListDahuaDeviceByIDs(ctx context.Context, ids []int64) ([]List
 			&i.Username,
 			&i.Password,
 			&i.Location,
+			&i.Feature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Seed,
@@ -726,7 +732,7 @@ func (q *Queries) TouchDahuaFileScanLock(ctx context.Context, arg TouchDahuaFile
 
 const updateDahuaDevice = `-- name: UpdateDahuaDevice :one
 UPDATE dahua_devices 
-SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?
+SET name = ?, address = ?, username = ?, password = ?, location = ?, feature = ?, updated_at = ?
 WHERE id = ?
 RETURNING id
 `
@@ -737,6 +743,7 @@ type UpdateDahuaDeviceParams struct {
 	Username  string
 	Password  string
 	Location  types.Location
+	Feature   models.DahuaFeature
 	UpdatedAt types.Time
 	ID        int64
 }
@@ -748,6 +755,7 @@ func (q *Queries) UpdateDahuaDevice(ctx context.Context, arg UpdateDahuaDevicePa
 		arg.Username,
 		arg.Password,
 		arg.Location,
+		arg.Feature,
 		arg.UpdatedAt,
 		arg.ID,
 	)
@@ -958,9 +966,9 @@ func (q *Queries) allocateDahuaSeed(ctx context.Context, deviceID sql.NullInt64)
 
 const createDahuaDevice = `-- name: createDahuaDevice :one
 INSERT INTO dahua_devices (
-  name, address, username, password, location, created_at, updated_at
+  name, address, username, password, location, feature, created_at, updated_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id
 `
 
@@ -970,6 +978,7 @@ type createDahuaDeviceParams struct {
 	Username  string
 	Password  string
 	Location  types.Location
+	Feature   models.DahuaFeature
 	CreatedAt types.Time
 	UpdatedAt types.Time
 }
@@ -981,6 +990,7 @@ func (q *Queries) createDahuaDevice(ctx context.Context, arg createDahuaDevicePa
 		arg.Username,
 		arg.Password,
 		arg.Location,
+		arg.Feature,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -1076,6 +1086,59 @@ func (q *Queries) getDahuaEventRuleByEvent(ctx context.Context, arg getDahuaEven
 			&i.IgnoreLive,
 			&i.IgnoreMqtt,
 			&i.Code,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDahuaDeviceByFeature = `-- name: listDahuaDeviceByFeature :many
+SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
+LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
+WHERE feature & ?1 = ?1
+`
+
+type listDahuaDeviceByFeatureRow struct {
+	ID        int64
+	Name      string
+	Address   string
+	Username  string
+	Password  string
+	Location  types.Location
+	Feature   models.DahuaFeature
+	CreatedAt types.Time
+	UpdatedAt types.Time
+	Seed      int64
+}
+
+func (q *Queries) listDahuaDeviceByFeature(ctx context.Context, feature models.DahuaFeature) ([]listDahuaDeviceByFeatureRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaDeviceByFeature, feature)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []listDahuaDeviceByFeatureRow
+	for rows.Next() {
+		var i listDahuaDeviceByFeatureRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Address,
+			&i.Username,
+			&i.Password,
+			&i.Location,
+			&i.Feature,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Seed,
 		); err != nil {
 			return nil, err
 		}

@@ -247,3 +247,11 @@ func (db DB) GetDahuaEventRuleByEvent(ctx context.Context, event models.DahuaEve
 		IgnoreMQTT: res[0].IgnoreMqtt,
 	}, nil
 }
+
+func (q *Queries) ListDahuaDeviceByFeature(ctx context.Context, features ...models.DahuaFeature) ([]listDahuaDeviceByFeatureRow, error) {
+	var feature models.DahuaFeature
+	for _, f := range features {
+		feature = feature | f
+	}
+	return q.listDahuaDeviceByFeature(ctx, feature)
+}

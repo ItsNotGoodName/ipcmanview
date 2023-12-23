@@ -399,6 +399,7 @@ func (s Server) DahuaDevices(c echo.Context) error {
 func (s Server) DahuaDevicesCreate(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-devices-create", Data{
 		"Locations": dahua.Locations,
+		"Features":  dahua.FeatureList,
 	})
 }
 
@@ -411,6 +412,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 		Username string
 		Password string
 		Location string
+		Features []string
 	}
 	if err := api.ParseForm(c, &form); err != nil {
 		return err
@@ -432,6 +434,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 		Username: form.Username,
 		Password: form.Password,
 		Location: location.Location,
+		Feature:  dahua.FeatureFromStrings(form.Features),
 	})
 
 	id, err := s.db.CreateDahuaDevice(ctx, repo.CreateDahuaDeviceParams{
@@ -440,6 +443,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 		Password:  create.Password,
 		Address:   create.Address,
 		Location:  types.NewLocation(create.Location),
+		Feature:   create.Feature,
 		CreatedAt: types.NewTime(create.CreatedAt),
 		UpdatedAt: types.NewTime(create.UpdatedAt),
 	}, dahua.NewFileCursor())
@@ -556,6 +560,7 @@ func (s Server) DahuaDevicesUpdate(c echo.Context) error {
 
 	return c.Render(http.StatusOK, "dahua-devices-update", Data{
 		"Locations": dahua.Locations,
+		"Features":  dahua.FeatureList,
 		"Device":    device,
 	})
 }
@@ -574,6 +579,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 		Username string
 		Password string
 		Location string
+		Features []string
 	}
 	if err := api.ParseForm(c, &form); err != nil {
 		return err
@@ -593,6 +599,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 		Username:  form.Username,
 		Password:  form.Password,
 		Location:  location.Location,
+		Feature:   dahua.FeatureFromStrings(form.Features),
 		CreatedAt: device.CreatedAt.Time,
 		UpdatedAt: device.UpdatedAt.Time,
 	})
@@ -607,6 +614,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 		Password:  update.Password,
 		Address:   update.Address,
 		Location:  types.NewLocation(update.Location),
+		Feature:   update.Feature,
 		UpdatedAt: types.NewTime(update.UpdatedAt),
 	})
 	if err != nil {
@@ -625,7 +633,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 }
 
 func (s Server) DahuaSnapshots(c echo.Context) error {
-	devices, err := s.db.ListDahuaDevice(c.Request().Context())
+	devices, err := s.db.ListDahuaDeviceByFeature(c.Request().Context(), models.DahuaFeatureCamera)
 	if err != nil {
 		return err
 	}

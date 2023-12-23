@@ -1,8 +1,8 @@
 -- name: createDahuaDevice :one
 INSERT INTO dahua_devices (
-  name, address, username, password, location, created_at, updated_at
+  name, address, username, password, location, feature, created_at, updated_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id;
 
 -- name: dahuaDeviceExists :one
@@ -10,7 +10,7 @@ SELECT COUNT(id) FROM dahua_devices WHERE id = ?;
 
 -- name: UpdateDahuaDevice :one
 UPDATE dahua_devices 
-SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?
+SET name = ?, address = ?, username = ?, password = ?, location = ?, feature = ?, updated_at = ?
 WHERE id = ?
 RETURNING id;
 
@@ -27,6 +27,11 @@ LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id;
 SELECT dahua_devices.*, coalesce(seed, id) FROM dahua_devices 
 LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 WHERE id IN (sqlc.slice('ids'));
+
+-- name: listDahuaDeviceByFeature :many
+SELECT dahua_devices.*, coalesce(seed, id) FROM dahua_devices 
+LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
+WHERE feature & sqlc.arg('feature') = sqlc.arg('feature');
 
 -- name: DeleteDahuaDevice :exec
 DELETE FROM dahua_devices WHERE id = ?;

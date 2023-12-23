@@ -87,6 +87,29 @@
           {{ end }}
         </select>
       </div>
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text">Features</span>
+        </label>
+        <select
+          id="features"
+          name="features"
+          class="select select-bordered"
+          multiple
+        >
+          <option>None</option>
+          {{ with first .Data.Features }}
+            <option value="{{ .Key }}" selected>
+              {{ .Name }}
+            </option>
+          {{ end }}
+          {{ range rest .Data.Features }}
+            <option value="{{ .Key }}">
+              {{ .Name }}
+            </option>
+          {{ end }}
+        </select>
+      </div>
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
   </main>

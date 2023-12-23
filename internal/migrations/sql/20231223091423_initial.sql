@@ -2,7 +2,7 @@
 -- create "settings" table
 CREATE TABLE `settings` (`site_name` text NOT NULL, `default_location` text NOT NULL);
 -- create "dahua_devices" table
-CREATE TABLE `dahua_devices` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `name` text NOT NULL, `address` text NOT NULL, `username` text NOT NULL, `password` text NOT NULL, `location` text NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL);
+CREATE TABLE `dahua_devices` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `name` text NOT NULL, `address` text NOT NULL, `username` text NOT NULL, `password` text NOT NULL, `location` text NOT NULL, `feature` integer NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL);
 -- create index "dahua_devices_name" to table: "dahua_devices"
 CREATE UNIQUE INDEX `dahua_devices_name` ON `dahua_devices` (`name`);
 -- create index "dahua_devices_address" to table: "dahua_devices"

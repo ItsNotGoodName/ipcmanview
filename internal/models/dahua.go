@@ -35,6 +35,7 @@ type DahuaDevice struct {
 	Username  string
 	Password  string
 	Location  *time.Location
+	Feature   DahuaFeature
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
@@ -45,6 +46,7 @@ type DahuaConn struct {
 	Username string
 	Password string
 	Location *time.Location
+	Feature  DahuaFeature
 	Seed     int
 }
 
@@ -52,6 +54,17 @@ type DahuaDeviceConn struct {
 	DahuaDevice
 	DahuaConn
 }
+
+type DahuaFeature int
+
+func (f DahuaFeature) EQ(feature DahuaFeature) bool {
+	return feature != 0 && f&feature == feature
+}
+
+const (
+	// DahuaFeatureCamera means the device has at least 1 camera.
+	DahuaFeatureCamera DahuaFeature = 1 << iota
+)
 
 type DahuaDetail struct {
 	DeviceID         int64  `json:"device_id"`

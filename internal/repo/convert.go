@@ -15,6 +15,7 @@ func (c ListDahuaDeviceByIDsRow) Convert() models.DahuaDeviceConn {
 			Name:      c.Name,
 			CreatedAt: c.CreatedAt.Time,
 			UpdatedAt: c.UpdatedAt.Time,
+			Feature:   c.Feature,
 		},
 		DahuaConn: models.DahuaConn{
 			ID:       c.ID,
@@ -22,6 +23,7 @@ func (c ListDahuaDeviceByIDsRow) Convert() models.DahuaDeviceConn {
 			Username: c.Username,
 			Password: c.Password,
 			Location: c.Location.Location,
+			Feature:  c.Feature,
 			Seed:     int(c.Seed),
 		},
 	}
@@ -38,6 +40,7 @@ func (c GetDahuaDeviceRow) Convert() models.DahuaDeviceConn {
 			Name:      c.Name,
 			CreatedAt: c.CreatedAt.Time,
 			UpdatedAt: c.UpdatedAt.Time,
+			Feature:   c.Feature,
 		},
 		DahuaConn: models.DahuaConn{
 			ID:       c.ID,
@@ -45,6 +48,7 @@ func (c GetDahuaDeviceRow) Convert() models.DahuaDeviceConn {
 			Username: c.Username,
 			Password: c.Password,
 			Location: c.Location.Location,
+			Feature:  c.Feature,
 			Seed:     int(c.Seed),
 		},
 	}
@@ -61,6 +65,7 @@ func (c ListDahuaDeviceRow) Convert() models.DahuaDeviceConn {
 			Name:      c.Name,
 			CreatedAt: c.CreatedAt.Time,
 			UpdatedAt: c.UpdatedAt.Time,
+			Feature:   c.Feature,
 		},
 		DahuaConn: models.DahuaConn{
 			ID:       c.ID,
@@ -68,6 +73,7 @@ func (c ListDahuaDeviceRow) Convert() models.DahuaDeviceConn {
 			Username: c.Username,
 			Password: c.Password,
 			Location: c.Location.Location,
+			Feature:  c.Feature,
 			Seed:     int(c.Seed),
 		},
 	}

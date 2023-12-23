@@ -19,6 +19,7 @@ type DahuaDevice struct {
 	Username  string
 	Password  string
 	Location  types.Location
+	Feature   models.DahuaFeature
 	CreatedAt types.Time
 	UpdatedAt types.Time
 }

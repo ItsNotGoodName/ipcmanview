@@ -25,3 +25,5 @@ sql:
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.StringSlice"
           - column: "dahua_event_worker_states.state"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.DahuaEventWorkerState"
+          - column: "dahua_devices.feature"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.DahuaFeature"
