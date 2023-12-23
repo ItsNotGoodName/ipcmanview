@@ -9,24 +9,15 @@ import (
 )
 
 func Create(ctx context.Context, c dahuarpc.Conn) (int64, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return 0, err
-	}
-
-	res, err := dahuarpc.Send[any](ctx, rpc.Method("mediaFileFind.factory.create"))
+	res, err := dahuarpc.Send[any](ctx, c, dahuarpc.
+		New("mediaFileFind.factory.create"))
 
 	return res.Result.Integer(), err
 }
 
 func FindFile(ctx context.Context, c dahuarpc.Conn, object int64, condition Condition) (bool, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	res, err := dahuarpc.Send[any](ctx, rpc.
-		Method("mediaFileFind.findFile").
+	res, err := dahuarpc.Send[any](ctx, c, dahuarpc.
+		New("mediaFileFind.findFile").
 		Params(struct {
 			Condition Condition `json:"condition"`
 		}{
@@ -82,13 +73,8 @@ func (c Condition) Picture() Condition {
 }
 
 func FindNextFile(ctx context.Context, c dahuarpc.Conn, object int64, count int) (FindNextFileResult, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return FindNextFileResult{}, err
-	}
-
-	res, err := dahuarpc.Send[FindNextFileResult](ctx, rpc.
-		Method("mediaFileFind.findNextFile").
+	res, err := dahuarpc.Send[FindNextFileResult](ctx, c, dahuarpc.
+		New("mediaFileFind.findNextFile").
 		Params(struct {
 			Count int `json:"count"`
 		}{
@@ -161,41 +147,26 @@ func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Locatio
 }
 
 func GetCount(ctx context.Context, c dahuarpc.Conn, object int64) (int, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return 0, err
-	}
-
 	res, err := dahuarpc.Send[struct {
 		Count int `json:"count"`
-	}](ctx, rpc.
-		Method("mediaFileFind.getCount").
+	}](ctx, c, dahuarpc.
+		New("mediaFileFind.getCount").
 		Object(object))
 
 	return res.Params.Count, err
 }
 
 func Close(ctx context.Context, c dahuarpc.Conn, object int64) (bool, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	res, err := dahuarpc.Send[any](ctx, rpc.
-		Method("mediaFileFind.close").
+	res, err := dahuarpc.Send[any](ctx, c, dahuarpc.
+		New("mediaFileFind.close").
 		Object(object))
 
 	return res.Result.Bool(), err
 }
 
 func Destroy(ctx context.Context, c dahuarpc.Conn, object int64) (bool, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return false, err
-	}
-
-	res, err := dahuarpc.Send[any](ctx, rpc.
-		Method("mediaFileFind.destroy").
+	res, err := dahuarpc.Send[any](ctx, c, dahuarpc.
+		New("mediaFileFind.destroy").
 		Object(object))
 
 	return res.Result.Bool(), err

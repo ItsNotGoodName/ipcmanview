@@ -18,17 +18,20 @@ func Test_AuthParam(t *testing.T) {
 }
 
 func Test_Timestamp(t *testing.T) {
-	data := []Timestamp{
-		"2023-02-06 00:00:00",
-		"2023-02-06 03:09:09",
-		"2023-02-06 23:59:59",
-		"2023-11-18 08:58:49 PM",
+	data := []struct {
+		Input  Timestamp
+		Output Timestamp
+	}{
+		{"2023-02-06 00:00:00", "2023-02-06 00:00:00"},
+		{"2023-02-06 03:09:09", "2023-02-06 03:09:09"},
+		{"2023-02-06 23:59:59", "2023-02-06 23:59:59"},
+		{"2023-11-18 08:58:49 AM", "2023-11-18 08:58:49"},
 	}
 
 	for _, date := range data {
-		from, err := date.Parse(time.Local)
+		from, err := date.Input.Parse(time.Local)
 		assert.Nil(t, err, nil)
-		assert.Equal(t, date, NewTimestamp(from, time.Local))
+		assert.Equal(t, date.Output, NewTimestamp(from, time.Local))
 	}
 }
 

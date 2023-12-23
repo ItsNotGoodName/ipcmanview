@@ -1,23 +1,17 @@
-package global
+package dahuarpc
 
 import (
 	"context"
 	"errors"
 	"fmt"
-
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-const (
-	WatchNet = "WatchNet"
-)
-
-type LoginClient interface {
-	Client
-	UpdateSession(session string)
+type LoginConn interface {
+	Conn
+	SetSession(session string)
 }
 
-func Login(ctx context.Context, conn LoginClient, username, password string) error {
+func Login(ctx context.Context, conn LoginConn, username, password string) error {
 	firstLogin, err := FirstLogin(ctx, conn, username)
 	if err != nil {
 		return err
@@ -30,23 +24,23 @@ func Login(ctx context.Context, conn LoginClient, username, password string) err
 	}
 
 	// Update session
-	conn.UpdateSession(firstLogin.Session.String())
+	conn.SetSession(firstLogin.Session.String())
 
 	// Magic
-	loginType := func() string {
-		if firstLogin.Params.Encryption == WatchNet {
-			return WatchNet
-		}
-		return "Direct"
-	}()
+	var loginType string
+	if firstLogin.Params.Encryption == "WatchNet" {
+		loginType = "WatchNet"
+	} else {
+		loginType = "Direct"
+	}
 
 	// Encrypt password based on the first login and then do a second login
 	passwordHash := firstLogin.Params.HashPassword(username, password)
 	err = SecondLogin(ctx, conn, username, passwordHash, loginType, firstLogin.Params.Encryption)
 	if err != nil {
-		var responseErr *dahuarpc.ResponseError
+		var responseErr *ResponseError
 		if errors.As(err, &responseErr) {
-			if loginErr := intoLoginError(responseErr); loginErr != nil {
+			if loginErr := loginErrorFromResponseError(responseErr); loginErr != nil {
 				return errors.Join(loginErr, err)
 			}
 		}
@@ -57,7 +51,7 @@ func Login(ctx context.Context, conn LoginClient, username, password string) err
 	return nil
 }
 
-func intoLoginError(r *dahuarpc.ResponseError) *LoginError {
+func loginErrorFromResponseError(r *ResponseError) *LoginError {
 	switch r.Code {
 	case 268632085:
 		return ErrLoginUserOrPasswordNotValid

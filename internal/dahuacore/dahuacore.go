@@ -11,7 +11,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/auth"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/intervideo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/license"
@@ -35,7 +34,7 @@ func NewConn(camera models.DahuaConn) Conn {
 	}
 	cgiHTTPClient := http.Client{}
 
-	connRPC := auth.NewClient(rpcHTTPClient, address, camera.Username, camera.Password)
+	connRPC := dahuarpc.NewClient(rpcHTTPClient, address, camera.Username, camera.Password)
 	connPTZ := ptz.NewClient(connRPC)
 	connCGI := dahuacgi.NewClient(cgiHTTPClient, address, camera.Username, camera.Password)
 
@@ -49,18 +48,18 @@ func NewConn(camera models.DahuaConn) Conn {
 
 type Conn struct {
 	Camera models.DahuaConn
-	RPC    auth.Client
-	PTZ    *ptz.Client
+	RPC    dahuarpc.Client
+	PTZ    ptz.Client
 	CGI    dahuacgi.Client
 }
 
 func ignorableError(err error) bool {
 	res := &dahuarpc.ResponseError{}
-	if errors.As(err, &res) && slices.Contains([]dahuarpc.ResponseErrorType{
-		dahuarpc.ErrResponseTypeInvalidRequest,
-		dahuarpc.ErrResponseTypeMethodNotFound,
-		dahuarpc.ErrResponseTypeInterfaceNotFound,
-		dahuarpc.ErrResponseTypeUnknown,
+	if errors.As(err, &res) && slices.Contains([]dahuarpc.ErrorType{
+		dahuarpc.ErrorTypeInvalidRequest,
+		dahuarpc.ErrorTypeMethodNotFound,
+		dahuarpc.ErrorTypeInterfaceNotFound,
+		dahuarpc.ErrorTypeUnknown,
 	}, res.Type) {
 		log.Err(err).Str("method", res.Method).Int("code", res.Code).Str("type", string(res.Type)).Msg("Ignoring ResponseError")
 		return true
@@ -207,8 +206,8 @@ func GetStorage(ctx context.Context, cameraID int64, rpcClient dahuarpc.Conn) ([
 
 }
 
-func GetError(conn auth.Client) models.DahuaError {
-	err := conn.Data().Error
+func GetError(conn dahuarpc.Client) models.DahuaError {
+	err := conn.State().Error
 	if err == nil {
 		return models.DahuaError{}
 	}
@@ -352,11 +351,11 @@ func NewHTTPAddress(address string) string {
 	return "http://" + address
 }
 
-func GetDahuaStatus(camera models.DahuaConn, rpcClient auth.Client) models.DahuaStatus {
-	rpcData := rpcClient.Data()
+func GetDahuaStatus(camera models.DahuaConn, rpcClient dahuarpc.Client) models.DahuaStatus {
+	rpcState := rpcClient.State()
 	var rpcError string
-	if rpcData.Error != nil {
-		rpcError = rpcData.Error.Error()
+	if rpcState.Error != nil {
+		rpcError = rpcState.Error.Error()
 	}
 	return models.DahuaStatus{
 		CameraID:     camera.ID,
@@ -365,12 +364,12 @@ func GetDahuaStatus(camera models.DahuaConn, rpcClient auth.Client) models.Dahua
 		Location:     camera.Location.String(),
 		Seed:         camera.Seed,
 		RPCError:     rpcError,
-		RPCState:     rpcData.State.String(),
-		RPCLastLogin: rpcData.LastLogin,
+		RPCState:     rpcState.State.String(),
+		RPCLastLogin: rpcState.LastLogin,
 	}
 }
 
-func SetPreset(ctx context.Context, clientPTZ *ptz.Client, channel, index int) error {
+func SetPreset(ctx context.Context, clientPTZ ptz.Client, channel, index int) error {
 	return ptz.Start(ctx, clientPTZ, channel, ptz.Params{
 		Code: "GotoPreset",
 		Arg1: index,

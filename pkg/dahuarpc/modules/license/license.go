@@ -19,14 +19,9 @@ type LicenseInfo struct {
 }
 
 func GetLicenseInfo(ctx context.Context, c dahuarpc.Conn) ([]LicenseInfo, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	res, err := dahuarpc.Send[[]struct {
 		Info LicenseInfo `json:"Info"`
-	}](ctx, rpc.Method("License.getLicenseInfo"))
+	}](ctx, c, dahuarpc.New("License.getLicenseInfo"))
 	if err != nil {
 		return nil, err
 	}

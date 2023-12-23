@@ -28,7 +28,7 @@ func NewStream(ctx context.Context, c dahuarpc.Conn, condtion Condition) (*Strea
 			return nil, err
 		}
 
-		if resErr.Type != dahuarpc.ErrResponseTypeNoData {
+		if resErr.Type != dahuarpc.ErrorTypeNoData {
 			return nil, err
 		}
 

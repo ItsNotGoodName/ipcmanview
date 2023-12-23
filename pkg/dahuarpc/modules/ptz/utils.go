@@ -17,7 +17,7 @@ func getSuffix(s string, count int) string {
 	return s[start:end]
 }
 
-func getSeq(session string, id int) int {
+func nextSeq(session string, id int) int {
 	sessionNumberRaw := strings.Join(numbersReg.FindAllString(session, -1), "")
 	sessionNumber, _ := strconv.Atoi(sessionNumberRaw)
 	sessionBinary := getSuffix(strconv.FormatInt(int64(sessionNumber), 2), 24)
@@ -26,6 +26,6 @@ func getSeq(session string, id int) int {
 	return int(seq)
 }
 
-func getNextID(id int) int {
+func nextID(id int) int {
 	return (id + 1) % 256
 }

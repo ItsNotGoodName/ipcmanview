@@ -47,17 +47,11 @@ func (c *CmdRPC) Run(ctx *Context) error {
 			conn := dahuacore.NewConn(camera.DahuaConn)
 
 			res, err := func() (string, error) {
-				rpc, err := conn.RPC.RPC(ctx)
-				if err != nil {
-					return "", err
-				}
-
-				res, err := dahuarpc.
-					SendRaw[json.RawMessage](ctx, rpc.
-					Method(c.Method).
+				res, err := dahuarpc.SendRaw[json.RawMessage](ctx, conn.RPC, dahuarpc.
+					New(c.Method).
 					Params(params).
 					Object(c.Object).
-					Seq(c.Seq))
+					Option("seq", c.Seq))
 				if err != nil {
 					return "", err
 				}

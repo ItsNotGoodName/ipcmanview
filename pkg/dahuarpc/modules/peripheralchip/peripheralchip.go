@@ -20,15 +20,9 @@ type Cap struct {
 }
 
 func GetCaps(ctx context.Context, c dahuarpc.Conn) ([]Cap, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	res, err := dahuarpc.Send[struct {
 		Caps []Cap `json:"caps"`
-	}](ctx, rpc.
-		Method("PeripheralChip.getCaps"))
+	}](ctx, c, dahuarpc.New("PeripheralChip.getCaps"))
 	if err != nil {
 		return nil, err
 	}
@@ -43,15 +37,9 @@ type Version struct {
 }
 
 func GetVersion(ctx context.Context, c dahuarpc.Conn, typ Type) ([]Version, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	res, err := dahuarpc.Send[struct {
 		Versions []Version `json:"versions"`
-	}](ctx, rpc.
-		Method("PeripheralChip.getVersion").
+	}](ctx, c, dahuarpc.New("PeripheralChip.getVersion").
 		Params(struct {
 			Type Type `json:"type"`
 		}{

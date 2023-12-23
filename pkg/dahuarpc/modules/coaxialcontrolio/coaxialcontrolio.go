@@ -7,15 +7,10 @@ import (
 )
 
 func GetStatus(ctx context.Context, c dahuarpc.Conn, channel int) (Status, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return Status{}, err
-	}
-
 	res, err := dahuarpc.Send[struct {
 		Status Status `json:"status"`
-	}](ctx, rpc.
-		Method("CoaxialControlIO.getStatus").
+	}](ctx, c, dahuarpc.
+		New("CoaxialControlIO.getStatus").
 		Params(struct {
 			Channel int `json:"channel"`
 		}{
@@ -31,15 +26,10 @@ type Status struct {
 }
 
 func GetCaps(ctx context.Context, c dahuarpc.Conn, channel int) (Caps, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return Caps{}, err
-	}
-
 	res, err := dahuarpc.Send[struct {
 		Caps Caps `json:"caps"`
-	}](ctx, rpc.
-		Method("CoaxialControlIO.getCaps").
+	}](ctx, c, dahuarpc.
+		New("CoaxialControlIO.getCaps").
 		Params(struct {
 			Channel int `json:"channel"`
 		}{
@@ -62,13 +52,8 @@ type ControlRequest struct {
 }
 
 func Control(ctx context.Context, c dahuarpc.Conn, channel int, controls ...ControlRequest) error {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return err
-	}
-
-	_, err = dahuarpc.Send[any](ctx, rpc.
-		Method("CoaxialControlIO.control").
+	_, err := dahuarpc.Send[any](ctx, c, dahuarpc.
+		New("CoaxialControlIO.control").
 		Params(struct {
 			Channel int              `json:"channel"`
 			Info    []ControlRequest `json:"info"`

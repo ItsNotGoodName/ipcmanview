@@ -128,16 +128,10 @@ func (s *DahuaServer) DahuaIDRPCPOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	rpc, err := conn.RPC.RPC(ctx)
-	if err != nil {
-		return err
-	}
-
-	res, err := dahuarpc.SendRaw[json.RawMessage](ctx, rpc.
-		Method(req.Method).
+	res, err := dahuarpc.SendRaw[json.RawMessage](ctx, conn.RPC, dahuarpc.New(req.Method).
 		Params(req.Params).
 		Object(req.Object).
-		Seq(req.Seq))
+		Option("seq", req.Seq))
 	if err != nil {
 		return err
 	}
@@ -424,7 +418,7 @@ func (s *DahuaServer) DahuaIDFilesPath(c echo.Context) error {
 			return err
 		}
 
-		session, err := conn.RPC.RPCSession(ctx)
+		session, err := conn.RPC.Session(ctx)
 		if err != nil {
 			return err
 		}

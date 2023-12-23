@@ -7,17 +7,12 @@ import (
 )
 
 func ManagerGetVersion(ctx context.Context, c dahuarpc.Conn) (string, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return "", err
-	}
-
 	res, err := dahuarpc.Send[struct {
 		Info struct {
 			Onvif string `json:"Onvif"`
 		} `json:"info"`
-	}](ctx, rpc.
-		Method("IntervideoManager.getVersion").
+	}](ctx, c, dahuarpc.
+		New("IntervideoManager.getVersion").
 		Params(struct {
 			Name string `json:"Name"`
 		}{

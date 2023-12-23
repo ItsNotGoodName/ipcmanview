@@ -10,12 +10,8 @@ import (
 func GetDeviceAllInfo(ctx context.Context, c dahuarpc.Conn) ([]Storage, error) {
 	var object int64
 	{
-		rpc, err := c.RPC(ctx)
-		if err != nil {
-			return []Storage{}, err
-		}
-
-		res, err := dahuarpc.Send[any](ctx, rpc.Method("storage.factory.instance"))
+		res, err := dahuarpc.Send[any](ctx, c, dahuarpc.
+			New("storage.factory.instance"))
 		if err != nil {
 			return []Storage{}, err
 		}
@@ -23,12 +19,9 @@ func GetDeviceAllInfo(ctx context.Context, c dahuarpc.Conn) ([]Storage, error) {
 		object = res.Result.Integer()
 	}
 
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return []Storage{}, err
-	}
-
-	res, err := dahuarpc.Send[getDeviceAllInfoResult](ctx, rpc.Method("storage.getDeviceAllInfo").Object(object))
+	res, err := dahuarpc.Send[getDeviceAllInfoResult](ctx, c, dahuarpc.
+		New("storage.getDeviceAllInfo").
+		Object(object))
 	if err != nil {
 		return []Storage{}, err
 	}

@@ -16,14 +16,10 @@ type User struct {
 }
 
 func GetActiveUserInfoAll(ctx context.Context, c dahuarpc.Conn) ([]User, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	res, err := dahuarpc.Send[struct {
 		Users []User `json:"users"`
-	}](ctx, rpc.Method("userManager.getActiveUserInfoAll"))
+	}](ctx, c, dahuarpc.
+		New("userManager.getActiveUserInfoAll"))
 	if err != nil {
 		return nil, err
 	}
@@ -32,12 +28,8 @@ func GetActiveUserInfoAll(ctx context.Context, c dahuarpc.Conn) ([]User, error) 
 }
 
 func GetAuthorityList(ctx context.Context, c dahuarpc.Conn) ([]string, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := dahuarpc.Send[[]string](ctx, rpc.Method("userManager.getAuthorityList"))
+	res, err := dahuarpc.Send[[]string](ctx, c, dahuarpc.
+		New("userManager.getAuthorityList"))
 	if err != nil {
 		return nil, err
 	}
@@ -60,14 +52,10 @@ type UserInfo struct {
 }
 
 func GetUserInfoAll(ctx context.Context, c dahuarpc.Conn) ([]UserInfo, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	res, err := dahuarpc.Send[struct {
 		Users []UserInfo `json:"users"`
-	}](ctx, rpc.Method("userManager.getUserInfoAll"))
+	}](ctx, c, dahuarpc.
+		New("userManager.getUserInfoAll"))
 	if err != nil {
 		return nil, err
 	}
@@ -83,12 +71,8 @@ type GroupInfo struct {
 }
 
 func GetGroupInfoAll(ctx context.Context, c dahuarpc.Conn) ([]GroupInfo, error) {
-	rpc, err := c.RPC(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := dahuarpc.Send[[]GroupInfo](ctx, rpc.Method("userManager.getGroupInfoAll"))
+	res, err := dahuarpc.Send[[]GroupInfo](ctx, c, dahuarpc.
+		New("userManager.getGroupInfoAll"))
 	if err != nil {
 		return nil, err
 	}

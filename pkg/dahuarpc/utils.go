@@ -97,11 +97,11 @@ func (s Integer) Integer() int64 {
 	return int64(s)
 }
 
-func RPCURL(httpAddress string) string {
+func URL(httpAddress string) string {
 	return fmt.Sprintf("%s/RPC2", httpAddress)
 }
 
-func RPCLoginURL(httpAddress string) string {
+func LoginURL(httpAddress string) string {
 	return fmt.Sprintf("%s/RPC2_Login", httpAddress)
 }
 
