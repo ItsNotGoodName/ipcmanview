@@ -13,7 +13,7 @@ sql:
         overrides:
           - db_type: "DATETIME"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.Time"
-          - column: "dahua_cameras.location"
+          - column: "dahua_devices.location"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.Location"
           - column: "settings.default_location"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.Location"

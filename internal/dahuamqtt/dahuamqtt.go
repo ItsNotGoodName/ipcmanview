@@ -17,11 +17,11 @@ import (
 
 const dahuaEventType = "dahua_event"
 
-func newCameraUID(cameraID string, extra ...string) string {
+func newDeviceUID(deviceID string, extra ...string) string {
 	if len(extra) > 0 {
-		return "ipcmanview_dahua_" + cameraID + "_" + strings.Join(extra, "_")
+		return "ipcmanview_dahua_" + deviceID + "_" + strings.Join(extra, "_")
 	}
-	return "ipcmanview_dahua_" + cameraID
+	return "ipcmanview_dahua_" + deviceID
 }
 
 type Conn struct {
@@ -70,13 +70,13 @@ func (c Conn) Sync(ctx context.Context) error {
 func (c Conn) haSync(ctx context.Context) error {
 	c.conn.Ready()
 
-	cameras, err := c.db.ListDahuaCamera(ctx)
+	devices, err := c.db.ListDahuaDevice(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, dbCamera := range cameras {
-		if err := c.haSyncCamera(ctx, dbCamera.Convert()); err != nil {
+	for _, dbDevice := range devices {
+		if err := c.haSyncDevice(ctx, dbDevice.Convert()); err != nil {
 			return err
 		}
 	}
@@ -84,49 +84,49 @@ func (c Conn) haSync(ctx context.Context) error {
 	return nil
 }
 
-func (c Conn) haSyncCamera(ctx context.Context, camera models.DahuaCameraConn) error {
-	conn := c.store.Conn(ctx, camera.DahuaConn)
+func (c Conn) haSyncDevice(ctx context.Context, device models.DahuaDeviceConn) error {
+	conn := c.store.Conn(ctx, device.DahuaConn)
 
-	detail, err := dahuacore.GetDahuaDetail(ctx, conn.Camera.ID, conn.RPC)
+	detail, err := dahuacore.GetDahuaDetail(ctx, conn.Device.ID, conn.RPC)
 	if err != nil {
 		log.Err(err).Msg("Failed to get detail")
 		return nil
 	}
 
-	sw, err := dahuacore.GetSoftwareVersion(ctx, conn.Camera.ID, conn.RPC)
+	sw, err := dahuacore.GetSoftwareVersion(ctx, conn.Device.ID, conn.RPC)
 	if err != nil {
 		log.Err(err).Msg("Failed to get software version")
 		return nil
 	}
 
-	coaxialCaps, err := dahuacore.GetCoaxialCaps(ctx, conn.Camera.ID, conn.RPC, 1)
+	coaxialCaps, err := dahuacore.GetCoaxialCaps(ctx, conn.Device.ID, conn.RPC, 1)
 	if err != nil {
 		log.Err(err).Msg("Failed to get coaxial caps")
 		return nil
 	}
 
-	cameraID := mqtt.Int(camera.DahuaCamera.ID)
-	cameraUID := newCameraUID(cameraID)
+	deviceID := mqtt.Int(device.DahuaDevice.ID)
+	deviceUID := newDeviceUID(deviceID)
 
 	haEntity := mqtt.NewHaEntity(c.conn)
-	haEntity.Device.Name = camera.Name
+	haEntity.Device.Name = device.Name
 	haEntity.Device.Manufacturer = detail.Vendor
 	haEntity.Device.Model = detail.DeviceType
 	haEntity.Device.HwVersion = detail.HardwareVersion
 	haEntity.Device.SwVersion = sw.Version
-	haEntity.Device.Identifiers = []string{cameraUID}
-	haEntity.ObjectId = "dahua_" + camera.Name
+	haEntity.Device.Identifiers = []string{deviceUID}
+	haEntity.ObjectId = "dahua_" + device.Name
 
 	// event
 	{
-		topicDahuaIDEvent := mqtt.Topic(c.conn.Topic.Join("dahua", cameraID, "event"))
+		topicDahuaIDEvent := mqtt.Topic(c.conn.Topic.Join("dahua", deviceID, "event"))
 
 		event := mqtt.HaEvent{HaEntity: haEntity}
 		event.Availability = append(event.Availability, mqtt.HaAvailability{
 			Topic: topicDahuaIDEvent.Join("state"),
 		})
 		event.StateTopic = string(topicDahuaIDEvent)
-		event.UniqueId = cameraUID
+		event.UniqueId = deviceUID
 		event.Name = "Event"
 		event.EventTypes = []string{dahuaEventType}
 
@@ -135,7 +135,7 @@ func (c Conn) haSyncCamera(ctx context.Context, camera models.DahuaCameraConn) e
 			return err
 		}
 
-		topicConfig := c.haTopic.Join("event", cameraUID, "config")
+		topicConfig := c.haTopic.Join("event", deviceUID, "config")
 		if err := mqtt.Wait(c.conn.Client.Publish(topicConfig, 0, true, b)); err != nil {
 			return err
 		}
@@ -143,11 +143,11 @@ func (c Conn) haSyncCamera(ctx context.Context, camera models.DahuaCameraConn) e
 
 	// white_light
 	if coaxialCaps.SupportControlLight {
-		topicDahuaIDWhiteLight := mqtt.Topic(c.conn.Topic.Join("dahua", cameraID, "white_light"))
+		topicDahuaIDWhiteLight := mqtt.Topic(c.conn.Topic.Join("dahua", deviceID, "white_light"))
 
 		binarySensor := mqtt.HaBinarySensor{HaEntity: haEntity}
 		binarySensor.StateTopic = string(topicDahuaIDWhiteLight)
-		binarySensor.UniqueId = newCameraUID(cameraID, "white_light")
+		binarySensor.UniqueId = newDeviceUID(deviceID, "white_light")
 		binarySensor.Name = "White Light"
 		binarySensor.Icon = "mdi:lightbulb"
 
@@ -156,7 +156,7 @@ func (c Conn) haSyncCamera(ctx context.Context, camera models.DahuaCameraConn) e
 			return err
 		}
 
-		topicConfig := c.haTopic.Join("binary_sensor", cameraUID, "white_light", "config")
+		topicConfig := c.haTopic.Join("binary_sensor", deviceUID, "white_light", "config")
 		if err := mqtt.Wait(c.conn.Client.Publish(topicConfig, 0, true, b)); err != nil {
 			return err
 		}
@@ -164,11 +164,11 @@ func (c Conn) haSyncCamera(ctx context.Context, camera models.DahuaCameraConn) e
 
 	// speaker
 	if coaxialCaps.SupportControlSpeaker {
-		topicDahuaIDSpeaker := mqtt.Topic(c.conn.Topic.Join("dahua", cameraID, "speaker"))
+		topicDahuaIDSpeaker := mqtt.Topic(c.conn.Topic.Join("dahua", deviceID, "speaker"))
 
 		binarySensor := mqtt.HaBinarySensor{HaEntity: haEntity}
 		binarySensor.StateTopic = string(topicDahuaIDSpeaker)
-		binarySensor.UniqueId = newCameraUID(cameraID, "speaker")
+		binarySensor.UniqueId = newDeviceUID(deviceID, "speaker")
 		binarySensor.Name = "Speaker"
 		binarySensor.Icon = "mdi:bullhorn"
 
@@ -177,7 +177,7 @@ func (c Conn) haSyncCamera(ctx context.Context, camera models.DahuaCameraConn) e
 			return err
 		}
 
-		topicConfig := c.haTopic.Join("binary_sensor", cameraUID, "speaker", "config")
+		topicConfig := c.haTopic.Join("binary_sensor", deviceUID, "speaker", "config")
 		if err := mqtt.Wait(c.conn.Client.Publish(topicConfig, 0, true, b)); err != nil {
 			return err
 		}
@@ -193,18 +193,18 @@ type dahuaEvent struct {
 
 func (c Conn) Register(bus *core.Bus) error {
 	if c.haEnable {
-		bus.OnEventDahuaCameraCreated(func(ctx context.Context, event models.EventDahuaCameraCreated) error {
+		bus.OnEventDahuaDeviceCreated(func(ctx context.Context, event models.EventDahuaDeviceCreated) error {
 			c.conn.Ready()
 
-			return c.haSyncCamera(ctx, event.Camera)
+			return c.haSyncDevice(ctx, event.Device)
 		})
-		bus.OnEventDahuaCameraUpdated(func(ctx context.Context, event models.EventDahuaCameraUpdated) error {
+		bus.OnEventDahuaDeviceUpdated(func(ctx context.Context, event models.EventDahuaDeviceUpdated) error {
 			c.conn.Ready()
 
-			return c.haSyncCamera(ctx, event.Camera)
+			return c.haSyncDevice(ctx, event.Device)
 		})
 	}
-	bus.OnEventDahuaCameraEvent(func(ctx context.Context, evt models.EventDahuaCameraEvent) error {
+	bus.OnEventDahuaDeviceEvent(func(ctx context.Context, evt models.EventDahuaDeviceEvent) error {
 		c.conn.Ready()
 
 		if evt.EventRule.IgnoreMQTT {
@@ -216,25 +216,25 @@ func (c Conn) Register(bus *core.Bus) error {
 			return err
 		}
 
-		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(evt.Event.CameraID), "event"), 0, false, b))
+		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(evt.Event.DeviceID), "event"), 0, false, b))
 	})
 	bus.OnEventDahuaEventWorkerConnect(func(ctx context.Context, evt models.EventDahuaEventWorkerConnect) error {
 		c.conn.Ready()
 
-		if err := publishEventError(ctx, c.conn, evt.CameraID, nil); err != nil {
+		if err := publishEventError(ctx, c.conn, evt.DeviceID, nil); err != nil {
 			return err
 		}
 
-		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", strconv.FormatInt(evt.CameraID, 10), "event", "state"), 0, true, "online"))
+		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", strconv.FormatInt(evt.DeviceID, 10), "event", "state"), 0, true, "online"))
 	})
 	bus.OnEventDahuaEventWorkerDisconnect(func(ctx context.Context, evt models.EventDahuaEventWorkerDisconnect) error {
 		c.conn.Ready()
 
-		if err := publishEventError(ctx, c.conn, evt.CameraID, evt.Error); err != nil {
+		if err := publishEventError(ctx, c.conn, evt.DeviceID, evt.Error); err != nil {
 			return err
 		}
 
-		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(evt.CameraID), "event", "state"), 0, true, "offline"))
+		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(evt.DeviceID), "event", "state"), 0, true, "offline"))
 	})
 	bus.OnEventDahuaCoaxialStatus(func(ctx context.Context, event models.EventDahuaCoaxialStatus) error {
 		c.conn.Ready()
@@ -245,7 +245,7 @@ func (c Conn) Register(bus *core.Bus) error {
 				payload = "ON"
 			}
 
-			if err := mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(event.CoaxialStatus.CameraID), "white_light"), 0, true, payload)); err != nil {
+			if err := mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(event.CoaxialStatus.DeviceID), "white_light"), 0, true, payload)); err != nil {
 				return err
 			}
 		}
@@ -256,7 +256,7 @@ func (c Conn) Register(bus *core.Bus) error {
 				payload = "ON"
 			}
 
-			if err := mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(event.CoaxialStatus.CameraID), "speaker"), 0, true, payload)); err != nil {
+			if err := mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(event.CoaxialStatus.DeviceID), "speaker"), 0, true, payload)); err != nil {
 				return err
 			}
 		}
@@ -266,12 +266,12 @@ func (c Conn) Register(bus *core.Bus) error {
 	return nil
 }
 
-func publishEventError(ctx context.Context, conn mqtt.Conn, cameraID int64, err error) error {
+func publishEventError(ctx context.Context, conn mqtt.Conn, deviceID int64, err error) error {
 	var payload any
 	if err != nil {
 		payload = err.Error()
 	} else {
 		payload = []byte{}
 	}
-	return mqtt.Wait(conn.Client.Publish(conn.Topic.Join("dahua", mqtt.Int(cameraID), "event", "error"), 0, true, payload))
+	return mqtt.Wait(conn.Client.Publish(conn.Topic.Join("dahua", mqtt.Int(deviceID), "event", "error"), 0, true, payload))
 }

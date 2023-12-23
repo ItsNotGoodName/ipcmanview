@@ -18,7 +18,7 @@ type DahuaError struct {
 }
 
 type DahuaStatus struct {
-	CameraID     int64     `json:"camera_id"`
+	DeviceID     int64     `json:"device_id"`
 	Address      string    `json:"address"`
 	Username     string    `json:"username"`
 	Location     string    `json:"location"`
@@ -28,7 +28,7 @@ type DahuaStatus struct {
 	RPCLastLogin time.Time `json:"rpc_last_login"`
 }
 
-type DahuaCamera struct {
+type DahuaDevice struct {
 	ID        int64
 	Name      string
 	Address   string `validate:"address"`
@@ -48,13 +48,13 @@ type DahuaConn struct {
 	Seed     int
 }
 
-type DahuaCameraConn struct {
-	DahuaCamera
+type DahuaDeviceConn struct {
+	DahuaDevice
 	DahuaConn
 }
 
 type DahuaDetail struct {
-	CameraID         int64  `json:"camera_id"`
+	DeviceID         int64  `json:"device_id"`
 	SN               string `json:"sn"`
 	DeviceClass      string `json:"device_class"`
 	DeviceType       string `json:"device_type"`
@@ -67,7 +67,7 @@ type DahuaDetail struct {
 }
 
 type DahuaSoftwareVersion struct {
-	CameraID                int64  `json:"camera_id"`
+	DeviceID                int64  `json:"device_id"`
 	Build                   string `json:"build"`
 	BuildDate               string `json:"build_date"`
 	SecurityBaseLineVersion string `json:"security_base_line_version"`
@@ -76,7 +76,7 @@ type DahuaSoftwareVersion struct {
 }
 
 type DahuaLicense struct {
-	CameraID      int64     `json:"camera_id"`
+	DeviceID      int64     `json:"device_id"`
 	AbroadInfo    string    `json:"abroad_info"`
 	AllType       bool      `json:"all_type"`
 	DigitChannel  int       `json:"digit_channel"`
@@ -89,13 +89,13 @@ type DahuaLicense struct {
 }
 
 type DahuaCoaxialStatus struct {
-	CameraID   int64 `json:"camera_id"`
+	DeviceID   int64 `json:"device_id"`
 	WhiteLight bool  `json:"white_light"`
 	Speaker    bool  `json:"speaker"`
 }
 
 type DahuaCoaxialCaps struct {
-	CameraID                     int64 `json:"camera_id"`
+	DeviceID                     int64 `json:"device_id"`
 	SupportControlFullcolorLight bool  `json:"support_control_fullcolor_light"`
 	SupportControlLight          bool  `json:"support_control_light"`
 	SupportControlSpeaker        bool  `json:"support_control_speaker"`
@@ -103,7 +103,7 @@ type DahuaCoaxialCaps struct {
 
 type DahuaFile struct {
 	ID          int64     `json:"id"`
-	CameraID    int64     `json:"camera_id"`
+	DeviceID    int64     `json:"device_id"`
 	Channel     int       `json:"channel"`
 	StartTime   time.Time `json:"start_time"`
 	EndTime     time.Time `json:"end_time"`
@@ -125,7 +125,7 @@ type DahuaFile struct {
 
 type DahuaEvent struct {
 	ID        int64           `json:"id"`
-	CameraID  int64           `json:"camera_id"`
+	DeviceID  int64           `json:"device_id"`
 	Code      string          `json:"code"`
 	Action    string          `json:"action"`
 	Index     int             `json:"index"`
@@ -140,7 +140,7 @@ type DahuaEventRule struct {
 }
 
 type DahuaStorage struct {
-	CameraID   int64  `json:"camera_id"`
+	DeviceID   int64  `json:"device_id"`
 	Name       string `json:"name"`
 	State      string `json:"state"`
 	Path       string `json:"path"`
@@ -151,7 +151,7 @@ type DahuaStorage struct {
 }
 
 type DahuaUser struct {
-	CameraID      int64     `json:"camera_id"`
+	DeviceID      int64     `json:"device_id"`
 	ClientAddress string    `json:"client_address"`
 	ClientType    string    `json:"client_type"`
 	Group         string    `json:"group"`

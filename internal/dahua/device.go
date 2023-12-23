@@ -8,12 +8,12 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-func DeleteCamera(ctx context.Context, db repo.DB, bus *core.Bus, id int64) error {
-	if err := db.DeleteDahuaCamera(ctx, id); err != nil {
+func DeleteDevice(ctx context.Context, db repo.DB, bus *core.Bus, id int64) error {
+	if err := db.DeleteDahuaDevice(ctx, id); err != nil {
 		return err
 	}
-	bus.EventDahuaCameraDeleted(models.EventDahuaCameraDeleted{
-		CameraID: id,
+	bus.EventDahuaDeviceDeleted(models.EventDahuaDeviceDeleted{
+		DeviceID: id,
 	})
 	return nil
 }

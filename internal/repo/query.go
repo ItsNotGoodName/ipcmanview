@@ -12,26 +12,26 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-func (db DB) DahuaCameraExists(ctx context.Context, id int64) (bool, error) {
-	count, err := db.dahuaCameraExists(ctx, id)
+func (db DB) DahuaDeviceExists(ctx context.Context, id int64) (bool, error) {
+	count, err := db.dahuaDeviceExists(ctx, id)
 	if err != nil {
 		return false, err
 	}
 	return count > 0, nil
 }
 
-type CreateDahuaCameraParams = createDahuaCameraParams
+type CreateDahuaDeviceParams = createDahuaDeviceParams
 
 type CreateDahuaFileCursorParams = createDahuaFileCursorParams
 
-func (db DB) CreateDahuaCamera(ctx context.Context, arg CreateDahuaCameraParams, args2 CreateDahuaFileCursorParams) (int64, error) {
+func (db DB) CreateDahuaDevice(ctx context.Context, arg CreateDahuaDeviceParams, args2 CreateDahuaFileCursorParams) (int64, error) {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return 0, nil
 	}
 	defer tx.Rollback()
 
-	id, err := tx.createDahuaCamera(ctx, arg)
+	id, err := tx.createDahuaDevice(ctx, arg)
 	if err != nil {
 		return 0, err
 	}
@@ -45,7 +45,7 @@ func (db DB) CreateDahuaCamera(ctx context.Context, arg CreateDahuaCameraParams,
 		return 0, err
 	}
 
-	args2.CameraID = id
+	args2.DeviceID = id
 	err = tx.createDahuaFileCursor(ctx, args2)
 	if err != nil {
 		return 0, err
@@ -61,7 +61,7 @@ func (db DB) CreateDahuaCamera(ctx context.Context, arg CreateDahuaCameraParams,
 
 func (db DB) UpsertDahuaFiles(ctx context.Context, args CreateDahuaFileParams) (int64, error) {
 	id, err := db.UpdateDahuaFile(ctx, UpdateDahuaFileParams{
-		CameraID:    args.CameraID,
+		DeviceID:    args.DeviceID,
 		Channel:     args.Channel,
 		StartTime:   args.StartTime,
 		EndTime:     args.EndTime,
@@ -95,7 +95,7 @@ type ListDahuaEventParams struct {
 	pagination.Page
 	Code      []string
 	Action    []string
-	CameraID  []int64
+	DeviceID  []int64
 	Start     types.Time
 	End       types.Time
 	Ascending bool
@@ -116,8 +116,8 @@ func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (List
 	if len(arg.Action) != 0 {
 		eq["action"] = arg.Action
 	}
-	if len(arg.CameraID) != 0 {
-		eq["camera_id"] = arg.CameraID
+	if len(arg.DeviceID) != 0 {
+		eq["device_id"] = arg.DeviceID
 	}
 	where = append(where, eq)
 
@@ -165,7 +165,7 @@ func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (List
 type ListDahuaFileParams struct {
 	pagination.Page
 	Type      []string
-	CameraID  []int64
+	DeviceID  []int64
 	Start     types.Time
 	End       types.Time
 	Ascending bool
@@ -183,8 +183,8 @@ func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDa
 	if len(arg.Type) != 0 {
 		eq["type"] = arg.Type
 	}
-	if len(arg.CameraID) != 0 {
-		eq["camera_id"] = arg.CameraID
+	if len(arg.DeviceID) != 0 {
+		eq["device_id"] = arg.DeviceID
 	}
 	where = append(where, eq)
 
@@ -231,7 +231,7 @@ func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDa
 
 func (db DB) GetDahuaEventRuleByEvent(ctx context.Context, event models.DahuaEvent) (models.DahuaEventRule, error) {
 	res, err := db.getDahuaEventRuleByEvent(ctx, getDahuaEventRuleByEventParams{
-		CameraID: event.CameraID,
+		DeviceID: event.DeviceID,
 		Code:     event.Code,
 	})
 	if err != nil {

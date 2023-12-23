@@ -9,7 +9,7 @@ import (
 
 type CmdScan struct {
 	Shared
-	SharedCameras
+	SharedDevices
 	Full  bool `help:"Run full file scan."`
 	Reset bool `help:"Reset all file cursors."`
 }
@@ -20,7 +20,7 @@ func (c *CmdScan) Run(ctx *Context) error {
 		return err
 	}
 
-	cameras, err := c.useCameras(ctx, db)
+	devices, err := c.useDevices(ctx, db)
 	if err != nil {
 		return err
 	}
@@ -30,25 +30,25 @@ func (c *CmdScan) Run(ctx *Context) error {
 		scanType = dahua.ScanTypeFull
 	}
 
-	for _, camera := range cameras {
-		err := dahua.ScanLockCreate(ctx, db, camera.DahuaConn.ID)
+	for _, device := range devices {
+		err := dahua.ScanLockCreate(ctx, db, device.DahuaConn.ID)
 		if err != nil {
 			return err
 		}
-		cancel := dahua.ScanLockHeartbeat(ctx, db, camera.DahuaConn.ID)
+		cancel := dahua.ScanLockHeartbeat(ctx, db, device.DahuaConn.ID)
 		defer cancel()
 
 		if c.Reset {
-			err := dahua.ScanReset(ctx, db, camera.DahuaCamera.ID)
+			err := dahua.ScanReset(ctx, db, device.DahuaDevice.ID)
 			if err != nil {
 				return err
 			}
 		}
 
-		conn := dahuacore.NewConn(camera.DahuaConn)
+		conn := dahuacore.NewConn(device.DahuaConn)
 		defer conn.RPC.Close(context.Background())
 
-		err = dahua.Scan(ctx, db, conn.RPC, conn.Camera, scanType)
+		err = dahua.Scan(ctx, db, conn.RPC, conn.Device, scanType)
 		if err != nil {
 			return err
 		}

@@ -12,7 +12,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-type DahuaCamera struct {
+type DahuaDevice struct {
 	ID        int64
 	Name      string
 	Address   string
@@ -25,7 +25,7 @@ type DahuaCamera struct {
 
 type DahuaEvent struct {
 	ID        int64
-	CameraID  int64
+	DeviceID  int64
 	Code      string
 	Action    string
 	Index     int64
@@ -33,8 +33,8 @@ type DahuaEvent struct {
 	CreatedAt types.Time
 }
 
-type DahuaEventCameraRule struct {
-	CameraID   int64
+type DahuaEventDeviceRule struct {
+	DeviceID   int64
 	Code       string
 	IgnoreDb   bool
 	IgnoreLive bool
@@ -51,7 +51,7 @@ type DahuaEventRule struct {
 
 type DahuaEventWorkerState struct {
 	ID        int64
-	CameraID  int64
+	DeviceID  int64
 	State     models.DahuaEventWorkerState
 	Error     sql.NullString
 	CreatedAt types.Time
@@ -59,7 +59,7 @@ type DahuaEventWorkerState struct {
 
 type DahuaFile struct {
 	ID          int64
-	CameraID    int64
+	DeviceID    int64
 	Channel     int64
 	StartTime   types.Time
 	EndTime     types.Time
@@ -81,7 +81,7 @@ type DahuaFile struct {
 }
 
 type DahuaFileCursor struct {
-	CameraID     int64
+	DeviceID     int64
 	QuickCursor  types.Time
 	FullCursor   types.Time
 	FullEpoch    types.Time
@@ -90,13 +90,13 @@ type DahuaFileCursor struct {
 }
 
 type DahuaFileScanLock struct {
-	CameraID  int64
+	DeviceID  int64
 	TouchedAt types.Time
 }
 
 type DahuaSeed struct {
 	Seed     int64
-	CameraID sql.NullInt64
+	DeviceID sql.NullInt64
 }
 
 type Setting struct {

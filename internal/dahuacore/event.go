@@ -14,37 +14,37 @@ import (
 )
 
 type EventHooks interface {
-	Connecting(ctx context.Context, cameraID int64)
-	Connect(ctx context.Context, cameraID int64)
-	Disconnect(cameraID int64, err error)
+	Connecting(ctx context.Context, deviceID int64)
+	Connect(ctx context.Context, deviceID int64)
+	Disconnect(deviceID int64, err error)
 	Event(ctx context.Context, event models.DahuaEvent)
 }
 
-func NewEventWorker(camera models.DahuaConn, hooks EventHooks) EventWorker {
+func NewEventWorker(device models.DahuaConn, hooks EventHooks) EventWorker {
 	return EventWorker{
-		Camera: camera,
+		device: device,
 		hooks:  hooks,
 	}
 }
 
 type EventWorker struct {
-	Camera models.DahuaConn
+	device models.DahuaConn
 	hooks  EventHooks
 }
 
 func (w EventWorker) String() string {
-	return fmt.Sprintf("dahuacore.EventWorker(id=%d)", w.Camera.ID)
+	return fmt.Sprintf("dahuacore.EventWorker(id=%d)", w.device.ID)
 }
 
 func (w EventWorker) Serve(ctx context.Context) error {
-	w.hooks.Connecting(ctx, w.Camera.ID)
+	w.hooks.Connecting(ctx, w.device.ID)
 	err := w.serve(ctx)
-	w.hooks.Disconnect(w.Camera.ID, err)
+	w.hooks.Disconnect(w.device.ID, err)
 	return err
 }
 
 func (w EventWorker) serve(ctx context.Context) error {
-	c := dahuacgi.NewClient(http.Client{}, NewHTTPAddress(w.Camera.Address), w.Camera.Username, w.Camera.Password)
+	c := dahuacgi.NewClient(http.Client{}, NewHTTPAddress(w.device.Address), w.device.Username, w.device.Password)
 
 	manager, err := dahuacgi.EventManagerGet(ctx, c, 0)
 	if err != nil {
@@ -62,7 +62,7 @@ func (w EventWorker) serve(ctx context.Context) error {
 	}
 	defer manager.Close()
 
-	w.hooks.Connect(ctx, w.Camera.ID)
+	w.hooks.Connect(ctx, w.device.ID)
 
 	for reader := manager.Reader(); ; {
 		if err := reader.Poll(); err != nil {
@@ -74,7 +74,7 @@ func (w EventWorker) serve(ctx context.Context) error {
 			return err
 		}
 
-		event := NewDahuaEvent(w.Camera.ID, rawEvent)
+		event := NewDahuaEvent(w.device.ID, rawEvent)
 
 		w.hooks.Event(ctx, event)
 	}

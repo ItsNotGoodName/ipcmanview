@@ -31,10 +31,10 @@ func RegisterMiddleware(e *echo.Echo) {
 func (w Server) RegisterRoutes(e *echo.Echo) {
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
-	e.GET("/dahua/cameras", w.DahuaCameras)
-	e.GET("/dahua/cameras/:id/update", w.DahuaCamerasUpdate)
-	e.GET("/dahua/cameras/create", w.DahuaCamerasCreate)
-	e.GET("/dahua/cameras/file-cursors", w.DahuaCamerasFileCursors)
+	e.GET("/dahua/devices", w.DahuaDevices)
+	e.GET("/dahua/devices/:id/update", w.DahuaDevicesUpdate)
+	e.GET("/dahua/devices/create", w.DahuaDevicesCreate)
+	e.GET("/dahua/devices/file-cursors", w.DahuaDevicesFileCursors)
 	e.GET("/dahua/events", w.DahuaEvents)
 	e.GET("/dahua/events/:id/data", w.DahuaEventsIDData)
 	e.GET("/dahua/events/live", w.DahuaEventsLive)
@@ -43,10 +43,10 @@ func (w Server) RegisterRoutes(e *echo.Echo) {
 	e.GET("/dahua/files", w.DahuaFiles)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
 
-	e.POST("/dahua/cameras", w.DahuaCamerasPOST)
-	e.POST("/dahua/cameras/:id/update", w.DahuaCamerasUpdatePOST)
-	e.POST("/dahua/cameras/create", w.DahuaCamerasCreatePOST)
-	e.POST("/dahua/cameras/file-cursors", w.DahuaCamerasFileCursorsPOST)
+	e.POST("/dahua/devices", w.DahuaDevicesPOST)
+	e.POST("/dahua/devices/:id/update", w.DahuaDevicesUpdatePOST)
+	e.POST("/dahua/devices/create", w.DahuaDevicesCreatePOST)
+	e.POST("/dahua/devices/file-cursors", w.DahuaDevicesFileCursorsPOST)
 	e.POST("/dahua/events/rules", w.DahuaEventsRulePOST)
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
 }
@@ -79,7 +79,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	params := struct {
-		CameraID  []int64
+		DeviceID  []int64
 		Code      []string
 		Action    []string
 		Page      int64 `validate:"gt=0"`
@@ -105,7 +105,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 	}
 
 	events, err := s.db.ListDahuaEvent(ctx, repo.ListDahuaEventParams{
-		CameraID: params.CameraID,
+		DeviceID: params.DeviceID,
 		Code:     params.Code,
 		Action:   params.Action,
 		Page: pagination.Page{
@@ -130,14 +130,14 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
-	cameras, err := s.db.ListDahuaCamera(ctx)
+	devices, err := s.db.ListDahuaDevice(ctx)
 	if err != nil {
 		return err
 	}
 
 	data := Data{
 		"Params":      params,
-		"Cameras":     cameras,
+		"Devices":     devices,
 		"Events":      events,
 		"EventCodes":  eventCodes,
 		"EventAction": eventActions,
@@ -169,7 +169,7 @@ func (s Server) DahuaFiles(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	params := struct {
-		CameraID  []int64
+		DeviceID  []int64
 		Type      []string
 		Page      int64 `validate:"gt=0"`
 		PerPage   int64
@@ -198,7 +198,7 @@ func (s Server) DahuaFiles(c echo.Context) error {
 			PerPage: int(params.PerPage),
 		},
 		Type:      params.Type,
-		CameraID:  params.CameraID,
+		DeviceID:  params.DeviceID,
 		Start:     types.NewTime(timeRange.Start),
 		End:       types.NewTime(timeRange.End),
 		Ascending: params.Ascending,
@@ -207,7 +207,7 @@ func (s Server) DahuaFiles(c echo.Context) error {
 		return err
 	}
 
-	cameras, err := s.db.ListDahuaCamera(ctx)
+	devices, err := s.db.ListDahuaDevice(ctx)
 	if err != nil {
 		return err
 	}
@@ -220,7 +220,7 @@ func (s Server) DahuaFiles(c echo.Context) error {
 	data := Data{
 		"Params":  params,
 		"Files":   files,
-		"Cameras": cameras,
+		"Devices": devices,
 		"Types":   types,
 	}
 
@@ -236,7 +236,7 @@ func (s Server) DahuaEventsLive(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	params := struct {
-		CameraID []int64
+		DeviceID []int64
 		Code     []string
 		Action   []string
 		Data     bool
@@ -255,14 +255,14 @@ func (s Server) DahuaEventsLive(c echo.Context) error {
 		return err
 	}
 
-	cameras, err := s.db.ListDahuaCamera(ctx)
+	devices, err := s.db.ListDahuaDevice(ctx)
 	if err != nil {
 		return err
 	}
 
 	data := Data{
 		"Params":      params,
-		"Cameras":     cameras,
+		"Devices":     devices,
 		"EventCodes":  eventCodes,
 		"EventAction": eventActions,
 	}
@@ -279,7 +279,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	params := struct {
-		CameraID []int64
+		DeviceID []int64
 		Code     []string
 		Action   []string
 		Data     bool
@@ -288,7 +288,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 		return err
 	}
 
-	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaCameraEvent{})
+	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaDeviceEvent{})
 	if err != nil {
 		return err
 	}
@@ -298,10 +298,10 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	buf := new(bytes.Buffer)
 
 	for event := range eventsC {
-		evt, ok := event.(models.EventDahuaCameraEvent)
+		evt, ok := event.(models.EventDahuaDeviceEvent)
 		if !ok ||
 			evt.EventRule.IgnoreLive ||
-			(len(params.CameraID) > 0 && !slices.Contains(params.CameraID, evt.Event.CameraID)) ||
+			(len(params.DeviceID) > 0 && !slices.Contains(params.DeviceID, evt.Event.DeviceID)) ||
 			(len(params.Code) > 0 && !slices.Contains(params.Code, evt.Event.Code)) ||
 			(len(params.Action) > 0 && !slices.Contains(params.Action, evt.Event.Action)) {
 			continue
@@ -325,12 +325,12 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	return sub.Error()
 }
 
-func (s Server) DahuaCamerasPOST(c echo.Context) error {
+func (s Server) DahuaDevicesPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var form struct {
 		Action  string
-		Cameras []struct {
+		Devices []struct {
 			Selected bool
 			ID       int64
 		}
@@ -340,41 +340,41 @@ func (s Server) DahuaCamerasPOST(c echo.Context) error {
 	}
 
 	if form.Action == "Delete" {
-		for _, camera := range form.Cameras {
-			if !camera.Selected {
+		for _, device := range form.Devices {
+			if !device.Selected {
 				continue
 			}
-			if err := dahua.DeleteCamera(ctx, s.db, s.bus, camera.ID); err != nil {
+			if err := dahua.DeleteDevice(ctx, s.db, s.bus, device.ID); err != nil {
 				return err
 			}
 		}
 	}
 
 	if isHTMX(c) {
-		cameras, err := s.db.ListDahuaCamera(c.Request().Context())
+		devices, err := s.db.ListDahuaDevice(c.Request().Context())
 		if err != nil {
 			return err
 		}
 
-		return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{"htmx-cameras", Data{
-			"Cameras": cameras,
+		return c.Render(http.StatusOK, "dahua-devices", TemplateBlock{"htmx-devices", Data{
+			"Devices": devices,
 		}})
 	}
 
-	return s.DahuaCameras(c)
+	return s.DahuaDevices(c)
 }
 
-func (s Server) DahuaCameras(c echo.Context) error {
+func (s Server) DahuaDevices(c echo.Context) error {
 	if isHTMX(c) {
 		tables, err := useDahuaTables(c.Request().Context(), s.db, s.dahuaStore)
 		if err != nil {
 			return err
 		}
 
-		return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{"htmx", tables})
+		return c.Render(http.StatusOK, "dahua-devices", TemplateBlock{"htmx", tables})
 	}
 
-	cameras, err := s.db.ListDahuaCamera(c.Request().Context())
+	devices, err := s.db.ListDahuaDevice(c.Request().Context())
 	if err != nil {
 		return err
 	}
@@ -389,20 +389,20 @@ func (s Server) DahuaCameras(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-cameras", Data{
-		"Cameras":      cameras,
+	return c.Render(http.StatusOK, "dahua-devices", Data{
+		"Devices":      devices,
 		"FileCursors":  fileCursors,
 		"EventWorkers": eventWorkers,
 	})
 }
 
-func (s Server) DahuaCamerasCreate(c echo.Context) error {
-	return c.Render(http.StatusOK, "dahua-cameras-create", Data{
+func (s Server) DahuaDevicesCreate(c echo.Context) error {
+	return c.Render(http.StatusOK, "dahua-devices-create", Data{
 		"Locations": dahua.Locations,
 	})
 }
 
-func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
+func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var form struct {
@@ -426,7 +426,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	create, err := dahuacore.NewDahuaCamera(models.DahuaCamera{
+	create, err := dahuacore.NewDahuaDevice(models.DahuaDevice{
 		Name:     form.Name,
 		Address:  form.Address,
 		Username: form.Username,
@@ -434,7 +434,7 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 		Location: location.Location,
 	})
 
-	id, err := s.db.CreateDahuaCamera(ctx, repo.CreateDahuaCameraParams{
+	id, err := s.db.CreateDahuaDevice(ctx, repo.CreateDahuaDeviceParams{
 		Name:      create.Name,
 		Username:  create.Username,
 		Password:  create.Password,
@@ -446,25 +446,25 @@ func (s Server) DahuaCamerasCreatePOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	dbCamera, err := s.db.GetDahuaCamera(ctx, id)
+	dbDevice, err := s.db.GetDahuaDevice(ctx, id)
 	if err != nil {
 		return err
 	}
-	s.bus.EventDahuaCameraCreated(models.EventDahuaCameraCreated{
-		Camera: dbCamera.Convert(),
+	s.bus.EventDahuaDeviceCreated(models.EventDahuaDeviceCreated{
+		Device: dbDevice.Convert(),
 	})
 
-	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
+	return c.Redirect(http.StatusSeeOther, "/dahua/devices")
 }
 
-func (s Server) DahuaCamerasFileCursorsPOST(c echo.Context) error {
+func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var form struct {
 		Action      string
 		FileCursors []struct {
 			Selected bool
-			CameraID int64
+			DeviceID int64
 		}
 	}
 	if err := api.ParseForm(c, &form); err != nil {
@@ -478,14 +478,14 @@ func (s Server) DahuaCamerasFileCursorsPOST(c echo.Context) error {
 				continue
 			}
 
-			err := dahua.ScanLockCreate(ctx, s.db, v.CameraID)
+			err := dahua.ScanLockCreate(ctx, s.db, v.DeviceID)
 			if err != nil {
 				return err
 			}
 
-			err = dahua.ScanReset(ctx, s.db, v.CameraID)
+			err = dahua.ScanReset(ctx, s.db, v.DeviceID)
 
-			dahua.ScanLockDelete(s.db, v.CameraID)
+			dahua.ScanLockDelete(s.db, v.DeviceID)
 
 			if err != nil {
 				if repo.IsNotFound(err) {
@@ -505,24 +505,24 @@ func (s Server) DahuaCamerasFileCursorsPOST(c echo.Context) error {
 				continue
 			}
 
-			camera, err := s.db.GetDahuaCamera(ctx, v.CameraID)
+			device, err := s.db.GetDahuaDevice(ctx, v.DeviceID)
 			if err != nil {
 				if repo.IsNotFound(err) {
 					continue
 				}
 				return err
 			}
-			conn := s.dahuaStore.Conn(ctx, camera.Convert().DahuaConn)
+			conn := s.dahuaStore.Conn(ctx, device.Convert().DahuaConn)
 
-			if err := dahua.ScanLockCreate(ctx, s.db, v.CameraID); err != nil {
+			if err := dahua.ScanLockCreate(ctx, s.db, v.DeviceID); err != nil {
 				return err
 			}
 			go func(conn dahuacore.Conn) {
 				ctx := context.Background()
-				cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Camera.ID)
+				cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Device.ID)
 				defer cancel()
 
-				err := dahua.Scan(ctx, s.db, conn.RPC, conn.Camera, scanType)
+				err := dahua.Scan(ctx, s.db, conn.RPC, conn.Device, scanType)
 				if err != nil {
 					log.Err(err).Msg("Scan error")
 				}
@@ -530,12 +530,12 @@ func (s Server) DahuaCamerasFileCursorsPOST(c echo.Context) error {
 		}
 	}
 
-	return s.DahuaCamerasFileCursors(c)
+	return s.DahuaDevicesFileCursors(c)
 }
 
-func (s Server) DahuaCamerasFileCursors(c echo.Context) error {
+func (s Server) DahuaDevicesFileCursors(c echo.Context) error {
 	if !isHTMX(c) {
-		return c.Redirect(http.StatusSeeOther, "/dahua/cameras#file-cursors")
+		return c.Redirect(http.StatusSeeOther, "/dahua/devices#file-cursors")
 	}
 
 	fileCursors, err := s.db.ListDahuaFileCursor(c.Request().Context(), dahua.ScanLockStaleTime())
@@ -543,27 +543,27 @@ func (s Server) DahuaCamerasFileCursors(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-cameras", TemplateBlock{"htmx-file-cursors", Data{
+	return c.Render(http.StatusOK, "dahua-devices", TemplateBlock{"htmx-file-cursors", Data{
 		"FileCursors": fileCursors,
 	}})
 }
 
-func (s Server) DahuaCamerasUpdate(c echo.Context) error {
-	camera, err := useDahuaCamera(c, s.db)
+func (s Server) DahuaDevicesUpdate(c echo.Context) error {
+	device, err := useDahuaDevice(c, s.db)
 	if err != nil {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-cameras-update", Data{
+	return c.Render(http.StatusOK, "dahua-devices-update", Data{
 		"Locations": dahua.Locations,
-		"Camera":    camera,
+		"Device":    device,
 	})
 }
 
-func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
+func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	camera, err := useDahuaCamera(c, s.db)
+	device, err := useDahuaDevice(c, s.db)
 	if err != nil {
 		return err
 	}
@@ -583,24 +583,24 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 	if form.Password == "" {
-		form.Password = camera.Password
+		form.Password = device.Password
 	}
 
-	update, err := dahuacore.UpdateDahuaCamera(models.DahuaCamera{
-		ID:        camera.ID,
+	update, err := dahuacore.UpdateDahuaDevice(models.DahuaDevice{
+		ID:        device.ID,
 		Name:      form.Name,
 		Address:   form.Address,
 		Username:  form.Username,
 		Password:  form.Password,
 		Location:  location.Location,
-		CreatedAt: camera.CreatedAt.Time,
-		UpdatedAt: camera.UpdatedAt.Time,
+		CreatedAt: device.CreatedAt.Time,
+		UpdatedAt: device.UpdatedAt.Time,
 	})
 	if err != nil {
 		return err
 	}
 
-	_, err = s.db.UpdateDahuaCamera(ctx, repo.UpdateDahuaCameraParams{
+	_, err = s.db.UpdateDahuaDevice(ctx, repo.UpdateDahuaDeviceParams{
 		ID:        update.ID,
 		Name:      form.Name,
 		Username:  update.Username,
@@ -613,25 +613,25 @@ func (s Server) DahuaCamerasUpdatePOST(c echo.Context) error {
 		return err
 	}
 
-	dbCamera, err := s.db.GetDahuaCamera(ctx, camera.ID)
+	dbDevice, err := s.db.GetDahuaDevice(ctx, device.ID)
 	if err != nil {
 		return err
 	}
-	s.bus.EventDahuaCameraUpdated(models.EventDahuaCameraUpdated{
-		Camera: dbCamera.Convert(),
+	s.bus.EventDahuaDeviceUpdated(models.EventDahuaDeviceUpdated{
+		Device: dbDevice.Convert(),
 	})
 
-	return c.Redirect(http.StatusSeeOther, "/dahua/cameras")
+	return c.Redirect(http.StatusSeeOther, "/dahua/devices")
 }
 
 func (s Server) DahuaSnapshots(c echo.Context) error {
-	cameras, err := s.db.ListDahuaCamera(c.Request().Context())
+	devices, err := s.db.ListDahuaDevice(c.Request().Context())
 	if err != nil {
 		return err
 	}
 
 	return c.Render(http.StatusOK, "dahua-snapshots", Data{
-		"Cameras": cameras,
+		"Devices": devices,
 	})
 }
 

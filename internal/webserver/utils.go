@@ -12,18 +12,18 @@ import (
 type Data map[string]any
 
 // TODO: remove this
-func useDahuaCamera(c echo.Context, db repo.DB) (repo.GetDahuaCameraRow, error) {
+func useDahuaDevice(c echo.Context, db repo.DB) (repo.GetDahuaDeviceRow, error) {
 	id, err := api.ParamID(c)
 	if err != nil {
-		return repo.GetDahuaCameraRow{}, err
+		return repo.GetDahuaDeviceRow{}, err
 	}
 
-	camera, err := db.GetDahuaCamera(c.Request().Context(), id)
+	device, err := db.GetDahuaDevice(c.Request().Context(), id)
 	if err != nil {
-		return repo.GetDahuaCameraRow{}, err
+		return repo.GetDahuaDeviceRow{}, err
 	}
 
-	return camera, nil
+	return device, nil
 }
 
 // isHTMX checks if request is an htmx request but not a boosted htmx request.

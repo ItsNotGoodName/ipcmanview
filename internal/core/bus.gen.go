@@ -9,12 +9,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func busLogError(err error) bool {
+func busLogError(err error) {
 	if err != nil {
 		log.Err(err).Str("package", "core").Msg("Failed to handle event")
-		return true
 	}
-	return false
 }
 
 func NewBus() *Bus {
@@ -25,10 +23,10 @@ func NewBus() *Bus {
 
 type Bus struct {
 	sutureext.ServiceContext
-	onEventDahuaCameraCreated []func(ctx context.Context, event models.EventDahuaCameraCreated) error
-	onEventDahuaCameraUpdated []func(ctx context.Context, event models.EventDahuaCameraUpdated) error
-	onEventDahuaCameraDeleted []func(ctx context.Context, event models.EventDahuaCameraDeleted) error
-	onEventDahuaCameraEvent []func(ctx context.Context, event models.EventDahuaCameraEvent) error
+	onEventDahuaDeviceCreated []func(ctx context.Context, event models.EventDahuaDeviceCreated) error
+	onEventDahuaDeviceUpdated []func(ctx context.Context, event models.EventDahuaDeviceUpdated) error
+	onEventDahuaDeviceDeleted []func(ctx context.Context, event models.EventDahuaDeviceDeleted) error
+	onEventDahuaDeviceEvent []func(ctx context.Context, event models.EventDahuaDeviceEvent) error
 	onEventDahuaEventWorkerConnecting []func(ctx context.Context, event models.EventDahuaEventWorkerConnecting) error
 	onEventDahuaEventWorkerConnect []func(ctx context.Context, event models.EventDahuaEventWorkerConnect) error
 	onEventDahuaEventWorkerDisconnect []func(ctx context.Context, event models.EventDahuaEventWorkerDisconnect) error
@@ -36,16 +34,16 @@ type Bus struct {
 }
 
 func (b *Bus) Register(pub pubsub.Pub) {
-	b.OnEventDahuaCameraCreated(func(ctx context.Context, event models.EventDahuaCameraCreated) error {
+	b.OnEventDahuaDeviceCreated(func(ctx context.Context, event models.EventDahuaDeviceCreated) error {
 		return pub.Publish(ctx, event)
 	})
-	b.OnEventDahuaCameraUpdated(func(ctx context.Context, event models.EventDahuaCameraUpdated) error {
+	b.OnEventDahuaDeviceUpdated(func(ctx context.Context, event models.EventDahuaDeviceUpdated) error {
 		return pub.Publish(ctx, event)
 	})
-	b.OnEventDahuaCameraDeleted(func(ctx context.Context, event models.EventDahuaCameraDeleted) error {
+	b.OnEventDahuaDeviceDeleted(func(ctx context.Context, event models.EventDahuaDeviceDeleted) error {
 		return pub.Publish(ctx, event)
 	})
-	b.OnEventDahuaCameraEvent(func(ctx context.Context, event models.EventDahuaCameraEvent) error {
+	b.OnEventDahuaDeviceEvent(func(ctx context.Context, event models.EventDahuaDeviceEvent) error {
 		return pub.Publish(ctx, event)
 	})
 	b.OnEventDahuaEventWorkerConnecting(func(ctx context.Context, event models.EventDahuaEventWorkerConnecting) error {
@@ -63,20 +61,20 @@ func (b *Bus) Register(pub pubsub.Pub) {
 }
 
 
-func (b *Bus) OnEventDahuaCameraCreated(h func(ctx context.Context, event models.EventDahuaCameraCreated) error) {
-	b.onEventDahuaCameraCreated = append(b.onEventDahuaCameraCreated, h)
+func (b *Bus) OnEventDahuaDeviceCreated(h func(ctx context.Context, event models.EventDahuaDeviceCreated) error) {
+	b.onEventDahuaDeviceCreated = append(b.onEventDahuaDeviceCreated, h)
 }
 
-func (b *Bus) OnEventDahuaCameraUpdated(h func(ctx context.Context, event models.EventDahuaCameraUpdated) error) {
-	b.onEventDahuaCameraUpdated = append(b.onEventDahuaCameraUpdated, h)
+func (b *Bus) OnEventDahuaDeviceUpdated(h func(ctx context.Context, event models.EventDahuaDeviceUpdated) error) {
+	b.onEventDahuaDeviceUpdated = append(b.onEventDahuaDeviceUpdated, h)
 }
 
-func (b *Bus) OnEventDahuaCameraDeleted(h func(ctx context.Context, event models.EventDahuaCameraDeleted) error) {
-	b.onEventDahuaCameraDeleted = append(b.onEventDahuaCameraDeleted, h)
+func (b *Bus) OnEventDahuaDeviceDeleted(h func(ctx context.Context, event models.EventDahuaDeviceDeleted) error) {
+	b.onEventDahuaDeviceDeleted = append(b.onEventDahuaDeviceDeleted, h)
 }
 
-func (b *Bus) OnEventDahuaCameraEvent(h func(ctx context.Context, event models.EventDahuaCameraEvent) error) {
-	b.onEventDahuaCameraEvent = append(b.onEventDahuaCameraEvent, h)
+func (b *Bus) OnEventDahuaDeviceEvent(h func(ctx context.Context, event models.EventDahuaDeviceEvent) error) {
+	b.onEventDahuaDeviceEvent = append(b.onEventDahuaDeviceEvent, h)
 }
 
 func (b *Bus) OnEventDahuaEventWorkerConnecting(h func(ctx context.Context, event models.EventDahuaEventWorkerConnecting) error) {
@@ -97,26 +95,26 @@ func (b *Bus) OnEventDahuaCoaxialStatus(h func(ctx context.Context, event models
 
 
 
-func (b *Bus) EventDahuaCameraCreated(event models.EventDahuaCameraCreated) {
-	for _, v := range b.onEventDahuaCameraCreated {
+func (b *Bus) EventDahuaDeviceCreated(event models.EventDahuaDeviceCreated) {
+	for _, v := range b.onEventDahuaDeviceCreated {
 		busLogError(v(b.Context(), event))
 	}
 }
 
-func (b *Bus) EventDahuaCameraUpdated(event models.EventDahuaCameraUpdated) {
-	for _, v := range b.onEventDahuaCameraUpdated {
+func (b *Bus) EventDahuaDeviceUpdated(event models.EventDahuaDeviceUpdated) {
+	for _, v := range b.onEventDahuaDeviceUpdated {
 		busLogError(v(b.Context(), event))
 	}
 }
 
-func (b *Bus) EventDahuaCameraDeleted(event models.EventDahuaCameraDeleted) {
-	for _, v := range b.onEventDahuaCameraDeleted {
+func (b *Bus) EventDahuaDeviceDeleted(event models.EventDahuaDeviceDeleted) {
+	for _, v := range b.onEventDahuaDeviceDeleted {
 		busLogError(v(b.Context(), event))
 	}
 }
 
-func (b *Bus) EventDahuaCameraEvent(event models.EventDahuaCameraEvent) {
-	for _, v := range b.onEventDahuaCameraEvent {
+func (b *Bus) EventDahuaDeviceEvent(event models.EventDahuaDeviceEvent) {
+	for _, v := range b.onEventDahuaDeviceEvent {
 		busLogError(v(b.Context(), event))
 	}
 }

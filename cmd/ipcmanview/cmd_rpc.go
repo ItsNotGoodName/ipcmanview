@@ -14,7 +14,7 @@ import (
 
 type CmdRPC struct {
 	Shared
-	SharedCameras
+	SharedDevices
 	Method string `help:"Set RPC method."`
 	Params bool   `help:"Set RPC params by reading from stdin as JSON."`
 	Object int64  `help:"Set RPC object."`
@@ -35,16 +35,16 @@ func (c *CmdRPC) Run(ctx *Context) error {
 		return err
 	}
 
-	cameras, err := c.useCameras(ctx, db)
+	devices, err := c.useDevices(ctx, db)
 	if err != nil {
 		return err
 	}
 
 	wg := sync.WaitGroup{}
-	for _, camera := range cameras {
+	for _, device := range devices {
 		wg.Add(1)
-		go func(camera models.DahuaCameraConn) {
-			conn := dahuacore.NewConn(camera.DahuaConn)
+		go func(device models.DahuaDeviceConn) {
+			conn := dahuacore.NewConn(device.DahuaConn)
 
 			res, err := func() (string, error) {
 				res, err := dahuarpc.SendRaw[json.RawMessage](ctx, conn.RPC, dahuarpc.
@@ -63,7 +63,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 
 				return string(b), nil
 			}()
-			prefix := fmt.Sprintf("id=%d name=%s", camera.DahuaCamera.ID, camera.Name)
+			prefix := fmt.Sprintf("id=%d name=%s", device.DahuaDevice.ID, device.Name)
 			if err != nil {
 				fmt.Println(prefix, err)
 			} else {
@@ -72,7 +72,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 
 			conn.RPC.Close(context.Background())
 			wg.Done()
-		}(camera)
+		}(device)
 	}
 	wg.Wait()
 

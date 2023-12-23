@@ -3,7 +3,7 @@ CREATE TABLE settings (
   default_location TEXT NOT NULL
 );
 
-CREATE TABLE dahua_cameras (
+CREATE TABLE dahua_devices (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
   address TEXT NOT NULL UNIQUE,
@@ -16,21 +16,21 @@ CREATE TABLE dahua_cameras (
 
 CREATE TABLE dahua_seeds (
   seed INTEGER NOT NULL PRIMARY KEY,
-  camera_id INTEGER UNIQUE,
+  device_id INTEGER UNIQUE,
 
-  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE SET NULL
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE dahua_events (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  camera_id INTEGER NOT NULL,
+  device_id INTEGER NOT NULL,
   code TEXT NOT NULL,
   action TEXT NOT NULL,
   `index` INTEGER NOT NULL,
   data JSON NOT NULL,
   created_at DATETIME NOT NULL,
 
-  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_event_rules(
@@ -41,20 +41,20 @@ CREATE TABLE dahua_event_rules(
   ignore_mqtt BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE TABLE dahua_event_camera_rules(
-  camera_id INTEGER NOT NULL,
+CREATE TABLE dahua_event_device_rules(
+  device_id INTEGER NOT NULL,
   code TEXT NOT NULL,
   ignore_db BOOLEAN NOT NULL DEFAULT false,
   ignore_live BOOLEAN NOT NULL DEFAULT false,
   ignore_mqtt BOOLEAN NOT NULL DEFAULT false,
 
-  UNIQUE (camera_id, code),
-  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
+  UNIQUE (device_id, code),
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_files (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  camera_id INTEGER NOT NULL,
+  device_id INTEGER NOT NULL,
   channel INTEGER NOT NULL,
   start_time DATETIME NOT NULL UNIQUE,
   end_time DATETIME NOT NULL,
@@ -74,34 +74,34 @@ CREATE TABLE dahua_files (
   work_dir_sn INTEGER NOT NULL,
   updated_at DATETIME NOT NULL,
 
-  UNIQUE (camera_id, file_path),
-  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
+  UNIQUE (device_id, file_path),
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_file_cursors (
-  camera_id INTEGER NOT NULL UNIQUE,
+  device_id INTEGER NOT NULL UNIQUE,
   quick_cursor DATETIME NOT NULL, -- (scanned) <- quick_cursor -> (not scanned / volatile)
   full_cursor DATETIME NOT NULL,  -- (not scanned) <- full_cursor -> (scanned)
   full_epoch DATETIME NOT NULL,
   full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED,
   percent REAL NOT NULL,
 
-  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_file_scan_locks (
-  camera_id INTEGER NOT NULL UNIQUE,
+  device_id INTEGER NOT NULL UNIQUE,
   touched_at DATETIME NOT NULL, 
 
-  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_event_worker_states (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  camera_id INTEGER NOT NULL,
+  device_id INTEGER NOT NULL,
   state TEXT NOT NULL,
   error TEXT,
   created_at DATETIME NOT NULL,
 
-  FOREIGN KEY(camera_id) REFERENCES dahua_cameras(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );

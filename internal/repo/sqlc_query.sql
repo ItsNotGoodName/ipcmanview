@@ -1,35 +1,35 @@
--- name: createDahuaCamera :one
-INSERT INTO dahua_cameras (
+-- name: createDahuaDevice :one
+INSERT INTO dahua_devices (
   name, address, username, password, location, created_at, updated_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id;
 
--- name: dahuaCameraExists :one
-SELECT COUNT(id) FROM dahua_cameras WHERE id = ?;
+-- name: dahuaDeviceExists :one
+SELECT COUNT(id) FROM dahua_devices WHERE id = ?;
 
--- name: UpdateDahuaCamera :one
-UPDATE dahua_cameras 
+-- name: UpdateDahuaDevice :one
+UPDATE dahua_devices 
 SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?
 WHERE id = ?
 RETURNING id;
 
--- name: GetDahuaCamera :one
-SELECT dahua_cameras.*, coalesce(seed, id) FROM dahua_cameras 
-LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
+-- name: GetDahuaDevice :one
+SELECT dahua_devices.*, coalesce(seed, id) FROM dahua_devices 
+LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 WHERE id = ? LIMIT 1;
 
--- name: ListDahuaCamera :many
-SELECT dahua_cameras.*, coalesce(seed, id) FROM dahua_cameras 
-LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id;
+-- name: ListDahuaDevice :many
+SELECT dahua_devices.*, coalesce(seed, id) FROM dahua_devices 
+LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id;
 
--- name: ListDahuaCameraByIDs :many
-SELECT dahua_cameras.*, coalesce(seed, id) FROM dahua_cameras 
-LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
+-- name: ListDahuaDeviceByIDs :many
+SELECT dahua_devices.*, coalesce(seed, id) FROM dahua_devices 
+LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 WHERE id IN (sqlc.slice('ids'));
 
--- name: DeleteDahuaCamera :exec
-DELETE FROM dahua_cameras WHERE id = ?;
+-- name: DeleteDahuaDevice :exec
+DELETE FROM dahua_devices WHERE id = ?;
 
 -- name: GetSettings :one
 SELECT * FROM settings
@@ -45,18 +45,18 @@ RETURNING *;
 
 -- name: allocateDahuaSeed :exec
 UPDATE dahua_seeds 
-SET camera_id = ?1
-WHERE seed = (SELECT seed FROM dahua_seeds WHERE camera_id = ?1 OR camera_id IS NULL ORDER BY camera_id asc LIMIT 1);
+SET device_id = ?1
+WHERE seed = (SELECT seed FROM dahua_seeds WHERE device_id = ?1 OR device_id IS NULL ORDER BY device_id asc LIMIT 1);
 
 -- name: CreateDahuaFileScanLock :one
 INSERT INTO dahua_file_scan_locks (
-  camera_id, touched_at
+  device_id, touched_at
 ) VALUES (
   ?, ?
 ) RETURNING *;
 
 -- name: DeleteDahuaFileScanLock :exec
-DELETE FROM dahua_file_scan_locks WHERE camera_id = ?;
+DELETE FROM dahua_file_scan_locks WHERE device_id = ?;
 
 -- name: DeleteDahuaFileScanLockByAge :exec
 DELETE FROM dahua_file_scan_locks WHERE touched_at < ?;
@@ -64,24 +64,24 @@ DELETE FROM dahua_file_scan_locks WHERE touched_at < ?;
 -- name: TouchDahuaFileScanLock :exec
 UPDATE dahua_file_scan_locks
 SET touched_at = ?
-WHERE camera_id = ?;
+WHERE device_id = ?;
 
 -- name: UpdateDahuaFileCursorPercent :one
 UPDATE dahua_file_cursors 
 SET
   percent = ?
-WHERE camera_id = ?
+WHERE device_id = ?
 RETURNING *;
 
 -- name: ListDahuaFileCursor :many
 SELECT 
   c.*,
-  count(f.camera_id) AS files,
+  count(f.device_id) AS files,
   coalesce(l.touched_at > ?, false) AS locked
 FROM dahua_file_cursors AS c
-LEFT JOIN dahua_files AS f ON f.camera_id = c.camera_id
-LEFT JOIN dahua_file_scan_locks AS l ON l.camera_id = c.camera_id
-GROUP BY c.camera_id;
+LEFT JOIN dahua_files AS f ON f.device_id = c.device_id
+LEFT JOIN dahua_file_scan_locks AS l ON l.device_id = c.device_id
+GROUP BY c.device_id;
 
 -- name: UpdateDahuaFileCursor :one
 UPDATE dahua_file_cursors
@@ -90,12 +90,12 @@ SET
   full_cursor = ?,
   full_epoch = ?,
   percent = ?
-WHERE camera_id = ?
+WHERE device_id = ?
 RETURNING *;
 
 -- name: createDahuaFileCursor :exec
 INSERT INTO dahua_file_cursors (
-  camera_id,
+  device_id,
   quick_cursor,
   full_cursor,
   full_epoch,
@@ -110,7 +110,7 @@ FROM dahua_files;
 
 -- name: CreateDahuaFile :one
 INSERT INTO dahua_files (
-  camera_id,
+  device_id,
   channel,
   start_time,
   end_time,
@@ -136,7 +136,7 @@ INSERT INTO dahua_files (
 -- name: GetDahuaFileByFilePath :one
 SELECT *
 FROM dahua_files
-WHERE camera_id = ? and file_path = ?;
+WHERE device_id = ? and file_path = ?;
 
 -- name: UpdateDahuaFile :one
 UPDATE dahua_files 
@@ -158,20 +158,20 @@ SET
   work_dir = ?,
   work_dir_sn = ?,
   updated_at = ?
-WHERE camera_id = ? AND file_path = ?
+WHERE device_id = ? AND file_path = ?
 RETURNING id;
 
 -- name: DeleteDahuaFile :exec
 DELETE FROM dahua_files
 WHERE
   updated_at < sqlc.arg('updated_at') AND
-  camera_id = sqlc.arg('camera_id') AND
+  device_id = sqlc.arg('device_id') AND
   start_time <= sqlc.arg('end') AND
   sqlc.arg('start') < start_time;
 
 -- name: CreateDahuaEvent :one
 INSERT INTO dahua_events (
-  camera_id,
+  device_id,
   code,
   action,
   `index`,
@@ -196,8 +196,8 @@ SELECT
   ignore_live,
   ignore_mqtt,
   code
-FROM dahua_event_camera_rules 
-WHERE camera_id = sqlc.arg('camera_id') AND (dahua_event_camera_rules.code = sqlc.arg('code') OR dahua_event_camera_rules.code = '')
+FROM dahua_event_device_rules 
+WHERE device_id = sqlc.arg('device_id') AND (dahua_event_device_rules.code = sqlc.arg('code') OR dahua_event_device_rules.code = '')
 UNION ALL
 SELECT 
   ignore_db,
@@ -242,7 +242,7 @@ DELETE FROM dahua_event_rules WHERE id = ?;
 
 -- name: CreateDahuaEventWorkerState :exec
 INSERT INTO dahua_event_worker_states(
-  camera_id,
+  device_id,
   state,
   error,
   created_at
@@ -254,4 +254,4 @@ INSERT INTO dahua_event_worker_states(
 );
 
 -- name: ListDahuaEventWorkerState :many
-SELECT *,max(created_at) FROM dahua_event_worker_states GROUP BY camera_id;
+SELECT *,max(created_at) FROM dahua_event_worker_states GROUP BY device_id;

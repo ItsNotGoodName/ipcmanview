@@ -1,32 +1,32 @@
 package models
 
-type EventDahuaCameraCreated struct {
-	Camera DahuaCameraConn
+type EventDahuaDeviceCreated struct {
+	Device DahuaDeviceConn
 }
 
-type EventDahuaCameraUpdated struct {
-	Camera DahuaCameraConn
+type EventDahuaDeviceUpdated struct {
+	Device DahuaDeviceConn
 }
 
-type EventDahuaCameraDeleted struct {
-	CameraID int64
+type EventDahuaDeviceDeleted struct {
+	DeviceID int64
 }
 
-type EventDahuaCameraEvent struct {
+type EventDahuaDeviceEvent struct {
 	Event     DahuaEvent
 	EventRule DahuaEventRule
 }
 
 type EventDahuaEventWorkerConnecting struct {
-	CameraID int64
+	DeviceID int64
 }
 
 type EventDahuaEventWorkerConnect struct {
-	CameraID int64
+	DeviceID int64
 }
 
 type EventDahuaEventWorkerDisconnect struct {
-	CameraID int64
+	DeviceID int64
 	Error    error
 }
 

@@ -15,10 +15,10 @@
   <main class="min-h-screen">
     <div class="breadcrumbs px-4 text-sm">
       <ul>
-        <li><a href="/dahua/cameras">Cameras</a></li>
+        <li><a href="/dahua/devices">Devices</a></li>
         <li>
-          <a href="/dahua/cameras/{{ .Data.Camera.ID }}"
-            >{{ .Data.Camera.ID }}</a
+          <a href="/dahua/devices/{{ .Data.Device.ID }}"
+            >{{ .Data.Device.ID }}</a
           >
         </li>
         <li>Update</li>
@@ -29,7 +29,7 @@
       method="post"
       class="mx-auto flex w-full max-w-md flex-col gap-4 px-4"
     >
-      <div class="card-title">Update Camera</div>
+      <div class="card-title">Update Device</div>
       <div class="form-control w-full">
         <label for="name" class="label">
           <span class="label-text">Name</span>
@@ -40,7 +40,7 @@
           type="text"
           placeholder="Name"
           class="input input-bordered w-full"
-          value="{{ .Data.Camera.Name }}"
+          value="{{ .Data.Device.Name }}"
         />
       </div>
       <div class="form-control w-full">
@@ -53,7 +53,7 @@
           type="text"
           placeholder="Username"
           class="input input-bordered w-full"
-          value="{{ .Data.Camera.Address }}"
+          value="{{ .Data.Device.Address }}"
         />
       </div>
       <div class="form-control w-full">
@@ -66,7 +66,7 @@
           type="text"
           placeholder="admin"
           class="input input-bordered w-full"
-          value="{{ .Data.Camera.Username }}"
+          value="{{ .Data.Device.Username }}"
         />
       </div>
       <div class="form-control w-full">
@@ -88,7 +88,7 @@
         <select id="location" name="location" class="select select-bordered">
           {{ range .Data.Locations }}
             <option
-              {{ if eq . $.Data.Camera.Location.String }}selected{{ end }}
+              {{ if eq . $.Data.Device.Location.String }}selected{{ end }}
             >
               {{ . }}
             </option>

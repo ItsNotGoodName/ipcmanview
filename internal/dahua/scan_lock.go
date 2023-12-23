@@ -18,14 +18,14 @@ func ScanLockStaleTime() types.Time {
 	return types.NewTime(time.Now().Add(-scanLockStale))
 }
 
-func ScanLockCreate(ctx context.Context, db repo.DB, cameraID int64) error {
+func ScanLockCreate(ctx context.Context, db repo.DB, deviceID int64) error {
 	err := db.DeleteDahuaFileScanLockByAge(ctx, ScanLockStaleTime())
 	if err != nil {
 		return err
 	}
 
 	_, err = db.CreateDahuaFileScanLock(ctx, repo.CreateDahuaFileScanLockParams{
-		CameraID:  cameraID,
+		DeviceID:  deviceID,
 		TouchedAt: types.NewTime(time.Now()),
 	})
 	if err != nil {
@@ -37,7 +37,7 @@ func ScanLockCreate(ctx context.Context, db repo.DB, cameraID int64) error {
 
 // ScanLockHeartbeat keeps the lock active until context is canceled or the cancel function is called.
 // Lock is automatically deleted.
-func ScanLockHeartbeat(ctx context.Context, db repo.DB, cameraID int64) context.CancelFunc {
+func ScanLockHeartbeat(ctx context.Context, db repo.DB, deviceID int64) context.CancelFunc {
 	ctx, cancel := context.WithCancel(ctx)
 	go func() {
 		t := time.NewTicker(scanLockHeartbeat)
@@ -46,12 +46,12 @@ func ScanLockHeartbeat(ctx context.Context, db repo.DB, cameraID int64) context.
 		for {
 			select {
 			case <-ctx.Done():
-				ScanLockDelete(db, cameraID)
+				ScanLockDelete(db, deviceID)
 				return
 			case <-t.C:
 				err := db.TouchDahuaFileScanLock(ctx, repo.TouchDahuaFileScanLockParams{
 					TouchedAt: types.NewTime(time.Now()),
-					CameraID:  cameraID,
+					DeviceID:  deviceID,
 				})
 				if err != nil {
 					log.Err(err).Msg("Failed to touch scan lock")
@@ -62,8 +62,8 @@ func ScanLockHeartbeat(ctx context.Context, db repo.DB, cameraID int64) context.
 	return cancel
 }
 
-func ScanLockDelete(db repo.DB, cameraID int64) {
-	err := db.DeleteDahuaFileScanLock(context.Background(), cameraID)
+func ScanLockDelete(db repo.DB, deviceID int64) {
+	err := db.DeleteDahuaFileScanLock(context.Background(), deviceID)
 	if err != nil {
 		log.Err(err).Msg("Failed to delete scan lock")
 	}

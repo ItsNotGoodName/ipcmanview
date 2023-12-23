@@ -4,9 +4,9 @@ import "github.com/ItsNotGoodName/ipcmanview/internal/models"
 
 // this is stupid
 
-func (c ListDahuaCameraByIDsRow) Convert() models.DahuaCameraConn {
-	return models.DahuaCameraConn{
-		DahuaCamera: models.DahuaCamera{
+func (c ListDahuaDeviceByIDsRow) Convert() models.DahuaDeviceConn {
+	return models.DahuaDeviceConn{
+		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
 			Address:   c.Address,
 			Username:  c.Username,
@@ -27,9 +27,9 @@ func (c ListDahuaCameraByIDsRow) Convert() models.DahuaCameraConn {
 	}
 }
 
-func (c GetDahuaCameraRow) Convert() models.DahuaCameraConn {
-	return models.DahuaCameraConn{
-		DahuaCamera: models.DahuaCamera{
+func (c GetDahuaDeviceRow) Convert() models.DahuaDeviceConn {
+	return models.DahuaDeviceConn{
+		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
 			Address:   c.Address,
 			Username:  c.Username,
@@ -50,9 +50,9 @@ func (c GetDahuaCameraRow) Convert() models.DahuaCameraConn {
 	}
 }
 
-func (c ListDahuaCameraRow) Convert() models.DahuaCameraConn {
-	return models.DahuaCameraConn{
-		DahuaCamera: models.DahuaCamera{
+func (c ListDahuaDeviceRow) Convert() models.DahuaDeviceConn {
+	return models.DahuaDeviceConn{
+		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
 			Address:   c.Address,
 			Username:  c.Username,
@@ -76,7 +76,7 @@ func (c ListDahuaCameraRow) Convert() models.DahuaCameraConn {
 func (c DahuaFile) Convert() models.DahuaFile {
 	return models.DahuaFile{
 		ID:          c.ID,
-		CameraID:    c.CameraID,
+		DeviceID:    c.DeviceID,
 		Channel:     int(c.Channel),
 		StartTime:   c.StartTime.Time,
 		EndTime:     c.EndTime.Time,

@@ -20,7 +20,7 @@ import (
 type DahuaRepo interface {
 	GetConn(ctx context.Context, id int64) (models.DahuaConn, bool, error)
 	ListConn(ctx context.Context) ([]models.DahuaConn, error)
-	GetFileByFilePath(ctx context.Context, cameraID int64, filePath string) (models.DahuaFile, error)
+	GetFileByFilePath(ctx context.Context, deviceID int64, filePath string) (models.DahuaFile, error)
 }
 
 type DahuaFileCache interface {
@@ -79,7 +79,7 @@ func useDahuaConn(c echo.Context, repo DahuaRepo, store *dahuacore.Store) (dahua
 
 	ctx := c.Request().Context()
 
-	camera, found, err := repo.GetConn(ctx, id)
+	device, found, err := repo.GetConn(ctx, id)
 	if err != nil {
 		return dahuacore.Conn{}, err
 	}
@@ -87,7 +87,7 @@ func useDahuaConn(c echo.Context, repo DahuaRepo, store *dahuacore.Store) (dahua
 		return dahuacore.Conn{}, echo.ErrNotFound.WithInternal(err)
 	}
 
-	client := store.Conn(ctx, camera)
+	client := store.Conn(ctx, device)
 
 	return client, nil
 }
@@ -95,16 +95,16 @@ func useDahuaConn(c echo.Context, repo DahuaRepo, store *dahuacore.Store) (dahua
 func (s *DahuaServer) Dahua(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	cameras, err := s.dahuaRepo.ListConn(ctx)
+	devices, err := s.dahuaRepo.ListConn(ctx)
 	if err != nil {
 		return err
 	}
 
-	conns := s.dahuaStore.ConnList(ctx, cameras)
+	conns := s.dahuaStore.ConnList(ctx, devices)
 
 	res := make([]models.DahuaStatus, 0, len(conns))
 	for _, conn := range conns {
-		res = append(res, dahuacore.GetDahuaStatus(conn.Camera, conn.RPC))
+		res = append(res, dahuacore.GetDahuaStatus(conn.Device, conn.RPC))
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -147,7 +147,7 @@ func (s *DahuaServer) DahuaIDDetail(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahuacore.GetDahuaDetail(ctx, conn.Camera.ID, conn.RPC)
+	res, err := dahuacore.GetDahuaDetail(ctx, conn.Device.ID, conn.RPC)
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func (s *DahuaServer) DahuaIDSoftware(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahuacore.GetSoftwareVersion(ctx, conn.Camera.ID, conn.RPC)
+	res, err := dahuacore.GetSoftwareVersion(ctx, conn.Device.ID, conn.RPC)
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (s *DahuaServer) DahuaIDLicenses(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahuacore.GetLicenseList(ctx, conn.Camera.ID, conn.RPC)
+	res, err := dahuacore.GetLicenseList(ctx, conn.Device.ID, conn.RPC)
 	if err != nil {
 		return err
 	}
@@ -242,7 +242,7 @@ func (s *DahuaServer) DahuaIDEvents(c echo.Context) error {
 	}
 
 	if direct {
-		// Get events directly from the camera
+		// Get events directly from the device
 
 		manager, err := dahuacgi.EventManagerGet(ctx, conn.CGI, 0)
 		if err != nil {
@@ -263,7 +263,7 @@ func (s *DahuaServer) DahuaIDEvents(c echo.Context) error {
 				return sendStreamError(c, stream, err)
 			}
 
-			data := dahuacore.NewDahuaEvent(conn.Camera.ID, event)
+			data := dahuacore.NewDahuaEvent(conn.Device.ID, event)
 
 			if err := sendStream(c, stream, data); err != nil {
 				return err
@@ -272,7 +272,7 @@ func (s *DahuaServer) DahuaIDEvents(c echo.Context) error {
 	} else {
 		// Get events from PubSub
 
-		sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaCameraEvent{})
+		sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaDeviceEvent{})
 		if err != nil {
 			return err
 		}
@@ -281,7 +281,7 @@ func (s *DahuaServer) DahuaIDEvents(c echo.Context) error {
 		stream := useStream(c)
 
 		for event := range eventsC {
-			evt, ok := event.(models.EventDahuaCameraEvent)
+			evt, ok := event.(models.EventDahuaDeviceEvent)
 			if !ok {
 				continue
 			}
@@ -308,7 +308,7 @@ func (s *DahuaServer) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
-	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaCameraEvent{})
+	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaDeviceEvent{})
 	if err != nil {
 		return err
 	}
@@ -317,12 +317,12 @@ func (s *DahuaServer) DahuaEvents(c echo.Context) error {
 	stream := useStream(c)
 
 	for event := range eventsC {
-		evt, ok := event.(models.EventDahuaCameraEvent)
+		evt, ok := event.(models.EventDahuaDeviceEvent)
 		if !ok {
 			continue
 		}
 
-		if len(ids) != 0 && !slices.Contains(ids, evt.Event.CameraID) {
+		if len(ids) != 0 && !slices.Contains(ids, evt.Event.DeviceID) {
 			continue
 		}
 
@@ -365,7 +365,7 @@ func (s *DahuaServer) DahuaIDFiles(c echo.Context) error {
 	stream := useStream(c)
 
 	for period, ok := iterator.Next(); ok; period, ok = iterator.Next() {
-		cancel, errC := dahuacore.Scan(ctx, conn.RPC, period, conn.Camera.Location, filesC)
+		cancel, errC := dahuacore.Scan(ctx, conn.RPC, period, conn.Device.Location, filesC)
 		defer cancel()
 
 	inner:
@@ -379,7 +379,7 @@ func (s *DahuaServer) DahuaIDFiles(c echo.Context) error {
 				}
 				break inner
 			case files := <-filesC:
-				res, err := dahuacore.NewDahuaFiles(conn.Camera.ID, files, dahuacore.GetSeed(conn.Camera), conn.Camera.Location)
+				res, err := dahuacore.NewDahuaFiles(conn.Device.ID, files, dahuacore.GetSeed(conn.Device), conn.Device.Location)
 				if err != nil {
 					return sendStreamError(c, stream, err)
 				}
@@ -404,7 +404,7 @@ func (s *DahuaServer) DahuaIDFilesPath(c echo.Context) error {
 
 	filePath := c.Param("*")
 
-	dahuaFile, err := s.dahuaRepo.GetFileByFilePath(ctx, conn.Camera.ID, filePath)
+	dahuaFile, err := s.dahuaRepo.GetFileByFilePath(ctx, conn.Device.ID, filePath)
 	if err != nil {
 		return err
 	}
@@ -413,7 +413,7 @@ func (s *DahuaServer) DahuaIDFilesPath(c echo.Context) error {
 	if exists, err := s.dahuaFileCache.Exists(ctx, dahuaFile); err != nil {
 		return err
 	} else if !exists {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(dahuacore.NewHTTPAddress(conn.Camera.Address), filePath), nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(dahuacore.NewHTTPAddress(conn.Device.Address), filePath), nil)
 		if err != nil {
 			return err
 		}
@@ -487,7 +487,7 @@ func (s *DahuaServer) DahuaIDCoaxialStatus(c echo.Context) error {
 		return err
 	}
 
-	status, err := dahuacore.GetCoaxialStatus(ctx, conn.Camera.ID, conn.RPC, channel)
+	status, err := dahuacore.GetCoaxialStatus(ctx, conn.Device.ID, conn.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -508,7 +508,7 @@ func (s *DahuaServer) DahuaIDCoaxialCaps(c echo.Context) error {
 		return err
 	}
 
-	status, err := dahuacore.GetCoaxialCaps(ctx, conn.Camera.ID, conn.RPC, channel)
+	status, err := dahuacore.GetCoaxialCaps(ctx, conn.Device.ID, conn.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -550,7 +550,7 @@ func (s *DahuaServer) DahuaIDStorage(c echo.Context) error {
 		return err
 	}
 
-	storage, err := dahuacore.GetStorage(ctx, conn.Camera.ID, conn.RPC)
+	storage, err := dahuacore.GetStorage(ctx, conn.Device.ID, conn.RPC)
 	if err != nil {
 		return err
 	}
@@ -566,7 +566,7 @@ func (s *DahuaServer) DahuaIDUsers(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahuacore.GetUsers(ctx, conn.Camera.ID, conn.RPC, conn.Camera.Location)
+	res, err := dahuacore.GetUsers(ctx, conn.Device.ID, conn.RPC, conn.Device.Location)
 	if err != nil {
 		return err
 	}

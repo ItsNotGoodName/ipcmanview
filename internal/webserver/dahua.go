@@ -13,12 +13,12 @@ import (
 )
 
 func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store) (any, error) {
-	dbCameras, err := db.ListDahuaCamera(ctx)
+	dbDevices, err := db.ListDahuaDevice(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	type cameraData struct {
+	type deviceData struct {
 		detail               models.DahuaDetail
 		softwareVersion      models.DahuaSoftwareVersion
 		licenses             []models.DahuaLicense
@@ -26,25 +26,25 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 		coaxialcontrolStatus []models.DahuaCoaxialStatus
 	}
 
-	cameras := make([]models.DahuaConn, 0, len(dbCameras))
-	for _, row := range dbCameras {
-		cameras = append(cameras, row.Convert().DahuaConn)
+	devices := make([]models.DahuaConn, 0, len(dbDevices))
+	for _, row := range dbDevices {
+		devices = append(devices, row.Convert().DahuaConn)
 	}
-	conns := dahuaStore.ConnList(ctx, cameras)
+	conns := dahuaStore.ConnList(ctx, devices)
 
-	cameraDataC := make(chan cameraData, len(dbCameras))
+	deviceDataC := make(chan deviceData, len(dbDevices))
 	wg := sync.WaitGroup{}
 	for _, conn := range conns {
 		wg.Add(1)
 		go func(conn dahuacore.Conn) {
 			defer wg.Done()
 
-			log := log.With().Int64("id", conn.Camera.ID).Logger()
+			log := log.With().Int64("id", conn.Device.ID).Logger()
 
-			var data cameraData
+			var data deviceData
 
 			{
-				res, err := dahuacore.GetDahuaDetail(ctx, conn.Camera.ID, conn.RPC)
+				res, err := dahuacore.GetDahuaDetail(ctx, conn.Device.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get detail")
 					return
@@ -54,7 +54,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 			}
 
 			{
-				res, err := dahuacore.GetSoftwareVersion(ctx, conn.Camera.ID, conn.RPC)
+				res, err := dahuacore.GetSoftwareVersion(ctx, conn.Device.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get software version")
 					return
@@ -64,7 +64,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 			}
 
 			{
-				res, err := dahuacore.GetLicenseList(ctx, conn.Camera.ID, conn.RPC)
+				res, err := dahuacore.GetLicenseList(ctx, conn.Device.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get licenses")
 					return
@@ -74,7 +74,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 			}
 
 			{
-				res, err := dahuacore.GetStorage(ctx, conn.Camera.ID, conn.RPC)
+				res, err := dahuacore.GetStorage(ctx, conn.Device.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get storage")
 				}
@@ -83,14 +83,14 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 			}
 
 			{
-				caps, err := dahuacore.GetCoaxialCaps(ctx, conn.Camera.ID, conn.RPC, 1)
+				caps, err := dahuacore.GetCoaxialCaps(ctx, conn.Device.ID, conn.RPC, 1)
 				if err != nil {
 					log.Err(err).Msg("Failed to get coaxial caps")
 					return
 				}
 
 				if caps.SupportControlLight || caps.SupportControlSpeaker || caps.SupportControlFullcolorLight {
-					res, err := dahuacore.GetCoaxialStatus(ctx, conn.Camera.ID, conn.RPC, 1)
+					res, err := dahuacore.GetCoaxialStatus(ctx, conn.Device.ID, conn.RPC, 1)
 					if err != nil {
 						log.Err(err).Msg("Failed to get coaxial status")
 						return
@@ -100,41 +100,41 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 				}
 			}
 
-			cameraDataC <- data
+			deviceDataC <- data
 		}(conn)
 	}
 	wg.Wait()
-	close(cameraDataC)
+	close(deviceDataC)
 
 	status := make([]models.DahuaStatus, 0, len(conns))
 	for _, conn := range conns {
-		status = append(status, dahuacore.GetDahuaStatus(conn.Camera, conn.RPC))
+		status = append(status, dahuacore.GetDahuaStatus(conn.Device, conn.RPC))
 	}
 
-	details := make([]models.DahuaDetail, 0, len(dbCameras))
-	softwareVersions := make([]models.DahuaSoftwareVersion, 0, len(dbCameras))
-	licenses := make([]models.DahuaLicense, 0, len(dbCameras))
-	storage := make([]models.DahuaStorage, 0, len(dbCameras))
-	coaxialStatus := make([]models.DahuaCoaxialStatus, 0, len(dbCameras))
-	for data := range cameraDataC {
-		if data.detail.CameraID != 0 {
+	details := make([]models.DahuaDetail, 0, len(dbDevices))
+	softwareVersions := make([]models.DahuaSoftwareVersion, 0, len(dbDevices))
+	licenses := make([]models.DahuaLicense, 0, len(dbDevices))
+	storage := make([]models.DahuaStorage, 0, len(dbDevices))
+	coaxialStatus := make([]models.DahuaCoaxialStatus, 0, len(dbDevices))
+	for data := range deviceDataC {
+		if data.detail.DeviceID != 0 {
 			details = append(details, data.detail)
 		}
-		if data.softwareVersion.CameraID != 0 {
+		if data.softwareVersion.DeviceID != 0 {
 			softwareVersions = append(softwareVersions, data.softwareVersion)
 		}
 		licenses = append(licenses, data.licenses...)
 		storage = append(storage, data.storage...)
 		coaxialStatus = append(coaxialStatus, data.coaxialcontrolStatus...)
 	}
-	slices.SortFunc(details, func(a, b models.DahuaDetail) int { return cmp.Compare(a.CameraID, b.CameraID) })
-	slices.SortFunc(softwareVersions, func(a, b models.DahuaSoftwareVersion) int { return cmp.Compare(a.CameraID, b.CameraID) })
-	slices.SortFunc(licenses, func(a, b models.DahuaLicense) int { return cmp.Compare(a.CameraID, b.CameraID) })
-	slices.SortFunc(storage, func(a, b models.DahuaStorage) int { return cmp.Compare(a.CameraID, b.CameraID) })
-	slices.SortFunc(coaxialStatus, func(a, b models.DahuaCoaxialStatus) int { return cmp.Compare(a.CameraID, b.CameraID) })
+	slices.SortFunc(details, func(a, b models.DahuaDetail) int { return cmp.Compare(a.DeviceID, b.DeviceID) })
+	slices.SortFunc(softwareVersions, func(a, b models.DahuaSoftwareVersion) int { return cmp.Compare(a.DeviceID, b.DeviceID) })
+	slices.SortFunc(licenses, func(a, b models.DahuaLicense) int { return cmp.Compare(a.DeviceID, b.DeviceID) })
+	slices.SortFunc(storage, func(a, b models.DahuaStorage) int { return cmp.Compare(a.DeviceID, b.DeviceID) })
+	slices.SortFunc(coaxialStatus, func(a, b models.DahuaCoaxialStatus) int { return cmp.Compare(a.DeviceID, b.DeviceID) })
 
 	return Data{
-		"Cameras":          dbCameras,
+		"Devices":          dbDevices,
 		"Status":           status,
 		"Details":          details,
 		"SoftwareVersions": softwareVersions,

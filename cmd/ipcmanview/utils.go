@@ -48,31 +48,31 @@ func (c Shared) useDB(ctx *Context) (repo.DB, error) {
 	return db, nil
 }
 
-type SharedCameras struct {
-	ID  []int64 `help:"Run on camera by ID."`
-	All bool    `help:"Run on all cameras."`
+type SharedDevices struct {
+	ID  []int64 `help:"Run on device by ID."`
+	All bool    `help:"Run on all devices."`
 }
 
-func (c SharedCameras) useCameras(ctx context.Context, db repo.DB) ([]models.DahuaCameraConn, error) {
-	var cameras []models.DahuaCameraConn
+func (c SharedDevices) useDevices(ctx context.Context, db repo.DB) ([]models.DahuaDeviceConn, error) {
+	var devices []models.DahuaDeviceConn
 	if c.All {
-		dbCameras, err := db.ListDahuaCamera(ctx)
+		dbDevices, err := db.ListDahuaDevice(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, dbCamera := range dbCameras {
-			cameras = append(cameras, dbCamera.Convert())
+		for _, dbDevice := range dbDevices {
+			devices = append(devices, dbDevice.Convert())
 		}
 	} else {
-		dbCameras, err := db.ListDahuaCameraByIDs(ctx, c.ID)
+		dbDevices, err := db.ListDahuaDeviceByIDs(ctx, c.ID)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, dbCamera := range dbCameras {
-			cameras = append(cameras, dbCamera.Convert())
+		for _, dbDevice := range dbDevices {
+			devices = append(devices, dbDevice.Convert())
 		}
 	}
-	return cameras, nil
+	return devices, nil
 }

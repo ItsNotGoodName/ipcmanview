@@ -18,11 +18,11 @@ func init() {
 }
 
 const (
-	// MaxScanPeriod is longest allowed time range for a mediafilefind query because some cameras give invalid data past the MaxScanPeriod.
+	// MaxScanPeriod is longest allowed time range for a mediafilefind query because some devices give invalid data past the MaxScanPeriod.
 	MaxScanPeriod = 30 * 24 * time.Hour
 )
 
-// ScanEpoch is the oldest time a camera file can exist.
+// ScanEpoch is the oldest time a file can exist.
 var ScanEpoch time.Time
 
 // ScanPeriod is INCLUSIVE Start and EXCLUSIVE End.

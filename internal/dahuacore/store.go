@@ -10,10 +10,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func newStoreClient(camera models.DahuaConn, lastAccessed time.Time) storeClient {
+func newStoreClient(device models.DahuaConn, lastAccessed time.Time) storeClient {
 	return storeClient{
 		LastAccessed: lastAccessed,
-		Conn:         NewConn(camera),
+		Conn:         NewConn(device),
 	}
 }
 
@@ -24,7 +24,7 @@ type storeClient struct {
 
 func (c storeClient) Close(ctx context.Context) {
 	if err := c.Conn.RPC.Close(ctx); err != nil {
-		log.Err(err).Int64("id", c.Conn.Camera.ID).Msg("Failed to close RPC connection")
+		log.Err(err).Int64("id", c.Conn.Device.ID).Msg("Failed to close RPC connection")
 	}
 }
 
@@ -87,46 +87,46 @@ func (s *Store) Serve(ctx context.Context) error {
 	}
 }
 
-func (s *Store) getOrCreateCamera(ctx context.Context, camera models.DahuaConn) Conn {
-	client, ok := s.clients[camera.ID]
+func (s *Store) getOrCreateDevice(ctx context.Context, device models.DahuaConn) Conn {
+	client, ok := s.clients[device.ID]
 	if !ok {
 		// Not found
 
-		client = newStoreClient(camera, time.Now())
-		s.clients[camera.ID] = client
-	} else if !ConnEqual(client.Conn.Camera, camera) {
+		client = newStoreClient(device, time.Now())
+		s.clients[device.ID] = client
+	} else if !ConnEqual(client.Conn.Device, device) {
 		// Found but not equal
 
-		// Closing camera connection should not block that store
+		// Closing device connection should not block that store
 		go client.Close(ctx)
 
-		client = newStoreClient(camera, time.Now())
-		s.clients[camera.ID] = client
+		client = newStoreClient(device, time.Now())
+		s.clients[device.ID] = client
 	} else {
 		// Found
 
 		client.LastAccessed = time.Now()
-		s.clients[camera.ID] = client
+		s.clients[device.ID] = client
 	}
 
 	return client.Conn
 }
 
-func (s *Store) ConnList(ctx context.Context, cameras []models.DahuaConn) []Conn {
-	clients := make([]Conn, 0, len(cameras))
+func (s *Store) ConnList(ctx context.Context, devices []models.DahuaConn) []Conn {
+	clients := make([]Conn, 0, len(devices))
 
 	s.clientsMu.Lock()
-	for _, camera := range cameras {
-		clients = append(clients, s.getOrCreateCamera(ctx, camera))
+	for _, device := range devices {
+		clients = append(clients, s.getOrCreateDevice(ctx, device))
 	}
 	s.clientsMu.Unlock()
 
 	return clients
 }
 
-func (s *Store) Conn(ctx context.Context, camera models.DahuaConn) Conn {
+func (s *Store) Conn(ctx context.Context, device models.DahuaConn) Conn {
 	s.clientsMu.Lock()
-	client := s.getOrCreateCamera(ctx, camera)
+	client := s.getOrCreateDevice(ctx, device)
 	s.clientsMu.Unlock()
 
 	return client
@@ -146,8 +146,8 @@ func (s *Store) ConnDelete(ctx context.Context, id int64) {
 }
 
 func (store *Store) Register(bus *core.Bus) {
-	bus.OnEventDahuaCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
-		store.ConnDelete(ctx, evt.CameraID)
+	bus.OnEventDahuaDeviceDeleted(func(ctx context.Context, evt models.EventDahuaDeviceDeleted) error {
+		store.ConnDelete(ctx, evt.DeviceID)
 		return nil
 	})
 }

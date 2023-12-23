@@ -11,17 +11,17 @@ import (
 )
 
 func DefaultWorkerBuilder(hooks EventHooks, bus *core.Bus, store *Store) WorkerBuilder {
-	return func(ctx context.Context, super *suture.Supervisor, camera models.DahuaConn) ([]suture.ServiceToken, error) {
+	return func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
 		{
-			worker := NewEventWorker(camera, hooks)
+			worker := NewEventWorker(device, hooks)
 			token := super.Add(worker)
 			tokens = append(tokens, token)
 		}
 
 		{
-			worker := NewCoaxialWorker(bus, camera.ID, store.Conn(ctx, camera).RPC)
+			worker := NewCoaxialWorker(bus, device.ID, store.Conn(ctx, device).RPC)
 			token := super.Add(worker)
 			tokens = append(tokens, token)
 		}
@@ -30,7 +30,7 @@ func DefaultWorkerBuilder(hooks EventHooks, bus *core.Bus, store *Store) WorkerB
 	}
 }
 
-type WorkerBuilder = func(ctx context.Context, super *suture.Supervisor, camera models.DahuaConn) ([]suture.ServiceToken, error)
+type WorkerBuilder = func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error)
 
 type WorkerStore struct {
 	super *suture.Supervisor
@@ -41,7 +41,7 @@ type WorkerStore struct {
 }
 
 type workerData struct {
-	camera models.DahuaConn
+	device models.DahuaConn
 	tokens []suture.ServiceToken
 }
 
@@ -54,41 +54,41 @@ func NewWorkerStore(super *suture.Supervisor, build WorkerBuilder) *WorkerStore 
 	}
 }
 
-func (s *WorkerStore) create(ctx context.Context, camera models.DahuaConn) error {
-	tokens, err := s.build(ctx, s.super, camera)
+func (s *WorkerStore) create(ctx context.Context, device models.DahuaConn) error {
+	tokens, err := s.build(ctx, s.super, device)
 	if err != nil {
 		return err
 	}
 
-	s.workers[camera.ID] = workerData{
-		camera: camera,
+	s.workers[device.ID] = workerData{
+		device: device,
 		tokens: tokens,
 	}
 
 	return nil
 }
 
-func (s *WorkerStore) Create(ctx context.Context, camera models.DahuaConn) error {
+func (s *WorkerStore) Create(ctx context.Context, device models.DahuaConn) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 
-	_, found := s.workers[camera.ID]
+	_, found := s.workers[device.ID]
 	if found {
-		return fmt.Errorf("workers already exists for camera by ID: %d", camera.ID)
+		return fmt.Errorf("workers already exists for device by ID: %d", device.ID)
 	}
 
-	return s.create(ctx, camera)
+	return s.create(ctx, device)
 }
 
-func (s *WorkerStore) Update(ctx context.Context, camera models.DahuaConn) error {
+func (s *WorkerStore) Update(ctx context.Context, device models.DahuaConn) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 
-	worker, found := s.workers[camera.ID]
+	worker, found := s.workers[device.ID]
 	if !found {
-		return fmt.Errorf("workers not found for camera by ID: %d", camera.ID)
+		return fmt.Errorf("workers not found for device by ID: %d", device.ID)
 	}
-	if ConnEqual(worker.camera, camera) {
+	if ConnEqual(worker.device, device) {
 		return nil
 	}
 
@@ -96,7 +96,7 @@ func (s *WorkerStore) Update(ctx context.Context, camera models.DahuaConn) error
 		s.super.Remove(st)
 	}
 
-	return s.create(ctx, camera)
+	return s.create(ctx, device)
 }
 
 func (s *WorkerStore) Delete(id int64) error {
@@ -104,7 +104,7 @@ func (s *WorkerStore) Delete(id int64) error {
 	worker, found := s.workers[id]
 	if !found {
 		s.workersMu.Unlock()
-		return fmt.Errorf("workers not found for camera by ID: %d", id)
+		return fmt.Errorf("workers not found for device by ID: %d", id)
 	}
 
 	for _, token := range worker.tokens {
@@ -116,29 +116,29 @@ func (s *WorkerStore) Delete(id int64) error {
 }
 
 func (e *WorkerStore) Register(bus *core.Bus) {
-	bus.OnEventDahuaCameraCreated(func(ctx context.Context, evt models.EventDahuaCameraCreated) error {
-		return e.Create(ctx, evt.Camera.DahuaConn)
+	bus.OnEventDahuaDeviceCreated(func(ctx context.Context, evt models.EventDahuaDeviceCreated) error {
+		return e.Create(ctx, evt.Device.DahuaConn)
 	})
-	bus.OnEventDahuaCameraUpdated(func(ctx context.Context, evt models.EventDahuaCameraUpdated) error {
-		return e.Update(ctx, evt.Camera.DahuaConn)
+	bus.OnEventDahuaDeviceUpdated(func(ctx context.Context, evt models.EventDahuaDeviceUpdated) error {
+		return e.Update(ctx, evt.Device.DahuaConn)
 	})
-	bus.OnEventDahuaCameraDeleted(func(ctx context.Context, evt models.EventDahuaCameraDeleted) error {
-		return e.Delete(evt.CameraID)
+	bus.OnEventDahuaDeviceDeleted(func(ctx context.Context, evt models.EventDahuaDeviceDeleted) error {
+		return e.Delete(evt.DeviceID)
 	})
 }
 
-type CameraStore interface {
+type deviceStore interface {
 	ListConn(ctx context.Context) ([]models.DahuaConn, error)
 }
 
-func (w *WorkerStore) Bootstrap(ctx context.Context, cameraStore CameraStore, store *Store) error {
-	cameras, err := cameraStore.ListConn(ctx)
+func (w *WorkerStore) Bootstrap(ctx context.Context, deviceStore deviceStore, store *Store) error {
+	devices, err := deviceStore.ListConn(ctx)
 	if err != nil {
 		return err
 	}
-	conns := store.ConnList(ctx, cameras)
+	conns := store.ConnList(ctx, devices)
 	for _, conn := range conns {
-		if err := w.Create(ctx, conn.Camera); err != nil {
+		if err := w.Create(ctx, conn.Device); err != nil {
 			return err
 		}
 	}

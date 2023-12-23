@@ -27,19 +27,19 @@
         >
           <div class="form-control w-full">
             <label class="label">
-              <span class="label-text">Cameras</span>
+              <span class="label-text">Devices</span>
             </label>
 
-            <select name="CameraID" class="select select-bordered" multiple>
+            <select name="DeviceID" class="select select-bordered" multiple>
               <option
                 value=""
-                {{ if eq (len $.Data.Params.CameraID) 0 }}selected{{ end }}
+                {{ if eq (len $.Data.Params.DeviceID) 0 }}selected{{ end }}
               >
                 All
               </option>
-              {{ range .Data.Cameras }}
+              {{ range .Data.Devices }}
                 <option
-                  {{ if has .ID $.Data.Params.CameraID }}selected{{ end }}
+                  {{ if has .ID $.Data.Params.DeviceID }}selected{{ end }}
                   value="{{ .ID }}"
                 >
                   {{ .Name }}
@@ -109,7 +109,7 @@
                 <figure>
                   {{ if eq .Type "jpg" }}
                     <img
-                      src="/v1/dahua/{{ .CameraID }}/files/{{ .FilePath }}"
+                      src="/v1/dahua/{{ .DeviceID }}/files/{{ .FilePath }}"
                     />
                   {{ else }}
                     <img

@@ -32,37 +32,37 @@ func (e EventHooks) logErr(err error) {
 	}
 }
 
-func (e EventHooks) Connecting(ctx context.Context, cameraID int64) {
+func (e EventHooks) Connecting(ctx context.Context, deviceID int64) {
 	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
-		CameraID:  cameraID,
+		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnecting,
 		CreatedAt: types.NewTime(time.Now()),
 	}))
 	e.bus.EventDahuaEventWorkerConnecting(models.EventDahuaEventWorkerConnecting{
-		CameraID: cameraID,
+		DeviceID: deviceID,
 	})
 }
 
-func (e EventHooks) Connect(ctx context.Context, cameraID int64) {
+func (e EventHooks) Connect(ctx context.Context, deviceID int64) {
 	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
-		CameraID:  cameraID,
+		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnected,
 		CreatedAt: types.NewTime(time.Now()),
 	}))
 	e.bus.EventDahuaEventWorkerConnect(models.EventDahuaEventWorkerConnect{
-		CameraID: cameraID,
+		DeviceID: deviceID,
 	})
 }
 
-func (e EventHooks) Disconnect(cameraID int64, err error) {
+func (e EventHooks) Disconnect(deviceID int64, err error) {
 	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
-		CameraID:  cameraID,
+		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateDisconnected,
 		Error:     repo.ErrorToNullString(err),
 		CreatedAt: types.NewTime(time.Now()),
 	}))
 	e.bus.EventDahuaEventWorkerDisconnect(models.EventDahuaEventWorkerDisconnect{
-		CameraID: cameraID,
+		DeviceID: deviceID,
 		Error:    err,
 	})
 }
@@ -76,7 +76,7 @@ func (e EventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 
 	if !eventRule.IgnoreDB {
 		id, err := e.db.CreateDahuaEvent(ctx, repo.CreateDahuaEventParams{
-			CameraID:  event.CameraID,
+			DeviceID:  event.DeviceID,
 			Code:      event.Code,
 			Action:    event.Action,
 			Index:     int64(event.Index),
@@ -90,7 +90,7 @@ func (e EventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 		event.ID = id
 	}
 
-	e.bus.EventDahuaCameraEvent(models.EventDahuaCameraEvent{
+	e.bus.EventDahuaDeviceEvent(models.EventDahuaDeviceEvent{
 		Event:     event,
 		EventRule: eventRule,
 	})

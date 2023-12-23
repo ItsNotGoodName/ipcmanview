@@ -15,7 +15,7 @@
   <main class="min-h-screen">
     <div class="breadcrumbs px-4 text-sm">
       <ul>
-        <li>Cameras</li>
+        <li>Devices</li>
       </ul>
     </div>
 
@@ -23,16 +23,16 @@
       <form
         class="flex flex-col gap-4 px-4"
         method="post"
-        hx-post="/dahua/cameras"
+        hx-post="/dahua/devices"
       >
-        {{ block "htmx-cameras" . }}
+        {{ block "htmx-devices" . }}
           <div class="border-b-base-content flex justify-between gap-4">
-            <div class="card-title" id="cameras">
-              <a href="#cameras">Cameras</a>
+            <div class="card-title" id="devices">
+              <a href="#devices">Devices</a>
             </div>
             <div class="join">
               <a
-                href="/dahua/cameras/create"
+                href="/dahua/devices/create"
                 class="btn btn-sm btn-primary join-item"
               >
                 Create
@@ -67,24 +67,24 @@
                 </tr>
               </thead>
               <tbody>
-                {{ range $index, $val := .Data.Cameras }}
+                {{ range $index, $val := .Data.Devices }}
                   <tr>
                     <th>
                       <label>
                         <input
                           type="hidden"
-                          name="Cameras.{{ $index }}.ID"
+                          name="Devices.{{ $index }}.ID"
                           value="{{ .ID }}"
                         />
                         <input
-                          name="Cameras.{{ $index }}.Selected"
+                          name="Devices.{{ $index }}.Selected"
                           type="checkbox"
                           class="checkbox"
                         />
                       </label>
                     </th>
-                    <th id="camera-{{ $val.ID }}">
-                      <a href="#camera-{{ $val.ID }}">
+                    <th id="device-{{ $val.ID }}">
+                      <a href="#device-{{ $val.ID }}">
                         {{ $val.ID }}
                       </a>
                     </th>
@@ -112,13 +112,13 @@
                       <div class="join">
                         <a
                           class="btn-xs join-item btn"
-                          href="/dahua/cameras/{{ $val.ID }}"
+                          href="/dahua/devices/{{ $val.ID }}"
                         >
                           View
                         </a>
                         <a
                           class="btn-xs btn join-item btn-primary"
-                          href="/dahua/cameras/{{ $val.ID }}/update"
+                          href="/dahua/devices/{{ $val.ID }}/update"
                         >
                           Update
                         </a>
@@ -139,8 +139,8 @@
       <form
         class="flex flex-col gap-4 px-4"
         method="post"
-        action="/dahua/cameras/file-cursors"
-        hx-post="/dahua/cameras/file-cursors"
+        action="/dahua/devices/file-cursors"
+        hx-post="/dahua/devices/file-cursors"
       >
         {{ block "htmx-file-cursors" . }}
           <div class="border-b-base-content flex justify-between gap-4">
@@ -151,7 +151,7 @@
               <button
                 class="btn btn-sm join-item"
                 type="submit"
-                hx-get="/dahua/cameras/file-cursors"
+                hx-get="/dahua/devices/file-cursors"
                 hx-target="closest form"
               >
                 Refresh
@@ -191,7 +191,7 @@
                       <input type="checkbox" class="checkbox" />
                     </label>
                   </th>
-                  <th>Camera ID</th>
+                  <th>device ID</th>
                   <th>Files</th>
                   <th>Percent</th>
                   <th>Quick Cursor</th>
@@ -207,8 +207,8 @@
                       <label>
                         <input
                           type="hidden"
-                          name="FileCursors.{{ $index }}.CameraID"
-                          value="{{ .CameraID }}"
+                          name="FileCursors.{{ $index }}.DeviceID"
+                          value="{{ .DeviceID }}"
                         />
                         {{ if .Locked }}
                           <span
@@ -224,8 +224,8 @@
                       </label>
                     </th>
                     <th>
-                      <a href="#camera-{{ .CameraID }}">
-                        {{ .CameraID }}
+                      <a href="#device-{{ .DeviceID }}">
+                        {{ .DeviceID }}
                       </a>
                     </th>
                     <td>{{ .Files }}</td>
@@ -255,7 +255,7 @@
         <table class="table">
           <thead>
             <tr>
-              <th>Camera ID</th>
+              <th>device ID</th>
               <th>State</th>
               <th>Created At</th>
             </tr>
@@ -264,8 +264,8 @@
             {{ range $index, $val := .Data.EventWorkers }}
               <tr>
                 <th>
-                  <a href="#camera-{{ .CameraID }}">
-                    {{ .CameraID }}
+                  <a href="#device-{{ .DeviceID }}">
+                    {{ .DeviceID }}
                   </a>
                 </th>
                 <td>{{ .State }}</td>
@@ -290,7 +290,7 @@
 
     <div
       class="flex justify-center"
-      hx-get="/dahua/cameras"
+      hx-get="/dahua/devices"
       hx-swap="outerHTML"
       hx-trigger="load"
     >
@@ -317,7 +317,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Camera ID</th>
+            <th>device ID</th>
             <th>RPC State</th>
             <th>RPC Last Login</th>
             <th>RPC Error</th>
@@ -327,8 +327,8 @@
           {{ range $index, $val := .Status }}
             <tr>
               <th>
-                <a href="#camera-{{ $val.CameraID }}">
-                  {{ $val.CameraID }}
+                <a href="#device-{{ $val.DeviceID }}">
+                  {{ $val.DeviceID }}
                 </a>
               </th>
               <td>{{ $val.RPCState }}</td>
@@ -353,7 +353,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Camera ID</th>
+            <th>device ID</th>
             <th>SN</th>
             <th>Device Class</th>
             <th>Device Type</th>
@@ -369,8 +369,8 @@
           {{ range $index, $val := .Details }}
             <tr>
               <th>
-                <a href="#camera-{{ $val.CameraID }}">
-                  {{ $val.CameraID }}
+                <a href="#device-{{ $val.DeviceID }}">
+                  {{ $val.DeviceID }}
                 </a>
               </th>
               <td>
@@ -407,7 +407,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Camera ID</th>
+            <th>device ID</th>
             <th>Build</th>
             <th>Build Date</th>
             <th>Security Baseline Version</th>
@@ -419,8 +419,8 @@
           {{ range $index, $val := .SoftwareVersions }}
             <tr>
               <th>
-                <a href="#camera-{{ $val.CameraID }}">
-                  {{ $val.CameraID }}
+                <a href="#device-{{ $val.DeviceID }}">
+                  {{ $val.DeviceID }}
                 </a>
               </th>
               <td>{{ $val.Build }}</td>
@@ -447,7 +447,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Camera ID</th>
+            <th>device ID</th>
             <th>Name</th>
             <th>State</th>
             <th>Path</th>
@@ -461,8 +461,8 @@
           {{ range $index, $val := .Storage }}
             <tr>
               <th>
-                <a href="#camera-{{ $val.CameraID }}">
-                  {{ $val.CameraID }}
+                <a href="#device-{{ $val.DeviceID }}">
+                  {{ $val.DeviceID }}
                 </a>
               </th>
               <td>{{ $val.Name }}</td>
@@ -491,7 +491,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Camera ID</th>
+            <th>device ID</th>
             <th>Abroad Info</th>
             <th>All Type</th>
             <th>Digit Channel</th>
@@ -507,8 +507,8 @@
           {{ range $index, $val := .Licenses }}
             <tr>
               <th>
-                <a href="#camera-{{ $val.CameraID }}">
-                  {{ $val.CameraID }}
+                <a href="#device-{{ $val.DeviceID }}">
+                  {{ $val.DeviceID }}
                 </a>
               </th>
               <td>{{ $val.AbroadInfo }}</td>
@@ -547,7 +547,7 @@
         <thead>
           <tr></tr>
           <tr>
-            <th>Camera ID</th>
+            <th>device ID</th>
             <th>White Light</th>
             <th>Speaker</th>
           </tr>
@@ -556,8 +556,8 @@
           {{ range $index, $val := .CoaxialStatus }}
             <tr>
               <th>
-                <a href="#camera-{{ $val.CameraID }}">
-                  {{ $val.CameraID }}
+                <a href="#device-{{ $val.DeviceID }}">
+                  {{ $val.DeviceID }}
                 </a>
               </th>
               <td>{{ $val.WhiteLight }}</td>

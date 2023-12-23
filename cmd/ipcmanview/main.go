@@ -20,15 +20,15 @@ var mainCmd struct {
 	Debug bool `help:"Enable debug mode."`
 
 	Serve CmdServe `cmd:"" help:"Start application."`
-	Scan  CmdScan  `cmd:"" help:"Scan files on cameras."`
-	RPC   CmdRPC   `cmd:"" help:"Run RPC on cameras."`
+	Scan  CmdScan  `cmd:"" help:"Scan files on devices."`
+	RPC   CmdRPC   `cmd:"" help:"Run RPC on devices."`
 }
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	ktx := kong.Parse(&mainCmd, kong.Description("Application for managing and viewing Dahua IP cameras."))
+	ktx := kong.Parse(&mainCmd, kong.Description("Application for managing and viewing Dahua IP devices."))
 
 	initLogger(mainCmd.Debug)
 

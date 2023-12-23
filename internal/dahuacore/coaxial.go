@@ -11,22 +11,22 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-func NewCoaxialWorker(bus *core.Bus, cameraID int64, rpcConn dahuarpc.Conn) CoaxialWorker {
+func NewCoaxialWorker(bus *core.Bus, deviceID int64, rpcConn dahuarpc.Conn) CoaxialWorker {
 	return CoaxialWorker{
 		bus:      bus,
-		cameraID: cameraID,
+		deviceID: deviceID,
 		rpcConn:  rpcConn,
 	}
 }
 
 type CoaxialWorker struct {
 	bus      *core.Bus
-	cameraID int64
+	deviceID int64
 	rpcConn  dahuarpc.Conn
 }
 
 func (w CoaxialWorker) String() string {
-	return fmt.Sprintf("dahuacore.CoaxialWorker(id=%d)", w.cameraID)
+	return fmt.Sprintf("dahuacore.CoaxialWorker(id=%d)", w.deviceID)
 }
 
 func (w CoaxialWorker) Serve(ctx context.Context) error {
@@ -34,8 +34,8 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 
 	channel := 1
 
-	// Does this camera support coaxial?
-	caps, err := GetCoaxialCaps(ctx, w.cameraID, w.rpcConn, channel)
+	// Does this device support coaxial?
+	caps, err := GetCoaxialCaps(ctx, w.deviceID, w.rpcConn, channel)
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 	}
 
 	// Get and send initial coaxial status
-	coaxialStatus, err := GetCoaxialStatus(ctx, w.cameraID, w.rpcConn, channel)
+	coaxialStatus, err := GetCoaxialStatus(ctx, w.deviceID, w.rpcConn, channel)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 		case <-t.C:
 		}
 
-		s, err := GetCoaxialStatus(ctx, w.cameraID, w.rpcConn, channel)
+		s, err := GetCoaxialStatus(ctx, w.deviceID, w.rpcConn, channel)
 		if err != nil {
 			return err
 		}

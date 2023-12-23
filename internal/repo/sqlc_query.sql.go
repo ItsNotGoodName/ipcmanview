@@ -17,7 +17,7 @@ import (
 
 const createDahuaEvent = `-- name: CreateDahuaEvent :one
 INSERT INTO dahua_events (
-  camera_id,
+  device_id,
   code,
   action,
   ` + "`" + `index` + "`" + `,
@@ -29,7 +29,7 @@ INSERT INTO dahua_events (
 `
 
 type CreateDahuaEventParams struct {
-	CameraID  int64
+	DeviceID  int64
 	Code      string
 	Action    string
 	Index     int64
@@ -39,7 +39,7 @@ type CreateDahuaEventParams struct {
 
 func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, createDahuaEvent,
-		arg.CameraID,
+		arg.DeviceID,
 		arg.Code,
 		arg.Action,
 		arg.Index,
@@ -84,7 +84,7 @@ func (q *Queries) CreateDahuaEventRule(ctx context.Context, arg CreateDahuaEvent
 
 const createDahuaEventWorkerState = `-- name: CreateDahuaEventWorkerState :exec
 INSERT INTO dahua_event_worker_states(
-  camera_id,
+  device_id,
   state,
   error,
   created_at
@@ -97,7 +97,7 @@ INSERT INTO dahua_event_worker_states(
 `
 
 type CreateDahuaEventWorkerStateParams struct {
-	CameraID  int64
+	DeviceID  int64
 	State     models.DahuaEventWorkerState
 	Error     sql.NullString
 	CreatedAt types.Time
@@ -105,7 +105,7 @@ type CreateDahuaEventWorkerStateParams struct {
 
 func (q *Queries) CreateDahuaEventWorkerState(ctx context.Context, arg CreateDahuaEventWorkerStateParams) error {
 	_, err := q.db.ExecContext(ctx, createDahuaEventWorkerState,
-		arg.CameraID,
+		arg.DeviceID,
 		arg.State,
 		arg.Error,
 		arg.CreatedAt,
@@ -115,7 +115,7 @@ func (q *Queries) CreateDahuaEventWorkerState(ctx context.Context, arg CreateDah
 
 const createDahuaFile = `-- name: CreateDahuaFile :one
 INSERT INTO dahua_files (
-  camera_id,
+  device_id,
   channel,
   start_time,
   end_time,
@@ -140,7 +140,7 @@ INSERT INTO dahua_files (
 `
 
 type CreateDahuaFileParams struct {
-	CameraID    int64
+	DeviceID    int64
 	Channel     int64
 	StartTime   types.Time
 	EndTime     types.Time
@@ -163,7 +163,7 @@ type CreateDahuaFileParams struct {
 
 func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, createDahuaFile,
-		arg.CameraID,
+		arg.DeviceID,
 		arg.Channel,
 		arg.StartTime,
 		arg.EndTime,
@@ -190,30 +190,30 @@ func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams
 
 const createDahuaFileScanLock = `-- name: CreateDahuaFileScanLock :one
 INSERT INTO dahua_file_scan_locks (
-  camera_id, touched_at
+  device_id, touched_at
 ) VALUES (
   ?, ?
-) RETURNING camera_id, touched_at
+) RETURNING device_id, touched_at
 `
 
 type CreateDahuaFileScanLockParams struct {
-	CameraID  int64
+	DeviceID  int64
 	TouchedAt types.Time
 }
 
 func (q *Queries) CreateDahuaFileScanLock(ctx context.Context, arg CreateDahuaFileScanLockParams) (DahuaFileScanLock, error) {
-	row := q.db.QueryRowContext(ctx, createDahuaFileScanLock, arg.CameraID, arg.TouchedAt)
+	row := q.db.QueryRowContext(ctx, createDahuaFileScanLock, arg.DeviceID, arg.TouchedAt)
 	var i DahuaFileScanLock
-	err := row.Scan(&i.CameraID, &i.TouchedAt)
+	err := row.Scan(&i.DeviceID, &i.TouchedAt)
 	return i, err
 }
 
-const deleteDahuaCamera = `-- name: DeleteDahuaCamera :exec
-DELETE FROM dahua_cameras WHERE id = ?
+const deleteDahuaDevice = `-- name: DeleteDahuaDevice :exec
+DELETE FROM dahua_devices WHERE id = ?
 `
 
-func (q *Queries) DeleteDahuaCamera(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteDahuaCamera, id)
+func (q *Queries) DeleteDahuaDevice(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteDahuaDevice, id)
 	return err
 }
 
@@ -230,14 +230,14 @@ const deleteDahuaFile = `-- name: DeleteDahuaFile :exec
 DELETE FROM dahua_files
 WHERE
   updated_at < ?1 AND
-  camera_id = ?2 AND
+  device_id = ?2 AND
   start_time <= ?3 AND
   ?4 < start_time
 `
 
 type DeleteDahuaFileParams struct {
 	UpdatedAt types.Time
-	CameraID  int64
+	DeviceID  int64
 	End       types.Time
 	Start     types.Time
 }
@@ -245,7 +245,7 @@ type DeleteDahuaFileParams struct {
 func (q *Queries) DeleteDahuaFile(ctx context.Context, arg DeleteDahuaFileParams) error {
 	_, err := q.db.ExecContext(ctx, deleteDahuaFile,
 		arg.UpdatedAt,
-		arg.CameraID,
+		arg.DeviceID,
 		arg.End,
 		arg.Start,
 	)
@@ -253,11 +253,11 @@ func (q *Queries) DeleteDahuaFile(ctx context.Context, arg DeleteDahuaFileParams
 }
 
 const deleteDahuaFileScanLock = `-- name: DeleteDahuaFileScanLock :exec
-DELETE FROM dahua_file_scan_locks WHERE camera_id = ?
+DELETE FROM dahua_file_scan_locks WHERE device_id = ?
 `
 
-func (q *Queries) DeleteDahuaFileScanLock(ctx context.Context, cameraID int64) error {
-	_, err := q.db.ExecContext(ctx, deleteDahuaFileScanLock, cameraID)
+func (q *Queries) DeleteDahuaFileScanLock(ctx context.Context, deviceID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteDahuaFileScanLock, deviceID)
 	return err
 }
 
@@ -270,13 +270,13 @@ func (q *Queries) DeleteDahuaFileScanLockByAge(ctx context.Context, touchedAt ty
 	return err
 }
 
-const getDahuaCamera = `-- name: GetDahuaCamera :one
-SELECT dahua_cameras.id, dahua_cameras.name, dahua_cameras.address, dahua_cameras.username, dahua_cameras.password, dahua_cameras.location, dahua_cameras.created_at, dahua_cameras.updated_at, coalesce(seed, id) FROM dahua_cameras 
-LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
+const getDahuaDevice = `-- name: GetDahuaDevice :one
+SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
+LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 WHERE id = ? LIMIT 1
 `
 
-type GetDahuaCameraRow struct {
+type GetDahuaDeviceRow struct {
 	ID        int64
 	Name      string
 	Address   string
@@ -288,9 +288,9 @@ type GetDahuaCameraRow struct {
 	Seed      int64
 }
 
-func (q *Queries) GetDahuaCamera(ctx context.Context, id int64) (GetDahuaCameraRow, error) {
-	row := q.db.QueryRowContext(ctx, getDahuaCamera, id)
-	var i GetDahuaCameraRow
+func (q *Queries) GetDahuaDevice(ctx context.Context, id int64) (GetDahuaDeviceRow, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaDevice, id)
+	var i GetDahuaDeviceRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -335,22 +335,22 @@ func (q *Queries) GetDahuaEventRule(ctx context.Context, id int64) (DahuaEventRu
 }
 
 const getDahuaFileByFilePath = `-- name: GetDahuaFileByFilePath :one
-SELECT id, camera_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at
+SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at
 FROM dahua_files
-WHERE camera_id = ? and file_path = ?
+WHERE device_id = ? and file_path = ?
 `
 
 type GetDahuaFileByFilePathParams struct {
-	CameraID int64
+	DeviceID int64
 	FilePath string
 }
 
 func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileByFilePathParams) (DahuaFile, error) {
-	row := q.db.QueryRowContext(ctx, getDahuaFileByFilePath, arg.CameraID, arg.FilePath)
+	row := q.db.QueryRowContext(ctx, getDahuaFileByFilePath, arg.DeviceID, arg.FilePath)
 	var i DahuaFile
 	err := row.Scan(
 		&i.ID,
-		&i.CameraID,
+		&i.DeviceID,
 		&i.Channel,
 		&i.StartTime,
 		&i.EndTime,
@@ -385,12 +385,12 @@ func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 	return i, err
 }
 
-const listDahuaCamera = `-- name: ListDahuaCamera :many
-SELECT dahua_cameras.id, dahua_cameras.name, dahua_cameras.address, dahua_cameras.username, dahua_cameras.password, dahua_cameras.location, dahua_cameras.created_at, dahua_cameras.updated_at, coalesce(seed, id) FROM dahua_cameras 
-LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
+const listDahuaDevice = `-- name: ListDahuaDevice :many
+SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
+LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 `
 
-type ListDahuaCameraRow struct {
+type ListDahuaDeviceRow struct {
 	ID        int64
 	Name      string
 	Address   string
@@ -402,15 +402,15 @@ type ListDahuaCameraRow struct {
 	Seed      int64
 }
 
-func (q *Queries) ListDahuaCamera(ctx context.Context) ([]ListDahuaCameraRow, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaCamera)
+func (q *Queries) ListDahuaDevice(ctx context.Context) ([]ListDahuaDeviceRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaDevice)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListDahuaCameraRow
+	var items []ListDahuaDeviceRow
 	for rows.Next() {
-		var i ListDahuaCameraRow
+		var i ListDahuaDeviceRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -435,13 +435,13 @@ func (q *Queries) ListDahuaCamera(ctx context.Context) ([]ListDahuaCameraRow, er
 	return items, nil
 }
 
-const listDahuaCameraByIDs = `-- name: ListDahuaCameraByIDs :many
-SELECT dahua_cameras.id, dahua_cameras.name, dahua_cameras.address, dahua_cameras.username, dahua_cameras.password, dahua_cameras.location, dahua_cameras.created_at, dahua_cameras.updated_at, coalesce(seed, id) FROM dahua_cameras 
-LEFT JOIN dahua_seeds ON dahua_seeds.camera_id = dahua_cameras.id
+const listDahuaDeviceByIDs = `-- name: ListDahuaDeviceByIDs :many
+SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
+LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 WHERE id IN (/*SLICE:ids*/?)
 `
 
-type ListDahuaCameraByIDsRow struct {
+type ListDahuaDeviceByIDsRow struct {
 	ID        int64
 	Name      string
 	Address   string
@@ -453,8 +453,8 @@ type ListDahuaCameraByIDsRow struct {
 	Seed      int64
 }
 
-func (q *Queries) ListDahuaCameraByIDs(ctx context.Context, ids []int64) ([]ListDahuaCameraByIDsRow, error) {
-	query := listDahuaCameraByIDs
+func (q *Queries) ListDahuaDeviceByIDs(ctx context.Context, ids []int64) ([]ListDahuaDeviceByIDsRow, error) {
+	query := listDahuaDeviceByIDs
 	var queryParams []interface{}
 	if len(ids) > 0 {
 		for _, v := range ids {
@@ -469,9 +469,9 @@ func (q *Queries) ListDahuaCameraByIDs(ctx context.Context, ids []int64) ([]List
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListDahuaCameraByIDsRow
+	var items []ListDahuaDeviceByIDsRow
 	for rows.Next() {
-		var i ListDahuaCameraByIDsRow
+		var i ListDahuaDeviceByIDsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -584,12 +584,12 @@ func (q *Queries) ListDahuaEventRule(ctx context.Context) ([]DahuaEventRule, err
 }
 
 const listDahuaEventWorkerState = `-- name: ListDahuaEventWorkerState :many
-SELECT id, camera_id, state, error, created_at,max(created_at) FROM dahua_event_worker_states GROUP BY camera_id
+SELECT id, device_id, state, error, created_at,max(created_at) FROM dahua_event_worker_states GROUP BY device_id
 `
 
 type ListDahuaEventWorkerStateRow struct {
 	ID        int64
-	CameraID  int64
+	DeviceID  int64
 	State     models.DahuaEventWorkerState
 	Error     sql.NullString
 	CreatedAt types.Time
@@ -607,7 +607,7 @@ func (q *Queries) ListDahuaEventWorkerState(ctx context.Context) ([]ListDahuaEve
 		var i ListDahuaEventWorkerStateRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.CameraID,
+			&i.DeviceID,
 			&i.State,
 			&i.Error,
 			&i.CreatedAt,
@@ -628,17 +628,17 @@ func (q *Queries) ListDahuaEventWorkerState(ctx context.Context) ([]ListDahuaEve
 
 const listDahuaFileCursor = `-- name: ListDahuaFileCursor :many
 SELECT 
-  c.camera_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete, c.percent,
-  count(f.camera_id) AS files,
+  c.device_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete, c.percent,
+  count(f.device_id) AS files,
   coalesce(l.touched_at > ?, false) AS locked
 FROM dahua_file_cursors AS c
-LEFT JOIN dahua_files AS f ON f.camera_id = c.camera_id
-LEFT JOIN dahua_file_scan_locks AS l ON l.camera_id = c.camera_id
-GROUP BY c.camera_id
+LEFT JOIN dahua_files AS f ON f.device_id = c.device_id
+LEFT JOIN dahua_file_scan_locks AS l ON l.device_id = c.device_id
+GROUP BY c.device_id
 `
 
 type ListDahuaFileCursorRow struct {
-	CameraID     int64
+	DeviceID     int64
 	QuickCursor  types.Time
 	FullCursor   types.Time
 	FullEpoch    types.Time
@@ -658,7 +658,7 @@ func (q *Queries) ListDahuaFileCursor(ctx context.Context, touchedAt types.Time)
 	for rows.Next() {
 		var i ListDahuaFileCursorRow
 		if err := rows.Scan(
-			&i.CameraID,
+			&i.DeviceID,
 			&i.QuickCursor,
 			&i.FullCursor,
 			&i.FullEpoch,
@@ -711,27 +711,27 @@ func (q *Queries) ListDahuaFileTypes(ctx context.Context) ([]string, error) {
 const touchDahuaFileScanLock = `-- name: TouchDahuaFileScanLock :exec
 UPDATE dahua_file_scan_locks
 SET touched_at = ?
-WHERE camera_id = ?
+WHERE device_id = ?
 `
 
 type TouchDahuaFileScanLockParams struct {
 	TouchedAt types.Time
-	CameraID  int64
+	DeviceID  int64
 }
 
 func (q *Queries) TouchDahuaFileScanLock(ctx context.Context, arg TouchDahuaFileScanLockParams) error {
-	_, err := q.db.ExecContext(ctx, touchDahuaFileScanLock, arg.TouchedAt, arg.CameraID)
+	_, err := q.db.ExecContext(ctx, touchDahuaFileScanLock, arg.TouchedAt, arg.DeviceID)
 	return err
 }
 
-const updateDahuaCamera = `-- name: UpdateDahuaCamera :one
-UPDATE dahua_cameras 
+const updateDahuaDevice = `-- name: UpdateDahuaDevice :one
+UPDATE dahua_devices 
 SET name = ?, address = ?, username = ?, password = ?, location = ?, updated_at = ?
 WHERE id = ?
 RETURNING id
 `
 
-type UpdateDahuaCameraParams struct {
+type UpdateDahuaDeviceParams struct {
 	Name      string
 	Address   string
 	Username  string
@@ -741,8 +741,8 @@ type UpdateDahuaCameraParams struct {
 	ID        int64
 }
 
-func (q *Queries) UpdateDahuaCamera(ctx context.Context, arg UpdateDahuaCameraParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, updateDahuaCamera,
+func (q *Queries) UpdateDahuaDevice(ctx context.Context, arg UpdateDahuaDeviceParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, updateDahuaDevice,
 		arg.Name,
 		arg.Address,
 		arg.Username,
@@ -805,7 +805,7 @@ SET
   work_dir = ?,
   work_dir_sn = ?,
   updated_at = ?
-WHERE camera_id = ? AND file_path = ?
+WHERE device_id = ? AND file_path = ?
 RETURNING id
 `
 
@@ -827,7 +827,7 @@ type UpdateDahuaFileParams struct {
 	WorkDir     string
 	WorkDirSn   int64
 	UpdatedAt   types.Time
-	CameraID    int64
+	DeviceID    int64
 	FilePath    string
 }
 
@@ -850,7 +850,7 @@ func (q *Queries) UpdateDahuaFile(ctx context.Context, arg UpdateDahuaFileParams
 		arg.WorkDir,
 		arg.WorkDirSn,
 		arg.UpdatedAt,
-		arg.CameraID,
+		arg.DeviceID,
 		arg.FilePath,
 	)
 	var id int64
@@ -865,8 +865,8 @@ SET
   full_cursor = ?,
   full_epoch = ?,
   percent = ?
-WHERE camera_id = ?
-RETURNING camera_id, quick_cursor, full_cursor, full_epoch, full_complete, percent
+WHERE device_id = ?
+RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, percent
 `
 
 type UpdateDahuaFileCursorParams struct {
@@ -874,7 +874,7 @@ type UpdateDahuaFileCursorParams struct {
 	FullCursor  types.Time
 	FullEpoch   types.Time
 	Percent     float64
-	CameraID    int64
+	DeviceID    int64
 }
 
 func (q *Queries) UpdateDahuaFileCursor(ctx context.Context, arg UpdateDahuaFileCursorParams) (DahuaFileCursor, error) {
@@ -883,11 +883,11 @@ func (q *Queries) UpdateDahuaFileCursor(ctx context.Context, arg UpdateDahuaFile
 		arg.FullCursor,
 		arg.FullEpoch,
 		arg.Percent,
-		arg.CameraID,
+		arg.DeviceID,
 	)
 	var i DahuaFileCursor
 	err := row.Scan(
-		&i.CameraID,
+		&i.DeviceID,
 		&i.QuickCursor,
 		&i.FullCursor,
 		&i.FullEpoch,
@@ -901,20 +901,20 @@ const updateDahuaFileCursorPercent = `-- name: UpdateDahuaFileCursorPercent :one
 UPDATE dahua_file_cursors 
 SET
   percent = ?
-WHERE camera_id = ?
-RETURNING camera_id, quick_cursor, full_cursor, full_epoch, full_complete, percent
+WHERE device_id = ?
+RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, percent
 `
 
 type UpdateDahuaFileCursorPercentParams struct {
 	Percent  float64
-	CameraID int64
+	DeviceID int64
 }
 
 func (q *Queries) UpdateDahuaFileCursorPercent(ctx context.Context, arg UpdateDahuaFileCursorPercentParams) (DahuaFileCursor, error) {
-	row := q.db.QueryRowContext(ctx, updateDahuaFileCursorPercent, arg.Percent, arg.CameraID)
+	row := q.db.QueryRowContext(ctx, updateDahuaFileCursorPercent, arg.Percent, arg.DeviceID)
 	var i DahuaFileCursor
 	err := row.Scan(
-		&i.CameraID,
+		&i.DeviceID,
 		&i.QuickCursor,
 		&i.FullCursor,
 		&i.FullEpoch,
@@ -947,24 +947,24 @@ func (q *Queries) UpdateSettings(ctx context.Context, arg UpdateSettingsParams) 
 
 const allocateDahuaSeed = `-- name: allocateDahuaSeed :exec
 UPDATE dahua_seeds 
-SET camera_id = ?1
-WHERE seed = (SELECT seed FROM dahua_seeds WHERE camera_id = ?1 OR camera_id IS NULL ORDER BY camera_id asc LIMIT 1)
+SET device_id = ?1
+WHERE seed = (SELECT seed FROM dahua_seeds WHERE device_id = ?1 OR device_id IS NULL ORDER BY device_id asc LIMIT 1)
 `
 
-func (q *Queries) allocateDahuaSeed(ctx context.Context, cameraID sql.NullInt64) error {
-	_, err := q.db.ExecContext(ctx, allocateDahuaSeed, cameraID)
+func (q *Queries) allocateDahuaSeed(ctx context.Context, deviceID sql.NullInt64) error {
+	_, err := q.db.ExecContext(ctx, allocateDahuaSeed, deviceID)
 	return err
 }
 
-const createDahuaCamera = `-- name: createDahuaCamera :one
-INSERT INTO dahua_cameras (
+const createDahuaDevice = `-- name: createDahuaDevice :one
+INSERT INTO dahua_devices (
   name, address, username, password, location, created_at, updated_at
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id
 `
 
-type createDahuaCameraParams struct {
+type createDahuaDeviceParams struct {
 	Name      string
 	Address   string
 	Username  string
@@ -974,8 +974,8 @@ type createDahuaCameraParams struct {
 	UpdatedAt types.Time
 }
 
-func (q *Queries) createDahuaCamera(ctx context.Context, arg createDahuaCameraParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, createDahuaCamera,
+func (q *Queries) createDahuaDevice(ctx context.Context, arg createDahuaDeviceParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createDahuaDevice,
 		arg.Name,
 		arg.Address,
 		arg.Username,
@@ -991,7 +991,7 @@ func (q *Queries) createDahuaCamera(ctx context.Context, arg createDahuaCameraPa
 
 const createDahuaFileCursor = `-- name: createDahuaFileCursor :exec
 INSERT INTO dahua_file_cursors (
-  camera_id,
+  device_id,
   quick_cursor,
   full_cursor,
   full_epoch,
@@ -1002,7 +1002,7 @@ INSERT INTO dahua_file_cursors (
 `
 
 type createDahuaFileCursorParams struct {
-	CameraID    int64
+	DeviceID    int64
 	QuickCursor types.Time
 	FullCursor  types.Time
 	FullEpoch   types.Time
@@ -1011,7 +1011,7 @@ type createDahuaFileCursorParams struct {
 
 func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFileCursorParams) error {
 	_, err := q.db.ExecContext(ctx, createDahuaFileCursor,
-		arg.CameraID,
+		arg.DeviceID,
 		arg.QuickCursor,
 		arg.FullCursor,
 		arg.FullEpoch,
@@ -1020,12 +1020,12 @@ func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFile
 	return err
 }
 
-const dahuaCameraExists = `-- name: dahuaCameraExists :one
-SELECT COUNT(id) FROM dahua_cameras WHERE id = ?
+const dahuaDeviceExists = `-- name: dahuaDeviceExists :one
+SELECT COUNT(id) FROM dahua_devices WHERE id = ?
 `
 
-func (q *Queries) dahuaCameraExists(ctx context.Context, id int64) (int64, error) {
-	row := q.db.QueryRowContext(ctx, dahuaCameraExists, id)
+func (q *Queries) dahuaDeviceExists(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRowContext(ctx, dahuaDeviceExists, id)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -1037,8 +1037,8 @@ SELECT
   ignore_live,
   ignore_mqtt,
   code
-FROM dahua_event_camera_rules 
-WHERE camera_id = ?1 AND (dahua_event_camera_rules.code = ?2 OR dahua_event_camera_rules.code = '')
+FROM dahua_event_device_rules 
+WHERE device_id = ?1 AND (dahua_event_device_rules.code = ?2 OR dahua_event_device_rules.code = '')
 UNION ALL
 SELECT 
   ignore_db,
@@ -1051,7 +1051,7 @@ ORDER BY code DESC
 `
 
 type getDahuaEventRuleByEventParams struct {
-	CameraID int64
+	DeviceID int64
 	Code     string
 }
 
@@ -1063,7 +1063,7 @@ type getDahuaEventRuleByEventRow struct {
 }
 
 func (q *Queries) getDahuaEventRuleByEvent(ctx context.Context, arg getDahuaEventRuleByEventParams) ([]getDahuaEventRuleByEventRow, error) {
-	rows, err := q.db.QueryContext(ctx, getDahuaEventRuleByEvent, arg.CameraID, arg.Code)
+	rows, err := q.db.QueryContext(ctx, getDahuaEventRuleByEvent, arg.DeviceID, arg.Code)
 	if err != nil {
 		return nil, err
 	}

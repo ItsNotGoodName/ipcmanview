@@ -18,7 +18,7 @@ import (
 
 type DahuaFile struct {
 	ID       int64
-	CameraID int64
+	DeviceID int64
 }
 
 func fromDahuaFileName(fileName string) (DahuaFile, error) {
@@ -33,7 +33,7 @@ func fromDahuaFileName(fileName string) (DahuaFile, error) {
 		return DahuaFile{}, fmt.Errorf("invalid length: %d", dashSplitLen)
 	}
 
-	cameraID, err := strconv.ParseInt(dashSplit[dashSplitLen-2], 10, 64)
+	deviceID, err := strconv.ParseInt(dashSplit[dashSplitLen-2], 10, 64)
 	if err != nil {
 		return DahuaFile{}, err
 	}
@@ -45,12 +45,12 @@ func fromDahuaFileName(fileName string) (DahuaFile, error) {
 
 	return DahuaFile{
 		ID:       id,
-		CameraID: cameraID,
+		DeviceID: deviceID,
 	}, nil
 }
 
 func toDahuaFileName(file models.DahuaFile) string {
-	return fmt.Sprintf("%s-%d-%d.%s", file.StartTime.UTC().Format("2006-01-02-15-04-05"), file.CameraID, file.ID, file.Type)
+	return fmt.Sprintf("%s-%d-%d.%s", file.StartTime.UTC().Format("2006-01-02-15-04-05"), file.DeviceID, file.ID, file.Type)
 }
 
 type DahuaFileStore struct {
