@@ -196,7 +196,7 @@ type NewFile struct {
 	Index       int    `json:"Index"`
 	MailTimeout int    `json:"MailTimeout"`
 	Size        int    `json:"Size"`
-	// StoragePoint can be "Temporary".
+	// StoragePoint can be "Temporary", "NULL".
 	StoragePoint string `json:"StoragePoint"`
 }
 
