@@ -72,8 +72,9 @@ CREATE TABLE dahua_files (
   pic_index INTEGER NOT NULL,
   repeat INTEGER NOT NULL,
   work_dir TEXT NOT NULL,
-  work_dir_sn INTEGER NOT NULL,
+  work_dir_sn BOOLEAN NOT NULL,
   updated_at DATETIME NOT NULL,
+  local BOOLEAN NOT NULL,
 
   UNIQUE (device_id, file_path),
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE

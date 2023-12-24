@@ -99,6 +99,6 @@ func (c DahuaFile) Convert() models.DahuaFile {
 		PicIndex:    int(c.PicIndex),
 		Repeat:      int(c.Repeat),
 		WorkDir:     c.WorkDir,
-		WorkDirSN:   int(c.WorkDirSn),
+		WorkDirSN:   c.WorkDirSn,
 	}
 }

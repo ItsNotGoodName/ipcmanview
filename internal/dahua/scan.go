@@ -137,8 +137,9 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 						PicIndex:    int64(f.PicIndex),
 						Repeat:      int64(f.Repeat),
 						WorkDir:     f.WorkDir,
-						WorkDirSn:   int64(f.WorkDirSN),
+						WorkDirSn:   f.WorkDirSN,
 						UpdatedAt:   updated_at,
+						Local:       f.Local,
 					})
 					if err != nil {
 						return err

@@ -77,8 +77,9 @@ type DahuaFile struct {
 	PicIndex    int64
 	Repeat      int64
 	WorkDir     string
-	WorkDirSn   int64
+	WorkDirSn   bool
 	UpdatedAt   types.Time
+	Local       bool
 }
 
 type DahuaFileCursor struct {

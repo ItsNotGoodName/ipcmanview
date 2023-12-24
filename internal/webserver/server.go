@@ -3,6 +3,7 @@ package webserver
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"net/http"
 	"slices"
 
@@ -202,6 +203,10 @@ func (s Server) DahuaFiles(c echo.Context) error {
 		Start:     types.NewTime(timeRange.Start),
 		End:       types.NewTime(timeRange.End),
 		Ascending: params.Ascending,
+		Local: sql.NullBool{
+			Bool:  true,
+			Valid: true,
+		},
 	})
 	if err != nil {
 		return err

@@ -133,9 +133,10 @@ INSERT INTO dahua_files (
   repeat,
   work_dir,
   work_dir_sn,
-  updated_at
+  updated_at,
+  local
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id;
 
 -- name: GetDahuaFileByFilePath :one
@@ -162,7 +163,8 @@ SET
   repeat = ?,
   work_dir = ?,
   work_dir_sn = ?,
-  updated_at = ?
+  updated_at = ?,
+  local = ?
 WHERE device_id = ? AND file_path = ?
 RETURNING id;
 

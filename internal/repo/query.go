@@ -80,6 +80,7 @@ func (db DB) UpsertDahuaFiles(ctx context.Context, args CreateDahuaFileParams) (
 		WorkDir:     args.WorkDir,
 		WorkDirSn:   args.WorkDirSn,
 		UpdatedAt:   args.UpdatedAt,
+		Local:       args.Local,
 	})
 	if err == nil {
 		return id, nil
@@ -169,6 +170,7 @@ type ListDahuaFileParams struct {
 	Start     types.Time
 	End       types.Time
 	Ascending bool
+	Local     sql.NullBool
 }
 
 type ListDahuaFileResult struct {
@@ -185,6 +187,9 @@ func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDa
 	}
 	if len(arg.DeviceID) != 0 {
 		eq["device_id"] = arg.DeviceID
+	}
+	if arg.Local.Valid {
+		eq["local"] = arg.Local.Bool
 	}
 	where = append(where, eq)
 

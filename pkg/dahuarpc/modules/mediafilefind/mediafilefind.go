@@ -3,6 +3,7 @@ package mediafilefind
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -106,13 +107,15 @@ type FindNextFileInfo struct {
 	Partition   int                `json:"Partition"`
 	PicIndex    int                `json:"PicIndex"`
 	Repeat      int                `json:"Repeat"`
-	WorkDir     string             `json:"WorkDir"`
-	WorkDirSN   int                `json:"WorkDirSN"`
+	// WorkDir is the working directory (e.g. /mnt/dvr/mmc0p2_0).
+	WorkDir string `json:"WorkDir"`
+	// WorkDirSN is indicates that the WorkDir's name is the Serial Number (e.g ftp://192.168.20.30/test/share/XXXXXXXXXXXXXXX).
+	WorkDirSN int `json:"WorkDirSN"`
 }
 
 // UniqueTime returns StartTime and EndTime that are unique.
 //
-// Dahua cameras can only handle timestamps that are precise up to the second, we use the leftover microseconds (.000_000) to create a unique time.
+// Dahua devices can only handle timestamps that are precise up to the second, we use the leftover microseconds (.000_000) to create a unique time.
 // Unique means it won't conflict with other media files on the camera.
 // An affixSeed can optionally be passed to make the media file not conflict with other cameras.
 func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Location) (time.Time, time.Time, error) {
@@ -144,6 +147,11 @@ func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Locatio
 	seed := (time.Duration((prefixSeed % 999)) * time.Millisecond) + (time.Duration((affixSeed % 999)) * time.Microsecond)
 
 	return startTime.Add(seed), endTime.Add(seed), nil
+}
+
+// Local checks if the file is stored directly disk which allows it to be loaded through RPC_Loadfile.
+func (f FindNextFileInfo) Local() bool {
+	return strings.HasPrefix(f.FilePath, "/")
 }
 
 func GetCount(ctx context.Context, c dahuarpc.Conn, object int64) (int, error) {

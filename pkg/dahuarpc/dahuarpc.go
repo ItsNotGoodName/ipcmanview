@@ -21,12 +21,12 @@ func SendRaw[T any](ctx context.Context, c Conn, rb RequestBuilder) (Response[T]
 	}
 	defer rd.Close()
 
-	raw, err := io.ReadAll(rd)
+	b, err := io.ReadAll(rd)
 	if err != nil {
 		return res, err
 	}
 
-	if err := json.Unmarshal(raw, &res); err != nil {
+	if err := json.Unmarshal(b, &res); err != nil {
 		return res, err
 	}
 

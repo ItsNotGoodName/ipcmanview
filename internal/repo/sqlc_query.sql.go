@@ -133,9 +133,10 @@ INSERT INTO dahua_files (
   repeat,
   work_dir,
   work_dir_sn,
-  updated_at
+  updated_at,
+  local
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? 
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id
 `
 
@@ -157,8 +158,9 @@ type CreateDahuaFileParams struct {
 	PicIndex    int64
 	Repeat      int64
 	WorkDir     string
-	WorkDirSn   int64
+	WorkDirSn   bool
 	UpdatedAt   types.Time
+	Local       bool
 }
 
 func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams) (int64, error) {
@@ -182,6 +184,7 @@ func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams
 		arg.WorkDir,
 		arg.WorkDirSn,
 		arg.UpdatedAt,
+		arg.Local,
 	)
 	var id int64
 	err := row.Scan(&id)
@@ -337,7 +340,7 @@ func (q *Queries) GetDahuaEventRule(ctx context.Context, id int64) (DahuaEventRu
 }
 
 const getDahuaFileByFilePath = `-- name: GetDahuaFileByFilePath :one
-SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at
+SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, local
 FROM dahua_files
 WHERE device_id = ? and file_path = ?
 `
@@ -371,6 +374,7 @@ func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileBy
 		&i.WorkDir,
 		&i.WorkDirSn,
 		&i.UpdatedAt,
+		&i.Local,
 	)
 	return i, err
 }
@@ -812,7 +816,8 @@ SET
   repeat = ?,
   work_dir = ?,
   work_dir_sn = ?,
-  updated_at = ?
+  updated_at = ?,
+  local = ?
 WHERE device_id = ? AND file_path = ?
 RETURNING id
 `
@@ -833,8 +838,9 @@ type UpdateDahuaFileParams struct {
 	PicIndex    int64
 	Repeat      int64
 	WorkDir     string
-	WorkDirSn   int64
+	WorkDirSn   bool
 	UpdatedAt   types.Time
+	Local       bool
 	DeviceID    int64
 	FilePath    string
 }
@@ -858,6 +864,7 @@ func (q *Queries) UpdateDahuaFile(ctx context.Context, arg UpdateDahuaFileParams
 		arg.WorkDir,
 		arg.WorkDirSn,
 		arg.UpdatedAt,
+		arg.Local,
 		arg.DeviceID,
 		arg.FilePath,
 	)

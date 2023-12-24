@@ -28,6 +28,7 @@ const (
 	CodeVideoMotion           Code = "VideoMotion"
 	CodeVideoMotionInfo       Code = "VideoMotionInfo"
 	CodeWanderDetection       Code = "WanderDetection"
+	CodeSystemState           Code = "SystemState"
 )
 
 type Action string
@@ -217,4 +218,9 @@ type LoginFailure struct {
 	Name    string `json:"Name"`
 	Type    string `json:"Type"`
 	Utc     int    `json:"UTC"`
+}
+
+type SystemState struct {
+	// State can be "Active".
+	State string `json:"State"`
 }
