@@ -7,6 +7,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
 	"github.com/rs/zerolog/log"
 )
 
@@ -34,13 +35,15 @@ func (c *CmdDebug) Run(ctx *Context) error {
 			defer conn.RPC.Close(context.Background())
 			defer wg.Done()
 
-			config, err := configmanager.GetConfig[[]configmanager.VideoInMode](ctx, conn.RPC, "VideoInMode")
+			cfg, err := configmanager.VideoInMode(ctx, conn.RPC)
 			if err != nil {
 				log.Err(err).Send()
 				return
 			}
 
-			err = configmanager.SetConfig(ctx, conn.RPC, "VideoInMode", config)
+			cfg.Tables[0].Data.SetSwitchMode(config.SwitchModeTime)
+
+			err = configmanager.SetConfig(ctx, conn.RPC, cfg)
 			if err != nil {
 				log.Err(err).Send()
 				return
