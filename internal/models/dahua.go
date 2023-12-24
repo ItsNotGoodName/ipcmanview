@@ -3,6 +3,9 @@ package models
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
 )
 
 type DahuaEventWorkerState string
@@ -172,4 +175,9 @@ type DahuaUser struct {
 	ID            int       `json:"id"`
 	LoginTime     time.Time `json:"login_time"`
 	Name          string    `json:"name"`
+}
+
+type DahuaSunriseSunset struct {
+	SwitchMode  config.SwitchMode    `json:"switch_mode"`
+	TimeSection dahuarpc.TimeSection `json:"time_section"`
 }

@@ -122,7 +122,6 @@ func (s *DahuaServer) DahuaIDRPCPOST(c echo.Context) error {
 		Method string          `json:"method"`
 		Params json.RawMessage `json:"params"`
 		Object int64           `json:"object"`
-		Seq    int             `json:"seq"`
 	}
 	if err := c.Bind(&req); err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
@@ -130,8 +129,7 @@ func (s *DahuaServer) DahuaIDRPCPOST(c echo.Context) error {
 
 	res, err := dahuarpc.SendRaw[json.RawMessage](ctx, conn.RPC, dahuarpc.New(req.Method).
 		Params(req.Params).
-		Object(req.Object).
-		Option("seq", req.Seq))
+		Object(req.Object))
 	if err != nil {
 		return err
 	}

@@ -21,7 +21,7 @@ func NewLocation(location string) (types.Location, error) {
 
 func NewTimeRange(start, end time.Time) (models.TimeRange, error) {
 	if end.Before(start) {
-		return models.TimeRange{}, errors.New("end time before start time")
+		return models.TimeRange{}, errors.New("invalid time range: end is before start")
 	}
 
 	return models.TimeRange{

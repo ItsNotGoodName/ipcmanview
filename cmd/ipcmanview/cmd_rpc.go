@@ -15,10 +15,9 @@ import (
 type CmdRPC struct {
 	Shared
 	SharedDevices
-	Method string `help:"Set RPC method."`
 	Params bool   `help:"Set RPC params by reading from stdin as JSON."`
+	Method string `help:"Set RPC method."`
 	Object int64  `help:"Set RPC object."`
-	Seq    int    `help:"Set RPC seq."`
 }
 
 func (c *CmdRPC) Run(ctx *Context) error {
@@ -50,8 +49,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 				res, err := dahuarpc.SendRaw[json.RawMessage](ctx, conn.RPC, dahuarpc.
 					New(c.Method).
 					Params(params).
-					Object(c.Object).
-					Option("seq", c.Seq))
+					Object(c.Object))
 				if err != nil {
 					return "", err
 				}

@@ -379,10 +379,22 @@ func SetPreset(ctx context.Context, clientPTZ ptz.Client, channel, index int) er
 	})
 }
 
-func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location, coordinate models.Coordinate, sunriseOffset, sunsetOffset time.Duration) (dahuarpc.TimeSection, error) {
+func GetSunriseSunset(ctx context.Context, c dahuarpc.Conn) (models.DahuaSunriseSunset, error) {
 	cfg, err := config.GetVideoInMode(ctx, c)
 	if err != nil {
-		return dahuarpc.TimeSection{}, err
+		return models.DahuaSunriseSunset{}, err
+	}
+
+	return models.DahuaSunriseSunset{
+		SwitchMode:  cfg.Tables[0].Data.SwitchMode(),
+		TimeSection: cfg.Tables[0].Data.TimeSection[0][0],
+	}, nil
+}
+
+func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location, coordinate models.Coordinate, sunriseOffset, sunsetOffset time.Duration) (models.DahuaSunriseSunset, error) {
+	cfg, err := config.GetVideoInMode(ctx, c)
+	if err != nil {
+		return models.DahuaSunriseSunset{}, err
 	}
 
 	var changed bool
@@ -407,9 +419,12 @@ func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location,
 	if changed {
 		err := configmanager.SetConfig(ctx, c, cfg)
 		if err != nil {
-			return dahuarpc.TimeSection{}, err
+			return models.DahuaSunriseSunset{}, err
 		}
 	}
 
-	return cfg.Tables[0].Data.TimeSection[0][0], nil
+	return models.DahuaSunriseSunset{
+		SwitchMode:  cfg.Tables[0].Data.SwitchMode(),
+		TimeSection: cfg.Tables[0].Data.TimeSection[0][0],
+	}, nil
 }
