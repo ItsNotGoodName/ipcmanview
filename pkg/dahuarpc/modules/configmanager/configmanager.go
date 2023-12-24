@@ -9,17 +9,18 @@ import (
 )
 
 type ConfigData interface {
+	Merge(js string) (string, error)
 	Validate() error
 }
 
 type ConfigTable[T ConfigData] struct {
-	Data     T
-	Original json.RawMessage
+	Data T
+	JSON string
 }
 
 type Config[T ConfigData] struct {
-	Name   string
-	Array  bool
+	name   string
+	array  bool
 	Tables []ConfigTable[T]
 }
 
@@ -57,9 +58,9 @@ func GetConfig[T ConfigData](ctx context.Context, c dahuarpc.Conn, name string, 
 	}
 
 	var configTables []ConfigTable[T]
-	for _, t := range tables {
+	for _, table := range tables {
 		var data T
-		if err := json.Unmarshal(t, &data); err != nil {
+		if err := json.Unmarshal(table, &data); err != nil {
 			return Config[T]{}, err
 		}
 
@@ -69,20 +70,20 @@ func GetConfig[T ConfigData](ctx context.Context, c dahuarpc.Conn, name string, 
 		}
 
 		configTables = append(configTables, ConfigTable[T]{
-			Data:     data,
-			Original: t,
+			Data: data,
+			JSON: string(table),
 		})
 	}
 
 	return Config[T]{
-		Name:   name,
-		Array:  array,
+		name:   name,
+		array:  array,
 		Tables: configTables,
 	}, nil
 }
 
 func SetConfig[T ConfigData](ctx context.Context, c dahuarpc.Conn, config Config[T]) error {
-	table, err := config.merge()
+	table, err := config.table()
 	if err != nil {
 		return err
 	}
@@ -93,50 +94,28 @@ func SetConfig[T ConfigData](ctx context.Context, c dahuarpc.Conn, config Config
 			Name  string          `json:"name"`
 			Table json.RawMessage `json:"table"`
 		}{
-			Name:  config.Name,
+			Name:  config.name,
 			Table: table,
 		}))
 	return err
 }
 
-// merge does a shallow merge on all the tables and returns a JSON object or a JSON array.
-func (c Config[T]) merge() (json.RawMessage, error) {
+func (c Config[T]) table() (json.RawMessage, error) {
 	if len(c.Tables) == 0 {
 		return nil, fmt.Errorf("no tables")
 	}
 
 	var tables []json.RawMessage
 	for _, table := range c.Tables {
-		b, err := json.Marshal(table.Data)
-		if err != nil {
-			return nil, err
-		}
-		left := make(map[string]any)
-		if err := json.Unmarshal(b, &left); err != nil {
-			return nil, err
-		}
-
-		right := make(map[string]any)
-		if err := json.Unmarshal(table.Original, &right); err != nil {
-			return nil, err
-		}
-
-		for key, value := range left {
-			if _, ok := right[key]; !ok {
-				continue
-			}
-			right[key] = value
-		}
-
-		b, err = json.Marshal(right)
+		js, err := table.Data.Merge(table.JSON)
 		if err != nil {
 			return nil, err
 		}
 
-		tables = append(tables, json.RawMessage(b))
+		tables = append(tables, json.RawMessage(js))
 	}
 
-	if !c.Array {
+	if !c.array {
 		return tables[0], nil
 	}
 

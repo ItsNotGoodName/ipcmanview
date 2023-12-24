@@ -43,17 +43,16 @@ func (c *CmdDebug) Run(ctx *Context) error {
 				return
 			}
 
-			b, err := json.MarshalIndent(cfg.Tables[0].Data, "", "  ")
+			_, err = json.MarshalIndent(cfg.Tables[0].Data, "", "  ")
 			if err != nil {
 				log.Err(err).Send()
 				return
 			}
-			fmt.Println(string(b))
 
 			for i := range cfg.Tables[0].Data {
-				if cfg.Tables[0].Data[i].Name == "IVS-1" {
-					cfg.Tables[0].Data[i].Enable = false
-				}
+				fmt.Println(cfg.Tables[0].Data[i].Enable, cfg.Tables[0].Data[i].Name)
+				cfg.Tables[0].Data[i].Enable = false
+				// fmt.Println(string(b))
 			}
 
 			err = configmanager.SetConfig(ctx, conn.RPC, cfg)

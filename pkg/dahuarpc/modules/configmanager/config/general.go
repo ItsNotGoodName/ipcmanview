@@ -20,6 +20,17 @@ type General struct {
 	MaxOnlineTime     int    `json:"MaxOnlineTime"`
 }
 
+func (g General) Merge(js string) (string, error) {
+	return configmanager.Merge(js, []configmanager.MergeOption{
+		{Path: "LocalNo", Value: g.LocalNo},
+		{Path: "LockLoginEnable", Value: g.LockLoginEnable},
+		{Path: "LockLoginTimes", Value: g.LockLoginTimes},
+		{Path: "LoginFailLockTime", Value: g.LoginFailLockTime},
+		{Path: "MachineName", Value: g.MachineName},
+		{Path: "MaxOnlineTime", Value: g.MaxOnlineTime},
+	})
+}
+
 func (g General) Validate() error {
 	return nil
 }

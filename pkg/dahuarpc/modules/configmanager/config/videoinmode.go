@@ -19,6 +19,14 @@ type VideoInMode struct {
 	TimeSection [][]dahuarpc.TimeSection `json:"TimeSection"`
 }
 
+func (m VideoInMode) Merge(js string) (string, error) {
+	return configmanager.Merge(js, []configmanager.MergeOption{
+		{Path: "Config", Value: m.Config},
+		{Path: "Mode", Value: m.Mode},
+		{Path: "TimeSection", Value: m.TimeSection},
+	})
+}
+
 func (m VideoInMode) Validate() error {
 	if len(m.TimeSection) == 0 || len(m.TimeSection[0]) == 0 {
 		return fmt.Errorf("empty TimeSection")
