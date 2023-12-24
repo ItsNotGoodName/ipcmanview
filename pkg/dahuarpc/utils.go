@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -111,4 +112,99 @@ func LoadFileURL(httpAddress, path string) string {
 
 func Cookie(session string) string {
 	return fmt.Sprintf("WebClientSessionID=%s; DWebClientSessionID=%s; DhWebClientSessionID=%s", session, session, session)
+}
+
+// NewTimeSection (e.g. "1 08:01:45-16:16:22")
+func NewTimeSection(s string) (TimeSection, error) {
+	splitBySpace := strings.Split(s, " ")
+	if len(splitBySpace) != 2 {
+		return TimeSection{}, fmt.Errorf("invalid number of spaces: %d", len(splitBySpace))
+	}
+
+	splitByDash := strings.Split(splitBySpace[1], "-")
+	if len(splitByDash) != 2 {
+		return TimeSection{}, fmt.Errorf("invalid number of dashes: %d", len(splitByDash))
+	}
+
+	start, err := durationFromTimeString(splitByDash[0])
+	if err != nil {
+		return TimeSection{}, err
+	}
+
+	end, err := durationFromTimeString(splitByDash[1])
+	if err != nil {
+		return TimeSection{}, err
+	}
+
+	return TimeSection{
+		Enable: splitBySpace[0] == "1",
+		Start:  start,
+		End:    end,
+	}, nil
+}
+
+// durationFromTimeString (e.g. "08:01:45")
+func durationFromTimeString(s string) (time.Duration, error) {
+	arr := strings.Split(s, ":")
+	if len(arr) != 3 {
+		return 0, fmt.Errorf("invalid number of colons: %d", len(arr))
+	}
+
+	var numbers [3]int
+	for i := range arr {
+		var err error
+		numbers[i], err = strconv.Atoi(arr[i])
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return time.Duration(numbers[0])*time.Hour + time.Duration(numbers[1])*time.Minute + time.Duration(numbers[2])*time.Second, nil
+}
+
+type TimeSection struct {
+	Enable bool
+	Start  time.Duration
+	End    time.Duration
+}
+
+func (s *TimeSection) UnmarshalJSON(data []byte) error {
+	var str string
+	err := json.Unmarshal(data, &str)
+	if err != nil {
+		return err
+	}
+
+	res, err := NewTimeSection(str)
+	if err != nil {
+		return err
+	}
+
+	s.Enable = res.Enable
+	s.Start = res.Start
+	s.End = res.End
+
+	return nil
+}
+
+func (s TimeSection) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.String())
+}
+
+func (s TimeSection) String() string {
+	var enable int
+	if s.Enable {
+		enable = 1
+	}
+
+	return fmt.Sprintf(
+		"%d %02d:%02d:%02d-%02d:%02d:%02d",
+		enable,
+		int(s.Start.Hours()),
+		int(s.Start.Minutes())%60,
+		int(s.Start.Seconds())%60,
+		int(s.End.Hours()),
+		int(s.End.Minutes())%60,
+		int(s.End.Seconds())%60,
+	)
 }

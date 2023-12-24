@@ -70,3 +70,20 @@ func Test_ExtractFilePathTags(t *testing.T) {
 		assert.Equal(t, d.Tags, tags)
 	}
 }
+
+func TestTimeSectionFromString(t *testing.T) {
+	args := []struct {
+		Input  string
+		Output TimeSection
+	}{
+		{"1 08:01:45-16:16:22", TimeSection{true, 8*time.Hour + 1*time.Minute + 45*time.Second, 16*time.Hour + 16*time.Minute + 22*time.Second}},
+		{"0 00:00:00-23:59:59", TimeSection{false, 0, 23*time.Hour + 59*time.Minute + 59*time.Second}},
+	}
+
+	for _, arg := range args {
+		ts, err := NewTimeSection(arg.Input)
+		assert.Nil(t, err, nil)
+		assert.Equal(t, arg.Output, ts)
+		assert.Equal(t, arg.Input, ts.String())
+	}
+}

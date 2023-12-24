@@ -19,9 +19,10 @@ type Context struct {
 var mainCmd struct {
 	Debug bool `help:"Enable debug mode."`
 
-	Serve CmdServe `cmd:"" help:"Start application."`
-	Scan  CmdScan  `cmd:"" help:"Scan files on devices."`
-	RPC   CmdRPC   `cmd:"" help:"Run RPC on devices."`
+	Serve  CmdServe `cmd:"" help:"Start application."`
+	Scan   CmdScan  `cmd:"" help:"Scan files on devices."`
+	RPC    CmdRPC   `cmd:"" help:"Run RPC on devices."`
+	Debug_ CmdDebug `name:"debug" cmd:"" help:"Debug."`
 }
 
 func main() {
