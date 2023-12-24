@@ -71,7 +71,7 @@ func Test_ExtractFilePathTags(t *testing.T) {
 	}
 }
 
-func TestTimeSectionFromString(t *testing.T) {
+func Test_TimeSectionFromString(t *testing.T) {
 	args := []struct {
 		Input  string
 		Output TimeSection
@@ -81,9 +81,31 @@ func TestTimeSectionFromString(t *testing.T) {
 	}
 
 	for _, arg := range args {
-		ts, err := NewTimeSection(arg.Input)
+		ts, err := NewTimeSectionFromString(arg.Input)
 		assert.Nil(t, err, nil)
 		assert.Equal(t, arg.Output, ts)
 		assert.Equal(t, arg.Input, ts.String())
+	}
+}
+
+func Test_NewTimeSectionFromRange(t *testing.T) {
+	must := func(t time.Time, err error) time.Time {
+		if err != nil {
+			panic(err)
+		}
+		return t
+	}
+	args := []struct {
+		Enable bool
+		Start  time.Time
+		End    time.Time
+		Output TimeSection
+	}{
+		{true, must(time.Parse(time.DateTime, "2023-02-06 08:01:45")), must(time.Parse(time.DateTime, "2023-02-06 16:16:22")), TimeSection{true, 8*time.Hour + 1*time.Minute + 45*time.Second, 16*time.Hour + 16*time.Minute + 22*time.Second}},
+	}
+
+	for _, arg := range args {
+		ts := NewTimeSectionFromRange(arg.Enable, arg.Start, arg.End)
+		assert.Equal(t, arg.Output, ts)
 	}
 }

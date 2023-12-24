@@ -11,3 +11,8 @@ type TimeRange struct {
 func (t TimeRange) Null() bool {
 	return t.Start.IsZero() && t.End.IsZero()
 }
+
+type Coordinate struct {
+	Latitude  float64
+	Longitude float64
+}

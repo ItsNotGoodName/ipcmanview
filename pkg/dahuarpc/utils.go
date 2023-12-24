@@ -114,8 +114,14 @@ func Cookie(session string) string {
 	return fmt.Sprintf("WebClientSessionID=%s; DWebClientSessionID=%s; DhWebClientSessionID=%s", session, session, session)
 }
 
-// NewTimeSection (e.g. "1 08:01:45-16:16:22")
-func NewTimeSection(s string) (TimeSection, error) {
+var DefaultTimeSection TimeSection = TimeSection{
+	Enable: false,
+	Start:  0,
+	End:    24 * time.Hour,
+}
+
+// NewTimeSectionFromString (e.g. "1 08:01:45-16:16:22")
+func NewTimeSectionFromString(s string) (TimeSection, error) {
 	splitBySpace := strings.Split(s, " ")
 	if len(splitBySpace) != 2 {
 		return TimeSection{}, fmt.Errorf("invalid number of spaces: %d", len(splitBySpace))
@@ -141,6 +147,14 @@ func NewTimeSection(s string) (TimeSection, error) {
 		Start:  start,
 		End:    end,
 	}, nil
+}
+
+func NewTimeSectionFromRange(enable bool, start, end time.Time) TimeSection {
+	return TimeSection{
+		Enable: enable,
+		Start:  time.Duration(start.Hour())*time.Hour + time.Duration(start.Minute())*time.Minute + time.Duration(start.Second())*time.Second,
+		End:    time.Duration(end.Hour())*time.Hour + time.Duration(end.Minute())*time.Minute + time.Duration(end.Second())*time.Second,
+	}
 }
 
 // durationFromTimeString (e.g. "08:01:45")
@@ -175,7 +189,7 @@ func (s *TimeSection) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	res, err := NewTimeSection(str)
+	res, err := NewTimeSectionFromString(str)
 	if err != nil {
 		return err
 	}

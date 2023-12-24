@@ -14,6 +14,7 @@ require (
 	github.com/icholy/digest v0.1.22
 	github.com/labstack/echo/v4 v4.11.3
 	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/nathan-osman/go-sunrise v1.1.0
 	github.com/pressly/goose/v3 v3.16.0
 	github.com/rs/zerolog v1.31.0
 	github.com/stretchr/testify v1.8.4

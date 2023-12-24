@@ -8,18 +8,22 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-type ConfigTable[T any] struct {
+type ConfigData interface {
+	Validate() error
+}
+
+type ConfigTable[T ConfigData] struct {
 	Data     T
 	Original json.RawMessage
 }
 
-type Config[T any] struct {
+type Config[T ConfigData] struct {
 	Name   string
 	Array  bool
 	Tables []ConfigTable[T]
 }
 
-func GetConfig[T any](ctx context.Context, c dahuarpc.Conn, name string, array bool) (Config[T], error) {
+func GetConfig[T ConfigData](ctx context.Context, c dahuarpc.Conn, name string, array bool) (Config[T], error) {
 	rb := dahuarpc.
 		New("configManager.getConfig").
 		Params(struct {
@@ -54,13 +58,18 @@ func GetConfig[T any](ctx context.Context, c dahuarpc.Conn, name string, array b
 
 	var configTables []ConfigTable[T]
 	for _, t := range tables {
-		var table T
-		if err := json.Unmarshal(t, &table); err != nil {
+		var data T
+		if err := json.Unmarshal(t, &data); err != nil {
+			return Config[T]{}, err
+		}
+
+		err := data.Validate()
+		if err != nil {
 			return Config[T]{}, err
 		}
 
 		configTables = append(configTables, ConfigTable[T]{
-			Data:     table,
+			Data:     data,
 			Original: t,
 		})
 	}
@@ -72,7 +81,7 @@ func GetConfig[T any](ctx context.Context, c dahuarpc.Conn, name string, array b
 	}, nil
 }
 
-func SetConfig[T any](ctx context.Context, c dahuarpc.Conn, config Config[T]) error {
+func SetConfig[T ConfigData](ctx context.Context, c dahuarpc.Conn, config Config[T]) error {
 	table, err := config.merge()
 	if err != nil {
 		return err

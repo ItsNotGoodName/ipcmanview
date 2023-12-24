@@ -12,6 +12,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/intervideo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/license"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/magicbox"
@@ -20,6 +22,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/storage"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/usermanager"
+	"github.com/nathan-osman/go-sunrise"
 	"github.com/rs/zerolog/log"
 )
 
@@ -374,4 +377,39 @@ func SetPreset(ctx context.Context, clientPTZ ptz.Client, channel, index int) er
 		Code: "GotoPreset",
 		Arg1: index,
 	})
+}
+
+func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location, coordinate models.Coordinate, sunriseOffset, sunsetOffset time.Duration) (dahuarpc.TimeSection, error) {
+	cfg, err := config.GetVideoInMode(ctx, c)
+	if err != nil {
+		return dahuarpc.TimeSection{}, err
+	}
+
+	var changed bool
+
+	// Sync SwitchMode
+	if cfg.Tables[0].Data.SwitchMode() != config.SwitchModeTime {
+		cfg.Tables[0].Data.SetSwitchMode(config.SwitchModeTime)
+		changed = true
+	}
+
+	// Sync TimeSection
+	now := time.Now()
+	sunrise, sunset := sunrise.SunriseSunset(coordinate.Latitude, coordinate.Longitude, now.Year(), now.Month(), now.Day())
+	sunrise = sunrise.In(loc).Add(sunriseOffset)
+	sunset = sunset.In(loc).Add(sunsetOffset)
+	ts := dahuarpc.NewTimeSectionFromRange(true, sunrise, sunset)
+	if cfg.Tables[0].Data.TimeSection[0][0].String() != ts.String() {
+		cfg.Tables[0].Data.TimeSection[0][0] = ts
+		changed = true
+	}
+
+	if changed {
+		err := configmanager.SetConfig(ctx, c, cfg)
+		if err != nil {
+			return dahuarpc.TimeSection{}, err
+		}
+	}
+
+	return cfg.Tables[0].Data.TimeSection[0][0], nil
 }

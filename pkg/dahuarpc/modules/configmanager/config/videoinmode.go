@@ -1,11 +1,36 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"slices"
 
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
 )
+
+func GetVideoInMode(ctx context.Context, c dahuarpc.Conn) (configmanager.Config[VideoInMode], error) {
+	return configmanager.GetConfig[VideoInMode](ctx, c, "VideoInMode", true)
+}
+
+type VideoInMode struct {
+	Config      []int                    `json:"Config"`
+	Mode        int                      `json:"Mode"`
+	TimeSection [][]dahuarpc.TimeSection `json:"TimeSection"`
+}
+
+func (m VideoInMode) Validate() error {
+	if len(m.TimeSection) == 0 || len(m.TimeSection[0]) == 0 {
+		return fmt.Errorf("empty TimeSection")
+	}
+
+	_, err := m.switchMode()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 type SwitchMode int
 
@@ -34,13 +59,12 @@ func (m SwitchMode) String() string {
 	}
 }
 
-type VideoInMode struct {
-	Config      []int                    `json:"Config"`
-	Mode        int                      `json:"Mode"`
-	TimeSection [][]dahuarpc.TimeSection `json:"TimeSection"`
+func (m VideoInMode) SwitchMode() SwitchMode {
+	s, _ := m.switchMode()
+	return s
 }
 
-func (m VideoInMode) SwitchMode() (SwitchMode, error) {
+func (m VideoInMode) switchMode() (SwitchMode, error) {
 	if m.Mode == 0 && slices.Equal(m.Config, []int{2}) {
 		return SwitchModeGeneral, nil
 	}
