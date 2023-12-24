@@ -122,6 +122,9 @@ func (c Config[T]) merge() (json.RawMessage, error) {
 		}
 
 		for key, value := range left {
+			if _, ok := right[key]; !ok {
+				continue
+			}
 			right[key] = value
 		}
 
