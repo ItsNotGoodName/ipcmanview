@@ -9,6 +9,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 	"github.com/thejerf/suture/v4"
 )
@@ -41,7 +42,7 @@ func (w EventWorker) Serve(ctx context.Context) error {
 	w.hooks.Connecting(ctx, w.device.ID)
 	err := w.serve(ctx)
 	w.hooks.Disconnect(w.device.ID, err)
-	return err
+	return sutureext.SanitizeError(ctx, err)
 }
 
 func (w EventWorker) serve(ctx context.Context) error {

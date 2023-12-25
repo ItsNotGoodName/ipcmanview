@@ -7,6 +7,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/thejerf/suture/v4"
 )
 
@@ -36,6 +37,10 @@ func (w CoaxialWorker) String() string {
 }
 
 func (w CoaxialWorker) Serve(ctx context.Context) error {
+	return sutureext.SanitizeError(ctx, w.serve(ctx))
+}
+
+func (w CoaxialWorker) serve(ctx context.Context) error {
 	conn, ok, err := w.repo.GetConn(ctx, w.deviceID)
 	if err != nil {
 		return err

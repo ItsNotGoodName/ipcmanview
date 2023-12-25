@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sync"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -120,66 +119,34 @@ func (b ServiceContext) Context() context.Context {
 	}
 }
 
-type WorkerStore struct {
-	super *suture.Supervisor
-
-	workersMu sync.Mutex
-	workers   map[int64]suture.ServiceToken
-}
-
-func NewWorkerStore(super *suture.Supervisor) *WorkerStore {
-	return &WorkerStore{
-		super:     super,
-		workersMu: sync.Mutex{},
-		workers:   make(map[int64]suture.ServiceToken),
-	}
-}
-
-func (s *WorkerStore) Create(id int64, create func() (suture.Service, error)) error {
-	s.workersMu.Lock()
-	defer s.workersMu.Unlock()
-
-	token, found := s.workers[id]
-	if found {
-		return fmt.Errorf("create failed: service already exists: %d", id)
+// SanitizeError prevents the error from being interpreted as a context error unless it
+// really is a context error because suture kills the service when it sees a context error.
+func SanitizeError(ctx context.Context, err error) error {
+	if err == nil {
+		return nil
 	}
 
-	worker, err := create()
-	if err != nil {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
+
+	if !(errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)) {
 		return err
 	}
-	token = s.super.Add(worker)
-	s.workers[id] = token
 
-	return nil
-}
+	var newErrs [3]error
 
-func (s *WorkerStore) Update(id int64, create func() (suture.Service, error)) error {
-	s.workersMu.Lock()
-	defer s.workersMu.Unlock()
-
-	token, found := s.workers[id]
-	if !found {
-		return fmt.Errorf("update failed: service already exists: %d", id)
+	if errors.Is(err, suture.ErrDoNotRestart) {
+		newErrs[0] = suture.ErrDoNotRestart
 	}
 
-	s.super.Remove(token)
-	worker, err := create()
-	if err != nil {
-		return err
+	if errors.Is(err, suture.ErrTerminateSupervisorTree) {
+		newErrs[1] = suture.ErrTerminateSupervisorTree
 	}
-	token = s.super.Add(worker)
-	s.workers[id] = token
 
-	return nil
-}
+	newErrs[2] = errors.New(err.Error())
 
-func (s *WorkerStore) Delete(id int64) {
-	s.workersMu.Lock()
-	token, found := s.workers[id]
-	if found {
-		s.super.Remove(token)
-	}
-	delete(s.workers, id)
-	s.workersMu.Unlock()
+	return errors.Join(newErrs[:]...)
 }
