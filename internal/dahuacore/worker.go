@@ -10,7 +10,7 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-func DefaultWorkerBuilder(hooks EventHooks, bus *core.Bus, store *Store) WorkerBuilder {
+func DefaultWorkerBuilder(hooks EventHooks, bus *core.Bus, store *Store, conn ConnRepo) WorkerBuilder {
 	return func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
@@ -21,7 +21,7 @@ func DefaultWorkerBuilder(hooks EventHooks, bus *core.Bus, store *Store) WorkerB
 		}
 
 		{
-			worker := NewCoaxialWorker(bus, device.ID, store.Conn(ctx, device).RPC)
+			worker := NewCoaxialWorker(bus, device.ID, store, conn)
 			token := super.Add(worker)
 			tokens = append(tokens, token)
 		}
@@ -138,7 +138,7 @@ func (w *WorkerStore) Bootstrap(ctx context.Context, deviceStore DeviceStore, st
 	}
 	conns := store.ConnList(ctx, devices)
 	for _, conn := range conns {
-		if err := w.Create(ctx, conn.Device); err != nil {
+		if err := w.Create(ctx, conn.Conn); err != nil {
 			return err
 		}
 	}

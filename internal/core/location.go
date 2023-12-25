@@ -1,4 +1,4 @@
-package dahua
+package core
 
 var Locations []string = []string{
 	"Local",

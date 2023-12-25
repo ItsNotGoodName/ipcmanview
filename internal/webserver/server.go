@@ -403,7 +403,7 @@ func (s Server) DahuaDevices(c echo.Context) error {
 
 func (s Server) DahuaDevicesCreate(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-devices-create", Data{
-		"Locations": dahua.Locations,
+		"Locations": core.Locations,
 		"Features":  dahua.FeatureList,
 	})
 }
@@ -519,12 +519,12 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 			if err := dahua.ScanLockCreate(ctx, s.db, v.DeviceID); err != nil {
 				return err
 			}
-			go func(conn dahuacore.Conn) {
+			go func(conn dahuacore.Client) {
 				ctx := context.Background()
-				cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Device.ID)
+				cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Conn.ID)
 				defer cancel()
 
-				err := dahua.Scan(ctx, s.db, conn.RPC, conn.Device, scanType)
+				err := dahua.Scan(ctx, s.db, conn.RPC, conn.Conn, scanType)
 				if err != nil {
 					log.Err(err).Msg("Scan error")
 				}
@@ -557,7 +557,7 @@ func (s Server) DahuaDevicesUpdate(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "dahua-devices-update", Data{
-		"Locations": dahua.Locations,
+		"Locations": core.Locations,
 		"Features":  dahua.FeatureList,
 		"Device":    device,
 	})

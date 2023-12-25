@@ -7,15 +7,19 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/thejerf/suture/v4"
 )
 
-func NewCoaxialWorker(bus *core.Bus, deviceID int64, rpcConn dahuarpc.Conn) CoaxialWorker {
+type ConnRepo interface {
+	GetConn(ctx context.Context, id int64) (models.DahuaConn, bool, error)
+}
+
+func NewCoaxialWorker(bus *core.Bus, deviceID int64, store *Store, repo ConnRepo) CoaxialWorker {
 	return CoaxialWorker{
 		bus:      bus,
 		deviceID: deviceID,
-		rpcConn:  rpcConn,
+		repo:     repo,
+		store:    store,
 	}
 }
 
@@ -23,7 +27,8 @@ func NewCoaxialWorker(bus *core.Bus, deviceID int64, rpcConn dahuarpc.Conn) Coax
 type CoaxialWorker struct {
 	bus      *core.Bus
 	deviceID int64
-	rpcConn  dahuarpc.Conn
+	store    *Store
+	repo     ConnRepo
 }
 
 func (w CoaxialWorker) String() string {
@@ -31,12 +36,19 @@ func (w CoaxialWorker) String() string {
 }
 
 func (w CoaxialWorker) Serve(ctx context.Context) error {
-	t := time.NewTicker(1 * time.Second)
+	conn, ok, err := w.repo.GetConn(ctx, w.deviceID)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return suture.ErrDoNotRestart
+	}
+	client := w.store.Conn(ctx, conn)
 
 	channel := 1
 
 	// Does this device support coaxial?
-	caps, err := GetCoaxialCaps(ctx, w.deviceID, w.rpcConn, channel)
+	caps, err := GetCoaxialCaps(ctx, w.deviceID, client.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -45,7 +57,7 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 	}
 
 	// Get and send initial coaxial status
-	coaxialStatus, err := GetCoaxialStatus(ctx, w.deviceID, w.rpcConn, channel)
+	coaxialStatus, err := GetCoaxialStatus(ctx, w.deviceID, client.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -54,7 +66,9 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 		CoaxialStatus: coaxialStatus,
 	})
 
-	// On an interval, get and send coaxial status if it changes
+	t := time.NewTicker(1 * time.Second)
+
+	// Get and send coaxial status if it changes on an interval
 	for {
 		select {
 		case <-ctx.Done():
@@ -62,7 +76,7 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 		case <-t.C:
 		}
 
-		s, err := GetCoaxialStatus(ctx, w.deviceID, w.rpcConn, channel)
+		s, err := GetCoaxialStatus(ctx, w.deviceID, client.RPC, channel)
 		if err != nil {
 			return err
 		}

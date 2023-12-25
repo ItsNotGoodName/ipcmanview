@@ -60,7 +60,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	dahuaEventHooks := dahua.NewEventHooks(bus, db)
 	super.Add(dahuaEventHooks)
 
-	dahuaWorkerStore := dahuacore.NewWorkerStore(super, dahuacore.DefaultWorkerBuilder(dahuaEventHooks, bus, dahuaStore))
+	dahuaWorkerStore := dahuacore.NewWorkerStore(super, dahuacore.DefaultWorkerBuilder(dahuaEventHooks, bus, dahuaStore, dahuaRepo))
 	dahuaWorkerStore.Register(bus)
 	super.Add(sutureext.NewServiceFunc("dahua.WorkerStore.Bootstrap", sutureext.OneShotFunc(func(ctx context.Context) error {
 		return dahuaWorkerStore.Bootstrap(ctx, dahuaRepo, dahuaStore)

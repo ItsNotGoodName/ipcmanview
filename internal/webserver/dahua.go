@@ -36,15 +36,15 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 	wg := sync.WaitGroup{}
 	for _, conn := range conns {
 		wg.Add(1)
-		go func(conn dahuacore.Conn) {
+		go func(conn dahuacore.Client) {
 			defer wg.Done()
 
-			log := log.With().Int64("id", conn.Device.ID).Logger()
+			log := log.With().Int64("id", conn.Conn.ID).Logger()
 
 			var data deviceData
 
 			{
-				res, err := dahuacore.GetDahuaDetail(ctx, conn.Device.ID, conn.RPC)
+				res, err := dahuacore.GetDahuaDetail(ctx, conn.Conn.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get detail")
 					return
@@ -54,7 +54,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 			}
 
 			{
-				res, err := dahuacore.GetSoftwareVersion(ctx, conn.Device.ID, conn.RPC)
+				res, err := dahuacore.GetSoftwareVersion(ctx, conn.Conn.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get software version")
 					return
@@ -64,7 +64,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 			}
 
 			{
-				res, err := dahuacore.GetLicenseList(ctx, conn.Device.ID, conn.RPC)
+				res, err := dahuacore.GetLicenseList(ctx, conn.Conn.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get licenses")
 					return
@@ -74,7 +74,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 			}
 
 			{
-				res, err := dahuacore.GetStorage(ctx, conn.Device.ID, conn.RPC)
+				res, err := dahuacore.GetStorage(ctx, conn.Conn.ID, conn.RPC)
 				if err != nil {
 					log.Err(err).Msg("Failed to get storage")
 				}
@@ -83,14 +83,14 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 			}
 
 			{
-				caps, err := dahuacore.GetCoaxialCaps(ctx, conn.Device.ID, conn.RPC, 1)
+				caps, err := dahuacore.GetCoaxialCaps(ctx, conn.Conn.ID, conn.RPC, 1)
 				if err != nil {
 					log.Err(err).Msg("Failed to get coaxial caps")
 					return
 				}
 
 				if caps.SupportControlLight || caps.SupportControlSpeaker || caps.SupportControlFullcolorLight {
-					res, err := dahuacore.GetCoaxialStatus(ctx, conn.Device.ID, conn.RPC, 1)
+					res, err := dahuacore.GetCoaxialStatus(ctx, conn.Conn.ID, conn.RPC, 1)
 					if err != nil {
 						log.Err(err).Msg("Failed to get coaxial status")
 						return
@@ -108,7 +108,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 
 	status := make([]models.DahuaStatus, 0, len(conns))
 	for _, conn := range conns {
-		status = append(status, dahuacore.GetDahuaStatus(conn.Device, conn.RPC))
+		status = append(status, dahuacore.GetDahuaStatus(conn.Conn, conn.RPC))
 	}
 
 	details := make([]models.DahuaDetail, 0, len(dbDevices))

@@ -87,19 +87,19 @@ func (c Conn) haSync(ctx context.Context) error {
 func (c Conn) haSyncDevice(ctx context.Context, device models.DahuaDeviceConn) error {
 	conn := c.store.Conn(ctx, device.DahuaConn)
 
-	detail, err := dahuacore.GetDahuaDetail(ctx, conn.Device.ID, conn.RPC)
+	detail, err := dahuacore.GetDahuaDetail(ctx, conn.Conn.ID, conn.RPC)
 	if err != nil {
 		log.Err(err).Msg("Failed to get detail")
 		return nil
 	}
 
-	sw, err := dahuacore.GetSoftwareVersion(ctx, conn.Device.ID, conn.RPC)
+	sw, err := dahuacore.GetSoftwareVersion(ctx, conn.Conn.ID, conn.RPC)
 	if err != nil {
 		log.Err(err).Msg("Failed to get software version")
 		return nil
 	}
 
-	coaxialCaps, err := dahuacore.GetCoaxialCaps(ctx, conn.Device.ID, conn.RPC, 1)
+	coaxialCaps, err := dahuacore.GetCoaxialCaps(ctx, conn.Conn.ID, conn.RPC, 1)
 	if err != nil {
 		log.Err(err).Msg("Failed to get coaxial caps")
 		return nil

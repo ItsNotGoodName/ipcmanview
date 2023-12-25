@@ -33,7 +33,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 	for _, device := range devices {
 		wg.Add(1)
 		go func(device models.DahuaDeviceConn) {
-			conn := dahuacore.NewConn(device.DahuaConn)
+			conn := dahuacore.NewClient(device.DahuaConn)
 			defer conn.RPC.Close(context.Background())
 			defer wg.Done()
 

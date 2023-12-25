@@ -71,7 +71,7 @@ func getScanRange(fileCursor repo.DahuaFileCursor, scanType ScanType) models.Tim
 	}
 }
 
-// ScanReset cannot be called concurrently per device.
+// ScanReset cannot be called concurrently for the same device.
 func ScanReset(ctx context.Context, db repo.DB, id int64) error {
 	fileCursor := NewFileCursor()
 	_, err := db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
@@ -84,7 +84,7 @@ func ScanReset(ctx context.Context, db repo.DB, id int64) error {
 	return err
 }
 
-// Scan cannot be called concurrently per device.
+// Scan cannot be called concurrently for the same device.
 func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device models.DahuaConn, scanType ScanType) error {
 	fileCursor, err := db.UpdateDahuaFileCursorPercent(ctx, repo.UpdateDahuaFileCursorPercentParams{
 		DeviceID: device.ID,

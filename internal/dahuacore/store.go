@@ -10,21 +10,21 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func newStoreClient(device models.DahuaConn, lastAccessed time.Time) storeClient {
+func newStoreClient(conn models.DahuaConn, lastAccessed time.Time) storeClient {
 	return storeClient{
 		LastAccessed: lastAccessed,
-		Conn:         NewConn(device),
+		Client:       NewClient(conn),
 	}
 }
 
 type storeClient struct {
 	LastAccessed time.Time
-	Conn         Conn
+	Client       Client
 }
 
 func (c storeClient) Close(ctx context.Context) {
-	if err := c.Conn.RPC.Close(ctx); err != nil {
-		log.Err(err).Int64("id", c.Conn.Device.ID).Msg("Failed to close RPC connection")
+	if err := c.Client.RPC.Close(ctx); err != nil {
+		log.Err(err).Int64("id", c.Client.Conn.ID).Msg("Failed to close RPC connection")
 	}
 }
 
@@ -87,14 +87,14 @@ func (s *Store) Serve(ctx context.Context) error {
 	}
 }
 
-func (s *Store) getOrCreateDevice(ctx context.Context, device models.DahuaConn) Conn {
+func (s *Store) getOrCreateDevice(ctx context.Context, device models.DahuaConn) Client {
 	client, ok := s.clients[device.ID]
 	if !ok {
 		// Not found
 
 		client = newStoreClient(device, time.Now())
 		s.clients[device.ID] = client
-	} else if !ConnEqual(client.Conn.Device, device) {
+	} else if !ConnEqual(client.Client.Conn, device) {
 		// Found but not equal
 
 		// Closing device connection should not block that store
@@ -109,11 +109,11 @@ func (s *Store) getOrCreateDevice(ctx context.Context, device models.DahuaConn) 
 		s.clients[device.ID] = client
 	}
 
-	return client.Conn
+	return client.Client
 }
 
-func (s *Store) ConnList(ctx context.Context, devices []models.DahuaConn) []Conn {
-	clients := make([]Conn, 0, len(devices))
+func (s *Store) ConnList(ctx context.Context, devices []models.DahuaConn) []Client {
+	clients := make([]Client, 0, len(devices))
 
 	s.clientsMu.Lock()
 	for _, device := range devices {
@@ -124,9 +124,9 @@ func (s *Store) ConnList(ctx context.Context, devices []models.DahuaConn) []Conn
 	return clients
 }
 
-func (s *Store) Conn(ctx context.Context, device models.DahuaConn) Conn {
+func (s *Store) Conn(ctx context.Context, conn models.DahuaConn) Client {
 	s.clientsMu.Lock()
-	client := s.getOrCreateDevice(ctx, device)
+	client := s.getOrCreateDevice(ctx, conn)
 	s.clientsMu.Unlock()
 
 	return client

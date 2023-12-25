@@ -43,7 +43,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 	for _, device := range devices {
 		wg.Add(1)
 		go func(device models.DahuaDeviceConn) {
-			conn := dahuacore.NewConn(device.DahuaConn)
+			conn := dahuacore.NewClient(device.DahuaConn)
 
 			res, err := func() (string, error) {
 				res, err := dahuarpc.SendRaw[json.RawMessage](ctx, conn.RPC, dahuarpc.

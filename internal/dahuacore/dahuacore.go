@@ -30,30 +30,30 @@ func ConnEqual(lhs, rhs models.DahuaConn) bool {
 	return lhs.Address == rhs.Address && lhs.Username == rhs.Username && lhs.Password == rhs.Password
 }
 
-func NewConn(device models.DahuaConn) Conn {
-	address := NewHTTPAddress(device.Address)
+func NewClient(conn models.DahuaConn) Client {
+	address := NewHTTPAddress(conn.Address)
 	rpcHTTPClient := &http.Client{
 		Timeout: 5 * time.Second,
 	}
 	cgiHTTPClient := http.Client{}
 
-	connRPC := dahuarpc.NewClient(rpcHTTPClient, address, device.Username, device.Password)
-	connPTZ := ptz.NewClient(connRPC)
-	connCGI := dahuacgi.NewClient(cgiHTTPClient, address, device.Username, device.Password)
+	clientRPC := dahuarpc.NewClient(rpcHTTPClient, address, conn.Username, conn.Password)
+	clientPTZ := ptz.NewClient(clientRPC)
+	clientCGI := dahuacgi.NewClient(cgiHTTPClient, address, conn.Username, conn.Password)
 
-	return Conn{
-		Device: device,
-		RPC:    connRPC,
-		PTZ:    connPTZ,
-		CGI:    connCGI,
+	return Client{
+		Conn: conn,
+		RPC:  clientRPC,
+		PTZ:  clientPTZ,
+		CGI:  clientCGI,
 	}
 }
 
-type Conn struct {
-	Device models.DahuaConn
-	RPC    dahuarpc.Client
-	PTZ    ptz.Client
-	CGI    dahuacgi.Client
+type Client struct {
+	Conn models.DahuaConn
+	RPC  dahuarpc.Client
+	PTZ  ptz.Client
+	CGI  dahuacgi.Client
 }
 
 func ignorableError(err error) bool {
