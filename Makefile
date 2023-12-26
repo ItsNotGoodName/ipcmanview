@@ -3,29 +3,33 @@ export VITE_HOST=127.0.0.1
 
 -include .env
 
+_:
+	mkdir web/dist -p && touch web/dist/index.html
+
 migrate:
 	goose -dir internal/migrations/sql sqlite3 "$(DIR)/sqlite.db" up
 
 clean:
 	rm -rf $(DIR)
 
-# Preview
-
-preview:
-	cd internal/web && pnpm run build && cd ../.. && go run ./cmd/ipcmanview serve
-
-# Run
+generate:
+	go generate ./...
 
 run:
 	go run ./cmd/ipcmanview serve
+
+preview: generate run
 
 # Dev
 
 dev:
 	air
 
-dev-assets:
+dev-web:
 	cd internal/web && pnpm install && pnpm run dev
+
+dev-webnext:
+	cd internal/webnext && pnpm install && pnpm run dev
 
 # Gen
 

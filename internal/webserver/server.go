@@ -15,6 +15,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
+	"github.com/ItsNotGoodName/ipcmanview/internal/webnext"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
@@ -26,6 +27,18 @@ import (
 func RegisterMiddleware(e *echo.Echo) {
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Filesystem: web.AssetFS(),
+	}))
+	e.Group("/next", middleware.StaticWithConfig(middleware.StaticConfig{
+		// Skipper: func(c echo.Context) bool {
+		// 	// Prevent API 404's from being overwritten
+		// 	return strings.HasPrefix(c.Request().RequestURI, "/api")
+		// },
+		Root:       "dist",
+		Index:      "index.html",
+		Browse:     false,
+		HTML5:      true,
+		Filesystem: webnext.DistFS(),
+		IgnoreBase: true,
 	}))
 }
 

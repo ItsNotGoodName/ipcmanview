@@ -1,0 +1,20 @@
+{
+  "name": "webnext",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "solid-js": "^1.8.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8",
+    "vite-plugin-solid": "^2.8.0"
+  }
+}

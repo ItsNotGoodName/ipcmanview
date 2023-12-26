@@ -1,3 +1,4 @@
+// web contains the MPA.
 package web
 
 //go:generate pnpm install

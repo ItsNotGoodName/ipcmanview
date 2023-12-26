@@ -7,6 +7,9 @@
     <div class="hidden md:flex">
       <ul class="menu menu-sm menu-horizontal gap-4">
         <li>
+          <a href="/next">Next</a>
+        </li>
+        <li>
           <a
             href="/dahua"
             {{ if hasPrefix "/dahua" .URL.Path }}class="active"{{ end }}
@@ -35,6 +38,9 @@
         tabindex="0"
         class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
       >
+        <li>
+          <a href="/next">Next</a>
+        </li>
         <li>
           <a
             href="/dahua"
