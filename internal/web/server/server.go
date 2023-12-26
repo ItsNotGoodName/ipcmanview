@@ -1,4 +1,4 @@
-package webserver
+package server
 
 import (
 	"bytes"
@@ -14,12 +14,22 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
+	"github.com/ItsNotGoodName/ipcmanview/internal/web/view"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 )
+
+func RegisterRenderer(e *echo.Echo) error {
+	r, err := view.NewRenderer()
+	if err != nil {
+		return err
+	}
+	e.Renderer = r
+	return nil
+}
 
 func (w Server) Register(e *echo.Echo) {
 	e.GET("/", w.Index)
@@ -128,7 +138,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
-	data := Data{
+	data := view.Data{
 		"Params":      params,
 		"Devices":     devices,
 		"Events":      events,
@@ -138,7 +148,7 @@ func (s Server) DahuaEvents(c echo.Context) error {
 
 	if isHTMX(c) {
 		htmx.SetReplaceURL(c.Response(), c.Request().URL.Path+"?"+api.EncodeQuery(params).Encode())
-		return c.Render(http.StatusOK, "dahua-events", TemplateBlock{"htmx", data})
+		return c.Render(http.StatusOK, "dahua-events", view.Block{Name: "htmx", Data: data})
 	}
 
 	return c.Render(http.StatusOK, "dahua-events", data)
@@ -155,7 +165,7 @@ func (s Server) DahuaEventsIDData(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-events", TemplateBlock{"dahua-events-data-json", data})
+	return c.Render(http.StatusOK, "dahua-events", view.Block{Name: "dahua-events-data-json", Data: data})
 }
 
 func (s Server) DahuaFiles(c echo.Context) error {
@@ -214,7 +224,7 @@ func (s Server) DahuaFiles(c echo.Context) error {
 		return err
 	}
 
-	data := Data{
+	data := view.Data{
 		"Params":  params,
 		"Files":   files,
 		"Devices": devices,
@@ -223,7 +233,7 @@ func (s Server) DahuaFiles(c echo.Context) error {
 
 	if isHTMX(c) {
 		htmx.SetReplaceURL(c.Response(), c.Request().URL.Path+"?"+api.EncodeQuery(params).Encode())
-		return c.Render(http.StatusOK, "dahua-files", TemplateBlock{"htmx", data})
+		return c.Render(http.StatusOK, "dahua-files", view.Block{Name: "htmx", Data: data})
 	}
 
 	return c.Render(http.StatusOK, "dahua-files", data)
@@ -257,7 +267,7 @@ func (s Server) DahuaEventsLive(c echo.Context) error {
 		return err
 	}
 
-	data := Data{
+	data := view.Data{
 		"Params":      params,
 		"Devices":     devices,
 		"EventCodes":  eventCodes,
@@ -266,7 +276,7 @@ func (s Server) DahuaEventsLive(c echo.Context) error {
 
 	if isHTMX(c) {
 		htmx.SetReplaceURL(c.Response(), c.Request().URL.Path+"?"+api.EncodeQuery(params).Encode())
-		return c.Render(http.StatusOK, "dahua-events-live", TemplateBlock{"htmx", data})
+		return c.Render(http.StatusOK, "dahua-events-live", view.Block{Name: "htmx", Data: data})
 	}
 
 	return c.Render(http.StatusOK, "dahua-events-live", data)
@@ -304,7 +314,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 			continue
 		}
 
-		if err := c.Echo().Renderer.Render(buf, "dahua-events-live", TemplateBlock{"event-row", Data{
+		if err := c.Echo().Renderer.Render(buf, "dahua-events-live", view.Block{Name: "event-row", Data: view.Data{
 			"Event":  evt.Event,
 			"Params": params,
 		}}, c); err != nil {
@@ -353,7 +363,7 @@ func (s Server) DahuaDevicesPOST(c echo.Context) error {
 			return err
 		}
 
-		return c.Render(http.StatusOK, "dahua-devices", TemplateBlock{"htmx-devices", Data{
+		return c.Render(http.StatusOK, "dahua-devices", view.Block{Name: "htmx-devices", Data: view.Data{
 			"Devices": devices,
 		}})
 	}
@@ -368,7 +378,7 @@ func (s Server) DahuaDevices(c echo.Context) error {
 			return err
 		}
 
-		return c.Render(http.StatusOK, "dahua-devices", TemplateBlock{"htmx", tables})
+		return c.Render(http.StatusOK, "dahua-devices", view.Block{Name: "htmx", Data: tables})
 	}
 
 	devices, err := s.db.ListDahuaDevice(c.Request().Context())
@@ -386,7 +396,7 @@ func (s Server) DahuaDevices(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-devices", Data{
+	return c.Render(http.StatusOK, "dahua-devices", view.Data{
 		"Devices":      devices,
 		"FileCursors":  fileCursors,
 		"EventWorkers": eventWorkers,
@@ -394,7 +404,7 @@ func (s Server) DahuaDevices(c echo.Context) error {
 }
 
 func (s Server) DahuaDevicesCreate(c echo.Context) error {
-	return c.Render(http.StatusOK, "dahua-devices-create", Data{
+	return c.Render(http.StatusOK, "dahua-devices-create", view.Data{
 		"Locations": core.Locations,
 		"Features":  dahua.FeatureList,
 	})
@@ -537,7 +547,7 @@ func (s Server) DahuaDevicesFileCursors(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-devices", TemplateBlock{"htmx-file-cursors", Data{
+	return c.Render(http.StatusOK, "dahua-devices", view.Block{Name: "htmx-file-cursors", Data: view.Data{
 		"FileCursors": fileCursors,
 	}})
 }
@@ -548,7 +558,7 @@ func (s Server) DahuaDevicesUpdate(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-devices-update", Data{
+	return c.Render(http.StatusOK, "dahua-devices-update", view.Data{
 		"Locations": core.Locations,
 		"Features":  dahua.FeatureList,
 		"Device":    device,
@@ -620,7 +630,7 @@ func (s Server) DahuaSnapshots(c echo.Context) error {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-snapshots", Data{
+	return c.Render(http.StatusOK, "dahua-snapshots", view.Data{
 		"Devices": devices,
 	})
 }
@@ -723,12 +733,12 @@ func (s Server) DahuaEventsRules(c echo.Context) error {
 		return err
 	}
 
-	data := Data{
+	data := view.Data{
 		"Rules": rules,
 	}
 
 	if isHTMX(c) {
-		return c.Render(http.StatusOK, "dahua-events-rules", TemplateBlock{"htmx", data})
+		return c.Render(http.StatusOK, "dahua-events-rules", view.Block{Name: "htmx", Data: data})
 	}
 
 	return c.Render(http.StatusOK, "dahua-events-rules", data)

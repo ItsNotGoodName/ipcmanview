@@ -1,4 +1,4 @@
-package webserver
+package server
 
 import (
 	"cmp"
@@ -9,6 +9,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/web/view"
 	"github.com/rs/zerolog/log"
 )
 
@@ -133,7 +134,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahuacore.Store
 	slices.SortFunc(storage, func(a, b models.DahuaStorage) int { return cmp.Compare(a.DeviceID, b.DeviceID) })
 	slices.SortFunc(coaxialStatus, func(a, b models.DahuaCoaxialStatus) int { return cmp.Compare(a.DeviceID, b.DeviceID) })
 
-	return Data{
+	return view.Data{
 		"Devices":          dbDevices,
 		"Status":           status,
 		"Details":          details,

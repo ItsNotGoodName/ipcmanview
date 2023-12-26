@@ -1,4 +1,4 @@
-package webserver
+package server
 
 import (
 	"strings"
@@ -8,8 +8,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/labstack/echo/v4"
 )
-
-type Data map[string]any
 
 // TODO: remove this
 func useDahuaDevice(c echo.Context, db repo.DB) (repo.GetDahuaDeviceRow, error) {

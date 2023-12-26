@@ -11,7 +11,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
-	"github.com/ItsNotGoodName/ipcmanview/internal/webserver"
+	webserver "github.com/ItsNotGoodName/ipcmanview/internal/web/server"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -90,11 +90,11 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
-	// HTTP API
-	api.NewDahuaServer(pub, dahuaStore, dahuaRepo, dahuaFileStore).Register(httpRouter)
-
 	// HTTP WEB
 	webserver.New(db, pub, bus, dahuaStore).Register(httpRouter)
+
+	// HTTP API
+	api.NewDahuaServer(pub, dahuaStore, dahuaRepo, dahuaFileStore).Register(httpRouter)
 
 	// HTTP RPC
 	rpcserver.Register(httpRouter, rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}))

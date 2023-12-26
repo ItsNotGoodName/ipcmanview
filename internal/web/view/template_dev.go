@@ -1,6 +1,6 @@
 //go:build dev
 
-package webserver
+package view
 
 import (
 	"html/template"

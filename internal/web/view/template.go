@@ -1,4 +1,4 @@
-package webserver
+package view
 
 import (
 	"fmt"
@@ -18,13 +18,11 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func RegisterRenderer(e *echo.Echo) error {
-	r, err := NewRenderer()
-	if err != nil {
-		return err
-	}
-	e.Renderer = r
-	return nil
+type Data map[string]any
+
+type Block struct {
+	Name string
+	Data any
 }
 
 func parseTemplate(name string) (*template.Template, error) {
@@ -115,12 +113,6 @@ type TemplateContext struct {
 	Data     any
 }
 
-// TemplateBlock only renders the template block.
-type TemplateBlock struct {
-	Name string
-	any
-}
-
 func NewRenderer() (Renderer, error) {
 	files, err := web.ViewsFS().ReadDir("views")
 	if err != nil {
@@ -160,8 +152,8 @@ func (t Renderer) Render(w io.Writer, name string, data any, c echo.Context) err
 	}
 
 	switch data := data.(type) {
-	case TemplateBlock:
-		tmplData.Data = data.any
+	case Block:
+		tmplData.Data = data.Data
 		return tmpl.ExecuteTemplate(w, data.Name, tmplData)
 	default:
 		tmplData.Data = data
