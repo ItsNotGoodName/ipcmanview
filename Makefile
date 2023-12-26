@@ -20,6 +20,8 @@ run:
 
 preview: generate run
 
+nightly: task nightly
+
 # Dev
 
 dev:
@@ -70,11 +72,3 @@ tooling-atlas:
 
 tooling-sqlc:
 	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-
-# Fixture
-
-fixture-dahua-push:
-	curl -s -H "Content-Type: application/json" --data-binary @fixtures/dahua.json localhost:8080/v1/dahua | jq
-
-fixture-dahua-list:
-	jq -r 'keys | join("\n")' fixtures/dahua.json

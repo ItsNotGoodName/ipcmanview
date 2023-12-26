@@ -12,20 +12,21 @@ tasks:
     cmds:
       - rm -rf dist
       - mkdir dist dist/artifacts dist/files dist/files-windows
-  build-server:
+
+  build-nightly:
     internal: true
     cmds:
       - go mod tidy
       - go generate ./...
-      - GOOS=linux GOARCH=amd64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_x86_64/{{.CMD_NAME}}       {{.MAIN_PACKAGE}}
-      - GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_armv7/{{.CMD_NAME}}        {{.MAIN_PACKAGE}}
-      - GOOS=linux GOARCH=arm64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_arm64/{{.CMD_NAME}}        {{.MAIN_PACKAGE}}
-      - GOOS=darwin GOARCH=arm64      go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Darwin_arm64/{{.CMD_NAME}}       {{.MAIN_PACKAGE}}
-      - GOOS=windows GOARCH=amd64     go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Windows_x86_64/{{.CMD_NAME}}.exe {{.MAIN_PACKAGE}}
+      - GOOS=linux GOARCH=amd64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_x86_64/{{.CMD_NAME}}       {{.PACKAGE}}
+      - GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_armv7/{{.CMD_NAME}}        {{.PACKAGE}}
+      - GOOS=linux GOARCH=arm64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_arm64/{{.CMD_NAME}}        {{.PACKAGE}}
+      - GOOS=darwin GOARCH=arm64      go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Darwin_arm64/{{.CMD_NAME}}       {{.PACKAGE}}
+      - GOOS=windows GOARCH=amd64     go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Windows_x86_64/{{.CMD_NAME}}.exe {{.PACKAGE}}
     env:
       CGO_ENABLED: 0
     vars:
-      BUILD_PACKAGE_NAME: "{{.PACKAGE_NAME}}/internal/build/build"
+      BUILD_PACKAGE_NAME: "{{.PACKAGE_NAME}}/internal/build"
       BUILD_VERSION: "nightly"
       BUILD_DATE: '{{now | date "2006-01-02T15:04:05Z07:00"}}'
       BUILD_COMMIT:
@@ -33,7 +34,7 @@ tasks:
       BUILD_REPO_URL: "https://{{.PACKAGE_NAME}}"
 
       LDFLAGS: -s -w -X {{.BUILD_PACKAGE_NAME}}.version={{.BUILD_VERSION}} -X {{.BUILD_PACKAGE_NAME}}.commit={{.BUILD_COMMIT}} -X {{.BUILD_PACKAGE_NAME}}.date={{.BUILD_DATE}} -X {{.BUILD_PACKAGE_NAME}}.repoURL={{.BUILD_REPO_URL}}
-      MAIN_PACKAGE: "{{.PACKAGE_NAME}}/cmd/{{.CMD_NAME}}"
+      PACKAGE: "{{.PACKAGE_NAME}}/cmd/{{.CMD_NAME}}"
 
   compile-artifacts:
     internal: true
@@ -53,8 +54,9 @@ tasks:
       FILES: README.md LICENSE
       WINDOWS_FILES: start.bat
 
-  build:
-    deps: [clean, build-server]
+  nightly:
+    deps: [clean]
     dir: dist
     cmds:
+      - task: build-nightly
       - task: compile-artifacts
