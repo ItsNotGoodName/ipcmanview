@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"slices"
@@ -20,6 +22,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/jlaffaye/ftp"
 	echo "github.com/labstack/echo/v4"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 )
 
 type DahuaFileCache interface {
@@ -463,6 +467,47 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 		if err != nil {
 			return err
 		}
+	case models.StorageSFTP:
+		u, err := url.Parse(dahuaFile.FilePath)
+		if err != nil {
+			return err
+		}
+
+		cred, err := s.db.GetDahuaCredential(ctx, repo.GetDahuaCredentialParams{
+			ServerAddress: u.Hostname(),
+			Storage:       storage,
+		})
+		if err != nil {
+			return echo.ErrNotFound.WithInternal(err)
+		}
+
+		conn, err := ssh.Dial("tcp", cred.ServerAddress+":"+strconv.FormatInt(cred.Port, 10), &ssh.ClientConfig{
+			User: cred.Username,
+			Auth: []ssh.AuthMethod{ssh.Password(cred.Password)},
+			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+				// TODO: check public key
+				return nil
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+		client, err := sftp.NewClient(conn)
+		if err != nil {
+			return err
+		}
+		defer client.Close()
+
+		username := "/" + cred.Username
+		path, _ := strings.CutPrefix(u.Path, username)
+
+		rd, err = client.Open(path)
+		if err != nil {
+			return err
+		}
+	default:
+		return echo.ErrInternalServerError.WithInternal(fmt.Errorf("storage not supported: %s", storage))
 	}
 	defer rd.Close()
 
