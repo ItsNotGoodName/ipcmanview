@@ -137,7 +137,7 @@ INSERT INTO dahua_files (
   storage
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-) RETURNING id
+) ON CONFLICT (start_time) DO UPDATE SET id = id RETURNING id
 `
 
 type CreateDahuaFileParams struct {

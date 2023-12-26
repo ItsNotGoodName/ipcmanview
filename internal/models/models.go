@@ -23,6 +23,6 @@ const (
 	StorageLocal Storage = "local"
 	StorageSFTP  Storage = "sftp"
 	StorageFTP   Storage = "ftp"
-	StorageNFS   Storage = "nfs"
-	StorageSMB   Storage = "smb"
+	// StorageNFS   Storage = "nfs"
+	// StorageSMB   Storage = "smb"
 )

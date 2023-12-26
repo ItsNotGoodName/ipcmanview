@@ -19,8 +19,8 @@ func TestStorageFromFilePath(t *testing.T) {
 		{name: "", args: args{filePath: "/some/file.jpg"}, want: models.StorageLocal},
 		{name: "", args: args{filePath: "sftp://some/file.jpg"}, want: models.StorageSFTP},
 		{name: "", args: args{filePath: "ftp://some/file.jpg"}, want: models.StorageFTP},
-		{name: "", args: args{filePath: "nfs://some/file.jpg"}, want: models.StorageNFS},
-		{name: "", args: args{filePath: "smb://some/file.jpg"}, want: models.StorageSMB},
+		// {name: "", args: args{filePath: "nfs://some/file.jpg"}, want: models.StorageNFS},
+		// {name: "", args: args{filePath: "smb://some/file.jpg"}, want: models.StorageSMB},
 		{name: "", args: args{filePath: "../some/file.jpg"}, want: models.StorageLocal},
 		{name: "", args: args{filePath: "unknow://some/file.jpg"}, want: models.StorageLocal},
 	}

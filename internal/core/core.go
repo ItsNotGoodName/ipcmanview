@@ -38,11 +38,11 @@ func StorageFromFilePath(filePath string) models.Storage {
 	if strings.HasPrefix(filePath, "ftp://") {
 		return models.StorageFTP
 	}
-	if strings.HasPrefix(filePath, "nfs://") {
-		return models.StorageNFS
-	}
-	if strings.HasPrefix(filePath, "smb://") {
-		return models.StorageSMB
-	}
+	// if strings.HasPrefix(filePath, "nfs://") {
+	// 	return models.StorageNFS
+	// }
+	// if strings.HasPrefix(filePath, "smb://") {
+	// 	return models.StorageSMB
+	// }
 	return models.StorageLocal
 }
