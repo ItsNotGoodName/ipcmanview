@@ -4,7 +4,7 @@ var (
 	commit  = ""
 	date    = ""
 	version = "dev"
-	repoURL = "https://github.com/ItsNotGoodName/ipcmanview"
+	repoURL = ""
 )
 
 func init() {

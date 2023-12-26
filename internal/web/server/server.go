@@ -10,7 +10,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
+	dahua1 "github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -58,10 +58,10 @@ type Server struct {
 	db         repo.DB
 	pub        pubsub.Pub
 	bus        *core.Bus
-	dahuaStore *dahuacore.Store
+	dahuaStore *dahua1.Store
 }
 
-func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, dahuaStore *dahuacore.Store) Server {
+func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, dahuaStore *dahua1.Store) Server {
 	return Server{
 		db:         db,
 		pub:        pub,
@@ -435,7 +435,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	create, err := dahuacore.NewDahuaDevice(models.DahuaDevice{
+	create, err := dahua1.NewDahuaDevice(models.DahuaDevice{
 		Name:     form.Name,
 		Address:  form.Address,
 		Username: form.Username,
@@ -521,12 +521,12 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 			if err := dahua.ScanLockCreate(ctx, s.db, v.DeviceID); err != nil {
 				return err
 			}
-			go func(conn dahuacore.Client) {
+			go func(conn dahua1.Client) {
 				ctx := context.Background()
 				cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Conn.ID)
 				defer cancel()
 
-				err := dahua.Scan(ctx, s.db, conn.RPC, conn.Conn, scanType)
+				err := dahua.Scan3(ctx, s.db, conn.RPC, conn.Conn, scanType)
 				if err != nil {
 					log.Err(err).Msg("Scan error")
 				}
@@ -592,7 +592,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 		form.Password = device.Password
 	}
 
-	update, err := dahuacore.UpdateDahuaDevice(models.DahuaDevice{
+	update, err := dahua1.UpdateDahuaDevice(models.DahuaDevice{
 		ID:        device.ID,
 		Name:      form.Name,
 		Address:   form.Address,

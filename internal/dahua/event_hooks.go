@@ -12,27 +12,27 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func NewEventHooks(bus *core.Bus, db repo.DB) EventHooks {
-	return EventHooks{
-		ServiceContext: sutureext.NewServiceContext("dahua.EventHooks"),
+func NewDefaultEventHooks(bus *core.Bus, db repo.DB) DefaultEventHooks {
+	return DefaultEventHooks{
+		ServiceContext: sutureext.NewServiceContext("dahua.DefailtEventHooks"),
 		bus:            bus,
 		db:             db,
 	}
 }
 
-type EventHooks struct {
+type DefaultEventHooks struct {
 	sutureext.ServiceContext
 	bus *core.Bus
 	db  repo.DB
 }
 
-func (e EventHooks) logErr(err error) {
+func (e DefaultEventHooks) logErr(err error) {
 	if err != nil {
 		log.Err(err).Str("service", e.String()).Send()
 	}
 }
 
-func (e EventHooks) Connecting(ctx context.Context, deviceID int64) {
+func (e DefaultEventHooks) Connecting(ctx context.Context, deviceID int64) {
 	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnecting,
@@ -43,7 +43,7 @@ func (e EventHooks) Connecting(ctx context.Context, deviceID int64) {
 	})
 }
 
-func (e EventHooks) Connect(ctx context.Context, deviceID int64) {
+func (e DefaultEventHooks) Connect(ctx context.Context, deviceID int64) {
 	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnected,
@@ -54,7 +54,7 @@ func (e EventHooks) Connect(ctx context.Context, deviceID int64) {
 	})
 }
 
-func (e EventHooks) Disconnect(deviceID int64, err error) {
+func (e DefaultEventHooks) Disconnect(deviceID int64, err error) {
 	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateDisconnected,
@@ -67,7 +67,7 @@ func (e EventHooks) Disconnect(deviceID int64, err error) {
 	})
 }
 
-func (e EventHooks) Event(ctx context.Context, event models.DahuaEvent) {
+func (e DefaultEventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 	eventRule, err := e.db.GetDahuaEventRuleByEvent(ctx, event)
 	if err != nil {
 		e.logErr(err)

@@ -6,7 +6,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
+	dahua1 "github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
@@ -56,14 +56,14 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	dahuaRepo := dahua.NewRepo(db)
 
-	dahuaStore := dahuacore.NewStore()
+	dahuaStore := dahua1.NewStore()
 	dahuaStore.Register(bus)
 	super.Add(dahuaStore)
 
-	dahuaEventHooks := dahua.NewEventHooks(bus, db)
+	dahuaEventHooks := dahua.NewDefaultEventHooks(bus, db)
 	super.Add(dahuaEventHooks)
 
-	dahuaWorkerStore := dahuacore.NewWorkerStore(super, dahuacore.DefaultWorkerBuilder(dahuaEventHooks, bus, dahuaStore, dahuaRepo))
+	dahuaWorkerStore := dahua1.NewWorkerStore(super, dahua1.DefaultWorkerBuilder(dahuaEventHooks, bus, dahuaStore, dahuaRepo))
 	dahuaWorkerStore.Register(bus)
 	super.Add(sutureext.NewServiceFunc("dahua.WorkerStore.Bootstrap", sutureext.OneShotFunc(func(ctx context.Context) error {
 		return dahuaWorkerStore.Bootstrap(ctx, dahuaRepo, dahuaStore)

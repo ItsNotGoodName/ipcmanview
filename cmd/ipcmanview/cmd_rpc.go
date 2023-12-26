@@ -7,7 +7,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
@@ -43,7 +43,7 @@ func (c *CmdRPC) Run(ctx *Context) error {
 	for _, device := range devices {
 		wg.Add(1)
 		go func(device models.DahuaDeviceConn) {
-			conn := dahuacore.NewClient(device.DahuaConn)
+			conn := dahua.NewClient(device.DahuaConn)
 
 			res, err := func() (string, error) {
 				res, err := dahuarpc.SendRaw[json.RawMessage](ctx, conn.RPC, dahuarpc.

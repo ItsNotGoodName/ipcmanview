@@ -1,4 +1,4 @@
-package dahuacore
+package dahua
 
 import (
 	"context"
@@ -41,7 +41,7 @@ func NewStore() *Store {
 }
 
 func (*Store) String() string {
-	return "dahuacore.Store"
+	return "dahua.Store"
 }
 
 func (s *Store) Serve(ctx context.Context) error {

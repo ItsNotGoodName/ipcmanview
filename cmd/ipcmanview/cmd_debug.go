@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
@@ -33,7 +33,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 	for _, device := range devices {
 		wg.Add(1)
 		go func(device models.DahuaDeviceConn) {
-			conn := dahuacore.NewClient(device.DahuaConn)
+			conn := dahua.NewClient(device.DahuaConn)
 			defer conn.RPC.Close(context.Background())
 			defer wg.Done()
 

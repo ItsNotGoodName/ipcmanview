@@ -1,4 +1,4 @@
-package dahuacore
+package dahua
 
 import (
 	"context"
@@ -11,44 +11,44 @@ import (
 
 func init() {
 	var err error
-	ScanEpoch, err = time.ParseInLocation(time.DateTime, "2009-12-31 00:00:00", time.UTC)
+	ScannerEpoch, err = time.ParseInLocation(time.DateTime, "2009-12-31 00:00:00", time.UTC)
 	if err != nil {
 		panic(err)
 	}
 }
 
 const (
-	// MaxScanPeriod is longest allowed time range for a mediafilefind query because some devices give invalid data past the MaxScanPeriod.
-	MaxScanPeriod = 30 * 24 * time.Hour
+	// MaxScannerPeriod is longest allowed time range for a mediafilefind query because some devices give invalid data past the MaxScannerPeriod.
+	MaxScannerPeriod = 30 * 24 * time.Hour
 )
 
-// ScanEpoch is the oldest time a file can exist.
-var ScanEpoch time.Time
+// ScannerEpoch is the oldest time a file can exist.
+var ScannerEpoch time.Time
 
-// ScanPeriod is INCLUSIVE Start and EXCLUSIVE End.
-type ScanPeriod struct {
+// ScannerPeriod is INCLUSIVE Start and EXCLUSIVE End.
+type ScannerPeriod struct {
 	Start time.Time
 	End   time.Time
 }
 
-// ScanPeriodIterator generates scan periods that are equal to or less than MaxScanPeriod.
-type ScanPeriodIterator struct {
+// ScannerPeriodIterator generates scan periods that are equal to or less than MaxScanPeriod.
+type ScannerPeriodIterator struct {
 	start  time.Time
 	end    time.Time
 	cursor time.Time
 }
 
-func NewScanPeriodIterator(scanRange models.TimeRange) *ScanPeriodIterator {
-	return &ScanPeriodIterator{
+func NewScannerPeriodIterator(scanRange models.TimeRange) *ScannerPeriodIterator {
+	return &ScannerPeriodIterator{
 		start:  scanRange.Start,
 		end:    scanRange.End,
 		cursor: scanRange.End,
 	}
 }
 
-func (s *ScanPeriodIterator) Next() (ScanPeriod, bool) {
+func (s *ScannerPeriodIterator) Next() (ScannerPeriod, bool) {
 	if s.start.Equal(s.cursor) {
-		return ScanPeriod{}, false
+		return ScannerPeriod{}, false
 	}
 
 	var (
@@ -58,7 +58,7 @@ func (s *ScanPeriodIterator) Next() (ScanPeriod, bool) {
 	)
 	{
 		end = s.cursor
-		maybe_start := s.cursor.Add(-MaxScanPeriod)
+		maybe_start := s.cursor.Add(-MaxScannerPeriod)
 		if maybe_start.Before(s.start) {
 			cursor = s.start
 			start = s.start
@@ -71,21 +71,21 @@ func (s *ScanPeriodIterator) Next() (ScanPeriod, bool) {
 	// Only mutation in this struct
 	s.cursor = cursor
 
-	return ScanPeriod{Start: start, End: end}, true
+	return ScannerPeriod{Start: start, End: end}, true
 }
 
-func (s *ScanPeriodIterator) Percent() float64 {
+func (s *ScannerPeriodIterator) Percent() float64 {
 	return (s.end.Sub(s.cursor).Hours() / s.end.Sub(s.start).Hours()) * 100
 }
 
-func (s *ScanPeriodIterator) Cursor() time.Time {
+func (s *ScannerPeriodIterator) Cursor() time.Time {
 	return s.cursor
 }
 
-func Scan(
+func Scanner(
 	ctx context.Context,
 	rpcClient dahuarpc.Conn,
-	scanPeriod ScanPeriod,
+	scanPeriod ScannerPeriod,
 	location *time.Location,
 	resC chan<- []mediafilefind.FindNextFileInfo,
 ) (context.CancelFunc, <-chan error) {
@@ -93,17 +93,17 @@ func Scan(
 	errC := make(chan error, 1)
 
 	go func() {
-		errC <- scan(ctx, rpcClient, scanPeriod, location, resC)
+		errC <- scanner(ctx, rpcClient, scanPeriod, location, resC)
 		cancel()
 	}()
 
 	return cancel, errC
 }
 
-func scan(
+func scanner(
 	ctx context.Context,
 	rpcClient dahuarpc.Conn,
-	scanPeriod ScanPeriod,
+	scanPeriod ScannerPeriod,
 	location *time.Location,
 	resC chan<- []mediafilefind.FindNextFileInfo,
 ) error {

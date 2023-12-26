@@ -1,4 +1,4 @@
-package dahuacore
+package dahua
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-func DefaultWorkerBuilder(hooks EventHooks, bus *core.Bus, store *Store, conn ConnRepo) WorkerBuilder {
+func DefaultWorkerBuilder(hooks DefaultEventHooks, bus *core.Bus, store *Store, conn ConnRepo) WorkerBuilder {
 	return func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 

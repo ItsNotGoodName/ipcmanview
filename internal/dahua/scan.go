@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -27,12 +26,12 @@ func NewFileCursor() repo.CreateDahuaFileCursorParams {
 		DeviceID:    0,
 		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
 		FullCursor:  types.NewTime(now),
-		FullEpoch:   types.NewTime(dahuacore.ScanEpoch),
+		FullEpoch:   types.NewTime(ScannerEpoch),
 		Percent:     0,
 	}
 }
 
-func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod dahuacore.ScanPeriod, scanType ScanType) repo.DahuaFileCursor {
+func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod, scanType ScanType) repo.DahuaFileCursor {
 	switch scanType {
 	case ScanTypeFull:
 		// Update FullCursor
@@ -85,7 +84,7 @@ func ScanReset(ctx context.Context, db repo.DB, id int64) error {
 }
 
 // Scan cannot be called concurrently for the same device.
-func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device models.DahuaConn, scanType ScanType) error {
+func Scan3(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device models.DahuaConn, scanType ScanType) error {
 	fileCursor, err := db.UpdateDahuaFileCursorPercent(ctx, repo.UpdateDahuaFileCursorPercentParams{
 		DeviceID: device.ID,
 		Percent:  0,
@@ -95,11 +94,11 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 	}
 
 	updated_at := types.NewTime(time.Now())
-	iterator := dahuacore.NewScanPeriodIterator(getScanRange(fileCursor, scanType))
+	iterator := NewScannerPeriodIterator(getScanRange(fileCursor, scanType))
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
 
 	for scanPeriod, ok := iterator.Next(); ok; scanPeriod, ok = iterator.Next() {
-		cancel, errC := dahuacore.Scan(ctx, rpcClient, scanPeriod, device.Location, mediaFilesC)
+		cancel, errC := Scanner(ctx, rpcClient, scanPeriod, device.Location, mediaFilesC)
 		defer cancel()
 
 	inner:
@@ -113,7 +112,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 				}
 				break inner
 			case mediaFiles := <-mediaFilesC:
-				files, err := dahuacore.NewDahuaFiles(device.ID, mediaFiles, int(device.Seed), device.Location)
+				files, err := NewDahuaFiles(device.ID, mediaFiles, int(device.Seed), device.Location)
 				if err != nil {
 					return err
 				}

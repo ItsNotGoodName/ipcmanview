@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -32,7 +32,7 @@ type DahuaFileCache interface {
 
 func NewDahuaServer(
 	pub pubsub.Pub,
-	dahuaStore *dahuacore.Store,
+	dahuaStore *dahua.Store,
 	dahuaRepo DahuaRepo,
 	dahuaFileCache DahuaFileCache,
 ) *DahuaServer {
@@ -46,7 +46,7 @@ func NewDahuaServer(
 
 type DahuaServer struct {
 	pub            pubsub.Pub
-	dahuaStore     *dahuacore.Store
+	dahuaStore     *dahua.Store
 	dahuaRepo      DahuaRepo
 	dahuaFileCache DahuaFileCache
 }
@@ -72,20 +72,20 @@ func (s *DahuaServer) Register(e *echo.Echo) {
 	e.POST("/v1/dahua/:id/rpc", s.DahuaIDRPCPOST)
 }
 
-func useDahuaConn(c echo.Context, repo DahuaRepo, store *dahuacore.Store) (dahuacore.Client, error) {
+func useDahuaConn(c echo.Context, repo DahuaRepo, store *dahua.Store) (dahua.Client, error) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return dahuacore.Client{}, echo.ErrBadRequest.WithInternal(err)
+		return dahua.Client{}, echo.ErrBadRequest.WithInternal(err)
 	}
 
 	ctx := c.Request().Context()
 
 	device, found, err := repo.GetConn(ctx, id)
 	if err != nil {
-		return dahuacore.Client{}, err
+		return dahua.Client{}, err
 	}
 	if !found {
-		return dahuacore.Client{}, echo.ErrNotFound.WithInternal(err)
+		return dahua.Client{}, echo.ErrNotFound.WithInternal(err)
 	}
 
 	client := store.Conn(ctx, device)
@@ -105,7 +105,7 @@ func (s *DahuaServer) Dahua(c echo.Context) error {
 
 	res := make([]models.DahuaStatus, 0, len(conns))
 	for _, conn := range conns {
-		res = append(res, dahuacore.GetDahuaStatus(conn.Conn, conn.RPC))
+		res = append(res, dahua.GetDahuaStatus(conn.Conn, conn.RPC))
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -146,7 +146,7 @@ func (s *DahuaServer) DahuaIDDetail(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahuacore.GetDahuaDetail(ctx, conn.Conn.ID, conn.RPC)
+	res, err := dahua.GetDahuaDetail(ctx, conn.Conn.ID, conn.RPC)
 	if err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (s *DahuaServer) DahuaIDSoftware(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahuacore.GetSoftwareVersion(ctx, conn.Conn.ID, conn.RPC)
+	res, err := dahua.GetSoftwareVersion(ctx, conn.Conn.ID, conn.RPC)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func (s *DahuaServer) DahuaIDLicenses(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahuacore.GetLicenseList(ctx, conn.Conn.ID, conn.RPC)
+	res, err := dahua.GetLicenseList(ctx, conn.Conn.ID, conn.RPC)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func (s *DahuaServer) DahuaIDError(c echo.Context) error {
 		return err
 	}
 
-	res := dahuacore.GetError(conn.RPC)
+	res := dahua.GetError(conn.RPC)
 
 	return c.JSON(http.StatusOK, res)
 }
@@ -262,7 +262,7 @@ func (s *DahuaServer) DahuaIDEvents(c echo.Context) error {
 				return sendStreamError(c, stream, err)
 			}
 
-			data := dahuacore.NewDahuaEvent(conn.Conn.ID, event)
+			data := dahua.NewDahuaEvent(conn.Conn.ID, event)
 
 			if err := sendStream(c, stream, data); err != nil {
 				return err
@@ -358,13 +358,13 @@ func (s *DahuaServer) DahuaIDFiles(c echo.Context) error {
 		return err
 	}
 
-	iterator := dahuacore.NewScanPeriodIterator(timeRange)
+	iterator := dahua.NewScannerPeriodIterator(timeRange)
 
 	filesC := make(chan []mediafilefind.FindNextFileInfo)
 	stream := useStream(c)
 
 	for period, ok := iterator.Next(); ok; period, ok = iterator.Next() {
-		cancel, errC := dahuacore.Scan(ctx, conn.RPC, period, conn.Conn.Location, filesC)
+		cancel, errC := dahua.Scanner(ctx, conn.RPC, period, conn.Conn.Location, filesC)
 		defer cancel()
 
 	inner:
@@ -378,7 +378,7 @@ func (s *DahuaServer) DahuaIDFiles(c echo.Context) error {
 				}
 				break inner
 			case files := <-filesC:
-				res, err := dahuacore.NewDahuaFiles(conn.Conn.ID, files, dahuacore.GetSeed(conn.Conn), conn.Conn.Location)
+				res, err := dahua.NewDahuaFiles(conn.Conn.ID, files, dahua.GetSeed(conn.Conn), conn.Conn.Location)
 				if err != nil {
 					return sendStreamError(c, stream, err)
 				}
@@ -415,7 +415,7 @@ func (s *DahuaServer) DahuaIDFilesPath(c echo.Context) error {
 	if exists, err := s.dahuaFileCache.Exists(ctx, dahuaFile); err != nil {
 		return err
 	} else if !exists {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(dahuacore.NewHTTPAddress(conn.Conn.Address), filePath), nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(dahua.NewHTTPAddress(conn.Conn.Address), filePath), nil)
 		if err != nil {
 			return err
 		}
@@ -489,7 +489,7 @@ func (s *DahuaServer) DahuaIDCoaxialStatus(c echo.Context) error {
 		return err
 	}
 
-	status, err := dahuacore.GetCoaxialStatus(ctx, conn.Conn.ID, conn.RPC, channel)
+	status, err := dahua.GetCoaxialStatus(ctx, conn.Conn.ID, conn.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -510,7 +510,7 @@ func (s *DahuaServer) DahuaIDCoaxialCaps(c echo.Context) error {
 		return err
 	}
 
-	status, err := dahuacore.GetCoaxialCaps(ctx, conn.Conn.ID, conn.RPC, channel)
+	status, err := dahua.GetCoaxialCaps(ctx, conn.Conn.ID, conn.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -536,7 +536,7 @@ func (s *DahuaServer) DahuaIDPTZPresetPOST(c echo.Context) error {
 		return err
 	}
 
-	err = dahuacore.SetPreset(ctx, conn.PTZ, channel, index)
+	err = dahua.SetPreset(ctx, conn.PTZ, channel, index)
 	if err != nil {
 		return err
 	}
@@ -552,7 +552,7 @@ func (s *DahuaServer) DahuaIDStorage(c echo.Context) error {
 		return err
 	}
 
-	storage, err := dahuacore.GetStorage(ctx, conn.Conn.ID, conn.RPC)
+	storage, err := dahua.GetStorage(ctx, conn.Conn.ID, conn.RPC)
 	if err != nil {
 		return err
 	}
@@ -568,7 +568,7 @@ func (s *DahuaServer) DahuaIDUsers(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahuacore.GetUsers(ctx, conn.Conn.ID, conn.RPC, conn.Conn.Location)
+	res, err := dahua.GetUsers(ctx, conn.Conn.ID, conn.RPC, conn.Conn.Location)
 	if err != nil {
 		return err
 	}

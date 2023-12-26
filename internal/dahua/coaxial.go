@@ -1,4 +1,4 @@
-package dahuacore
+package dahua
 
 import (
 	"context"
@@ -33,7 +33,7 @@ type CoaxialWorker struct {
 }
 
 func (w CoaxialWorker) String() string {
-	return fmt.Sprintf("dahuacore.CoaxialWorker(id=%d)", w.deviceID)
+	return fmt.Sprintf("dahua.CoaxialWorker(id=%d)", w.deviceID)
 }
 
 func (w CoaxialWorker) Serve(ctx context.Context) error {

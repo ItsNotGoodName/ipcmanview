@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
+	dahua1 "github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 )
 
 type CmdScan struct {
@@ -45,10 +45,10 @@ func (c *CmdScan) Run(ctx *Context) error {
 			}
 		}
 
-		conn := dahuacore.NewClient(device.DahuaConn)
+		conn := dahua1.NewClient(device.DahuaConn)
 		defer conn.RPC.Close(context.Background())
 
-		err = dahua.Scan(ctx, db, conn.RPC, conn.Conn, scanType)
+		err = dahua.Scan3(ctx, db, conn.RPC, conn.Conn, scanType)
 		if err != nil {
 			return err
 		}
