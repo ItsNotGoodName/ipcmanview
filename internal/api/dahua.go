@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuacore"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -401,6 +402,9 @@ func (s *DahuaServer) DahuaIDFilesPath(c echo.Context) error {
 	}
 
 	filePath := c.Param("*")
+	if !strings.HasPrefix(filePath, "/") && !strings.Contains(strings.SplitN(filePath, "/", 2)[0], "://") {
+		filePath = "/" + filePath
+	}
 
 	dahuaFile, err := s.dahuaRepo.GetFileByFilePath(ctx, conn.Conn.ID, filePath)
 	if err != nil {
