@@ -516,7 +516,7 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 				}
 				return err
 			}
-			conn := s.dahuaStore.Conn(ctx, device.Convert().DahuaConn)
+			conn := s.dahuaStore.Client(ctx, device.Convert().DahuaConn)
 
 			if err := dahua.ScanLockCreate(ctx, s.db, v.DeviceID); err != nil {
 				return err
@@ -526,7 +526,7 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 				cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Conn.ID)
 				defer cancel()
 
-				err := dahua.Scan3(ctx, s.db, conn.RPC, conn.Conn, scanType)
+				err := dahua.Scan(ctx, s.db, conn.RPC, conn.Conn, scanType)
 				if err != nil {
 					log.Err(err).Msg("Scan error")
 				}

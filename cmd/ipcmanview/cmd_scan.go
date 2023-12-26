@@ -48,7 +48,7 @@ func (c *CmdScan) Run(ctx *Context) error {
 		conn := dahua1.NewClient(device.DahuaConn)
 		defer conn.RPC.Close(context.Background())
 
-		err = dahua.Scan3(ctx, db, conn.RPC, conn.Conn, scanType)
+		err = dahua.Scan(ctx, db, conn.RPC, conn.Conn, scanType)
 		if err != nil {
 			return err
 		}

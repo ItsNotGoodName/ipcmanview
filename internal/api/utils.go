@@ -6,8 +6,31 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/labstack/echo/v4"
 )
+
+func useDahuaConn(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, error) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return dahua.Client{}, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	ctx := c.Request().Context()
+
+	dbDevice, err := db.GetDahuaDevice(ctx, id)
+	if err != nil {
+		if repo.IsNotFound(err) {
+			return dahua.Client{}, echo.ErrNotFound.WithInternal(err)
+		}
+		return dahua.Client{}, err
+	}
+
+	client := store.Client(ctx, dbDevice.Convert().DahuaConn)
+
+	return client, nil
+}
 
 // ---------- Stream
 

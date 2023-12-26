@@ -31,11 +31,11 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 	for _, row := range dbDevices {
 		devices = append(devices, row.Convert().DahuaConn)
 	}
-	conns := dahuaStore.ConnList(ctx, devices)
+	clients := dahuaStore.ClientList(ctx, devices)
 
 	deviceDataC := make(chan deviceData, len(dbDevices))
 	wg := sync.WaitGroup{}
-	for _, conn := range conns {
+	for _, conn := range clients {
 		wg.Add(1)
 		go func(conn dahua.Client) {
 			defer wg.Done()
@@ -107,8 +107,8 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 	wg.Wait()
 	close(deviceDataC)
 
-	status := make([]models.DahuaStatus, 0, len(conns))
-	for _, conn := range conns {
+	status := make([]models.DahuaStatus, 0, len(clients))
+	for _, conn := range clients {
 		status = append(status, dahua.GetDahuaStatus(conn.Conn, conn.RPC))
 	}
 

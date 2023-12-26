@@ -1,12 +1,9 @@
 package main
 
 import (
-	"context"
-
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	dahua1 "github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
@@ -48,26 +45,21 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super.Add(pub)
 
 	// Bus
-	bus := core.NewBus()
-	bus.Register(pub)
+	bus := core.NewBus().Register(pub)
 	super.Add(bus)
 
 	// Dahua
 
-	dahuaRepo := dahua.NewRepo(db)
-
-	dahuaStore := dahua1.NewStore()
-	dahuaStore.Register(bus)
+	dahuaStore := dahua.NewStore().Register(bus)
 	super.Add(dahuaStore)
 
 	dahuaEventHooks := dahua.NewDefaultEventHooks(bus, db)
 	super.Add(dahuaEventHooks)
 
-	dahuaWorkerStore := dahua1.NewWorkerStore(super, dahua1.DefaultWorkerBuilder(dahuaEventHooks, bus, dahuaStore, dahuaRepo))
-	dahuaWorkerStore.Register(bus)
-	super.Add(sutureext.NewServiceFunc("dahua.WorkerStore.Bootstrap", sutureext.OneShotFunc(func(ctx context.Context) error {
-		return dahuaWorkerStore.Bootstrap(ctx, dahuaRepo, dahuaStore)
-	})))
+	dahuaWorkerStore := dahua.NewWorkerStore(super, dahua.DefaultWorkerBuilder(dahuaEventHooks, bus, dahuaStore, db)).Register(bus)
+	if err := dahuaWorkerStore.Bootstrap(ctx, db, dahuaStore); err != nil {
+		return err
+	}
 
 	dahuaFileStore, err := c.useDahuaFileStore()
 	if err != nil {
@@ -90,13 +82,13 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
-	// HTTP WEB
+	// WEB
 	webserver.New(db, pub, bus, dahuaStore).Register(httpRouter)
 
-	// HTTP API
-	api.NewDahuaServer(pub, dahuaStore, dahuaRepo, dahuaFileStore).Register(httpRouter)
+	// API
+	api.NewServer(pub, db, dahuaStore, dahuaFileStore).Register(httpRouter)
 
-	// HTTP RPC
+	// RPC
 	rpcserver.Register(httpRouter, rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}))
 
 	// HTTP server

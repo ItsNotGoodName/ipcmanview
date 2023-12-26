@@ -7,19 +7,16 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/thejerf/suture/v4"
 )
 
-type ConnRepo interface {
-	GetConn(ctx context.Context, id int64) (models.DahuaConn, bool, error)
-}
-
-func NewCoaxialWorker(bus *core.Bus, deviceID int64, store *Store, repo ConnRepo) CoaxialWorker {
+func NewCoaxialWorker(bus *core.Bus, deviceID int64, store *Store, db repo.DB) CoaxialWorker {
 	return CoaxialWorker{
 		bus:      bus,
 		deviceID: deviceID,
-		repo:     repo,
+		db:       db,
 		store:    store,
 	}
 }
@@ -29,7 +26,7 @@ type CoaxialWorker struct {
 	bus      *core.Bus
 	deviceID int64
 	store    *Store
-	repo     ConnRepo
+	db       repo.DB
 }
 
 func (w CoaxialWorker) String() string {
@@ -41,14 +38,14 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 }
 
 func (w CoaxialWorker) serve(ctx context.Context) error {
-	conn, ok, err := w.repo.GetConn(ctx, w.deviceID)
+	dbDevice, err := w.db.GetDahuaDevice(ctx, w.deviceID)
 	if err != nil {
+		if repo.IsNotFound(err) {
+			return suture.ErrDoNotRestart
+		}
 		return err
 	}
-	if !ok {
-		return suture.ErrDoNotRestart
-	}
-	client := w.store.Conn(ctx, conn)
+	client := w.store.Client(ctx, dbDevice.Convert().DahuaConn)
 
 	channel := 1
 

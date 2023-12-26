@@ -7,10 +7,11 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/thejerf/suture/v4"
 )
 
-func DefaultWorkerBuilder(hooks DefaultEventHooks, bus *core.Bus, store *Store, conn ConnRepo) WorkerBuilder {
+func DefaultWorkerBuilder(hooks DefaultEventHooks, bus *core.Bus, store *Store, db repo.DB) WorkerBuilder {
 	return func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
@@ -21,7 +22,7 @@ func DefaultWorkerBuilder(hooks DefaultEventHooks, bus *core.Bus, store *Store, 
 		}
 
 		{
-			worker := NewCoaxialWorker(bus, device.ID, store, conn)
+			worker := NewCoaxialWorker(bus, device.ID, store, db)
 			token := super.Add(worker)
 			tokens = append(tokens, token)
 		}
@@ -115,32 +116,35 @@ func (s *WorkerStore) Delete(id int64) error {
 	return nil
 }
 
-func (e *WorkerStore) Register(bus *core.Bus) {
+func (s *WorkerStore) Register(bus *core.Bus) *WorkerStore {
 	bus.OnEventDahuaDeviceCreated(func(ctx context.Context, evt models.EventDahuaDeviceCreated) error {
-		return e.Create(ctx, evt.Device.DahuaConn)
+		return s.Create(ctx, evt.Device.DahuaConn)
 	})
 	bus.OnEventDahuaDeviceUpdated(func(ctx context.Context, evt models.EventDahuaDeviceUpdated) error {
-		return e.Update(ctx, evt.Device.DahuaConn)
+		return s.Update(ctx, evt.Device.DahuaConn)
 	})
 	bus.OnEventDahuaDeviceDeleted(func(ctx context.Context, evt models.EventDahuaDeviceDeleted) error {
-		return e.Delete(evt.DeviceID)
+		return s.Delete(evt.DeviceID)
 	})
+	return s
 }
 
-type DeviceStore interface {
-	ListConn(ctx context.Context) ([]models.DahuaConn, error)
-}
-
-func (w *WorkerStore) Bootstrap(ctx context.Context, deviceStore DeviceStore, store *Store) error {
-	devices, err := deviceStore.ListConn(ctx)
+func (s *WorkerStore) Bootstrap(ctx context.Context, db repo.DB, store *Store) error {
+	dbDevices, err := db.ListDahuaDevice(ctx)
 	if err != nil {
 		return err
 	}
-	conns := store.ConnList(ctx, devices)
-	for _, conn := range conns {
-		if err := w.Create(ctx, conn.Conn); err != nil {
+	var conns []models.DahuaConn
+	for _, v := range dbDevices {
+		conns = append(conns, v.Convert().DahuaConn)
+	}
+
+	clients := store.ClientList(ctx, conns)
+	for _, conn := range clients {
+		if err := s.Create(ctx, conn.Conn); err != nil {
 			return err
 		}
 	}
+
 	return err
 }

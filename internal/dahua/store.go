@@ -87,52 +87,52 @@ func (s *Store) Serve(ctx context.Context) error {
 	}
 }
 
-func (s *Store) getOrCreateDevice(ctx context.Context, device models.DahuaConn) Client {
-	client, ok := s.clients[device.ID]
+func (s *Store) getOrCreateClient(ctx context.Context, conn models.DahuaConn) Client {
+	client, ok := s.clients[conn.ID]
 	if !ok {
 		// Not found
 
-		client = newStoreClient(device, time.Now())
-		s.clients[device.ID] = client
-	} else if !ConnEqual(client.Client.Conn, device) {
+		client = newStoreClient(conn, time.Now())
+		s.clients[conn.ID] = client
+	} else if !ConnEqual(client.Client.Conn, conn) {
 		// Found but not equal
 
 		// Closing device connection should not block that store
 		go client.Close(ctx)
 
-		client = newStoreClient(device, time.Now())
-		s.clients[device.ID] = client
+		client = newStoreClient(conn, time.Now())
+		s.clients[conn.ID] = client
 	} else {
 		// Found
 
 		client.LastAccessed = time.Now()
-		s.clients[device.ID] = client
+		s.clients[conn.ID] = client
 	}
 
 	return client.Client
 }
 
-func (s *Store) ConnList(ctx context.Context, devices []models.DahuaConn) []Client {
-	clients := make([]Client, 0, len(devices))
+func (s *Store) ClientList(ctx context.Context, conns []models.DahuaConn) []Client {
+	clients := make([]Client, 0, len(conns))
 
 	s.clientsMu.Lock()
-	for _, device := range devices {
-		clients = append(clients, s.getOrCreateDevice(ctx, device))
+	for _, conn := range conns {
+		clients = append(clients, s.getOrCreateClient(ctx, conn))
 	}
 	s.clientsMu.Unlock()
 
 	return clients
 }
 
-func (s *Store) Conn(ctx context.Context, conn models.DahuaConn) Client {
+func (s *Store) Client(ctx context.Context, conn models.DahuaConn) Client {
 	s.clientsMu.Lock()
-	client := s.getOrCreateDevice(ctx, conn)
+	client := s.getOrCreateClient(ctx, conn)
 	s.clientsMu.Unlock()
 
 	return client
 }
 
-func (s *Store) ConnDelete(ctx context.Context, id int64) {
+func (s *Store) ClientDelete(ctx context.Context, id int64) {
 	s.clientsMu.Lock()
 	client, found := s.clients[id]
 	if found {
@@ -145,9 +145,10 @@ func (s *Store) ConnDelete(ctx context.Context, id int64) {
 	}
 }
 
-func (store *Store) Register(bus *core.Bus) {
+func (s *Store) Register(bus *core.Bus) *Store {
 	bus.OnEventDahuaDeviceDeleted(func(ctx context.Context, evt models.EventDahuaDeviceDeleted) error {
-		store.ConnDelete(ctx, evt.DeviceID)
+		s.ClientDelete(ctx, evt.DeviceID)
 		return nil
 	})
+	return s
 }

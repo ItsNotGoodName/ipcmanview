@@ -33,7 +33,7 @@ type Bus struct {
 	onEventDahuaCoaxialStatus []func(ctx context.Context, event models.EventDahuaCoaxialStatus) error
 }
 
-func (b *Bus) Register(pub pubsub.Pub) {
+func (b *Bus) Register(pub pubsub.Pub)(*Bus) {
 	b.OnEventDahuaDeviceCreated(func(ctx context.Context, event models.EventDahuaDeviceCreated) error {
 		return pub.Publish(ctx, event)
 	})
@@ -58,6 +58,7 @@ func (b *Bus) Register(pub pubsub.Pub) {
 	b.OnEventDahuaCoaxialStatus(func(ctx context.Context, event models.EventDahuaCoaxialStatus) error {
 		return pub.Publish(ctx, event)
 	})
+	return b
 }
 
 
