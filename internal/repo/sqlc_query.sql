@@ -134,7 +134,7 @@ INSERT INTO dahua_files (
   work_dir,
   work_dir_sn,
   updated_at,
-  local
+  storage
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id;
@@ -164,7 +164,7 @@ SET
   work_dir = ?,
   work_dir_sn = ?,
   updated_at = ?,
-  local = ?
+  storage = ?
 WHERE device_id = ? AND file_path = ?
 RETURNING id;
 
@@ -262,3 +262,7 @@ INSERT INTO dahua_event_worker_states(
 
 -- name: ListDahuaEventWorkerState :many
 SELECT *,max(created_at) FROM dahua_event_worker_states GROUP BY device_id;
+
+-- name: GetDahuaCredential :one
+SELECT * FROM dahua_credentials 
+WHERE server_address = ? AND storage = ?;

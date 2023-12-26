@@ -80,7 +80,7 @@ func (db DB) UpsertDahuaFiles(ctx context.Context, args CreateDahuaFileParams) (
 		WorkDir:     args.WorkDir,
 		WorkDirSn:   args.WorkDirSn,
 		UpdatedAt:   args.UpdatedAt,
-		Local:       args.Local,
+		Storage:     args.Storage,
 	})
 	if err == nil {
 		return id, nil
@@ -170,7 +170,7 @@ type ListDahuaFileParams struct {
 	Start     types.Time
 	End       types.Time
 	Ascending bool
-	Local     sql.NullBool
+	Storage   []models.Storage
 }
 
 type ListDahuaFileResult struct {
@@ -188,8 +188,8 @@ func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDa
 	if len(arg.DeviceID) != 0 {
 		eq["device_id"] = arg.DeviceID
 	}
-	if arg.Local.Valid {
-		eq["local"] = arg.Local.Bool
+	if len(arg.Storage) != 0 {
+		eq["storage"] = arg.Storage
 	}
 	where = append(where, eq)
 
@@ -253,10 +253,10 @@ func (db DB) GetDahuaEventRuleByEvent(ctx context.Context, event models.DahuaEve
 	}, nil
 }
 
-func (q *Queries) ListDahuaDeviceByFeature(ctx context.Context, features ...models.DahuaFeature) ([]listDahuaDeviceByFeatureRow, error) {
+func (db DB) ListDahuaDeviceByFeature(ctx context.Context, features ...models.DahuaFeature) ([]listDahuaDeviceByFeatureRow, error) {
 	var feature models.DahuaFeature
 	for _, f := range features {
 		feature = feature | f
 	}
-	return q.listDahuaDeviceByFeature(ctx, feature)
+	return db.listDahuaDeviceByFeature(ctx, feature)
 }

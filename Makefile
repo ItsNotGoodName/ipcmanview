@@ -23,6 +23,12 @@ preview: generate run
 nightly:
 	task nightly
 
+migration:
+	atlas migrate diff $(name) --env local
+
+hash:
+	atlas migrate hash --env local
+
 # Dev
 
 dev:
@@ -50,14 +56,6 @@ gen-bus:
 gen-proto:
 	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto
 	cd internal/webnext && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=../../rpc rpc.proto
-
-# Database
-
-db-inspect:
-	atlas schema inspect --env local
-
-db-migration:
-	atlas migrate diff $(name) --env local
 
 # Tooling
 

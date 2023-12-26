@@ -12,6 +12,7 @@ require (
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/gorilla/schema v1.2.1
 	github.com/icholy/digest v0.1.22
+	github.com/jlaffaye/ftp v0.2.0
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/nathan-osman/go-sunrise v1.1.0
@@ -36,6 +37,8 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huandu/xstrings v1.4.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect

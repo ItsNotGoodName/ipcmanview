@@ -53,6 +53,16 @@ CREATE TABLE dahua_event_device_rules(
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE TABLE dahua_event_worker_states (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  device_id INTEGER NOT NULL,
+  state TEXT NOT NULL,
+  error TEXT,
+  created_at DATETIME NOT NULL,
+
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
 CREATE TABLE dahua_files (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   device_id INTEGER NOT NULL,
@@ -74,7 +84,7 @@ CREATE TABLE dahua_files (
   work_dir TEXT NOT NULL,
   work_dir_sn BOOLEAN NOT NULL,
   updated_at DATETIME NOT NULL,
-  local BOOLEAN NOT NULL,
+  storage TEXT NOT NULL,
 
   UNIQUE (device_id, file_path),
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
@@ -98,12 +108,25 @@ CREATE TABLE dahua_file_scan_locks (
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE dahua_event_worker_states (
+CREATE TABLE dahua_credentials (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  storage TEXT NOT NULL,
+  server_address TEXT NOT NULL,
+  port INTEGER NOT NULL,
+  username TEXT NOT NULL,
+  password TEXT NOT NULL,
+  remote_directory TEXT NOT NULL
+);
+
+CREATE TABLE dahua_device_credentials (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   device_id INTEGER NOT NULL,
-  state TEXT NOT NULL,
-  error TEXT,
-  created_at DATETIME NOT NULL,
+  storage TEXT NOT NULL UNIQUE,
+  server_address TEXT NOT NULL,
+  port INTEGER NOT NULL,
+  username TEXT NOT NULL,
+  password TEXT NOT NULL,
+  remote_directory TEXT NOT NULL,
 
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );

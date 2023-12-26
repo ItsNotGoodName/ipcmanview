@@ -134,7 +134,7 @@ INSERT INTO dahua_files (
   work_dir,
   work_dir_sn,
   updated_at,
-  local
+  storage
 ) VALUES (
   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id
@@ -160,7 +160,7 @@ type CreateDahuaFileParams struct {
 	WorkDir     string
 	WorkDirSn   bool
 	UpdatedAt   types.Time
-	Local       bool
+	Storage     models.Storage
 }
 
 func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams) (int64, error) {
@@ -184,7 +184,7 @@ func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams
 		arg.WorkDir,
 		arg.WorkDirSn,
 		arg.UpdatedAt,
-		arg.Local,
+		arg.Storage,
 	)
 	var id int64
 	err := row.Scan(&id)
@@ -273,6 +273,31 @@ func (q *Queries) DeleteDahuaFileScanLockByAge(ctx context.Context, touchedAt ty
 	return err
 }
 
+const getDahuaCredential = `-- name: GetDahuaCredential :one
+SELECT id, storage, server_address, port, username, password, remote_directory FROM dahua_credentials 
+WHERE server_address = ? AND storage = ?
+`
+
+type GetDahuaCredentialParams struct {
+	ServerAddress string
+	Storage       models.Storage
+}
+
+func (q *Queries) GetDahuaCredential(ctx context.Context, arg GetDahuaCredentialParams) (DahuaCredential, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaCredential, arg.ServerAddress, arg.Storage)
+	var i DahuaCredential
+	err := row.Scan(
+		&i.ID,
+		&i.Storage,
+		&i.ServerAddress,
+		&i.Port,
+		&i.Username,
+		&i.Password,
+		&i.RemoteDirectory,
+	)
+	return i, err
+}
+
 const getDahuaDevice = `-- name: GetDahuaDevice :one
 SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
 LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
@@ -340,7 +365,7 @@ func (q *Queries) GetDahuaEventRule(ctx context.Context, id int64) (DahuaEventRu
 }
 
 const getDahuaFileByFilePath = `-- name: GetDahuaFileByFilePath :one
-SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, local
+SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, storage
 FROM dahua_files
 WHERE device_id = ? and file_path = ?
 `
@@ -374,7 +399,7 @@ func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileBy
 		&i.WorkDir,
 		&i.WorkDirSn,
 		&i.UpdatedAt,
-		&i.Local,
+		&i.Storage,
 	)
 	return i, err
 }
@@ -817,7 +842,7 @@ SET
   work_dir = ?,
   work_dir_sn = ?,
   updated_at = ?,
-  local = ?
+  storage = ?
 WHERE device_id = ? AND file_path = ?
 RETURNING id
 `
@@ -840,7 +865,7 @@ type UpdateDahuaFileParams struct {
 	WorkDir     string
 	WorkDirSn   bool
 	UpdatedAt   types.Time
-	Local       bool
+	Storage     models.Storage
 	DeviceID    int64
 	FilePath    string
 }
@@ -864,7 +889,7 @@ func (q *Queries) UpdateDahuaFile(ctx context.Context, arg UpdateDahuaFileParams
 		arg.WorkDir,
 		arg.WorkDirSn,
 		arg.UpdatedAt,
-		arg.Local,
+		arg.Storage,
 		arg.DeviceID,
 		arg.FilePath,
 	)

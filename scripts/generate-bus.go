@@ -37,12 +37,13 @@ type Bus struct {
 {{- end }}
 }
 
-func (b *Bus) Register(pub pubsub.Pub) {
+func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 {{- range .Events }}
 	b.On{{ . }}(func(ctx context.Context, event {{ $.EventPackage }}{{ . }}) error {
 		return pub.Publish(ctx, event)
 	})
 {{- end }}
+	return b
 }
 
 {{ range .Events }}

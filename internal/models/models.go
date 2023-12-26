@@ -16,3 +16,13 @@ type Coordinate struct {
 	Latitude  float64
 	Longitude float64
 }
+
+type Storage string
+
+const (
+	StorageLocal Storage = "local"
+	StorageSFTP  Storage = "sftp"
+	StorageFTP   Storage = "ftp"
+	StorageNFS   Storage = "nfs"
+	StorageSMB   Storage = "smb"
+)
