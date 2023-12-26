@@ -14,35 +14,14 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/ipcmanview/internal/web"
-	"github.com/ItsNotGoodName/ipcmanview/internal/webnext"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
 )
 
-func RegisterMiddleware(e *echo.Echo) {
-	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-		Filesystem: web.AssetFS(),
-	}))
-	e.Group("/next", middleware.StaticWithConfig(middleware.StaticConfig{
-		// Skipper: func(c echo.Context) bool {
-		// 	// Prevent API 404's from being overwritten
-		// 	return strings.HasPrefix(c.Request().RequestURI, "/api")
-		// },
-		Root:       "dist",
-		Index:      "index.html",
-		Browse:     false,
-		HTML5:      true,
-		Filesystem: webnext.DistFS(),
-		IgnoreBase: true,
-	}))
-}
-
-func (w Server) RegisterRoutes(e *echo.Echo) {
+func (w Server) Register(e *echo.Echo) {
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
 	e.GET("/dahua/devices", w.DahuaDevices)

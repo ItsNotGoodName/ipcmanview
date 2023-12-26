@@ -5,11 +5,23 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@protobuf-ts/runtime':
+    specifier: ^2.9.3
+    version: 2.9.3
+  '@protobuf-ts/runtime-rpc':
+    specifier: ^2.9.3
+    version: 2.9.3
+  '@protobuf-ts/twirp-transport':
+    specifier: ^2.9.3
+    version: 2.9.3
   solid-js:
     specifier: ^1.8.7
     version: 1.8.7
 
 devDependencies:
+  '@protobuf-ts/plugin':
+    specifier: ^2.9.3
+    version: 2.9.3
   '@types/node':
     specifier: ^20.10.5
     version: 20.10.5
@@ -590,6 +602,44 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
+  /@protobuf-ts/plugin-framework@2.9.3:
+    resolution: {integrity: sha512-iqdkhAu7fGPvBCVOoAEEFJ1/oaGIBoNIMgSv2WonTNJVHxv5FvvAfWFn6nG/eta34fHRZT38ZXTaYcMUkv8AiQ==}
+    dependencies:
+      '@protobuf-ts/runtime': 2.9.3
+      typescript: 3.9.10
+    dev: true
+
+  /@protobuf-ts/plugin@2.9.3:
+    resolution: {integrity: sha512-tHYACv+nnIV2eoiMxeZhrgMqGiUktzUzrhfgnROg/rr8TecPLp9v5/yqNibN+bad5k7d57aqlTuQKhFl+J4W/g==}
+    hasBin: true
+    dependencies:
+      '@protobuf-ts/plugin-framework': 2.9.3
+      '@protobuf-ts/protoc': 2.9.3
+      '@protobuf-ts/runtime': 2.9.3
+      '@protobuf-ts/runtime-rpc': 2.9.3
+      typescript: 3.9.10
+    dev: true
+
+  /@protobuf-ts/protoc@2.9.3:
+    resolution: {integrity: sha512-TJ0Ycx/CIBqpB4wpKt6K05kjXj6zv36s/qpdCT/wdJBhpayOVBqLF5NpLp3WIiw1PmIxvqalB6QHKjvnLzGKLA==}
+    hasBin: true
+    dev: true
+
+  /@protobuf-ts/runtime-rpc@2.9.3:
+    resolution: {integrity: sha512-WelHpctvZeG8yhbb7tnsrLzotq9xjMCXuGuhJ8qMyEdNoBBEodbXseofAYFTebo2/PN2LzyEq3X6vwr5f8jqTA==}
+    dependencies:
+      '@protobuf-ts/runtime': 2.9.3
+
+  /@protobuf-ts/runtime@2.9.3:
+    resolution: {integrity: sha512-nivzCpg/qYD0RX2OmHOahJALb8ndjGmUhNBcTJ0BbXoqKwCSM6vYA+vegzS3rhuaPgbyC7Ec8idlnizzUfIRuw==}
+
+  /@protobuf-ts/twirp-transport@2.9.3:
+    resolution: {integrity: sha512-GblMjxj0IJ6Q7ULMRS6Ad+AFQdRBN22LcX6OxSXEg+RiRdoLUvBcmJeBWnUZ6CS7EIGUOaGid5pJ2MmfccfEsQ==}
+    dependencies:
+      '@protobuf-ts/runtime': 2.9.3
+      '@protobuf-ts/runtime-rpc': 2.9.3
+    dev: false
+
   /@rollup/rollup-android-arm-eabi@4.9.1:
     resolution: {integrity: sha512-6vMdBZqtq1dVQ4CWdhFwhKZL6E4L1dV6jUjuBvsavvNJSppzi6dLBbuV+3+IyUREaj9ZFvQefnQm28v4OCXlig==}
     cpu: [arm]
@@ -1006,6 +1056,12 @@ packages:
   /to-fast-properties@2.0.0:
     resolution: {integrity: sha512-/OaKK0xYrs3DmxRYqL/yDc+FxFUVYhDlXMhRmv3z915w2HF1tnN1omB354j8VUGO/hbRzyD6Y3sA7v7GS/ceog==}
     engines: {node: '>=4'}
+    dev: true
+
+  /typescript@3.9.10:
+    resolution: {integrity: sha512-w6fIxVE/H1PkLKcCPsFqKE7Kv7QUwhU8qQY2MueZXWx5cPZdwFupLgKK3vntcK98BtNHZtAF4LA/yl2a7k8R6Q==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
     dev: true
 
   /typescript@5.3.3:

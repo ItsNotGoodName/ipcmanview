@@ -21,6 +21,8 @@ require (
 	github.com/thejerf/suture/v4 v4.0.2
 	github.com/tidwall/gjson v1.14.2
 	github.com/tidwall/sjson v1.2.5
+	github.com/twitchtv/twirp v8.1.3+incompatible
+	google.golang.org/protobuf v1.31.0
 	modernc.org/sqlite v1.27.0
 )
 

@@ -50,7 +50,7 @@ type DahuaServer struct {
 	dahuaFileCache DahuaFileCache
 }
 
-func (s *DahuaServer) RegisterRoutes(e *echo.Echo) {
+func (s *DahuaServer) Register(e *echo.Echo) {
 	e.GET("/v1/dahua", s.Dahua)
 	e.GET("/v1/dahua-events", s.DahuaEvents)
 	e.GET("/v1/dahua/:id/audio", s.DahuaIDAudio)

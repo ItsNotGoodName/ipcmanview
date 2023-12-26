@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "../rpc";
+
+option optimize_for = CODE_SIZE;
+
+import "google/protobuf/timestamp.proto";
+
+service HelloWorld {
+  rpc Hello(HelloReq) returns (HelloResp);
+}
+
+message HelloReq {
+  string subject = 1;
+  google.protobuf.Timestamp current_time = 2;
+}
+
+message HelloResp {
+  string text = 1;
+  google.protobuf.Timestamp current_time = 2;
+}
+
