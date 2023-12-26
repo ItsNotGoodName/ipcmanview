@@ -18,7 +18,7 @@
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": false, // NOTE: this was disabled because of google/protobuf/timestamp.ts
     "noFallthroughCasesInSwitch": true
   },
   "include": ["src"],

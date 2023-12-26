@@ -20,7 +20,8 @@ run:
 
 preview: generate run
 
-nightly: task nightly
+nightly:
+	task nightly
 
 # Dev
 
