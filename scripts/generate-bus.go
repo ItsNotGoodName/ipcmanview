@@ -81,6 +81,8 @@ func main() {
 	outputFilePath = path.Clean(outputFilePath)
 	inputFilePath = path.Clean(inputFilePath)
 
+	must(os.Remove(outputFilePath))
+
 	var events []string
 	for _, v := range must2(regexp.Compile(`type (.*?) struct {`)).FindAllStringSubmatch(string(must2(os.ReadFile(inputFilePath))), -1) {
 		events = append(events, v[1])

@@ -12,7 +12,7 @@ type EventDahuaDeviceDeleted struct {
 	DeviceID int64
 }
 
-type EventDahuaDeviceEvent struct {
+type EventDahuaEvent struct {
 	Event     DahuaEvent
 	EventRule DahuaEventRule
 }

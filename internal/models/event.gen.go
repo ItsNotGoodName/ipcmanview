@@ -13,8 +13,8 @@ func (e EventDahuaDeviceDeleted) EventTopic() string {
 	return "EventDahuaDeviceDeleted"
 }
 
-func (e EventDahuaDeviceEvent) EventTopic() string {
-	return "EventDahuaDeviceEvent"
+func (e EventDahuaEvent) EventTopic() string {
+	return "EventDahuaEvent"
 }
 
 func (e EventDahuaEventWorkerConnecting) EventTopic() string {

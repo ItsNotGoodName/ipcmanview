@@ -26,7 +26,7 @@ type Bus struct {
 	onEventDahuaDeviceCreated []func(ctx context.Context, event models.EventDahuaDeviceCreated) error
 	onEventDahuaDeviceUpdated []func(ctx context.Context, event models.EventDahuaDeviceUpdated) error
 	onEventDahuaDeviceDeleted []func(ctx context.Context, event models.EventDahuaDeviceDeleted) error
-	onEventDahuaDeviceEvent []func(ctx context.Context, event models.EventDahuaDeviceEvent) error
+	onEventDahuaEvent []func(ctx context.Context, event models.EventDahuaEvent) error
 	onEventDahuaEventWorkerConnecting []func(ctx context.Context, event models.EventDahuaEventWorkerConnecting) error
 	onEventDahuaEventWorkerConnect []func(ctx context.Context, event models.EventDahuaEventWorkerConnect) error
 	onEventDahuaEventWorkerDisconnect []func(ctx context.Context, event models.EventDahuaEventWorkerDisconnect) error
@@ -43,7 +43,7 @@ func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 	b.OnEventDahuaDeviceDeleted(func(ctx context.Context, event models.EventDahuaDeviceDeleted) error {
 		return pub.Publish(ctx, event)
 	})
-	b.OnEventDahuaDeviceEvent(func(ctx context.Context, event models.EventDahuaDeviceEvent) error {
+	b.OnEventDahuaEvent(func(ctx context.Context, event models.EventDahuaEvent) error {
 		return pub.Publish(ctx, event)
 	})
 	b.OnEventDahuaEventWorkerConnecting(func(ctx context.Context, event models.EventDahuaEventWorkerConnecting) error {
@@ -74,8 +74,8 @@ func (b *Bus) OnEventDahuaDeviceDeleted(h func(ctx context.Context, event models
 	b.onEventDahuaDeviceDeleted = append(b.onEventDahuaDeviceDeleted, h)
 }
 
-func (b *Bus) OnEventDahuaDeviceEvent(h func(ctx context.Context, event models.EventDahuaDeviceEvent) error) {
-	b.onEventDahuaDeviceEvent = append(b.onEventDahuaDeviceEvent, h)
+func (b *Bus) OnEventDahuaEvent(h func(ctx context.Context, event models.EventDahuaEvent) error) {
+	b.onEventDahuaEvent = append(b.onEventDahuaEvent, h)
 }
 
 func (b *Bus) OnEventDahuaEventWorkerConnecting(h func(ctx context.Context, event models.EventDahuaEventWorkerConnecting) error) {
@@ -114,8 +114,8 @@ func (b *Bus) EventDahuaDeviceDeleted(event models.EventDahuaDeviceDeleted) {
 	}
 }
 
-func (b *Bus) EventDahuaDeviceEvent(event models.EventDahuaDeviceEvent) {
-	for _, v := range b.onEventDahuaDeviceEvent {
+func (b *Bus) EventDahuaEvent(event models.EventDahuaEvent) {
+	for _, v := range b.onEventDahuaEvent {
 		busLogError(v(b.Context(), event))
 	}
 }

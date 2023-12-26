@@ -98,8 +98,8 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 	iterator := NewScannerPeriodIterator(getScanRange(fileCursor, scanType))
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
 
-	for scanPeriod, ok := iterator.Next(); ok; scanPeriod, ok = iterator.Next() {
-		cancel, errC := Scanner(ctx, rpcClient, scanPeriod, device.Location, mediaFilesC)
+	for scannerPeriod, ok := iterator.Next(); ok; scannerPeriod, ok = iterator.Next() {
+		cancel, errC := Scanner(ctx, rpcClient, scannerPeriod, device.Location, mediaFilesC)
 		defer cancel()
 
 	inner:
@@ -151,14 +151,14 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 		err := db.DeleteDahuaFile(ctx, repo.DeleteDahuaFileParams{
 			UpdatedAt: updated_at,
 			DeviceID:  device.ID,
-			Start:     types.NewTime(scanPeriod.Start.UTC()),
-			End:       types.NewTime(scanPeriod.End.UTC()),
+			Start:     types.NewTime(scannerPeriod.Start.UTC()),
+			End:       types.NewTime(scannerPeriod.End.UTC()),
 		})
 		if err != nil {
 			return err
 		}
 
-		fileCursor = updateFileCursor(fileCursor, scanPeriod, scanType)
+		fileCursor = updateFileCursor(fileCursor, scannerPeriod, scanType)
 		fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
 			QuickCursor: fileCursor.QuickCursor,
 			FullCursor:  fileCursor.FullCursor,

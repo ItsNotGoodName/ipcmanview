@@ -291,7 +291,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 		return err
 	}
 
-	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaDeviceEvent{})
+	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaEvent{})
 	if err != nil {
 		return err
 	}
@@ -301,7 +301,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	buf := new(bytes.Buffer)
 
 	for event := range eventsC {
-		evt, ok := event.(models.EventDahuaDeviceEvent)
+		evt, ok := event.(models.EventDahuaEvent)
 		if !ok ||
 			evt.EventRule.IgnoreLive ||
 			(len(params.DeviceID) > 0 && !slices.Contains(params.DeviceID, evt.Event.DeviceID)) ||

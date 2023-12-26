@@ -252,7 +252,7 @@ func (s *Server) DahuaIDEvents(c echo.Context) error {
 	} else {
 		// Get events from PubSub
 
-		sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaDeviceEvent{})
+		sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaEvent{})
 		if err != nil {
 			return err
 		}
@@ -261,7 +261,7 @@ func (s *Server) DahuaIDEvents(c echo.Context) error {
 		stream := useStream(c)
 
 		for event := range eventsC {
-			evt, ok := event.(models.EventDahuaDeviceEvent)
+			evt, ok := event.(models.EventDahuaEvent)
 			if !ok {
 				continue
 			}
@@ -288,7 +288,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
-	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaDeviceEvent{})
+	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaEvent{})
 	if err != nil {
 		return err
 	}
@@ -297,7 +297,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 	stream := useStream(c)
 
 	for event := range eventsC {
-		evt, ok := event.(models.EventDahuaDeviceEvent)
+		evt, ok := event.(models.EventDahuaEvent)
 		if !ok {
 			continue
 		}

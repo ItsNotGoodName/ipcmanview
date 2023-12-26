@@ -204,7 +204,7 @@ func (c Conn) Register(bus *core.Bus) error {
 			return c.haSyncDevice(ctx, event.Device)
 		})
 	}
-	bus.OnEventDahuaDeviceEvent(func(ctx context.Context, evt models.EventDahuaDeviceEvent) error {
+	bus.OnEventDahuaEvent(func(ctx context.Context, evt models.EventDahuaEvent) error {
 		c.conn.Ready()
 
 		if evt.EventRule.IgnoreMQTT {

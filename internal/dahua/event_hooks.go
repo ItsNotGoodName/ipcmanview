@@ -90,7 +90,7 @@ func (e DefaultEventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 		event.ID = id
 	}
 
-	e.bus.EventDahuaDeviceEvent(models.EventDahuaDeviceEvent{
+	e.bus.EventDahuaEvent(models.EventDahuaEvent{
 		Event:     event,
 		EventRule: eventRule,
 	})
