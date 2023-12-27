@@ -30,7 +30,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	ktx := kong.Parse(&mainCmd, kong.Description("Application for managing and viewing Dahua IP devices."))
+	ktx := kong.Parse(&mainCmd, kong.Description("Application for managing and viewing Dahua devices."))
 
 	initLogger(mainCmd.Debug)
 

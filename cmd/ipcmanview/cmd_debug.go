@@ -2,14 +2,12 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
 	"github.com/rs/zerolog/log"
 )
 
@@ -33,34 +31,17 @@ func (c *CmdDebug) Run(ctx *Context) error {
 	for _, device := range devices {
 		wg.Add(1)
 		go func(device models.DahuaDeviceConn) {
-			conn := dahua.NewClient(device.DahuaConn)
-			defer conn.RPC.Close(context.Background())
+			client := dahua.NewClient(device.DahuaConn)
+			defer client.RPC.Close(context.Background())
 			defer wg.Done()
 
-			cfg, err := config.GetVideoAnalyseRules(ctx, conn.RPC)
+			status, err := ptz.GetStatus(ctx, client.PTZ, 0)
 			if err != nil {
 				log.Err(err).Send()
 				return
 			}
 
-			_, err = json.MarshalIndent(cfg.Tables[0].Data, "", "  ")
-			if err != nil {
-				log.Err(err).Send()
-				return
-			}
-
-			for i := range cfg.Tables[0].Data {
-				fmt.Println(cfg.Tables[0].Data[i].Enable, cfg.Tables[0].Data[i].Name)
-				cfg.Tables[0].Data[i].Enable = false
-				// fmt.Println(string(b))
-			}
-
-			err = configmanager.SetConfig(ctx, conn.RPC, cfg)
-			if err != nil {
-				log.Err(err).Send()
-				return
-			}
-
+			fmt.Println(status)
 		}(device)
 	}
 	wg.Wait()

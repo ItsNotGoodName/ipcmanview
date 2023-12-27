@@ -103,7 +103,7 @@ type Preset struct {
 	Name  string `json:"Name"`
 }
 
-func GetPresets(ctx context.Context, c Client, channel int, params Params) ([]Preset, error) {
+func GetPresets(ctx context.Context, c Client, channel int) ([]Preset, error) {
 	instance, err := c.Instance(ctx, channel)
 	if err != nil {
 		return nil, err
@@ -113,11 +113,37 @@ func GetPresets(ctx context.Context, c Client, channel int, params Params) ([]Pr
 		Presets []Preset `json:"presets"`
 	}](ctx, c.conn, c.Seq(dahuarpc.
 		New("ptz.getPresets").
-		Params(params).
 		Object(instance.Result.Integer())))
 	if err != nil {
 		return nil, err
 	}
 
 	return res.Params.Presets, nil
+}
+
+type Status struct {
+	Postion       [3]float64 `json:"Postion"`
+	Action        string     `json:"Action"`
+	ActionID      int        `json:"ActionID"`
+	MoveStatus    string     `json:"MoveStatus"`
+	TaskName      string     `json:"TaskName"`
+	PanTiltStatus string     `json:"PanTiltStatus"`
+}
+
+func GetStatus(ctx context.Context, c Client, channel int) (Status, error) {
+	instance, err := c.Instance(ctx, channel)
+	if err != nil {
+		return Status{}, err
+	}
+
+	res, err := dahuarpc.Send[struct {
+		Status Status `json:"status"`
+	}](ctx, c.conn, dahuarpc.
+		New("ptz.getStatus").
+		Object(instance.Result.Integer()))
+	if err != nil {
+		return Status{}, err
+	}
+
+	return res.Params.Status, nil
 }
