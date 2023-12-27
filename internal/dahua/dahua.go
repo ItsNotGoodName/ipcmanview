@@ -64,7 +64,7 @@ func ignorableError(err error) bool {
 		dahuarpc.ErrorTypeInterfaceNotFound,
 		dahuarpc.ErrorTypeUnknown,
 	}, res.Type) {
-		log.Err(err).Str("method", res.Method).Int("code", res.Code).Str("type", string(res.Type)).Msg("Ignoring ResponseError")
+		log.Err(err).Str("method", res.Method).Int("code", res.Code).Str("type", string(res.Type)).Msg("Ignoring RPC ResponseError")
 		return true
 	}
 

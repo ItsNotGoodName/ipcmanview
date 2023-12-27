@@ -1,10 +1,11 @@
 export DIR=ipcmanview_data
 export VITE_HOST=127.0.0.1
+export WEBNEXT_PATH=internal/webnext
 
 -include .env
 
 _:
-	mkdir web/dist -p && touch web/dist/index.html
+	mkdir "$(WEBNEXT_PATH)/dist" -p && touch "$(WEBNEXT_PATH)/dist/index.html"
 
 migrate:
 	goose -dir internal/migrations/sql sqlite3 "$(DIR)/sqlite.db" up
@@ -38,7 +39,7 @@ dev-web:
 	cd internal/web && pnpm install && pnpm run dev
 
 dev-webnext:
-	cd internal/webnext && pnpm install && pnpm run dev
+	cd "$(WEBNEXT_PATH)" && pnpm install && pnpm run dev
 
 # Gen
 
@@ -55,7 +56,7 @@ gen-bus:
 
 gen-proto:
 	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto
-	cd internal/webnext && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=../../rpc rpc.proto
+	cd "$(WEBNEXT_PATH)" && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=../../rpc rpc.proto
 
 # Tooling
 

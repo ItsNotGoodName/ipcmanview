@@ -13,4 +13,8 @@ export default defineConfig({
       input: 'src/main.ts',
     },
   },
+  server: {
+    port: 5173,
+    strictPort: true
+  }
 })
