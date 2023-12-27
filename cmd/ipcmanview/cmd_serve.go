@@ -22,14 +22,14 @@ import (
 
 type CmdServe struct {
 	Shared
-	HTTPHost     string     `env:"HTTP_HOST" help:"HTTP host to listen on."`
+	HTTPHost     string     `env:"HTTP_HOST" help:"HTTP host to listen on (e.g. \"127.0.0.1\")."`
 	HTTPPort     string     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
-	MQTTAddress  string     `env:"MQTT_ADDRESS" help:"MQTT broker to publish events."`
-	MQTTTopic    mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT broker publish topic."`
-	MQTTUsername string     `env:"MQTT_USERNAME" help:"MQTT broker username."`
-	MQTTPassword string     `env:"MQTT_PASSWORD" help:"MQTT broker password."`
-	MQTTHa       bool       `env:"MQTT_HA" help:"Enable HomeAssistant MQTT discovery."`
-	MQTTHaTopic  mqtt.Topic `env:"MQTT_HA_TOPIC" default:"homeassistant" help:"HomeAssistant MQTT discovery topic."`
+	MQTTAddress  string     `env:"MQTT_ADDRESS" help:"MQTT server address (e.g. \"mqtt://example.com:1883\")."`
+	MQTTTopic    mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT server topic to publish messages."`
+	MQTTUsername string     `env:"MQTT_USERNAME" help:"MQTT server username for authentication."`
+	MQTTPassword string     `env:"MQTT_PASSWORD" help:"MQTT server password for authentication."`
+	MQTTHa       bool       `env:"MQTT_HA" help:"Enable Home Assistant MQTT discovery."`
+	MQTTHaTopic  mqtt.Topic `env:"MQTT_HA_TOPIC" default:"homeassistant" help:"Home Assistant MQTT discover topic."`
 }
 
 func (c *CmdServe) Run(ctx *Context) error {

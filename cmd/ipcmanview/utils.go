@@ -13,7 +13,7 @@ import (
 )
 
 type Shared struct {
-	Dir string `default:"ipcmanview_data" env:"DIR" help:"Directory for data."`
+	Dir string `default:"ipcmanview_data" env:"DIR" help:"Directory path for storing data."`
 }
 
 func useDir(dir string) error {
