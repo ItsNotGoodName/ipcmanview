@@ -386,128 +386,125 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 		return err
 	}
 
-	// FIXME: vite dev proxy removes double slashes which messes up the file path
 	filePath := c.Param("*")
-	// if !strings.HasPrefix(filePath, "/") && !strings.Contains(strings.SplitN(filePath, "/", 2)[0], "://") {
-	// 	filePath = "/" + filePath
-	// }
+	storage := core.StorageFromFilePath(filePath)
 
+	var directFilePath bool
 	dbDahuaFile, err := s.db.GetDahuaFileByFilePath(ctx, repo.GetDahuaFileByFilePathParams{
 		DeviceID: conn.Conn.ID,
 		FilePath: filePath,
 	})
-	if err != nil {
-		if repo.IsNotFound(err) {
-			return echo.ErrNotFound.WithInternal(err)
-		}
+	if repo.IsNotFound(err) {
+		directFilePath = true
+	} else if err != nil {
 		return err
 	}
-	dahuaFile := dbDahuaFile.Convert()
-
-	storage := core.StorageFromFilePath(dahuaFile.FilePath)
 
 	var rd io.ReadCloser
-	switch storage {
-	case models.StorageLocal:
-		if exists, err := s.dahuaFileCache.Exists(ctx, dahuaFile); err != nil {
+	if directFilePath {
+		if storage != models.StorageLocal {
+			return dahuaErrStorageNotSupported(storage)
+		}
+
+		// File from device
+		rd, err = dahuaFileReadCloser(ctx, conn, filePath)
+		if err != nil {
 			return err
-		} else if !exists {
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(dahua.NewHTTPAddress(conn.Conn.Address), filePath), nil)
+		}
+	} else {
+		dahuaFile := dbDahuaFile.Convert()
+
+		switch storage {
+		case models.StorageLocal:
+			if exists, err := s.dahuaFileCache.Exists(ctx, dahuaFile); err != nil {
+				return err
+			} else if exists {
+				// File from cache
+				rd, err = s.dahuaFileCache.Get(ctx, dahuaFile)
+				if err != nil {
+					return err
+				}
+			} else {
+				// File from device
+				rd, err = dahuaFileReadCloser(ctx, conn, filePath)
+				if err != nil {
+					return err
+				}
+			}
+		case models.StorageFTP:
+			u, err := url.Parse(dahuaFile.FilePath)
 			if err != nil {
 				return err
 			}
 
-			session, err := conn.RPC.Session(ctx)
+			cred, err := s.db.GetDahuaCredential(ctx, repo.GetDahuaCredentialParams{
+				ServerAddress: u.Hostname(),
+				Storage:       storage,
+			})
+			if err != nil {
+				return echo.ErrNotFound.WithInternal(err)
+			}
+
+			c, err := ftp.Dial(cred.ServerAddress+":"+strconv.FormatInt(cred.Port, 10), ftp.DialWithContext(ctx))
 			if err != nil {
 				return err
 			}
 
-			req.Header.Add("Cookie", dahuarpc.Cookie(session))
-
-			resp, err := http.DefaultClient.Do(req)
+			err = c.Login(cred.Username, cred.Password)
 			if err != nil {
 				return err
 			}
-			rd = resp.Body
-		} else {
-			rd, err = s.dahuaFileCache.Get(ctx, dahuaFile)
+			defer c.Quit()
+
+			username := "/" + cred.Username
+			path, _ := strings.CutPrefix(u.Path, username)
+
+			rd, err = c.Retr(path)
 			if err != nil {
 				return err
 			}
-		}
-	case models.StorageFTP:
-		u, err := url.Parse(dahuaFile.FilePath)
-		if err != nil {
-			return err
-		}
+		case models.StorageSFTP:
+			u, err := url.Parse(dahuaFile.FilePath)
+			if err != nil {
+				return err
+			}
 
-		cred, err := s.db.GetDahuaCredential(ctx, repo.GetDahuaCredentialParams{
-			ServerAddress: u.Hostname(),
-			Storage:       storage,
-		})
-		if err != nil {
-			return echo.ErrNotFound.WithInternal(err)
-		}
+			cred, err := s.db.GetDahuaCredential(ctx, repo.GetDahuaCredentialParams{
+				ServerAddress: u.Hostname(),
+				Storage:       storage,
+			})
+			if err != nil {
+				return echo.ErrNotFound.WithInternal(err)
+			}
 
-		c, err := ftp.Dial(cred.ServerAddress+":"+strconv.FormatInt(cred.Port, 10), ftp.DialWithContext(ctx))
-		if err != nil {
-			return err
-		}
+			conn, err := ssh.Dial("tcp", cred.ServerAddress+":"+strconv.FormatInt(cred.Port, 10), &ssh.ClientConfig{
+				User: cred.Username,
+				Auth: []ssh.AuthMethod{ssh.Password(cred.Password)},
+				HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+					// TODO: check public key
+					return nil
+				},
+			})
+			if err != nil {
+				return err
+			}
 
-		err = c.Login(cred.Username, cred.Password)
-		if err != nil {
-			return err
-		}
-		defer c.Quit()
+			client, err := sftp.NewClient(conn)
+			if err != nil {
+				return err
+			}
+			defer client.Close()
 
-		username := "/" + cred.Username
-		path, _ := strings.CutPrefix(u.Path, username)
+			username := "/" + cred.Username
+			path, _ := strings.CutPrefix(u.Path, username)
 
-		rd, err = c.Retr(path)
-		if err != nil {
-			return err
+			rd, err = client.Open(path)
+			if err != nil {
+				return err
+			}
+		default:
+			return dahuaErrStorageNotSupported(storage)
 		}
-	case models.StorageSFTP:
-		u, err := url.Parse(dahuaFile.FilePath)
-		if err != nil {
-			return err
-		}
-
-		cred, err := s.db.GetDahuaCredential(ctx, repo.GetDahuaCredentialParams{
-			ServerAddress: u.Hostname(),
-			Storage:       storage,
-		})
-		if err != nil {
-			return echo.ErrNotFound.WithInternal(err)
-		}
-
-		conn, err := ssh.Dial("tcp", cred.ServerAddress+":"+strconv.FormatInt(cred.Port, 10), &ssh.ClientConfig{
-			User: cred.Username,
-			Auth: []ssh.AuthMethod{ssh.Password(cred.Password)},
-			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-				// TODO: check public key
-				return nil
-			},
-		})
-		if err != nil {
-			return err
-		}
-
-		client, err := sftp.NewClient(conn)
-		if err != nil {
-			return err
-		}
-		defer client.Close()
-
-		username := "/" + cred.Username
-		path, _ := strings.CutPrefix(u.Path, username)
-
-		rd, err = client.Open(path)
-		if err != nil {
-			return err
-		}
-	default:
-		return echo.ErrInternalServerError.WithInternal(fmt.Errorf("storage not supported: %s", storage))
 	}
 	defer rd.Close()
 
@@ -517,6 +514,30 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 	}
 
 	return nil
+}
+
+func dahuaErrStorageNotSupported(storage models.Storage) error {
+	return echo.ErrInternalServerError.WithInternal(fmt.Errorf("storage not supported: %s", storage))
+}
+
+func dahuaFileReadCloser(ctx context.Context, client dahua.Client, filePath string) (io.ReadCloser, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(dahua.NewHTTPAddress(client.Conn.Address), filePath), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	session, err := client.RPC.Session(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Cookie", dahuarpc.Cookie(session))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body, nil
 }
 
 func (s *Server) DahuaIDAudio(c echo.Context) error {
