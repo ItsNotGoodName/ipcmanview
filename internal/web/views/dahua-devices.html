@@ -91,7 +91,15 @@
                       </a>
                     </th>
                     <td>{{ $val.Name }}</td>
-                    <td>{{ $val.Address }}</td>
+                    <td>
+                      <a
+                        class="link"
+                        href="http://{{ $val.Address }}"
+                        target="_blank"
+                      >
+                        {{ $val.Address }}
+                      </a>
+                    </td>
                     <td>{{ $val.Username }}</td>
                     <td>{{ $val.Location }}</td>
                     <td>

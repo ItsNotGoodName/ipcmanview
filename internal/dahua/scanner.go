@@ -75,6 +75,9 @@ func (s *ScannerPeriodIterator) Next() (ScannerPeriod, bool) {
 }
 
 func (s *ScannerPeriodIterator) Percent() float64 {
+	if s.cursor.Equal(s.start) {
+		return 100.0
+	}
 	return (s.end.Sub(s.cursor).Hours() / s.end.Sub(s.start).Hours()) * 100
 }
 

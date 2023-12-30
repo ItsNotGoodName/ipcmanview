@@ -159,6 +159,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 		}
 
 		fileCursor = updateFileCursor(fileCursor, scannerPeriod, scanType)
+
 		fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
 			QuickCursor: fileCursor.QuickCursor,
 			FullCursor:  fileCursor.FullCursor,
@@ -169,6 +170,16 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 		if err != nil {
 			return err
 		}
+	}
+	fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
+		QuickCursor: fileCursor.QuickCursor,
+		FullCursor:  fileCursor.FullCursor,
+		FullEpoch:   fileCursor.FullEpoch,
+		DeviceID:    device.ID,
+		Percent:     iterator.Percent(),
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil
