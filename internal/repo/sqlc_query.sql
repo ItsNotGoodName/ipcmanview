@@ -197,6 +197,9 @@ SELECT DISTINCT action FROM dahua_events;
 -- name: GetDahuaEventData :one
 SELECT data FROM dahua_events WHERE id = ?;
 
+-- name: DeleteDahuaEvent :exec
+DELETE FROM dahua_events;
+
 -- name: getDahuaEventRuleByEvent :many
 SELECT 
   ignore_db,

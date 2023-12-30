@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"slices"
+	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -52,8 +53,11 @@ func (w Server) Register(e *echo.Echo) {
 	e.POST("/dahua/devices/file-cursors", w.DahuaDevicesFileCursorsPOST)
 	e.POST("/dahua/events/rules", w.DahuaEventsRulePOST)
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
+	e.POST("/dahua/files", w.DahuaFilesPOST)
 
 	e.PATCH("/dahua/devices/streams/:id", w.DahuaDevicesStreamsIDPATCH)
+
+	e.DELETE("/dahua/events", w.DahuaEventsDELETE)
 }
 
 type Server struct {
@@ -80,6 +84,17 @@ func (s Server) Index(c echo.Context) error {
 
 func (s Server) Dahua(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua", nil)
+}
+
+func (s Server) DahuaEventsDELETE(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	err := s.db.DeleteDahuaEvent(ctx)
+	if err != nil {
+		return err
+	}
+
+	return s.DahuaEvents(c)
 }
 
 func (s Server) DahuaEvents(c echo.Context) error {
@@ -170,6 +185,44 @@ func (s Server) DahuaEventsIDData(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "dahua-events", view.Block{Name: "dahua-events-data-json", Data: data})
+}
+
+func (s Server) DahuaFilesPOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	scanType := dahua.ScanTypeQuick
+
+	dbDevices, err := s.db.ListDahuaDevice(ctx)
+	if err != nil {
+		return err
+	}
+
+	wg := sync.WaitGroup{}
+	for _, dbDevice := range dbDevices {
+		conn := s.dahuaStore.Client(ctx, dbDevice.Convert().DahuaConn)
+
+		if err := dahua.ScanLockCreate(ctx, s.db, dbDevice.ID); err != nil {
+			log.Err(err).Int64("device", dbDevice.ID).Msg("Device already locked")
+			continue
+		}
+
+		wg.Add(1)
+		go func(conn dahua.Client) {
+			ctx := context.Background()
+			cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Conn.ID)
+			defer cancel()
+			defer wg.Done()
+
+			err := dahua.Scan(ctx, s.db, conn.RPC, conn.Conn, scanType)
+			if err != nil {
+				log.Err(err).Msg("Failed to scan")
+			}
+		}(conn)
+	}
+
+	wg.Wait()
+
+	return s.DahuaFiles(c)
 }
 
 func (s Server) DahuaFiles(c echo.Context) error {
@@ -537,7 +590,7 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 
 				err := dahua.Scan(ctx, s.db, conn.RPC, conn.Conn, scanType)
 				if err != nil {
-					log.Err(err).Msg("Scan error")
+					log.Err(err).Msg("Failed to scan")
 				}
 			}(conn)
 		}

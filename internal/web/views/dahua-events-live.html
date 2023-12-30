@@ -92,23 +92,6 @@
           </div>
 
           <div class="flex w-full flex-col gap-2 md:w-auto">
-            {{ if .Data.Params.Data }}
-              <a
-                class="btn"
-                {{ $url := URLQuery .URL.Path .Data.Params `Data` false }}
-                href="{{ $url }}"
-                hx-get="{{ $url }}"
-                >Hide Data</a
-              >
-            {{ else }}
-              <a
-                class="btn"
-                {{ $url := URLQuery .URL.Path .Data.Params `Data` true }}
-                href="{{ $url }}"
-                hx-get="{{ $url }}"
-                >Show Data</a
-              >
-            {{ end }}
             <button class="btn btn-info flex-1" type="submit">Apply</button>
           </div>
         </form>
@@ -116,6 +99,26 @@
         <div class="divider"></div>
 
         <div class="flex flex-col gap-4 px-4">
+          <div class="join flex justify-end">
+            {{ if .Data.Params.Data }}
+              <a
+                class="btn join-item btn-sm"
+                {{ $url := URLQuery .URL.Path .Data.Params `Data` false }}
+                href="{{ $url }}"
+                hx-get="{{ $url }}"
+                >Hide Data</a
+              >
+            {{ else }}
+              <a
+                class="btn join-item btn-sm"
+                {{ $url := URLQuery .URL.Path .Data.Params `Data` true }}
+                href="{{ $url }}"
+                hx-get="{{ $url }}"
+                >Show Data</a
+              >
+            {{ end }}
+          </div>
+
           <div class="overflow-x-auto">
             <table class="table">
               <thead>

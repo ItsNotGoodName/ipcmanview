@@ -220,6 +220,15 @@ func (q *Queries) DeleteDahuaDevice(ctx context.Context, id int64) error {
 	return err
 }
 
+const deleteDahuaEvent = `-- name: DeleteDahuaEvent :exec
+DELETE FROM dahua_events
+`
+
+func (q *Queries) DeleteDahuaEvent(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, deleteDahuaEvent)
+	return err
+}
+
 const deleteDahuaEventRule = `-- name: DeleteDahuaEventRule :exec
 DELETE FROM dahua_event_rules WHERE id = ?
 `
