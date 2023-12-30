@@ -15,8 +15,9 @@ import (
 type ScanType string
 
 var (
-	ScanTypeFull  ScanType = "full"
-	ScanTypeQuick ScanType = "quick"
+	ScanTypeFull    ScanType = "full"
+	ScanTypeQuick   ScanType = "quick"
+	ScanTypeReverse ScanType = "reverse"
 )
 
 const scanVolatileDuration = 8 * time.Hour
@@ -47,6 +48,7 @@ func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod,
 		} else {
 			fileCursor.QuickCursor = types.NewTime(quickCursor)
 		}
+	case ScanTypeReverse:
 	default:
 		panic("unknown type")
 	}
@@ -54,18 +56,31 @@ func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod,
 	return fileCursor
 }
 
-func getScanRange(fileCursor repo.DahuaFileCursor, scanType ScanType) models.TimeRange {
+func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCursor, scanType ScanType) (models.TimeRange, error) {
 	switch scanType {
 	case ScanTypeFull:
 		return models.TimeRange{
 			Start: fileCursor.FullEpoch.Time,
 			End:   fileCursor.FullCursor.Time,
-		}
+		}, nil
 	case ScanTypeQuick:
 		return models.TimeRange{
 			Start: fileCursor.QuickCursor.Time,
 			End:   time.Now(),
+		}, nil
+	case ScanTypeReverse:
+		file, err := db.GetDahuaFileOldest(ctx, fileCursor.DeviceID)
+		if err != nil {
+			return models.TimeRange{}, nil
 		}
+
+		start := file.StartTime.Time.Add(-MaxScannerPeriod / 2)
+		end := file.StartTime.Time.Add(MaxScannerPeriod / 2)
+
+		return models.TimeRange{
+			Start: start,
+			End:   end,
+		}, nil
 	default:
 		panic("unknown type")
 	}
@@ -94,8 +109,13 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 		return err
 	}
 
+	scanRange, err := getScanRange(ctx, db, fileCursor, scanType)
+	if err != nil {
+		return err
+	}
+	iterator := NewScannerPeriodIterator(scanRange)
+
 	updated_at := types.NewTime(time.Now())
-	iterator := NewScannerPeriodIterator(getScanRange(fileCursor, scanType))
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
 
 	for scannerPeriod, ok := iterator.Next(); ok; scannerPeriod, ok = iterator.Next() {

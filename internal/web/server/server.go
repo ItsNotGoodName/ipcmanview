@@ -557,10 +557,12 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 				return err
 			}
 		}
-	case "Quick", "Full":
+	case "Quick", "Full", "Reverse":
 		scanType := dahua.ScanTypeQuick
 		if form.Action == "Full" {
 			scanType = dahua.ScanTypeFull
+		} else if form.Action == "Reverse" {
+			scanType = dahua.ScanTypeReverse
 		}
 
 		for _, v := range form.FileCursors {

@@ -144,6 +144,12 @@ SELECT *
 FROM dahua_files
 WHERE device_id = ? and file_path = ?;
 
+-- name: GetDahuaFileOldest :one
+SELECT *
+FROM dahua_files
+WHERE device_id = ?
+ORDER BY start_time ASC LIMIT 1;
+
 -- name: UpdateDahuaFile :one
 UPDATE dahua_files 
 SET 

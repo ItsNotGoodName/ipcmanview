@@ -8,8 +8,6 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
@@ -325,21 +323,6 @@ func NewDahuaFiles(deviceID int64, files []mediafilefind.FindNextFileInfo, affix
 	}
 
 	return res, nil
-}
-
-func NewDahuaDevice(c models.DahuaDevice) (models.DahuaDevice, error) {
-	if c.Location == nil {
-		c.Location = time.Local
-	}
-	c.CreatedAt = time.Now()
-	c.UpdatedAt = time.Now()
-
-	return c, validate.Validate.Struct(c)
-}
-
-func UpdateDahuaDevice(ctx context.Context, db repo.DB, c models.DahuaDevice, update repo.UpdateDahuaDeviceParams) (models.DahuaDevice, error) {
-	c.UpdatedAt = time.Now()
-	return c, validate.Validate.Struct(c)
 }
 
 func GetSeed(c models.DahuaConn) int {
