@@ -122,6 +122,15 @@ type DahuaSeed struct {
 	DeviceID sql.NullInt64
 }
 
+type DahuaStream struct {
+	ID           int64
+	DeviceID     int64
+	Channel      int64
+	Subtype      int64
+	Name         string
+	MediamtxPath string
+}
+
 type Setting struct {
 	SiteName        string
 	DefaultLocation types.Location

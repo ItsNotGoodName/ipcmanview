@@ -18,3 +18,24 @@ func ErrorToNullString(err error) sql.NullString {
 		Valid:  true,
 	}
 }
+
+func NilStringToNullString(s *string) sql.NullString {
+	if s == nil {
+		return sql.NullString{
+			Valid: true,
+		}
+	}
+	return sql.NullString{
+		String: *s,
+		Valid:  true,
+	}
+}
+
+func Coalasce(s ...*string) string {
+	for _, v := range s {
+		if v != nil {
+			return *v
+		}
+	}
+	return ""
+}

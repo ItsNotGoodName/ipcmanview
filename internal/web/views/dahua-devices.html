@@ -288,6 +288,64 @@
 
     <div class="divider"></div>
 
+    <section class="flex flex-col gap-4 px-4">
+      <div class="border-b-base-content flex justify-between gap-4">
+        <div class="card-title" id="streams">
+          <a href="#streams">Streams</a>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Device ID</th>
+              <th>Channel</th>
+              <th>Subtype</th>
+              <th>Name</th>
+              <th>MediaMTX Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range $index, $val := .Data.Streams }}
+              <tr>
+                <th>
+                  <a href="#device-{{ .DeviceID }}">
+                    {{ .DeviceID }}
+                  </a>
+                </th>
+                <td>{{ .Channel }}</td>
+                <td>{{ .Subtype }}</td>
+                <td class="py-0">
+                  {{ block "streams-name" . }}
+                    <input
+                      name="Name"
+                      class="input input-sm input-bordered w-full"
+                      type="text"
+                      value="{{ .Name }}"
+                      hx-patch="/dahua/devices/streams/{{ .ID }}?"
+                    />
+                  {{ end }}
+                </td>
+                <td class="py-0">
+                  {{ block "streams-mediamtx-path" . }}
+                    <input
+                      name="MediamtxPath"
+                      class="input input-sm input-bordered w-full"
+                      type="text"
+                      value="{{ .MediamtxPath }}"
+                      hx-patch="/dahua/devices/streams/{{ .ID }}?"
+                    />
+                  {{ end }}
+                </td>
+              </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
     <div
       class="flex justify-center"
       hx-get="/dahua/devices"
@@ -299,6 +357,14 @@
   </main>
 
   {{ template "footer.html". }}
+{{ end }}
+
+{{ define "htmx-streams-name" }}
+  {{ template "streams-name" .Data }}
+{{ end }}
+
+{{ define "htmx-streams-mediamtx-path" }}
+  {{ template "streams-mediamtx-path" .Data }}
 {{ end }}
 
 {{ define "htmx" }}

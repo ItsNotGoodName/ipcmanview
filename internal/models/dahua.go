@@ -181,3 +181,13 @@ type DahuaSunriseSunset struct {
 	SwitchMode  config.SwitchMode    `json:"switch_mode"`
 	TimeSection dahuarpc.TimeSection `json:"time_section"`
 }
+
+type DahuaStream struct {
+	ID           int64
+	DeviceID     int64
+	Name         string
+	Channel      int
+	Subtype      int
+	MediamtxPath string
+	EmbedURL     string
+}

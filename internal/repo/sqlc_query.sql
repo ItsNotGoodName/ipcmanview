@@ -266,3 +266,35 @@ SELECT *,max(created_at) FROM dahua_event_worker_states GROUP BY device_id;
 -- name: GetDahuaCredential :one
 SELECT * FROM dahua_credentials 
 WHERE server_address = ? AND storage = ?;
+
+-- name: TryCreateDahuaStream :exec
+INSERT OR IGNORE INTO dahua_streams (
+  device_id,
+  channel,
+  subtype,
+  name,
+  mediamtx_path
+) VALUES ( 
+  ?, ?, ?, ?, ?
+);
+
+-- name: ListDahuaStreamByDevice :many
+SELECT * FROM dahua_streams
+WHERE device_id = ?;
+
+-- name: ListDahuaStream :many
+SELECT * FROM dahua_streams
+ORDER BY device_id;
+
+-- name: GetDahuaStream :one
+SELECT * FROM dahua_streams
+WHERE id = ?;
+
+-- name: UpdateDahuaStream :one
+UPDATE dahua_streams
+SET
+  name = ?,
+  mediamtx_path = ?
+WHERE id = ?
+RETURNING *;
+

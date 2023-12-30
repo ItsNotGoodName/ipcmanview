@@ -1,0 +1,68 @@
+{{ template "base.html" . }}
+
+{{ define "body" }}
+  {{ template "dahua-base.html" . }}
+{{ end }}
+
+{{ define "header-navbar-start" }}
+  {{ template "dahua-base-drawer-button" . }}
+{{ end }}
+
+{{ define "dahua-base-body" }}
+  {{ template "header.html" . }}
+
+
+  <main class="min-h-screen">
+    <div class="breadcrumbs px-4 text-sm">
+      <ul>
+        <li>Streams</li>
+      </ul>
+    </div>
+
+    <div
+      class="grid justify-center grid-cols-1 gap-4 p-4 md:grid-cols-2 xl:grid-cols-3"
+    >
+      {{ range $device := .Data.Devices }}
+        {{ block "stream" $device }}
+          {{ $device := . }}
+          {{ with $selectedStream := $device.SelectedStream }}
+            <figure>
+              <div role="tablist" class="tabs tabs-boxed pb-2">
+                {{ range $stream := $device.Streams }}
+                  <a
+                    hx-target="closest figure"
+                    hx-get="/dahua/streams?id={{ $stream.ID }}"
+                    role="tab"
+                    {{ if eq $selectedStream.ID $stream.ID }}
+                      class="tab tab-active"
+                    {{ else }}
+                      class="tab"
+                    {{ end }}
+                    >{{ $stream.Name }}</a
+                  >
+                {{ end }}
+              </div>
+              <iframe
+                class="h-96 w-full"
+                src="{{ .EmbedURL }}"
+                scrolling="no"
+                allow="fullscreen"
+              ></iframe>
+              <div class="flex justify-center pt-2">
+                <figcaption>
+                  {{ $device.Name }} - {{ $selectedStream.Name }} Stream
+                </figcaption>
+              </div>
+            </figure>
+          {{ end }}
+        {{ end }}
+      {{ end }}
+    </div>
+  </main>
+
+  {{ template "footer.html" . }}
+{{ end }}
+
+{{ define "htmx" }}
+  {{ template "stream" .Data }}
+{{ end }}

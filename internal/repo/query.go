@@ -253,7 +253,9 @@ func (db DB) GetDahuaEventRuleByEvent(ctx context.Context, event models.DahuaEve
 	}, nil
 }
 
-func (db DB) ListDahuaDeviceByFeature(ctx context.Context, features ...models.DahuaFeature) ([]listDahuaDeviceByFeatureRow, error) {
+type ListDahuaDeviceByFeatureRow = listDahuaDeviceByFeatureRow
+
+func (db DB) ListDahuaDeviceByFeature(ctx context.Context, features ...models.DahuaFeature) ([]ListDahuaDeviceByFeatureRow, error) {
 	var feature models.DahuaFeature
 	for _, f := range features {
 		feature = feature | f

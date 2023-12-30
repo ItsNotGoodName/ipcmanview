@@ -9,7 +9,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	dahua1 "github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -44,6 +44,7 @@ func (w Server) Register(e *echo.Echo) {
 	e.GET("/dahua/events/stream", w.DahuaEventStream)
 	e.GET("/dahua/files", w.DahuaFiles)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
+	e.GET("/dahua/streams", w.DahuaStreams)
 
 	e.POST("/dahua/devices", w.DahuaDevicesPOST)
 	e.POST("/dahua/devices/:id/update", w.DahuaDevicesUpdatePOST)
@@ -51,21 +52,25 @@ func (w Server) Register(e *echo.Echo) {
 	e.POST("/dahua/devices/file-cursors", w.DahuaDevicesFileCursorsPOST)
 	e.POST("/dahua/events/rules", w.DahuaEventsRulePOST)
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
+
+	e.PATCH("/dahua/devices/streams/:id", w.DahuaDevicesStreamsIDPATCH)
 }
 
 type Server struct {
-	db         repo.DB
-	pub        pubsub.Pub
-	bus        *core.Bus
-	dahuaStore *dahua1.Store
+	db             repo.DB
+	pub            pubsub.Pub
+	bus            *core.Bus
+	dahuaStore     *dahua.Store
+	mediamtxConfig mediamtx.Config
 }
 
-func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, dahuaStore *dahua1.Store) Server {
+func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, dahuaStore *dahua.Store, mediamtxConfig mediamtx.Config) Server {
 	return Server{
-		db:         db,
-		pub:        pub,
-		bus:        bus,
-		dahuaStore: dahuaStore,
+		db:             db,
+		pub:            pub,
+		bus:            bus,
+		dahuaStore:     dahuaStore,
+		mediamtxConfig: mediamtxConfig,
 	}
 }
 
@@ -368,8 +373,10 @@ func (s Server) DahuaDevicesPOST(c echo.Context) error {
 }
 
 func (s Server) DahuaDevices(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	if isHTMX(c) {
-		tables, err := useDahuaTables(c.Request().Context(), s.db, s.dahuaStore)
+		tables, err := useDahuaTables(ctx, s.db, s.dahuaStore)
 		if err != nil {
 			return err
 		}
@@ -377,17 +384,22 @@ func (s Server) DahuaDevices(c echo.Context) error {
 		return c.Render(http.StatusOK, "dahua-devices", view.Block{Name: "htmx", Data: tables})
 	}
 
-	devices, err := s.db.ListDahuaDevice(c.Request().Context())
+	devices, err := s.db.ListDahuaDevice(ctx)
 	if err != nil {
 		return err
 	}
 
-	fileCursors, err := s.db.ListDahuaFileCursor(c.Request().Context(), dahua.ScanLockStaleTime())
+	fileCursors, err := s.db.ListDahuaFileCursor(ctx, dahua.ScanLockStaleTime())
 	if err != nil {
 		return err
 	}
 
-	eventWorkers, err := s.db.ListDahuaEventWorkerState(c.Request().Context())
+	eventWorkers, err := s.db.ListDahuaEventWorkerState(ctx)
+	if err != nil {
+		return err
+	}
+
+	streams, err := s.db.ListDahuaStream(ctx)
 	if err != nil {
 		return err
 	}
@@ -396,6 +408,7 @@ func (s Server) DahuaDevices(c echo.Context) error {
 		"Devices":      devices,
 		"FileCursors":  fileCursors,
 		"EventWorkers": eventWorkers,
+		"Streams":      streams,
 	})
 }
 
@@ -431,7 +444,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	create, err := dahua1.NewDahuaDevice(models.DahuaDevice{
+	create, err := dahua.NewDahuaDevice(models.DahuaDevice{
 		Name:     form.Name,
 		Address:  form.Address,
 		Username: form.Username,
@@ -517,7 +530,7 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 			if err := dahua.ScanLockCreate(ctx, s.db, v.DeviceID); err != nil {
 				return err
 			}
-			go func(conn dahua1.Client) {
+			go func(conn dahua.Client) {
 				ctx := context.Background()
 				cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Conn.ID)
 				defer cancel()
@@ -588,7 +601,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 		form.Password = device.Password
 	}
 
-	update, err := dahua1.UpdateDahuaDevice(models.DahuaDevice{
+	update, err := dahua.UpdateDahuaDevice(models.DahuaDevice{
 		ID:        device.ID,
 		Name:      form.Name,
 		Address:   form.Address,
@@ -738,4 +751,124 @@ func (s Server) DahuaEventsRules(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "dahua-events-rules", data)
+}
+
+func (s Server) DahuaStreams(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	type ViewCamera struct {
+		models.DahuaDevice
+		SelectedStream *models.DahuaStream
+		Streams        []models.DahuaStream
+	}
+
+	if isHTMX(c) {
+		var params struct {
+			ID int64
+		}
+		err := api.DecodeQuery(c, &params)
+		if err != nil {
+			return err
+		}
+
+		dbStream, err := s.db.GetDahuaStream(ctx, params.ID)
+		if err != nil {
+			return err
+		}
+
+		dbCamera, err := s.db.GetDahuaDevice(ctx, dbStream.DeviceID)
+		if err != nil {
+			return err
+		}
+
+		dbStreams, err := s.db.ListDahuaStreamByDevice(ctx, dbStream.DeviceID)
+		if err != nil {
+			return err
+		}
+		streams := make([]models.DahuaStream, 0, len(dbStreams))
+		for _, dbStream := range dbStreams {
+			streams = append(streams, dbStream.Convert(s.mediamtxConfig.DahuaEmbedURL(dbStream)))
+		}
+
+		stream := dbStream.Convert(s.mediamtxConfig.DahuaEmbedURL(dbStream))
+
+		viewDevice := ViewCamera{
+			DahuaDevice:    dbCamera.Convert().DahuaDevice,
+			SelectedStream: &stream,
+			Streams:        streams,
+		}
+
+		return c.Render(http.StatusOK, "dahua-streams", view.Block{Name: "htmx", Data: viewDevice})
+	}
+
+	dbCameras, err := s.db.ListDahuaDeviceByFeature(ctx, models.DahuaFeatureCamera)
+	if err != nil {
+		return err
+	}
+
+	viewDevices := make([]ViewCamera, 0, len(dbCameras))
+	for _, camera := range dbCameras {
+		dbStreams, err := s.db.ListDahuaStreamByDevice(ctx, camera.ID)
+		if err != nil {
+			return err
+		}
+
+		streams := make([]models.DahuaStream, 0, len(dbStreams))
+		for _, dbStream := range dbStreams {
+			streams = append(streams, dbStream.Convert(s.mediamtxConfig.DahuaEmbedURL(dbStream)))
+		}
+
+		var selectedStream *models.DahuaStream
+		if len(streams) > 0 {
+			selectedStream = &streams[0]
+		}
+
+		viewDevices = append(viewDevices, ViewCamera{
+			DahuaDevice:    camera.Convert().DahuaDevice,
+			SelectedStream: selectedStream,
+			Streams:        streams,
+		})
+	}
+
+	return c.Render(http.StatusOK, "dahua-streams", view.Data{
+		"Devices": viewDevices,
+	})
+}
+
+func (s Server) DahuaDevicesStreamsIDPATCH(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := api.ParamID(c)
+	if err != nil {
+		return err
+	}
+	stream, err := s.db.GetDahuaStream(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	var form struct {
+		Name         *string
+		MediamtxPath *string
+	}
+	if err := api.ParseForm(c, &form); err != nil {
+		return err
+	}
+
+	stream, err = dahua.UpdateStream(ctx, s.db, stream, repo.UpdateDahuaStreamParams{
+		Name:         repo.Coalasce(form.Name, &stream.Name),
+		MediamtxPath: repo.Coalasce(form.MediamtxPath, &stream.MediamtxPath),
+		ID:           stream.ID,
+	})
+	if err != nil {
+		return err
+	}
+
+	if form.Name != nil {
+		return c.Render(http.StatusOK, "dahua-devices", view.Block{Name: "htmx-streams-name", Data: stream})
+	} else if form.MediamtxPath != nil {
+		return c.Render(http.StatusOK, "dahua-devices", view.Block{Name: "htmx-streams-mediamtx-path", Data: stream})
+	} else {
+		return c.NoContent(http.StatusNoContent)
+	}
 }

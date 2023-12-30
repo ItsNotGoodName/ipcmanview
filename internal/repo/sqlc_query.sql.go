@@ -404,6 +404,25 @@ func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileBy
 	return i, err
 }
 
+const getDahuaStream = `-- name: GetDahuaStream :one
+SELECT id, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
+WHERE id = ?
+`
+
+func (q *Queries) GetDahuaStream(ctx context.Context, id int64) (DahuaStream, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaStream, id)
+	var i DahuaStream
+	err := row.Scan(
+		&i.ID,
+		&i.DeviceID,
+		&i.Channel,
+		&i.Subtype,
+		&i.Name,
+		&i.MediamtxPath,
+	)
+	return i, err
+}
+
 const getSettings = `-- name: GetSettings :one
 SELECT site_name, default_location FROM settings
 LIMIT 1
@@ -743,6 +762,76 @@ func (q *Queries) ListDahuaFileTypes(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
+const listDahuaStream = `-- name: ListDahuaStream :many
+SELECT id, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
+ORDER BY device_id
+`
+
+func (q *Queries) ListDahuaStream(ctx context.Context) ([]DahuaStream, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaStream)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DahuaStream
+	for rows.Next() {
+		var i DahuaStream
+		if err := rows.Scan(
+			&i.ID,
+			&i.DeviceID,
+			&i.Channel,
+			&i.Subtype,
+			&i.Name,
+			&i.MediamtxPath,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDahuaStreamByDevice = `-- name: ListDahuaStreamByDevice :many
+SELECT id, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
+WHERE device_id = ?
+`
+
+func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) ([]DahuaStream, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaStreamByDevice, deviceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DahuaStream
+	for rows.Next() {
+		var i DahuaStream
+		if err := rows.Scan(
+			&i.ID,
+			&i.DeviceID,
+			&i.Channel,
+			&i.Subtype,
+			&i.Name,
+			&i.MediamtxPath,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const touchDahuaFileScanLock = `-- name: TouchDahuaFileScanLock :exec
 UPDATE dahua_file_scan_locks
 SET touched_at = ?
@@ -756,6 +845,37 @@ type TouchDahuaFileScanLockParams struct {
 
 func (q *Queries) TouchDahuaFileScanLock(ctx context.Context, arg TouchDahuaFileScanLockParams) error {
 	_, err := q.db.ExecContext(ctx, touchDahuaFileScanLock, arg.TouchedAt, arg.DeviceID)
+	return err
+}
+
+const tryCreateDahuaStream = `-- name: TryCreateDahuaStream :exec
+INSERT OR IGNORE INTO dahua_streams (
+  device_id,
+  channel,
+  subtype,
+  name,
+  mediamtx_path
+) VALUES ( 
+  ?, ?, ?, ?, ?
+)
+`
+
+type TryCreateDahuaStreamParams struct {
+	DeviceID     int64
+	Channel      int64
+	Subtype      int64
+	Name         string
+	MediamtxPath string
+}
+
+func (q *Queries) TryCreateDahuaStream(ctx context.Context, arg TryCreateDahuaStreamParams) error {
+	_, err := q.db.ExecContext(ctx, tryCreateDahuaStream,
+		arg.DeviceID,
+		arg.Channel,
+		arg.Subtype,
+		arg.Name,
+		arg.MediamtxPath,
+	)
 	return err
 }
 
@@ -960,6 +1080,35 @@ func (q *Queries) UpdateDahuaFileCursorPercent(ctx context.Context, arg UpdateDa
 		&i.FullEpoch,
 		&i.FullComplete,
 		&i.Percent,
+	)
+	return i, err
+}
+
+const updateDahuaStream = `-- name: UpdateDahuaStream :one
+UPDATE dahua_streams
+SET
+  name = ?,
+  mediamtx_path = ?
+WHERE id = ?
+RETURNING id, device_id, channel, subtype, name, mediamtx_path
+`
+
+type UpdateDahuaStreamParams struct {
+	Name         string
+	MediamtxPath string
+	ID           int64
+}
+
+func (q *Queries) UpdateDahuaStream(ctx context.Context, arg UpdateDahuaStreamParams) (DahuaStream, error) {
+	row := q.db.QueryRowContext(ctx, updateDahuaStream, arg.Name, arg.MediamtxPath, arg.ID)
+	var i DahuaStream
+	err := row.Scan(
+		&i.ID,
+		&i.DeviceID,
+		&i.Channel,
+		&i.Subtype,
+		&i.Name,
+		&i.MediamtxPath,
 	)
 	return i, err
 }

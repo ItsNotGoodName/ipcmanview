@@ -53,6 +53,15 @@
       <li>
         <a
           hx-boost="true"
+          href="/dahua/streams"
+          {{ if hasPrefix "/dahua/streams" .URL.Path }}class="active"{{ end }}
+        >
+          Streams
+        </a>
+      </li>
+      <li>
+        <a
+          hx-boost="true"
           href="/dahua/snapshots"
           {{ if hasPrefix "/dahua/snapshots" .URL.Path }}class="active"{{ end }}
         >

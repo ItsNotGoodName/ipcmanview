@@ -130,3 +130,15 @@ CREATE TABLE dahua_device_credentials (
 
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+CREATE TABLE dahua_streams (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  device_id INTEGER NOT NULL,
+  channel INTEGER NOT NULL,
+  subtype INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  mediamtx_path TEXT NOT NULL,
+
+  UNIQUE(device_id, channel, subtype),
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+);

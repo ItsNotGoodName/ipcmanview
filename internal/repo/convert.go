@@ -79,6 +79,31 @@ func (c ListDahuaDeviceRow) Convert() models.DahuaDeviceConn {
 	}
 }
 
+func (c ListDahuaDeviceByFeatureRow) Convert() models.DahuaDeviceConn {
+	return models.DahuaDeviceConn{
+		DahuaDevice: models.DahuaDevice{
+			ID:        c.ID,
+			Address:   c.Address,
+			Username:  c.Username,
+			Password:  c.Password,
+			Location:  c.Location.Location,
+			Name:      c.Name,
+			CreatedAt: c.CreatedAt.Time,
+			UpdatedAt: c.UpdatedAt.Time,
+			Feature:   c.Feature,
+		},
+		DahuaConn: models.DahuaConn{
+			ID:       c.ID,
+			Address:  c.Address,
+			Username: c.Username,
+			Password: c.Password,
+			Location: c.Location.Location,
+			Feature:  c.Feature,
+			Seed:     int(c.Seed),
+		},
+	}
+}
+
 func (c DahuaFile) Convert() models.DahuaFile {
 	return models.DahuaFile{
 		ID:          c.ID,
@@ -100,5 +125,17 @@ func (c DahuaFile) Convert() models.DahuaFile {
 		Repeat:      int(c.Repeat),
 		WorkDir:     c.WorkDir,
 		WorkDirSN:   c.WorkDirSn,
+	}
+}
+
+func (c DahuaStream) Convert(embedURL string) models.DahuaStream {
+	return models.DahuaStream{
+		ID:           c.ID,
+		DeviceID:     c.DeviceID,
+		Name:         c.Name,
+		Channel:      int(c.Channel),
+		Subtype:      int(c.Subtype),
+		MediamtxPath: c.MediamtxPath,
+		EmbedURL:     embedURL,
 	}
 }

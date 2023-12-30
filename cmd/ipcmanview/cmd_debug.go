@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/encode"
 	"github.com/rs/zerolog/log"
 )
 
@@ -35,13 +36,19 @@ func (c *CmdDebug) Run(ctx *Context) error {
 			defer client.RPC.Close(context.Background())
 			defer wg.Done()
 
-			status, err := ptz.GetStatus(ctx, client.PTZ, 0)
+			caps, err := encode.GetCaps(ctx, client.RPC, 1)
 			if err != nil {
 				log.Err(err).Send()
 				return
 			}
 
-			fmt.Println(status)
+			b, err := json.MarshalIndent(caps, "", "  ")
+			if err != nil {
+				log.Err(err).Send()
+				return
+			}
+
+			fmt.Println(string(b))
 		}(device)
 	}
 	wg.Wait()
