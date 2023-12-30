@@ -52,3 +52,17 @@ import '@shoelace-style/shoelace/dist/components/format-date/format-date.js';
 // ---------- Lit
 
 import "./x-json.ts"
+
+// ---------- Checkbox
+
+// @ts-ignore
+window.tableCheckbox = function(ele: HTMLInputElement) {
+  ele.
+    closest("table")?.
+    querySelectorAll(`th input[type="checkbox"]`).
+    // @ts-ignore
+    forEach((e: HTMLInputElement, _) => {
+      if (!e.disabled)
+        e.checked = ele.checked
+    })
+}

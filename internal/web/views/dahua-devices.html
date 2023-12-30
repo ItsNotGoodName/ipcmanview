@@ -24,27 +24,25 @@
         class="flex flex-col gap-4 px-4"
         method="post"
         hx-post="/dahua/devices"
+        hx-confirm="Are you sure?"
       >
         {{ block "htmx-devices" . }}
           <div class="border-b-base-content flex justify-between gap-4">
             <div class="card-title" id="devices">
               <a href="#devices">Devices</a>
             </div>
-            <div class="join">
-              <a
-                href="/dahua/devices/create"
-                class="btn btn-sm btn-primary join-item"
-              >
+            <button
+              class="btn btn-sm btn-error"
+              type="submit"
+              name="Action"
+              value="Delete"
+            >
+              Delete
+            </button>
+            <div class="flex flex-1 justify-end">
+              <a href="/dahua/devices/create" class="btn btn-sm btn-primary">
                 Create
               </a>
-              <button
-                class="btn btn-sm join-item btn-error"
-                type="submit"
-                name="Action"
-                value="Delete"
-              >
-                Delete
-              </button>
             </div>
           </div>
           <div class="overflow-x-auto">
@@ -53,7 +51,11 @@
                 <tr>
                   <th class="w-0">
                     <label>
-                      <input type="checkbox" class="checkbox" />
+                      <input
+                        type="checkbox"
+                        class="checkbox"
+                        onchange="tableCheckbox(this)"
+                      />
                     </label>
                   </th>
                   <th>ID</th>
@@ -143,19 +145,11 @@
         hx-post="/dahua/devices/file-cursors"
       >
         {{ block "htmx-file-cursors" . }}
-          <div class="border-b-base-content flex justify-between gap-4">
+          <div class="border-b-base-content flex gap-4">
             <div class="card-title" id="file-cursors">
               <a href="#file-cursors">File Cursors</a>
             </div>
             <div class="join">
-              <button
-                class="btn btn-sm join-item"
-                type="submit"
-                hx-get="/dahua/devices/file-cursors"
-                hx-target="closest form"
-              >
-                Refresh
-              </button>
               <button
                 class="btn btn-sm join-item btn-primary"
                 type="submit"
@@ -181,6 +175,16 @@
                 Reset
               </button>
             </div>
+            <div class="flex flex-1 justify-end">
+              <button
+                class="btn btn-sm"
+                type="submit"
+                hx-get="/dahua/devices/file-cursors"
+                hx-target="closest form"
+              >
+                Refresh
+              </button>
+            </div>
           </div>
           <div class="overflow-x-auto">
             <table class="table">
@@ -188,7 +192,11 @@
                 <tr>
                   <th class="w-0">
                     <label>
-                      <input type="checkbox" class="checkbox" />
+                      <input
+                        type="checkbox"
+                        class="checkbox"
+                        onchange="tableCheckbox(this)"
+                      />
                     </label>
                   </th>
                   <th>Device ID</th>

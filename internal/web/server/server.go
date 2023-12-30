@@ -664,11 +664,16 @@ func (s Server) DahuaEventsRulesCreatePOST(c echo.Context) error {
 		return err
 	}
 
-	if !isHTMX(c) {
-		return c.Redirect(http.StatusSeeOther, "/dahua/events/rules")
+	rules, err := s.db.ListDahuaEventRule(ctx)
+	if err != nil {
+		return err
 	}
 
-	return s.DahuaEventsRules(c)
+	data := view.Data{
+		"Rules": rules,
+	}
+
+	return c.Render(http.StatusOK, "dahua-events-rules", view.Block{Name: "htmx-create", Data: data})
 }
 
 func (s Server) DahuaEventsRulePOST(c echo.Context) error {

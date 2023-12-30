@@ -25,29 +25,28 @@
         <div class="card-title">Create Event Rule</div>
       </div>
 
-      <form
-        method="post"
-        action="/dahua/events/rules/create"
-        hx-post="/dahua/events/rules/create"
-        hx-target="#htmx"
-      >
-        <label class="form-control">
-          <div class="label">
-            <span class="label-text">Code</span>
-          </div>
-          <div class="flex gap-4">
-            <input
-              type="text"
-              class="input input-bordered w-full"
-              name="Code"
-              placeholder="Code"
-            />
-            <button class="btn btn-primary no-animation" type="submit">
-              Create
-            </button>
-          </div>
-        </label>
-      </form>
+      {{ block "create" . }}
+        <form
+          method="post"
+          action="/dahua/events/rules/create"
+          hx-post="/dahua/events/rules/create"
+        >
+          <label class="form-control">
+            <div class="label">
+              <span class="label-text">Code</span>
+            </div>
+            <div class="flex gap-4">
+              <input
+                type="text"
+                class="input input-bordered w-full"
+                name="Code"
+                placeholder="Code"
+              />
+              <button class="btn btn-primary" type="submit">Create</button>
+            </div>
+          </label>
+        </form>
+      {{ end }}
     </div>
 
     <div class="divider"></div>
@@ -60,9 +59,17 @@
           hx-post="/dahua/events/rules"
           hx-target="#htmx"
         >
-          <div class="border-b-base-content flex justify-between gap-4">
+          <div class="border-b-base-content flex gap-4">
             <div class="card-title">Event Rules</div>
-            <div class="join">
+            <button
+              class="btn btn-sm btn-error"
+              type="submit"
+              name="Action"
+              value="Delete"
+            >
+              Delete
+            </button>
+            <div class="join flex-1 justify-end">
               <button class="btn btn-sm join-item" hx-get="/dahua/events/rules">
                 Refresh
               </button>
@@ -74,14 +81,6 @@
               >
                 Update
               </button>
-              <button
-                class="btn btn-sm join-item btn-error"
-                type="submit"
-                name="Action"
-                value="Delete"
-              >
-                Delete
-              </button>
             </div>
           </div>
           <div class="overflow-x-auto">
@@ -90,7 +89,11 @@
                 <tr>
                   <th class="w-0">
                     <label>
-                      <input type="checkbox" class="checkbox" />
+                      <input
+                        type="checkbox"
+                        class="checkbox"
+                        onchange="tableCheckbox(this)"
+                      />
                     </label>
                   </th>
                   <th>Code</th>
@@ -170,4 +173,11 @@
   </main>
 
   {{ template "footer.html". }}
+{{ end }}
+
+{{ define "htmx-create" }}
+  {{ template "create" . }}
+  <div id="htmx" hx-swap-oob="true">
+    {{ template "htmx" . }}
+  </div>
 {{ end }}
