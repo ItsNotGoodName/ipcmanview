@@ -69,13 +69,13 @@ func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCurs
 			End:   time.Now(),
 		}, nil
 	case ScanTypeReverse:
-		file, err := db.GetDahuaFileOldest(ctx, fileCursor.DeviceID)
+		startTime, err := db.GetOldestDahuaFileStartTime(ctx, fileCursor.DeviceID)
 		if err != nil {
 			return models.TimeRange{}, nil
 		}
 
-		start := file.StartTime.Time.Add(-MaxScannerPeriod / 2)
-		end := file.StartTime.Time.Add(MaxScannerPeriod / 2)
+		start := startTime.Time.Add(-MaxScannerPeriod / 2)
+		end := startTime.Time.Add(MaxScannerPeriod / 2)
 
 		return models.TimeRange{
 			Start: start,

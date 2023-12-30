@@ -144,8 +144,8 @@ SELECT *
 FROM dahua_files
 WHERE device_id = ? and file_path = ?;
 
--- name: GetDahuaFileOldest :one
-SELECT *
+-- name: GetOldestDahuaFileStartTime :one
+SELECT start_time 
 FROM dahua_files
 WHERE device_id = ?
 ORDER BY start_time ASC LIMIT 1;

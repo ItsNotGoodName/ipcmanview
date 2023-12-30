@@ -413,42 +413,6 @@ func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileBy
 	return i, err
 }
 
-const getDahuaFileOldest = `-- name: GetDahuaFileOldest :one
-SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, storage
-FROM dahua_files
-WHERE device_id = ?
-ORDER BY start_time ASC LIMIT 1
-`
-
-func (q *Queries) GetDahuaFileOldest(ctx context.Context, deviceID int64) (DahuaFile, error) {
-	row := q.db.QueryRowContext(ctx, getDahuaFileOldest, deviceID)
-	var i DahuaFile
-	err := row.Scan(
-		&i.ID,
-		&i.DeviceID,
-		&i.Channel,
-		&i.StartTime,
-		&i.EndTime,
-		&i.Length,
-		&i.Type,
-		&i.FilePath,
-		&i.Duration,
-		&i.Disk,
-		&i.VideoStream,
-		&i.Flags,
-		&i.Events,
-		&i.Cluster,
-		&i.Partition,
-		&i.PicIndex,
-		&i.Repeat,
-		&i.WorkDir,
-		&i.WorkDirSn,
-		&i.UpdatedAt,
-		&i.Storage,
-	)
-	return i, err
-}
-
 const getDahuaStream = `-- name: GetDahuaStream :one
 SELECT id, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
 WHERE id = ?
@@ -466,6 +430,20 @@ func (q *Queries) GetDahuaStream(ctx context.Context, id int64) (DahuaStream, er
 		&i.MediamtxPath,
 	)
 	return i, err
+}
+
+const getOldestDahuaFileStartTime = `-- name: GetOldestDahuaFileStartTime :one
+SELECT start_time 
+FROM dahua_files
+WHERE device_id = ?
+ORDER BY start_time ASC LIMIT 1
+`
+
+func (q *Queries) GetOldestDahuaFileStartTime(ctx context.Context, deviceID int64) (types.Time, error) {
+	row := q.db.QueryRowContext(ctx, getOldestDahuaFileStartTime, deviceID)
+	var start_time types.Time
+	err := row.Scan(&start_time)
+	return start_time, err
 }
 
 const getSettings = `-- name: GetSettings :one
