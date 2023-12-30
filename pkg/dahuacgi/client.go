@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/icholy/digest"
 )
@@ -13,7 +14,7 @@ type Client struct {
 	baseURL string
 }
 
-func NewClient(httpClient http.Client, httpAddress, username, password string) Client {
+func NewClient(httpClient http.Client, u *url.URL, username, password string) Client {
 	t := &digest.Transport{
 		Username: username,
 		Password: password,
@@ -23,7 +24,7 @@ func NewClient(httpClient http.Client, httpAddress, username, password string) C
 	}
 	httpClient.Transport = t
 	return Client{
-		baseURL: fmt.Sprintf("%s/cgi-bin/", httpAddress),
+		baseURL: fmt.Sprintf("%s://%s/cgi-bin/", u.Scheme, u.Hostname()),
 		client:  &httpClient,
 	}
 }

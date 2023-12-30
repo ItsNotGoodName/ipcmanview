@@ -25,7 +25,7 @@ type DahuaCredential struct {
 type DahuaDevice struct {
 	ID        int64
 	Name      string
-	Address   string
+	Address   types.URL
 	Username  string
 	Password  string
 	Location  types.Location

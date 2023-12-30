@@ -2,13 +2,32 @@ package dahua
 
 import (
 	"context"
+	"net/url"
+	"slices"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
+func toHTTPURL(u *url.URL) *url.URL {
+	if slices.Contains([]string{"http", "https"}, u.Scheme) {
+		return u
+	}
+
+	switch u.Port() {
+	case "443":
+		u.Scheme = "https"
+	default:
+		u.Scheme = "http"
+	}
+
+	return u
+}
+
 func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, args repo.CreateDahuaDeviceParams) error {
+	args.Address.URL = toHTTPURL(args.Address.URL)
+
 	id, err := db.CreateDahuaDevice(ctx, args, NewFileCursor())
 	if err != nil {
 		return err
@@ -25,7 +44,9 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, args repo.Crea
 	return nil
 }
 
-func UpdateDevice(ctx context.Context, db repo.DB, bus *core.Bus, args repo.UpdateDahuaDeviceParams) error {
+func UpdateDevice(ctx context.Context, db repo.DB, bus *core.Bus, device models.DahuaDevice, args repo.UpdateDahuaDeviceParams) error {
+	args.Address.URL = toHTTPURL(args.Address.URL)
+
 	_, err := db.UpdateDahuaDevice(ctx, args)
 	if err != nil {
 		return err

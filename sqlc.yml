@@ -32,3 +32,5 @@ sql:
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.Storage"
           - column: "dahua_device_credentials.storage"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.Storage"
+          - column: "dahua_devices.address"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.URL"

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 )
@@ -112,14 +113,14 @@ func (c clientLogin) SetSession(session string) {
 	c.client.session = session
 }
 
-func NewClient(httpClient *http.Client, httpAddress, username, password string) Client {
+func NewClient(httpClient *http.Client, u *url.URL, username, password string) Client {
 	return Client{
 		client: &client{
 			Client:      httpClient,
 			Username:    username,
 			Password:    password,
-			RPCURL:      URL(httpAddress),
-			RPCLoginURL: LoginURL(httpAddress),
+			RPCURL:      URL(u),
+			RPCLoginURL: LoginURL(u),
 			Mutex:       sync.Mutex{},
 			clientState: clientState{
 				lastID:    0,

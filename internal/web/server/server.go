@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"net/url"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -492,29 +494,24 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 	if form.Username == "" {
 		form.Username = "admin"
 	}
-	location, err := core.NewLocation(form.Location)
+	location, err := time.LoadLocation(form.Location)
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
-
-	create, err := dahua.NewDahuaDevice(models.DahuaDevice{
-		Name:     form.Name,
-		Address:  form.Address,
-		Username: form.Username,
-		Password: form.Password,
-		Location: location.Location,
-		Feature:  dahua.FeatureFromStrings(form.Features),
-	})
+	address, err := url.Parse(form.Address)
+	if err != nil {
+		return err
+	}
 
 	err = dahua.CreateDevice(ctx, s.db, s.bus, repo.CreateDahuaDeviceParams{
-		Name:      create.Name,
-		Username:  create.Username,
-		Password:  create.Password,
-		Address:   create.Address,
-		Location:  types.NewLocation(create.Location),
-		Feature:   create.Feature,
-		CreatedAt: types.NewTime(create.CreatedAt),
-		UpdatedAt: types.NewTime(create.UpdatedAt),
+		Name:      form.Name,
+		Username:  form.Username,
+		Password:  form.Password,
+		Address:   types.NewURL(address),
+		Location:  types.NewLocation(location),
+		Feature:   dahua.FeatureFromStrings(form.Features),
+		CreatedAt: types.NewTime(time.Now()),
+		UpdatedAt: types.NewTime(time.Now()),
 	})
 	if err != nil {
 		return err
@@ -646,7 +643,11 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 	if err := api.ParseForm(c, &form); err != nil {
 		return err
 	}
-	location, err := core.NewLocation(form.Location)
+	location, err := time.LoadLocation(form.Location)
+	if err != nil {
+		return echo.ErrBadRequest.WithInternal(err)
+	}
+	address, err := url.Parse(form.Address)
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
@@ -654,30 +655,15 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 		form.Password = device.Password
 	}
 
-	update, err := dahua.UpdateDahuaDevice(models.DahuaDevice{
+	err = dahua.UpdateDevice(ctx, s.db, s.bus, device.Convert().DahuaDevice, repo.UpdateDahuaDeviceParams{
 		ID:        device.ID,
 		Name:      form.Name,
-		Address:   form.Address,
 		Username:  form.Username,
 		Password:  form.Password,
-		Location:  location.Location,
+		Address:   types.NewURL(address),
+		Location:  types.NewLocation(location),
 		Feature:   dahua.FeatureFromStrings(form.Features),
-		CreatedAt: device.CreatedAt.Time,
-		UpdatedAt: device.UpdatedAt.Time,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = dahua.UpdateDevice(ctx, s.db, s.bus, repo.UpdateDahuaDeviceParams{
-		ID:        update.ID,
-		Name:      form.Name,
-		Username:  update.Username,
-		Password:  update.Password,
-		Address:   update.Address,
-		Location:  types.NewLocation(update.Location),
-		Feature:   update.Feature,
-		UpdatedAt: types.NewTime(update.UpdatedAt),
+		UpdatedAt: types.NewTime(time.Now()),
 	})
 	if err != nil {
 		return err

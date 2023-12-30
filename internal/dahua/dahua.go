@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -27,19 +28,18 @@ import (
 )
 
 func ConnEqual(lhs, rhs models.DahuaConn) bool {
-	return lhs.Address == rhs.Address && lhs.Username == rhs.Username && lhs.Password == rhs.Password
+	return lhs.Address.String() == rhs.Address.String() && lhs.Username == rhs.Username && lhs.Password == rhs.Password
 }
 
 func NewClient(conn models.DahuaConn) Client {
-	address := NewHTTPAddress(conn.Address)
 	rpcHTTPClient := &http.Client{
 		Timeout: 5 * time.Second,
 	}
 	cgiHTTPClient := http.Client{}
 
-	clientRPC := dahuarpc.NewClient(rpcHTTPClient, address, conn.Username, conn.Password)
+	clientRPC := dahuarpc.NewClient(rpcHTTPClient, conn.Address, conn.Username, conn.Password)
 	clientPTZ := ptz.NewClient(clientRPC)
-	clientCGI := dahuacgi.NewClient(cgiHTTPClient, address, conn.Username, conn.Password)
+	clientCGI := dahuacgi.NewClient(cgiHTTPClient, conn.Address, conn.Username, conn.Password)
 
 	return Client{
 		Conn: conn,
@@ -337,7 +337,7 @@ func NewDahuaDevice(c models.DahuaDevice) (models.DahuaDevice, error) {
 	return c, validate.Validate.Struct(c)
 }
 
-func UpdateDahuaDevice(c models.DahuaDevice) (models.DahuaDevice, error) {
+func UpdateDahuaDevice(ctx context.Context, db repo.DB, c models.DahuaDevice, update repo.UpdateDahuaDeviceParams) (models.DahuaDevice, error) {
 	c.UpdatedAt = time.Now()
 	return c, validate.Validate.Struct(c)
 }
@@ -362,7 +362,7 @@ func GetDahuaStatus(device models.DahuaConn, rpcClient dahuarpc.Client) models.D
 	}
 	return models.DahuaStatus{
 		DeviceID:     device.ID,
-		Address:      device.Address,
+		Address:      device.Address.String(),
 		Username:     device.Username,
 		Location:     device.Location.String(),
 		Seed:         device.Seed,

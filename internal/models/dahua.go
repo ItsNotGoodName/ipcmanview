@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"net/url"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -34,7 +35,7 @@ type DahuaStatus struct {
 type DahuaDevice struct {
 	ID        int64
 	Name      string
-	Address   string `validate:"address"`
+	Address   *url.URL
 	Username  string
 	Password  string
 	Location  *time.Location
@@ -45,7 +46,7 @@ type DahuaDevice struct {
 
 type DahuaConn struct {
 	ID       int64
-	Address  string
+	Address  *url.URL
 	Username string
 	Password string
 	Location *time.Location

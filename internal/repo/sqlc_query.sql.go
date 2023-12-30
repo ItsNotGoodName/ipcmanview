@@ -316,7 +316,7 @@ WHERE id = ? LIMIT 1
 type GetDahuaDeviceRow struct {
 	ID        int64
 	Name      string
-	Address   string
+	Address   types.URL
 	Username  string
 	Password  string
 	Location  types.Location
@@ -452,7 +452,7 @@ LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 type ListDahuaDeviceRow struct {
 	ID        int64
 	Name      string
-	Address   string
+	Address   types.URL
 	Username  string
 	Password  string
 	Location  types.Location
@@ -505,7 +505,7 @@ WHERE id IN (/*SLICE:ids*/?)
 type ListDahuaDeviceByIDsRow struct {
 	ID        int64
 	Name      string
-	Address   string
+	Address   types.URL
 	Username  string
 	Password  string
 	Location  types.Location
@@ -897,7 +897,7 @@ RETURNING id
 
 type UpdateDahuaDeviceParams struct {
 	Name      string
-	Address   string
+	Address   types.URL
 	Username  string
 	Password  string
 	Location  types.Location
@@ -1164,7 +1164,7 @@ INSERT INTO dahua_devices (
 
 type createDahuaDeviceParams struct {
 	Name      string
-	Address   string
+	Address   types.URL
 	Username  string
 	Password  string
 	Location  types.Location
@@ -1299,7 +1299,7 @@ WHERE feature & ?1 = ?1
 type listDahuaDeviceByFeatureRow struct {
 	ID        int64
 	Name      string
-	Address   string
+	Address   types.URL
 	Username  string
 	Password  string
 	Location  types.Location

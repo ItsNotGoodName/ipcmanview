@@ -8,7 +8,7 @@ func (c ListDahuaDeviceByIDsRow) Convert() models.DahuaDeviceConn {
 	return models.DahuaDeviceConn{
 		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
-			Address:   c.Address,
+			Address:   c.Address.URL,
 			Username:  c.Username,
 			Password:  c.Password,
 			Location:  c.Location.Location,
@@ -19,7 +19,7 @@ func (c ListDahuaDeviceByIDsRow) Convert() models.DahuaDeviceConn {
 		},
 		DahuaConn: models.DahuaConn{
 			ID:       c.ID,
-			Address:  c.Address,
+			Address:  c.Address.URL,
 			Username: c.Username,
 			Password: c.Password,
 			Location: c.Location.Location,
@@ -33,7 +33,7 @@ func (c GetDahuaDeviceRow) Convert() models.DahuaDeviceConn {
 	return models.DahuaDeviceConn{
 		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
-			Address:   c.Address,
+			Address:   c.Address.URL,
 			Username:  c.Username,
 			Password:  c.Password,
 			Location:  c.Location.Location,
@@ -44,7 +44,7 @@ func (c GetDahuaDeviceRow) Convert() models.DahuaDeviceConn {
 		},
 		DahuaConn: models.DahuaConn{
 			ID:       c.ID,
-			Address:  c.Address,
+			Address:  c.Address.URL,
 			Username: c.Username,
 			Password: c.Password,
 			Location: c.Location.Location,
@@ -58,7 +58,7 @@ func (c ListDahuaDeviceRow) Convert() models.DahuaDeviceConn {
 	return models.DahuaDeviceConn{
 		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
-			Address:   c.Address,
+			Address:   c.Address.URL,
 			Username:  c.Username,
 			Password:  c.Password,
 			Location:  c.Location.Location,
@@ -69,7 +69,7 @@ func (c ListDahuaDeviceRow) Convert() models.DahuaDeviceConn {
 		},
 		DahuaConn: models.DahuaConn{
 			ID:       c.ID,
-			Address:  c.Address,
+			Address:  c.Address.URL,
 			Username: c.Username,
 			Password: c.Password,
 			Location: c.Location.Location,
@@ -83,7 +83,7 @@ func (c ListDahuaDeviceByFeatureRow) Convert() models.DahuaDeviceConn {
 	return models.DahuaDeviceConn{
 		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
-			Address:   c.Address,
+			Address:   c.Address.URL,
 			Username:  c.Username,
 			Password:  c.Password,
 			Location:  c.Location.Location,
@@ -94,7 +94,7 @@ func (c ListDahuaDeviceByFeatureRow) Convert() models.DahuaDeviceConn {
 		},
 		DahuaConn: models.DahuaConn{
 			ID:       c.ID,
-			Address:  c.Address,
+			Address:  c.Address.URL,
 			Username: c.Username,
 			Password: c.Password,
 			Location: c.Location.Location,

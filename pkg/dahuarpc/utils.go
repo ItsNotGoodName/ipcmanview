@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -98,16 +99,16 @@ func (s Integer) Integer() int64 {
 	return int64(s)
 }
 
-func URL(httpAddress string) string {
-	return fmt.Sprintf("%s/RPC2", httpAddress)
+func URL(u *url.URL) string {
+	return fmt.Sprintf("%s://%s/RPC2", u.Scheme, u.Hostname())
 }
 
-func LoginURL(httpAddress string) string {
-	return fmt.Sprintf("%s/RPC2_Login", httpAddress)
+func LoginURL(u *url.URL) string {
+	return fmt.Sprintf("%s://%s/RPC2_Login", u.Scheme, u.Hostname())
 }
 
-func LoadFileURL(httpAddress, path string) string {
-	return fmt.Sprintf("%s/RPC_Loadfile%s", httpAddress, path)
+func LoadFileURL(u *url.URL, path string) string {
+	return fmt.Sprintf("%s://%s/RPC_Loadfile%s", u.Scheme, u.Hostname(), path)
 }
 
 func Cookie(session string) string {
