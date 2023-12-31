@@ -1,16 +1,5 @@
 package core
 
-// func NewLocation(location string) (types.Location, error) {
-// 	loc, err := time.LoadLocation(location)
-// 	if err != nil {
-// 		return types.Location{}, err
-// 	}
-//
-// 	return types.Location{
-// 		Location: loc,
-// 	}, nil
-// }
-
 var Locations []string = []string{
 	"Local",
 	"Africa/Abidjan",

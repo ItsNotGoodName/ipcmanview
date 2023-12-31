@@ -40,7 +40,11 @@ type Bus struct {
 func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 {{- range .Events }}
 	b.On{{ . }}(func(ctx context.Context, event {{ $.EventPackage }}{{ . }}) error {
-		return pub.Publish(ctx, event)
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
 	})
 {{- end }}
 	return b
@@ -92,6 +96,7 @@ func main() {
 		Package: "core",
 		Imports: []string{
 			"context",
+			"errors",
 			"github.com/ItsNotGoodName/ipcmanview/internal/models",
 			"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub",
 			"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext",

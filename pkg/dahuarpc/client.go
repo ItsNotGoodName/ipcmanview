@@ -183,6 +183,16 @@ func (c Client) Close(ctx context.Context) error {
 	}
 	c.client.state = StateClosed
 	c.client.Unlock()
+
+	if err == nil {
+		return nil
+	}
+
+	var respErr *ResponseError
+	if errors.As(err, &respErr) && respErr.Type == ErrorTypeInvalidSession {
+		return nil
+	}
+
 	return err
 }
 

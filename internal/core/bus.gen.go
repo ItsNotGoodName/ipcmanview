@@ -3,6 +3,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
@@ -35,28 +36,60 @@ type Bus struct {
 
 func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 	b.OnEventDahuaDeviceCreated(func(ctx context.Context, event models.EventDahuaDeviceCreated) error {
-		return pub.Publish(ctx, event)
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
 	})
 	b.OnEventDahuaDeviceUpdated(func(ctx context.Context, event models.EventDahuaDeviceUpdated) error {
-		return pub.Publish(ctx, event)
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
 	})
 	b.OnEventDahuaDeviceDeleted(func(ctx context.Context, event models.EventDahuaDeviceDeleted) error {
-		return pub.Publish(ctx, event)
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
 	})
 	b.OnEventDahuaEvent(func(ctx context.Context, event models.EventDahuaEvent) error {
-		return pub.Publish(ctx, event)
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
 	})
 	b.OnEventDahuaEventWorkerConnecting(func(ctx context.Context, event models.EventDahuaEventWorkerConnecting) error {
-		return pub.Publish(ctx, event)
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
 	})
 	b.OnEventDahuaEventWorkerConnect(func(ctx context.Context, event models.EventDahuaEventWorkerConnect) error {
-		return pub.Publish(ctx, event)
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
 	})
 	b.OnEventDahuaEventWorkerDisconnect(func(ctx context.Context, event models.EventDahuaEventWorkerDisconnect) error {
-		return pub.Publish(ctx, event)
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
 	})
 	b.OnEventDahuaCoaxialStatus(func(ctx context.Context, event models.EventDahuaCoaxialStatus) error {
-		return pub.Publish(ctx, event)
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
 	})
 	return b
 }
