@@ -13,8 +13,9 @@ type EventDahuaDeviceDeleted struct {
 }
 
 type EventDahuaEvent struct {
-	Event     DahuaEvent
-	EventRule DahuaEventRule
+	DeviceName string
+	Event      DahuaEvent
+	EventRule  DahuaEventRule
 }
 
 type EventDahuaEventWorkerConnecting struct {

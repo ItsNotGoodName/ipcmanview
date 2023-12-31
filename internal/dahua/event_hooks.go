@@ -74,6 +74,12 @@ func (e DefaultEventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 		return
 	}
 
+	deviceName, err := e.db.GetDahuaDeviceName(ctx, event.DeviceID)
+	if err != nil && !repo.IsNotFound(err) {
+		e.logErr(err)
+		return
+	}
+
 	if !eventRule.IgnoreDB {
 		id, err := e.db.CreateDahuaEvent(ctx, repo.CreateDahuaEventParams{
 			DeviceID:  event.DeviceID,
@@ -91,7 +97,8 @@ func (e DefaultEventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 	}
 
 	e.bus.EventDahuaEvent(models.EventDahuaEvent{
-		Event:     event,
-		EventRule: eventRule,
+		DeviceName: deviceName,
+		Event:      event,
+		EventRule:  eventRule,
 	})
 }

@@ -14,6 +14,9 @@ SET name = ?, address = ?, username = ?, password = ?, location = ?, feature = ?
 WHERE id = ?
 RETURNING id;
 
+-- name: GetDahuaDeviceName :one
+SELECT name FROM dahua_devices WHERE id = ?; 
+
 -- name: GetDahuaDevice :one
 SELECT dahua_devices.*, coalesce(seed, id) FROM dahua_devices 
 LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id

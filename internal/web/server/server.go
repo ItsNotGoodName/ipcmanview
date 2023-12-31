@@ -338,8 +338,16 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 			continue
 		}
 
+		type Event struct {
+			DeviceName string
+			models.DahuaEvent
+		}
+
 		if err := c.Echo().Renderer.Render(buf, "dahua-events-live", view.Block{Name: "event-row", Data: view.Data{
-			"Event":  evt.Event,
+			"Event": Event{
+				DeviceName: evt.DeviceName,
+				DahuaEvent: evt.Event,
+			},
 			"Params": params,
 		}}, c); err != nil {
 			return err

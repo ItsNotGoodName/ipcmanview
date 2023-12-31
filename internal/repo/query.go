@@ -104,7 +104,12 @@ type ListDahuaEventParams struct {
 
 type ListDahuaEventResult struct {
 	pagination.PageResult
-	Data []DahuaEvent
+	Data []ListDahuaEvent
+}
+
+type ListDahuaEvent struct {
+	DeviceName string
+	DahuaEvent
 }
 
 func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (ListDahuaEventResult, error) {
@@ -136,14 +141,15 @@ func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (List
 		order = "created_at ASC"
 	}
 
-	var res []DahuaEvent
+	var res []ListDahuaEvent
 	err := ssq.Query(ctx, db, &res, sq.
-		Select("*").
-		From("dahua_events").
+		Select("e.*, d.name as device_name").
+		From("dahua_events AS e").
 		Where(where).
 		OrderBy(order).
 		Limit(uint64(arg.Page.Limit())).
-		Offset(uint64(arg.Page.Offset())))
+		Offset(uint64(arg.Page.Offset())).
+		LeftJoin("dahua_devices AS d ON d.id = e.device_id"))
 	if err != nil {
 		return ListDahuaEventResult{}, err
 	}
