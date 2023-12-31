@@ -2,6 +2,7 @@ package dahua
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -18,7 +19,8 @@ func ScanLockStaleTime() types.Time {
 	return types.NewTime(time.Now().Add(-scanLockStale))
 }
 
-func ScanLockCreate(ctx context.Context, db repo.DB, deviceID int64) error {
+// ScanLockCreateTry only tries once to create a lock.
+func ScanLockCreateTry(ctx context.Context, db repo.DB, deviceID int64) error {
 	err := db.DeleteDahuaFileScanLockByAge(ctx, ScanLockStaleTime())
 	if err != nil {
 		return err
@@ -33,6 +35,36 @@ func ScanLockCreate(ctx context.Context, db repo.DB, deviceID int64) error {
 	}
 
 	return nil
+}
+
+// ScanLockCreate keeps trying to create a lock.
+func ScanLockCreate(ctx context.Context, db repo.DB, deviceID int64) error {
+	err := ScanLockCreateTry(ctx, db, deviceID)
+	if err == nil {
+		return nil
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return err
+	}
+
+	t := time.NewTicker(scanLockHeartbeat)
+	defer t.Stop()
+
+	for {
+		err := ScanLockCreateTry(ctx, db, deviceID)
+		if err == nil {
+			return nil
+		}
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-t.C:
+		}
+	}
 }
 
 // ScanLockHeartbeat keeps the lock active until context is canceled or the cancel function is called.

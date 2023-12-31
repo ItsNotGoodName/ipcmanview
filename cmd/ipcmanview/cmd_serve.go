@@ -71,7 +71,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	dahuaEventHooks := dahua.NewDefaultEventHooks(bus, db)
 	super.Add(dahuaEventHooks)
 
-	dahuaWorkerStore := dahua.NewWorkerStore(super, dahua.DefaultWorkerBuilder(dahuaEventHooks, bus, dahuaStore, db)).Register(bus)
+	dahuaWorkerStore := dahua.NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahuaEventHooks)).Register(bus)
 	if err := dahuaWorkerStore.Bootstrap(ctx, db, dahuaStore); err != nil {
 		return err
 	}
@@ -122,14 +122,14 @@ func (c *CmdServe) Run(ctx *Context) error {
 				}
 				client := dahuaStore.Client(ctx, dbDevice.Convert().DahuaConn)
 
-				err = dahua.ScanLockCreate(ctx, db, client.Conn.ID)
+				err = dahua.ScanLockCreateTry(ctx, db, client.Conn.ID)
 				if err != nil {
 					return err
 				}
 				cancel := dahua.ScanLockHeartbeat(ctx, db, client.Conn.ID)
 				defer cancel()
 
-				return dahua.Scan(ctx, db, client.RPC, client.Conn, dahua.ScanTypeQuick)
+				return dahua.Scan(ctx, db, client.RPC, client.Conn, models.DahuaScanTypeQuick)
 			}()
 
 			return nil

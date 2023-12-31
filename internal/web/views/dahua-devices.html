@@ -213,7 +213,9 @@
                   </th>
                   <th>Device ID</th>
                   <th>Files</th>
-                  <th>Percent</th>
+                  <th>Scan</th>
+                  <th>Scan Percent</th>
+                  <th>Scan Type</th>
                   <th>Quick Cursor</th>
                   <th>Full Cursor</th>
                   <th>Full Epoch</th>
@@ -249,7 +251,9 @@
                       </a>
                     </th>
                     <td>{{ .Files }}</td>
-                    <td>{{ round .Percent 2 }}%</td>
+                    <td>{{ .Scan }}</td>
+                    <td>{{ round .ScanPercent 2 }}%</td>
+                    <td>{{ .ScanType }}</td>
                     <td>{{ SLFormatDate .QuickCursor }}</td>
                     <td>{{ SLFormatDate .FullCursor }}</td>
                     <td>{{ SLFormatDate .FullEpoch }}</td>

@@ -34,3 +34,5 @@ sql:
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.Storage"
           - column: "dahua_devices.address"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.URL"
+          - column: "dahua_file_cursors.scan_type"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.DahuaScanType"

@@ -12,14 +12,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
 )
 
-type ScanType string
-
-var (
-	ScanTypeFull    ScanType = "full"
-	ScanTypeQuick   ScanType = "quick"
-	ScanTypeReverse ScanType = "reverse"
-)
-
 const scanVolatileDuration = 8 * time.Hour
 
 func NewFileCursor() repo.CreateDahuaFileCursorParams {
@@ -29,18 +21,19 @@ func NewFileCursor() repo.CreateDahuaFileCursorParams {
 		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
 		FullCursor:  types.NewTime(now),
 		FullEpoch:   types.NewTime(ScannerEpoch),
-		Percent:     0,
+		Scan:        false,
+		ScanPercent: 0,
 	}
 }
 
-func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod, scanType ScanType) repo.DahuaFileCursor {
+func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod, scanType models.DahuaScanType) repo.DahuaFileCursor {
 	switch scanType {
-	case ScanTypeFull:
+	case models.DahuaScanTypeFull:
 		// Update FullCursor
 		if scanPeriod.Start.Before(fileCursor.FullCursor.Time) {
 			fileCursor.FullCursor = types.NewTime(scanPeriod.Start)
 		}
-	case ScanTypeQuick:
+	case models.DahuaScanTypeQuick:
 		// Update QuickCursor
 		quickCursor := time.Now().Add(-scanVolatileDuration)
 		if scanPeriod.End.Before(quickCursor) {
@@ -48,7 +41,7 @@ func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod,
 		} else {
 			fileCursor.QuickCursor = types.NewTime(quickCursor)
 		}
-	case ScanTypeReverse:
+	case models.DahuaScanTypeReverse:
 	default:
 		panic("unknown type")
 	}
@@ -56,19 +49,19 @@ func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod,
 	return fileCursor
 }
 
-func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCursor, scanType ScanType) (models.TimeRange, error) {
+func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCursor, scanType models.DahuaScanType) (models.TimeRange, error) {
 	switch scanType {
-	case ScanTypeFull:
+	case models.DahuaScanTypeFull:
 		return models.TimeRange{
 			Start: fileCursor.FullEpoch.Time,
 			End:   fileCursor.FullCursor.Time,
 		}, nil
-	case ScanTypeQuick:
+	case models.DahuaScanTypeQuick:
 		return models.TimeRange{
 			Start: fileCursor.QuickCursor.Time,
 			End:   time.Now(),
 		}, nil
-	case ScanTypeReverse:
+	case models.DahuaScanTypeReverse:
 		startTime, err := db.GetOldestDahuaFileStartTime(ctx, fileCursor.DeviceID)
 		if err != nil {
 			return models.TimeRange{}, nil
@@ -94,16 +87,18 @@ func ScanReset(ctx context.Context, db repo.DB, id int64) error {
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
 		DeviceID:    id,
-		Percent:     0,
+		ScanPercent: 0,
+		Scan:        false,
+		ScanType:    models.DahuaScanTypeUnkown,
 	})
 	return err
 }
 
 // Scan cannot be called concurrently for the same device.
-func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device models.DahuaConn, scanType ScanType) error {
-	fileCursor, err := db.UpdateDahuaFileCursorPercent(ctx, repo.UpdateDahuaFileCursorPercentParams{
-		DeviceID: device.ID,
-		Percent:  0,
+func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device models.DahuaConn, scanType models.DahuaScanType) error {
+	fileCursor, err := db.UpdateDahuaFileCursorScanPercent(ctx, repo.UpdateDahuaFileCursorScanPercentParams{
+		DeviceID:    device.ID,
+		ScanPercent: 0,
 	})
 	if err != nil {
 		return err
@@ -117,6 +112,19 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 
 	updated_at := types.NewTime(time.Now())
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
+
+	fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
+		QuickCursor: fileCursor.QuickCursor,
+		FullCursor:  fileCursor.FullCursor,
+		FullEpoch:   fileCursor.FullEpoch,
+		DeviceID:    device.ID,
+		ScanPercent: iterator.Percent(),
+		Scan:        true,
+		ScanType:    scanType,
+	})
+	if err != nil {
+		return err
+	}
 
 	for scannerPeriod, ok := iterator.Next(); ok; scannerPeriod, ok = iterator.Next() {
 		cancel, errC := Scanner(ctx, rpcClient, scannerPeriod, device.Location, mediaFilesC)
@@ -185,7 +193,9 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 			FullCursor:  fileCursor.FullCursor,
 			FullEpoch:   fileCursor.FullEpoch,
 			DeviceID:    device.ID,
-			Percent:     iterator.Percent(),
+			ScanPercent: iterator.Percent(),
+			Scan:        true,
+			ScanType:    scanType,
 		})
 		if err != nil {
 			return err
@@ -196,7 +206,9 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
 		DeviceID:    device.ID,
-		Percent:     iterator.Percent(),
+		ScanPercent: iterator.Percent(),
+		Scan:        false,
+		ScanType:    scanType,
 	})
 	if err != nil {
 		return err

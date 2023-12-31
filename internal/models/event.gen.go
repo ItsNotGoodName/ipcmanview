@@ -33,3 +33,7 @@ func (e EventDahuaCoaxialStatus) EventTopic() string {
 	return "EventDahuaCoaxialStatus"
 }
 
+func (e EventDahuaQuickScanQueue) EventTopic() string {
+	return "EventDahuaQuickScanQueue"
+}
+

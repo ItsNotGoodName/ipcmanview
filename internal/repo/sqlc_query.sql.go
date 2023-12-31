@@ -705,7 +705,7 @@ func (q *Queries) ListDahuaEventWorkerState(ctx context.Context) ([]ListDahuaEve
 
 const listDahuaFileCursor = `-- name: ListDahuaFileCursor :many
 SELECT 
-  c.device_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete, c.percent,
+  c.device_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete, c.scan, c.scan_percent, c.scan_type,
   count(f.device_id) AS files,
   coalesce(l.touched_at > ?, false) AS locked
 FROM dahua_file_cursors AS c
@@ -720,7 +720,9 @@ type ListDahuaFileCursorRow struct {
 	FullCursor   types.Time
 	FullEpoch    types.Time
 	FullComplete bool
-	Percent      float64
+	Scan         bool
+	ScanPercent  float64
+	ScanType     models.DahuaScanType
 	Files        int64
 	Locked       interface{}
 }
@@ -740,7 +742,9 @@ func (q *Queries) ListDahuaFileCursor(ctx context.Context, touchedAt types.Time)
 			&i.FullCursor,
 			&i.FullEpoch,
 			&i.FullComplete,
-			&i.Percent,
+			&i.Scan,
+			&i.ScanPercent,
+			&i.ScanType,
 			&i.Files,
 			&i.Locked,
 		); err != nil {
@@ -853,6 +857,47 @@ func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) (
 		return nil, err
 	}
 	return items, nil
+}
+
+const normalizeDahuaFileCursor = `-- name: NormalizeDahuaFileCursor :exec
+INSERT OR IGNORE INTO dahua_file_cursors (
+  device_id,
+  quick_cursor,
+  full_cursor,
+  full_epoch,
+  scan,
+  scan_percent,
+  scan_type
+) SELECT 
+  id,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ? 
+FROM dahua_devices
+`
+
+type NormalizeDahuaFileCursorParams struct {
+	QuickCursor types.Time
+	FullCursor  types.Time
+	FullEpoch   types.Time
+	Scan        bool
+	ScanPercent float64
+	ScanType    models.DahuaScanType
+}
+
+func (q *Queries) NormalizeDahuaFileCursor(ctx context.Context, arg NormalizeDahuaFileCursorParams) error {
+	_, err := q.db.ExecContext(ctx, normalizeDahuaFileCursor,
+		arg.QuickCursor,
+		arg.FullCursor,
+		arg.FullEpoch,
+		arg.Scan,
+		arg.ScanPercent,
+		arg.ScanType,
+	)
+	return err
 }
 
 const touchDahuaFileScanLock = `-- name: TouchDahuaFileScanLock :exec
@@ -1047,16 +1092,20 @@ SET
   quick_cursor = ?,
   full_cursor = ?,
   full_epoch = ?,
-  percent = ?
+  scan = ?,
+  scan_percent = ?,
+  scan_type = ?
 WHERE device_id = ?
-RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, percent
+RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, scan, scan_percent, scan_type
 `
 
 type UpdateDahuaFileCursorParams struct {
 	QuickCursor types.Time
 	FullCursor  types.Time
 	FullEpoch   types.Time
-	Percent     float64
+	Scan        bool
+	ScanPercent float64
+	ScanType    models.DahuaScanType
 	DeviceID    int64
 }
 
@@ -1065,7 +1114,9 @@ func (q *Queries) UpdateDahuaFileCursor(ctx context.Context, arg UpdateDahuaFile
 		arg.QuickCursor,
 		arg.FullCursor,
 		arg.FullEpoch,
-		arg.Percent,
+		arg.Scan,
+		arg.ScanPercent,
+		arg.ScanType,
 		arg.DeviceID,
 	)
 	var i DahuaFileCursor
@@ -1075,26 +1126,28 @@ func (q *Queries) UpdateDahuaFileCursor(ctx context.Context, arg UpdateDahuaFile
 		&i.FullCursor,
 		&i.FullEpoch,
 		&i.FullComplete,
-		&i.Percent,
+		&i.Scan,
+		&i.ScanPercent,
+		&i.ScanType,
 	)
 	return i, err
 }
 
-const updateDahuaFileCursorPercent = `-- name: UpdateDahuaFileCursorPercent :one
+const updateDahuaFileCursorScanPercent = `-- name: UpdateDahuaFileCursorScanPercent :one
 UPDATE dahua_file_cursors 
 SET
-  percent = ?
+  scan_percent = ?
 WHERE device_id = ?
-RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, percent
+RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, scan, scan_percent, scan_type
 `
 
-type UpdateDahuaFileCursorPercentParams struct {
-	Percent  float64
-	DeviceID int64
+type UpdateDahuaFileCursorScanPercentParams struct {
+	ScanPercent float64
+	DeviceID    int64
 }
 
-func (q *Queries) UpdateDahuaFileCursorPercent(ctx context.Context, arg UpdateDahuaFileCursorPercentParams) (DahuaFileCursor, error) {
-	row := q.db.QueryRowContext(ctx, updateDahuaFileCursorPercent, arg.Percent, arg.DeviceID)
+func (q *Queries) UpdateDahuaFileCursorScanPercent(ctx context.Context, arg UpdateDahuaFileCursorScanPercentParams) (DahuaFileCursor, error) {
+	row := q.db.QueryRowContext(ctx, updateDahuaFileCursorScanPercent, arg.ScanPercent, arg.DeviceID)
 	var i DahuaFileCursor
 	err := row.Scan(
 		&i.DeviceID,
@@ -1102,7 +1155,9 @@ func (q *Queries) UpdateDahuaFileCursorPercent(ctx context.Context, arg UpdateDa
 		&i.FullCursor,
 		&i.FullEpoch,
 		&i.FullComplete,
-		&i.Percent,
+		&i.Scan,
+		&i.ScanPercent,
+		&i.ScanType,
 	)
 	return i, err
 }
@@ -1209,9 +1264,11 @@ INSERT INTO dahua_file_cursors (
   quick_cursor,
   full_cursor,
   full_epoch,
-  percent
+  scan,
+  scan_percent,
+  scan_type
 ) VALUES (
-  ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?
 )
 `
 
@@ -1220,7 +1277,9 @@ type createDahuaFileCursorParams struct {
 	QuickCursor types.Time
 	FullCursor  types.Time
 	FullEpoch   types.Time
-	Percent     float64
+	Scan        bool
+	ScanPercent float64
+	ScanType    models.DahuaScanType
 }
 
 func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFileCursorParams) error {
@@ -1229,7 +1288,9 @@ func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFile
 		arg.QuickCursor,
 		arg.FullCursor,
 		arg.FullEpoch,
-		arg.Percent,
+		arg.Scan,
+		arg.ScanPercent,
+		arg.ScanType,
 	)
 	return err
 }

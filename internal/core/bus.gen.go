@@ -32,6 +32,7 @@ type Bus struct {
 	onEventDahuaEventWorkerConnect []func(ctx context.Context, event models.EventDahuaEventWorkerConnect) error
 	onEventDahuaEventWorkerDisconnect []func(ctx context.Context, event models.EventDahuaEventWorkerDisconnect) error
 	onEventDahuaCoaxialStatus []func(ctx context.Context, event models.EventDahuaCoaxialStatus) error
+	onEventDahuaQuickScanQueue []func(ctx context.Context, event models.EventDahuaQuickScanQueue) error
 }
 
 func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
@@ -91,6 +92,13 @@ func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 		}
 		return err
 	})
+	b.OnEventDahuaQuickScanQueue(func(ctx context.Context, event models.EventDahuaQuickScanQueue) error {
+		err := pub.Publish(ctx, event)
+		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+			return nil
+		}
+		return err
+	})
 	return b
 }
 
@@ -125,6 +133,10 @@ func (b *Bus) OnEventDahuaEventWorkerDisconnect(h func(ctx context.Context, even
 
 func (b *Bus) OnEventDahuaCoaxialStatus(h func(ctx context.Context, event models.EventDahuaCoaxialStatus) error) {
 	b.onEventDahuaCoaxialStatus = append(b.onEventDahuaCoaxialStatus, h)
+}
+
+func (b *Bus) OnEventDahuaQuickScanQueue(h func(ctx context.Context, event models.EventDahuaQuickScanQueue) error) {
+	b.onEventDahuaQuickScanQueue = append(b.onEventDahuaQuickScanQueue, h)
 }
 
 
@@ -173,6 +185,12 @@ func (b *Bus) EventDahuaEventWorkerDisconnect(event models.EventDahuaEventWorker
 
 func (b *Bus) EventDahuaCoaxialStatus(event models.EventDahuaCoaxialStatus) {
 	for _, v := range b.onEventDahuaCoaxialStatus {
+		busLogError(v(b.Context(), event))
+	}
+}
+
+func (b *Bus) EventDahuaQuickScanQueue(event models.EventDahuaQuickScanQueue) {
+	for _, v := range b.onEventDahuaQuickScanQueue {
 		busLogError(v(b.Context(), event))
 	}
 }

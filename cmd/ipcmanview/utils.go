@@ -45,6 +45,11 @@ func (c Shared) useDB(ctx *Context) (repo.DB, error) {
 		db = repo.NewDB(sqlite.NewDB(sqlDB))
 	}
 
+	err = migrations.Normalize(ctx, db)
+	if err != nil {
+		return repo.DB{}, nil
+	}
+
 	return db, nil
 }
 

@@ -109,7 +109,9 @@ type DahuaFileCursor struct {
 	FullCursor   types.Time
 	FullEpoch    types.Time
 	FullComplete bool
-	Percent      float64
+	Scan         bool
+	ScanPercent  float64
+	ScanType     models.DahuaScanType
 }
 
 type DahuaFileScanLock struct {

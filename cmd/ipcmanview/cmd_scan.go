@@ -5,6 +5,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	dahua1 "github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
 
 type CmdScan struct {
@@ -25,13 +26,13 @@ func (c *CmdScan) Run(ctx *Context) error {
 		return err
 	}
 
-	scanType := dahua.ScanTypeQuick
+	scanType := models.DahuaScanTypeQuick
 	if c.Full {
-		scanType = dahua.ScanTypeFull
+		scanType = models.DahuaScanTypeFull
 	}
 
 	for _, device := range devices {
-		err := dahua.ScanLockCreate(ctx, db, device.DahuaConn.ID)
+		err := dahua.ScanLockCreateTry(ctx, db, device.DahuaConn.ID)
 		if err != nil {
 			return err
 		}

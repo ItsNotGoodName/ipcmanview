@@ -192,3 +192,12 @@ type DahuaStream struct {
 	MediamtxPath string
 	EmbedURL     string
 }
+
+type DahuaScanType string
+
+var (
+	DahuaScanTypeUnkown  DahuaScanType = ""
+	DahuaScanTypeFull    DahuaScanType = "full"
+	DahuaScanTypeQuick   DahuaScanType = "quick"
+	DahuaScanTypeReverse DahuaScanType = "reverse"
+)

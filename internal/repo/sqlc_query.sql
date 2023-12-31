@@ -71,10 +71,29 @@ UPDATE dahua_file_scan_locks
 SET touched_at = ?
 WHERE device_id = ?;
 
--- name: UpdateDahuaFileCursorPercent :one
+-- name: NormalizeDahuaFileCursor :exec
+INSERT OR IGNORE INTO dahua_file_cursors (
+  device_id,
+  quick_cursor,
+  full_cursor,
+  full_epoch,
+  scan,
+  scan_percent,
+  scan_type
+) SELECT 
+  id,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ? 
+FROM dahua_devices;
+
+-- name: UpdateDahuaFileCursorScanPercent :one
 UPDATE dahua_file_cursors 
 SET
-  percent = ?
+  scan_percent = ?
 WHERE device_id = ?
 RETURNING *;
 
@@ -94,7 +113,9 @@ SET
   quick_cursor = ?,
   full_cursor = ?,
   full_epoch = ?,
-  percent = ?
+  scan = ?,
+  scan_percent = ?,
+  scan_type = ?
 WHERE device_id = ?
 RETURNING *;
 
@@ -104,9 +125,11 @@ INSERT INTO dahua_file_cursors (
   quick_cursor,
   full_cursor,
   full_epoch,
-  percent
+  scan,
+  scan_percent,
+  scan_type
 ) VALUES (
-  ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?
 );
 
 -- name: ListDahuaFileTypes :many

@@ -13,23 +13,15 @@ import (
 //go:embed sql/*.sql
 var migrations embed.FS
 
-//go:embed init.sql
-var initSQL string
-
-func Migrate(db *sql.DB) error {
+func Migrate(sqlDB *sql.DB) error {
 	goose.SetBaseFS(migrations)
 
 	if err := goose.SetDialect("sqlite3"); err != nil {
 		return err
 	}
 
-	if err := goose.Up(db, "sql"); err != nil {
+	if err := goose.Up(sqlDB, "sql"); err != nil {
 		return err
-	}
-
-	_, err := db.Exec(initSQL)
-	if err != nil {
-		return fmt.Errorf("failed to init database: %e", err)
 	}
 
 	return nil

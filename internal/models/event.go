@@ -34,3 +34,7 @@ type EventDahuaCoaxialStatus struct {
 	Channel       int
 	CoaxialStatus DahuaCoaxialStatus
 }
+
+type EventDahuaQuickScanQueue struct {
+	DeviceID int64
+}

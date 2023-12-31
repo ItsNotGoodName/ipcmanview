@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
-	"sync"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
@@ -190,40 +189,9 @@ func (s Server) DahuaEventsIDData(c echo.Context) error {
 }
 
 func (s Server) DahuaFilesPOST(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	scanType := dahua.ScanTypeQuick
-
-	dbDevices, err := s.db.ListDahuaDevice(ctx)
-	if err != nil {
-		return err
-	}
-
-	wg := sync.WaitGroup{}
-	for _, dbDevice := range dbDevices {
-		conn := s.dahuaStore.Client(ctx, dbDevice.Convert().DahuaConn)
-
-		if err := dahua.ScanLockCreate(ctx, s.db, dbDevice.ID); err != nil {
-			log.Err(err).Int64("device", dbDevice.ID).Msg("Device already locked")
-			continue
-		}
-
-		wg.Add(1)
-		go func(conn dahua.Client) {
-			ctx := context.Background()
-			cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Conn.ID)
-			defer cancel()
-			defer wg.Done()
-
-			err := dahua.Scan(ctx, s.db, conn.RPC, conn.Conn, scanType)
-			if err != nil {
-				log.Err(err).Msg("Failed to scan")
-			}
-		}(conn)
-	}
-
-	wg.Wait()
-
+	s.bus.EventDahuaQuickScanQueue(models.EventDahuaQuickScanQueue{
+		DeviceID: 0,
+	})
 	return s.DahuaFiles(c)
 }
 
@@ -541,7 +509,7 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 				continue
 			}
 
-			err := dahua.ScanLockCreate(ctx, s.db, v.DeviceID)
+			err := dahua.ScanLockCreateTry(ctx, s.db, v.DeviceID)
 			if err != nil {
 				return err
 			}
@@ -557,12 +525,22 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 				return err
 			}
 		}
-	case "Quick", "Full", "Reverse":
-		scanType := dahua.ScanTypeQuick
+	case "Quick":
+		for _, v := range form.FileCursors {
+			if !v.Selected {
+				continue
+			}
+
+			s.bus.EventDahuaQuickScanQueue(models.EventDahuaQuickScanQueue{
+				DeviceID: v.DeviceID,
+			})
+		}
+	case "Full", "Reverse":
+		scanType := models.DahuaScanTypeFull
 		if form.Action == "Full" {
-			scanType = dahua.ScanTypeFull
+			scanType = models.DahuaScanTypeFull
 		} else if form.Action == "Reverse" {
-			scanType = dahua.ScanTypeReverse
+			scanType = models.DahuaScanTypeReverse
 		}
 
 		for _, v := range form.FileCursors {
@@ -577,9 +555,9 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 				}
 				return err
 			}
-			conn := s.dahuaStore.Client(ctx, device.Convert().DahuaConn)
+			client := s.dahuaStore.Client(ctx, device.Convert().DahuaConn)
 
-			if err := dahua.ScanLockCreate(ctx, s.db, v.DeviceID); err != nil {
+			if err := dahua.ScanLockCreateTry(ctx, s.db, v.DeviceID); err != nil {
 				return err
 			}
 			go func(conn dahua.Client) {
@@ -591,7 +569,7 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 				if err != nil {
 					log.Err(err).Msg("Failed to scan")
 				}
-			}(conn)
+			}(client)
 		}
 	}
 
