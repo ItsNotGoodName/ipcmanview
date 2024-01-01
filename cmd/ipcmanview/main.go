@@ -7,6 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/alecthomas/kong"
+	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -27,6 +28,11 @@ var mainCmd struct {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal().Err(err).Send()
+	}
+
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
@@ -34,7 +40,7 @@ func main() {
 
 	initLogger(mainCmd.Debug)
 
-	err := ktx.Run(&Context{
+	err = ktx.Run(&Context{
 		Context: ctx,
 		Debug:   mainCmd.Debug,
 	})

@@ -8,32 +8,29 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 )
 
 func NewDefaultEventHooks(bus *core.Bus, db repo.DB) DefaultEventHooks {
 	return DefaultEventHooks{
-		ServiceContext: sutureext.NewServiceContext("dahua.DefailtEventHooks"),
-		bus:            bus,
-		db:             db,
+		bus: bus,
+		db:  db,
 	}
 }
 
 type DefaultEventHooks struct {
-	sutureext.ServiceContext
 	bus *core.Bus
 	db  repo.DB
 }
 
 func (e DefaultEventHooks) logErr(err error) {
 	if err != nil {
-		log.Err(err).Str("service", e.String()).Send()
+		log.Err(err).Str("service", "dahua.DefailtEventHooks").Send()
 	}
 }
 
 func (e DefaultEventHooks) Connecting(ctx context.Context, deviceID int64) {
-	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
+	e.logErr(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnecting,
 		CreatedAt: types.NewTime(time.Now()),
@@ -44,7 +41,7 @@ func (e DefaultEventHooks) Connecting(ctx context.Context, deviceID int64) {
 }
 
 func (e DefaultEventHooks) Connect(ctx context.Context, deviceID int64) {
-	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
+	e.logErr(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnected,
 		CreatedAt: types.NewTime(time.Now()),
@@ -54,8 +51,8 @@ func (e DefaultEventHooks) Connect(ctx context.Context, deviceID int64) {
 	})
 }
 
-func (e DefaultEventHooks) Disconnect(deviceID int64, err error) {
-	e.logErr(e.db.CreateDahuaEventWorkerState(e.Context(), repo.CreateDahuaEventWorkerStateParams{
+func (e DefaultEventHooks) Disconnect(ctx context.Context, deviceID int64, err error) {
+	e.logErr(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateDisconnected,
 		Error:     repo.ErrorToNullString(err),

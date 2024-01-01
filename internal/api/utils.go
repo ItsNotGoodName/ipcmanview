@@ -12,9 +12,9 @@ import (
 )
 
 func useDahuaConn(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, error) {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	id, err := ParamID(c)
 	if err != nil {
-		return dahua.Client{}, echo.ErrBadRequest.WithInternal(err)
+		return dahua.Client{}, err
 	}
 
 	ctx := c.Request().Context()

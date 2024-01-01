@@ -13,6 +13,7 @@ require (
 	github.com/gorilla/schema v1.2.1
 	github.com/icholy/digest v0.1.22
 	github.com/jlaffaye/ftp v0.2.0
+	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/nathan-osman/go-sunrise v1.1.0

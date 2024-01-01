@@ -14,7 +14,7 @@ type Config struct {
 	pathTemplate *template.Template
 }
 
-func NewConfig(embedAddress string, pathTemplate string) (Config, error) {
+func NewConfig(host, pathTemplate, streamProtocol string, webrtcPort, hlsPort int) (Config, error) {
 	var tmpl *template.Template
 	if pathTemplate != "" {
 		var err error
@@ -23,6 +23,17 @@ func NewConfig(embedAddress string, pathTemplate string) (Config, error) {
 			return Config{}, err
 		}
 	}
+
+	var embedAddress string
+	switch streamProtocol {
+	case "webrtc":
+		embedAddress = fmt.Sprintf("http://%s:%d", host, webrtcPort)
+	case "hls":
+		embedAddress = fmt.Sprintf("http://%s:%d", host, hlsPort)
+	default:
+		return Config{}, fmt.Errorf("invalid stream protocol: %s", streamProtocol)
+	}
+
 	return Config{
 		embedAddress: embedAddress,
 		pathTemplate: tmpl,

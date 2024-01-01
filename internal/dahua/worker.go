@@ -47,7 +47,7 @@ func DefaultWorkerFactory(bus *core.Bus, pub pubsub.Pub, db repo.DB, store *Stor
 type EventHooks interface {
 	Connecting(ctx context.Context, deviceID int64)
 	Connect(ctx context.Context, deviceID int64)
-	Disconnect(deviceID int64, err error)
+	Disconnect(ctx context.Context, deviceID int64, err error)
 	Event(ctx context.Context, event models.DahuaEvent)
 }
 
@@ -71,7 +71,7 @@ func (w EventWorker) String() string {
 func (w EventWorker) Serve(ctx context.Context) error {
 	w.hooks.Connecting(ctx, w.device.ID)
 	err := w.serve(ctx)
-	w.hooks.Disconnect(w.device.ID, err)
+	w.hooks.Disconnect(context.Background(), w.device.ID, err)
 	return sutureext.SanitizeError(ctx, err)
 }
 

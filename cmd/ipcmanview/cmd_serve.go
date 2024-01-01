@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -25,16 +26,19 @@ import (
 
 type CmdServe struct {
 	Shared
-	HTTPHost             string     `env:"HTTP_HOST" help:"HTTP host to listen on (e.g. \"127.0.0.1\")."`
-	HTTPPort             string     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
-	MQTTAddress          string     `env:"MQTT_ADDRESS" help:"MQTT server address (e.g. \"mqtt://example.com:1883\")."`
-	MQTTTopic            mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT server topic to publish messages."`
-	MQTTUsername         string     `env:"MQTT_USERNAME" help:"MQTT server username for authentication."`
-	MQTTPassword         string     `env:"MQTT_PASSWORD" help:"MQTT server password for authentication."`
-	MQTTHa               bool       `env:"MQTT_HA" help:"Enable Home Assistant MQTT discovery."`
-	MQTTHaTopic          mqtt.Topic `env:"MQTT_HA_TOPIC" default:"homeassistant" help:"Home Assistant MQTT discover topic."`
-	MediamtxWebAddress   string     `env:"MEDIAMTX_WEB_ADDRESS" help:"MediaMTX web server address for streaming (e.g. \"http://example.com:8889\" or \"http://example.com:8888\")."`
-	MediamtxPathTemplate string     `env:"MEDIAMTX_PATH_TEMPLATE" help:"Template for generating MediaMTX paths (e.g. \"ipcmanview_dahua_{{.DeviceID}}_{{.Channel}}_{{.Subtype}}\")."`
+	HTTPHost               string     `env:"HTTP_HOST" help:"HTTP host to listen on (e.g. \"127.0.0.1\")."`
+	HTTPPort               uint16     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
+	MQTTAddress            string     `env:"MQTT_ADDRESS" help:"MQTT server address (e.g. \"mqtt://192.168.1.20:1883\")."`
+	MQTTTopic              mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT server topic to publish messages."`
+	MQTTUsername           string     `env:"MQTT_USERNAME" help:"MQTT server username for authentication."`
+	MQTTPassword           string     `env:"MQTT_PASSWORD" help:"MQTT server password for authentication."`
+	MQTTHa                 bool       `env:"MQTT_HA" help:"Enable Home Assistant MQTT discovery."`
+	MQTTHaTopic            mqtt.Topic `env:"MQTT_HA_TOPIC" default:"homeassistant" help:"Home Assistant MQTT discover topic."`
+	MediamtxHost           string     `env:"MEDIAMTX_HOST" help:"MediaMTX host address (e.g. \"192.168.1.20\")."`
+	MediamtxWebrtcPort     uint16     `env:"MEDIAMTX_WEBRTC_PORT" default:"8889" help:"MediaMTX WebRTC port."`
+	MediamtxHLSPort        uint16     `env:"MEDIAMTX_HLS_PORT" default:"8888" help:"MediaMTX HLS port."`
+	MediamtxPathTemplate   string     `env:"MEDIAMTX_PATH_TEMPLATE" help:"Template for generating MediaMTX paths (e.g. \"ipcmanview_dahua_{{.DeviceID}}_{{.Channel}}_{{.Subtype}}\")."`
+	MediamtxStreamProtocol string     `env:"MEDIAMTX_STREAM_PROTOCOL" default:"webrtc" enum:"webrtc,hls" help:"MediaMTX stream protocol."`
 }
 
 func (c *CmdServe) Run(ctx *Context) error {
@@ -58,20 +62,21 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super.Add(bus)
 
 	// MediaMTX
-	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxWebAddress, c.MediamtxPathTemplate)
+	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))
 	if err != nil {
 		return err
 	}
 
 	// Dahua
 
-	dahuaStore := dahua.NewStore().Register(bus)
+	dahuaStore := dahua.
+		NewStore().
+		Register(bus)
 	super.Add(dahuaStore)
 
-	dahuaEventHooks := dahua.NewDefaultEventHooks(bus, db)
-	super.Add(dahuaEventHooks)
-
-	dahuaWorkerStore := dahua.NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahuaEventHooks)).Register(bus)
+	dahuaWorkerStore := dahua.
+		NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahua.NewDefaultEventHooks(bus, db))).
+		Register(bus)
 	if err := dahuaWorkerStore.Bootstrap(ctx, db, dahuaStore); err != nil {
 		return err
 	}
@@ -98,16 +103,20 @@ func (c *CmdServe) Run(ctx *Context) error {
 	}
 
 	// WEB
-	webserver.New(db, pub, bus, dahuaStore, mediamtxConfig).Register(httpRouter)
+	webserver.
+		New(db, pub, bus, dahuaStore, mediamtxConfig).
+		Register(httpRouter)
 
 	// API
-	api.NewServer(pub, db, dahuaStore, dahuaFileStore).Register(httpRouter)
+	api.
+		NewServer(pub, db, dahuaStore, dahuaFileStore).
+		Register(httpRouter)
 
 	// RPC
 	rpcserver.Register(httpRouter, rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}))
 
 	// HTTP server
-	httpServer := http.NewServer(httpRouter, c.HTTPHost+":"+c.HTTPPort)
+	httpServer := http.NewServer(httpRouter, fmt.Sprintf("%s:%d", c.HTTPHost, c.HTTPPort))
 	super.Add(httpServer)
 
 	// TODO: move this
