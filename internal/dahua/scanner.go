@@ -85,7 +85,7 @@ func (s *ScannerPeriodIterator) Cursor() time.Time {
 	return s.cursor
 }
 
-func Scanner(
+func ScannerScan(
 	ctx context.Context,
 	rpcClient dahuarpc.Conn,
 	scanPeriod ScannerPeriod,
@@ -96,14 +96,14 @@ func Scanner(
 	errC := make(chan error, 1)
 
 	go func() {
-		errC <- scanner(ctx, rpcClient, scanPeriod, location, resC)
+		errC <- scannerScan(ctx, rpcClient, scanPeriod, location, resC)
 		cancel()
 	}()
 
 	return cancel, errC
 }
 
-func scanner(
+func scannerScan(
 	ctx context.Context,
 	rpcClient dahuarpc.Conn,
 	scanPeriod ScannerPeriod,

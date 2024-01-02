@@ -130,7 +130,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 	}
 
 	for scannerPeriod, ok := iterator.Next(); ok; scannerPeriod, ok = iterator.Next() {
-		cancel, errC := Scanner(ctx, rpcClient, scannerPeriod, device.Location, mediaFilesC)
+		cancel, errC := ScannerScan(ctx, rpcClient, scannerPeriod, device.Location, mediaFilesC)
 		defer cancel()
 
 	inner:

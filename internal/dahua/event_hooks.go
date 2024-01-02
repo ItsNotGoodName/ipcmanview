@@ -23,14 +23,14 @@ type DefaultEventHooks struct {
 	db  repo.DB
 }
 
-func (e DefaultEventHooks) logErr(err error) {
+func (e DefaultEventHooks) logError(err error) {
 	if err != nil {
-		log.Err(err).Str("service", "dahua.DefailtEventHooks").Send()
+		log.Err(err).Str("service", "dahua.DefaultEventHooks").Send()
 	}
 }
 
 func (e DefaultEventHooks) Connecting(ctx context.Context, deviceID int64) {
-	e.logErr(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
+	e.logError(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnecting,
 		CreatedAt: types.NewTime(time.Now()),
@@ -41,7 +41,7 @@ func (e DefaultEventHooks) Connecting(ctx context.Context, deviceID int64) {
 }
 
 func (e DefaultEventHooks) Connect(ctx context.Context, deviceID int64) {
-	e.logErr(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
+	e.logError(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnected,
 		CreatedAt: types.NewTime(time.Now()),
@@ -52,7 +52,7 @@ func (e DefaultEventHooks) Connect(ctx context.Context, deviceID int64) {
 }
 
 func (e DefaultEventHooks) Disconnect(ctx context.Context, deviceID int64, err error) {
-	e.logErr(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
+	e.logError(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateDisconnected,
 		Error:     repo.ErrorToNullString(err),
@@ -67,13 +67,13 @@ func (e DefaultEventHooks) Disconnect(ctx context.Context, deviceID int64, err e
 func (e DefaultEventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 	eventRule, err := e.db.GetDahuaEventRuleByEvent(ctx, event)
 	if err != nil {
-		e.logErr(err)
+		e.logError(err)
 		return
 	}
 
 	deviceName, err := e.db.GetDahuaDeviceName(ctx, event.DeviceID)
 	if err != nil && !repo.IsNotFound(err) {
-		e.logErr(err)
+		e.logError(err)
 		return
 	}
 
@@ -87,7 +87,7 @@ func (e DefaultEventHooks) Event(ctx context.Context, event models.DahuaEvent) {
 			CreatedAt: types.NewTime(event.CreatedAt),
 		})
 		if err != nil {
-			e.logErr(err)
+			e.logError(err)
 			return
 		}
 		event.ID = id

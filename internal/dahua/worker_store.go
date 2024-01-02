@@ -13,6 +13,7 @@ import (
 
 type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error)
 
+// WorkerStore manages the lifecycle of workers to devices.
 type WorkerStore struct {
 	super   *suture.Supervisor
 	factory WorkerFactory

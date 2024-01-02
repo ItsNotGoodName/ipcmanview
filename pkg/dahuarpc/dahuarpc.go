@@ -81,6 +81,7 @@ func Send[T any](ctx context.Context, c Conn, rb RequestBuilder) (Response[T], e
 	return res, nil
 }
 
+// DoRaw executes the RPC request and returns the body.
 func DoRaw(ctx context.Context, rb RequestBuilder, httpClient *http.Client, urL string) (io.ReadCloser, error) {
 	b, err := json.Marshal(rb.Request)
 	if err != nil {

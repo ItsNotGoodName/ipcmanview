@@ -2,28 +2,11 @@ package dahua
 
 import (
 	"context"
-	"net/url"
-	"slices"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
-
-func toHTTPURL(u *url.URL) *url.URL {
-	if slices.Contains([]string{"http", "https"}, u.Scheme) {
-		return u
-	}
-
-	switch u.Port() {
-	case "443":
-		u.Scheme = "https"
-	default:
-		u.Scheme = "http"
-	}
-
-	return u
-}
 
 func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, args repo.CreateDahuaDeviceParams) error {
 	args.Address.URL = toHTTPURL(args.Address.URL)

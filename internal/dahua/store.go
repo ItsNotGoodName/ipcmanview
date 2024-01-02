@@ -28,6 +28,7 @@ func (c storeClient) Close(ctx context.Context) {
 	}
 }
 
+// Store creates and maintains clients to devices.
 type Store struct {
 	clientsMu sync.Mutex
 	clients   map[int64]storeClient
@@ -73,7 +74,7 @@ func (s *Store) Serve(ctx context.Context) error {
 
 			s.clientsMu.Lock()
 			for id, client := range s.clients {
-				if now.Sub(client.LastAccessed) > 5*time.Minute {
+				if now.Sub(client.LastAccessed) > 5*time.Minute && now.Sub(client.Client.RPC.State(ctx).LastRPC) > 5*time.Minute {
 					delete(s.clients, id)
 					clients = append(clients, client)
 				}

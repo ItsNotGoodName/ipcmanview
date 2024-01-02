@@ -351,7 +351,7 @@ func (s *Server) DahuaIDFiles(c echo.Context) error {
 	stream := useStream(c)
 
 	for period, ok := iterator.Next(); ok; period, ok = iterator.Next() {
-		cancel, errC := dahua.Scanner(ctx, conn.RPC, period, conn.Conn.Location, filesC)
+		cancel, errC := dahua.ScannerScan(ctx, conn.RPC, period, conn.Conn.Location, filesC)
 		defer cancel()
 
 	inner:

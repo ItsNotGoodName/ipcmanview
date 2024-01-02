@@ -126,7 +126,7 @@ func NewClient(httpClient *http.Client, u *url.URL, username, password string, c
 		rpcLoginURL: LoginURL(u),
 		onError:     cfg.onError,
 		doneC:       make(chan struct{}),
-		rpcCC:       make(chan chan rpc),
+		rpcCC:       make(chan chan clientRPC),
 		stateCC:     make(chan chan ClientState),
 		closeCC:     make(chan chan error),
 	}
@@ -146,7 +146,7 @@ type Client struct {
 
 	doneC chan struct{}
 
-	rpcCC   chan chan rpc
+	rpcCC   chan chan clientRPC
 	stateCC chan chan ClientState
 	closeCC chan chan error
 }
@@ -166,6 +166,9 @@ func (c Client) checkError(err error) {
 	}
 }
 
+// serve can only be called once and returns when context is canceled or client is closed.
+// It handles authenticating and keeping the connection alive.
+// If authentication eror occurs, then it will enter and errored state.
 func (c Client) serve(ctx context.Context) {
 	defer close(c.doneC)
 
@@ -241,10 +244,10 @@ func (c Client) serve(ctx context.Context) {
 				login()
 			}
 
-			var reply rpc
+			var reply clientRPC
 			switch state.State {
 			case StateLogin:
-				reply = rpc{
+				reply = clientRPC{
 					ID:      state.NextID(),
 					Session: state.Session,
 				}
@@ -255,7 +258,7 @@ func (c Client) serve(ctx context.Context) {
 				} else {
 					err = fmt.Errorf("invalid state: %s", state.State)
 				}
-				reply = rpc{
+				reply = clientRPC{
 					Error: err,
 				}
 			}
@@ -279,7 +282,7 @@ func (c Client) serve(ctx context.Context) {
 	}
 }
 
-type rpc struct {
+type clientRPC struct {
 	ID      int
 	Session string
 	Error   error
@@ -290,7 +293,7 @@ func (c Client) Do(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error
 		return nil, fmt.Errorf("login request not supported")
 	}
 
-	rpcC := make(chan rpc, 1)
+	rpcC := make(chan clientRPC, 1)
 
 	select {
 	case <-ctx.Done():
