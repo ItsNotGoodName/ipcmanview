@@ -11,7 +11,7 @@ import (
 
 type Conn interface {
 	dahuarpc.Conn
-	SessionRaw() string
+	Session() string
 }
 
 func newClient(session string) *client {
@@ -33,7 +33,7 @@ type client struct {
 func NewClient(conn Conn) Client {
 	return Client{
 		conn:   conn,
-		client: newClient(conn.SessionRaw()),
+		client: newClient(conn.Session()),
 	}
 }
 
@@ -52,7 +52,7 @@ func (c Client) Instance(ctx context.Context, channel int) (dahuarpc.Response[js
 
 func (c *Client) Seq(rb dahuarpc.RequestBuilder) dahuarpc.RequestBuilder {
 	c.client.Lock()
-	session := c.conn.SessionRaw()
+	session := c.conn.Session()
 	if session != c.client.Session {
 		c.client = newClient(session)
 	}

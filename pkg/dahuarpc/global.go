@@ -47,7 +47,14 @@ func GetCurrentTime(ctx context.Context, c Conn) (string, error) {
 func KeepAlive(ctx context.Context, c Conn) (int, error) {
 	res, err := Send[struct {
 		Timeout int `json:"timeout"`
-	}](ctx, c, New("global.keepAlive"))
+	}](ctx, c, New("global.keepAlive").
+		Params(struct {
+			Timeout int  `json:"timeout"`
+			Active  bool `json:"active"`
+		}{
+			Timeout: 300,
+			Active:  true,
+		}))
 	return res.Params.Timeout, err
 }
 

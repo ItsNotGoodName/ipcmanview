@@ -48,7 +48,8 @@ func New(method string) RequestBuilder {
 		Login: false,
 		Request: Request{
 			ID:      0,
-			Session: "", Method: method,
+			Session: "",
+			Method:  method,
 			Params:  nil,
 			options: make(map[string]any),
 		},

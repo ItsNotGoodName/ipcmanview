@@ -206,8 +206,8 @@ func GetStorage(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn) ([
 	return res, nil
 }
 
-func GetError(conn dahuarpc.Client) models.DahuaError {
-	err := conn.State().Error
+func GetError(ctx context.Context, conn dahuarpc.Client) models.DahuaError {
+	err := conn.State(ctx).Error
 	if err == nil {
 		return models.DahuaError{}
 	}
@@ -333,12 +333,8 @@ func GetSeed(c models.DahuaConn) int {
 	return int(c.ID)
 }
 
-func NewHTTPAddress(address string) string {
-	return "http://" + address
-}
-
-func GetDahuaStatus(device models.DahuaConn, rpcClient dahuarpc.Client) models.DahuaStatus {
-	rpcState := rpcClient.State()
+func GetDahuaStatus(ctx context.Context, device models.DahuaConn, rpcClient dahuarpc.Client) models.DahuaStatus {
+	rpcState := rpcClient.State(ctx)
 	var rpcError string
 	if rpcState.Error != nil {
 		rpcError = rpcState.Error.Error()

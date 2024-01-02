@@ -29,7 +29,7 @@ var mainCmd struct {
 
 func main() {
 	err := godotenv.Load()
-	if err != nil {
+	if err != nil && !os.IsNotExist(err) {
 		log.Fatal().Err(err).Send()
 	}
 

@@ -109,7 +109,7 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 
 	status := make([]models.DahuaStatus, 0, len(clients))
 	for _, conn := range clients {
-		status = append(status, dahua.GetDahuaStatus(conn.Conn, conn.RPC))
+		status = append(status, dahua.GetDahuaStatus(ctx, conn.Conn, conn.RPC))
 	}
 
 	details := make([]models.DahuaDetail, 0, len(dbDevices))

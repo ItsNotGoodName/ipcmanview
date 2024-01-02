@@ -1,276 +1,377 @@
 package dahuarpc
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 )
 
 var (
-	ErrClientRequestFailed = errors.New("client request failed")
-	ErrClientClosed        = errors.New("client closed")
+	ErrClientClosed = errors.New("client closed")
 )
 
-const (
-	StateLogout State = iota
-	StateLogin
-	StateError
-	StateClosed
-)
+type Config struct {
+	ctx     context.Context
+	onError func(err error)
+}
 
-type State int
+type ConfigFunc func(c *Config)
 
-func (s State) String() string {
-	switch s {
-	case StateLogin:
-		return "login"
-	case StateLogout:
-		return "logout"
-	case StateError:
-		return "error"
-	case StateClosed:
-		return "closed"
-	default:
-		return "unknown"
+func WithContext(ctx context.Context) ConfigFunc {
+	return func(c *Config) {
+		c.ctx = ctx
 	}
 }
 
-// func (s State) Is(states ...State) bool {
-// 	return slices.Contains(states, s)
-// }
-
-type client struct {
-	Client      *http.Client
-	Username    string
-	Password    string
-	RPCURL      string
-	RPCLoginURL string
-
-	sync.Mutex
-	clientState
-}
-
-type clientState struct {
-	lastID    int
-	state     State
-	session   string
-	error     error
-	lastLogin time.Time
-}
-
-func (c *client) DoRaw(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error) {
-	var url string
-	if rb.Login {
-		url = c.RPCLoginURL
-	} else {
-		url = c.RPCURL
-	}
-
-	b, err := json.Marshal(rb.Request)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(b))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := c.Client.Do(req)
-	if err != nil {
-		return nil, errors.Join(ErrClientRequestFailed, err)
-	}
-	return resp.Body, nil
-}
-
-func (c *client) sessionID(rb RequestBuilder) RequestBuilder {
-	c.lastID++
-	rb = rb.ID(c.lastID).Session(c.session)
-	if arrs, ok := rb.Request.Params.([]RequestBuilder); ok {
-		for i := range arrs {
-			c.lastID++
-			arrs[i] = arrs[i].ID(c.lastID).Session(c.session)
-		}
-	}
-	return rb
-}
-
-type clientLogin struct {
-	client *client
-}
-
-func (c clientLogin) Do(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error) {
-	return c.client.DoRaw(ctx, c.client.sessionID(rb))
-}
-
-func (c clientLogin) SetSession(session string) {
-	c.client.session = session
-}
-
-func NewClient(httpClient *http.Client, u *url.URL, username, password string) Client {
-	return Client{
-		client: &client{
-			Client:      httpClient,
-			Username:    username,
-			Password:    password,
-			RPCURL:      URL(u),
-			RPCLoginURL: LoginURL(u),
-			Mutex:       sync.Mutex{},
-			clientState: clientState{
-				lastID:    0,
-				state:     StateLogout,
-				session:   "",
-				error:     nil,
-				lastLogin: time.Time{},
-			},
-		},
+func WithOnError(fn func(err error)) ConfigFunc {
+	return func(c *Config) {
+		c.onError = fn
 	}
 }
 
-type Client struct {
-	client *client
-}
-
-func (c Client) clientLogin() clientLogin {
-	return clientLogin{
-		client: c.client,
+func clientLogError(address string) func(err error) {
+	return func(err error) {
+		slog.Error("", slog.String("address", address), slog.String("package", "dahuarpc"), slog.String("error", err.Error()))
 	}
-}
-
-func (c Client) SessionRaw() string {
-	c.client.Lock()
-	session := c.client.session
-	c.client.Unlock()
-	return session
-}
-
-func (c Client) Session(ctx context.Context) (string, error) {
-	c.client.Lock()
-	err := c.readyConnection(ctx)
-	if err != nil {
-		c.client.Unlock()
-		return "", err
-	}
-	session := c.client.session
-	c.client.Unlock()
-	return session, err
-}
-
-func (c Client) Do(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error) {
-	c.client.Lock()
-	err := c.readyConnection(ctx)
-	if err != nil {
-		c.client.Unlock()
-		return nil, err
-	}
-	rb = c.client.sessionID(rb)
-	c.client.Unlock()
-
-	return c.client.DoRaw(ctx, rb)
-}
-
-func (c Client) Close(ctx context.Context) error {
-	c.client.Lock()
-	var err error
-	if c.client.state == StateLogin {
-		_, err = Logout(ctx, c.clientLogin())
-	}
-	c.client.state = StateClosed
-	c.client.Unlock()
-
-	if err == nil {
-		return nil
-	}
-
-	var respErr *ResponseError
-	if errors.As(err, &respErr) && respErr.Type == ErrorTypeInvalidSession {
-		return nil
-	}
-
-	return err
-}
-
-func (c Client) readyConnection(ctx context.Context) error {
-	switch c.client.state {
-	case StateLogout:
-		if err := Login(ctx, c.clientLogin(), c.client.Username, c.client.Password); err != nil {
-			var e *LoginError
-			if errors.As(err, &e) {
-				c.client.clientState = clientState{
-					lastID:    0,
-					state:     StateError,
-					session:   "",
-					error:     err,
-					lastLogin: time.Time{},
-				}
-			}
-			return err
-		}
-		c.client.clientState = clientState{
-			lastID:    c.client.lastID,
-			state:     StateLogin,
-			session:   c.client.session,
-			error:     nil,
-			lastLogin: time.Now(),
-		}
-
-		return nil
-	case StateLogin:
-		if time.Now().Sub(c.client.lastLogin) > 60*time.Second {
-			if _, err := KeepAlive(ctx, c.clientLogin()); err != nil {
-				if !errors.Is(err, ErrClientRequestFailed) {
-					c.client.clientState = clientState{
-						lastID:    0,
-						state:     StateLogout,
-						session:   "",
-						error:     nil,
-						lastLogin: time.Time{},
-					}
-
-					return c.readyConnection(ctx)
-				}
-				return err
-			}
-			c.client.clientState = clientState{
-				lastID:    c.client.lastID,
-				state:     StateLogin,
-				session:   c.client.session,
-				error:     nil,
-				lastLogin: time.Now(),
-			}
-		}
-
-		return nil
-	case StateError:
-		return c.client.error
-	case StateClosed:
-		return ErrClientClosed
-	}
-
-	panic("unhandled connection state")
 }
 
 type ClientState struct {
 	State     State
+	LastID    int
+	Session   string
+	Error     error
+	LastLogin time.Time
+	LastRPC   time.Time
+}
+
+type clientState struct {
+	State     State
+	LastID    int
 	Session   string
 	Error     error
 	LastLogin time.Time
 }
 
-func (c Client) State() ClientState {
-	c.client.Lock()
-	data := ClientState{
-		State:     c.client.state,
-		Session:   c.client.session,
-		Error:     c.client.error,
-		LastLogin: c.client.lastLogin,
+func (s *clientState) NextID() int {
+	s.LastID++
+	return s.LastID
+}
+
+func (s *clientState) To(newState State, err ...error) {
+	switch newState {
+	case StateLogout:
+		s.State = StateLogout
+		s.LastID = 0
+		s.Session = ""
+		s.Error = nil
+	case StateLogin:
+		s.State = StateLogin
+		s.Error = nil
+		s.LastLogin = time.Now()
+	case StateError:
+		s.State = StateError
+		if len(err) > 0 {
+			s.Error = err[0]
+		} else {
+			s.Error = errors.New("error not set")
+		}
+	case StateClosed:
+		s.State = StateClosed
+	default:
+		panic(fmt.Sprintf("unknown state: %s", newState))
 	}
-	c.client.Unlock()
-	return data
+}
+
+func (s *clientState) SetSession(session string) {
+	s.Session = session
+}
+
+type clientLogin struct {
+	*clientState
+	client      *http.Client
+	rpcURL      string
+	rpcLoginURL string
+}
+
+func (s clientLogin) Do(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error) {
+	var urL string
+	if rb.Login {
+		urL = s.rpcLoginURL
+	} else {
+		urL = s.rpcURL
+	}
+	return DoRaw(ctx, rb.ID(s.NextID()).Session(s.Session), s.client, urL)
+}
+
+func NewClient(httpClient *http.Client, u *url.URL, username, password string, configFuncs ...ConfigFunc) Client {
+	cfg := Config{
+		ctx:     context.Background(),
+		onError: clientLogError(u.String()),
+	}
+
+	for _, fn := range configFuncs {
+		fn(&cfg)
+	}
+
+	c := Client{
+		client:      httpClient,
+		username:    username,
+		password:    password,
+		rpcURL:      URL(u),
+		rpcLoginURL: LoginURL(u),
+		onError:     cfg.onError,
+		doneC:       make(chan struct{}),
+		rpcCC:       make(chan chan rpc),
+		stateCC:     make(chan chan ClientState),
+		closeCC:     make(chan chan error),
+	}
+
+	go c.serve(cfg.ctx)
+
+	return c
+}
+
+type Client struct {
+	client      *http.Client
+	username    string
+	password    string
+	rpcURL      string
+	rpcLoginURL string
+	onError     func(err error)
+
+	doneC chan struct{}
+
+	rpcCC   chan chan rpc
+	stateCC chan chan ClientState
+	closeCC chan chan error
+}
+
+func (c Client) clientLogin(rpcState *clientState) clientLogin {
+	return clientLogin{
+		clientState: rpcState,
+		client:      c.client,
+		rpcURL:      c.rpcURL,
+		rpcLoginURL: c.rpcLoginURL,
+	}
+}
+
+func (c Client) checkError(err error) {
+	if err != nil {
+		c.onError(err)
+	}
+}
+
+func (c Client) serve(ctx context.Context) {
+	defer close(c.doneC)
+
+	state := clientState{
+		LastID:    0,
+		State:     StateLogout,
+		Session:   "",
+		Error:     nil,
+		LastLogin: time.Time{},
+	}
+
+	login := func() {
+		err := Login(ctx, c.clientLogin(&state), c.username, c.password)
+		if err != nil {
+			var e *LoginError
+			if errors.As(err, &e) {
+				state.To(StateError, err)
+			} else {
+				c.checkError(err)
+			}
+		} else {
+			state.To(StateLogin)
+		}
+	}
+
+	logout := func() error {
+		var closeErr error
+		if state.State == StateLogin {
+			_, err := Logout(ctx, c.clientLogin(&state))
+			var respErr *ResponseError
+			if errors.As(err, &respErr) && respErr.Type == ErrorTypeInvalidSession {
+				closeErr = nil
+			} else {
+				closeErr = err
+			}
+		}
+		state.To(StateClosed)
+		return closeErr
+	}
+
+	t := time.NewTicker(60 * time.Second)
+	lastRPC := time.Time{}
+
+	for {
+		select {
+		case <-ctx.Done():
+			// Logout
+			c.checkError(logout())
+			return
+		case <-t.C:
+			switch state.State {
+			case StateLogin:
+				// KeepAlive
+				if _, err := KeepAlive(ctx, c.clientLogin(&state)); err != nil {
+					if !errors.Is(err, ErrRequestFailed) {
+						state.To(StateLogout)
+						// Login
+						login()
+					} else {
+						c.checkError(err)
+					}
+				} else {
+					state.To(StateLogin)
+				}
+			case StateLogout:
+				// Login
+				login()
+			default:
+			}
+		case rpcC := <-c.rpcCC:
+			if state.State == StateLogout {
+				// Login
+				login()
+			}
+
+			var reply rpc
+			switch state.State {
+			case StateLogin:
+				reply = rpc{
+					ID:      state.NextID(),
+					Session: state.Session,
+				}
+			default:
+				var err error
+				if state.Error != nil {
+					err = state.Error
+				} else {
+					err = fmt.Errorf("invalid state: %s", state.State)
+				}
+				reply = rpc{
+					Error: err,
+				}
+			}
+			rpcC <- reply
+
+			lastRPC = time.Now()
+		case stateC := <-c.stateCC:
+			stateC <- ClientState{
+				State:     state.State,
+				LastID:    state.LastID,
+				Session:   state.Session,
+				Error:     state.Error,
+				LastLogin: state.LastLogin,
+				LastRPC:   lastRPC,
+			}
+		case closeC := <-c.closeCC:
+			// Logout
+			closeC <- logout()
+			return
+		}
+	}
+}
+
+type rpc struct {
+	ID      int
+	Session string
+	Error   error
+}
+
+func (c Client) Do(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error) {
+	if rb.Login {
+		return nil, fmt.Errorf("login request not supported")
+	}
+
+	rpcC := make(chan rpc, 1)
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-c.doneC:
+		return nil, ErrClientClosed
+	case c.rpcCC <- rpcC:
+	}
+
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-c.doneC:
+		return nil, ErrClientClosed
+	case rpc := <-rpcC:
+		if rpc.Error != nil {
+			return nil, rpc.Error
+		}
+		return DoRaw(ctx, rb.ID(rpc.ID).Session(rpc.Session), c.client, c.rpcURL)
+	}
+}
+
+func (c Client) close(ctx context.Context, wait bool) error {
+	errC := make(chan error, 1)
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-c.doneC:
+		return nil
+	case c.closeCC <- errC:
+	}
+
+	if wait {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-c.doneC:
+			return nil
+		case err := <-errC:
+			return err
+		}
+	}
+	return nil
+}
+
+// CloseNoWait closes the connection without waiting for it to fully close.
+func (c Client) CloseNoWait(ctx context.Context) error {
+	return c.close(ctx, false)
+}
+
+// Close fully closes the connection.
+func (c Client) Close(ctx context.Context) error {
+	return c.close(ctx, true)
+}
+
+func (c Client) State(ctx context.Context) ClientState {
+	stateC := make(chan ClientState, 1)
+	select {
+	case <-ctx.Done():
+		return ClientState{Error: ctx.Err()}
+	case <-c.doneC:
+		return ClientState{
+			State: StateClosed,
+			Error: ctx.Err(),
+		}
+	case c.stateCC <- stateC:
+	}
+
+	select {
+	case <-ctx.Done():
+		return ClientState{Error: ctx.Err()}
+	case <-c.doneC:
+		return ClientState{
+			State: StateClosed,
+			Error: ctx.Err(),
+		}
+	case state := <-stateC:
+		return state
+	}
+}
+
+func (c Client) Session() string {
+	return c.State(context.Background()).Session
 }

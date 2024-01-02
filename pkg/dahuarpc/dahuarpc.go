@@ -2,14 +2,44 @@
 package dahuarpc
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
+	"net/http"
 )
+
+var (
+	ErrRequestFailed = errors.New("request failed")
+)
+
+const (
+	StateLogout State = iota
+	StateLogin
+	StateError
+	StateClosed
+)
+
+type State int
+
+func (s State) String() string {
+	switch s {
+	case StateLogin:
+		return "login"
+	case StateLogout:
+		return "logout"
+	case StateError:
+		return "error"
+	case StateClosed:
+		return "closed"
+	default:
+		return "unknown"
+	}
+}
 
 type Conn interface {
 	Do(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error)
-	// SessionRaw() string
 }
 
 // SendRaw sends RPC request to camera without checking if the response contains an error field.
@@ -49,4 +79,22 @@ func Send[T any](ctx context.Context, c Conn, rb RequestBuilder) (Response[T], e
 	}
 
 	return res, nil
+}
+
+func DoRaw(ctx context.Context, rb RequestBuilder, httpClient *http.Client, urL string) (io.ReadCloser, error) {
+	b, err := json.Marshal(rb.Request)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urL, bytes.NewBuffer(b))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, errors.Join(ErrRequestFailed, err)
+	}
+	return resp.Body, nil
 }

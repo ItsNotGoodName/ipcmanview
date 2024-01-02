@@ -90,7 +90,7 @@ func (s *Server) Dahua(c echo.Context) error {
 
 	res := make([]models.DahuaStatus, 0, len(clients))
 	for _, client := range clients {
-		res = append(res, dahua.GetDahuaStatus(client.Conn, client.RPC))
+		res = append(res, dahua.GetDahuaStatus(ctx, client.Conn, client.RPC))
 	}
 
 	return c.JSON(http.StatusOK, res)
@@ -172,12 +172,14 @@ func (s *Server) DahuaIDLicenses(c echo.Context) error {
 }
 
 func (s *Server) DahuaIDError(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
 
-	res := dahua.GetError(conn.RPC)
+	res := dahua.GetError(ctx, conn.RPC)
 
 	return c.JSON(http.StatusOK, res)
 }
@@ -526,12 +528,7 @@ func dahuaFileReadCloser(ctx context.Context, client dahua.Client, filePath stri
 		return nil, err
 	}
 
-	session, err := client.RPC.Session(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Cookie", dahuarpc.Cookie(session))
+	req.Header.Add("Cookie", dahuarpc.Cookie(client.RPC.Session()))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
