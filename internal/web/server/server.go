@@ -33,8 +33,12 @@ func RegisterRenderer(e *echo.Echo) error {
 }
 
 func (w Server) Register(e *echo.Echo) {
+	e.DELETE("/dahua/events", w.DahuaEventsDELETE)
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
+	e.GET("/dahua/credentials", w.DahuaCredentials)
+	e.GET("/dahua/credentials/:id", w.DahuaCredentialsID)
+	e.GET("/dahua/credentials/create", w.DahuaCredentialsCreate)
 	e.GET("/dahua/devices", w.DahuaDevices)
 	e.GET("/dahua/devices/:id/update", w.DahuaDevicesUpdate)
 	e.GET("/dahua/devices/create", w.DahuaDevicesCreate)
@@ -47,7 +51,10 @@ func (w Server) Register(e *echo.Echo) {
 	e.GET("/dahua/files", w.DahuaFiles)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
 	e.GET("/dahua/streams", w.DahuaStreams)
-
+	e.PATCH("/dahua/devices/streams/:id", w.DahuaDevicesStreamsIDPATCH)
+	e.POST("/dahua/credentials", w.DahuaCredentialsPOST)
+	e.POST("/dahua/credentials/:id", w.DahuaCredentialsIDPOST)
+	e.POST("/dahua/credentials/create", w.DahuaCredentialsCreatePOST)
 	e.POST("/dahua/devices", w.DahuaDevicesPOST)
 	e.POST("/dahua/devices/:id/update", w.DahuaDevicesUpdatePOST)
 	e.POST("/dahua/devices/create", w.DahuaDevicesCreatePOST)
@@ -55,10 +62,6 @@ func (w Server) Register(e *echo.Echo) {
 	e.POST("/dahua/events/rules", w.DahuaEventsRulePOST)
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
 	e.POST("/dahua/files", w.DahuaFilesPOST)
-
-	e.PATCH("/dahua/devices/streams/:id", w.DahuaDevicesStreamsIDPATCH)
-
-	e.DELETE("/dahua/events", w.DahuaEventsDELETE)
 }
 
 type Server struct {
@@ -865,6 +868,170 @@ func (s Server) DahuaStreams(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-streams", view.Data{
 		"Devices": viewDevices,
 	})
+}
+
+func (s Server) DahuaCredentials(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	credentials, err := s.db.ListDahuaCredential(ctx)
+	if err != nil {
+		return err
+	}
+
+	if isHTMX(c) {
+		return c.Render(http.StatusOK, "dahua-credentials", view.Block{Name: "htmx-credentials", Data: view.Data{
+			"Credentials": credentials,
+		}})
+	}
+
+	return c.Render(http.StatusOK, "dahua-credentials", view.Data{
+		"Credentials": credentials,
+	})
+}
+
+func (s Server) DahuaCredentialsPOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var form struct {
+		Action      string
+		Credentials []struct {
+			Selected bool
+			ID       int64
+		}
+	}
+	if err := api.ParseForm(c, &form); err != nil {
+		return err
+	}
+
+	switch form.Action {
+	case "Delete":
+		for _, v := range form.Credentials {
+			if !v.Selected {
+				continue
+			}
+
+			err := dahua.DeleteCredential(ctx, s.db, v.ID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return s.DahuaCredentials(c)
+}
+
+func (s Server) DahuaCredentialsID(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := api.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	credential, err := s.db.GetDahuaCredential(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "dahua-credentials-id", view.Data{
+		"Credential": credential,
+		"Storage":    dahua.Storage,
+	})
+}
+
+func (s Server) DahuaCredentialsCreate(c echo.Context) error {
+	return c.Render(http.StatusOK, "dahua-credentials-create", view.Data{
+		"Storage": dahua.Storage,
+	})
+}
+
+func (s Server) DahuaCredentialsCreatePOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var form struct {
+		Name            string
+		Storage         string
+		ServerAddress   string
+		Port            int64
+		Username        string
+		Password        string
+		RemoteDirectory string
+	}
+	if err := api.ParseForm(c, &form); err != nil {
+		return err
+	}
+
+	storage, err := dahua.ParseStorage(form.Storage)
+	if err != nil {
+		return err
+	}
+
+	_, err = dahua.CreateCredential(ctx, s.db, repo.CreateDahuaCredentialParams{
+		Name:            form.Name,
+		Storage:         storage,
+		ServerAddress:   form.ServerAddress,
+		Port:            form.Port,
+		Username:        form.Username,
+		Password:        form.Password,
+		RemoteDirectory: form.RemoteDirectory,
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusSeeOther, "/dahua/credentials")
+}
+
+func (s Server) DahuaCredentialsIDPOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := api.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	credential, err := s.db.GetDahuaCredential(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	var form struct {
+		Name            string
+		Storage         string
+		ServerAddress   string
+		Port            int64
+		Username        string
+		Password        string
+		RemoteDirectory string
+		UpdatePassword  bool
+	}
+	if err := api.ParseForm(c, &form); err != nil {
+		return err
+	}
+	if form.UpdatePassword {
+		form.Password = credential.Password
+	}
+
+	storage, err := dahua.ParseStorage(form.Storage)
+	if err != nil {
+		return err
+	}
+
+	_, err = dahua.UpdateCredential(ctx, s.db, credential, repo.UpdateDahuaCredentialParams{
+		ID:              id,
+		Name:            form.Name,
+		Storage:         storage,
+		ServerAddress:   form.ServerAddress,
+		Port:            form.Port,
+		Username:        form.Username,
+		Password:        form.Password,
+		RemoteDirectory: form.RemoteDirectory,
+	})
+	if err != nil {
+		return err
+	}
+
+	return c.Redirect(http.StatusSeeOther, "/dahua/credentials")
 }
 
 func (s Server) DahuaDevicesStreamsIDPATCH(c echo.Context) error {

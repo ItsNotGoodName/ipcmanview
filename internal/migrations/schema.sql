@@ -113,6 +113,7 @@ CREATE TABLE dahua_file_scan_locks (
 
 CREATE TABLE dahua_credentials (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
   storage TEXT NOT NULL,
   server_address TEXT NOT NULL,
   port INTEGER NOT NULL,
@@ -123,6 +124,7 @@ CREATE TABLE dahua_credentials (
 
 CREATE TABLE dahua_device_credentials (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
   device_id INTEGER NOT NULL,
   storage TEXT NOT NULL UNIQUE,
   server_address TEXT NOT NULL,

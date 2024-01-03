@@ -14,6 +14,7 @@ import (
 
 type DahuaCredential struct {
 	ID              int64
+	Name            string
 	Storage         models.Storage
 	ServerAddress   string
 	Port            int64
@@ -36,6 +37,7 @@ type DahuaDevice struct {
 
 type DahuaDeviceCredential struct {
 	ID              int64
+	Name            string
 	DeviceID        int64
 	Storage         models.Storage
 	ServerAddress   string

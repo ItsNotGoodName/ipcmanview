@@ -300,7 +300,43 @@ SELECT *,max(created_at) FROM dahua_event_worker_states GROUP BY device_id;
 
 -- name: GetDahuaCredential :one
 SELECT * FROM dahua_credentials 
+WHERE id = ?;
+
+-- name: GetDahuaCredentialByServerAddressAndStorage :one
+SELECT * FROM dahua_credentials 
 WHERE server_address = ? AND storage = ?;
+
+-- name: ListDahuaCredential :many
+SELECT * FROM dahua_credentials;
+
+-- name: CreateDahuaCredential :one
+INSERT INTO dahua_credentials (
+  name,
+  storage,
+  server_address,
+  port,
+  username,
+  password,
+  remote_directory 
+) VALUES (
+  ?, ?, ?, ?, ?, ?, ?
+) RETURNING id;
+
+-- name: UpdateDahuaCredential :one
+UPDATE dahua_credentials
+SET
+  name = ?,
+  storage = ?,
+  server_address = ?,
+  port = ?,
+  username = ?,
+  password = ?,
+  remote_directory = ?
+WHERE id = ?
+RETURNING *;
+
+-- name: DeleteDahuaCredential :exec
+DELETE FROM dahua_credentials WHERE id = ?;
 
 -- name: TryCreateDahuaStream :exec
 INSERT OR IGNORE INTO dahua_streams (

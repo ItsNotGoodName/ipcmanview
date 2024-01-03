@@ -2,16 +2,18 @@ package dahua
 
 import (
 	"context"
+	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, args repo.CreateDahuaDeviceParams) error {
-	args.Address.URL = toHTTPURL(args.Address.URL)
+func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg repo.CreateDahuaDeviceParams) error {
+	arg.Address.URL = toHTTPURL(arg.Address.URL)
+	arg.Name = strings.TrimSpace(arg.Name)
 
-	id, err := db.CreateDahuaDevice(ctx, args, NewFileCursor())
+	id, err := db.CreateDahuaDevice(ctx, arg, NewFileCursor())
 	if err != nil {
 		return err
 	}
@@ -27,15 +29,16 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, args repo.Crea
 	return nil
 }
 
-func UpdateDevice(ctx context.Context, db repo.DB, bus *core.Bus, device models.DahuaDevice, args repo.UpdateDahuaDeviceParams) error {
-	args.Address.URL = toHTTPURL(args.Address.URL)
+func UpdateDevice(ctx context.Context, db repo.DB, bus *core.Bus, device models.DahuaDevice, arg repo.UpdateDahuaDeviceParams) error {
+	arg.Address.URL = toHTTPURL(arg.Address.URL)
+	arg.Name = strings.TrimSpace(arg.Name)
 
-	_, err := db.UpdateDahuaDevice(ctx, args)
+	_, err := db.UpdateDahuaDevice(ctx, arg)
 	if err != nil {
 		return err
 	}
 
-	dbDevice, err := db.GetDahuaDevice(ctx, args.ID)
+	dbDevice, err := db.GetDahuaDevice(ctx, arg.ID)
 	if err != nil {
 		return err
 	}

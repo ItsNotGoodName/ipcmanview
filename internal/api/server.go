@@ -439,7 +439,7 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 				return err
 			}
 
-			cred, err := s.db.GetDahuaCredential(ctx, repo.GetDahuaCredentialParams{
+			cred, err := s.db.GetDahuaCredentialByServerAddressAndStorage(ctx, repo.GetDahuaCredentialByServerAddressAndStorageParams{
 				ServerAddress: u.Hostname(),
 				Storage:       storage,
 			})
@@ -471,7 +471,7 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 				return err
 			}
 
-			cred, err := s.db.GetDahuaCredential(ctx, repo.GetDahuaCredentialParams{
+			cred, err := s.db.GetDahuaCredentialByServerAddressAndStorage(ctx, repo.GetDahuaCredentialByServerAddressAndStorageParams{
 				ServerAddress: u.Hostname(),
 				Storage:       storage,
 			})

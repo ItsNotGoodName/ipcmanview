@@ -71,6 +71,26 @@
       <li>
         <a
           hx-boost="true"
+          href="/dahua/files"
+          {{ if hasPrefix "/dahua/files" .URL.Path }}class="active"{{ end }}
+        >
+          Files
+        </a>
+      </li>
+      <li>
+        <a
+          hx-boost="true"
+          href="/dahua/credentials"
+          {{ if hasPrefix "/dahua/credentials" .URL.Path }}
+            class="active"
+          {{ end }}
+        >
+          Credentials
+        </a>
+      </li>
+      <li>
+        <a
+          hx-boost="true"
           href="/dahua/events"
           {{ if eq "/dahua/events" .URL.Path }}class="active"{{ end }}
         >
@@ -100,15 +120,6 @@
             </a>
           </li>
         </ul>
-      </li>
-      <li>
-        <a
-          hx-boost="true"
-          href="/dahua/files"
-          {{ if hasPrefix "/dahua/files" .URL.Path }}class="active"{{ end }}
-        >
-          Files
-        </a>
       </li>
     </ul>
   </div>
