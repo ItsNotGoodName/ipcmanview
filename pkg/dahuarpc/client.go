@@ -15,6 +15,8 @@ var (
 	ErrClientClosed = errors.New("client closed")
 )
 
+const clientKeepAliveTimeout = 60 * time.Second
+
 type Config struct {
 	ctx     context.Context
 	onError func(err error)
@@ -43,7 +45,6 @@ func clientLogError(address string) func(err error) {
 type ClientState struct {
 	State     State
 	LastID    int
-	Session   string
 	Error     error
 	LastLogin time.Time
 	LastRPC   time.Time
@@ -55,6 +56,7 @@ type clientState struct {
 	Session   string
 	Error     error
 	LastLogin time.Time
+	Ticker    *time.Ticker
 }
 
 func (s *clientState) NextID() int {
@@ -69,10 +71,12 @@ func (s *clientState) To(newState State, err ...error) {
 		s.LastID = 0
 		s.Session = ""
 		s.Error = nil
+		s.Ticker.Stop()
 	case StateLogin:
 		s.State = StateLogin
 		s.Error = nil
 		s.LastLogin = time.Now()
+		s.Ticker.Reset(clientKeepAliveTimeout)
 	case StateError:
 		s.State = StateError
 		if len(err) > 0 {
@@ -80,8 +84,10 @@ func (s *clientState) To(newState State, err ...error) {
 		} else {
 			s.Error = errors.New("error not set")
 		}
+		s.Ticker.Stop()
 	case StateClosed:
 		s.State = StateClosed
+		s.Ticker.Stop()
 	default:
 		panic(fmt.Sprintf("unknown state: %s", newState))
 	}
@@ -127,7 +133,8 @@ func NewClient(httpClient *http.Client, u *url.URL, username, password string, c
 		onError:     cfg.onError,
 		doneC:       make(chan struct{}),
 		rpcCC:       make(chan chan clientRPC),
-		stateCC:     make(chan chan ClientState),
+		stateC:      make(chan ClientState),
+		sessionCC:   make(chan chan string),
 		closeCC:     make(chan chan error),
 	}
 
@@ -146,9 +153,10 @@ type Client struct {
 
 	doneC chan struct{}
 
-	rpcCC   chan chan clientRPC
-	stateCC chan chan ClientState
-	closeCC chan chan error
+	rpcCC     chan chan clientRPC
+	stateC    chan ClientState
+	sessionCC chan chan string
+	closeCC   chan chan error
 }
 
 func (c Client) clientLogin(rpcState *clientState) clientLogin {
@@ -178,6 +186,7 @@ func (c Client) serve(ctx context.Context) {
 		Session:   "",
 		Error:     nil,
 		LastLogin: time.Time{},
+		Ticker:    time.NewTicker(clientKeepAliveTimeout),
 	}
 
 	login := func() {
@@ -209,7 +218,6 @@ func (c Client) serve(ctx context.Context) {
 		return closeErr
 	}
 
-	t := time.NewTicker(60 * time.Second)
 	lastRPC := time.Time{}
 
 	for {
@@ -218,9 +226,8 @@ func (c Client) serve(ctx context.Context) {
 			// Logout
 			c.checkError(logout())
 			return
-		case <-t.C:
-			switch state.State {
-			case StateLogin:
+		case <-state.Ticker.C:
+			if state.State == StateLogin {
 				// KeepAlive
 				if _, err := KeepAlive(ctx, c.clientLogin(&state)); err != nil {
 					if !errors.Is(err, ErrRequestFailed) {
@@ -233,10 +240,6 @@ func (c Client) serve(ctx context.Context) {
 				} else {
 					state.To(StateLogin)
 				}
-			case StateLogout:
-				// Login
-				login()
-			default:
 			}
 		case rpcC := <-c.rpcCC:
 			if state.State == StateLogout {
@@ -265,15 +268,20 @@ func (c Client) serve(ctx context.Context) {
 			rpcC <- reply
 
 			lastRPC = time.Now()
-		case stateC := <-c.stateCC:
-			stateC <- ClientState{
-				State:     state.State,
-				LastID:    state.LastID,
-				Session:   state.Session,
-				Error:     state.Error,
-				LastLogin: state.LastLogin,
-				LastRPC:   lastRPC,
+		case sessionC := <-c.sessionCC:
+			if state.State == StateLogout {
+				// Login
+				login()
 			}
+
+			sessionC <- state.Session
+		case c.stateC <- ClientState{
+			State:     state.State,
+			LastID:    state.LastID,
+			Error:     state.Error,
+			LastLogin: state.LastLogin,
+			LastRPC:   lastRPC,
+		}:
 		case closeC := <-c.closeCC:
 			// Logout
 			closeC <- logout()
@@ -350,7 +358,6 @@ func (c Client) Close(ctx context.Context) error {
 }
 
 func (c Client) State(ctx context.Context) ClientState {
-	stateC := make(chan ClientState, 1)
 	select {
 	case <-ctx.Done():
 		return ClientState{Error: ctx.Err()}
@@ -359,22 +366,27 @@ func (c Client) State(ctx context.Context) ClientState {
 			State: StateClosed,
 			Error: ctx.Err(),
 		}
-	case c.stateCC <- stateC:
-	}
-
-	select {
-	case <-ctx.Done():
-		return ClientState{Error: ctx.Err()}
-	case <-c.doneC:
-		return ClientState{
-			State: StateClosed,
-			Error: ctx.Err(),
-		}
-	case state := <-stateC:
+	case state := <-c.stateC:
 		return state
 	}
 }
 
-func (c Client) Session() string {
-	return c.State(context.Background()).Session
+func (c Client) Session(ctx context.Context) string {
+	sessionC := make(chan string, 1)
+	select {
+	case <-ctx.Done():
+		return ""
+	case <-c.doneC:
+		return ""
+	case c.sessionCC <- sessionC:
+	}
+
+	select {
+	case <-ctx.Done():
+		return ""
+	case <-c.doneC:
+		return ""
+	case session := <-sessionC:
+		return session
+	}
 }

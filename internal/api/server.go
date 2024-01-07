@@ -528,7 +528,7 @@ func dahuaFileReadCloser(ctx context.Context, client dahua.Client, filePath stri
 		return nil, err
 	}
 
-	req.Header.Add("Cookie", dahuarpc.Cookie(client.RPC.Session()))
+	req.Header.Add("Cookie", dahuarpc.Cookie(client.RPC.Session(ctx)))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

@@ -57,6 +57,8 @@ func SendRaw[T any](ctx context.Context, c Conn, rb RequestBuilder) (Response[T]
 		return res, err
 	}
 
+	// fmt.Printf("RESPONSE: %s\n", string(b))
+
 	if err := json.Unmarshal(b, &res); err != nil {
 		return res, err
 	}
@@ -87,6 +89,8 @@ func DoRaw(ctx context.Context, rb RequestBuilder, httpClient *http.Client, urL 
 	if err != nil {
 		return nil, err
 	}
+
+	// fmt.Printf("REQUEST: %s\n", string(b))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urL, bytes.NewBuffer(b))
 	if err != nil {

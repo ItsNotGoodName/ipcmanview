@@ -11,7 +11,7 @@ import (
 
 type Conn interface {
 	dahuarpc.Conn
-	Session() string
+	Session(ctx context.Context) string
 }
 
 func newClient(session string) *client {
@@ -33,7 +33,7 @@ type client struct {
 func NewClient(conn Conn) Client {
 	return Client{
 		conn:   conn,
-		client: newClient(conn.Session()),
+		client: newClient(conn.Session(context.Background())),
 	}
 }
 
@@ -50,9 +50,9 @@ func (c Client) Instance(ctx context.Context, channel int) (dahuarpc.Response[js
 	return res, err
 }
 
-func (c *Client) Seq(rb dahuarpc.RequestBuilder) dahuarpc.RequestBuilder {
+func (c *Client) Seq(ctx context.Context, rb dahuarpc.RequestBuilder) dahuarpc.RequestBuilder {
 	c.client.Lock()
-	session := c.conn.Session()
+	session := c.conn.Session(ctx)
 	if session != c.client.Session {
 		c.client = newClient(session)
 	}
@@ -78,7 +78,7 @@ func Start(ctx context.Context, c Client, channel int, params Params) error {
 		return err
 	}
 
-	_, err = dahuarpc.Send[any](ctx, c.conn, c.Seq(dahuarpc.
+	_, err = dahuarpc.Send[any](ctx, c.conn, c.Seq(ctx, dahuarpc.
 		New("ptz.start").
 		Params(params).
 		Object(instance.Result.Integer())))
@@ -91,7 +91,7 @@ func Stop(ctx context.Context, c Client, channel int, params Params) error {
 		return err
 	}
 
-	_, err = dahuarpc.Send[any](ctx, c.conn, c.Seq(dahuarpc.
+	_, err = dahuarpc.Send[any](ctx, c.conn, c.Seq(ctx, dahuarpc.
 		New("ptz.stop").
 		Params(params).
 		Object(instance.Result.Integer())))
@@ -111,7 +111,7 @@ func GetPresets(ctx context.Context, c Client, channel int) ([]Preset, error) {
 
 	res, err := dahuarpc.Send[struct {
 		Presets []Preset `json:"presets"`
-	}](ctx, c.conn, c.Seq(dahuarpc.
+	}](ctx, c.conn, c.Seq(ctx, dahuarpc.
 		New("ptz.getPresets").
 		Object(instance.Result.Integer())))
 	if err != nil {
