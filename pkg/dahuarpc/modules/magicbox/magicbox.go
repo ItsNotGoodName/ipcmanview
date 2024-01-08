@@ -128,3 +128,17 @@ type UpTime struct {
 	Last  int64 `json:"last"`
 	Total int64 `json:"total"`
 }
+
+func GetMachineName(ctx context.Context, c dahuarpc.Conn) (string, error) {
+	res, err := dahuarpc.Send[struct {
+		Name string `json:"name"`
+	}](ctx, c, dahuarpc.New("magicBox.getMachineName"))
+	return res.Params.Name, err
+}
+
+func ListMethod(ctx context.Context, c dahuarpc.Conn) ([]string, error) {
+	res, err := dahuarpc.Send[struct {
+		Method []string `json:"method"`
+	}](ctx, c, dahuarpc.New("magicBox.listMethod"))
+	return res.Params.Method, err
+}
