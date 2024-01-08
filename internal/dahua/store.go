@@ -3,23 +3,20 @@ package dahua
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/rs/zerolog/log"
 )
 
-func newStoreClient(conn models.DahuaConn, lastAccessed time.Time) storeClient {
+func newStoreClient(conn models.DahuaConn) storeClient {
 	return storeClient{
-		LastAccessed: lastAccessed,
-		Client:       NewClient(conn),
+		Client: NewClient(conn),
 	}
 }
 
 type storeClient struct {
-	LastAccessed time.Time
-	Client       Client
+	Client Client
 }
 
 func (c storeClient) Close(ctx context.Context) {
@@ -28,7 +25,7 @@ func (c storeClient) Close(ctx context.Context) {
 	}
 }
 
-// Store creates and maintains clients to devices.
+// Store maintains device clients.
 type Store struct {
 	clientsMu sync.Mutex
 	clients   map[int64]storeClient
@@ -41,51 +38,18 @@ func NewStore() *Store {
 	}
 }
 
-func (*Store) String() string {
-	return "dahua.Store"
-}
+func (s *Store) Close() {
+	wg := sync.WaitGroup{}
 
-func (s *Store) Serve(ctx context.Context) error {
-	t := time.NewTicker(5 * time.Minute)
-	defer t.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			wg := sync.WaitGroup{}
-
-			s.clientsMu.Lock()
-			for _, client := range s.clients {
-				wg.Add(1)
-				go func(client storeClient) {
-					client.Close(context.Background())
-					wg.Done()
-				}(client)
-			}
-			s.clientsMu.Unlock()
-
-			wg.Wait()
-
-			return ctx.Err()
-		case <-t.C:
-			var clients []storeClient
-
-			now := time.Now()
-
-			s.clientsMu.Lock()
-			for id, client := range s.clients {
-				if now.Sub(client.LastAccessed) > 5*time.Minute && now.Sub(client.Client.RPC.State(ctx).LastRPC) > 5*time.Minute {
-					delete(s.clients, id)
-					clients = append(clients, client)
-				}
-			}
-			s.clientsMu.Unlock()
-
-			for _, client := range clients {
-				client.Close(ctx)
-			}
-		}
+	for _, client := range s.clients {
+		wg.Add(1)
+		go func(client storeClient) {
+			client.Close(context.Background())
+			wg.Done()
+		}(client)
 	}
+
+	wg.Wait()
 }
 
 func (s *Store) getOrCreateClient(ctx context.Context, conn models.DahuaConn) Client {
@@ -93,20 +57,19 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn models.DahuaConn) Cl
 	if !ok {
 		// Not found
 
-		client = newStoreClient(conn, time.Now())
+		client = newStoreClient(conn)
 		s.clients[conn.ID] = client
 	} else if !ConnEqual(client.Client.Conn, conn) {
 		// Found but not equal
 
 		// Closing device connection should not block that store
-		go client.Close(ctx)
+		go client.Close(context.Background())
 
-		client = newStoreClient(conn, time.Now())
+		client = newStoreClient(conn)
 		s.clients[conn.ID] = client
 	} else {
 		// Found
 
-		client.LastAccessed = time.Now()
 		s.clients[conn.ID] = client
 	}
 

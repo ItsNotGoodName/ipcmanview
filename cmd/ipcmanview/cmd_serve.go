@@ -72,7 +72,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	dahuaStore := dahua.
 		NewStore().
 		Register(bus)
-	super.Add(dahuaStore)
+	defer dahuaStore.Close()
 
 	dahuaWorkerStore := dahua.
 		NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahua.NewDefaultEventHooks(bus, db))).
@@ -154,6 +154,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 		}
 
 		client := dahuaStore.Client(ctx, device.DahuaConn)
+
 		caps, err := encode.GetCaps(ctx, client.RPC, 1)
 		if err != nil {
 			return err
