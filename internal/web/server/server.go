@@ -1081,13 +1081,12 @@ func (s Server) DahuaCredentialsCreatePOST(c echo.Context) error {
 	if err := api.ParseForm(c, &form); err != nil {
 		return err
 	}
-
 	storage, err := dahua.ParseStorage(form.Storage)
 	if err != nil {
-		return err
+		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	_, err = dahua.CreateCredential(ctx, s.db, repo.CreateDahuaCredentialParams{
+	_, err = dahua.CreateCredential(ctx, s.db, models.DahuaCredential{
 		Name:            form.Name,
 		Storage:         storage,
 		ServerAddress:   form.ServerAddress,
@@ -1110,9 +1109,11 @@ func (s Server) DahuaCredentialsIDPOST(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-
 	credential, err := s.db.GetDahuaCredential(ctx, id)
 	if err != nil {
+		if repo.IsNotFound(err) {
+			return echo.ErrNotFound.WithInternal(err)
+		}
 		return err
 	}
 
@@ -1129,25 +1130,23 @@ func (s Server) DahuaCredentialsIDPOST(c echo.Context) error {
 	if err := api.ParseForm(c, &form); err != nil {
 		return err
 	}
-	if form.UpdatePassword {
+	if !form.UpdatePassword {
 		form.Password = credential.Password
 	}
-
 	storage, err := dahua.ParseStorage(form.Storage)
 	if err != nil {
-		return err
+		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	_, err = dahua.UpdateCredential(ctx, s.db, credential, repo.UpdateDahuaCredentialParams{
-		ID:              id,
-		Name:            form.Name,
-		Storage:         storage,
-		ServerAddress:   form.ServerAddress,
-		Port:            form.Port,
-		Username:        form.Username,
-		Password:        form.Password,
-		RemoteDirectory: form.RemoteDirectory,
-	})
+	credential.Name = form.Name
+	credential.Storage = storage
+	credential.ServerAddress = form.ServerAddress
+	credential.Port = form.Port
+	credential.Username = form.Username
+	credential.Password = form.Password
+	credential.RemoteDirectory = form.RemoteDirectory
+
+	_, err = dahua.UpdateCredential(ctx, s.db, credential.Convert())
 	if err != nil {
 		return err
 	}

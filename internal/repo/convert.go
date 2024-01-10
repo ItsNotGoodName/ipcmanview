@@ -139,3 +139,16 @@ func (c DahuaStream) Convert(embedURL string) models.DahuaStream {
 		EmbedURL:     embedURL,
 	}
 }
+
+func (c DahuaCredential) Convert() models.DahuaCredential {
+	return models.DahuaCredential{
+		ID:              c.ID,
+		Name:            c.Name,
+		Storage:         c.Storage,
+		ServerAddress:   c.ServerAddress,
+		Port:            c.Port,
+		Username:        c.Username,
+		Password:        c.Password,
+		RemoteDirectory: c.RemoteDirectory,
+	}
+}

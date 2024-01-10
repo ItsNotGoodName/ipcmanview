@@ -199,8 +199,19 @@ type DahuaStream struct {
 type DahuaScanType string
 
 var (
-	DahuaScanTypeUnkown  DahuaScanType = ""
+	DahuaScanTypeUnknown DahuaScanType = ""
 	DahuaScanTypeFull    DahuaScanType = "full"
 	DahuaScanTypeQuick   DahuaScanType = "quick"
 	DahuaScanTypeReverse DahuaScanType = "reverse"
 )
+
+type DahuaCredential struct {
+	ID              int64
+	Name            string `validate:"required,lte=64"`
+	Storage         Storage
+	ServerAddress   string `validate:"hostname_or_ip"`
+	Port            int64
+	Username        string
+	Password        string
+	RemoteDirectory string
+}

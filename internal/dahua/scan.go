@@ -92,7 +92,7 @@ func ScanReset(ctx context.Context, db repo.DB, id int64) error {
 		DeviceID:    id,
 		ScanPercent: 0,
 		Scan:        false,
-		ScanType:    models.DahuaScanTypeUnkown,
+		ScanType:    models.DahuaScanTypeUnknown,
 	})
 	return err
 }
