@@ -25,9 +25,9 @@ type VideoAnalyseRule struct {
 
 type VideoAnalyseRules []VideoAnalyseRule
 
-func (r VideoAnalyseRules) Merge(js string) (string, error) {
+func (c VideoAnalyseRules) Merge(js string) (string, error) {
 	var err error
-	for i, v := range r {
+	for i, v := range c {
 		prefix := strconv.Itoa(i) + "."
 		js, err = configmanager.Merge(js, []configmanager.MergeOption{
 			{Path: prefix + "Class", Value: v.Class},
@@ -46,6 +46,6 @@ func (r VideoAnalyseRules) Merge(js string) (string, error) {
 	return js, nil
 }
 
-func (r VideoAnalyseRules) Validate() error {
+func (c VideoAnalyseRules) Validate() error {
 	return nil
 }

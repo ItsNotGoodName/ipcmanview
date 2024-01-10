@@ -19,20 +19,20 @@ type VideoInMode struct {
 	TimeSection [][]dahuarpc.TimeSection `json:"TimeSection"`
 }
 
-func (m VideoInMode) Merge(js string) (string, error) {
+func (c VideoInMode) Merge(js string) (string, error) {
 	return configmanager.Merge(js, []configmanager.MergeOption{
-		{Path: "Config", Value: m.Config},
-		{Path: "Mode", Value: m.Mode},
-		{Path: "TimeSection", Value: m.TimeSection},
+		{Path: "Config", Value: c.Config},
+		{Path: "Mode", Value: c.Mode},
+		{Path: "TimeSection", Value: c.TimeSection},
 	})
 }
 
-func (m VideoInMode) Validate() error {
-	if len(m.TimeSection) == 0 || len(m.TimeSection[0]) == 0 {
+func (c VideoInMode) Validate() error {
+	if len(c.TimeSection) == 0 || len(c.TimeSection[0]) == 0 {
 		return fmt.Errorf("empty TimeSection")
 	}
 
-	_, err := m.switchMode()
+	_, err := c.switchMode()
 	if err != nil {
 		return err
 	}

@@ -15,7 +15,7 @@ type ConfigData interface {
 
 type ConfigTable[T ConfigData] struct {
 	Data T
-	JSON string
+	JSON json.RawMessage
 }
 
 type Config[T ConfigData] struct {
@@ -71,7 +71,7 @@ func GetConfig[T ConfigData](ctx context.Context, c dahuarpc.Conn, name string, 
 
 		configTables = append(configTables, ConfigTable[T]{
 			Data: data,
-			JSON: string(table),
+			JSON: table,
 		})
 	}
 
@@ -107,7 +107,7 @@ func (c Config[T]) table() (json.RawMessage, error) {
 
 	var tables []json.RawMessage
 	for _, table := range c.Tables {
-		js, err := table.Data.Merge(table.JSON)
+		js, err := table.Data.Merge(string(table.JSON))
 		if err != nil {
 			return nil, err
 		}

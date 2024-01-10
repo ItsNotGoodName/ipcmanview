@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
+	"github.com/rs/zerolog/log"
 )
 
 type CmdDebug struct {
@@ -19,45 +21,30 @@ func (c *CmdDebug) Run(ctx *Context) error {
 		return err
 	}
 
-	dahuaFileStore, err := c.useDahuaFileStore()
+	devices, err := c.useDevices(ctx, db)
 	if err != nil {
 		return err
 	}
 
-	ids, err := dahuaFileStore.List()
-	if err != nil {
-		return err
-	}
+	for _, device := range devices {
+		conn := dahua.NewClient(device.DahuaConn)
+		defer conn.RPC.Close(context.Background())
 
-	for _, id := range ids {
-		dbFile, err := db.GetDahuaFile(ctx, id)
+		cfg, err := config.GetLocales(ctx, conn.RPC)
 		if err != nil {
-			if repo.IsNotFound(err) {
-				continue
-			}
-			return err
-		}
-		file := dbFile.Convert()
-
-		if file.Type != models.DahuaFileTypeDAV {
+			log.Err(err).Str("name", device.Name).Send()
 			continue
 		}
 
-		exists, err := dahuaFileStore.Exists(ctx, file)
+		b, err := json.MarshalIndent(cfg.Tables[0].JSON, "", "  ")
 		if err != nil {
 			return err
-		}
-		if !exists {
-			continue
 		}
 
-		err = dahua.FileDAVToJPG(ctx, dahuaFileStore, file)
-		if err != nil {
-			return err
-		}
+		fmt.Printf("name=%s, json=%s\n", device.Name, string(b))
+
+		conn.RPC.Close(context.Background())
 	}
-
-	fmt.Println(ids)
 
 	return nil
 }
