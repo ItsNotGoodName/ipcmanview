@@ -76,8 +76,8 @@ func Test_TimeSectionFromString(t *testing.T) {
 		Input  string
 		Output TimeSection
 	}{
-		{"1 08:01:45-16:16:22", TimeSection{true, 8*time.Hour + 1*time.Minute + 45*time.Second, 16*time.Hour + 16*time.Minute + 22*time.Second}},
-		{"0 00:00:00-23:59:59", TimeSection{false, 0, 23*time.Hour + 59*time.Minute + 59*time.Second}},
+		{"0 08:01:45-16:16:22", TimeSection{0, 8*time.Hour + 1*time.Minute + 45*time.Second, 16*time.Hour + 16*time.Minute + 22*time.Second}},
+		{"1 00:00:00-23:59:59", TimeSection{1, 0, 23*time.Hour + 59*time.Minute + 59*time.Second}},
 	}
 
 	for _, arg := range args {
@@ -96,16 +96,16 @@ func Test_NewTimeSectionFromRange(t *testing.T) {
 		return t
 	}
 	args := []struct {
-		Enable bool
+		Number int
 		Start  time.Time
 		End    time.Time
 		Output TimeSection
 	}{
-		{true, must(time.Parse(time.DateTime, "2023-02-06 08:01:45")), must(time.Parse(time.DateTime, "2023-02-06 16:16:22")), TimeSection{true, 8*time.Hour + 1*time.Minute + 45*time.Second, 16*time.Hour + 16*time.Minute + 22*time.Second}},
+		{0, must(time.Parse(time.DateTime, "2023-02-06 08:01:45")), must(time.Parse(time.DateTime, "2023-02-06 16:16:22")), TimeSection{0, 8*time.Hour + 1*time.Minute + 45*time.Second, 16*time.Hour + 16*time.Minute + 22*time.Second}},
 	}
 
 	for _, arg := range args {
-		ts := NewTimeSectionFromRange(arg.Enable, arg.Start, arg.End)
+		ts := NewTimeSectionFromRange(arg.Number, arg.Start, arg.End)
 		assert.Equal(t, arg.Output, ts)
 	}
 }

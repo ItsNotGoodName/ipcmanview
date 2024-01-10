@@ -116,7 +116,7 @@ func Cookie(session string) string {
 }
 
 var DefaultTimeSection TimeSection = TimeSection{
-	Enable: false,
+	Number: 0,
 	Start:  0,
 	End:    24 * time.Hour,
 }
@@ -143,16 +143,21 @@ func NewTimeSectionFromString(s string) (TimeSection, error) {
 		return TimeSection{}, err
 	}
 
+	number, err := strconv.Atoi(splitBySpace[0])
+	if err != nil {
+		return TimeSection{}, err
+	}
+
 	return TimeSection{
-		Enable: splitBySpace[0] == "1",
+		Number: number,
 		Start:  start,
 		End:    end,
 	}, nil
 }
 
-func NewTimeSectionFromRange(enable bool, start, end time.Time) TimeSection {
+func NewTimeSectionFromRange(number int, start, end time.Time) TimeSection {
 	return TimeSection{
-		Enable: enable,
+		Number: number,
 		Start:  time.Duration(start.Hour())*time.Hour + time.Duration(start.Minute())*time.Minute + time.Duration(start.Second())*time.Second,
 		End:    time.Duration(end.Hour())*time.Hour + time.Duration(end.Minute())*time.Minute + time.Duration(end.Second())*time.Second,
 	}
@@ -178,7 +183,7 @@ func durationFromTimeString(s string) (time.Duration, error) {
 }
 
 type TimeSection struct {
-	Enable bool
+	Number int
 	Start  time.Duration
 	End    time.Duration
 }
@@ -195,7 +200,7 @@ func (s *TimeSection) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	s.Enable = res.Enable
+	s.Number = res.Number
 	s.Start = res.Start
 	s.End = res.End
 
@@ -207,14 +212,9 @@ func (s TimeSection) MarshalJSON() ([]byte, error) {
 }
 
 func (s TimeSection) String() string {
-	var enable int
-	if s.Enable {
-		enable = 1
-	}
-
 	return fmt.Sprintf(
 		"%d %02d:%02d:%02d-%02d:%02d:%02d",
-		enable,
+		s.Number,
 		int(s.Start.Hours()),
 		int(s.Start.Minutes())%60,
 		int(s.Start.Seconds())%60,

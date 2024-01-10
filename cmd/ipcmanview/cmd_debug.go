@@ -30,13 +30,13 @@ func (c *CmdDebug) Run(ctx *Context) error {
 		conn := dahua.NewClient(device.DahuaConn)
 		defer conn.RPC.Close(context.Background())
 
-		cfg, err := config.GetLocales(ctx, conn.RPC)
+		cfg, err := config.GetRecord(ctx, conn.RPC)
 		if err != nil {
 			log.Err(err).Str("name", device.Name).Send()
 			continue
 		}
 
-		b, err := json.MarshalIndent(cfg.Tables[0].JSON, "", "  ")
+		b, err := json.MarshalIndent(cfg.Tables[0].Data.TimeSection, "", "  ")
 		if err != nil {
 			return err
 		}

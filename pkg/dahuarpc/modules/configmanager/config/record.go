@@ -14,12 +14,13 @@ func GetRecord(ctx context.Context, c dahuarpc.Conn) (configmanager.Config[Recor
 }
 
 type Record struct {
-	Format        string `json:"Format"`
-	HolidayEnable bool   `json:"HolidayEnable"`
-	PreRecord     int    `json:"PreRecord"`
-	Redundancy    bool   `json:"Redundancy"`
-	SnapShot      bool   `json:"SnapShot"`
-	Stream        int    `json:"Stream"`
+	Format        string                   `json:"Format"`
+	HolidayEnable bool                     `json:"HolidayEnable"`
+	PreRecord     int                      `json:"PreRecord"`
+	Redundancy    bool                     `json:"Redundancy"`
+	SnapShot      bool                     `json:"SnapShot"`
+	Stream        int                      `json:"Stream"`
+	TimeSection   [][]dahuarpc.TimeSection `json:"TimeSection"`
 }
 
 func (c Record) Merge(js string) (string, error) {

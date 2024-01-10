@@ -389,7 +389,7 @@ func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location,
 	sunrise, sunset := sunrise.SunriseSunset(coordinate.Latitude, coordinate.Longitude, now.Year(), now.Month(), now.Day())
 	sunrise = sunrise.In(loc).Add(sunriseOffset)
 	sunset = sunset.In(loc).Add(sunsetOffset)
-	ts := dahuarpc.NewTimeSectionFromRange(true, sunrise, sunset)
+	ts := dahuarpc.NewTimeSectionFromRange(1, sunrise, sunset)
 	if cfg.Tables[0].Data.TimeSection[0][0].String() != ts.String() {
 		cfg.Tables[0].Data.TimeSection[0][0] = ts
 		changed = true
