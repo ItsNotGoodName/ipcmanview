@@ -9,6 +9,9 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
 )
 
+const DahuaFileTypeJPG = "jpg"
+const DahuaFileTypeDAV = "dav"
+
 type DahuaEventWorkerState string
 
 const (

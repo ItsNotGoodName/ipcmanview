@@ -8,7 +8,6 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 )
@@ -31,7 +30,7 @@ func ViewsFS() fs.ReadDirFS {
 var assetFSPath string
 
 func AssetFS() http.FileSystem {
-	return http.FS(os.DirFS(path.Join(cwd, "public")))
+	return http.FS(os.DirFS(filepath.Join(cwd, "public")))
 }
 
 func Head() template.HTML {

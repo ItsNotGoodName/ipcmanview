@@ -165,6 +165,11 @@ INSERT INTO dahua_files (
   ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 ) ON CONFLICT (start_time) DO UPDATE SET id = id RETURNING id;
 
+-- name: GetDahuaFile :one
+SELECT *
+FROM dahua_files
+WHERE id = ?;
+
 -- name: GetDahuaFileByFilePath :one
 SELECT *
 FROM dahua_files

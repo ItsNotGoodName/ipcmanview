@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,45 +16,17 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
 
-type DahuaFile struct {
-	ID       int64
-	DeviceID int64
+func DahuaFileName(startTime time.Time, id int64, typ string) string {
+	return fmt.Sprintf("%s.%d.%s", startTime.UTC().Format("2006-01-02_15-04-05"), id, typ)
 }
 
-func fromDahuaFileName(fileName string) (DahuaFile, error) {
-	dotSplit := strings.Split(fileName, ".")
-	if len(dotSplit) != 2 {
-		return DahuaFile{}, fmt.Errorf("invalid length: %d", len(dotSplit))
+func DahuaFileIDFromFileName(fileName string) (int64, error) {
+	s := strings.Split(fileName, ".")
+	if len(s) != 3 {
+		return 0, fmt.Errorf("invalid file name: %s", fileName)
 	}
 
-	dashSplit := strings.Split(dotSplit[0], "-")
-	dashSplitLen := len(dashSplit)
-	if dashSplitLen < 2 {
-		return DahuaFile{}, fmt.Errorf("invalid length: %d", dashSplitLen)
-	}
-
-	deviceID, err := strconv.ParseInt(dashSplit[dashSplitLen-2], 10, 64)
-	if err != nil {
-		return DahuaFile{}, err
-	}
-
-	id, err := strconv.ParseInt(dashSplit[dashSplitLen-1], 10, 64)
-	if err != nil {
-		return DahuaFile{}, err
-	}
-
-	return DahuaFile{
-		ID:       id,
-		DeviceID: deviceID,
-	}, nil
-}
-
-func toDahuaFileName(file models.DahuaFile) string {
-	return fmt.Sprintf("%s-%d-%d.%s", file.StartTime.UTC().Format("2006-01-02-15-04-05"), file.DeviceID, file.ID, file.Type)
-}
-
-type DahuaFileStore struct {
-	dir string
+	return strconv.ParseInt(s[1], 10, 64)
 }
 
 func NewDahuaFileStore(dir string) DahuaFileStore {
@@ -63,8 +35,16 @@ func NewDahuaFileStore(dir string) DahuaFileStore {
 	}
 }
 
+type DahuaFileStore struct {
+	dir string
+}
+
+func (s DahuaFileStore) FilePath(startTime time.Time, id int64, typ string) string {
+	return filepath.Join(s.dir, DahuaFileName(startTime, id, typ))
+}
+
 func (s DahuaFileStore) filePath(file models.DahuaFile) string {
-	return path.Join(s.dir, toDahuaFileName(file))
+	return filepath.Join(s.dir, DahuaFileName(file.StartTime, file.ID, file.Type))
 }
 
 func (s DahuaFileStore) Exists(ctx context.Context, file models.DahuaFile) (bool, error) {
@@ -77,17 +57,47 @@ func (s DahuaFileStore) Exists(ctx context.Context, file models.DahuaFile) (bool
 	}
 }
 
-func (s DahuaFileStore) Save(ctx context.Context, file models.DahuaFile, r io.ReadCloser) error {
+func (s DahuaFileStore) List() ([]int64, error) {
+	entries, err := os.ReadDir(s.dir)
+	if err != nil {
+		return nil, err
+	}
+
+	ids := make([]int64, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		info, err := entry.Info()
+		if err != nil {
+			return nil, err
+		}
+
+		id, err := DahuaFileIDFromFileName(info.Name())
+		if err != nil {
+			continue
+		}
+
+		ids = append(ids, id)
+	}
+
+	return ids, nil
+}
+
+func (s DahuaFileStore) Save(ctx context.Context, file models.DahuaFile, r io.Reader) error {
 	filePath := s.filePath(file)
 	filePathSwap := filePath + ".swap"
 	f, err := os.OpenFile(filePathSwap, os.O_CREATE|os.O_RDWR, 0777)
 	if err != nil {
 		return err
 	}
+	defer f.Close()
 
 	if _, err := io.Copy(f, r); err != nil {
 		return err
 	}
+	f.Close()
 
 	return os.Rename(filePathSwap, filePath)
 }
@@ -157,7 +167,7 @@ func (s DahuaFileStore) Trim(ctx context.Context, size int64, minAge time.Time) 
 			continue
 		}
 
-		if err := os.Remove(path.Join(s.dir, infos[i].Name())); err != nil {
+		if err := os.Remove(filepath.Join(s.dir, infos[i].Name())); err != nil {
 			return 0, err
 		}
 

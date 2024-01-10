@@ -3,6 +3,8 @@ package server
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"slices"
@@ -11,6 +13,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/files"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -49,6 +52,7 @@ func (w Server) Register(e *echo.Echo) {
 	e.GET("/dahua/events/rules", w.DahuaEventsRules)
 	e.GET("/dahua/events/stream", w.DahuaEventStream)
 	e.GET("/dahua/files", w.DahuaFiles)
+	e.GET("/dahua/files/:id/thumbnail", w.DahuaFilesIDThumbnail)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
 	e.GET("/dahua/streams", w.DahuaStreams)
 	e.PATCH("/dahua/devices/streams/:id", w.DahuaDevicesStreamsIDPATCH)
@@ -62,6 +66,7 @@ func (w Server) Register(e *echo.Echo) {
 	e.POST("/dahua/events/rules", w.DahuaEventsRulePOST)
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
 	e.POST("/dahua/files", w.DahuaFilesPOST)
+	e.POST("/dahua/files/download", w.DahuaFilesDownloadPOST)
 }
 
 type Server struct {
@@ -70,14 +75,16 @@ type Server struct {
 	bus            *core.Bus
 	dahuaStore     *dahua.Store
 	mediamtxConfig mediamtx.Config
+	dahuaFileStore files.DahuaFileStore
 }
 
-func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, dahuaStore *dahua.Store, mediamtxConfig mediamtx.Config) Server {
+func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, dahuaStore *dahua.Store, dahuaFileStore files.DahuaFileStore, mediamtxConfig mediamtx.Config) Server {
 	return Server{
 		db:             db,
 		pub:            pub,
 		bus:            bus,
 		dahuaStore:     dahuaStore,
+		dahuaFileStore: dahuaFileStore,
 		mediamtxConfig: mediamtxConfig,
 	}
 }
@@ -191,6 +198,115 @@ func (s Server) DahuaEventsIDData(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-events", view.Block{Name: "dahua-events-data-json", Data: data})
 }
 
+type DahuaFilesParams struct {
+	DeviceID  []int64
+	Type      []string
+	Page      int64 `validate:"gt=0"`
+	PerPage   int64 `validate:"gt=0"`
+	Start     string
+	End       string
+	Ascending bool
+}
+
+func (params DahuaFilesParams) Filter() (repo.DahuaFileFilter, error) {
+	timeRange, err := api.UseTimeRange(params.Start, params.End)
+	if err != nil {
+		return repo.DahuaFileFilter{}, err
+	}
+
+	return repo.DahuaFileFilter{
+		Type:      params.Type,
+		DeviceID:  params.DeviceID,
+		Start:     types.NewTime(timeRange.Start),
+		End:       types.NewTime(timeRange.End),
+		Ascending: params.Ascending,
+		Storage:   []models.Storage{},
+	}, nil
+}
+
+func (s Server) DahuaFilesDownloadPOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	params := DahuaFilesParams{}
+	if err := api.DecodeQuery(c, &params); err != nil {
+		return err
+	}
+	if err := api.ValidateStruct(params); err != nil {
+		return err
+	}
+
+	filter, err := params.Filter()
+	if err != nil {
+		return err
+	}
+
+	for cursor := ""; ; {
+		files, err := s.db.CursorListDahuaFile(ctx, repo.CursorListDahuaFileParams{
+			PerPage:         100,
+			Cursor:          cursor,
+			DahuaFileFilter: filter,
+		})
+		if err != nil {
+			return err
+		}
+		cursor = files.Cursor
+
+		for _, dbFile := range files.Data {
+			file := dbFile.Convert()
+
+			exists, err := s.dahuaFileStore.Exists(ctx, file)
+			if err != nil {
+				return err
+			}
+			if exists {
+				log.Info().Str("file-path", file.FilePath).Msg("Exists")
+				continue
+			}
+
+			storage := core.StorageFromFilePath(file.FilePath)
+
+			var rd io.ReadCloser
+			switch storage {
+			case models.StorageLocal:
+				device, err := s.db.GetDahuaDevice(ctx, dbFile.DeviceID)
+				if err != nil {
+					return err
+				}
+				client := s.dahuaStore.Client(ctx, device.Convert().DahuaConn)
+
+				rd, err = dahua.FileLocalReadCloser(ctx, client, file.FilePath)
+				if err != nil {
+					return err
+				}
+			case models.StorageFTP:
+				rd, err = dahua.FileFTPReadCloser(ctx, s.db, file)
+				if err != nil {
+					return err
+				}
+			case models.StorageSFTP:
+				rd, err = dahua.FileSFTPReadCloser(ctx, s.db, file)
+				if err != nil {
+					return err
+				}
+			default:
+				log.Err(fmt.Errorf("invalid storage: %s", storage)).Send()
+			}
+			log.Info().Str("file-path", file.FilePath).Msg("Downloading...")
+			err = s.dahuaFileStore.Save(ctx, file, rd)
+			rd.Close()
+			if err != nil {
+				return err
+			}
+		}
+
+		if !files.HasMore {
+			break
+		}
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
 func (s Server) DahuaFilesPOST(c echo.Context) error {
 	s.bus.EventDahuaQuickScanQueue(models.EventDahuaQuickScanQueue{
 		DeviceID: 0,
@@ -201,15 +317,7 @@ func (s Server) DahuaFilesPOST(c echo.Context) error {
 func (s Server) DahuaFiles(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	params := struct {
-		DeviceID  []int64
-		Type      []string
-		Page      int64 `validate:"gt=0"`
-		PerPage   int64
-		Start     string
-		End       string
-		Ascending bool
-	}{
+	params := DahuaFilesParams{
 		Page:    1,
 		PerPage: 10,
 	}
@@ -220,7 +328,7 @@ func (s Server) DahuaFiles(c echo.Context) error {
 		return err
 	}
 
-	timeRange, err := api.UseTimeRange(params.Start, params.End)
+	filter, err := params.Filter()
 	if err != nil {
 		return err
 	}
@@ -230,12 +338,7 @@ func (s Server) DahuaFiles(c echo.Context) error {
 			Page:    int(params.Page),
 			PerPage: int(params.PerPage),
 		},
-		Type:      params.Type,
-		DeviceID:  params.DeviceID,
-		Start:     types.NewTime(timeRange.Start),
-		End:       types.NewTime(timeRange.End),
-		Ascending: params.Ascending,
-		Storage:   []models.Storage{},
+		DahuaFileFilter: filter,
 	})
 	if err != nil {
 		return err
@@ -264,6 +367,24 @@ func (s Server) DahuaFiles(c echo.Context) error {
 	}
 
 	return c.Render(http.StatusOK, "dahua-files", data)
+}
+
+func (s Server) DahuaFilesIDThumbnail(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := api.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	file, err := s.db.GetDahuaFile(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return c.Render(http.StatusOK, "dahua-files", view.Block{Name: "htmx-thumbnail",
+		Data: file,
+	})
 }
 
 func (s Server) DahuaEventsLive(c echo.Context) error {

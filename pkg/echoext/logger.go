@@ -15,7 +15,7 @@ import (
 func WithErrorLogging(e *echo.Echo) {
 	parent := e.HTTPErrorHandler
 	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		log.Debug().Err(err).Send()
+		log.Err(err).Send()
 		parent(err, c)
 	}
 }

@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
 	"errors"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -169,8 +170,7 @@ func (db DB) ListDahuaEvent(ctx context.Context, arg ListDahuaEventParams) (List
 	}, nil
 }
 
-type ListDahuaFileParams struct {
-	pagination.Page
+type DahuaFileFilter struct {
 	Type      []string
 	DeviceID  []int64
 	Start     types.Time
@@ -179,14 +179,7 @@ type ListDahuaFileParams struct {
 	Storage   []models.Storage
 }
 
-type ListDahuaFileResult struct {
-	pagination.PageResult
-	Data []DahuaFile
-}
-
-func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDahuaFileResult, error) {
-	where := sq.And{}
-
+func (arg DahuaFileFilter) where(where sq.And) sq.And {
 	eq := sq.Eq{}
 	if len(arg.Type) != 0 {
 		eq["type"] = arg.Type
@@ -208,10 +201,30 @@ func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDa
 	}
 	where = append(where, and)
 
-	order := "start_time DESC"
+	return where
+}
+
+func (arg DahuaFileFilter) order() string {
 	if arg.Ascending {
-		order = "start_time ASC"
+		return "start_time ASC"
+	} else {
+		return "start_time DESC"
 	}
+}
+
+type ListDahuaFileParams struct {
+	pagination.Page
+	DahuaFileFilter
+}
+
+type ListDahuaFileResult struct {
+	pagination.PageResult
+	Data []DahuaFile
+}
+
+func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDahuaFileResult, error) {
+	where := arg.where(sq.And{})
+	order := arg.order()
 
 	var res []DahuaFile
 	err := ssq.Query(ctx, db, &res, sq.
@@ -237,6 +250,82 @@ func (db DB) ListDahuaFile(ctx context.Context, arg ListDahuaFileParams) (ListDa
 	return ListDahuaFileResult{
 		PageResult: arg.Page.Result(count),
 		Data:       res,
+	}, nil
+}
+
+type CursorListDahuaFileParams struct {
+	Cursor  string
+	PerPage int
+	DahuaFileFilter
+}
+
+type CursorListDahuaFileResult struct {
+	Cursor  string
+	HasMore bool
+	Data    []DahuaFile
+}
+
+func (db DB) CursorListDahuaFile(ctx context.Context, arg CursorListDahuaFileParams) (CursorListDahuaFileResult, error) {
+	where := arg.where(sq.And{})
+	if arg.Cursor != "" {
+		b, err := base64.URLEncoding.DecodeString(arg.Cursor)
+		if err != nil {
+			return CursorListDahuaFileResult{}, err
+		}
+
+		var startTime types.Time
+
+		err = startTime.UnmarshalBinary(b)
+		if err != nil {
+			return CursorListDahuaFileResult{}, err
+		}
+
+		if arg.Ascending {
+			where = append(where, sq.GtOrEq{"start_time": startTime})
+		} else {
+			where = append(where, sq.LtOrEq{"start_time": startTime})
+		}
+	}
+
+	order := arg.order()
+	limit := arg.PerPage + 1
+
+	var res []DahuaFile
+	err := ssq.Query(ctx, db, &res, sq.
+		Select("*").
+		From("dahua_files").
+		Where(where).
+		OrderBy(order).
+		Limit(uint64(limit)))
+	if err != nil {
+		return CursorListDahuaFileResult{}, err
+	}
+	length := len(res)
+
+	if length == 0 || length != limit {
+		return CursorListDahuaFileResult{
+			Cursor:  "",
+			HasMore: false,
+			Data:    res,
+		}, nil
+	}
+
+	data, last := res[:length-1], res[length-1]
+
+	var cursor string
+	{
+		b, err := last.StartTime.MarshalBinary()
+		if err != nil {
+			return CursorListDahuaFileResult{}, nil
+		}
+
+		cursor = base64.URLEncoding.EncodeToString(b)
+	}
+
+	return CursorListDahuaFileResult{
+		Cursor:  cursor,
+		HasMore: true,
+		Data:    data,
 	}, nil
 }
 

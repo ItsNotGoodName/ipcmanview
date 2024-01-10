@@ -454,6 +454,41 @@ func (q *Queries) GetDahuaEventRule(ctx context.Context, id int64) (DahuaEventRu
 	return i, err
 }
 
+const getDahuaFile = `-- name: GetDahuaFile :one
+SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, storage
+FROM dahua_files
+WHERE id = ?
+`
+
+func (q *Queries) GetDahuaFile(ctx context.Context, id int64) (DahuaFile, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaFile, id)
+	var i DahuaFile
+	err := row.Scan(
+		&i.ID,
+		&i.DeviceID,
+		&i.Channel,
+		&i.StartTime,
+		&i.EndTime,
+		&i.Length,
+		&i.Type,
+		&i.FilePath,
+		&i.Duration,
+		&i.Disk,
+		&i.VideoStream,
+		&i.Flags,
+		&i.Events,
+		&i.Cluster,
+		&i.Partition,
+		&i.PicIndex,
+		&i.Repeat,
+		&i.WorkDir,
+		&i.WorkDirSn,
+		&i.UpdatedAt,
+		&i.Storage,
+	)
+	return i, err
+}
+
 const getDahuaFileByFilePath = `-- name: GetDahuaFileByFilePath :one
 SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, storage
 FROM dahua_files

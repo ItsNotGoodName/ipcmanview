@@ -104,7 +104,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// WEB
 	webserver.
-		New(db, pub, bus, dahuaStore, mediamtxConfig).
+		New(db, pub, bus, dahuaStore, dahuaFileStore, mediamtxConfig).
 		Register(httpRouter)
 
 	// API

@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/files"
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
@@ -16,21 +16,40 @@ type Shared struct {
 	Dir string `default:"ipcmanview_data" env:"DIR" help:"Directory path for storing data."`
 }
 
-func useDir(dir string) error {
-	return os.MkdirAll(dir, 0755)
+func (c Shared) useDir() (string, error) {
+	dir, err := filepath.Abs(c.Dir)
+	if err != nil {
+		return "", err
+	}
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", err
+	}
+
+	return dir, nil
 }
 
 func (c Shared) useDahuaFileStore() (files.DahuaFileStore, error) {
-	dir := path.Join(c.Dir, "dahua-files")
-	return files.NewDahuaFileStore(dir), useDir(dir)
+	dir, err := c.useDir()
+	if err != nil {
+		return files.DahuaFileStore{}, err
+	}
+
+	dir = filepath.Join(dir, "dahua-files")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return files.DahuaFileStore{}, err
+	}
+
+	return files.NewDahuaFileStore(dir), nil
 }
 
 func (c Shared) useDB(ctx *Context) (repo.DB, error) {
-	if err := useDir(c.Dir); err != nil {
+	dir, err := c.useDir()
+	if err != nil {
 		return repo.DB{}, err
 	}
 
-	sqlDB, err := sqlite.New(path.Join(c.Dir, "sqlite.db"))
+	sqlDB, err := sqlite.New(filepath.Join(dir, "sqlite.db"))
 	if err != nil {
 		return repo.DB{}, err
 	}

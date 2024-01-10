@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"io"
 	"strings"
 	"time"
 
@@ -33,4 +34,20 @@ func StorageFromFilePath(filePath string) models.Storage {
 	// 	return models.StorageSMB
 	// }
 	return models.StorageLocal
+}
+
+type MultiReadCloser struct {
+	io.Reader
+	Closers []func() error
+}
+
+func (c MultiReadCloser) Close() error {
+	var multiErr error
+	for _, closer := range c.Closers {
+		err := closer()
+		if err != nil {
+			multiErr = errors.Join(multiErr, err)
+		}
+	}
+	return multiErr
 }
