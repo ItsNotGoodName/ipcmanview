@@ -11,11 +11,9 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	webserver "github.com/ItsNotGoodName/ipcmanview/internal/web/server"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuaevents"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/encode"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -85,6 +83,8 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
+	dahua.RegisterStreams(bus, db, dahuaStore)
+
 	// MQTT
 	if c.MQTTAddress != "" {
 		mqttConn := mqtt.NewConn(c.MQTTTopic, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
@@ -144,55 +144,6 @@ func (c *CmdServe) Run(ctx *Context) error {
 		default:
 			return nil
 		}
-	})
-
-	// TODO: move this
-	dahuaStreamsHandle := func(ctx context.Context, device models.DahuaDeviceConn) error {
-		if !device.DahuaConn.Feature.EQ(models.DahuaFeatureCamera) {
-			return nil
-		}
-
-		client := dahuaStore.Client(ctx, device.DahuaConn)
-
-		caps, err := encode.GetCaps(ctx, client.RPC, 1)
-		if err != nil {
-			return err
-		}
-
-		subtypes := 1
-		if caps.MaxExtraStream > 0 && caps.MaxExtraStream < 10 {
-			subtypes += caps.MaxExtraStream
-		}
-
-		for channelIndex, device := range caps.VideoEncodeDevices {
-			names := make([]string, subtypes)
-			for i, v := range device.SupportDynamicBitrate {
-				if i < len(names) {
-					names[i] = v.Stream
-				}
-			}
-
-			args := repo.TryCreateDahuaStreamParams{
-				DeviceID: client.Conn.ID,
-				Channel:  int64(channelIndex + 1),
-			}
-			for i := 0; i < subtypes; i++ {
-				args.Subtype = int64(i)
-				args.Name = names[i]
-				err := db.TryCreateDahuaStream(ctx, args)
-				if err != nil {
-					return err
-				}
-			}
-		}
-
-		return nil
-	}
-	bus.OnEventDahuaDeviceCreated(func(ctx context.Context, event models.EventDahuaDeviceCreated) error {
-		return dahuaStreamsHandle(ctx, event.Device)
-	})
-	bus.OnEventDahuaDeviceUpdated(func(ctx context.Context, event models.EventDahuaDeviceUpdated) error {
-		return dahuaStreamsHandle(ctx, event.Device)
 	})
 
 	return super.Serve(ctx)

@@ -589,30 +589,22 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 	if err := api.ParseForm(c, &form); err != nil {
 		return err
 	}
-	if form.Name == "" {
-		form.Name = form.Address
-	}
-	if form.Username == "" {
-		form.Username = "admin"
-	}
 	location, err := time.LoadLocation(form.Location)
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 	address, err := url.Parse(form.Address)
 	if err != nil {
-		return err
+		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	err = dahua.CreateDevice(ctx, s.db, s.bus, repo.CreateDahuaDeviceParams{
-		Name:      form.Name,
-		Username:  form.Username,
-		Password:  form.Password,
-		Address:   types.NewURL(address),
-		Location:  types.NewLocation(location),
-		Feature:   dahua.FeatureFromStrings(form.Features),
-		CreatedAt: types.NewTime(time.Now()),
-		UpdatedAt: types.NewTime(time.Now()),
+	_, err = dahua.CreateDevice(ctx, s.db, s.bus, models.DahuaDevice{
+		Name:     form.Name,
+		Username: form.Username,
+		Password: form.Password,
+		Address:  address,
+		Location: location,
+		Feature:  dahua.FeatureFromStrings(form.Features),
 	})
 	if err != nil {
 		return err
@@ -740,10 +732,11 @@ func (s Server) DahuaDevicesUpdate(c echo.Context) error {
 func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	device, err := useDahuaDevice(c, s.db)
+	dbDevice, err := useDahuaDevice(c, s.db)
 	if err != nil {
 		return err
 	}
+	device := dbDevice.Convert().DahuaDevice
 
 	var form struct {
 		Name     string
@@ -768,16 +761,14 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 		form.Password = device.Password
 	}
 
-	err = dahua.UpdateDevice(ctx, s.db, s.bus, device.Convert().DahuaDevice, repo.UpdateDahuaDeviceParams{
-		ID:        device.ID,
-		Name:      form.Name,
-		Username:  form.Username,
-		Password:  form.Password,
-		Address:   types.NewURL(address),
-		Location:  types.NewLocation(location),
-		Feature:   dahua.FeatureFromStrings(form.Features),
-		UpdatedAt: types.NewTime(time.Now()),
-	})
+	device.Name = form.Name
+	device.Address = address
+	device.Username = form.Username
+	device.Password = form.Password
+	device.Location = location
+	device.Feature = dahua.FeatureFromStrings(form.Features)
+
+	_, err = dahua.UpdateDevice(ctx, s.db, s.bus, device)
 	if err != nil {
 		return err
 	}

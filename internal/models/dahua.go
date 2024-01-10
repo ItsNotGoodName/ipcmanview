@@ -37,7 +37,7 @@ type DahuaStatus struct {
 
 type DahuaDevice struct {
 	ID        int64
-	Name      string
+	Name      string `validate:"required,lte=64"`
 	Address   *url.URL
 	Username  string
 	Password  string
@@ -209,7 +209,7 @@ type DahuaStorageDestination struct {
 	ID              int64
 	Name            string `validate:"required,lte=64"`
 	Storage         Storage
-	ServerAddress   string `validate:"hostname_or_ip"`
+	ServerAddress   string `validate:"host"`
 	Port            int64
 	Username        string
 	Password        string
