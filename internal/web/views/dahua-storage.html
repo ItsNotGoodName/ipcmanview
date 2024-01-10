@@ -15,7 +15,7 @@
   <main class="min-h-screen">
     <div class="breadcrumbs px-4 text-sm">
       <ul>
-        <li>Credentials</li>
+        <li>Storage</li>
       </ul>
     </div>
 
@@ -23,12 +23,15 @@
       <form
         class="flex flex-col gap-4 px-4"
         method="post"
-        action="/dahua/credentials"
-        hx-post="/dahua/credentials"
+        action="/dahua/storage/destinations"
+        hx-post="/dahua/storage/destinations"
         hx-target="this"
       >
-        {{ block "htmx-credentials" . }}
+        {{ block "htmx-storage-destination" . }}
           <div class="border-b-base-content flex gap-4">
+            <div class="card-title" id="file-cursors">
+              <a href="#storage-destinations">Storage Destinations</a>
+            </div>
             <div class="join">
               <button
                 class="btn btn-sm join-item btn-error"
@@ -44,13 +47,13 @@
                 <button
                   class="btn btn-sm join-item"
                   type="submit"
-                  hx-get="/dahua/credentials"
+                  hx-get="/dahua/storage"
                   hx-target="closest form"
                 >
                   Refresh
                 </button>
                 <a
-                  href="/dahua/credentials/create"
+                  href="/dahua/storage/destinations/create"
                   class="btn btn-sm btn-primary join-item"
                 >
                   Create
@@ -81,17 +84,17 @@
                 </tr>
               </thead>
               <tbody>
-                {{ range $index, $val := .Data.Credentials }}
+                {{ range $index, $val := .Data.StorageDestinations }}
                   <tr>
                     <th>
                       <label>
                         <input
                           type="hidden"
-                          name="Credentials.{{ $index }}.ID"
+                          name="StorageDestinations.{{ $index }}.ID"
                           value="{{ .ID }}"
                         />
                         <input
-                          name="Credentials.{{ $index }}.Selected"
+                          name="StorageDestinations.{{ $index }}.Selected"
                           type="checkbox"
                           class="checkbox"
                         />
@@ -108,7 +111,7 @@
                     <td>
                       <a
                         class="btn-xs btn btn-primary"
-                        href="/dahua/credentials/{{ .ID }}"
+                        href="/dahua/storage/destinations/{{ .ID }}"
                       >
                         Update
                       </a>

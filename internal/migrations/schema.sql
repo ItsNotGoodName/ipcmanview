@@ -111,7 +111,7 @@ CREATE TABLE dahua_file_scan_locks (
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE dahua_credentials (
+CREATE TABLE dahua_storage_destinations (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
   storage TEXT NOT NULL,
@@ -120,20 +120,6 @@ CREATE TABLE dahua_credentials (
   username TEXT NOT NULL,
   password TEXT NOT NULL,
   remote_directory TEXT NOT NULL
-);
-
-CREATE TABLE dahua_device_credentials (
-  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL UNIQUE,
-  device_id INTEGER NOT NULL,
-  storage TEXT NOT NULL UNIQUE,
-  server_address TEXT NOT NULL,
-  port INTEGER NOT NULL,
-  username TEXT NOT NULL,
-  password TEXT NOT NULL,
-  remote_directory TEXT NOT NULL,
-
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_streams (

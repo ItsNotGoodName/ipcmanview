@@ -303,19 +303,19 @@ INSERT INTO dahua_event_worker_states(
 -- name: ListDahuaEventWorkerState :many
 SELECT *,max(created_at) FROM dahua_event_worker_states GROUP BY device_id;
 
--- name: GetDahuaCredential :one
-SELECT * FROM dahua_credentials 
+-- name: GetDahuaStorageDestination :one
+SELECT * FROM dahua_storage_destinations 
 WHERE id = ?;
 
--- name: GetDahuaCredentialByServerAddressAndStorage :one
-SELECT * FROM dahua_credentials 
+-- name: GetDahuaStorageDestinationByServerAddressAndStorage :one
+SELECT * FROM dahua_storage_destinations 
 WHERE server_address = ? AND storage = ?;
 
--- name: ListDahuaCredential :many
-SELECT * FROM dahua_credentials;
+-- name: ListDahuaStorageDestination :many
+SELECT * FROM dahua_storage_destinations;
 
--- name: CreateDahuaCredential :one
-INSERT INTO dahua_credentials (
+-- name: CreateDahuaStorageDestination :one
+INSERT INTO dahua_storage_destinations (
   name,
   storage,
   server_address,
@@ -327,8 +327,8 @@ INSERT INTO dahua_credentials (
   ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id;
 
--- name: UpdateDahuaCredential :one
-UPDATE dahua_credentials
+-- name: UpdateDahuaStorageDestination :one
+UPDATE dahua_storage_destinations
 SET
   name = ?,
   storage = ?,
@@ -340,8 +340,8 @@ SET
 WHERE id = ?
 RETURNING *;
 
--- name: DeleteDahuaCredential :exec
-DELETE FROM dahua_credentials WHERE id = ?;
+-- name: DeleteDahuaStorageDestination :exec
+DELETE FROM dahua_storage_destinations WHERE id = ?;
 
 -- name: TryCreateDahuaStream :exec
 INSERT OR IGNORE INTO dahua_streams (

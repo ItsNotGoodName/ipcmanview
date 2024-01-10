@@ -15,45 +15,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-const createDahuaCredential = `-- name: CreateDahuaCredential :one
-INSERT INTO dahua_credentials (
-  name,
-  storage,
-  server_address,
-  port,
-  username,
-  password,
-  remote_directory 
-) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
-) RETURNING id
-`
-
-type CreateDahuaCredentialParams struct {
-	Name            string
-	Storage         models.Storage
-	ServerAddress   string
-	Port            int64
-	Username        string
-	Password        string
-	RemoteDirectory string
-}
-
-func (q *Queries) CreateDahuaCredential(ctx context.Context, arg CreateDahuaCredentialParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, createDahuaCredential,
-		arg.Name,
-		arg.Storage,
-		arg.ServerAddress,
-		arg.Port,
-		arg.Username,
-		arg.Password,
-		arg.RemoteDirectory,
-	)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
 const createDahuaEvent = `-- name: CreateDahuaEvent :one
 INSERT INTO dahua_events (
   device_id,
@@ -250,13 +211,43 @@ func (q *Queries) CreateDahuaFileScanLock(ctx context.Context, arg CreateDahuaFi
 	return i, err
 }
 
-const deleteDahuaCredential = `-- name: DeleteDahuaCredential :exec
-DELETE FROM dahua_credentials WHERE id = ?
+const createDahuaStorageDestination = `-- name: CreateDahuaStorageDestination :one
+INSERT INTO dahua_storage_destinations (
+  name,
+  storage,
+  server_address,
+  port,
+  username,
+  password,
+  remote_directory 
+) VALUES (
+  ?, ?, ?, ?, ?, ?, ?
+) RETURNING id
 `
 
-func (q *Queries) DeleteDahuaCredential(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteDahuaCredential, id)
-	return err
+type CreateDahuaStorageDestinationParams struct {
+	Name            string
+	Storage         models.Storage
+	ServerAddress   string
+	Port            int64
+	Username        string
+	Password        string
+	RemoteDirectory string
+}
+
+func (q *Queries) CreateDahuaStorageDestination(ctx context.Context, arg CreateDahuaStorageDestinationParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createDahuaStorageDestination,
+		arg.Name,
+		arg.Storage,
+		arg.ServerAddress,
+		arg.Port,
+		arg.Username,
+		arg.Password,
+		arg.RemoteDirectory,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const deleteDahuaDevice = `-- name: DeleteDahuaDevice :exec
@@ -330,51 +321,13 @@ func (q *Queries) DeleteDahuaFileScanLockByAge(ctx context.Context, touchedAt ty
 	return err
 }
 
-const getDahuaCredential = `-- name: GetDahuaCredential :one
-SELECT id, name, storage, server_address, port, username, password, remote_directory FROM dahua_credentials 
-WHERE id = ?
+const deleteDahuaStorageDestination = `-- name: DeleteDahuaStorageDestination :exec
+DELETE FROM dahua_storage_destinations WHERE id = ?
 `
 
-func (q *Queries) GetDahuaCredential(ctx context.Context, id int64) (DahuaCredential, error) {
-	row := q.db.QueryRowContext(ctx, getDahuaCredential, id)
-	var i DahuaCredential
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Storage,
-		&i.ServerAddress,
-		&i.Port,
-		&i.Username,
-		&i.Password,
-		&i.RemoteDirectory,
-	)
-	return i, err
-}
-
-const getDahuaCredentialByServerAddressAndStorage = `-- name: GetDahuaCredentialByServerAddressAndStorage :one
-SELECT id, name, storage, server_address, port, username, password, remote_directory FROM dahua_credentials 
-WHERE server_address = ? AND storage = ?
-`
-
-type GetDahuaCredentialByServerAddressAndStorageParams struct {
-	ServerAddress string
-	Storage       models.Storage
-}
-
-func (q *Queries) GetDahuaCredentialByServerAddressAndStorage(ctx context.Context, arg GetDahuaCredentialByServerAddressAndStorageParams) (DahuaCredential, error) {
-	row := q.db.QueryRowContext(ctx, getDahuaCredentialByServerAddressAndStorage, arg.ServerAddress, arg.Storage)
-	var i DahuaCredential
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Storage,
-		&i.ServerAddress,
-		&i.Port,
-		&i.Username,
-		&i.Password,
-		&i.RemoteDirectory,
-	)
-	return i, err
+func (q *Queries) DeleteDahuaStorageDestination(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteDahuaStorageDestination, id)
+	return err
 }
 
 const getDahuaDevice = `-- name: GetDahuaDevice :one
@@ -529,6 +482,53 @@ func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileBy
 	return i, err
 }
 
+const getDahuaStorageDestination = `-- name: GetDahuaStorageDestination :one
+SELECT id, name, storage, server_address, port, username, password, remote_directory FROM dahua_storage_destinations 
+WHERE id = ?
+`
+
+func (q *Queries) GetDahuaStorageDestination(ctx context.Context, id int64) (DahuaStorageDestination, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaStorageDestination, id)
+	var i DahuaStorageDestination
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Storage,
+		&i.ServerAddress,
+		&i.Port,
+		&i.Username,
+		&i.Password,
+		&i.RemoteDirectory,
+	)
+	return i, err
+}
+
+const getDahuaStorageDestinationByServerAddressAndStorage = `-- name: GetDahuaStorageDestinationByServerAddressAndStorage :one
+SELECT id, name, storage, server_address, port, username, password, remote_directory FROM dahua_storage_destinations 
+WHERE server_address = ? AND storage = ?
+`
+
+type GetDahuaStorageDestinationByServerAddressAndStorageParams struct {
+	ServerAddress string
+	Storage       models.Storage
+}
+
+func (q *Queries) GetDahuaStorageDestinationByServerAddressAndStorage(ctx context.Context, arg GetDahuaStorageDestinationByServerAddressAndStorageParams) (DahuaStorageDestination, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaStorageDestinationByServerAddressAndStorage, arg.ServerAddress, arg.Storage)
+	var i DahuaStorageDestination
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Storage,
+		&i.ServerAddress,
+		&i.Port,
+		&i.Username,
+		&i.Password,
+		&i.RemoteDirectory,
+	)
+	return i, err
+}
+
 const getDahuaStream = `-- name: GetDahuaStream :one
 SELECT id, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
 WHERE id = ?
@@ -572,42 +572,6 @@ func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 	var i Setting
 	err := row.Scan(&i.SiteName, &i.DefaultLocation)
 	return i, err
-}
-
-const listDahuaCredential = `-- name: ListDahuaCredential :many
-SELECT id, name, storage, server_address, port, username, password, remote_directory FROM dahua_credentials
-`
-
-func (q *Queries) ListDahuaCredential(ctx context.Context) ([]DahuaCredential, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaCredential)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []DahuaCredential
-	for rows.Next() {
-		var i DahuaCredential
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Storage,
-			&i.ServerAddress,
-			&i.Port,
-			&i.Username,
-			&i.Password,
-			&i.RemoteDirectory,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const listDahuaDevice = `-- name: ListDahuaDevice :many
@@ -941,6 +905,42 @@ func (q *Queries) ListDahuaFileTypes(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
+const listDahuaStorageDestination = `-- name: ListDahuaStorageDestination :many
+SELECT id, name, storage, server_address, port, username, password, remote_directory FROM dahua_storage_destinations
+`
+
+func (q *Queries) ListDahuaStorageDestination(ctx context.Context) ([]DahuaStorageDestination, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaStorageDestination)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DahuaStorageDestination
+	for rows.Next() {
+		var i DahuaStorageDestination
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Storage,
+			&i.ServerAddress,
+			&i.Port,
+			&i.Username,
+			&i.Password,
+			&i.RemoteDirectory,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listDahuaStream = `-- name: ListDahuaStream :many
 SELECT id, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
 ORDER BY device_id
@@ -1097,56 +1097,6 @@ func (q *Queries) TryCreateDahuaStream(ctx context.Context, arg TryCreateDahuaSt
 		arg.MediamtxPath,
 	)
 	return err
-}
-
-const updateDahuaCredential = `-- name: UpdateDahuaCredential :one
-UPDATE dahua_credentials
-SET
-  name = ?,
-  storage = ?,
-  server_address = ?,
-  port = ?,
-  username = ?,
-  password = ?,
-  remote_directory = ?
-WHERE id = ?
-RETURNING id, name, storage, server_address, port, username, password, remote_directory
-`
-
-type UpdateDahuaCredentialParams struct {
-	Name            string
-	Storage         models.Storage
-	ServerAddress   string
-	Port            int64
-	Username        string
-	Password        string
-	RemoteDirectory string
-	ID              int64
-}
-
-func (q *Queries) UpdateDahuaCredential(ctx context.Context, arg UpdateDahuaCredentialParams) (DahuaCredential, error) {
-	row := q.db.QueryRowContext(ctx, updateDahuaCredential,
-		arg.Name,
-		arg.Storage,
-		arg.ServerAddress,
-		arg.Port,
-		arg.Username,
-		arg.Password,
-		arg.RemoteDirectory,
-		arg.ID,
-	)
-	var i DahuaCredential
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Storage,
-		&i.ServerAddress,
-		&i.Port,
-		&i.Username,
-		&i.Password,
-		&i.RemoteDirectory,
-	)
-	return i, err
 }
 
 const updateDahuaDevice = `-- name: UpdateDahuaDevice :one
@@ -1360,6 +1310,56 @@ func (q *Queries) UpdateDahuaFileCursorScanPercent(ctx context.Context, arg Upda
 		&i.Scan,
 		&i.ScanPercent,
 		&i.ScanType,
+	)
+	return i, err
+}
+
+const updateDahuaStorageDestination = `-- name: UpdateDahuaStorageDestination :one
+UPDATE dahua_storage_destinations
+SET
+  name = ?,
+  storage = ?,
+  server_address = ?,
+  port = ?,
+  username = ?,
+  password = ?,
+  remote_directory = ?
+WHERE id = ?
+RETURNING id, name, storage, server_address, port, username, password, remote_directory
+`
+
+type UpdateDahuaStorageDestinationParams struct {
+	Name            string
+	Storage         models.Storage
+	ServerAddress   string
+	Port            int64
+	Username        string
+	Password        string
+	RemoteDirectory string
+	ID              int64
+}
+
+func (q *Queries) UpdateDahuaStorageDestination(ctx context.Context, arg UpdateDahuaStorageDestinationParams) (DahuaStorageDestination, error) {
+	row := q.db.QueryRowContext(ctx, updateDahuaStorageDestination,
+		arg.Name,
+		arg.Storage,
+		arg.ServerAddress,
+		arg.Port,
+		arg.Username,
+		arg.Password,
+		arg.RemoteDirectory,
+		arg.ID,
+	)
+	var i DahuaStorageDestination
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Storage,
+		&i.ServerAddress,
+		&i.Port,
+		&i.Username,
+		&i.Password,
+		&i.RemoteDirectory,
 	)
 	return i, err
 }

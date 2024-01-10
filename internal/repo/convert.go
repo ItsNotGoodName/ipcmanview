@@ -140,8 +140,8 @@ func (c DahuaStream) Convert(embedURL string) models.DahuaStream {
 	}
 }
 
-func (c DahuaCredential) Convert() models.DahuaCredential {
-	return models.DahuaCredential{
+func (c DahuaStorageDestination) Convert() models.DahuaStorageDestination {
+	return models.DahuaStorageDestination{
 		ID:              c.ID,
 		Name:            c.Name,
 		Storage:         c.Storage,

@@ -51,7 +51,7 @@ func FileFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaFi
 		return nil, err
 	}
 
-	cred, err := db.GetDahuaCredentialByServerAddressAndStorage(ctx, repo.GetDahuaCredentialByServerAddressAndStorageParams{
+	cred, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
 		ServerAddress: u.Hostname(),
 		Storage:       storage,
 	})
@@ -90,7 +90,7 @@ func FileSFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaF
 		return nil, err
 	}
 
-	cred, err := db.GetDahuaCredentialByServerAddressAndStorage(ctx, repo.GetDahuaCredentialByServerAddressAndStorageParams{
+	cred, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
 		ServerAddress: u.Hostname(),
 		Storage:       models.StorageSFTP,
 	})

@@ -15,17 +15,19 @@
   <main class="min-h-screen">
     <div class="breadcrumbs px-4 text-sm">
       <ul>
-        <li><a href="/dahua/credentials">Credentials</a></li>
-        <li>{{ .Data.Credential.ID }}</li>
+        <li><a href="/dahua/storage">Storage</a></li>
+        <li><a href="/dahua/storage#storage-destinations">Destination</a></li>
+        <li>{{ .Data.StorageDestination.ID }}</li>
       </ul>
     </div>
 
-    {{ with $credential := .Data.Credential }}
+    {{ with $storageDestination := .Data.StorageDestination }}
       <form
         method="post"
+        hx-boost="true"
         class="mx-auto flex w-full max-w-md flex-col gap-4 px-4"
       >
-        <div class="card-title">Update Credential</div>
+        <div class="card-title">Update Storage Destination</div>
         <div class="form-control">
           <label class="label">
             <span class="label-text">Name</span>
@@ -45,7 +47,9 @@
           </label>
           <select name="Storage" class="select select-bordered">
             {{ range $.Data.Storage }}
-              <option {{ if eq . $credential.Storage }}selected{{ end }}>
+              <option
+                {{ if eq . $storageDestination.Storage }}selected{{ end }}
+              >
                 {{ . }}
               </option>
             {{ end }}

@@ -205,7 +205,7 @@ var (
 	DahuaScanTypeReverse DahuaScanType = "reverse"
 )
 
-type DahuaCredential struct {
+type DahuaStorageDestination struct {
 	ID              int64
 	Name            string `validate:"required,lte=64"`
 	Storage         Storage

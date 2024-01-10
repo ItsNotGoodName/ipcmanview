@@ -12,17 +12,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-type DahuaCredential struct {
-	ID              int64
-	Name            string
-	Storage         models.Storage
-	ServerAddress   string
-	Port            int64
-	Username        string
-	Password        string
-	RemoteDirectory string
-}
-
 type DahuaDevice struct {
 	ID        int64
 	Name      string
@@ -33,18 +22,6 @@ type DahuaDevice struct {
 	Feature   models.DahuaFeature
 	CreatedAt types.Time
 	UpdatedAt types.Time
-}
-
-type DahuaDeviceCredential struct {
-	ID              int64
-	Name            string
-	DeviceID        int64
-	Storage         models.Storage
-	ServerAddress   string
-	Port            int64
-	Username        string
-	Password        string
-	RemoteDirectory string
 }
 
 type DahuaEvent struct {
@@ -124,6 +101,17 @@ type DahuaFileScanLock struct {
 type DahuaSeed struct {
 	Seed     int64
 	DeviceID sql.NullInt64
+}
+
+type DahuaStorageDestination struct {
+	ID              int64
+	Name            string
+	Storage         models.Storage
+	ServerAddress   string
+	Port            int64
+	Username        string
+	Password        string
+	RemoteDirectory string
 }
 
 type DahuaStream struct {

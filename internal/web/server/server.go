@@ -39,9 +39,6 @@ func (w Server) Register(e *echo.Echo) {
 	e.DELETE("/dahua/events", w.DahuaEventsDELETE)
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
-	e.GET("/dahua/credentials", w.DahuaCredentials)
-	e.GET("/dahua/credentials/:id", w.DahuaCredentialsID)
-	e.GET("/dahua/credentials/create", w.DahuaCredentialsCreate)
 	e.GET("/dahua/devices", w.DahuaDevices)
 	e.GET("/dahua/devices/:id/update", w.DahuaDevicesUpdate)
 	e.GET("/dahua/devices/create", w.DahuaDevicesCreate)
@@ -54,11 +51,11 @@ func (w Server) Register(e *echo.Echo) {
 	e.GET("/dahua/files", w.DahuaFiles)
 	e.GET("/dahua/files/:id/thumbnail", w.DahuaFilesIDThumbnail)
 	e.GET("/dahua/snapshots", w.DahuaSnapshots)
+	e.GET("/dahua/storage", w.DahuaStorage)
+	e.GET("/dahua/storage/destinations/:id", w.DahuaStorageDestinationsID)
+	e.GET("/dahua/storage/destinations/create", w.DahuaStorageDestinationsCreate)
 	e.GET("/dahua/streams", w.DahuaStreams)
 	e.PATCH("/dahua/devices/streams/:id", w.DahuaDevicesStreamsIDPATCH)
-	e.POST("/dahua/credentials", w.DahuaCredentialsPOST)
-	e.POST("/dahua/credentials/:id", w.DahuaCredentialsIDPOST)
-	e.POST("/dahua/credentials/create", w.DahuaCredentialsCreatePOST)
 	e.POST("/dahua/devices", w.DahuaDevicesPOST)
 	e.POST("/dahua/devices/:id/update", w.DahuaDevicesUpdatePOST)
 	e.POST("/dahua/devices/create", w.DahuaDevicesCreatePOST)
@@ -67,6 +64,9 @@ func (w Server) Register(e *echo.Echo) {
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
 	e.POST("/dahua/files", w.DahuaFilesPOST)
 	e.POST("/dahua/files/download", w.DahuaFilesDownloadPOST)
+	e.POST("/dahua/storage/destinations", w.DahuaStorageDestinationsPOST)
+	e.POST("/dahua/storage/destinations/:id", w.DahuaStorageDestinationsIDPOST)
+	e.POST("/dahua/storage/destinations/create", w.DahuaStorageDestinationsCreatePOST)
 }
 
 type Server struct {
@@ -991,31 +991,31 @@ func (s Server) DahuaStreams(c echo.Context) error {
 	})
 }
 
-func (s Server) DahuaCredentials(c echo.Context) error {
+func (s Server) DahuaStorage(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	credentials, err := s.db.ListDahuaCredential(ctx)
+	storageDestinations, err := s.db.ListDahuaStorageDestination(ctx)
 	if err != nil {
 		return err
 	}
 
 	if isHTMX(c) {
-		return c.Render(http.StatusOK, "dahua-credentials", view.Block{Name: "htmx-credentials", Data: view.Data{
-			"Credentials": credentials,
+		return c.Render(http.StatusOK, "dahua-storage", view.Block{Name: "htmx-storage-destination", Data: view.Data{
+			"StorageDestinations": storageDestinations,
 		}})
 	}
 
-	return c.Render(http.StatusOK, "dahua-credentials", view.Data{
-		"Credentials": credentials,
+	return c.Render(http.StatusOK, "dahua-storage", view.Data{
+		"StorageDestinations": storageDestinations,
 	})
 }
 
-func (s Server) DahuaCredentialsPOST(c echo.Context) error {
+func (s Server) DahuaStorageDestinationsPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var form struct {
-		Action      string
-		Credentials []struct {
+		Action              string
+		StorageDestinations []struct {
 			Selected bool
 			ID       int64
 		}
@@ -1026,22 +1026,22 @@ func (s Server) DahuaCredentialsPOST(c echo.Context) error {
 
 	switch form.Action {
 	case "Delete":
-		for _, v := range form.Credentials {
+		for _, v := range form.StorageDestinations {
 			if !v.Selected {
 				continue
 			}
 
-			err := dahua.DeleteCredential(ctx, s.db, v.ID)
+			err := dahua.DeleteStorageDestination(ctx, s.db, v.ID)
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	return s.DahuaCredentials(c)
+	return s.DahuaStorage(c)
 }
 
-func (s Server) DahuaCredentialsID(c echo.Context) error {
+func (s Server) DahuaStorageDestinationsID(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id, err := api.ParamID(c)
@@ -1049,24 +1049,24 @@ func (s Server) DahuaCredentialsID(c echo.Context) error {
 		return err
 	}
 
-	credential, err := s.db.GetDahuaCredential(ctx, id)
+	storageDestination, err := s.db.GetDahuaStorageDestination(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	return c.Render(http.StatusOK, "dahua-credentials-id", view.Data{
-		"Credential": credential,
-		"Storage":    dahua.Storage,
+	return c.Render(http.StatusOK, "dahua-storage-destinations-id", view.Data{
+		"StorageDestination": storageDestination,
+		"Storage":            dahua.Storage,
 	})
 }
 
-func (s Server) DahuaCredentialsCreate(c echo.Context) error {
-	return c.Render(http.StatusOK, "dahua-credentials-create", view.Data{
+func (s Server) DahuaStorageDestinationsCreate(c echo.Context) error {
+	return c.Render(http.StatusOK, "dahua-storage-destinations-create", view.Data{
 		"Storage": dahua.Storage,
 	})
 }
 
-func (s Server) DahuaCredentialsCreatePOST(c echo.Context) error {
+func (s Server) DahuaStorageDestinationsCreatePOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var form struct {
@@ -1086,7 +1086,7 @@ func (s Server) DahuaCredentialsCreatePOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	_, err = dahua.CreateCredential(ctx, s.db, models.DahuaCredential{
+	_, err = dahua.CreateStorageDestination(ctx, s.db, models.DahuaStorageDestination{
 		Name:            form.Name,
 		Storage:         storage,
 		ServerAddress:   form.ServerAddress,
@@ -1099,17 +1099,17 @@ func (s Server) DahuaCredentialsCreatePOST(c echo.Context) error {
 		return err
 	}
 
-	return c.Redirect(http.StatusSeeOther, "/dahua/credentials")
+	return c.Redirect(http.StatusSeeOther, "/dahua/storage")
 }
 
-func (s Server) DahuaCredentialsIDPOST(c echo.Context) error {
+func (s Server) DahuaStorageDestinationsIDPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id, err := api.ParamID(c)
 	if err != nil {
 		return err
 	}
-	credential, err := s.db.GetDahuaCredential(ctx, id)
+	storageDestination, err := s.db.GetDahuaStorageDestination(ctx, id)
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return echo.ErrNotFound.WithInternal(err)
@@ -1131,27 +1131,27 @@ func (s Server) DahuaCredentialsIDPOST(c echo.Context) error {
 		return err
 	}
 	if !form.UpdatePassword {
-		form.Password = credential.Password
+		form.Password = storageDestination.Password
 	}
 	storage, err := dahua.ParseStorage(form.Storage)
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	credential.Name = form.Name
-	credential.Storage = storage
-	credential.ServerAddress = form.ServerAddress
-	credential.Port = form.Port
-	credential.Username = form.Username
-	credential.Password = form.Password
-	credential.RemoteDirectory = form.RemoteDirectory
+	storageDestination.Name = form.Name
+	storageDestination.Storage = storage
+	storageDestination.ServerAddress = form.ServerAddress
+	storageDestination.Port = form.Port
+	storageDestination.Username = form.Username
+	storageDestination.Password = form.Password
+	storageDestination.RemoteDirectory = form.RemoteDirectory
 
-	_, err = dahua.UpdateCredential(ctx, s.db, credential.Convert())
+	_, err = dahua.UpdateStorageDestination(ctx, s.db, storageDestination.Convert())
 	if err != nil {
 		return err
 	}
 
-	return c.Redirect(http.StatusSeeOther, "/dahua/credentials")
+	return c.Redirect(http.StatusSeeOther, "/dahua/storage")
 }
 
 func (s Server) DahuaDevicesStreamsIDPATCH(c echo.Context) error {
