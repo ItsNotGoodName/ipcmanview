@@ -1172,10 +1172,18 @@ func (s Server) DahuaStorageDestinationsIDTestPOST(c echo.Context) error {
 
 	err = dahua.TestStorageDestination(ctx, storageDestination.Convert())
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadGateway, err.Error())
+		htmx.NewEvent("toast-error", err.Error()).SetTrigger(c.Response())
+		return c.Render(http.StatusOK, "dahua-storage", view.Block{Name: "htmx-storage-destination-test", Data: view.Data{
+			"OK": false,
+			"ID": storageDestination.ID,
+		}})
+	} else {
+		htmx.NewEvent("toast", "OK").SetTrigger(c.Response())
+		return c.Render(http.StatusOK, "dahua-storage", view.Block{Name: "htmx-storage-destination-test", Data: view.Data{
+			"OK": true,
+			"ID": storageDestination.ID,
+		}})
 	}
-
-	return c.String(http.StatusOK, "OK")
 }
 
 func (s Server) DahuaDevicesStreamsIDPATCH(c echo.Context) error {

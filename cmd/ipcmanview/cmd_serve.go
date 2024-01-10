@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -116,7 +115,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	rpcserver.Register(httpRouter, rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}))
 
 	// HTTP server
-	httpServer := http.NewServer(httpRouter, fmt.Sprintf("%s:%d", c.HTTPHost, c.HTTPPort))
+	httpServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPPort)))
 	super.Add(httpServer)
 
 	// TODO: move this

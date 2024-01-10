@@ -50,16 +50,15 @@ func FileFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaFi
 		return nil, err
 	}
 
-	dbDest, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
+	dest, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
 		ServerAddress: u.Hostname(),
 		Storage:       storage,
 	})
 	if err != nil {
 		return nil, err
 	}
-	dest := dbDest.Convert()
 
-	c, err := ftp.Dial(StorageDestinationURL(dest), ftp.DialWithContext(ctx))
+	c, err := ftp.Dial(core.Address(dest.ServerAddress, int(dest.Port)), ftp.DialWithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -90,18 +89,17 @@ func FileSFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaF
 		return nil, err
 	}
 
-	dbCred, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
+	dest, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
 		ServerAddress: u.Hostname(),
 		Storage:       models.StorageSFTP,
 	})
 	if err != nil {
 		return nil, err
 	}
-	cred := dbCred.Convert()
 
-	conn, err := ssh.Dial("tcp", StorageDestinationURL(cred), &ssh.ClientConfig{
-		User: cred.Username,
-		Auth: []ssh.AuthMethod{ssh.Password(cred.Password)},
+	conn, err := ssh.Dial("tcp", core.Address(dest.ServerAddress, int(dest.Port)), &ssh.ClientConfig{
+		User: dest.Username,
+		Auth: []ssh.AuthMethod{ssh.Password(dest.Password)},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			// TODO: check public key
 			return nil
@@ -116,7 +114,7 @@ func FileSFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaF
 		return nil, err
 	}
 
-	username := "/" + cred.Username
+	username := "/" + dest.Username
 	path, _ := strings.CutPrefix(u.Path, username)
 
 	rd, err := client.Open(path)

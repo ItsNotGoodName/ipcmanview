@@ -100,9 +100,9 @@
                         />
                       </label>
                     </th>
-                    <th>
+                    <td>
                       {{ .Name }}
-                    </th>
+                    </td>
                     <td>{{ .Storage }}</td>
                     <td>{{ .ServerAddress }}</td>
                     <td>{{ .Port }}</td>
@@ -114,6 +114,7 @@
                           class="btn-xs btn join-item"
                           hx-post="/dahua/storage/destinations/{{ .ID }}/test"
                           hx-target="this"
+                          hx-swap="outerHTML"
                         >
                           Test
                         </button>
@@ -136,4 +137,28 @@
   </main>
 
   {{ template "footer.html" . }}
+{{ end }}
+
+{{ define "htmx-storage-destination-test" }}
+  {{ with .Data }}
+    {{ if .OK }}
+      <div
+        class="btn-xs btn join-item btn-success"
+        hx-post="/dahua/storage/destinations/{{ .ID }}/test"
+        hx-target="this"
+        hx-swap="outerHTML"
+      >
+        OK
+      </div>
+    {{ else }}
+      <div
+        class="btn-xs btn join-item btn-error"
+        hx-post="/dahua/storage/destinations/{{ .ID }}/test"
+        hx-target="this"
+        hx-swap="outerHTML"
+      >
+        ERROR
+      </div>
+    {{ end }}
+  {{ end }}
 {{ end }}

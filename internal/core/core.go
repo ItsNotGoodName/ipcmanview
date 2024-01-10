@@ -3,11 +3,16 @@ package core
 import (
 	"errors"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
+
+func Address(host string, port int) string {
+	return host + ":" + strconv.Itoa(port)
+}
 
 func NewTimeRange(start, end time.Time) (models.TimeRange, error) {
 	if end.Before(start) {
