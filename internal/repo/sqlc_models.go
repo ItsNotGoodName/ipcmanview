@@ -116,6 +116,7 @@ type DahuaStorageDestination struct {
 
 type DahuaStream struct {
 	ID           int64
+	Internal     bool
 	DeviceID     int64
 	Channel      int64
 	Subtype      int64

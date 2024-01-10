@@ -37,6 +37,7 @@ func RegisterRenderer(e *echo.Echo) error {
 
 func (w Server) Register(e *echo.Echo) {
 	e.DELETE("/dahua/events", w.DahuaEventsDELETE)
+	e.DELETE("/dahua/streams/:id", w.DahuaStreamsIDDELETE)
 	e.GET("/", w.Index)
 	e.GET("/dahua", w.Dahua)
 	e.GET("/dahua/devices", w.DahuaDevices)
@@ -981,6 +982,30 @@ func (s Server) DahuaStreams(c echo.Context) error {
 	return c.Render(http.StatusOK, "dahua-streams", view.Data{
 		"Devices": viewDevices,
 	})
+}
+
+func (s Server) DahuaStreamsIDDELETE(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := api.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	stream, err := s.db.GetDahuaStream(ctx, id)
+	if err != nil {
+		if repo.IsNotFound(err) {
+			return echo.ErrNotFound.WithInternal(err)
+		}
+		return err
+	}
+
+	err = dahua.DeleteStream(ctx, s.db, stream)
+	if err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusOK)
 }
 
 func (s Server) DahuaStorage(c echo.Context) error {

@@ -343,16 +343,27 @@ RETURNING *;
 -- name: DeleteDahuaStorageDestination :exec
 DELETE FROM dahua_storage_destinations WHERE id = ?;
 
--- name: TryCreateDahuaStream :exec
-INSERT OR IGNORE INTO dahua_streams (
+-- name: createDahuaStreamDefault :one
+INSERT INTO dahua_streams (
   device_id,
   channel,
   subtype,
   name,
-  mediamtx_path
+  mediamtx_path,
+  internal
 ) VALUES ( 
-  ?, ?, ?, ?, ?
-);
+  ?, ?, ?, ?, ?, true
+) ON CONFLICT DO UPDATE SET 
+  internal = true
+RETURNING ID;
+
+-- name: updateDahuaStreamDefault :exec
+UPDATE dahua_streams SET 
+  internal = false
+WHERE device_id = ?;
+
+-- name: DeleteDahuaStream :exec
+DELETE FROM dahua_streams WHERE id = ?;
 
 -- name: ListDahuaStreamByDevice :many
 SELECT * FROM dahua_streams

@@ -124,6 +124,7 @@ CREATE TABLE dahua_storage_destinations (
 
 CREATE TABLE dahua_streams (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  internal BOOLEAN NOT NULL,
   device_id INTEGER NOT NULL,
   channel INTEGER NOT NULL,
   subtype INTEGER NOT NULL,

@@ -24,7 +24,6 @@
         class="flex flex-col gap-4 px-4"
         method="post"
         hx-post="/dahua/devices"
-        hx-confirm="Are you sure?"
       >
         {{ block "htmx-devices" . }}
           <div class="border-b-base-content flex justify-between gap-4">
@@ -327,6 +326,7 @@
               <th>Subtype</th>
               <th>Name</th>
               <th>MediaMTX Path</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -359,6 +359,18 @@
                       value="{{ .MediamtxPath }}"
                       hx-patch="/dahua/devices/streams/{{ .ID }}?"
                     />
+                  {{ end }}
+                </td>
+                <td>
+                  {{ if not $val.Internal }}
+                    <button
+                      class="btn-xs btn btn-error"
+                      hx-delete="/dahua/streams/{{ $val.ID }}"
+                      hx-target="closest tr"
+                      hx-confirm="Are you sure?"
+                    >
+                      Delete
+                    </button>
                   {{ end }}
                 </td>
               </tr>

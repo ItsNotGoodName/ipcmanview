@@ -2,6 +2,7 @@ package dahua
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -12,6 +13,14 @@ import (
 
 func UpdateStream(ctx context.Context, db repo.DB, stream repo.DahuaStream, arg repo.UpdateDahuaStreamParams) (repo.DahuaStream, error) {
 	return db.UpdateDahuaStream(ctx, arg)
+}
+
+func DeleteStream(ctx context.Context, db repo.DB, stream repo.DahuaStream) error {
+	if stream.Internal {
+		return fmt.Errorf("cannot delete internal stream")
+	}
+
+	return db.DeleteDahuaStream(ctx, stream.ID)
 }
 
 func SupportStreams(device models.DahuaDeviceConn) bool {
@@ -39,17 +48,18 @@ func SyncStreams(ctx context.Context, db repo.DB, deviceID int64, conn dahuarpc.
 			}
 		}
 
-		args := repo.TryCreateDahuaStreamParams{
-			DeviceID: deviceID,
-			Channel:  int64(channelIndex + 1),
-		}
+		args := []repo.CreateDahuaStreamDefaultParams{}
 		for i := 0; i < subtypes; i++ {
-			args.Subtype = int64(i)
-			args.Name = names[i]
-			err := db.TryCreateDahuaStream(ctx, args)
-			if err != nil {
-				return err
+			arg := repo.CreateDahuaStreamDefaultParams{
+				Channel: int64(channelIndex + 1),
+				Subtype: int64(i),
+				Name:    names[i],
 			}
+			args = append(args, arg)
+		}
+		err := db.CreateDahuaStreamDefault(ctx, deviceID, args)
+		if err != nil {
+			return err
 		}
 	}
 

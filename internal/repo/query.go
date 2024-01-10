@@ -357,3 +357,38 @@ func (db DB) ListDahuaDeviceByFeature(ctx context.Context, features ...models.Da
 	}
 	return db.listDahuaDeviceByFeature(ctx, feature)
 }
+
+type CreateDahuaStreamDefaultParams struct {
+	Channel int64
+	Subtype int64
+	Name    string
+}
+
+func (db DB) CreateDahuaStreamDefault(ctx context.Context, deviceID int64, args []CreateDahuaStreamDefaultParams) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return nil
+	}
+	defer tx.Rollback()
+
+	err = tx.updateDahuaStreamDefault(ctx, deviceID)
+	if err != nil {
+		return err
+	}
+
+	ids := make([]int64, 0, len(args))
+	for _, arg := range args {
+		id, err := tx.createDahuaStreamDefault(ctx, createDahuaStreamDefaultParams{
+			DeviceID: deviceID,
+			Channel:  arg.Channel,
+			Subtype:  arg.Subtype,
+			Name:     arg.Name,
+		})
+		if err != nil {
+			return err
+		}
+		ids = append(ids, id)
+	}
+
+	return tx.Commit()
+}

@@ -330,6 +330,15 @@ func (q *Queries) DeleteDahuaStorageDestination(ctx context.Context, id int64) e
 	return err
 }
 
+const deleteDahuaStream = `-- name: DeleteDahuaStream :exec
+DELETE FROM dahua_streams WHERE id = ?
+`
+
+func (q *Queries) DeleteDahuaStream(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteDahuaStream, id)
+	return err
+}
+
 const getDahuaDevice = `-- name: GetDahuaDevice :one
 SELECT dahua_devices.id, dahua_devices.name, dahua_devices.address, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
 LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
@@ -530,7 +539,7 @@ func (q *Queries) GetDahuaStorageDestinationByServerAddressAndStorage(ctx contex
 }
 
 const getDahuaStream = `-- name: GetDahuaStream :one
-SELECT id, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
+SELECT id, internal, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
 WHERE id = ?
 `
 
@@ -539,6 +548,7 @@ func (q *Queries) GetDahuaStream(ctx context.Context, id int64) (DahuaStream, er
 	var i DahuaStream
 	err := row.Scan(
 		&i.ID,
+		&i.Internal,
 		&i.DeviceID,
 		&i.Channel,
 		&i.Subtype,
@@ -942,7 +952,7 @@ func (q *Queries) ListDahuaStorageDestination(ctx context.Context) ([]DahuaStora
 }
 
 const listDahuaStream = `-- name: ListDahuaStream :many
-SELECT id, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
+SELECT id, internal, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
 ORDER BY device_id
 `
 
@@ -957,6 +967,7 @@ func (q *Queries) ListDahuaStream(ctx context.Context) ([]DahuaStream, error) {
 		var i DahuaStream
 		if err := rows.Scan(
 			&i.ID,
+			&i.Internal,
 			&i.DeviceID,
 			&i.Channel,
 			&i.Subtype,
@@ -977,7 +988,7 @@ func (q *Queries) ListDahuaStream(ctx context.Context) ([]DahuaStream, error) {
 }
 
 const listDahuaStreamByDevice = `-- name: ListDahuaStreamByDevice :many
-SELECT id, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
+SELECT id, internal, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
 WHERE device_id = ?
 `
 
@@ -992,6 +1003,7 @@ func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) (
 		var i DahuaStream
 		if err := rows.Scan(
 			&i.ID,
+			&i.Internal,
 			&i.DeviceID,
 			&i.Channel,
 			&i.Subtype,
@@ -1065,37 +1077,6 @@ type TouchDahuaFileScanLockParams struct {
 
 func (q *Queries) TouchDahuaFileScanLock(ctx context.Context, arg TouchDahuaFileScanLockParams) error {
 	_, err := q.db.ExecContext(ctx, touchDahuaFileScanLock, arg.TouchedAt, arg.DeviceID)
-	return err
-}
-
-const tryCreateDahuaStream = `-- name: TryCreateDahuaStream :exec
-INSERT OR IGNORE INTO dahua_streams (
-  device_id,
-  channel,
-  subtype,
-  name,
-  mediamtx_path
-) VALUES ( 
-  ?, ?, ?, ?, ?
-)
-`
-
-type TryCreateDahuaStreamParams struct {
-	DeviceID     int64
-	Channel      int64
-	Subtype      int64
-	Name         string
-	MediamtxPath string
-}
-
-func (q *Queries) TryCreateDahuaStream(ctx context.Context, arg TryCreateDahuaStreamParams) error {
-	_, err := q.db.ExecContext(ctx, tryCreateDahuaStream,
-		arg.DeviceID,
-		arg.Channel,
-		arg.Subtype,
-		arg.Name,
-		arg.MediamtxPath,
-	)
 	return err
 }
 
@@ -1370,7 +1351,7 @@ SET
   name = ?,
   mediamtx_path = ?
 WHERE id = ?
-RETURNING id, device_id, channel, subtype, name, mediamtx_path
+RETURNING id, internal, device_id, channel, subtype, name, mediamtx_path
 `
 
 type UpdateDahuaStreamParams struct {
@@ -1384,6 +1365,7 @@ func (q *Queries) UpdateDahuaStream(ctx context.Context, arg UpdateDahuaStreamPa
 	var i DahuaStream
 	err := row.Scan(
 		&i.ID,
+		&i.Internal,
 		&i.DeviceID,
 		&i.Channel,
 		&i.Subtype,
@@ -1495,6 +1477,42 @@ func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFile
 		arg.ScanType,
 	)
 	return err
+}
+
+const createDahuaStreamDefault = `-- name: createDahuaStreamDefault :one
+INSERT INTO dahua_streams (
+  device_id,
+  channel,
+  subtype,
+  name,
+  mediamtx_path,
+  internal
+) VALUES ( 
+  ?, ?, ?, ?, ?, true
+) ON CONFLICT DO UPDATE SET 
+  internal = true
+RETURNING ID
+`
+
+type createDahuaStreamDefaultParams struct {
+	DeviceID     int64
+	Channel      int64
+	Subtype      int64
+	Name         string
+	MediamtxPath string
+}
+
+func (q *Queries) createDahuaStreamDefault(ctx context.Context, arg createDahuaStreamDefaultParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createDahuaStreamDefault,
+		arg.DeviceID,
+		arg.Channel,
+		arg.Subtype,
+		arg.Name,
+		arg.MediamtxPath,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const dahuaDeviceExists = `-- name: dahuaDeviceExists :one
@@ -1618,4 +1636,15 @@ func (q *Queries) listDahuaDeviceByFeature(ctx context.Context, feature models.D
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateDahuaStreamDefault = `-- name: updateDahuaStreamDefault :exec
+UPDATE dahua_streams SET 
+  internal = false
+WHERE device_id = ?
+`
+
+func (q *Queries) updateDahuaStreamDefault(ctx context.Context, deviceID int64) error {
+	_, err := q.db.ExecContext(ctx, updateDahuaStreamDefault, deviceID)
+	return err
 }
