@@ -1,19 +1,15 @@
 package main
 
 import (
-	"context"
-
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	webserver "github.com/ItsNotGoodName/ipcmanview/internal/web/server"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuaevents"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -117,34 +113,6 @@ func (c *CmdServe) Run(ctx *Context) error {
 	// HTTP server
 	httpServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPPort)))
 	super.Add(httpServer)
-
-	// TODO: move this
-	bus.OnEventDahuaEvent(func(ctx context.Context, event models.EventDahuaEvent) error {
-		switch event.Event.Code {
-		case dahuaevents.CodeNewFile:
-			go func() error {
-
-				dbDevice, err := db.GetDahuaDevice(ctx, event.Event.DeviceID)
-				if err != nil {
-					return err
-				}
-				client := dahuaStore.Client(ctx, dbDevice.Convert().DahuaConn)
-
-				err = dahua.ScanLockCreateTry(ctx, db, client.Conn.ID)
-				if err != nil {
-					return err
-				}
-				cancel := dahua.ScanLockHeartbeat(ctx, db, client.Conn.ID)
-				defer cancel()
-
-				return dahua.Scan(ctx, db, client.RPC, client.Conn, models.DahuaScanTypeQuick)
-			}()
-
-			return nil
-		default:
-			return nil
-		}
-	})
 
 	return super.Serve(ctx)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuaevents"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
@@ -222,8 +223,16 @@ func (w QuickScanWorker) serve(ctx context.Context) error {
 	quickScanC := make(chan struct{}, 1)
 
 	sub, err := w.pub.Subscribe(ctx, func(ctx context.Context, event pubsub.Event) error {
-		e, ok := event.(models.EventDahuaQuickScanQueue)
-		if !ok || !(e.DeviceID == 0 || e.DeviceID == w.deviceID) {
+		switch e := event.(type) {
+		case models.EventDahuaQuickScanQueue:
+			if !(e.DeviceID == 0 || e.DeviceID == w.deviceID) {
+				return nil
+			}
+		case models.EventDahuaEvent:
+			if e.Event.DeviceID != w.deviceID || e.Event.Code != dahuaevents.CodeNewFile {
+				return nil
+			}
+		default:
 			return nil
 		}
 
@@ -233,7 +242,7 @@ func (w QuickScanWorker) serve(ctx context.Context) error {
 		}
 
 		return nil
-	}, models.EventDahuaQuickScanQueue{})
+	}, models.EventDahuaQuickScanQueue{}, models.EventDahuaEvent{})
 	if err != nil {
 		return err
 	}
@@ -244,20 +253,27 @@ func (w QuickScanWorker) serve(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-quickScanC:
-			err := ScanLockCreate(ctx, w.db, w.deviceID)
-			if err != nil {
+			if err := w.scan(ctx); err != nil {
 				return err
 			}
-			cancel := ScanLockHeartbeat(ctx, w.db, w.deviceID)
-			defer cancel()
-
-			dbDevice, err := w.db.GetDahuaDevice(ctx, w.deviceID)
-			if err != nil {
-				return err
-			}
-			client := w.store.Client(ctx, dbDevice.Convert().DahuaConn)
-
-			return Scan(ctx, w.db, client.RPC, client.Conn, models.DahuaScanTypeQuick)
 		}
 	}
+}
+
+func (w QuickScanWorker) scan(ctx context.Context) error {
+	err := ScanLockCreate(ctx, w.db, w.deviceID)
+	if err != nil {
+		return err
+	}
+
+	cancel := ScanLockHeartbeat(ctx, w.db, w.deviceID)
+	defer cancel()
+
+	dbDevice, err := w.db.GetDahuaDevice(ctx, w.deviceID)
+	if err != nil {
+		return err
+	}
+	client := w.store.Client(ctx, dbDevice.Convert().DahuaConn)
+
+	return Scan(ctx, w.db, client.RPC, client.Conn, models.DahuaScanTypeQuick)
 }
