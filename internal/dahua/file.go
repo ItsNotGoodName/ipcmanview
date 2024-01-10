@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"os/exec"
-	"strconv"
 	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -51,25 +50,26 @@ func FileFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaFi
 		return nil, err
 	}
 
-	cred, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
+	dbDest, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
 		ServerAddress: u.Hostname(),
 		Storage:       storage,
 	})
 	if err != nil {
 		return nil, err
 	}
+	dest := dbDest.Convert()
 
-	c, err := ftp.Dial(cred.ServerAddress+":"+strconv.FormatInt(cred.Port, 10), ftp.DialWithContext(ctx))
+	c, err := ftp.Dial(StorageDestinationURL(dest), ftp.DialWithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.Login(cred.Username, cred.Password)
+	err = c.Login(dest.Username, dest.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	username := "/" + cred.Username
+	username := "/" + dest.Username
 	path, _ := strings.CutPrefix(u.Path, username)
 
 	rd, err := c.Retr(path)
@@ -90,15 +90,16 @@ func FileSFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaF
 		return nil, err
 	}
 
-	cred, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
+	dbCred, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
 		ServerAddress: u.Hostname(),
 		Storage:       models.StorageSFTP,
 	})
 	if err != nil {
 		return nil, err
 	}
+	cred := dbCred.Convert()
 
-	conn, err := ssh.Dial("tcp", cred.ServerAddress+":"+strconv.FormatInt(cred.Port, 10), &ssh.ClientConfig{
+	conn, err := ssh.Dial("tcp", StorageDestinationURL(cred), &ssh.ClientConfig{
 		User: cred.Username,
 		Auth: []ssh.AuthMethod{ssh.Password(cred.Password)},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {

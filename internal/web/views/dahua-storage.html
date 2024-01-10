@@ -109,12 +109,21 @@
                     <td>{{ .Username }}</td>
                     <td>{{ .RemoteDirectory }}</td>
                     <td>
-                      <a
-                        class="btn-xs btn btn-primary"
-                        href="/dahua/storage/destinations/{{ .ID }}"
-                      >
-                        Update
-                      </a>
+                      <div class="join">
+                        <button
+                          class="btn-xs btn join-item"
+                          hx-post="/dahua/storage/destinations/{{ .ID }}/test"
+                          hx-target="this"
+                        >
+                          Test
+                        </button>
+                        <a
+                          class="btn-xs btn btn-primary join-item"
+                          href="/dahua/storage/destinations/{{ .ID }}"
+                        >
+                          Update
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 {{ end }}

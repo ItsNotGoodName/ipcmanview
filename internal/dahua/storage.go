@@ -3,13 +3,21 @@ package dahua
 import (
 	"context"
 	"fmt"
+	"net"
 	"strconv"
 	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
+	"github.com/jlaffaye/ftp"
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
 )
+
+func StorageDestinationURL(arg models.DahuaStorageDestination) string {
+	return arg.ServerAddress + ":" + strconv.FormatInt(arg.Port, 10)
+}
 
 var Storage = []models.Storage{
 	models.StorageFTP,
@@ -41,7 +49,7 @@ func normalizeStorageDestination(arg models.DahuaStorageDestination, create bool
 
 	if create {
 		if arg.Name == "" {
-			arg.Name = arg.ServerAddress + ":" + strconv.FormatInt(arg.Port, 10)
+			arg.Name = StorageDestinationURL(arg)
 		}
 	}
 
@@ -94,4 +102,42 @@ func UpdateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaS
 
 func DeleteStorageDestination(ctx context.Context, db repo.DB, id int64) error {
 	return db.DeleteDahuaStorageDestination(ctx, id)
+}
+
+func TestStorageDestination(ctx context.Context, arg models.DahuaStorageDestination) error {
+	switch arg.Storage {
+	case models.StorageFTP:
+		c, err := ftp.Dial(StorageDestinationURL(arg), ftp.DialWithContext(ctx))
+		if err != nil {
+			return err
+		}
+
+		err = c.Login(arg.Username, arg.Password)
+		if err != nil {
+			return err
+		}
+
+		return c.Quit()
+	case models.StorageSFTP:
+		conn, err := ssh.Dial("tcp", StorageDestinationURL(arg), &ssh.ClientConfig{
+			User: arg.Username,
+			Auth: []ssh.AuthMethod{ssh.Password(arg.Password)},
+			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+				// TODO: check public key
+				return nil
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+		client, err := sftp.NewClient(conn)
+		if err != nil {
+			return err
+		}
+
+		return client.Close()
+	default:
+		return fmt.Errorf("invalid storage: %s", arg.Storage)
+	}
 }

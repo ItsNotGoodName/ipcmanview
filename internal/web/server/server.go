@@ -66,6 +66,7 @@ func (w Server) Register(e *echo.Echo) {
 	e.POST("/dahua/files/download", w.DahuaFilesDownloadPOST)
 	e.POST("/dahua/storage/destinations", w.DahuaStorageDestinationsPOST)
 	e.POST("/dahua/storage/destinations/:id", w.DahuaStorageDestinationsIDPOST)
+	e.POST("/dahua/storage/destinations/:id/test", w.DahuaStorageDestinationsIDTestPOST)
 	e.POST("/dahua/storage/destinations/create", w.DahuaStorageDestinationsCreatePOST)
 }
 
@@ -1152,6 +1153,29 @@ func (s Server) DahuaStorageDestinationsIDPOST(c echo.Context) error {
 	}
 
 	return c.Redirect(http.StatusSeeOther, "/dahua/storage")
+}
+
+func (s Server) DahuaStorageDestinationsIDTestPOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := api.ParamID(c)
+	if err != nil {
+		return err
+	}
+	storageDestination, err := s.db.GetDahuaStorageDestination(ctx, id)
+	if err != nil {
+		if repo.IsNotFound(err) {
+			return echo.ErrNotFound.WithInternal(err)
+		}
+		return err
+	}
+
+	err = dahua.TestStorageDestination(ctx, storageDestination.Convert())
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadGateway, err.Error())
+	}
+
+	return c.String(http.StatusOK, "OK")
 }
 
 func (s Server) DahuaDevicesStreamsIDPATCH(c echo.Context) error {
