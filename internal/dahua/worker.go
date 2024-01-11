@@ -77,7 +77,7 @@ func (w EventWorker) Serve(ctx context.Context) error {
 }
 
 func (w EventWorker) serve(ctx context.Context) error {
-	c := dahuacgi.NewClient(http.Client{}, w.device.Address, w.device.Username, w.device.Password)
+	c := dahuacgi.NewClient(http.Client{}, w.device.Url, w.device.Username, w.device.Password)
 
 	manager, err := dahuacgi.EventManagerGet(ctx, c, 0)
 	if err != nil {

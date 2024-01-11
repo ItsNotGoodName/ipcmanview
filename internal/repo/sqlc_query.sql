@@ -1,8 +1,8 @@
 -- name: createDahuaDevice :one
 INSERT INTO dahua_devices (
-  name, address, username, password, location, feature, created_at, updated_at
+  name, url, ip, username, password, location, feature, created_at, updated_at
 ) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?
+  ?, ?, ?, ?, ?, ?, ?, ?, ?
 ) RETURNING id;
 
 -- name: dahuaDeviceExists :one
@@ -10,7 +10,7 @@ SELECT COUNT(id) FROM dahua_devices WHERE id = ?;
 
 -- name: UpdateDahuaDevice :one
 UPDATE dahua_devices 
-SET name = ?, address = ?, username = ?, password = ?, location = ?, feature = ?, updated_at = ?
+SET name = ?, url = ?, ip = ?, username = ?, password = ?, location = ?, feature = ?, updated_at = ?
 WHERE id = ?
 RETURNING id;
 
@@ -21,6 +21,11 @@ SELECT name FROM dahua_devices WHERE id = ?;
 SELECT dahua_devices.*, coalesce(seed, id) FROM dahua_devices 
 LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 WHERE id = ? LIMIT 1;
+
+-- name: GetDahuaDeviceByIP :one
+SELECT dahua_devices.*, coalesce(seed, id) FROM dahua_devices 
+LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
+WHERE ip = ? LIMIT 1;
 
 -- name: ListDahuaDevice :many
 SELECT dahua_devices.*, coalesce(seed, id) FROM dahua_devices 
@@ -385,3 +390,36 @@ SET
 WHERE id = ?
 RETURNING *;
 
+-- name: createDahuaEmailMessage :one
+INSERT INTO dahua_email_messages (
+  device_id,
+  date,
+  'from',
+  `to`,
+  subject,
+  `text`,
+  alarm_event,
+  alarm_input_channel,
+  alarm_name,
+  created_at
+) VALUES (
+  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+) RETURNING *;
+
+-- name: createDahuaEmailAttachment :one
+INSERT INTO dahua_email_attachments (
+  message_id,
+  file_name
+) VALUES (
+  ?, ?
+) RETURNING *;
+
+-- name: CreateDahuaAferoFile :one
+INSERT INTO dahua_afero_files (
+  file_id,
+  email_attachment_id,
+  name,
+  created_at
+) VALUES (
+  ?, ?, ?, ?
+) RETURNING *;

@@ -3,7 +3,7 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  args_bin = ["serve", "--debug"]
+  args_bin = ["serve"]
   bin = "./tmp/main"
   cmd = "go build -o ./tmp/main -tags dev ./cmd/ipcmanview"
   delay = 100

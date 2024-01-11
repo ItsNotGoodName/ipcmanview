@@ -45,21 +45,17 @@ func NewTimestamp(date time.Time, cameraLocation *time.Location) Timestamp {
 
 // Parse returns the UTC time for the given timestamp and camera location.
 func (t Timestamp) Parse(cameraLocation *time.Location) (time.Time, error) {
+	var format = "2006-01-02 15:04:05"
 	if strings.HasSuffix(string(t), "PM") || strings.HasSuffix(string(t), "AM") {
-		date, err := time.ParseInLocation("2006-01-02 03:04:05 PM", string(t), cameraLocation)
-		if err != nil {
-			return date, err
-		}
-
-		return date.UTC(), nil
-	} else {
-		date, err := time.ParseInLocation("2006-01-02 15:04:05", string(t), cameraLocation)
-		if err != nil {
-			return date, err
-		}
-
-		return date.UTC(), nil
+		format = "2006-01-02 03:04:05 PM"
 	}
+
+	date, err := time.ParseInLocation(format, string(t), cameraLocation)
+	if err != nil {
+		return date, err
+	}
+
+	return date.UTC(), nil
 }
 
 // ExtractFilePathTags extracts tags that are surrounded by brackets from the given file path.

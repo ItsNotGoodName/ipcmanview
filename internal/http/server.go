@@ -25,6 +25,10 @@ func NewServer(echo *echo.Echo, address string) Server {
 }
 
 func (s Server) Serve(ctx context.Context) error {
+	s.e.HideBanner = true
+	s.e.HidePort = true
+	log.Info().Str("address", s.address).Msg("Starting HTTP server")
+
 	errC := make(chan error, 1)
 	go func() { errC <- s.e.Start(s.address) }()
 
@@ -32,6 +36,8 @@ func (s Server) Serve(ctx context.Context) error {
 	case err := <-errC:
 		return errors.Join(suture.ErrTerminateSupervisorTree, err)
 	case <-ctx.Done():
+		log.Info().Msg("Gracefully shutting down HTTP server...")
+
 		ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
 		defer cancel()
 

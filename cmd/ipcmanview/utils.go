@@ -10,10 +10,15 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
+	"github.com/spf13/afero"
 )
 
 type Shared struct {
 	Dir string `default:"ipcmanview_data" env:"DIR" help:"Directory path for storing data."`
+}
+
+func mkdir(dir string) error {
+	return os.MkdirAll(dir, 0755)
 }
 
 func (c Shared) useDir() (string, error) {
@@ -22,7 +27,7 @@ func (c Shared) useDir() (string, error) {
 		return "", err
 	}
 
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := mkdir(dir); err != nil {
 		return "", err
 	}
 
@@ -34,13 +39,25 @@ func (c Shared) useDahuaFileStore() (files.DahuaFileStore, error) {
 	if err != nil {
 		return files.DahuaFileStore{}, err
 	}
-
-	dir = filepath.Join(dir, "dahua-files")
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	dir = filepath.Join(dir, "dahua-files-old")
+	if err := mkdir(dir); err != nil {
 		return files.DahuaFileStore{}, err
 	}
 
 	return files.NewDahuaFileStore(dir), nil
+}
+
+func (c Shared) useDahuaFS() (afero.Fs, error) {
+	dir, err := c.useDir()
+	if err != nil {
+		return nil, err
+	}
+	dir = filepath.Join(dir, "dahua-files")
+	if err := mkdir(dir); err != nil {
+		return nil, err
+	}
+
+	return afero.NewBasePathFs(afero.NewOsFs(), dir), nil
 }
 
 func (c Shared) useDB(ctx *Context) (repo.DB, error) {

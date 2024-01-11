@@ -130,7 +130,7 @@ func FileSFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaF
 }
 
 func FileLocalReadCloser(ctx context.Context, client Client, filePath string) (io.ReadCloser, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(client.Conn.Address, filePath), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, dahuarpc.LoadFileURL(client.Conn.Url, filePath), nil)
 	if err != nil {
 		return nil, err
 	}

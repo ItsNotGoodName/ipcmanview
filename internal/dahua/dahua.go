@@ -26,7 +26,7 @@ import (
 )
 
 func ConnEqual(lhs, rhs models.DahuaConn) bool {
-	return lhs.Address.String() == rhs.Address.String() && lhs.Username == rhs.Username && lhs.Password == rhs.Password
+	return lhs.Url.String() == rhs.Url.String() && lhs.Username == rhs.Username && lhs.Password == rhs.Password
 }
 
 func NewClient(conn models.DahuaConn) Client {
@@ -35,9 +35,9 @@ func NewClient(conn models.DahuaConn) Client {
 	}
 	cgiHTTPClient := http.Client{}
 
-	clientRPC := dahuarpc.NewClient(rpcHTTPClient, conn.Address, conn.Username, conn.Password)
+	clientRPC := dahuarpc.NewClient(rpcHTTPClient, conn.Url, conn.Username, conn.Password)
 	clientPTZ := ptz.NewClient(clientRPC)
-	clientCGI := dahuacgi.NewClient(cgiHTTPClient, conn.Address, conn.Username, conn.Password)
+	clientCGI := dahuacgi.NewClient(cgiHTTPClient, conn.Url, conn.Username, conn.Password)
 
 	return Client{
 		Conn: conn,
@@ -341,7 +341,7 @@ func GetDahuaStatus(ctx context.Context, device models.DahuaConn, rpcClient dahu
 	}
 	return models.DahuaStatus{
 		DeviceID:     device.ID,
-		Address:      device.Address.String(),
+		Url:          device.Url.String(),
 		Username:     device.Username,
 		Location:     device.Location.String(),
 		Seed:         device.Seed,

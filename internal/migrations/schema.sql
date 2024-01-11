@@ -6,7 +6,8 @@ CREATE TABLE settings (
 CREATE TABLE dahua_devices (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
-  address TEXT NOT NULL UNIQUE,
+  ip TEXT NOT NULL UNIQUE,
+  url TEXT NOT NULL,
   username TEXT NOT NULL,
   password TEXT NOT NULL,
   location TEXT NOT NULL,
@@ -61,6 +62,18 @@ CREATE TABLE dahua_event_worker_states (
   created_at DATETIME NOT NULL,
 
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE dahua_afero_files (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  file_id INTEGER,
+  email_attachment_id INTEGER,
+  name TEXT NOT NULL UNIQUE,
+
+  created_at DATETIME NOT NULL,
+  deleted_at DATETIME,
+  FOREIGN KEY(file_id) REFERENCES dahua_files(id) ON UPDATE CASCADE ON DELETE SET NULL,
+  FOREIGN KEY(email_attachment_id) REFERENCES dahua_email_attachments(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE dahua_files (
@@ -133,4 +146,29 @@ CREATE TABLE dahua_streams (
 
   UNIQUE(device_id, channel, subtype),
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE dahua_email_messages (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  device_id INTEGER NOT NULL,
+  date DATETIME NOT NULL,
+  'from' TEXT NOT NULL,
+  `to` JSON NOT NULL,
+  subject TEXT NOT NULL,
+  `text` TEXT NOT NULL,
+
+	alarm_event TEXT NOT NULL,
+	alarm_input_channel INTEGER NOT NULL,
+	alarm_name TEXT NOT NULL,
+
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE dahua_email_attachments (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  message_id INTEGER NOT NULL,
+  file_name TEXT NOT NULL,
+
+  FOREIGN KEY(message_id) REFERENCES dahua_email_messages(id) ON UPDATE CASCADE ON DELETE CASCADE
 );

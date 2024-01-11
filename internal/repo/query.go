@@ -28,7 +28,7 @@ type CreateDahuaFileCursorParams = createDahuaFileCursorParams
 func (db DB) CreateDahuaDevice(ctx context.Context, arg CreateDahuaDeviceParams, args2 CreateDahuaFileCursorParams) (int64, error) {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
-		return 0, nil
+		return 0, err
 	}
 	defer tx.Rollback()
 
@@ -367,7 +367,7 @@ type CreateDahuaStreamDefaultParams struct {
 func (db DB) CreateDahuaStreamDefault(ctx context.Context, deviceID int64, args []CreateDahuaStreamDefaultParams) error {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
-		return nil
+		return err
 	}
 	defer tx.Rollback()
 
@@ -391,4 +391,35 @@ func (db DB) CreateDahuaStreamDefault(ctx context.Context, deviceID int64, args 
 	}
 
 	return tx.Commit()
+}
+
+type CreateDahuaEmailMessageParams = createDahuaEmailMessageParams
+type CreateDahuaEmailAttachmentParams = createDahuaEmailAttachmentParams
+
+func (db DB) CreateDahuaEmail(ctx context.Context, arg CreateDahuaEmailMessageParams, args ...CreateDahuaEmailAttachmentParams) (DahuaEmail, error) {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return DahuaEmail{}, err
+	}
+	defer tx.Rollback()
+
+	msg, err := db.createDahuaEmailMessage(ctx, arg)
+	if err != nil {
+		return DahuaEmail{}, err
+	}
+
+	atts := make([]DahuaEmailAttachment, 0, len(args))
+	for _, a := range args {
+		a.MessageID = msg.ID
+		att, err := db.createDahuaEmailAttachment(ctx, a)
+		if err != nil {
+			return DahuaEmail{}, err
+		}
+		atts = append(atts, att)
+	}
+
+	return DahuaEmail{
+		Message:     msg,
+		Attachments: atts,
+	}, tx.Commit()
 }

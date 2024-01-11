@@ -14,11 +14,11 @@ import (
 
 func normalizeDevice(arg models.DahuaDevice, create bool) models.DahuaDevice {
 	arg.Name = strings.TrimSpace(arg.Name)
-	arg.Address = toHTTPURL(arg.Address)
+	arg.Url = toHTTPURL(arg.Url)
 
 	if create {
 		if arg.Name == "" {
-			arg.Name = arg.Address.String()
+			arg.Name = arg.Url.String()
 		}
 		if arg.Username == "" {
 			arg.Username = "admin"
@@ -36,10 +36,16 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.Dah
 		return models.DahuaDeviceConn{}, err
 	}
 
+	ip, err := core.IPFromURL(arg.Url)
+	if err != nil {
+		return models.DahuaDeviceConn{}, err
+	}
+
 	now := types.NewTime(time.Now())
 	id, err := db.CreateDahuaDevice(ctx, repo.CreateDahuaDeviceParams{
 		Name:      arg.Name,
-		Address:   types.NewURL(arg.Address),
+		Url:       types.NewURL(arg.Url),
+		Ip:        ip,
 		Username:  arg.Username,
 		Password:  arg.Password,
 		Location:  types.NewLocation(arg.Location),
@@ -72,9 +78,15 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.Dah
 		return models.DahuaDeviceConn{}, err
 	}
 
+	ip, err := core.IPFromURL(arg.Url)
+	if err != nil {
+		return models.DahuaDeviceConn{}, err
+	}
+
 	_, err = db.UpdateDahuaDevice(ctx, repo.UpdateDahuaDeviceParams{
 		Name:      arg.Name,
-		Address:   types.NewURL(arg.Address),
+		Url:       types.NewURL(arg.Url),
+		Ip:        ip,
 		Username:  arg.Username,
 		Password:  arg.Password,
 		Location:  types.NewLocation(arg.Location),

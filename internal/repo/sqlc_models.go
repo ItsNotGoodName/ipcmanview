@@ -12,16 +12,46 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
+type DahuaAferoFile struct {
+	ID                int64
+	FileID            sql.NullInt64
+	EmailAttachmentID sql.NullInt64
+	Name              string
+	CreatedAt         types.Time
+	DeletedAt         sql.NullTime
+}
+
 type DahuaDevice struct {
 	ID        int64
 	Name      string
-	Address   types.URL
+	Ip        string
+	Url       types.URL
 	Username  string
 	Password  string
 	Location  types.Location
 	Feature   models.DahuaFeature
 	CreatedAt types.Time
 	UpdatedAt types.Time
+}
+
+type DahuaEmailAttachment struct {
+	ID        int64
+	MessageID int64
+	FileName  string
+}
+
+type DahuaEmailMessage struct {
+	ID                int64
+	DeviceID          int64
+	Date              types.Time
+	From              string
+	To                types.StringSlice
+	Subject           string
+	Text              string
+	AlarmEvent        string
+	AlarmInputChannel int64
+	AlarmName         string
+	CreatedAt         types.Time
 }
 
 type DahuaEvent struct {

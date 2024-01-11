@@ -17,6 +17,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	echo "github.com/labstack/echo/v4"
+	"github.com/spf13/afero"
 )
 
 func NewServer(
@@ -24,12 +25,14 @@ func NewServer(
 	db repo.DB,
 	dahuaStore *dahua.Store,
 	dahuaFileCache files.DahuaFileStore,
+	dahuaFileFS *afero.HttpFs,
 ) *Server {
 	return &Server{
 		pub:            pub,
 		db:             db,
 		dahuaStore:     dahuaStore,
 		dahuaFileCache: dahuaFileCache,
+		dahuaFileFS:    *dahuaFileFS,
 	}
 }
 
@@ -38,10 +41,12 @@ type Server struct {
 	db             repo.DB
 	dahuaStore     *dahua.Store
 	dahuaFileCache files.DahuaFileStore
+	dahuaFileFS    afero.HttpFs
 }
 
 func (s *Server) Register(e *echo.Echo) {
 	e.GET("/v1/dahua", s.Dahua)
+	e.GET("/v1/dahua-afero-files/*", echo.WrapHandler(http.StripPrefix("/v1/dahua-afero-files", http.FileServer(s.dahuaFileFS))))
 	e.GET("/v1/dahua-events", s.DahuaEvents)
 	e.GET("/v1/dahua/:id/audio", s.DahuaIDAudio)
 	e.GET("/v1/dahua/:id/coaxial/caps", s.DahuaIDCoaxialCaps)

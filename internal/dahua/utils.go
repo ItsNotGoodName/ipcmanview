@@ -17,5 +17,10 @@ func toHTTPURL(u *url.URL) *url.URL {
 		u.Scheme = "http"
 	}
 
+	u, err := url.Parse(u.String())
+	if err != nil {
+		panic(err)
+	}
+
 	return u
 }

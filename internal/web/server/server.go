@@ -581,7 +581,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 
 	var form struct {
 		Name     string
-		Address  string
+		Url      string
 		Username string
 		Password string
 		Location string
@@ -594,7 +594,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
-	address, err := url.Parse(form.Address)
+	urL, err := url.Parse(form.Url)
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
@@ -603,7 +603,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 		Name:     form.Name,
 		Username: form.Username,
 		Password: form.Password,
-		Address:  address,
+		Url:      urL,
 		Location: location,
 		Feature:  dahua.FeatureFromStrings(form.Features),
 	})
@@ -741,7 +741,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 
 	var form struct {
 		Name     string
-		Address  string
+		Url      string
 		Username string
 		Password string
 		Location string
@@ -754,7 +754,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
-	address, err := url.Parse(form.Address)
+	urL, err := url.Parse(form.Url)
 	if err != nil {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
@@ -763,7 +763,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 	}
 
 	device.Name = form.Name
-	device.Address = address
+	device.Url = urL
 	device.Username = form.Username
 	device.Password = form.Password
 	device.Location = location

@@ -6,6 +6,12 @@ import (
 	"fmt"
 )
 
+func NewStringSlice(slice []string) StringSlice {
+	return StringSlice{
+		Slice: slice,
+	}
+}
+
 type StringSlice struct {
 	Slice []string
 }

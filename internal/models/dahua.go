@@ -26,7 +26,7 @@ type DahuaError struct {
 
 type DahuaStatus struct {
 	DeviceID     int64     `json:"device_id"`
-	Address      string    `json:"address"`
+	Url          string    `json:"url"`
 	Username     string    `json:"username"`
 	Location     string    `json:"location"`
 	Seed         int       `json:"seed"`
@@ -38,7 +38,7 @@ type DahuaStatus struct {
 type DahuaDevice struct {
 	ID        int64
 	Name      string `validate:"required,lte=64"`
-	Address   *url.URL
+	Url       *url.URL
 	Username  string
 	Password  string
 	Location  *time.Location
@@ -49,7 +49,7 @@ type DahuaDevice struct {
 
 type DahuaConn struct {
 	ID       int64
-	Address  *url.URL
+	Url      *url.URL
 	Username string
 	Password string
 	Location *time.Location

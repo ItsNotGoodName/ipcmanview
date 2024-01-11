@@ -5,6 +5,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuasmtp"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
@@ -13,6 +14,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
+	"github.com/spf13/afero"
 
 	"github.com/thejerf/suture/v4"
 )
@@ -21,6 +23,8 @@ type CmdServe struct {
 	Shared
 	HTTPHost               string     `env:"HTTP_HOST" help:"HTTP host to listen on (e.g. \"127.0.0.1\")."`
 	HTTPPort               uint16     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
+	SMTPHost               string     `env:"SMTP_HOST" help:"SMTP host to listen on (e.g. \"127.0.0.1\")."`
+	SMTPPort               uint16     `env:"SMTP_PORT" default:"1025" help:"SMTP port to listen on."`
 	MQTTAddress            string     `env:"MQTT_ADDRESS" help:"MQTT server address (e.g. \"mqtt://192.168.1.20:1883\")."`
 	MQTTTopic              mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT server topic to publish messages."`
 	MQTTUsername           string     `env:"MQTT_USERNAME" help:"MQTT server username for authentication."`
@@ -62,6 +66,11 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// Dahua
 
+	dahuaFileFS, err := c.useDahuaFS()
+	if err != nil {
+		return err
+	}
+
 	dahuaStore := dahua.
 		NewStore().
 		Register(bus)
@@ -91,6 +100,14 @@ func (c *CmdServe) Run(ctx *Context) error {
 		super.Add(dahuaMQTTConn)
 	}
 
+	// SMTP
+	dahuaSMTPBackend := dahuasmtp.NewBackend(dahuasmtp.App{
+		DB: db,
+		FS: dahuaFileFS,
+	})
+	dahuaSMTPServer := dahuasmtp.NewServer(dahuaSMTPBackend, core.Address(c.SMTPHost, int(c.SMTPPort)))
+	super.Add(dahuaSMTPServer)
+
 	// HTTP router
 	httpRouter := http.NewRouter()
 	if err := webserver.RegisterRenderer(httpRouter); err != nil {
@@ -104,7 +121,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// API
 	api.
-		NewServer(pub, db, dahuaStore, dahuaFileStore).
+		NewServer(pub, db, dahuaStore, dahuaFileStore, afero.NewHttpFs(dahuaFileFS)).
 		Register(httpRouter)
 
 	// RPC
