@@ -23,7 +23,7 @@ type WorkerStore struct {
 }
 
 type workerData struct {
-	device models.DahuaConn
+	conn   models.DahuaConn
 	tokens []suture.ServiceToken
 }
 
@@ -36,14 +36,14 @@ func NewWorkerStore(super *suture.Supervisor, factory WorkerFactory) *WorkerStor
 	}
 }
 
-func (s *WorkerStore) create(ctx context.Context, device models.DahuaConn) error {
-	tokens, err := s.factory(ctx, s.super, device)
+func (s *WorkerStore) create(ctx context.Context, conn models.DahuaConn) error {
+	tokens, err := s.factory(ctx, s.super, conn)
 	if err != nil {
 		return err
 	}
 
-	s.workers[device.ID] = workerData{
-		device: device,
+	s.workers[conn.ID] = workerData{
+		conn:   conn,
 		tokens: tokens,
 	}
 
@@ -70,7 +70,7 @@ func (s *WorkerStore) Update(ctx context.Context, device models.DahuaConn) error
 	if !found {
 		return fmt.Errorf("workers not found for device by ID: %d", device.ID)
 	}
-	if ConnEqual(worker.device, device) {
+	if worker.conn.EQ(device) {
 		return nil
 	}
 

@@ -59,7 +59,7 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn models.DahuaConn) Cl
 
 		client = newStoreClient(conn)
 		s.clients[conn.ID] = client
-	} else if !ConnEqual(client.Client.Conn, conn) {
+	} else if !client.Client.Conn.EQ(conn) {
 		// Found but not equal
 
 		// Closing device connection should not block that store

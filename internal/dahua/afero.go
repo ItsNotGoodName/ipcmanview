@@ -58,12 +58,12 @@ func DeleteAllOrphanAferoFile(ctx context.Context, db repo.DB, fs afero.Fs) (int
 
 		for _, f := range files {
 			err := fs.Remove(f.Name)
-			if err != nil {
+			if err != nil && !os.IsNotExist(err) {
 				return deleted, err
 			}
 
 			err = db.DeleteDahuaAferoFile(ctx, f.ID)
-			if err != nil && !os.IsNotExist(err) {
+			if err != nil {
 				return deleted, err
 			}
 			deleted++

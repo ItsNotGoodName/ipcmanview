@@ -26,10 +26,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ConnEqual(lhs, rhs models.DahuaConn) bool {
-	return lhs.Url.String() == rhs.Url.String() && lhs.Username == rhs.Username && lhs.Password == rhs.Password
-}
-
 func NewClient(conn models.DahuaConn) Client {
 	rpcHTTPClient := &http.Client{
 		Timeout: 5 * time.Second,

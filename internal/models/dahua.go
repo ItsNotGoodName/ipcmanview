@@ -9,6 +9,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
 )
 
+// TODO: remove all json tags
+
 const DahuaFileTypeJPG = "jpg"
 const DahuaFileTypeDAV = "dav"
 
@@ -47,6 +49,7 @@ type DahuaDevice struct {
 	UpdatedAt time.Time
 }
 
+// DahuaConn is the bare minumum information required to create a connection to a Dahua device.
 type DahuaConn struct {
 	ID       int64
 	Url      *url.URL
@@ -55,6 +58,15 @@ type DahuaConn struct {
 	Location *time.Location
 	Feature  DahuaFeature
 	Seed     int
+}
+
+func (lhs DahuaConn) EQ(rhs DahuaConn) bool {
+	return lhs.Url.String() == rhs.Url.String() &&
+		lhs.Username == rhs.Username &&
+		lhs.Password == rhs.Password &&
+		lhs.Location.String() == rhs.Location.String() &&
+		lhs.Feature == rhs.Feature &&
+		lhs.Seed == rhs.Seed
 }
 
 type DahuaDeviceConn struct {
@@ -69,7 +81,7 @@ func (f DahuaFeature) EQ(feature DahuaFeature) bool {
 }
 
 const (
-	// DahuaFeatureCamera means the device has at least 1 camera.
+	// DahuaFeatureCamera means the device is a camera.
 	DahuaFeatureCamera DahuaFeature = 1 << iota
 )
 
