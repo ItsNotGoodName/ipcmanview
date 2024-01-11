@@ -7,6 +7,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -307,7 +308,7 @@ func NewDahuaFile(deviceID int64, file mediafilefind.FindNextFileInfo, affixSeed
 		Repeat:      file.Repeat,
 		WorkDir:     file.WorkDir,
 		WorkDirSN:   file.WorkDirSN == 1,
-		Local:       file.Local(),
+		Storage:     core.StorageFromFilePath(file.FilePath),
 	}, nil
 }
 

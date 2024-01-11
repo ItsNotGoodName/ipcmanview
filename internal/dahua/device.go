@@ -2,6 +2,9 @@ package dahua
 
 import (
 	"context"
+	"net"
+	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -12,9 +15,29 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 )
 
+func normalizeDeviceHTTPURL(u *url.URL) *url.URL {
+	if slices.Contains([]string{"http", "https"}, u.Scheme) {
+		return u
+	}
+
+	switch u.Port() {
+	case "443":
+		u.Scheme = "https"
+	default:
+		u.Scheme = "http"
+	}
+
+	u, err := url.Parse(u.String())
+	if err != nil {
+		panic(err)
+	}
+
+	return u
+}
+
 func normalizeDevice(arg models.DahuaDevice, create bool) models.DahuaDevice {
 	arg.Name = strings.TrimSpace(arg.Name)
-	arg.Url = toHTTPURL(arg.Url)
+	arg.Url = normalizeDeviceHTTPURL(arg.Url)
 
 	if create {
 		if arg.Name == "" {
@@ -28,6 +51,24 @@ func normalizeDevice(arg models.DahuaDevice, create bool) models.DahuaDevice {
 	return arg
 }
 
+func parseDeviceIPFromURL(urL *url.URL) (string, error) {
+	ip := urL.Hostname()
+
+	ips, err := net.LookupIP(ip)
+	if err != nil {
+		return "", err
+	}
+
+	for _, i2 := range ips {
+		if i2.To4() != nil {
+			ip = i2.String()
+			break
+		}
+	}
+
+	return ip, nil
+}
+
 func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.DahuaDevice) (models.DahuaDeviceConn, error) {
 	arg = normalizeDevice(arg, true)
 
@@ -36,7 +77,7 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.Dah
 		return models.DahuaDeviceConn{}, err
 	}
 
-	ip, err := core.IPFromURL(arg.Url)
+	ip, err := parseDeviceIPFromURL(arg.Url)
 	if err != nil {
 		return models.DahuaDeviceConn{}, err
 	}
@@ -78,7 +119,7 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.Dah
 		return models.DahuaDeviceConn{}, err
 	}
 
-	ip, err := core.IPFromURL(arg.Url)
+	ip, err := parseDeviceIPFromURL(arg.Url)
 	if err != nil {
 		return models.DahuaDeviceConn{}, err
 	}

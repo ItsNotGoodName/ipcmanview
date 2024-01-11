@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"net"
+
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 )
 
 type CmdDebug struct {
@@ -11,31 +12,22 @@ type CmdDebug struct {
 }
 
 func (c *CmdDebug) Run(ctx *Context) error {
-	// db, err := c.useDB(ctx)
-	// if err != nil {
-	// 	return err
-	// }
-	//
-	// devices, err := c.useDevices(ctx, db)
-	// if err != nil {
-	// 	return err
-	// }
-
-	ip := "lookup"
-	if net.IP(ip).To4() == nil {
-		ips, err := net.LookupIP(ip)
-		if err == nil {
-			return err
-		}
-
-		for _, i2 := range ips {
-			if i2.To4() != nil {
-				ip = i2.String()
-				break
-			}
-		}
+	db, err := c.useDB(ctx)
+	if err != nil {
+		return err
 	}
-	fmt.Println(ip)
+
+	dahuaFilesFS, err := c.useDahuaFileFS()
+	if err != nil {
+		return err
+	}
+
+	deleted, err := dahua.DeleteAllOrphanAferoFile(ctx, db, dahuaFilesFS)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(deleted)
 
 	// for _, device := range devices {
 	// 	conn := dahua.NewClient(device.DahuaConn)

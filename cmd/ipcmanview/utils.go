@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/files"
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -34,20 +33,7 @@ func (c Shared) useDir() (string, error) {
 	return dir, nil
 }
 
-func (c Shared) useDahuaFileStore() (files.DahuaFileStore, error) {
-	dir, err := c.useDir()
-	if err != nil {
-		return files.DahuaFileStore{}, err
-	}
-	dir = filepath.Join(dir, "dahua-files-old")
-	if err := mkdir(dir); err != nil {
-		return files.DahuaFileStore{}, err
-	}
-
-	return files.NewDahuaFileStore(dir), nil
-}
-
-func (c Shared) useDahuaFS() (afero.Fs, error) {
+func (c Shared) useDahuaFileFS() (afero.Fs, error) {
 	dir, err := c.useDir()
 	if err != nil {
 		return nil, err

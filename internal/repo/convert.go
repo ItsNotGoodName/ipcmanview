@@ -150,6 +150,7 @@ func (c DahuaFile) Convert() models.DahuaFile {
 		Repeat:      int(c.Repeat),
 		WorkDir:     c.WorkDir,
 		WorkDirSN:   c.WorkDirSn,
+		Storage:     c.Storage,
 	}
 }
 

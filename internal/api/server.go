@@ -1,15 +1,16 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"slices"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/files"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
@@ -24,29 +25,26 @@ func NewServer(
 	pub pubsub.Pub,
 	db repo.DB,
 	dahuaStore *dahua.Store,
-	dahuaFileCache files.DahuaFileStore,
-	dahuaFileFS *afero.HttpFs,
+	dahuaFileFS afero.Fs,
 ) *Server {
 	return &Server{
-		pub:            pub,
-		db:             db,
-		dahuaStore:     dahuaStore,
-		dahuaFileCache: dahuaFileCache,
-		dahuaFileFS:    *dahuaFileFS,
+		pub:         pub,
+		db:          db,
+		dahuaStore:  dahuaStore,
+		dahuaFileFS: dahuaFileFS,
 	}
 }
 
 type Server struct {
-	pub            pubsub.Pub
-	db             repo.DB
-	dahuaStore     *dahua.Store
-	dahuaFileCache files.DahuaFileStore
-	dahuaFileFS    afero.HttpFs
+	pub         pubsub.Pub
+	db          repo.DB
+	dahuaStore  *dahua.Store
+	dahuaFileFS afero.Fs
 }
 
 func (s *Server) Register(e *echo.Echo) {
 	e.GET("/v1/dahua", s.Dahua)
-	e.GET("/v1/dahua-afero-files/*", echo.WrapHandler(http.StripPrefix("/v1/dahua-afero-files", http.FileServer(s.dahuaFileFS))))
+	e.GET("/v1/dahua-afero-files/*", echo.WrapHandler(http.StripPrefix("/v1/dahua-afero-files", http.FileServer(afero.NewHttpFs(s.dahuaFileFS)))))
 	e.GET("/v1/dahua-events", s.DahuaEvents)
 	e.GET("/v1/dahua/:id/audio", s.DahuaIDAudio)
 	e.GET("/v1/dahua/:id/coaxial/caps", s.DahuaIDCoaxialCaps)
@@ -395,11 +393,7 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 	}
 
 	var rd io.ReadCloser
-	if directFilePath {
-		if storage != models.StorageLocal {
-			return echo.ErrInternalServerError.WithInternal(fmt.Errorf("storage not supported: %s", storage))
-		}
-
+	if directFilePath && storage == models.StorageLocal {
 		// File from device
 		rd, err = dahua.FileLocalReadCloser(ctx, conn, filePath)
 		if err != nil {
@@ -408,37 +402,55 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 	} else {
 		file := dbFile.Convert()
 
-		switch storage {
-		case models.StorageLocal:
-			if exists, err := s.dahuaFileCache.Exists(ctx, file); err != nil {
+		var aferoFileExists bool
+		aferoFile, err := s.db.GetDahuaAferoFileByFileID(ctx, sql.NullInt64{Int64: file.ID, Valid: true})
+		if err != nil {
+			if !repo.IsNotFound(err) {
 				return err
-			} else if exists {
-				// File from cache
-				rd, err = s.dahuaFileCache.Get(ctx, file)
+			}
+		} else {
+			aferoFileExists = true
+		}
+
+		if aferoFileExists && !directFilePath {
+			// File from cache
+			rd, err = s.dahuaFileFS.Open(aferoFile.Name)
+			if err != nil {
+				if os.IsNotExist(err) {
+					// File from device
+					rd, err = dahua.FileLocalReadCloser(ctx, conn, filePath)
+					if err != nil {
+						return err
+					}
+				} else {
+					return err
+				}
+			}
+		} else {
+			switch storage {
+			case models.StorageLocal:
+				if repo.IsNotFound(err) {
+					// File from device
+					rd, err = dahua.FileLocalReadCloser(ctx, conn, filePath)
+					if err != nil {
+						return err
+					}
+				}
+			case models.StorageFTP:
+				// File from FTP
+				rd, err = dahua.FileFTPReadCloser(ctx, s.db, file)
 				if err != nil {
 					return err
 				}
-			} else {
-				// File from device
-				rd, err = dahua.FileLocalReadCloser(ctx, conn, filePath)
+			case models.StorageSFTP:
+				// File from SFTP
+				rd, err = dahua.FileSFTPReadCloser(ctx, s.db, file)
 				if err != nil {
 					return err
 				}
+			default:
+				return echo.ErrInternalServerError.WithInternal(fmt.Errorf("storage not supported: %s", storage))
 			}
-		case models.StorageFTP:
-			// File from FTP
-			rd, err = dahua.FileFTPReadCloser(ctx, s.db, file)
-			if err != nil {
-				return err
-			}
-		case models.StorageSFTP:
-			// File from SFTP
-			rd, err = dahua.FileSFTPReadCloser(ctx, s.db, file)
-			if err != nil {
-				return err
-			}
-		default:
-			return echo.ErrInternalServerError.WithInternal(fmt.Errorf("storage not supported: %s", storage))
 		}
 	}
 	defer rd.Close()

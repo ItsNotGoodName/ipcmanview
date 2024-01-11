@@ -23,7 +23,7 @@ INSERT INTO dahua_afero_files (
   created_at
 ) VALUES (
   ?, ?, ?, ?
-) RETURNING id, file_id, email_attachment_id, name, created_at, deleted_at
+) RETURNING id, file_id, email_attachment_id, name, created_at
 `
 
 type CreateDahuaAferoFileParams struct {
@@ -47,7 +47,6 @@ func (q *Queries) CreateDahuaAferoFile(ctx context.Context, arg CreateDahuaAfero
 		&i.EmailAttachmentID,
 		&i.Name,
 		&i.CreatedAt,
-		&i.DeletedAt,
 	)
 	return i, err
 }
@@ -287,6 +286,16 @@ func (q *Queries) CreateDahuaStorageDestination(ctx context.Context, arg CreateD
 	return id, err
 }
 
+const deleteDahuaAferoFile = `-- name: DeleteDahuaAferoFile :exec
+DELETE FROM dahua_afero_files
+WHERE id = ?
+`
+
+func (q *Queries) DeleteDahuaAferoFile(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteDahuaAferoFile, id)
+	return err
+}
+
 const deleteDahuaDevice = `-- name: DeleteDahuaDevice :exec
 DELETE FROM dahua_devices WHERE id = ?
 `
@@ -374,6 +383,24 @@ DELETE FROM dahua_streams WHERE id = ?
 func (q *Queries) DeleteDahuaStream(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteDahuaStream, id)
 	return err
+}
+
+const getDahuaAferoFileByFileID = `-- name: GetDahuaAferoFileByFileID :one
+SELECT id, file_id, email_attachment_id, name, created_at FROM dahua_afero_files
+WHERE file_id = ?1
+`
+
+func (q *Queries) GetDahuaAferoFileByFileID(ctx context.Context, fileID sql.NullInt64) (DahuaAferoFile, error) {
+	row := q.db.QueryRowContext(ctx, getDahuaAferoFileByFileID, fileID)
+	var i DahuaAferoFile
+	err := row.Scan(
+		&i.ID,
+		&i.FileID,
+		&i.EmailAttachmentID,
+		&i.Name,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const getDahuaDevice = `-- name: GetDahuaDevice :one
@@ -1144,6 +1171,41 @@ func (q *Queries) NormalizeDahuaFileCursor(ctx context.Context, arg NormalizeDah
 		arg.ScanType,
 	)
 	return err
+}
+
+const orphanListDahuaAferoFile = `-- name: OrphanListDahuaAferoFile :many
+SELECT id, file_id, email_attachment_id, name, created_at FROM dahua_afero_files
+WHERE file_id IS NULL AND email_attachment_id IS NULL
+LIMIT ?
+`
+
+func (q *Queries) OrphanListDahuaAferoFile(ctx context.Context, limit int64) ([]DahuaAferoFile, error) {
+	rows, err := q.db.QueryContext(ctx, orphanListDahuaAferoFile, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DahuaAferoFile
+	for rows.Next() {
+		var i DahuaAferoFile
+		if err := rows.Scan(
+			&i.ID,
+			&i.FileID,
+			&i.EmailAttachmentID,
+			&i.Name,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const touchDahuaFileScanLock = `-- name: TouchDahuaFileScanLock :exec

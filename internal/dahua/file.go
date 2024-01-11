@@ -7,11 +7,10 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/files"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -20,22 +19,26 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func FileDAVToJPG(ctx context.Context, fileStore files.DahuaFileStore, file models.DahuaFile) error {
-	if file.Type != models.DahuaFileTypeDAV {
-		return fmt.Errorf("invalid type: %s", file.Type)
-	}
+// func FileDAVToJPG(ctx context.Context, fileStore files.DahuaFileStore, file models.DahuaFile) error {
+// 	if file.Type != models.DahuaFileTypeDAV {
+// 		return fmt.Errorf("invalid type: %s", file.Type)
+// 	}
+//
+// 	inputFilePath := fileStore.FilePath(file.StartTime, file.ID, file.Type)
+// 	outputFilePath := fileStore.FilePath(file.StartTime, file.ID, models.DahuaFileTypeJPG)
+//
+// 	// ffmpeg -n -i file:2024-01-08T04:25:01Z.115614.dav -ss 00:00:06.000 -vframes 1 output.jpg
+// 	output, err := exec.Command("ffmpeg", "-n", "-i", "file:"+inputFilePath, "-ss", "00:00:06.000", "-vframes", "1", outputFilePath).CombinedOutput()
+// 	if err != nil {
+// 		fmt.Println(string(output))
+// 		return err
+// 	}
+//
+// 	return nil
+// }
 
-	inputFilePath := fileStore.FilePath(file.StartTime, file.ID, file.Type)
-	outputFilePath := fileStore.FilePath(file.StartTime, file.ID, models.DahuaFileTypeJPG)
-
-	// ffmpeg -n -i file:2024-01-08T04:25:01Z.115614.dav -ss 00:00:06.000 -vframes 1 output.jpg
-	output, err := exec.Command("ffmpeg", "-n", "-i", "file:"+inputFilePath, "-ss", "00:00:06.000", "-vframes", "1", outputFilePath).CombinedOutput()
-	if err != nil {
-		fmt.Println(string(output))
-		return err
-	}
-
-	return nil
+func FileName(startTime time.Time, id int64, typ string) string {
+	return fmt.Sprintf("%s.%d.%s", startTime.UTC().Format("2006-01-02_15-04-05"), id, typ)
 }
 
 func FileURL(urL string, deviceID int64, filePath string) string {
@@ -43,8 +46,6 @@ func FileURL(urL string, deviceID int64, filePath string) string {
 }
 
 func FileFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaFile) (io.ReadCloser, error) {
-	storage := core.StorageFromFilePath(dahuaFile.FilePath)
-
 	u, err := url.Parse(dahuaFile.FilePath)
 	if err != nil {
 		return nil, err
@@ -52,7 +53,7 @@ func FileFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaFi
 
 	dest, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
 		ServerAddress: u.Hostname(),
-		Storage:       storage,
+		Storage:       models.StorageFTP,
 	})
 	if err != nil {
 		return nil, err

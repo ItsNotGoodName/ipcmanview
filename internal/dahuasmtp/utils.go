@@ -44,3 +44,11 @@ func parseFileExtension(fileName, contentType string) string {
 
 	return ext[0]
 }
+
+func ipFromAddress(address string) string {
+	s := strings.Split(address, ":")
+	if len(s) != 2 {
+		return ""
+	}
+	return s[0]
+}

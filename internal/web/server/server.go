@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/files"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -22,8 +22,10 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 )
 
 func RegisterRenderer(e *echo.Echo) error {
@@ -72,22 +74,24 @@ func (w Server) Register(e *echo.Echo) {
 }
 
 type Server struct {
-	db             repo.DB
-	pub            pubsub.Pub
-	bus            *core.Bus
-	dahuaStore     *dahua.Store
-	mediamtxConfig mediamtx.Config
-	dahuaFileStore files.DahuaFileStore
+	db                repo.DB
+	pub               pubsub.Pub
+	bus               *core.Bus
+	dahuaStore        *dahua.Store
+	mediamtxConfig    mediamtx.Config
+	dahuaFileFS       afero.Fs
+	dahuaDownloadSema chan struct{}
 }
 
-func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, dahuaStore *dahua.Store, dahuaFileStore files.DahuaFileStore, mediamtxConfig mediamtx.Config) Server {
+func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, dahuaStore *dahua.Store, dahuaFileFS afero.Fs, mediamtxConfig mediamtx.Config) Server {
 	return Server{
-		db:             db,
-		pub:            pub,
-		bus:            bus,
-		dahuaStore:     dahuaStore,
-		dahuaFileStore: dahuaFileStore,
-		mediamtxConfig: mediamtxConfig,
+		db:                db,
+		pub:               pub,
+		bus:               bus,
+		dahuaStore:        dahuaStore,
+		dahuaFileFS:       dahuaFileFS,
+		mediamtxConfig:    mediamtxConfig,
+		dahuaDownloadSema: make(chan struct{}, 1),
 	}
 }
 
@@ -227,6 +231,13 @@ func (params DahuaFilesParams) Filter() (repo.DahuaFileFilter, error) {
 }
 
 func (s Server) DahuaFilesDownloadPOST(c echo.Context) error {
+	select {
+	case s.dahuaDownloadSema <- struct{}{}:
+	default:
+		return echo.NewHTTPError(http.StatusConflict, "Already downloading...")
+	}
+	defer func() { <-s.dahuaDownloadSema }()
+
 	ctx := c.Request().Context()
 
 	params := DahuaFilesParams{}
@@ -242,6 +253,7 @@ func (s Server) DahuaFilesDownloadPOST(c echo.Context) error {
 		return err
 	}
 
+	downloaded := 0
 	for cursor := ""; ; {
 		files, err := s.db.CursorListDahuaFile(ctx, repo.CursorListDahuaFileParams{
 			PerPage:         100,
@@ -255,50 +267,63 @@ func (s Server) DahuaFilesDownloadPOST(c echo.Context) error {
 
 		for _, dbFile := range files.Data {
 			file := dbFile.Convert()
+			if file.Storage != models.StorageLocal {
+				log.Info().Str("file-path", file.FilePath).Msg("Is not local to device")
+				continue
+			}
 
-			exists, err := s.dahuaFileStore.Exists(ctx, file)
+			aferoFile, err := s.db.GetDahuaAferoFileByFileID(ctx, sql.NullInt64{Valid: true, Int64: dbFile.ID})
+			aferoFileExists, err := dahua.SyncAferoFile(ctx, s.db, s.dahuaFileFS, aferoFile, err)
 			if err != nil {
 				return err
-			}
-			if exists {
+			} else if aferoFileExists {
 				log.Info().Str("file-path", file.FilePath).Msg("Exists")
 				continue
 			}
 
-			storage := core.StorageFromFilePath(file.FilePath)
+			aferoFile, err = s.db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
+				FileID: sql.NullInt64{
+					Int64: file.ID,
+					Valid: true,
+				},
+				Name:      uuid.NewString() + "." + file.Type,
+				CreatedAt: types.NewTime(time.Now()),
+			})
+			if err != nil {
+				return err
+			}
 
-			var rd io.ReadCloser
-			switch storage {
-			case models.StorageLocal:
+			err = func() error {
 				device, err := s.db.GetDahuaDevice(ctx, dbFile.DeviceID)
 				if err != nil {
 					return err
 				}
 				client := s.dahuaStore.Client(ctx, device.Convert().DahuaConn)
 
-				rd, err = dahua.FileLocalReadCloser(ctx, client, file.FilePath)
+				rd, err := dahua.FileLocalReadCloser(ctx, client, file.FilePath)
 				if err != nil {
 					return err
 				}
-			case models.StorageFTP:
-				rd, err = dahua.FileFTPReadCloser(ctx, s.db, file)
+
+				log.Info().Str("file-path", file.FilePath).Msg("Downloading...")
+
+				f, err := s.dahuaFileFS.Create(aferoFile.Name)
 				if err != nil {
 					return err
 				}
-			case models.StorageSFTP:
-				rd, err = dahua.FileSFTPReadCloser(ctx, s.db, file)
-				if err != nil {
+				defer f.Close()
+
+				if _, err := io.Copy(f, rd); err != nil {
 					return err
 				}
-			default:
-				log.Err(fmt.Errorf("invalid storage: %s", storage)).Send()
-			}
-			log.Info().Str("file-path", file.FilePath).Msg("Downloading...")
-			err = s.dahuaFileStore.Save(ctx, file, rd)
-			rd.Close()
+
+				return nil
+			}()
 			if err != nil {
 				return err
 			}
+
+			downloaded++
 		}
 
 		if !files.HasMore {
@@ -306,6 +331,7 @@ func (s Server) DahuaFilesDownloadPOST(c echo.Context) error {
 		}
 	}
 
+	htmx.NewEvent("toast", fmt.Sprintf("Downloaded %d files.", downloaded)).SetTrigger(c.Response())
 	return c.NoContent(http.StatusOK)
 }
 

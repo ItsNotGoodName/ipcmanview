@@ -18,7 +18,7 @@ type Context struct {
 }
 
 var mainCmd struct {
-	Debug bool `help:"Enable debug mode."`
+	Debug bool `env:"DEBUG" help:"Enable debug mode."`
 
 	Version CmdVersion `cmd:"" help:"Show version."`
 	Serve   CmdServe   `cmd:"" help:"Start application."`

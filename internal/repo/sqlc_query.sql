@@ -423,3 +423,16 @@ INSERT INTO dahua_afero_files (
 ) VALUES (
   ?, ?, ?, ?
 ) RETURNING *;
+
+-- name: GetDahuaAferoFileByFileID :one
+SELECT * FROM dahua_afero_files
+WHERE file_id = sqlc.arg('file_id');
+
+-- name: DeleteDahuaAferoFile :exec
+DELETE FROM dahua_afero_files
+WHERE id = ?;
+
+-- name: OrphanListDahuaAferoFile :many
+SELECT * FROM dahua_afero_files
+WHERE file_id IS NULL AND email_attachment_id IS NULL
+LIMIT ?;

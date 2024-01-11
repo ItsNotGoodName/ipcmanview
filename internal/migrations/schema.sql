@@ -66,12 +66,11 @@ CREATE TABLE dahua_event_worker_states (
 
 CREATE TABLE dahua_afero_files (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  file_id INTEGER,
-  email_attachment_id INTEGER,
+  file_id INTEGER UNIQUE,
+  email_attachment_id INTEGER UNIQUE,
   name TEXT NOT NULL UNIQUE,
 
   created_at DATETIME NOT NULL,
-  deleted_at DATETIME,
   FOREIGN KEY(file_id) REFERENCES dahua_files(id) ON UPDATE CASCADE ON DELETE SET NULL,
   FOREIGN KEY(email_attachment_id) REFERENCES dahua_email_attachments(id) ON UPDATE CASCADE ON DELETE SET NULL
 );

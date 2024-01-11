@@ -141,7 +141,7 @@ type DahuaFile struct {
 	Repeat      int       `json:"repeat"`
 	WorkDir     string    `json:"work_dir"`
 	WorkDirSN   bool      `json:"work_dir_sn"`
-	Local       bool      `json:"local"`
+	Storage     Storage   `json:"storage"`
 }
 
 type DahuaEvent struct {

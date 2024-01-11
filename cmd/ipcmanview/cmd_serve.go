@@ -14,7 +14,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
-	"github.com/spf13/afero"
 
 	"github.com/thejerf/suture/v4"
 )
@@ -66,7 +65,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// Dahua
 
-	dahuaFileFS, err := c.useDahuaFS()
+	dahuaFileFS, err := c.useDahuaFileFS()
 	if err != nil {
 		return err
 	}
@@ -80,11 +79,6 @@ func (c *CmdServe) Run(ctx *Context) error {
 		NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahua.NewDefaultEventHooks(bus, db))).
 		Register(bus)
 	if err := dahuaWorkerStore.Bootstrap(ctx, db, dahuaStore); err != nil {
-		return err
-	}
-
-	dahuaFileStore, err := c.useDahuaFileStore()
-	if err != nil {
 		return err
 	}
 
@@ -116,12 +110,12 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// WEB
 	webserver.
-		New(db, pub, bus, dahuaStore, dahuaFileStore, mediamtxConfig).
+		New(db, pub, bus, dahuaStore, dahuaFileFS, mediamtxConfig).
 		Register(httpRouter)
 
 	// API
 	api.
-		NewServer(pub, db, dahuaStore, dahuaFileStore, afero.NewHttpFs(dahuaFileFS)).
+		NewServer(pub, db, dahuaStore, dahuaFileFS).
 		Register(httpRouter)
 
 	// RPC

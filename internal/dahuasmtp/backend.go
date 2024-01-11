@@ -10,7 +10,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -132,7 +131,7 @@ func (s *session) Data(r io.Reader) error {
 		log.Warn().Err(err).Str("date", e.GetHeader("Date")).Msg("Failed to parse date")
 	}
 
-	dbDevice, err := s.DB.GetDahuaDeviceByIP(ctx, core.IPFromAddress(s.address))
+	dbDevice, err := s.DB.GetDahuaDeviceByIP(ctx, ipFromAddress(s.address))
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return err

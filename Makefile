@@ -19,6 +19,9 @@ generate:
 run:
 	go run ./cmd/ipcmanview serve
 
+debug:
+	go run ./cmd/ipcmanview debug
+
 preview: generate run
 
 nightly:
