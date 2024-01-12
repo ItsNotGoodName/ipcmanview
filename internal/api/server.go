@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"slices"
+	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
@@ -44,7 +45,7 @@ type Server struct {
 
 func (s *Server) Register(e *echo.Echo) {
 	e.GET("/v1/dahua", s.Dahua)
-	e.GET("/v1/dahua-afero-files/*", echo.WrapHandler(http.StripPrefix("/v1/dahua-afero-files", http.FileServer(afero.NewHttpFs(s.dahuaFileFS)))))
+	e.GET(dahua.AferoEchoRoute, echo.WrapHandler(http.StripPrefix(dahua.AferoEchoRoutePrefix, http.FileServer(afero.NewHttpFs(s.dahuaFileFS)))))
 	e.GET("/v1/dahua-events", s.DahuaEvents)
 	e.GET("/v1/dahua/:id/audio", s.DahuaIDAudio)
 	e.GET("/v1/dahua/:id/coaxial/caps", s.DahuaIDCoaxialCaps)
@@ -53,7 +54,7 @@ func (s *Server) Register(e *echo.Echo) {
 	e.GET("/v1/dahua/:id/error", s.DahuaIDError)
 	e.GET("/v1/dahua/:id/events", s.DahuaIDEvents)
 	e.GET("/v1/dahua/:id/files", s.DahuaIDFiles)
-	e.GET("/v1/dahua/:id/files/*", s.DahuaIDFilesPath)
+	e.GET(dahua.FileEchoRoute, s.DahuaIDFilesPath)
 	e.GET("/v1/dahua/:id/licenses", s.DahuaIDLicenses)
 	e.GET("/v1/dahua/:id/snapshot", s.DahuaIDSnapshot)
 	e.GET("/v1/dahua/:id/software", s.DahuaIDSoftware)
@@ -391,6 +392,7 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 	} else if err != nil {
 		return err
 	}
+	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(dbFile.Length, 10))
 
 	var rd io.ReadCloser
 	if directFilePath && storage == models.StorageLocal {

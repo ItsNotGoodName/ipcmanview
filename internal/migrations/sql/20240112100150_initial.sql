@@ -24,7 +24,13 @@ CREATE UNIQUE INDEX `dahua_event_device_rules_device_id_code` ON `dahua_event_de
 -- create "dahua_event_worker_states" table
 CREATE TABLE `dahua_event_worker_states` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `device_id` integer NOT NULL, `state` text NOT NULL, `error` text NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create "dahua_afero_files" table
-CREATE TABLE `dahua_afero_files` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `file_id` integer NULL, `email_attachment_id` integer NULL, `name` text NOT NULL, `created_at` datetime NOT NULL, `deleted_at` datetime NULL, CONSTRAINT `0` FOREIGN KEY (`email_attachment_id`) REFERENCES `dahua_email_attachments` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `1` FOREIGN KEY (`file_id`) REFERENCES `dahua_files` (`id`) ON UPDATE CASCADE ON DELETE SET NULL);
+CREATE TABLE `dahua_afero_files` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `file_id` integer NULL, `file_thumbnail_id` integer NULL, `email_attachment_id` integer NULL, `name` text NOT NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`email_attachment_id`) REFERENCES `dahua_email_attachments` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `1` FOREIGN KEY (`file_thumbnail_id`) REFERENCES `dahua_file_thumbnails` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `2` FOREIGN KEY (`file_id`) REFERENCES `dahua_files` (`id`) ON UPDATE CASCADE ON DELETE SET NULL);
+-- create index "dahua_afero_files_file_id" to table: "dahua_afero_files"
+CREATE UNIQUE INDEX `dahua_afero_files_file_id` ON `dahua_afero_files` (`file_id`);
+-- create index "dahua_afero_files_file_thumbnail_id" to table: "dahua_afero_files"
+CREATE UNIQUE INDEX `dahua_afero_files_file_thumbnail_id` ON `dahua_afero_files` (`file_thumbnail_id`);
+-- create index "dahua_afero_files_email_attachment_id" to table: "dahua_afero_files"
+CREATE UNIQUE INDEX `dahua_afero_files_email_attachment_id` ON `dahua_afero_files` (`email_attachment_id`);
 -- create index "dahua_afero_files_name" to table: "dahua_afero_files"
 CREATE UNIQUE INDEX `dahua_afero_files_name` ON `dahua_afero_files` (`name`);
 -- create "dahua_files" table
@@ -33,6 +39,10 @@ CREATE TABLE `dahua_files` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `de
 CREATE UNIQUE INDEX `dahua_files_start_time` ON `dahua_files` (`start_time`);
 -- create index "dahua_files_device_id_file_path" to table: "dahua_files"
 CREATE UNIQUE INDEX `dahua_files_device_id_file_path` ON `dahua_files` (`device_id`, `file_path`);
+-- create "dahua_file_thumbnails" table
+CREATE TABLE `dahua_file_thumbnails` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `file_id` integer NOT NULL, `width` integer NOT NULL, `height` integer NOT NULL, CONSTRAINT `0` FOREIGN KEY (`file_id`) REFERENCES `dahua_files` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+-- create index "dahua_file_thumbnails_file_id_width_height" to table: "dahua_file_thumbnails"
+CREATE UNIQUE INDEX `dahua_file_thumbnails_file_id_width_height` ON `dahua_file_thumbnails` (`file_id`, `width`, `height`);
 -- create "dahua_file_cursors" table
 CREATE TABLE `dahua_file_cursors` (`device_id` integer NOT NULL, `quick_cursor` datetime NOT NULL, `full_cursor` datetime NOT NULL, `full_epoch` datetime NOT NULL, `full_complete` boolean NOT NULL AS (full_cursor <= full_epoch) STORED, `scan` boolean NOT NULL, `scan_percent` real NOT NULL, `scan_type` text NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "dahua_file_cursors_device_id" to table: "dahua_file_cursors"
@@ -75,6 +85,10 @@ DROP TABLE `dahua_file_scan_locks`;
 DROP INDEX `dahua_file_cursors_device_id`;
 -- reverse: create "dahua_file_cursors" table
 DROP TABLE `dahua_file_cursors`;
+-- reverse: create index "dahua_file_thumbnails_file_id_width_height" to table: "dahua_file_thumbnails"
+DROP INDEX `dahua_file_thumbnails_file_id_width_height`;
+-- reverse: create "dahua_file_thumbnails" table
+DROP TABLE `dahua_file_thumbnails`;
 -- reverse: create index "dahua_files_device_id_file_path" to table: "dahua_files"
 DROP INDEX `dahua_files_device_id_file_path`;
 -- reverse: create index "dahua_files_start_time" to table: "dahua_files"
@@ -83,6 +97,12 @@ DROP INDEX `dahua_files_start_time`;
 DROP TABLE `dahua_files`;
 -- reverse: create index "dahua_afero_files_name" to table: "dahua_afero_files"
 DROP INDEX `dahua_afero_files_name`;
+-- reverse: create index "dahua_afero_files_email_attachment_id" to table: "dahua_afero_files"
+DROP INDEX `dahua_afero_files_email_attachment_id`;
+-- reverse: create index "dahua_afero_files_file_thumbnail_id" to table: "dahua_afero_files"
+DROP INDEX `dahua_afero_files_file_thumbnail_id`;
+-- reverse: create index "dahua_afero_files_file_id" to table: "dahua_afero_files"
+DROP INDEX `dahua_afero_files_file_id`;
 -- reverse: create "dahua_afero_files" table
 DROP TABLE `dahua_afero_files`;
 -- reverse: create "dahua_event_worker_states" table

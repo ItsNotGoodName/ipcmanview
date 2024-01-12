@@ -2,6 +2,7 @@ package dahua
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"net"
@@ -13,36 +14,21 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
+	"github.com/google/uuid"
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/afero"
 	"golang.org/x/crypto/ssh"
 )
 
-// func FileDAVToJPG(ctx context.Context, fileStore files.DahuaFileStore, file models.DahuaFile) error {
-// 	if file.Type != models.DahuaFileTypeDAV {
-// 		return fmt.Errorf("invalid type: %s", file.Type)
-// 	}
-//
-// 	inputFilePath := fileStore.FilePath(file.StartTime, file.ID, file.Type)
-// 	outputFilePath := fileStore.FilePath(file.StartTime, file.ID, models.DahuaFileTypeJPG)
-//
-// 	// ffmpeg -n -i file:2024-01-08T04:25:01Z.115614.dav -ss 00:00:06.000 -vframes 1 output.jpg
-// 	output, err := exec.Command("ffmpeg", "-n", "-i", "file:"+inputFilePath, "-ss", "00:00:06.000", "-vframes", "1", outputFilePath).CombinedOutput()
-// 	if err != nil {
-// 		fmt.Println(string(output))
-// 		return err
-// 	}
-//
-// 	return nil
-// }
+const FileEchoRoute = "/v1/dahua/:id/files/*"
 
-func FileName(startTime time.Time, id int64, typ string) string {
-	return fmt.Sprintf("%s.%d.%s", startTime.UTC().Format("2006-01-02_15-04-05"), id, typ)
-}
-
-func FileURL(urL string, deviceID int64, filePath string) string {
-	return fmt.Sprintf("%s/v1/dahua/%d/files/%s", urL, deviceID, filePath)
+func FileURI(deviceID int64, filePath string) string {
+	return fmt.Sprintf("/v1/dahua/%d/files/%s", deviceID, filePath)
 }
 
 func FileFTPReadCloser(ctx context.Context, db repo.DB, dahuaFile models.DahuaFile) (io.ReadCloser, error) {
@@ -143,4 +129,156 @@ func FileLocalReadCloser(ctx context.Context, client Client, filePath string) (i
 		return nil, err
 	}
 	return resp.Body, nil
+}
+
+// FileLocalDownload downloads file from device and saves it to the afero file system.
+func FileLocalDownload(ctx context.Context, db repo.DB, fs afero.Fs, client Client, filePath, fileName string) error {
+	rd, err := FileLocalReadCloser(ctx, client, filePath)
+	if err != nil {
+		return err
+	}
+	defer rd.Close()
+
+	wt, err := fs.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer wt.Close()
+
+	log.Info().Int64("device-id", client.Conn.ID).Str("file-path", filePath).Msg("Downloading...")
+
+	if _, err := io.Copy(wt, rd); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func FileLocalDownloadByFilter(ctx context.Context, db repo.DB, fs afero.Fs, store *Store, filter repo.DahuaFileFilter) (int, error) {
+	filter.Storage = []models.Storage{models.StorageLocal}
+
+	downloaded := 0
+	for cursor := ""; ; {
+		files, err := db.CursorListDahuaFile(ctx, repo.CursorListDahuaFileParams{
+			PerPage:         100,
+			Cursor:          cursor,
+			DahuaFileFilter: filter,
+		})
+		if err != nil {
+			return downloaded, err
+		}
+		cursor = files.Cursor
+
+		for _, file := range files.Data {
+			aferoFile, err := db.GetDahuaAferoFileByFileID(ctx, sql.NullInt64{Valid: true, Int64: file.ID})
+			aferoFileExists, err := SyncAferoFile(ctx, db, fs, aferoFile, err)
+			if err != nil {
+				return downloaded, err
+			} else if aferoFileExists {
+				continue
+			}
+
+			aferoFile, err = db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
+				FileID: sql.NullInt64{
+					Int64: file.ID,
+					Valid: true,
+				},
+				Name:      uuid.NewString() + "." + file.Type,
+				CreatedAt: types.NewTime(time.Now()),
+			})
+			if err != nil {
+				return downloaded, err
+			}
+
+			device, err := db.GetDahuaDevice(ctx, file.DeviceID)
+			if err != nil {
+				return downloaded, err
+			}
+			client := store.Client(ctx, device.Convert().DahuaConn)
+
+			if err := FileLocalDownload(ctx, db, fs, client, file.FilePath, aferoFile.Name); err != nil {
+				return downloaded, err
+			}
+
+			downloaded++
+		}
+
+		if !files.HasMore {
+			break
+		}
+	}
+
+	return downloaded, nil
+}
+
+type fileServiceReq struct {
+	filter repo.DahuaFileFilter
+	resC   chan<- fileServiceRes
+}
+
+type fileServiceRes struct {
+	downloaded int
+	err        error
+}
+
+func NewFileService(db repo.DB, fs afero.Fs, store *Store) FileService {
+	return FileService{
+		db:       db,
+		fs:       fs,
+		store:    store,
+		requestC: make(chan fileServiceReq),
+	}
+}
+
+// FileService handles downloading files.
+type FileService struct {
+	db       repo.DB
+	fs       afero.Fs
+	store    *Store
+	requestC chan fileServiceReq
+}
+
+func (s FileService) String() string {
+	return "dahua.FileService"
+}
+
+func (s FileService) Serve(ctx context.Context) error {
+	return sutureext.SanitizeError(ctx, s.serve(ctx))
+}
+
+func (s FileService) serve(ctx context.Context) error {
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case request := <-s.requestC:
+			downloaded, err := FileLocalDownloadByFilter(ctx, s.db, s.fs, s.store, request.filter)
+			request.resC <- fileServiceRes{
+				downloaded: downloaded,
+				err:        err,
+			}
+		}
+	}
+}
+
+var ErrFileServiceConflict = fmt.Errorf("file service conflict")
+
+func (s FileService) Run(ctx context.Context, filter repo.DahuaFileFilter) (int, error) {
+	resC := make(chan fileServiceRes, 1)
+	select {
+	case <-ctx.Done():
+		return 0, ctx.Err()
+	case s.requestC <- fileServiceReq{
+		filter: filter,
+		resC:   resC,
+	}:
+		select {
+		case <-ctx.Done():
+			return 0, ctx.Err()
+		case res := <-resC:
+			return res.downloaded, res.err
+		}
+	default:
+		return 0, ErrFileServiceConflict
+	}
 }

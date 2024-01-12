@@ -15,6 +15,7 @@ import (
 type DahuaAferoFile struct {
 	ID                int64
 	FileID            sql.NullInt64
+	FileThumbnailID   sql.NullInt64
 	EmailAttachmentID sql.NullInt64
 	Name              string
 	CreatedAt         types.Time
@@ -125,6 +126,13 @@ type DahuaFileCursor struct {
 type DahuaFileScanLock struct {
 	DeviceID  int64
 	TouchedAt types.Time
+}
+
+type DahuaFileThumbnail struct {
+	ID     int64
+	FileID int64
+	Width  int64
+	Height int64
 }
 
 type DahuaSeed struct {

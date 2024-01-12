@@ -67,11 +67,13 @@ CREATE TABLE dahua_event_worker_states (
 CREATE TABLE dahua_afero_files (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   file_id INTEGER UNIQUE,
+  file_thumbnail_id INTEGER UNIQUE,
   email_attachment_id INTEGER UNIQUE,
   name TEXT NOT NULL UNIQUE,
 
   created_at DATETIME NOT NULL,
   FOREIGN KEY(file_id) REFERENCES dahua_files(id) ON UPDATE CASCADE ON DELETE SET NULL,
+  FOREIGN KEY(file_thumbnail_id) REFERENCES dahua_file_thumbnails(id) ON UPDATE CASCADE ON DELETE SET NULL,
   FOREIGN KEY(email_attachment_id) REFERENCES dahua_email_attachments(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
@@ -100,6 +102,17 @@ CREATE TABLE dahua_files (
 
   UNIQUE (device_id, file_path),
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE dahua_file_thumbnails (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  file_id INTEGER NOT NULL,
+  width INTEGER NOT NULL,
+  height INTEGER NOT NULL,
+
+  UNIQUE (file_id, width, height),
+
+  FOREIGN KEY(file_id) REFERENCES dahua_files(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_file_cursors (

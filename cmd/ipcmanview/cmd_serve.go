@@ -84,6 +84,11 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	dahua.RegisterStreams(bus, db, dahuaStore)
 
+	super.Add(dahua.NewAferoService(db, dahuaFileFS))
+
+	dahuaFileService := dahua.NewFileService(db, dahuaFileFS, dahuaStore)
+	super.Add(dahuaFileService)
+
 	// MQTT
 	if c.MQTTAddress != "" {
 		mqttConn := mqtt.NewConn(c.MQTTTopic, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
@@ -110,7 +115,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// WEB
 	webserver.
-		New(db, pub, bus, dahuaStore, dahuaFileFS, mediamtxConfig).
+		New(db, pub, bus, mediamtxConfig, dahuaStore, dahuaFileFS, dahuaFileService).
 		Register(httpRouter)
 
 	// API
