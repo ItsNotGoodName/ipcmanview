@@ -15,7 +15,7 @@ const AferoEchoRoute = "/v1/dahua-afero-files/*"
 const AferoEchoRoutePrefix = "/v1/dahua-afero-files"
 
 func AferoFileURI(name string) string {
-	return fmt.Sprintf("/v1/dahua-afero-files/%s", name)
+	return "/v1/dahua-afero-files/" + name
 }
 
 // SyncAferoFile deletes the file from the database if it does not exist in the file system.

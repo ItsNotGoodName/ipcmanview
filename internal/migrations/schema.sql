@@ -129,13 +129,6 @@ CREATE TABLE dahua_file_cursors (
   FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE dahua_file_scan_locks (
-  device_id INTEGER NOT NULL UNIQUE,
-  touched_at DATETIME NOT NULL, 
-
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
-);
-
 CREATE TABLE dahua_storage_destinations (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,

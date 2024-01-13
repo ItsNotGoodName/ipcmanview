@@ -72,24 +72,26 @@ func (w Server) Register(e *echo.Echo) {
 }
 
 type Server struct {
-	db               repo.DB
-	pub              pubsub.Pub
-	bus              *core.Bus
-	mediamtxConfig   mediamtx.Config
-	dahuaStore       *dahua.Store
-	dahuaFileFS      afero.Fs
-	dahuaFileService dahua.FileService
+	db                 repo.DB
+	pub                pubsub.Pub
+	bus                *core.Bus
+	mediamtxConfig     mediamtx.Config
+	dahuaStore         *dahua.Store
+	dahuaFileFS        afero.Fs
+	dahuaFileService   dahua.FileService
+	dahuaScanLockStore *dahua.ScanLockStore
 }
 
-func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, mediamtxConfig mediamtx.Config, dahuaStore *dahua.Store, dahuaFileFS afero.Fs, dahuaFileService dahua.FileService) Server {
+func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, mediamtxConfig mediamtx.Config, dahuaStore *dahua.Store, dahuaFileFS afero.Fs, dahuaFileService dahua.FileService, dahuaScanLockStore *dahua.ScanLockStore) Server {
 	return Server{
-		db:               db,
-		pub:              pub,
-		bus:              bus,
-		mediamtxConfig:   mediamtxConfig,
-		dahuaStore:       dahuaStore,
-		dahuaFileFS:      dahuaFileFS,
-		dahuaFileService: dahuaFileService,
+		db:                 db,
+		pub:                pub,
+		bus:                bus,
+		mediamtxConfig:     mediamtxConfig,
+		dahuaStore:         dahuaStore,
+		dahuaFileFS:        dahuaFileFS,
+		dahuaFileService:   dahuaFileService,
+		dahuaScanLockStore: dahuaScanLockStore,
 	}
 }
 
@@ -502,7 +504,7 @@ func (s Server) DahuaDevices(c echo.Context) error {
 		return err
 	}
 
-	fileCursors, err := s.db.ListDahuaFileCursor(ctx, dahua.ScanLockStaleTime())
+	fileCursors, err := useDahuaFileCursors(ctx, s.db, s.dahuaScanLockStore)
 	if err != nil {
 		return err
 	}
@@ -591,14 +593,12 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 				continue
 			}
 
-			err := dahua.ScanLockCreateTry(ctx, s.db, v.DeviceID)
+			unlock, err := s.dahuaScanLockStore.TryLock(v.DeviceID)
 			if err != nil {
 				return err
 			}
-
 			err = dahua.ScanReset(ctx, s.db, v.DeviceID)
-
-			dahua.ScanLockDelete(s.db, v.DeviceID)
+			unlock()
 
 			if err != nil {
 				if repo.IsNotFound(err) {
@@ -639,19 +639,19 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 			}
 			client := s.dahuaStore.Client(ctx, device.Convert().DahuaConn)
 
-			if err := dahua.ScanLockCreateTry(ctx, s.db, v.DeviceID); err != nil {
+			unlock, err := s.dahuaScanLockStore.TryLock(v.DeviceID)
+			if err != nil {
 				return err
 			}
-			go func(conn dahua.Client) {
+			go func(unlock func(), conn dahua.Client) {
 				ctx := context.Background()
-				cancel := dahua.ScanLockHeartbeat(ctx, s.db, conn.Conn.ID)
-				defer cancel()
+				defer unlock()
 
 				err := dahua.Scan(ctx, s.db, conn.RPC, conn.Conn, scanType)
 				if err != nil {
 					log.Err(err).Msg("Failed to scan")
 				}
-			}(client)
+			}(unlock, client)
 		}
 	}
 
@@ -659,11 +659,13 @@ func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
 }
 
 func (s Server) DahuaDevicesFileCursors(c echo.Context) error {
+	ctx := c.Request().Context()
+
 	if !isHTMX(c) {
 		return c.Redirect(http.StatusSeeOther, "/dahua/devices#file-cursors")
 	}
 
-	fileCursors, err := s.db.ListDahuaFileCursor(c.Request().Context(), dahua.ScanLockStaleTime())
+	fileCursors, err := useDahuaFileCursors(ctx, s.db, s.dahuaScanLockStore)
 	if err != nil {
 		return err
 	}

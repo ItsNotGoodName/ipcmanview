@@ -6,6 +6,7 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -143,4 +144,31 @@ func useDahuaTables(ctx context.Context, db repo.DB, dahuaStore *dahua.Store) (a
 		"Storage":          storage,
 		"CoaxialStatus":    coaxialStatus,
 	}, nil
+}
+
+type DahuaFileCursor struct {
+	repo.ListDahuaFileCursorRow
+	Locked bool
+}
+
+func useDahuaFileCursors(ctx context.Context, db repo.DB, scanLockStore *core.LockStore[int64]) ([]DahuaFileCursor, error) {
+	fileCursors, err := db.ListDahuaFileCursor(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]int64, 0, len(fileCursors))
+	for _, f := range fileCursors {
+		ids = append(ids, f.DeviceID)
+	}
+
+	res := make([]DahuaFileCursor, 0, len(fileCursors))
+	locks := scanLockStore.ListLock(ids...)
+	for i := range fileCursors {
+		res = append(res, DahuaFileCursor{
+			ListDahuaFileCursorRow: fileCursors[i],
+			Locked:                 locks[i],
+		})
+	}
+
+	return res, nil
 }

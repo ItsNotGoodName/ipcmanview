@@ -61,24 +61,6 @@ UPDATE dahua_seeds
 SET device_id = ?1
 WHERE seed = (SELECT seed FROM dahua_seeds WHERE device_id = ?1 OR device_id IS NULL ORDER BY device_id asc LIMIT 1);
 
--- name: CreateDahuaFileScanLock :one
-INSERT INTO dahua_file_scan_locks (
-  device_id, touched_at
-) VALUES (
-  ?, ?
-) RETURNING *;
-
--- name: DeleteDahuaFileScanLock :exec
-DELETE FROM dahua_file_scan_locks WHERE device_id = ?;
-
--- name: DeleteDahuaFileScanLockByAge :exec
-DELETE FROM dahua_file_scan_locks WHERE touched_at < ?;
-
--- name: TouchDahuaFileScanLock :exec
-UPDATE dahua_file_scan_locks
-SET touched_at = ?
-WHERE device_id = ?;
-
 -- name: NormalizeDahuaFileCursor :exec
 INSERT OR IGNORE INTO dahua_file_cursors (
   device_id,
@@ -108,11 +90,9 @@ RETURNING *;
 -- name: ListDahuaFileCursor :many
 SELECT 
   c.*,
-  count(f.device_id) AS files,
-  coalesce(l.touched_at > ?, false) AS locked
+  count(f.device_id) AS files
 FROM dahua_file_cursors AS c
 LEFT JOIN dahua_files AS f ON f.device_id = c.device_id
-LEFT JOIN dahua_file_scan_locks AS l ON l.device_id = c.device_id
 GROUP BY c.device_id;
 
 -- name: UpdateDahuaFileCursor :one

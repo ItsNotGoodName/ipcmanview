@@ -25,6 +25,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+var ErrFileServiceConflict = fmt.Errorf("file service conflict")
+
 const FileEchoRoute = "/v1/dahua/:id/files/*"
 
 func FileURI(deviceID int64, filePath string) string {
@@ -260,8 +262,6 @@ func (s FileService) serve(ctx context.Context) error {
 		}
 	}
 }
-
-var ErrFileServiceConflict = fmt.Errorf("file service conflict")
 
 func (s FileService) Run(ctx context.Context, filter repo.DahuaFileFilter) (int, error) {
 	resC := make(chan fileServiceRes, 1)

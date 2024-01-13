@@ -404,3 +404,5 @@ func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location,
 		TimeSection: cfg.Tables[0].Data.TimeSection[0][0],
 	}, nil
 }
+
+type ScanLockStore = core.LockStore[int64]

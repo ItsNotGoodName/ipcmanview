@@ -19,7 +19,7 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-func DefaultWorkerFactory(bus *core.Bus, pub pubsub.Pub, db repo.DB, store *Store, hooks DefaultEventHooks) WorkerFactory {
+func DefaultWorkerFactory(bus *core.Bus, pub pubsub.Pub, db repo.DB, store *Store, scanLockStore *ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
 	return func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
@@ -36,7 +36,7 @@ func DefaultWorkerFactory(bus *core.Bus, pub pubsub.Pub, db repo.DB, store *Stor
 		}
 
 		{
-			worker := NewQuickScanWorker(pub, db, store, device.ID)
+			worker := NewQuickScanWorker(pub, db, store, scanLockStore, device.ID)
 			token := super.Add(worker)
 			tokens = append(tokens, token)
 		}
@@ -195,20 +195,22 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 	}
 }
 
-func NewQuickScanWorker(pub pubsub.Pub, db repo.DB, store *Store, deviceID int64) QuickScanWorker {
+func NewQuickScanWorker(pub pubsub.Pub, db repo.DB, store *Store, scanLockStore *ScanLockStore, deviceID int64) QuickScanWorker {
 	return QuickScanWorker{
-		pub:      pub,
-		db:       db,
-		store:    store,
-		deviceID: deviceID,
+		pub:           pub,
+		db:            db,
+		store:         store,
+		scanLockStore: scanLockStore,
+		deviceID:      deviceID,
 	}
 }
 
 type QuickScanWorker struct {
-	pub      pubsub.Pub
-	db       repo.DB
-	store    *Store
-	deviceID int64
+	pub           pubsub.Pub
+	db            repo.DB
+	store         *Store
+	scanLockStore *ScanLockStore
+	deviceID      int64
 }
 
 func (w QuickScanWorker) String() string {
@@ -261,13 +263,11 @@ func (w QuickScanWorker) serve(ctx context.Context) error {
 }
 
 func (w QuickScanWorker) scan(ctx context.Context) error {
-	err := ScanLockCreate(ctx, w.db, w.deviceID)
+	unlock, err := w.scanLockStore.Lock(ctx, w.deviceID)
 	if err != nil {
 		return err
 	}
-
-	cancel := ScanLockHeartbeat(ctx, w.db, w.deviceID)
-	defer cancel()
+	defer unlock()
 
 	dbDevice, err := w.db.GetDahuaDevice(ctx, w.deviceID)
 	if err != nil {

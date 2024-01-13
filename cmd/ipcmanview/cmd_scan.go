@@ -32,13 +32,6 @@ func (c *CmdScan) Run(ctx *Context) error {
 	}
 
 	for _, device := range devices {
-		err := dahua.ScanLockCreateTry(ctx, db, device.DahuaConn.ID)
-		if err != nil {
-			return err
-		}
-		cancel := dahua.ScanLockHeartbeat(ctx, db, device.DahuaConn.ID)
-		defer cancel()
-
 		if c.Reset {
 			err := dahua.ScanReset(ctx, db, device.DahuaDevice.ID)
 			if err != nil {
@@ -54,7 +47,6 @@ func (c *CmdScan) Run(ctx *Context) error {
 			return err
 		}
 
-		cancel()
 		conn.RPC.Close(context.Background())
 	}
 

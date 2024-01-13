@@ -123,11 +123,6 @@ type DahuaFileCursor struct {
 	ScanType     models.DahuaScanType
 }
 
-type DahuaFileScanLock struct {
-	DeviceID  int64
-	TouchedAt types.Time
-}
-
 type DahuaFileThumbnail struct {
 	ID     int64
 	FileID int64

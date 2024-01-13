@@ -75,8 +75,10 @@ func (c *CmdServe) Run(ctx *Context) error {
 		Register(bus)
 	defer dahuaStore.Close()
 
+	dahuaScanLockStore := core.NewLockStore[int64]()
+
 	dahuaWorkerStore := dahua.
-		NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahua.NewDefaultEventHooks(bus, db))).
+		NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahuaScanLockStore, dahua.NewDefaultEventHooks(bus, db))).
 		Register(bus)
 	if err := dahuaWorkerStore.Bootstrap(ctx, db, dahuaStore); err != nil {
 		return err
@@ -115,7 +117,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// WEB
 	webserver.
-		New(db, pub, bus, mediamtxConfig, dahuaStore, dahuaFileFS, dahuaFileService).
+		New(db, pub, bus, mediamtxConfig, dahuaStore, dahuaFileFS, dahuaFileService, dahuaScanLockStore).
 		Register(httpRouter)
 
 	// API
