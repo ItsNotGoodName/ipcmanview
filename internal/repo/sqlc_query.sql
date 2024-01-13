@@ -205,8 +205,17 @@ WHERE
   start_time <= sqlc.arg('end') AND
   sqlc.arg('start') < start_time;
 
--- name: UpsertDahuaFileThumbnail :one
-INSERT OR REPLACE INTO dahua_file_thumbnails (
+-- -- name: UpsertDahuaFileThumbnail :one
+-- INSERT OR REPLACE INTO dahua_file_thumbnails (
+--   file_id,
+--   width,
+--   height
+-- ) VALUES (
+--   ?, ?, ?
+-- ) RETURNING *;
+
+-- name: CreateDahuaFileThumbnail :one
+INSERT INTO dahua_file_thumbnails (
   file_id,
   width,
   height
@@ -424,6 +433,9 @@ INSERT INTO dahua_afero_files (
 -- name: GetDahuaAferoFileByFileID :one
 SELECT * FROM dahua_afero_files
 WHERE file_id = ?;
+
+-- name: ReadyDahuaAferoFile :one
+UPDATE dahua_afero_files SET ready = true WHERE id = ? RETURNING id;
 
 -- name: DeleteDahuaAferoFile :exec
 DELETE FROM dahua_afero_files

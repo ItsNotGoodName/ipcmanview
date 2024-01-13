@@ -14,19 +14,7 @@ import (
 
 const scanVolatileDuration = 8 * time.Hour
 
-func NewFileCursor() repo.CreateDahuaFileCursorParams {
-	now := time.Now()
-	return repo.CreateDahuaFileCursorParams{
-		DeviceID:    0,
-		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
-		FullCursor:  types.NewTime(now),
-		FullEpoch:   types.NewTime(ScannerEpoch),
-		Scan:        false,
-		ScanPercent: 0,
-	}
-}
-
-func updateFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod, scanType models.DahuaScanType) repo.DahuaFileCursor {
+func updateScanFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod, scanType models.DahuaScanType) repo.DahuaFileCursor {
 	switch scanType {
 	case models.DahuaScanTypeFull:
 		// Update FullCursor
@@ -189,7 +177,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 			return err
 		}
 
-		fileCursor = updateFileCursor(fileCursor, scannerPeriod, scanType)
+		fileCursor = updateScanFileCursor(fileCursor, scannerPeriod, scanType)
 
 		fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
 			QuickCursor: fileCursor.QuickCursor,

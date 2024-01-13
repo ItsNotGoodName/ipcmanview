@@ -2,12 +2,16 @@ package dahua
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
+	"github.com/google/uuid"
 	"github.com/spf13/afero"
 )
 
@@ -16,6 +20,16 @@ const AferoEchoRoutePrefix = "/v1/dahua-afero-files"
 
 func AferoFileURI(name string) string {
 	return "/v1/dahua-afero-files/" + name
+}
+
+func NewAferoFileName(extension string) string {
+	if extension == "" {
+		return uuid.NewString()
+	}
+	if strings.HasPrefix(".", extension) {
+		return uuid.NewString() + extension
+	}
+	return uuid.NewString() + "." + extension
 }
 
 // SyncAferoFile deletes the file from the database if it does not exist in the file system.
@@ -78,6 +92,36 @@ func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, fs afero.Fs) (int, 
 			deleted++
 		}
 	}
+}
+
+func AferoCreateFileThumbnail(ctx context.Context, db repo.DB, afs afero.Fs, thumbnailID int64, fileName string) (afero.File, error) {
+	aferoFile, err := db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
+		FileThumbnailID: sql.NullInt64{
+			Int64: thumbnailID,
+			Valid: true,
+		},
+		Name:      fileName,
+		CreatedAt: types.NewTime(time.Now()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return afs.Create(aferoFile.Name)
+}
+
+func AferoCreateEmailAttachment(ctx context.Context, db repo.DB, afs afero.Fs, emailAttachmentID int64, fileName string) (afero.File, error) {
+	aferoFile, err := db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
+		EmailAttachmentID: sql.NullInt64{
+			Int64: emailAttachmentID,
+			Valid: true,
+		},
+		Name:      fileName,
+		CreatedAt: types.NewTime(time.Now()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return afs.Create(aferoFile.Name)
 }
 
 func NewAferoService(db repo.DB, fs afero.Fs) AferoService {

@@ -9,7 +9,7 @@ import (
 type ErrorType string
 
 var (
-	ErrorTypeInvalidSession    ErrorType = "invalid session"
+	ErrorTypeInvalidSession    ErrorType = "InvalidSession"
 	ErrorTypeInvalidRequest    ErrorType = "InvalidRequest"
 	ErrorTypeMethodNotFound    ErrorType = "MethodNotFound"
 	ErrorTypeInterfaceNotFound ErrorType = "InterfaceNotFound"

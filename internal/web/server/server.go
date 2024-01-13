@@ -65,6 +65,7 @@ func (w Server) Register(e *echo.Echo) {
 	e.POST("/dahua/events/rules/create", w.DahuaEventsRulesCreatePOST)
 	e.POST("/dahua/files", w.DahuaFilesPOST)
 	e.POST("/dahua/files/download", w.DahuaFilesDownloadPOST)
+	e.POST("/dahua/files/:id/download", w.DahuaFilesIDDownloadPOST)
 	e.POST("/dahua/storage/destinations", w.DahuaStorageDestinationsPOST)
 	e.POST("/dahua/storage/destinations/:id", w.DahuaStorageDestinationsIDPOST)
 	e.POST("/dahua/storage/destinations/:id/test", w.DahuaStorageDestinationsIDTestPOST)
@@ -246,7 +247,7 @@ func (s Server) DahuaFilesDownloadPOST(c echo.Context) error {
 		return err
 	}
 
-	downloaded, err := s.dahuaFileService.Run(ctx, filter)
+	downloaded, err := s.dahuaFileService.DownloadByFilter(ctx, filter)
 	if err != nil {
 		if errors.Is(err, dahua.ErrFileServiceConflict) {
 			return echo.NewHTTPError(http.StatusConflict, "Already downloading.").WithInternal(err)
@@ -255,6 +256,28 @@ func (s Server) DahuaFilesDownloadPOST(c echo.Context) error {
 	}
 
 	toast(fmt.Sprintf("Downloaded %d files.", downloaded)).SetTrigger(c.Response())
+	return c.NoContent(http.StatusOK)
+}
+
+func (s Server) DahuaFilesIDDownloadPOST(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := api.ParamID(c)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.dahuaFileService.Download(ctx, id)
+	if err != nil {
+		if errors.Is(err, dahua.ErrFileServiceConflict) {
+			return echo.NewHTTPError(http.StatusConflict, "Already downloading.").WithInternal(err)
+		} else if repo.IsNotFound(err) {
+			return echo.ErrNotFound.WithInternal(err)
+		}
+		return err
+	}
+
+	toast("Downloaded file.").SetTrigger(c.Response())
 	return c.NoContent(http.StatusOK)
 }
 

@@ -9,11 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 )
 
-type Conn interface {
-	dahuarpc.Conn
-	Session(ctx context.Context) string
-}
-
 func newClient(session string) *client {
 	return &client{
 		Mutex:   sync.Mutex{},
@@ -30,7 +25,7 @@ type client struct {
 	ID      int
 }
 
-func NewClient(conn Conn) Client {
+func NewClient(conn dahuarpc.ConnSession) Client {
 	return Client{
 		conn:   conn,
 		client: newClient(conn.Session(context.Background())),
@@ -38,7 +33,7 @@ func NewClient(conn Conn) Client {
 }
 
 type Client struct {
-	conn   Conn
+	conn   dahuarpc.ConnSession
 	client *client
 }
 

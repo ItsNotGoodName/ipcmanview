@@ -2,7 +2,6 @@ package dahuasmtp
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"io"
 	"net/http"
@@ -14,7 +13,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/emersion/go-smtp"
-	"github.com/google/uuid"
 	"github.com/jhillyerd/enmime"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -170,33 +168,21 @@ func (s *session) Data(r io.Reader) error {
 	log = log.With().Int64("message-id", email.Message.ID).Logger()
 
 	for i, attachment := range e.Attachments {
-		file, err := s.DB.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
-			EmailAttachmentID: sql.NullInt64{
-				Int64: email.Attachments[i].ID,
-				Valid: true,
-			},
-			Name:      uuid.NewString() + parseFileExtension(attachment.FileName, http.DetectContentType(attachment.Content)),
-			CreatedAt: types.NewTime(time.Now()),
-		})
-		if err != nil {
-			log.Err(err).Msg("Failed to create file")
-			return err
-		}
+		if err := func() error {
+			aferoFile, err := dahua.AferoCreateEmailAttachment(ctx, s.DB, s.FS, email.Attachments[i].ID, dahua.NewAferoFileName(parseFileExtension(attachment.FileName, http.DetectContentType(attachment.Content))))
+			if err != nil {
+				log.Err(err).Msg("Failed to create file")
+				return err
+			}
+			defer aferoFile.Close()
 
-		f, err := s.FS.Create(file.Name)
-		if err != nil {
-			log.Err(err).Msg("Failed to create file")
-			return err
-		}
-		defer f.Close()
+			if _, err = aferoFile.Write(attachment.Content); err != nil {
+				log.Err(err).Msg("Failed to write file")
+				return err
+			}
 
-		if _, err = f.Write(attachment.Content); err != nil {
-			log.Err(err).Msg("Failed to write file")
-			return err
-		}
-
-		if err := f.Close(); err != nil {
-			log.Err(err).Msg("Failed to close file")
+			return nil
+		}(); err != nil {
 			return err
 		}
 	}

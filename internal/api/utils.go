@@ -11,13 +11,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func useDahuaConn(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, error) {
+func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, error) {
+	ctx := c.Request().Context()
+
 	id, err := ParamID(c)
 	if err != nil {
 		return dahua.Client{}, err
 	}
-
-	ctx := c.Request().Context()
 
 	dbDevice, err := db.GetDahuaDevice(ctx, id)
 	if err != nil {
@@ -27,9 +27,7 @@ func useDahuaConn(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client,
 		return dahua.Client{}, err
 	}
 
-	client := store.Client(ctx, dbDevice.Convert().DahuaConn)
-
-	return client, nil
+	return store.Client(ctx, dbDevice.Convert().DahuaConn), nil
 }
 
 // ---------- Stream

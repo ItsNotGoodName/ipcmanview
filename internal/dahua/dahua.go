@@ -9,6 +9,8 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
@@ -31,16 +33,19 @@ func NewClient(conn models.DahuaConn) Client {
 		Timeout: 5 * time.Second,
 	}
 	cgiHTTPClient := http.Client{}
+	fileHTTPClient := http.Client{}
 
 	clientRPC := dahuarpc.NewClient(rpcHTTPClient, conn.Url, conn.Username, conn.Password)
 	clientPTZ := ptz.NewClient(clientRPC)
 	clientCGI := dahuacgi.NewClient(cgiHTTPClient, conn.Url, conn.Username, conn.Password)
+	clientFile := dahuarpc.NewFileClient(&fileHTTPClient, 10)
 
 	return Client{
 		Conn: conn,
 		RPC:  clientRPC,
 		PTZ:  clientPTZ,
 		CGI:  clientCGI,
+		File: clientFile,
 	}
 }
 
@@ -49,6 +54,12 @@ type Client struct {
 	RPC  dahuarpc.Client
 	PTZ  ptz.Client
 	CGI  dahuacgi.Client
+	File dahuarpc.FileClient
+}
+
+func (c Client) Close(ctx context.Context) error {
+	c.File.Close()
+	return c.RPC.Close(ctx)
 }
 
 func ignorableError(err error) bool {
@@ -406,3 +417,15 @@ func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location,
 }
 
 type ScanLockStore = core.LockStore[int64]
+
+func NewFileCursor() repo.CreateDahuaFileCursorParams {
+	now := time.Now()
+	return repo.CreateDahuaFileCursorParams{
+		DeviceID:    0,
+		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
+		FullCursor:  types.NewTime(now),
+		FullEpoch:   types.NewTime(ScannerEpoch),
+		Scan:        false,
+		ScanPercent: 0,
+	}
+}

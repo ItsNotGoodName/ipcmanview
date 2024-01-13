@@ -6,12 +6,7 @@ import (
 	"fmt"
 )
 
-type LoginConn interface {
-	Conn
-	SetSession(session string)
-}
-
-func Login(ctx context.Context, conn LoginConn, username, password string) error {
+func Login(ctx context.Context, conn ConnLogin, username, password string) error {
 	firstLogin, err := FirstLogin(ctx, conn, username)
 	if err != nil {
 		return err

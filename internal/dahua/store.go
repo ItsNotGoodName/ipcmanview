@@ -20,7 +20,7 @@ type storeClient struct {
 }
 
 func (c storeClient) Close(ctx context.Context) {
-	if err := c.Client.RPC.Close(ctx); err != nil {
+	if err := c.Client.Close(ctx); err != nil {
 		log.Err(err).Int64("id", c.Client.Conn.ID).Msg("Failed to close RPC connection")
 	}
 }

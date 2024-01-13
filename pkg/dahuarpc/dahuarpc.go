@@ -21,6 +21,7 @@ const (
 	StateClosed
 )
 
+// State is used to keep track of connection states.
 type State int
 
 func (s State) String() string {
@@ -38,8 +39,21 @@ func (s State) String() string {
 	}
 }
 
+// Conn is the base connection.
 type Conn interface {
 	Do(ctx context.Context, rb RequestBuilder) (io.ReadCloser, error)
+}
+
+// ConnSession is a connection with a session.
+type ConnSession interface {
+	Conn
+	Session(ctx context.Context) string
+}
+
+// ConnLogin is a connection used to login.
+type ConnLogin interface {
+	Conn
+	SetSession(session string)
 }
 
 // SendRaw sends RPC request to camera without checking if the response contains an error field.

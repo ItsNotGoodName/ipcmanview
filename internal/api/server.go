@@ -10,7 +10,6 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -45,7 +44,6 @@ type Server struct {
 
 func (s *Server) Register(e *echo.Echo) {
 	e.GET("/v1/dahua", s.Dahua)
-	e.GET(dahua.AferoEchoRoute, echo.WrapHandler(http.StripPrefix(dahua.AferoEchoRoutePrefix, http.FileServer(afero.NewHttpFs(s.dahuaFileFS)))))
 	e.GET("/v1/dahua-events", s.DahuaEvents)
 	e.GET("/v1/dahua/:id/audio", s.DahuaIDAudio)
 	e.GET("/v1/dahua/:id/coaxial/caps", s.DahuaIDCoaxialCaps)
@@ -54,13 +52,13 @@ func (s *Server) Register(e *echo.Echo) {
 	e.GET("/v1/dahua/:id/error", s.DahuaIDError)
 	e.GET("/v1/dahua/:id/events", s.DahuaIDEvents)
 	e.GET("/v1/dahua/:id/files", s.DahuaIDFiles)
-	e.GET(dahua.FileEchoRoute, s.DahuaIDFilesPath)
 	e.GET("/v1/dahua/:id/licenses", s.DahuaIDLicenses)
 	e.GET("/v1/dahua/:id/snapshot", s.DahuaIDSnapshot)
 	e.GET("/v1/dahua/:id/software", s.DahuaIDSoftware)
 	e.GET("/v1/dahua/:id/storage", s.DahuaIDStorage)
 	e.GET("/v1/dahua/:id/users", s.DahuaIDUsers)
-
+	e.GET(dahua.AferoEchoRoute, echo.WrapHandler(http.StripPrefix(dahua.AferoEchoRoutePrefix, http.FileServer(afero.NewHttpFs(s.dahuaFileFS)))))
+	e.GET(dahua.FileEchoRoute, s.DahuaIDFilesPath)
 	e.POST("/v1/dahua/:id/ptz/preset", s.DahuaIDPTZPresetPOST)
 	e.POST("/v1/dahua/:id/rpc", s.DahuaIDRPCPOST)
 }
@@ -90,7 +88,7 @@ func (s *Server) Dahua(c echo.Context) error {
 func (s *Server) DahuaIDRPCPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -104,7 +102,7 @@ func (s *Server) DahuaIDRPCPOST(c echo.Context) error {
 		return echo.ErrBadRequest.WithInternal(err)
 	}
 
-	res, err := dahuarpc.SendRaw[json.RawMessage](ctx, conn.RPC, dahuarpc.New(req.Method).
+	res, err := dahuarpc.SendRaw[json.RawMessage](ctx, client.RPC, dahuarpc.New(req.Method).
 		Params(req.Params).
 		Object(req.Object))
 	if err != nil {
@@ -117,12 +115,12 @@ func (s *Server) DahuaIDRPCPOST(c echo.Context) error {
 func (s *Server) DahuaIDDetail(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
 
-	res, err := dahua.GetDahuaDetail(ctx, conn.Conn.ID, conn.RPC)
+	res, err := dahua.GetDahuaDetail(ctx, client.Conn.ID, client.RPC)
 	if err != nil {
 		return err
 	}
@@ -133,12 +131,12 @@ func (s *Server) DahuaIDDetail(c echo.Context) error {
 func (s *Server) DahuaIDSoftware(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
 
-	res, err := dahua.GetSoftwareVersion(ctx, conn.Conn.ID, conn.RPC)
+	res, err := dahua.GetSoftwareVersion(ctx, client.Conn.ID, client.RPC)
 	if err != nil {
 		return err
 	}
@@ -149,12 +147,12 @@ func (s *Server) DahuaIDSoftware(c echo.Context) error {
 func (s *Server) DahuaIDLicenses(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
 
-	res, err := dahua.GetLicenseList(ctx, conn.Conn.ID, conn.RPC)
+	res, err := dahua.GetLicenseList(ctx, client.Conn.ID, client.RPC)
 	if err != nil {
 		return err
 	}
@@ -165,12 +163,12 @@ func (s *Server) DahuaIDLicenses(c echo.Context) error {
 func (s *Server) DahuaIDError(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
 
-	res := dahua.GetError(ctx, conn.RPC)
+	res := dahua.GetError(ctx, client.RPC)
 
 	return c.JSON(http.StatusOK, res)
 }
@@ -178,7 +176,7 @@ func (s *Server) DahuaIDError(c echo.Context) error {
 func (s *Server) DahuaIDSnapshot(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -188,7 +186,7 @@ func (s *Server) DahuaIDSnapshot(c echo.Context) error {
 		return err
 	}
 
-	snapshot, err := dahuacgi.SnapshotGet(ctx, conn.CGI, channel)
+	snapshot, err := dahuacgi.SnapshotGet(ctx, client.CGI, channel)
 	if err != nil {
 		return err
 	}
@@ -208,7 +206,7 @@ func (s *Server) DahuaIDSnapshot(c echo.Context) error {
 func (s *Server) DahuaIDEvents(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -221,7 +219,7 @@ func (s *Server) DahuaIDEvents(c echo.Context) error {
 	if direct {
 		// Get events directly from the device
 
-		manager, err := dahuacgi.EventManagerGet(ctx, conn.CGI, 0)
+		manager, err := dahuacgi.EventManagerGet(ctx, client.CGI, 0)
 		if err != nil {
 			return err
 		}
@@ -240,7 +238,7 @@ func (s *Server) DahuaIDEvents(c echo.Context) error {
 				return sendStreamError(c, stream, err)
 			}
 
-			data := dahua.NewDahuaEvent(conn.Conn.ID, event)
+			data := dahua.NewDahuaEvent(client.Conn.ID, event)
 
 			if err := sendStream(c, stream, data); err != nil {
 				return err
@@ -318,7 +316,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 func (s *Server) DahuaIDFiles(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -342,7 +340,7 @@ func (s *Server) DahuaIDFiles(c echo.Context) error {
 	stream := useStream(c)
 
 	for period, ok := iterator.Next(); ok; period, ok = iterator.Next() {
-		cancel, errC := dahua.ScannerScan(ctx, conn.RPC, period, conn.Conn.Location, filesC)
+		cancel, errC := dahua.ScannerScan(ctx, client.RPC, period, client.Conn.Location, filesC)
 		defer cancel()
 
 	inner:
@@ -356,7 +354,7 @@ func (s *Server) DahuaIDFiles(c echo.Context) error {
 				}
 				break inner
 			case files := <-filesC:
-				res, err := dahua.NewDahuaFiles(conn.Conn.ID, files, dahua.GetSeed(conn.Conn), conn.Conn.Location)
+				res, err := dahua.NewDahuaFiles(client.Conn.ID, files, dahua.GetSeed(client.Conn), client.Conn.Location)
 				if err != nil {
 					return sendStreamError(c, stream, err)
 				}
@@ -374,86 +372,65 @@ func (s *Server) DahuaIDFiles(c echo.Context) error {
 func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
 
 	filePath := c.Param("*")
-	storage := core.StorageFromFilePath(filePath)
-
-	var directFilePath bool
 	dbFile, err := s.db.GetDahuaFileByFilePath(ctx, repo.GetDahuaFileByFilePathParams{
-		DeviceID: conn.Conn.ID,
+		DeviceID: client.Conn.ID,
 		FilePath: filePath,
 	})
-	if repo.IsNotFound(err) {
-		directFilePath = true
-	} else if err != nil {
+	if err != nil {
+		if repo.IsNotFound(err) {
+			return echo.ErrNotFound.WithInternal(err)
+		}
 		return err
 	}
+
 	c.Response().Header().Set(echo.HeaderContentLength, strconv.FormatInt(dbFile.Length, 10))
 
-	var rd io.ReadCloser
-	if directFilePath && storage == models.StorageLocal {
-		// File from device
-		rd, err = dahua.FileLocalReadCloser(ctx, conn, filePath)
-		if err != nil {
-			return err
-		}
-	} else {
-		file := dbFile.Convert()
-
-		var aferoFileExists bool
-		aferoFile, err := s.db.GetDahuaAferoFileByFileID(ctx, sql.NullInt64{Int64: file.ID, Valid: true})
-		if err != nil {
-			if !repo.IsNotFound(err) {
-				return err
-			}
-		} else {
-			aferoFileExists = true
+	rd, err := func() (io.ReadCloser, error) {
+		aferoFileFound := true
+		aferoFile, err := s.db.GetDahuaAferoFileByFileID(ctx, sql.NullInt64{Int64: dbFile.ID, Valid: true})
+		if repo.IsNotFound(err) {
+			aferoFileFound = false
+		} else if err != nil {
+			return nil, err
 		}
 
-		if aferoFileExists && !directFilePath {
+		if aferoFileFound {
 			// File from cache
-			rd, err = s.dahuaFileFS.Open(aferoFile.Name)
+			rd, err := s.dahuaFileFS.Open(aferoFile.Name)
 			if err != nil {
 				if os.IsNotExist(err) {
 					// File from device
-					rd, err = dahua.FileLocalReadCloser(ctx, conn, filePath)
-					if err != nil {
-						return err
-					}
-				} else {
-					return err
+					return dahua.FileLocalReadCloser(ctx, client, dbFile.FilePath)
 				}
+
+				return nil, err
 			}
-		} else {
-			switch storage {
-			case models.StorageLocal:
-				if repo.IsNotFound(err) {
-					// File from device
-					rd, err = dahua.FileLocalReadCloser(ctx, conn, filePath)
-					if err != nil {
-						return err
-					}
-				}
-			case models.StorageFTP:
-				// File from FTP
-				rd, err = dahua.FileFTPReadCloser(ctx, s.db, file)
-				if err != nil {
-					return err
-				}
-			case models.StorageSFTP:
-				// File from SFTP
-				rd, err = dahua.FileSFTPReadCloser(ctx, s.db, file)
-				if err != nil {
-					return err
-				}
-			default:
-				return echo.ErrInternalServerError.WithInternal(fmt.Errorf("storage not supported: %s", storage))
-			}
+
+			return rd, nil
 		}
+
+		switch dbFile.Storage {
+		case models.StorageLocal:
+			// File from device
+			return dahua.FileLocalReadCloser(ctx, client, dbFile.FilePath)
+		case models.StorageFTP:
+			// File from FTP
+			return dahua.FileFTPReadCloser(ctx, s.db, dbFile.FilePath)
+		case models.StorageSFTP:
+			// File from SFTP
+			return dahua.FileSFTPReadCloser(ctx, s.db, dbFile.FilePath)
+		}
+
+		return nil, echo.ErrInternalServerError.WithInternal(fmt.Errorf("storage not supported: %s", dbFile.FilePath))
+	}()
+	if err != nil {
+		return err
 	}
 	defer rd.Close()
 
@@ -468,7 +445,7 @@ func (s *Server) DahuaIDFilesPath(c echo.Context) error {
 func (s *Server) DahuaIDAudio(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -478,7 +455,7 @@ func (s *Server) DahuaIDAudio(c echo.Context) error {
 		return err
 	}
 
-	audioStream, err := dahuacgi.AudioStreamGet(ctx, conn.CGI, channel, dahuacgi.HTTPTypeSinglePart)
+	audioStream, err := dahuacgi.AudioStreamGet(ctx, client.CGI, channel, dahuacgi.HTTPTypeSinglePart)
 	if err != nil {
 		return err
 	}
@@ -496,7 +473,7 @@ func (s *Server) DahuaIDAudio(c echo.Context) error {
 func (s *Server) DahuaIDCoaxialStatus(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -506,7 +483,7 @@ func (s *Server) DahuaIDCoaxialStatus(c echo.Context) error {
 		return err
 	}
 
-	status, err := dahua.GetCoaxialStatus(ctx, conn.Conn.ID, conn.RPC, channel)
+	status, err := dahua.GetCoaxialStatus(ctx, client.Conn.ID, client.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -517,7 +494,7 @@ func (s *Server) DahuaIDCoaxialStatus(c echo.Context) error {
 func (s *Server) DahuaIDCoaxialCaps(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -527,7 +504,7 @@ func (s *Server) DahuaIDCoaxialCaps(c echo.Context) error {
 		return err
 	}
 
-	status, err := dahua.GetCoaxialCaps(ctx, conn.Conn.ID, conn.RPC, channel)
+	status, err := dahua.GetCoaxialCaps(ctx, client.Conn.ID, client.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -538,7 +515,7 @@ func (s *Server) DahuaIDCoaxialCaps(c echo.Context) error {
 func (s *Server) DahuaIDPTZPresetPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -553,7 +530,7 @@ func (s *Server) DahuaIDPTZPresetPOST(c echo.Context) error {
 		return err
 	}
 
-	err = dahua.SetPreset(ctx, conn.PTZ, channel, index)
+	err = dahua.SetPreset(ctx, client.PTZ, channel, index)
 	if err != nil {
 		return err
 	}
@@ -564,12 +541,12 @@ func (s *Server) DahuaIDPTZPresetPOST(c echo.Context) error {
 func (s *Server) DahuaIDStorage(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
 
-	storage, err := dahua.GetStorage(ctx, conn.Conn.ID, conn.RPC)
+	storage, err := dahua.GetStorage(ctx, client.Conn.ID, client.RPC)
 	if err != nil {
 		return err
 	}
@@ -580,12 +557,12 @@ func (s *Server) DahuaIDStorage(c echo.Context) error {
 func (s *Server) DahuaIDUsers(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conn, err := useDahuaConn(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}
 
-	res, err := dahua.GetUsers(ctx, conn.Conn.ID, conn.RPC, conn.Conn.Location)
+	res, err := dahua.GetUsers(ctx, client.Conn.ID, client.RPC, client.Conn.Location)
 	if err != nil {
 		return err
 	}

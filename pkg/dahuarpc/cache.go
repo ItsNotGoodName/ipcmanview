@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 )
 
-type Cache map[string]Response[json.RawMessage]
-
 func NewCache() Cache {
 	return Cache(make(map[string]Response[json.RawMessage]))
 }
+
+// Cache caches RPC calls.
+type Cache map[string]Response[json.RawMessage]
 
 func (c Cache) Send(ctx context.Context, conn Conn, key string, rb RequestBuilder) (Response[json.RawMessage], error) {
 	if res, found := c[key]; found {

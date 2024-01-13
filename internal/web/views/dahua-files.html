@@ -160,6 +160,13 @@
                         </a>
                       </div>
                     </div>
+                    <button
+                      class="btn btn-sm"
+                      hx-post="/dahua/files/{{ .ID }}/download"
+                      hx-swap="none"
+                    >
+                      Download
+                    </button>
                   </div>
                 </div>
               </div>
