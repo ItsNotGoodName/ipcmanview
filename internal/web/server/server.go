@@ -359,8 +359,6 @@ func (s Server) DahuaFilesIDThumbnail(c echo.Context) error {
 	var uri string
 	if file.Name.Valid {
 		uri = dahua.AferoFileURI(file.Name.String)
-	} else if file.Type == models.DahuaFileTypeJPG {
-		uri = dahua.FileURI(file.DeviceID, file.FilePath)
 	} else {
 		return echo.ErrNotFound
 	}

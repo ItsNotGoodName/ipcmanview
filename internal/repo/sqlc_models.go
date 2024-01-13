@@ -18,8 +18,9 @@ type DahuaAferoFile struct {
 	FileThumbnailID   sql.NullInt64
 	EmailAttachmentID sql.NullInt64
 	Name              string
-	CreatedAt         types.Time
 	Ready             bool
+	Size              int64
+	CreatedAt         types.Time
 }
 
 type DahuaDevice struct {

@@ -20,8 +20,15 @@ import (
 )
 
 type App struct {
-	DB repo.DB
-	FS afero.Fs
+	db  repo.DB
+	afs afero.Fs
+}
+
+func NewApp(db repo.DB, afs afero.Fs) App {
+	return App{
+		db:  db,
+		afs: afs,
+	}
 }
 
 // The Backend implements SMTP server methods.
@@ -129,7 +136,7 @@ func (s *session) Data(r io.Reader) error {
 		log.Warn().Err(err).Str("date", e.GetHeader("Date")).Msg("Failed to parse date")
 	}
 
-	dbDevice, err := s.DB.GetDahuaDeviceByIP(ctx, ipFromAddress(s.address))
+	dbDevice, err := s.db.GetDahuaDeviceByIP(ctx, ipFromAddress(s.address))
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return err
@@ -160,7 +167,7 @@ func (s *session) Data(r io.Reader) error {
 		})
 	}
 
-	email, err := s.DB.CreateDahuaEmail(ctx, arg, args...)
+	email, err := s.db.CreateDahuaEmail(ctx, arg, args...)
 	if err != nil {
 		log.Err(err).Msg("Failed to create email")
 		return err
@@ -169,7 +176,13 @@ func (s *session) Data(r io.Reader) error {
 
 	for i, attachment := range e.Attachments {
 		if err := func() error {
-			aferoFile, err := dahua.AferoCreateEmailAttachment(ctx, s.DB, s.FS, email.Attachments[i].ID, dahua.NewAferoFileName(parseFileExtension(attachment.FileName, http.DetectContentType(attachment.Content))))
+			aferoFile, err := dahua.CreateAferoFile(
+				ctx,
+				s.db,
+				s.afs,
+				dahua.NewAferoFileName(parseFileExtension(attachment.FileName, http.DetectContentType(attachment.Content))),
+				dahua.AferoForeignKeys{EmailAttachmentID: email.Attachments[i].ID},
+			)
 			if err != nil {
 				log.Err(err).Msg("Failed to create file")
 				return err
@@ -179,6 +192,10 @@ func (s *session) Data(r io.Reader) error {
 			if _, err = aferoFile.Write(attachment.Content); err != nil {
 				log.Err(err).Msg("Failed to write file")
 				return err
+			}
+
+			if err := dahua.ReadyAferoFile(ctx, s.db, aferoFile.ID, aferoFile.File); err != nil {
+				log.Err(err).Msg("Failed to ready file")
 			}
 
 			return nil

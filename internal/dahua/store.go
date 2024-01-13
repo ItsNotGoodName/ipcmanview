@@ -6,6 +6,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,17 +26,19 @@ func (c storeClient) Close(ctx context.Context) {
 	}
 }
 
-// Store maintains device clients.
-type Store struct {
-	clientsMu sync.Mutex
-	clients   map[int64]storeClient
-}
-
 func NewStore() *Store {
 	return &Store{
-		clientsMu: sync.Mutex{},
-		clients:   make(map[int64]storeClient),
+		ServiceContext: sutureext.NewServiceContext("dahua.Store"),
+		clientsMu:      sync.Mutex{},
+		clients:        make(map[int64]storeClient),
 	}
+}
+
+// Store maintains device clients.
+type Store struct {
+	sutureext.ServiceContext
+	clientsMu sync.Mutex
+	clients   map[int64]storeClient
 }
 
 func (s *Store) Close() {
@@ -44,7 +47,7 @@ func (s *Store) Close() {
 	for _, client := range s.clients {
 		wg.Add(1)
 		go func(client storeClient) {
-			client.Close(context.Background())
+			client.Close(s.Context())
 			wg.Done()
 		}(client)
 	}

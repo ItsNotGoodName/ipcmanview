@@ -33,7 +33,7 @@ func (c Shared) useDir() (string, error) {
 	return dir, nil
 }
 
-func (c Shared) useDahuaFileFS() (afero.Fs, error) {
+func (c Shared) useDahuaAFS() (afero.Fs, error) {
 	dir, err := c.useDir()
 	if err != nil {
 		return nil, err

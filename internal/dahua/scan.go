@@ -71,13 +71,13 @@ func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCurs
 }
 
 // ScanReset cannot be called concurrently for the same device.
-func ScanReset(ctx context.Context, db repo.DB, id int64) error {
+func ScanReset(ctx context.Context, db repo.DB, deviceID int64) error {
 	fileCursor := NewFileCursor()
 	_, err := db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
-		DeviceID:    id,
+		DeviceID:    deviceID,
 		ScanPercent: 0,
 		Scan:        false,
 		ScanType:    models.DahuaScanTypeUnknown,

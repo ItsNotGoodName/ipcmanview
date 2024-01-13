@@ -1,6 +1,7 @@
 package core
 
 import (
+	"database/sql"
 	"errors"
 	"io"
 	"strconv"
@@ -55,4 +56,14 @@ func (c MultiReadCloser) Close() error {
 		}
 	}
 	return multiErr
+}
+
+func Int64ToNullInt64(a int64) sql.NullInt64 {
+	if a == 0 {
+		return sql.NullInt64{}
+	}
+	return sql.NullInt64{
+		Int64: a,
+		Valid: true,
+	}
 }

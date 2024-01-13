@@ -2,15 +2,14 @@ package dahua
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/google/uuid"
 	"github.com/spf13/afero"
 )
@@ -23,17 +22,18 @@ func AferoFileURI(name string) string {
 }
 
 func NewAferoFileName(extension string) string {
+	uuid := uuid.NewString()
 	if extension == "" {
-		return uuid.NewString()
+		return uuid
 	}
 	if strings.HasPrefix(".", extension) {
-		return uuid.NewString() + extension
+		return uuid + extension
 	}
-	return uuid.NewString() + "." + extension
+	return uuid + "." + extension
 }
 
 // SyncAferoFile deletes the file from the database if it does not exist in the file system.
-func SyncAferoFile(ctx context.Context, db repo.DB, fs afero.Fs, aferoFile repo.DahuaAferoFile, err error) (bool, error) {
+func SyncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFile repo.DahuaAferoFile, err error) (bool, error) {
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return false, nil
@@ -41,11 +41,11 @@ func SyncAferoFile(ctx context.Context, db repo.DB, fs afero.Fs, aferoFile repo.
 		return false, err
 	}
 
-	return syncAferoFile(ctx, db, fs, aferoFile)
+	return syncAferoFile(ctx, db, afs, aferoFile)
 }
 
-func syncAferoFile(ctx context.Context, db repo.DB, fs afero.Fs, aferoFile repo.DahuaAferoFile) (bool, error) {
-	_, err := fs.Stat(aferoFile.Name)
+func syncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFile repo.DahuaAferoFile) (bool, error) {
+	_, err := afs.Stat(aferoFile.Name)
 	if err == nil {
 		return true, nil
 	}
@@ -62,7 +62,7 @@ func syncAferoFile(ctx context.Context, db repo.DB, fs afero.Fs, aferoFile repo.
 }
 
 // DeleteOrphanAferoFiles deletes unreferenced afero files.
-func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, fs afero.Fs) (int, error) {
+func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, afs afero.Fs) (int, error) {
 	deleted := 0
 
 	var first repo.DahuaAferoFile
@@ -80,7 +80,7 @@ func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, fs afero.Fs) (int, 
 		first = files[0]
 
 		for _, f := range files {
-			err := fs.Remove(f.Name)
+			err := afs.Remove(f.Name)
 			if err != nil && !os.IsNotExist(err) {
 				return deleted, err
 			}
@@ -94,97 +94,54 @@ func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, fs afero.Fs) (int, 
 	}
 }
 
-func AferoCreateFileThumbnail(ctx context.Context, db repo.DB, afs afero.Fs, thumbnailID int64, fileName string) (afero.File, error) {
-	aferoFile, err := db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
-		FileThumbnailID: sql.NullInt64{
-			Int64: thumbnailID,
-			Valid: true,
-		},
-		Name:      fileName,
-		CreatedAt: types.NewTime(time.Now()),
+type AferoFile struct {
+	afero.File
+	ID   int64
+	Name string
+}
+
+type AferoForeignKeys struct {
+	FileID            int64
+	FileThumbnailID   int64
+	EmailAttachmentID int64
+}
+
+func CreateAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, fileName string, key AferoForeignKeys) (AferoFile, error) {
+	id, err := db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
+		FileID:            core.Int64ToNullInt64(key.FileID),
+		FileThumbnailID:   core.Int64ToNullInt64(key.FileThumbnailID),
+		EmailAttachmentID: core.Int64ToNullInt64(key.EmailAttachmentID),
+		Name:              fileName,
+		CreatedAt:         types.NewTime(time.Now()),
 	})
 	if err != nil {
-		return nil, err
+		return AferoFile{}, err
 	}
-	return afs.Create(aferoFile.Name)
-}
-
-func AferoCreateEmailAttachment(ctx context.Context, db repo.DB, afs afero.Fs, emailAttachmentID int64, fileName string) (afero.File, error) {
-	aferoFile, err := db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
-		EmailAttachmentID: sql.NullInt64{
-			Int64: emailAttachmentID,
-			Valid: true,
-		},
-		Name:      fileName,
-		CreatedAt: types.NewTime(time.Now()),
-	})
+	file, err := afs.Create(fileName)
 	if err != nil {
-		return nil, err
+		return AferoFile{}, err
 	}
-	return afs.Create(aferoFile.Name)
+	return AferoFile{
+		File: file,
+		ID:   id,
+		Name: fileName,
+	}, nil
 }
 
-func NewAferoService(db repo.DB, fs afero.Fs) AferoService {
-	return AferoService{
-		interval: 8 * time.Hour,
-		db:       db,
-		fs:       fs,
-		queueC:   make(chan struct{}, 1),
-	}
-}
-
-// AferoService handles deleting orphan afero files.
-type AferoService struct {
-	interval time.Duration
-	db       repo.DB
-	fs       afero.Fs
-	queueC   chan struct{}
-}
-
-func (s AferoService) String() string {
-	return "dahua.AferoService"
-}
-
-func (s AferoService) Serve(ctx context.Context) error {
-	return sutureext.SanitizeError(ctx, s.serve(ctx))
-}
-
-func (s AferoService) serve(ctx context.Context) error {
-	t := time.NewTicker(s.interval)
-	defer t.Stop()
-
-	if err := s.run(ctx); err != nil {
+func ReadyAferoFile(ctx context.Context, db repo.DB, id int64, file afero.File) error {
+	stat, err := file.Stat()
+	if err != nil {
 		return err
 	}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-s.queueC:
-			if err := s.run(ctx); err != nil {
-				return err
-			}
-		case <-t.C:
-			if err := s.run(ctx); err != nil {
-				return err
-			}
-		}
-	}
-}
-
-func (s AferoService) run(ctx context.Context) error {
-	_, err := DeleteOrphanAferoFiles(ctx, s.db, s.fs)
+	_, err = db.ReadyDahuaAferoFile(ctx, repo.ReadyDahuaAferoFileParams{
+		Size:      stat.Size(),
+		CreatedAt: types.NewTime(stat.ModTime()),
+		ID:        id,
+	})
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (s AferoService) Queue() {
-	select {
-	case s.queueC <- struct{}{}:
-	default:
-	}
 }

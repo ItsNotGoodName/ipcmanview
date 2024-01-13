@@ -13,11 +13,3 @@ func CreateFileThumbnail(ctx context.Context, db repo.DB, fileID int64, width, h
 		Height: int64(height),
 	})
 }
-
-func UpsertFileThumbnail(ctx context.Context, db repo.DB, fileID int64, width, height int64) (repo.DahuaFileThumbnail, error) {
-	return db.UpsertDahuaFileThumbnail(ctx, repo.UpsertDahuaFileThumbnailParams{
-		FileID: fileID,
-		Width:  int64(width),
-		Height: int64(height),
-	})
-}

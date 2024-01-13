@@ -70,9 +70,10 @@ CREATE TABLE dahua_afero_files (
   file_thumbnail_id INTEGER UNIQUE,
   email_attachment_id INTEGER UNIQUE,
   name TEXT NOT NULL UNIQUE,
-  created_at DATETIME NOT NULL,
 
   ready BOOLEAN NOT NULL DEFAULT false,
+  size INTEGER NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL,
 
   FOREIGN KEY(file_id) REFERENCES dahua_files(id) ON UPDATE CASCADE ON DELETE SET NULL,
   FOREIGN KEY(file_thumbnail_id) REFERENCES dahua_file_thumbnails(id) ON UPDATE CASCADE ON DELETE SET NULL,

@@ -65,7 +65,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// Dahua
 
-	dahuaFileFS, err := c.useDahuaFileFS()
+	dahuaAFS, err := c.useDahuaAFS()
 	if err != nil {
 		return err
 	}
@@ -74,6 +74,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 		NewStore().
 		Register(bus)
 	defer dahuaStore.Close()
+	super.Add(dahuaStore)
 
 	dahuaScanLockStore := core.NewLockStore[int64]()
 
@@ -86,9 +87,9 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	dahua.RegisterStreams(bus, db, dahuaStore)
 
-	super.Add(dahua.NewAferoService(db, dahuaFileFS))
+	super.Add(dahua.NewAferoService(db, dahuaAFS))
 
-	dahuaFileService := dahua.NewFileService(db, dahuaFileFS, dahuaStore)
+	dahuaFileService := dahua.NewFileService(db, dahuaAFS, dahuaStore)
 	super.Add(dahuaFileService)
 
 	// MQTT
@@ -102,10 +103,8 @@ func (c *CmdServe) Run(ctx *Context) error {
 	}
 
 	// SMTP
-	dahuaSMTPBackend := dahuasmtp.NewBackend(dahuasmtp.App{
-		DB: db,
-		FS: dahuaFileFS,
-	})
+	dahuaSMTPApp := dahuasmtp.NewApp(db, dahuaAFS)
+	dahuaSMTPBackend := dahuasmtp.NewBackend(dahuaSMTPApp)
 	dahuaSMTPServer := dahuasmtp.NewServer(dahuaSMTPBackend, core.Address(c.SMTPHost, int(c.SMTPPort)))
 	super.Add(dahuaSMTPServer)
 
@@ -117,12 +116,12 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// WEB
 	webserver.
-		New(db, pub, bus, mediamtxConfig, dahuaStore, dahuaFileFS, dahuaFileService, dahuaScanLockStore).
+		New(db, pub, bus, mediamtxConfig, dahuaStore, dahuaAFS, dahuaFileService, dahuaScanLockStore).
 		Register(httpRouter)
 
 	// API
 	api.
-		NewServer(pub, db, dahuaStore, dahuaFileFS).
+		NewServer(pub, db, dahuaStore, dahuaAFS).
 		Register(httpRouter)
 
 	// RPC
