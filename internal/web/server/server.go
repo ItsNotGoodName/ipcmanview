@@ -356,16 +356,15 @@ func (s Server) DahuaFilesIDThumbnail(c echo.Context) error {
 		return err
 	}
 
-	var uri string
-	if file.Name.Valid {
-		uri = dahua.AferoFileURI(file.Name.String)
-	} else {
-		return echo.ErrNotFound
+	if !file.Name.Valid {
+		return c.Render(http.StatusOK, "dahua-files", view.Block{Name: "htmx-thumbnail", Data: view.Data{
+			"File": file,
+		}})
 	}
 
-	return c.Render(http.StatusOK, "dahua-files", view.Block{Name: "htmx-thumbnail",
-		Data: uri,
-	})
+	return c.Render(http.StatusOK, "dahua-files", view.Block{Name: "htmx-thumbnail", Data: view.Data{
+		"URL": dahua.AferoFileURI(file.Name.String),
+	}})
 }
 
 func (s Server) DahuaEventsLive(c echo.Context) error {
