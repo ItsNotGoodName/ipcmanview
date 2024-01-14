@@ -22,7 +22,6 @@ func (db DB) DahuaDeviceExists(ctx context.Context, id int64) (bool, error) {
 }
 
 type CreateDahuaDeviceParams = createDahuaDeviceParams
-
 type CreateDahuaFileCursorParams = createDahuaFileCursorParams
 
 func (db DB) CreateDahuaDevice(ctx context.Context, arg CreateDahuaDeviceParams, args2 CreateDahuaFileCursorParams) (int64, error) {

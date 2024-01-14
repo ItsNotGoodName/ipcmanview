@@ -1208,7 +1208,7 @@ func (q *Queries) OrphanDeleteDahuaThumbnail(ctx context.Context) error {
 
 const orphanListDahuaAferoFile = `-- name: OrphanListDahuaAferoFile :many
 SELECT id, file_id, thumbnail_id, email_attachment_id, name, ready, size, created_at FROM dahua_afero_files
-WHERE file_id IS NULL AND thumbnail_id IS NULL AND email_attachment_id IS NULL
+WHERE file_id IS NULL AND thumbnail_id IS NULL AND email_attachment_id IS NULL AND ready = true
 LIMIT ?
 `
 

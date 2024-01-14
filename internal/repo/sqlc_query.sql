@@ -443,5 +443,5 @@ WHERE id = ?;
 
 -- name: OrphanListDahuaAferoFile :many
 SELECT * FROM dahua_afero_files
-WHERE file_id IS NULL AND thumbnail_id IS NULL AND email_attachment_id IS NULL
+WHERE file_id IS NULL AND thumbnail_id IS NULL AND email_attachment_id IS NULL AND ready = true
 LIMIT ?;

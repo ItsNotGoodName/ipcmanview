@@ -421,11 +421,8 @@ type ScanLockStore = core.LockStore[int64]
 func NewFileCursor() repo.CreateDahuaFileCursorParams {
 	now := time.Now()
 	return repo.CreateDahuaFileCursorParams{
-		DeviceID:    0,
 		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
 		FullCursor:  types.NewTime(now),
 		FullEpoch:   types.NewTime(ScannerEpoch),
-		Scan:        false,
-		ScanPercent: 0,
 	}
 }
