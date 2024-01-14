@@ -15,7 +15,7 @@ import (
 type DahuaAferoFile struct {
 	ID                int64
 	FileID            sql.NullInt64
-	FileThumbnailID   sql.NullInt64
+	ThumbnailID       sql.NullInt64
 	EmailAttachmentID sql.NullInt64
 	Name              string
 	Ready             bool
@@ -125,13 +125,6 @@ type DahuaFileCursor struct {
 	ScanType     models.DahuaScanType
 }
 
-type DahuaFileThumbnail struct {
-	ID     int64
-	FileID int64
-	Width  int64
-	Height int64
-}
-
 type DahuaSeed struct {
 	Seed     int64
 	DeviceID sql.NullInt64
@@ -156,6 +149,14 @@ type DahuaStream struct {
 	Subtype      int64
 	Name         string
 	MediamtxPath string
+}
+
+type DahuaThumbnail struct {
+	ID                int64
+	FileID            sql.NullInt64
+	EmailAttachmentID sql.NullInt64
+	Width             int64
+	Height            int64
 }
 
 type Setting struct {

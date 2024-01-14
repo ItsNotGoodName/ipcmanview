@@ -99,6 +99,7 @@ func (s *Store) Client(ctx context.Context, conn models.DahuaConn) Client {
 	return client
 }
 
+// FIXME: deleted clients are created when an old connection is passed to Store.Client or Store.ClientList
 func (s *Store) ClientDelete(ctx context.Context, id int64) {
 	s.clientsMu.Lock()
 	client, found := s.clients[id]

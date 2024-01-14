@@ -17,7 +17,7 @@ func NewLockStore[T comparable]() *LockStore[T] {
 	}
 }
 
-// LockStore handles concurrent locking of resources.
+// LockStore handles concurrent resource locking.
 type LockStore[T comparable] struct {
 	mu    sync.Mutex
 	locks map[T]chan struct{}

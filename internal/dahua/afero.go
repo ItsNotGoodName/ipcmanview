@@ -33,32 +33,28 @@ func NewAferoFileName(extension string) string {
 }
 
 // SyncAferoFile deletes the file from the database if it does not exist in the file system.
-func SyncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFile repo.DahuaAferoFile, err error) (bool, error) {
+func SyncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFileID int64, aferoFileName string, err error) error {
 	if err != nil {
-		if repo.IsNotFound(err) {
-			return false, nil
-		}
-		return false, err
+		return err
 	}
-
-	return syncAferoFile(ctx, db, afs, aferoFile)
+	return syncAferoFile(ctx, db, afs, aferoFileID, aferoFileName)
 }
 
-func syncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFile repo.DahuaAferoFile) (bool, error) {
-	_, err := afs.Stat(aferoFile.Name)
+func syncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFileID int64, aferoFileName string) error {
+	_, err := afs.Stat(aferoFileName)
 	if err == nil {
-		return true, nil
+		return nil
 	}
 	if !os.IsNotExist(err) {
-		return false, err
+		return err
 	}
 
-	err = db.DeleteDahuaAferoFile(ctx, aferoFile.ID)
+	err = db.DeleteDahuaAferoFile(ctx, aferoFileID)
 	if err != nil {
-		return false, err
+		return err
 	}
 
-	return false, nil
+	return repo.ErrNotFound
 }
 
 // DeleteOrphanAferoFiles deletes unreferenced afero files.
@@ -102,14 +98,15 @@ type AferoFile struct {
 
 type AferoForeignKeys struct {
 	FileID            int64
-	FileThumbnailID   int64
+	ThumbnailID       int64
 	EmailAttachmentID int64
 }
 
-func CreateAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, fileName string, key AferoForeignKeys) (AferoFile, error) {
+// CreateAferoFile creates an afero file in the database and in the file system.
+func CreateAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, key AferoForeignKeys, fileName string) (AferoFile, error) {
 	id, err := db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
 		FileID:            core.Int64ToNullInt64(key.FileID),
-		FileThumbnailID:   core.Int64ToNullInt64(key.FileThumbnailID),
+		ThumbnailID:       core.Int64ToNullInt64(key.ThumbnailID),
 		EmailAttachmentID: core.Int64ToNullInt64(key.EmailAttachmentID),
 		Name:              fileName,
 		CreatedAt:         types.NewTime(time.Now()),
@@ -117,10 +114,12 @@ func CreateAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, fileName str
 	if err != nil {
 		return AferoFile{}, err
 	}
+
 	file, err := afs.Create(fileName)
 	if err != nil {
 		return AferoFile{}, err
 	}
+
 	return AferoFile{
 		File: file,
 		ID:   id,
@@ -128,6 +127,7 @@ func CreateAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, fileName str
 	}, nil
 }
 
+// ReadyAferoFile sets the afero file to a ready state.
 func ReadyAferoFile(ctx context.Context, db repo.DB, id int64, file afero.File) error {
 	stat, err := file.Stat()
 	if err != nil {

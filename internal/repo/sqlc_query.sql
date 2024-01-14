@@ -158,8 +158,8 @@ WHERE id = ?;
 -- name: GetDahuaFileForThumbnail :one
 SELECT dahua_files.id, device_id, type, file_path, name 
 FROM dahua_files 
-LEFT JOIN dahua_file_thumbnails ON dahua_file_thumbnails.file_id = dahua_files.id 
-LEFT JOIN dahua_afero_files ON dahua_afero_files.file_thumbnail_id = dahua_file_thumbnails.id  
+LEFT JOIN dahua_thumbnails ON dahua_thumbnails.file_id = dahua_files.id 
+LEFT JOIN dahua_afero_files ON dahua_afero_files.thumbnail_id = dahua_thumbnails.id  
 WHERE dahua_files.id = ?;
 
 -- name: GetDahuaFileByFilePath :one
@@ -205,18 +205,19 @@ WHERE
   start_time <= sqlc.arg('end') AND
   sqlc.arg('start') < start_time;
 
--- name: CreateDahuaFileThumbnail :one
-INSERT INTO dahua_file_thumbnails (
+-- name: CreateDahuaThumbnail :one
+INSERT INTO dahua_thumbnails (
   file_id,
+  email_attachment_id,
   width,
   height
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?
 ) RETURNING *;
 
--- name: OrphanDeleteDahuaFileThumbnail :exec
-DELETE FROM dahua_file_thumbnails
-WHERE id IN (SELECT file_thumbnail_id FROM dahua_afero_files WHERE ready = false);
+-- name: OrphanDeleteDahuaThumbnail :exec
+DELETE FROM dahua_thumbnails
+WHERE id IN (SELECT thumbnail_id FROM dahua_afero_files WHERE ready = false);
 
 -- name: CreateDahuaEvent :one
 INSERT INTO dahua_events (
@@ -417,7 +418,7 @@ INSERT INTO dahua_email_attachments (
 -- name: CreateDahuaAferoFile :one
 INSERT INTO dahua_afero_files (
   file_id,
-  file_thumbnail_id,
+  thumbnail_id,
   email_attachment_id,
   name,
   created_at
@@ -442,5 +443,5 @@ WHERE id = ?;
 
 -- name: OrphanListDahuaAferoFile :many
 SELECT * FROM dahua_afero_files
-WHERE file_id IS NULL AND file_thumbnail_id IS NULL AND email_attachment_id IS NULL
+WHERE file_id IS NULL AND thumbnail_id IS NULL AND email_attachment_id IS NULL
 LIMIT ?;

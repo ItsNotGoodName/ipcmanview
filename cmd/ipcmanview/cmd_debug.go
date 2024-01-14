@@ -27,7 +27,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 		return err
 	}
 
-	if err := db.OrphanDeleteDahuaFileThumbnail(ctx); err != nil {
+	if err := db.OrphanDeleteDahuaThumbnail(ctx); err != nil {
 		return err
 	}
 
@@ -38,7 +38,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 			Page:    1,
 			PerPage: 100,
 		},
-		DahuaFileFilter: repo.DahuaFileFilter{Type: []string{"jpg"}},
+		DahuaFileFilter: repo.DahuaFileFilter{},
 	})
 	if err != nil {
 		return err
@@ -53,12 +53,12 @@ func (c *CmdDebug) Run(ctx *Context) error {
 		videoPosition := 5 * time.Second
 
 		if err := func() error {
-			thumbnail, err := dahua.CreateFileThumbnail(ctx, db, file.ID, int64(width), int64(height))
+			thumbnail, err := dahua.CreateThumbnail(ctx, db, dahua.ThumbnailForeignKeys{FileID: file.ID}, int64(width), int64(height))
 			if err != nil {
 				return nil
 			}
 
-			aferoFile, err := dahua.CreateAferoFile(ctx, db, afs, dahua.NewAferoFileName(extension), dahua.AferoForeignKeys{FileThumbnailID: thumbnail.ID})
+			aferoFile, err := dahua.CreateAferoFile(ctx, db, afs, dahua.AferoForeignKeys{ThumbnailID: thumbnail.ID}, dahua.NewAferoFileName(extension))
 			if err != nil {
 				return err
 			}

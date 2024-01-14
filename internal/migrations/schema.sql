@@ -19,8 +19,7 @@ CREATE TABLE dahua_devices (
 CREATE TABLE dahua_seeds (
   seed INTEGER NOT NULL PRIMARY KEY,
   device_id INTEGER UNIQUE,
-
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE SET NULL
+  FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE dahua_events (
@@ -31,11 +30,10 @@ CREATE TABLE dahua_events (
   `index` INTEGER NOT NULL,
   data JSON NOT NULL,
   created_at DATETIME NOT NULL,
-
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE dahua_event_rules(
+CREATE TABLE dahua_event_rules (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   code TEXT NOT NULL UNIQUE,
   ignore_db BOOLEAN NOT NULL DEFAULT false,
@@ -43,15 +41,14 @@ CREATE TABLE dahua_event_rules(
   ignore_mqtt BOOLEAN NOT NULL DEFAULT false
 );
 
-CREATE TABLE dahua_event_device_rules(
+CREATE TABLE dahua_event_device_rules (
   device_id INTEGER NOT NULL,
   code TEXT NOT NULL,
   ignore_db BOOLEAN NOT NULL DEFAULT false,
   ignore_live BOOLEAN NOT NULL DEFAULT false,
   ignore_mqtt BOOLEAN NOT NULL DEFAULT false,
-
   UNIQUE (device_id, code),
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_event_worker_states (
@@ -60,24 +57,23 @@ CREATE TABLE dahua_event_worker_states (
   state TEXT NOT NULL,
   error TEXT,
   created_at DATETIME NOT NULL,
-
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_afero_files (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   file_id INTEGER UNIQUE,
-  file_thumbnail_id INTEGER UNIQUE,
+  thumbnail_id INTEGER UNIQUE,
   email_attachment_id INTEGER UNIQUE,
   name TEXT NOT NULL UNIQUE,
-
+  --
   ready BOOLEAN NOT NULL DEFAULT false,
   size INTEGER NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL,
-
-  FOREIGN KEY(file_id) REFERENCES dahua_files(id) ON UPDATE CASCADE ON DELETE SET NULL,
-  FOREIGN KEY(file_thumbnail_id) REFERENCES dahua_file_thumbnails(id) ON UPDATE CASCADE ON DELETE SET NULL,
-  FOREIGN KEY(email_attachment_id) REFERENCES dahua_email_attachments(id) ON UPDATE CASCADE ON DELETE SET NULL
+  --
+  FOREIGN KEY (file_id) REFERENCES dahua_files (id) ON UPDATE CASCADE ON DELETE SET NULL,
+  FOREIGN KEY (thumbnail_id) REFERENCES dahua_thumbnails (id) ON UPDATE CASCADE ON DELETE SET NULL,
+  FOREIGN KEY (email_attachment_id) REFERENCES dahua_email_attachments (id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
 CREATE TABLE dahua_files (
@@ -102,34 +98,32 @@ CREATE TABLE dahua_files (
   work_dir_sn BOOLEAN NOT NULL,
   updated_at DATETIME NOT NULL,
   storage TEXT NOT NULL,
-
   UNIQUE (device_id, file_path),
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE dahua_file_thumbnails (
+CREATE TABLE dahua_thumbnails (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  file_id INTEGER NOT NULL,
+  file_id INTEGER,
+  email_attachment_id INTEGER,
   width INTEGER NOT NULL,
   height INTEGER NOT NULL,
-
   UNIQUE (file_id, width, height),
-
-  FOREIGN KEY(file_id) REFERENCES dahua_files(id) ON UPDATE CASCADE ON DELETE CASCADE
+  UNIQUE (email_attachment_id, width, height),
+  FOREIGN KEY (file_id) REFERENCES dahua_files (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (email_attachment_id) REFERENCES dahua_email_attachments (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_file_cursors (
   device_id INTEGER NOT NULL UNIQUE,
   quick_cursor DATETIME NOT NULL, -- (scanned) <- quick_cursor -> (not scanned / volatile)
-  full_cursor DATETIME NOT NULL,  -- (not scanned) <- full_cursor -> (scanned)
+  full_cursor DATETIME NOT NULL, -- (not scanned) <- full_cursor -> (scanned)
   full_epoch DATETIME NOT NULL,
   full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED,
-
   scan BOOLEAN NOT NULL,
   scan_percent REAL NOT NULL,
   scan_type TEXT NOT NULL,
-
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_storage_destinations (
@@ -151,9 +145,8 @@ CREATE TABLE dahua_streams (
   subtype INTEGER NOT NULL,
   name TEXT NOT NULL,
   mediamtx_path TEXT NOT NULL,
-
-  UNIQUE(device_id, channel, subtype),
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+  UNIQUE (device_id, channel, subtype),
+  FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_email_messages (
@@ -164,19 +157,18 @@ CREATE TABLE dahua_email_messages (
   `to` JSON NOT NULL,
   subject TEXT NOT NULL,
   `text` TEXT NOT NULL,
-
-	alarm_event TEXT NOT NULL,
-	alarm_input_channel INTEGER NOT NULL,
-	alarm_name TEXT NOT NULL,
-
+  --
+  alarm_event TEXT NOT NULL,
+  alarm_input_channel INTEGER NOT NULL,
+  alarm_name TEXT NOT NULL,
+  --
   created_at DATETIME NOT NULL,
-  FOREIGN KEY(device_id) REFERENCES dahua_devices(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_email_attachments (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   message_id INTEGER NOT NULL,
   file_name TEXT NOT NULL,
-
-  FOREIGN KEY(message_id) REFERENCES dahua_email_messages(id) ON UPDATE CASCADE ON DELETE CASCADE
+  FOREIGN KEY (message_id) REFERENCES dahua_email_messages (id) ON UPDATE CASCADE ON DELETE CASCADE
 );

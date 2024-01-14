@@ -18,7 +18,7 @@ import (
 const createDahuaAferoFile = `-- name: CreateDahuaAferoFile :one
 INSERT INTO dahua_afero_files (
   file_id,
-  file_thumbnail_id,
+  thumbnail_id,
   email_attachment_id,
   name,
   created_at
@@ -29,7 +29,7 @@ INSERT INTO dahua_afero_files (
 
 type CreateDahuaAferoFileParams struct {
 	FileID            sql.NullInt64
-	FileThumbnailID   sql.NullInt64
+	ThumbnailID       sql.NullInt64
 	EmailAttachmentID sql.NullInt64
 	Name              string
 	CreatedAt         types.Time
@@ -38,7 +38,7 @@ type CreateDahuaAferoFileParams struct {
 func (q *Queries) CreateDahuaAferoFile(ctx context.Context, arg CreateDahuaAferoFileParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, createDahuaAferoFile,
 		arg.FileID,
-		arg.FileThumbnailID,
+		arg.ThumbnailID,
 		arg.EmailAttachmentID,
 		arg.Name,
 		arg.CreatedAt,
@@ -224,34 +224,6 @@ func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams
 	return id, err
 }
 
-const createDahuaFileThumbnail = `-- name: CreateDahuaFileThumbnail :one
-INSERT INTO dahua_file_thumbnails (
-  file_id,
-  width,
-  height
-) VALUES (
-  ?, ?, ?
-) RETURNING id, file_id, width, height
-`
-
-type CreateDahuaFileThumbnailParams struct {
-	FileID int64
-	Width  int64
-	Height int64
-}
-
-func (q *Queries) CreateDahuaFileThumbnail(ctx context.Context, arg CreateDahuaFileThumbnailParams) (DahuaFileThumbnail, error) {
-	row := q.db.QueryRowContext(ctx, createDahuaFileThumbnail, arg.FileID, arg.Width, arg.Height)
-	var i DahuaFileThumbnail
-	err := row.Scan(
-		&i.ID,
-		&i.FileID,
-		&i.Width,
-		&i.Height,
-	)
-	return i, err
-}
-
 const createDahuaStorageDestination = `-- name: CreateDahuaStorageDestination :one
 INSERT INTO dahua_storage_destinations (
   name,
@@ -289,6 +261,42 @@ func (q *Queries) CreateDahuaStorageDestination(ctx context.Context, arg CreateD
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const createDahuaThumbnail = `-- name: CreateDahuaThumbnail :one
+INSERT INTO dahua_thumbnails (
+  file_id,
+  email_attachment_id,
+  width,
+  height
+) VALUES (
+  ?, ?, ?, ?
+) RETURNING id, file_id, email_attachment_id, width, height
+`
+
+type CreateDahuaThumbnailParams struct {
+	FileID            sql.NullInt64
+	EmailAttachmentID sql.NullInt64
+	Width             int64
+	Height            int64
+}
+
+func (q *Queries) CreateDahuaThumbnail(ctx context.Context, arg CreateDahuaThumbnailParams) (DahuaThumbnail, error) {
+	row := q.db.QueryRowContext(ctx, createDahuaThumbnail,
+		arg.FileID,
+		arg.EmailAttachmentID,
+		arg.Width,
+		arg.Height,
+	)
+	var i DahuaThumbnail
+	err := row.Scan(
+		&i.ID,
+		&i.FileID,
+		&i.EmailAttachmentID,
+		&i.Width,
+		&i.Height,
+	)
+	return i, err
 }
 
 const deleteDahuaAferoFile = `-- name: DeleteDahuaAferoFile :exec
@@ -373,7 +381,7 @@ func (q *Queries) DeleteDahuaStream(ctx context.Context, id int64) error {
 }
 
 const getDahuaAferoFileByFileID = `-- name: GetDahuaAferoFileByFileID :one
-SELECT id, file_id, file_thumbnail_id, email_attachment_id, name, ready, size, created_at FROM dahua_afero_files
+SELECT id, file_id, thumbnail_id, email_attachment_id, name, ready, size, created_at FROM dahua_afero_files
 WHERE file_id = ?
 `
 
@@ -383,7 +391,7 @@ func (q *Queries) GetDahuaAferoFileByFileID(ctx context.Context, fileID sql.Null
 	err := row.Scan(
 		&i.ID,
 		&i.FileID,
-		&i.FileThumbnailID,
+		&i.ThumbnailID,
 		&i.EmailAttachmentID,
 		&i.Name,
 		&i.Ready,
@@ -589,8 +597,8 @@ func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileBy
 const getDahuaFileForThumbnail = `-- name: GetDahuaFileForThumbnail :one
 SELECT dahua_files.id, device_id, type, file_path, name 
 FROM dahua_files 
-LEFT JOIN dahua_file_thumbnails ON dahua_file_thumbnails.file_id = dahua_files.id 
-LEFT JOIN dahua_afero_files ON dahua_afero_files.file_thumbnail_id = dahua_file_thumbnails.id  
+LEFT JOIN dahua_thumbnails ON dahua_thumbnails.file_id = dahua_files.id 
+LEFT JOIN dahua_afero_files ON dahua_afero_files.thumbnail_id = dahua_thumbnails.id  
 WHERE dahua_files.id = ?
 `
 
@@ -1188,18 +1196,19 @@ func (q *Queries) NormalizeDahuaFileCursor(ctx context.Context, arg NormalizeDah
 	return err
 }
 
-const orphanDeleteDahuaFileThumbnail = `-- name: OrphanDeleteDahuaFileThumbnail :exec
-DELETE FROM dahua_file_thumbnails WHERE id IN (SELECT file_thumbnail_id FROM dahua_afero_files WHERE ready = false)
+const orphanDeleteDahuaThumbnail = `-- name: OrphanDeleteDahuaThumbnail :exec
+DELETE FROM dahua_thumbnails
+WHERE id IN (SELECT thumbnail_id FROM dahua_afero_files WHERE ready = false)
 `
 
-func (q *Queries) OrphanDeleteDahuaFileThumbnail(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, orphanDeleteDahuaFileThumbnail)
+func (q *Queries) OrphanDeleteDahuaThumbnail(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, orphanDeleteDahuaThumbnail)
 	return err
 }
 
 const orphanListDahuaAferoFile = `-- name: OrphanListDahuaAferoFile :many
-SELECT id, file_id, file_thumbnail_id, email_attachment_id, name, ready, size, created_at FROM dahua_afero_files
-WHERE file_id IS NULL AND file_thumbnail_id IS NULL AND email_attachment_id IS NULL
+SELECT id, file_id, thumbnail_id, email_attachment_id, name, ready, size, created_at FROM dahua_afero_files
+WHERE file_id IS NULL AND thumbnail_id IS NULL AND email_attachment_id IS NULL
 LIMIT ?
 `
 
@@ -1215,7 +1224,7 @@ func (q *Queries) OrphanListDahuaAferoFile(ctx context.Context, limit int64) ([]
 		if err := rows.Scan(
 			&i.ID,
 			&i.FileID,
-			&i.FileThumbnailID,
+			&i.ThumbnailID,
 			&i.EmailAttachmentID,
 			&i.Name,
 			&i.Ready,

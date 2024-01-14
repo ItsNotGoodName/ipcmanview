@@ -180,8 +180,8 @@ func (s *session) Data(r io.Reader) error {
 				ctx,
 				s.db,
 				s.afs,
-				dahua.NewAferoFileName(parseFileExtension(attachment.FileName, http.DetectContentType(attachment.Content))),
 				dahua.AferoForeignKeys{EmailAttachmentID: email.Attachments[i].ID},
+				dahua.NewAferoFileName(parseFileExtension(attachment.FileName, http.DetectContentType(attachment.Content))),
 			)
 			if err != nil {
 				log.Err(err).Msg("Failed to create file")
