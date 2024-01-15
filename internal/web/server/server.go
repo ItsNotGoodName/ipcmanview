@@ -356,14 +356,14 @@ func (s Server) DahuaFilesIDThumbnail(c echo.Context) error {
 		return err
 	}
 
-	if !file.Name.Valid {
+	if file.Name.Valid && file.Ready.Bool {
 		return c.Render(http.StatusOK, "dahua-files", view.Block{Name: "htmx-thumbnail", Data: view.Data{
-			"File": file,
+			"URL": dahua.AferoFileURI(file.Name.String),
 		}})
 	}
 
 	return c.Render(http.StatusOK, "dahua-files", view.Block{Name: "htmx-thumbnail", Data: view.Data{
-		"URL": dahua.AferoFileURI(file.Name.String),
+		"File": file,
 	}})
 }
 

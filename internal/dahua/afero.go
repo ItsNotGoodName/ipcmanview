@@ -26,21 +26,14 @@ func NewAferoFileName(extension string) string {
 	if extension == "" {
 		return uuid
 	}
-	if strings.HasPrefix(".", extension) {
+	if strings.HasPrefix(extension, ".") {
 		return uuid + extension
 	}
 	return uuid + "." + extension
 }
 
 // SyncAferoFile deletes the file from the database if it does not exist in the file system.
-func SyncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFileID int64, aferoFileName string, err error) error {
-	if err != nil {
-		return err
-	}
-	return syncAferoFile(ctx, db, afs, aferoFileID, aferoFileName)
-}
-
-func syncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFileID int64, aferoFileName string) error {
+func SyncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFileID int64, aferoFileName string) error {
 	_, err := afs.Stat(aferoFileName)
 	if err == nil {
 		return nil

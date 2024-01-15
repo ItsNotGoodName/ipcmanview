@@ -123,8 +123,7 @@ func FileLocalDownload(ctx context.Context, db repo.DB, afs afero.Fs, client Cli
 	}
 	defer rd.Close()
 
-	fileName := NewAferoFileName(fileType)
-	aferoFile, err := CreateAferoFile(ctx, db, afs, AferoForeignKeys{FileID: fileID}, fileName)
+	aferoFile, err := CreateAferoFile(ctx, db, afs, AferoForeignKeys{FileID: fileID}, NewAferoFileName(fileType))
 	if err != nil {
 		return err
 	}
@@ -156,7 +155,10 @@ func FileLocalDownloadByFilter(ctx context.Context, db repo.DB, afs afero.Fs, st
 
 		for _, file := range files.Data {
 			aferoFile, err := db.GetDahuaAferoFileByFileID(ctx, sql.NullInt64{Valid: true, Int64: file.ID})
-			err = SyncAferoFile(ctx, db, afs, aferoFile.ID, aferoFile.Name, err)
+			if err != nil {
+				err = SyncAferoFile(ctx, db, afs, aferoFile.ID, aferoFile.Name)
+			}
+
 			if repo.IsNotFound(err) {
 				// File does not exist
 			} else if err != nil {

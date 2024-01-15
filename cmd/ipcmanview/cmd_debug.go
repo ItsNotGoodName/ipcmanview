@@ -8,6 +8,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/ffmpeg"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 )
 
@@ -27,7 +28,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 		return err
 	}
 
-	if err := db.OrphanDeleteDahuaThumbnail(ctx); err != nil {
+	if err := db.OrphanDeleteDahuaThumbnail(ctx, types.NewTime(time.Now())); err != nil {
 		return err
 	}
 
@@ -53,20 +54,19 @@ func (c *CmdDebug) Run(ctx *Context) error {
 		videoPosition := 5 * time.Second
 
 		if err := func() error {
-			thumbnail, err := dahua.CreateThumbnail(ctx, db, dahua.ThumbnailForeignKeys{FileID: file.ID}, int64(width), int64(height))
+			thumbnail, err := dahua.CreateThumbnail(ctx, db, afs,
+				dahua.ThumbnailForeignKeys{FileID: file.ID},
+				int64(width),
+				int64(height),
+				dahua.NewAferoFileName(extension))
 			if err != nil {
 				return nil
 			}
-
-			aferoFile, err := dahua.CreateAferoFile(ctx, db, afs, dahua.AferoForeignKeys{ThumbnailID: thumbnail.ID}, dahua.NewAferoFileName(extension))
-			if err != nil {
-				return err
-			}
-			defer aferoFile.Close()
+			defer thumbnail.Close()
 
 			switch file.Type {
 			case models.DahuaFileTypeDAV:
-				err := ffmpeg.VideoSnapshot(ctx, inputPath, extension, aferoFile, ffmpeg.VideoSnapshotConfig{
+				err := ffmpeg.VideoSnapshot(ctx, inputPath, extension, thumbnail, ffmpeg.VideoSnapshotConfig{
 					Width:    int(thumbnail.Width),
 					Height:   int(thumbnail.Height),
 					Position: videoPosition,
@@ -75,7 +75,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 					return err
 				}
 			case models.DahuaFileTypeJPG:
-				err := ffmpeg.ImageSnapshot(ctx, inputPath, extension, aferoFile, ffmpeg.ImageSnapshotConfig{
+				err := ffmpeg.ImageSnapshot(ctx, inputPath, extension, thumbnail, ffmpeg.ImageSnapshotConfig{
 					Width:  int(thumbnail.Width),
 					Height: int(thumbnail.Height),
 				})
@@ -86,7 +86,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 				return fmt.Errorf("invalid file type: %s", file.Type)
 			}
 
-			return dahua.ReadyAferoFile(ctx, db, aferoFile.ID, aferoFile.File)
+			return dahua.ReadyAferoFile(ctx, db, thumbnail.AferoFile.ID, thumbnail.File)
 		}(); err != nil {
 			return err
 		}

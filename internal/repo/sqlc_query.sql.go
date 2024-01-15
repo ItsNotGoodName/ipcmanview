@@ -16,15 +16,16 @@ import (
 )
 
 const createDahuaAferoFile = `-- name: CreateDahuaAferoFile :one
-INSERT INTO dahua_afero_files (
-  file_id,
-  thumbnail_id,
-  email_attachment_id,
-  name,
-  created_at
-) VALUES (
-  ?, ?, ?, ?, ?
-) RETURNING id
+INSERT INTO
+  dahua_afero_files (
+    file_id,
+    thumbnail_id,
+    email_attachment_id,
+    name,
+    created_at
+  )
+VALUES
+  (?, ?, ?, ?, ?) RETURNING id
 `
 
 type CreateDahuaAferoFileParams struct {
@@ -49,16 +50,17 @@ func (q *Queries) CreateDahuaAferoFile(ctx context.Context, arg CreateDahuaAfero
 }
 
 const createDahuaEvent = `-- name: CreateDahuaEvent :one
-INSERT INTO dahua_events (
-  device_id,
-  code,
-  action,
-  ` + "`" + `index` + "`" + `,
-  data,
-  created_at
-) VALUES (
-  ?, ?, ?, ?, ?, ?
-) RETURNING id
+INSERT INTO
+  dahua_events (
+    device_id,
+    code,
+    action,
+    ` + "`" + `index` + "`" + `,
+    data,
+    created_at
+  )
+VALUES
+  (?, ?, ?, ?, ?, ?) RETURNING id
 `
 
 type CreateDahuaEventParams struct {
@@ -85,17 +87,10 @@ func (q *Queries) CreateDahuaEvent(ctx context.Context, arg CreateDahuaEventPara
 }
 
 const createDahuaEventRule = `-- name: CreateDahuaEventRule :exec
-INSERT INTO dahua_event_rules(
-  code,
-  ignore_db,
-  ignore_live,
-  ignore_mqtt
-) VALUES(
-  ?,
-  ?,
-  ?,
-  ?
-)
+INSERT INTO
+  dahua_event_rules (code, ignore_db, ignore_live, ignore_mqtt)
+VALUES
+  (?, ?, ?, ?)
 `
 
 type CreateDahuaEventRuleParams struct {
@@ -116,17 +111,10 @@ func (q *Queries) CreateDahuaEventRule(ctx context.Context, arg CreateDahuaEvent
 }
 
 const createDahuaEventWorkerState = `-- name: CreateDahuaEventWorkerState :exec
-INSERT INTO dahua_event_worker_states(
-  device_id,
-  state,
-  error,
-  created_at
-) VALUES(
-  ?,
-  ?,
-  ?,
-  ?
-)
+INSERT INTO
+  dahua_event_worker_states (device_id, state, error, created_at)
+VALUES
+  (?, ?, ?, ?)
 `
 
 type CreateDahuaEventWorkerStateParams struct {
@@ -147,30 +135,56 @@ func (q *Queries) CreateDahuaEventWorkerState(ctx context.Context, arg CreateDah
 }
 
 const createDahuaFile = `-- name: CreateDahuaFile :one
-INSERT INTO dahua_files (
-  device_id,
-  channel,
-  start_time,
-  end_time,
-  length,
-  type,
-  file_path,
-  duration,
-  disk,
-  video_stream,
-  flags,
-  events,
-  cluster,
-  partition,
-  pic_index,
-  repeat,
-  work_dir,
-  work_dir_sn,
-  updated_at,
-  storage
-) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-) ON CONFLICT (start_time) DO UPDATE SET id = id RETURNING id
+INSERT INTO
+  dahua_files (
+    device_id,
+    channel,
+    start_time,
+    end_time,
+    length,
+    type,
+    file_path,
+    duration,
+    disk,
+    video_stream,
+    flags,
+    events,
+    cluster,
+    partition,
+    pic_index,
+    repeat,
+    work_dir,
+    work_dir_sn,
+    updated_at,
+    storage
+  )
+VALUES
+  (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
+  )
+ON CONFLICT (start_time) DO
+UPDATE
+SET
+  id = id RETURNING id
 `
 
 type CreateDahuaFileParams struct {
@@ -225,17 +239,18 @@ func (q *Queries) CreateDahuaFile(ctx context.Context, arg CreateDahuaFileParams
 }
 
 const createDahuaStorageDestination = `-- name: CreateDahuaStorageDestination :one
-INSERT INTO dahua_storage_destinations (
-  name,
-  storage,
-  server_address,
-  port,
-  username,
-  password,
-  remote_directory 
-) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
-) RETURNING id
+INSERT INTO
+  dahua_storage_destinations (
+    name,
+    storage,
+    server_address,
+    port,
+    username,
+    password,
+    remote_directory
+  )
+VALUES
+  (?, ?, ?, ?, ?, ?, ?) RETURNING id
 `
 
 type CreateDahuaStorageDestinationParams struct {
@@ -264,14 +279,10 @@ func (q *Queries) CreateDahuaStorageDestination(ctx context.Context, arg CreateD
 }
 
 const createDahuaThumbnail = `-- name: CreateDahuaThumbnail :one
-INSERT INTO dahua_thumbnails (
-  file_id,
-  email_attachment_id,
-  width,
-  height
-) VALUES (
-  ?, ?, ?, ?
-) RETURNING id, file_id, email_attachment_id, width, height
+INSERT INTO
+  dahua_thumbnails (file_id, email_attachment_id, width, height)
+VALUES
+  (?, ?, ?, ?) RETURNING id, file_id, email_attachment_id, width, height
 `
 
 type CreateDahuaThumbnailParams struct {
@@ -301,7 +312,8 @@ func (q *Queries) CreateDahuaThumbnail(ctx context.Context, arg CreateDahuaThumb
 
 const deleteDahuaAferoFile = `-- name: DeleteDahuaAferoFile :exec
 DELETE FROM dahua_afero_files
-WHERE id = ?
+WHERE
+  id = ?
 `
 
 func (q *Queries) DeleteDahuaAferoFile(ctx context.Context, id int64) error {
@@ -310,7 +322,9 @@ func (q *Queries) DeleteDahuaAferoFile(ctx context.Context, id int64) error {
 }
 
 const deleteDahuaDevice = `-- name: DeleteDahuaDevice :exec
-DELETE FROM dahua_devices WHERE id = ?
+DELETE FROM dahua_devices
+WHERE
+  id = ?
 `
 
 func (q *Queries) DeleteDahuaDevice(ctx context.Context, id int64) error {
@@ -328,7 +342,9 @@ func (q *Queries) DeleteDahuaEvent(ctx context.Context) error {
 }
 
 const deleteDahuaEventRule = `-- name: DeleteDahuaEventRule :exec
-DELETE FROM dahua_event_rules WHERE id = ?
+DELETE FROM dahua_event_rules
+WHERE
+  id = ?
 `
 
 func (q *Queries) DeleteDahuaEventRule(ctx context.Context, id int64) error {
@@ -339,10 +355,10 @@ func (q *Queries) DeleteDahuaEventRule(ctx context.Context, id int64) error {
 const deleteDahuaFile = `-- name: DeleteDahuaFile :exec
 DELETE FROM dahua_files
 WHERE
-  updated_at < ?1 AND
-  device_id = ?2 AND
-  start_time <= ?3 AND
-  ?4 < start_time
+  updated_at < ?1
+  AND device_id = ?2
+  AND start_time <= ?3
+  AND ?4 < start_time
 `
 
 type DeleteDahuaFileParams struct {
@@ -363,7 +379,9 @@ func (q *Queries) DeleteDahuaFile(ctx context.Context, arg DeleteDahuaFileParams
 }
 
 const deleteDahuaStorageDestination = `-- name: DeleteDahuaStorageDestination :exec
-DELETE FROM dahua_storage_destinations WHERE id = ?
+DELETE FROM dahua_storage_destinations
+WHERE
+  id = ?
 `
 
 func (q *Queries) DeleteDahuaStorageDestination(ctx context.Context, id int64) error {
@@ -372,7 +390,9 @@ func (q *Queries) DeleteDahuaStorageDestination(ctx context.Context, id int64) e
 }
 
 const deleteDahuaStream = `-- name: DeleteDahuaStream :exec
-DELETE FROM dahua_streams WHERE id = ?
+DELETE FROM dahua_streams
+WHERE
+  id = ?
 `
 
 func (q *Queries) DeleteDahuaStream(ctx context.Context, id int64) error {
@@ -381,8 +401,12 @@ func (q *Queries) DeleteDahuaStream(ctx context.Context, id int64) error {
 }
 
 const getDahuaAferoFileByFileID = `-- name: GetDahuaAferoFileByFileID :one
-SELECT id, file_id, thumbnail_id, email_attachment_id, name, ready, size, created_at FROM dahua_afero_files
-WHERE file_id = ?
+SELECT
+  id, file_id, thumbnail_id, email_attachment_id, name, ready, size, created_at
+FROM
+  dahua_afero_files
+WHERE
+  file_id = ?
 `
 
 func (q *Queries) GetDahuaAferoFileByFileID(ctx context.Context, fileID sql.NullInt64) (DahuaAferoFile, error) {
@@ -402,9 +426,16 @@ func (q *Queries) GetDahuaAferoFileByFileID(ctx context.Context, fileID sql.Null
 }
 
 const getDahuaDevice = `-- name: GetDahuaDevice :one
-SELECT dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
-LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE id = ? LIMIT 1
+SELECT
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  coalesce(seed, id)
+FROM
+  dahua_devices
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
+WHERE
+  id = ?
+LIMIT
+  1
 `
 
 type GetDahuaDeviceRow struct {
@@ -441,9 +472,16 @@ func (q *Queries) GetDahuaDevice(ctx context.Context, id int64) (GetDahuaDeviceR
 }
 
 const getDahuaDeviceByIP = `-- name: GetDahuaDeviceByIP :one
-SELECT dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
-LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE ip = ? LIMIT 1
+SELECT
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  coalesce(seed, id)
+FROM
+  dahua_devices
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
+WHERE
+  ip = ?
+LIMIT
+  1
 `
 
 type GetDahuaDeviceByIPRow struct {
@@ -480,7 +518,12 @@ func (q *Queries) GetDahuaDeviceByIP(ctx context.Context, ip string) (GetDahuaDe
 }
 
 const getDahuaDeviceName = `-- name: GetDahuaDeviceName :one
-SELECT name FROM dahua_devices WHERE id = ?
+SELECT
+  name
+FROM
+  dahua_devices
+WHERE
+  id = ?
 `
 
 func (q *Queries) GetDahuaDeviceName(ctx context.Context, id int64) (string, error) {
@@ -491,7 +534,12 @@ func (q *Queries) GetDahuaDeviceName(ctx context.Context, id int64) (string, err
 }
 
 const getDahuaEventData = `-- name: GetDahuaEventData :one
-SELECT data FROM dahua_events WHERE id = ?
+SELECT
+  data
+FROM
+  dahua_events
+WHERE
+  id = ?
 `
 
 func (q *Queries) GetDahuaEventData(ctx context.Context, id int64) (json.RawMessage, error) {
@@ -502,8 +550,12 @@ func (q *Queries) GetDahuaEventData(ctx context.Context, id int64) (json.RawMess
 }
 
 const getDahuaEventRule = `-- name: GetDahuaEventRule :one
-SELECT id, code, ignore_db, ignore_live, ignore_mqtt FROM dahua_event_rules
-WHERE id = ?
+SELECT
+  id, code, ignore_db, ignore_live, ignore_mqtt
+FROM
+  dahua_event_rules
+WHERE
+  id = ?
 `
 
 func (q *Queries) GetDahuaEventRule(ctx context.Context, id int64) (DahuaEventRule, error) {
@@ -520,9 +572,12 @@ func (q *Queries) GetDahuaEventRule(ctx context.Context, id int64) (DahuaEventRu
 }
 
 const getDahuaFile = `-- name: GetDahuaFile :one
-SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, storage
-FROM dahua_files
-WHERE id = ?
+SELECT
+  id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, storage
+FROM
+  dahua_files
+WHERE
+  id = ?
 `
 
 func (q *Queries) GetDahuaFile(ctx context.Context, id int64) (DahuaFile, error) {
@@ -555,9 +610,13 @@ func (q *Queries) GetDahuaFile(ctx context.Context, id int64) (DahuaFile, error)
 }
 
 const getDahuaFileByFilePath = `-- name: GetDahuaFileByFilePath :one
-SELECT id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, storage
-FROM dahua_files
-WHERE device_id = ? and file_path = ?
+SELECT
+  id, device_id, channel, start_time, end_time, length, type, file_path, duration, disk, video_stream, flags, events, cluster, "partition", pic_index, repeat, work_dir, work_dir_sn, updated_at, storage
+FROM
+  dahua_files
+WHERE
+  device_id = ?
+  and file_path = ?
 `
 
 type GetDahuaFileByFilePathParams struct {
@@ -595,11 +654,19 @@ func (q *Queries) GetDahuaFileByFilePath(ctx context.Context, arg GetDahuaFileBy
 }
 
 const getDahuaFileForThumbnail = `-- name: GetDahuaFileForThumbnail :one
-SELECT dahua_files.id, device_id, type, file_path, name 
-FROM dahua_files 
-LEFT JOIN dahua_thumbnails ON dahua_thumbnails.file_id = dahua_files.id 
-LEFT JOIN dahua_afero_files ON dahua_afero_files.thumbnail_id = dahua_thumbnails.id  
-WHERE dahua_files.id = ?
+SELECT
+  dahua_files.id,
+  device_id,
+  type,
+  file_path,
+  name,
+  ready
+FROM
+  dahua_files
+  LEFT JOIN dahua_thumbnails ON dahua_thumbnails.file_id = dahua_files.id
+  LEFT JOIN dahua_afero_files ON dahua_afero_files.thumbnail_id = dahua_thumbnails.id
+WHERE
+  dahua_files.id = ?
 `
 
 type GetDahuaFileForThumbnailRow struct {
@@ -608,6 +675,7 @@ type GetDahuaFileForThumbnailRow struct {
 	Type     string
 	FilePath string
 	Name     sql.NullString
+	Ready    sql.NullBool
 }
 
 func (q *Queries) GetDahuaFileForThumbnail(ctx context.Context, id int64) (GetDahuaFileForThumbnailRow, error) {
@@ -619,13 +687,18 @@ func (q *Queries) GetDahuaFileForThumbnail(ctx context.Context, id int64) (GetDa
 		&i.Type,
 		&i.FilePath,
 		&i.Name,
+		&i.Ready,
 	)
 	return i, err
 }
 
 const getDahuaStorageDestination = `-- name: GetDahuaStorageDestination :one
-SELECT id, name, storage, server_address, port, username, password, remote_directory FROM dahua_storage_destinations 
-WHERE id = ?
+SELECT
+  id, name, storage, server_address, port, username, password, remote_directory
+FROM
+  dahua_storage_destinations
+WHERE
+  id = ?
 `
 
 func (q *Queries) GetDahuaStorageDestination(ctx context.Context, id int64) (DahuaStorageDestination, error) {
@@ -645,8 +718,13 @@ func (q *Queries) GetDahuaStorageDestination(ctx context.Context, id int64) (Dah
 }
 
 const getDahuaStorageDestinationByServerAddressAndStorage = `-- name: GetDahuaStorageDestinationByServerAddressAndStorage :one
-SELECT id, name, storage, server_address, port, username, password, remote_directory FROM dahua_storage_destinations 
-WHERE server_address = ? AND storage = ?
+SELECT
+  id, name, storage, server_address, port, username, password, remote_directory
+FROM
+  dahua_storage_destinations
+WHERE
+  server_address = ?
+  AND storage = ?
 `
 
 type GetDahuaStorageDestinationByServerAddressAndStorageParams struct {
@@ -671,8 +749,12 @@ func (q *Queries) GetDahuaStorageDestinationByServerAddressAndStorage(ctx contex
 }
 
 const getDahuaStream = `-- name: GetDahuaStream :one
-SELECT id, internal, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
-WHERE id = ?
+SELECT
+  id, internal, device_id, channel, subtype, name, mediamtx_path
+FROM
+  dahua_streams
+WHERE
+  id = ?
 `
 
 func (q *Queries) GetDahuaStream(ctx context.Context, id int64) (DahuaStream, error) {
@@ -691,10 +773,16 @@ func (q *Queries) GetDahuaStream(ctx context.Context, id int64) (DahuaStream, er
 }
 
 const getOldestDahuaFileStartTime = `-- name: GetOldestDahuaFileStartTime :one
-SELECT start_time 
-FROM dahua_files
-WHERE device_id = ?
-ORDER BY start_time ASC LIMIT 1
+SELECT
+  start_time
+FROM
+  dahua_files
+WHERE
+  device_id = ?
+ORDER BY
+  start_time ASC
+LIMIT
+  1
 `
 
 func (q *Queries) GetOldestDahuaFileStartTime(ctx context.Context, deviceID int64) (types.Time, error) {
@@ -705,8 +793,12 @@ func (q *Queries) GetOldestDahuaFileStartTime(ctx context.Context, deviceID int6
 }
 
 const getSettings = `-- name: GetSettings :one
-SELECT site_name, default_location FROM settings
-LIMIT 1
+SELECT
+  site_name, default_location
+FROM
+  settings
+LIMIT
+  1
 `
 
 func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
@@ -717,8 +809,12 @@ func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 }
 
 const listDahuaDevice = `-- name: ListDahuaDevice :many
-SELECT dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
-LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
+SELECT
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  coalesce(seed, id)
+FROM
+  dahua_devices
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 `
 
 type ListDahuaDeviceRow struct {
@@ -771,9 +867,14 @@ func (q *Queries) ListDahuaDevice(ctx context.Context) ([]ListDahuaDeviceRow, er
 }
 
 const listDahuaDeviceByIDs = `-- name: ListDahuaDeviceByIDs :many
-SELECT dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
-LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE id IN (/*SLICE:ids*/?)
+SELECT
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  coalesce(seed, id)
+FROM
+  dahua_devices
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
+WHERE
+  id IN (/*SLICE:ids*/?)
 `
 
 type ListDahuaDeviceByIDsRow struct {
@@ -836,7 +937,10 @@ func (q *Queries) ListDahuaDeviceByIDs(ctx context.Context, ids []int64) ([]List
 }
 
 const listDahuaEventActions = `-- name: ListDahuaEventActions :many
-SELECT DISTINCT action FROM dahua_events
+SELECT DISTINCT
+  action
+FROM
+  dahua_events
 `
 
 func (q *Queries) ListDahuaEventActions(ctx context.Context) ([]string, error) {
@@ -863,7 +967,10 @@ func (q *Queries) ListDahuaEventActions(ctx context.Context) ([]string, error) {
 }
 
 const listDahuaEventCodes = `-- name: ListDahuaEventCodes :many
-SELECT DISTINCT code FROM dahua_events
+SELECT DISTINCT
+  code
+FROM
+  dahua_events
 `
 
 func (q *Queries) ListDahuaEventCodes(ctx context.Context) ([]string, error) {
@@ -890,7 +997,10 @@ func (q *Queries) ListDahuaEventCodes(ctx context.Context) ([]string, error) {
 }
 
 const listDahuaEventRule = `-- name: ListDahuaEventRule :many
-SELECT id, code, ignore_db, ignore_live, ignore_mqtt FROM dahua_event_rules
+SELECT
+  id, code, ignore_db, ignore_live, ignore_mqtt
+FROM
+  dahua_event_rules
 `
 
 func (q *Queries) ListDahuaEventRule(ctx context.Context) ([]DahuaEventRule, error) {
@@ -923,7 +1033,13 @@ func (q *Queries) ListDahuaEventRule(ctx context.Context) ([]DahuaEventRule, err
 }
 
 const listDahuaEventWorkerState = `-- name: ListDahuaEventWorkerState :many
-SELECT id, device_id, state, error, created_at,max(created_at) FROM dahua_event_worker_states GROUP BY device_id
+SELECT
+  id, device_id, state, error, created_at,
+  max(created_at)
+FROM
+  dahua_event_worker_states
+GROUP BY
+  device_id
 `
 
 type ListDahuaEventWorkerStateRow struct {
@@ -966,12 +1082,14 @@ func (q *Queries) ListDahuaEventWorkerState(ctx context.Context) ([]ListDahuaEve
 }
 
 const listDahuaFileCursor = `-- name: ListDahuaFileCursor :many
-SELECT 
+SELECT
   c.device_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete, c.scan, c.scan_percent, c.scan_type,
   count(f.device_id) AS files
-FROM dahua_file_cursors AS c
-LEFT JOIN dahua_files AS f ON f.device_id = c.device_id
-GROUP BY c.device_id
+FROM
+  dahua_file_cursors AS c
+  LEFT JOIN dahua_files AS f ON f.device_id = c.device_id
+GROUP BY
+  c.device_id
 `
 
 type ListDahuaFileCursorRow struct {
@@ -1020,8 +1138,10 @@ func (q *Queries) ListDahuaFileCursor(ctx context.Context) ([]ListDahuaFileCurso
 }
 
 const listDahuaFileTypes = `-- name: ListDahuaFileTypes :many
-SELECT DISTINCT type
-FROM dahua_files
+SELECT DISTINCT
+  type
+FROM
+  dahua_files
 `
 
 func (q *Queries) ListDahuaFileTypes(ctx context.Context) ([]string, error) {
@@ -1048,7 +1168,10 @@ func (q *Queries) ListDahuaFileTypes(ctx context.Context) ([]string, error) {
 }
 
 const listDahuaStorageDestination = `-- name: ListDahuaStorageDestination :many
-SELECT id, name, storage, server_address, port, username, password, remote_directory FROM dahua_storage_destinations
+SELECT
+  id, name, storage, server_address, port, username, password, remote_directory
+FROM
+  dahua_storage_destinations
 `
 
 func (q *Queries) ListDahuaStorageDestination(ctx context.Context) ([]DahuaStorageDestination, error) {
@@ -1084,8 +1207,12 @@ func (q *Queries) ListDahuaStorageDestination(ctx context.Context) ([]DahuaStora
 }
 
 const listDahuaStream = `-- name: ListDahuaStream :many
-SELECT id, internal, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
-ORDER BY device_id
+SELECT
+  id, internal, device_id, channel, subtype, name, mediamtx_path
+FROM
+  dahua_streams
+ORDER BY
+  device_id
 `
 
 func (q *Queries) ListDahuaStream(ctx context.Context) ([]DahuaStream, error) {
@@ -1120,8 +1247,12 @@ func (q *Queries) ListDahuaStream(ctx context.Context) ([]DahuaStream, error) {
 }
 
 const listDahuaStreamByDevice = `-- name: ListDahuaStreamByDevice :many
-SELECT id, internal, device_id, channel, subtype, name, mediamtx_path FROM dahua_streams
-WHERE device_id = ?
+SELECT
+  id, internal, device_id, channel, subtype, name, mediamtx_path
+FROM
+  dahua_streams
+WHERE
+  device_id = ?
 `
 
 func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) ([]DahuaStream, error) {
@@ -1156,23 +1287,26 @@ func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) (
 }
 
 const normalizeDahuaFileCursor = `-- name: NormalizeDahuaFileCursor :exec
-INSERT OR IGNORE INTO dahua_file_cursors (
-  device_id,
-  quick_cursor,
-  full_cursor,
-  full_epoch,
-  scan,
-  scan_percent,
-  scan_type
-) SELECT 
+INSERT OR IGNORE INTO
+  dahua_file_cursors (
+    device_id,
+    quick_cursor,
+    full_cursor,
+    full_epoch,
+    scan,
+    scan_percent,
+    scan_type
+  )
+SELECT
   id,
   ?,
   ?,
   ?,
   ?,
   ?,
-  ? 
-FROM dahua_devices
+  ?
+FROM
+  dahua_devices
 `
 
 type NormalizeDahuaFileCursorParams struct {
@@ -1198,18 +1332,35 @@ func (q *Queries) NormalizeDahuaFileCursor(ctx context.Context, arg NormalizeDah
 
 const orphanDeleteDahuaThumbnail = `-- name: OrphanDeleteDahuaThumbnail :exec
 DELETE FROM dahua_thumbnails
-WHERE id IN (SELECT thumbnail_id FROM dahua_afero_files WHERE ready = false)
+WHERE
+  id IN (
+    SELECT
+      thumbnail_id
+    FROM
+      dahua_afero_files
+    WHERE
+      ready = false
+      AND created_at < ?
+  )
 `
 
-func (q *Queries) OrphanDeleteDahuaThumbnail(ctx context.Context) error {
-	_, err := q.db.ExecContext(ctx, orphanDeleteDahuaThumbnail)
+func (q *Queries) OrphanDeleteDahuaThumbnail(ctx context.Context, createdAt types.Time) error {
+	_, err := q.db.ExecContext(ctx, orphanDeleteDahuaThumbnail, createdAt)
 	return err
 }
 
 const orphanListDahuaAferoFile = `-- name: OrphanListDahuaAferoFile :many
-SELECT id, file_id, thumbnail_id, email_attachment_id, name, ready, size, created_at FROM dahua_afero_files
-WHERE file_id IS NULL AND thumbnail_id IS NULL AND email_attachment_id IS NULL AND ready = true
-LIMIT ?
+SELECT
+  id, file_id, thumbnail_id, email_attachment_id, name, ready, size, created_at
+FROM
+  dahua_afero_files
+WHERE
+  file_id IS NULL
+  AND thumbnail_id IS NULL
+  AND email_attachment_id IS NULL
+  AND ready = true
+LIMIT
+  ?
 `
 
 func (q *Queries) OrphanListDahuaAferoFile(ctx context.Context, limit int64) ([]DahuaAferoFile, error) {
@@ -1245,11 +1396,13 @@ func (q *Queries) OrphanListDahuaAferoFile(ctx context.Context, limit int64) ([]
 }
 
 const readyDahuaAferoFile = `-- name: ReadyDahuaAferoFile :one
-UPDATE dahua_afero_files SET
+UPDATE dahua_afero_files
+SET
   ready = true,
   size = ?,
   created_at = ?
-WHERE id = ? RETURNING id
+WHERE
+  id = ? RETURNING id
 `
 
 type ReadyDahuaAferoFileParams struct {
@@ -1266,10 +1419,18 @@ func (q *Queries) ReadyDahuaAferoFile(ctx context.Context, arg ReadyDahuaAferoFi
 }
 
 const updateDahuaDevice = `-- name: UpdateDahuaDevice :one
-UPDATE dahua_devices 
-SET name = ?, url = ?, ip = ?, username = ?, password = ?, location = ?, feature = ?, updated_at = ?
-WHERE id = ?
-RETURNING id
+UPDATE dahua_devices
+SET
+  name = ?,
+  url = ?,
+  ip = ?,
+  username = ?,
+  password = ?,
+  location = ?,
+  feature = ?,
+  updated_at = ?
+WHERE
+  id = ? RETURNING id
 `
 
 type UpdateDahuaDeviceParams struct {
@@ -1302,13 +1463,14 @@ func (q *Queries) UpdateDahuaDevice(ctx context.Context, arg UpdateDahuaDevicePa
 }
 
 const updateDahuaEventRule = `-- name: UpdateDahuaEventRule :exec
-UPDATE dahua_event_rules 
-SET 
+UPDATE dahua_event_rules
+SET
   code = ?,
   ignore_db = ?,
   ignore_live = ?,
   ignore_mqtt = ?
-WHERE id = ?
+WHERE
+  id = ?
 `
 
 type UpdateDahuaEventRuleParams struct {
@@ -1331,8 +1493,8 @@ func (q *Queries) UpdateDahuaEventRule(ctx context.Context, arg UpdateDahuaEvent
 }
 
 const updateDahuaFile = `-- name: UpdateDahuaFile :one
-UPDATE dahua_files 
-SET 
+UPDATE dahua_files
+SET
   channel = ?,
   start_time = ?,
   end_time = ?,
@@ -1351,8 +1513,9 @@ SET
   work_dir_sn = ?,
   updated_at = ?,
   storage = ?
-WHERE device_id = ? AND file_path = ?
-RETURNING id
+WHERE
+  device_id = ?
+  AND file_path = ? RETURNING id
 `
 
 type UpdateDahuaFileParams struct {
@@ -1408,15 +1571,15 @@ func (q *Queries) UpdateDahuaFile(ctx context.Context, arg UpdateDahuaFileParams
 
 const updateDahuaFileCursor = `-- name: UpdateDahuaFileCursor :one
 UPDATE dahua_file_cursors
-SET 
+SET
   quick_cursor = ?,
   full_cursor = ?,
   full_epoch = ?,
   scan = ?,
   scan_percent = ?,
   scan_type = ?
-WHERE device_id = ?
-RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, scan, scan_percent, scan_type
+WHERE
+  device_id = ? RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, scan, scan_percent, scan_type
 `
 
 type UpdateDahuaFileCursorParams struct {
@@ -1454,11 +1617,11 @@ func (q *Queries) UpdateDahuaFileCursor(ctx context.Context, arg UpdateDahuaFile
 }
 
 const updateDahuaFileCursorScanPercent = `-- name: UpdateDahuaFileCursorScanPercent :one
-UPDATE dahua_file_cursors 
+UPDATE dahua_file_cursors
 SET
   scan_percent = ?
-WHERE device_id = ?
-RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, scan, scan_percent, scan_type
+WHERE
+  device_id = ? RETURNING device_id, quick_cursor, full_cursor, full_epoch, full_complete, scan, scan_percent, scan_type
 `
 
 type UpdateDahuaFileCursorScanPercentParams struct {
@@ -1492,8 +1655,8 @@ SET
   username = ?,
   password = ?,
   remote_directory = ?
-WHERE id = ?
-RETURNING id, name, storage, server_address, port, username, password, remote_directory
+WHERE
+  id = ? RETURNING id, name, storage, server_address, port, username, password, remote_directory
 `
 
 type UpdateDahuaStorageDestinationParams struct {
@@ -1537,8 +1700,8 @@ UPDATE dahua_streams
 SET
   name = ?,
   mediamtx_path = ?
-WHERE id = ?
-RETURNING id, internal, device_id, channel, subtype, name, mediamtx_path
+WHERE
+  id = ? RETURNING id, internal, device_id, channel, subtype, name, mediamtx_path
 `
 
 type UpdateDahuaStreamParams struct {
@@ -1567,8 +1730,8 @@ UPDATE settings
 SET
   default_location = coalesce(?1, default_location),
   site_name = coalesce(?2, site_name)
-WHERE 1 = 1
-RETURNING site_name, default_location
+WHERE
+  1 = 1 RETURNING site_name, default_location
 `
 
 type UpdateSettingsParams struct {
@@ -1584,9 +1747,23 @@ func (q *Queries) UpdateSettings(ctx context.Context, arg UpdateSettingsParams) 
 }
 
 const allocateDahuaSeed = `-- name: allocateDahuaSeed :exec
-UPDATE dahua_seeds 
-SET device_id = ?1
-WHERE seed = (SELECT seed FROM dahua_seeds WHERE device_id = ?1 OR device_id IS NULL ORDER BY device_id asc LIMIT 1)
+UPDATE dahua_seeds
+SET
+  device_id = ?1
+WHERE
+  seed = (
+    SELECT
+      seed
+    FROM
+      dahua_seeds
+    WHERE
+      device_id = ?1
+      OR device_id IS NULL
+    ORDER BY
+      device_id asc
+    LIMIT
+      1
+  )
 `
 
 func (q *Queries) allocateDahuaSeed(ctx context.Context, deviceID sql.NullInt64) error {
@@ -1595,11 +1772,20 @@ func (q *Queries) allocateDahuaSeed(ctx context.Context, deviceID sql.NullInt64)
 }
 
 const createDahuaDevice = `-- name: createDahuaDevice :one
-INSERT INTO dahua_devices (
-  name, url, ip, username, password, location, feature, created_at, updated_at
-) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?, ?
-) RETURNING id
+INSERT INTO
+  dahua_devices (
+    name,
+    url,
+    ip,
+    username,
+    password,
+    location,
+    feature,
+    created_at,
+    updated_at
+  )
+VALUES
+  (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
 `
 
 type createDahuaDeviceParams struct {
@@ -1632,12 +1818,10 @@ func (q *Queries) createDahuaDevice(ctx context.Context, arg createDahuaDevicePa
 }
 
 const createDahuaEmailAttachment = `-- name: createDahuaEmailAttachment :one
-INSERT INTO dahua_email_attachments (
-  message_id,
-  file_name
-) VALUES (
-  ?, ?
-) RETURNING id, message_id, file_name
+INSERT INTO
+  dahua_email_attachments (message_id, file_name)
+VALUES
+  (?, ?) RETURNING id, message_id, file_name
 `
 
 type createDahuaEmailAttachmentParams struct {
@@ -1653,20 +1837,21 @@ func (q *Queries) createDahuaEmailAttachment(ctx context.Context, arg createDahu
 }
 
 const createDahuaEmailMessage = `-- name: createDahuaEmailMessage :one
-INSERT INTO dahua_email_messages (
-  device_id,
-  date,
-  'from',
-  ` + "`" + `to` + "`" + `,
-  subject,
-  ` + "`" + `text` + "`" + `,
-  alarm_event,
-  alarm_input_channel,
-  alarm_name,
-  created_at
-) VALUES (
-  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-) RETURNING id, device_id, date, 'from', ` + "`" + `to` + "`" + `, subject, ` + "`" + `text` + "`" + `, alarm_event, alarm_input_channel, alarm_name, created_at
+INSERT INTO
+  dahua_email_messages (
+    device_id,
+    date,
+    'from',
+    ` + "`" + `to` + "`" + `,
+    subject,
+    ` + "`" + `text` + "`" + `,
+    alarm_event,
+    alarm_input_channel,
+    alarm_name,
+    created_at
+  )
+VALUES
+  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, device_id, date, 'from', ` + "`" + `to` + "`" + `, subject, ` + "`" + `text` + "`" + `, alarm_event, alarm_input_channel, alarm_name, created_at
 `
 
 type createDahuaEmailMessageParams struct {
@@ -1713,17 +1898,18 @@ func (q *Queries) createDahuaEmailMessage(ctx context.Context, arg createDahuaEm
 }
 
 const createDahuaFileCursor = `-- name: createDahuaFileCursor :exec
-INSERT INTO dahua_file_cursors (
-  device_id,
-  quick_cursor,
-  full_cursor,
-  full_epoch,
-  scan,
-  scan_percent,
-  scan_type
-) VALUES (
-  ?, ?, ?, ?, ?, ?, ?
-)
+INSERT INTO
+  dahua_file_cursors (
+    device_id,
+    quick_cursor,
+    full_cursor,
+    full_epoch,
+    scan,
+    scan_percent,
+    scan_type
+  )
+VALUES
+  (?, ?, ?, ?, ?, ?, ?)
 `
 
 type createDahuaFileCursorParams struct {
@@ -1750,18 +1936,21 @@ func (q *Queries) createDahuaFileCursor(ctx context.Context, arg createDahuaFile
 }
 
 const createDahuaStreamDefault = `-- name: createDahuaStreamDefault :one
-INSERT INTO dahua_streams (
-  device_id,
-  channel,
-  subtype,
-  name,
-  mediamtx_path,
-  internal
-) VALUES ( 
-  ?, ?, ?, ?, ?, true
-) ON CONFLICT DO UPDATE SET 
-  internal = true
-RETURNING ID
+INSERT INTO
+  dahua_streams (
+    device_id,
+    channel,
+    subtype,
+    name,
+    mediamtx_path,
+    internal
+  )
+VALUES
+  (?, ?, ?, ?, ?, true)
+ON CONFLICT DO
+UPDATE
+SET
+  internal = true RETURNING ID
 `
 
 type createDahuaStreamDefaultParams struct {
@@ -1786,7 +1975,12 @@ func (q *Queries) createDahuaStreamDefault(ctx context.Context, arg createDahuaS
 }
 
 const dahuaDeviceExists = `-- name: dahuaDeviceExists :one
-SELECT COUNT(id) FROM dahua_devices WHERE id = ?
+SELECT
+  COUNT(id)
+FROM
+  dahua_devices
+WHERE
+  id = ?
 `
 
 func (q *Queries) dahuaDeviceExists(ctx context.Context, id int64) (int64, error) {
@@ -1797,22 +1991,32 @@ func (q *Queries) dahuaDeviceExists(ctx context.Context, id int64) (int64, error
 }
 
 const getDahuaEventRuleByEvent = `-- name: getDahuaEventRuleByEvent :many
-SELECT 
+SELECT
   ignore_db,
   ignore_live,
   ignore_mqtt,
   code
-FROM dahua_event_device_rules 
-WHERE device_id = ?1 AND (dahua_event_device_rules.code = ?2 OR dahua_event_device_rules.code = '')
+FROM
+  dahua_event_device_rules
+WHERE
+  device_id = ?1
+  AND (
+    dahua_event_device_rules.code = ?2
+    OR dahua_event_device_rules.code = ''
+  )
 UNION ALL
-SELECT 
+SELECT
   ignore_db,
   ignore_live,
   ignore_mqtt,
   code
-FROM dahua_event_rules
-WHERE dahua_event_rules.code = ?2 OR dahua_event_rules.code = ''
-ORDER BY code DESC
+FROM
+  dahua_event_rules
+WHERE
+  dahua_event_rules.code = ?2
+  OR dahua_event_rules.code = ''
+ORDER BY
+  code DESC
 `
 
 type getDahuaEventRuleByEventParams struct {
@@ -1856,9 +2060,14 @@ func (q *Queries) getDahuaEventRuleByEvent(ctx context.Context, arg getDahuaEven
 }
 
 const listDahuaDeviceByFeature = `-- name: listDahuaDeviceByFeature :many
-SELECT dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, coalesce(seed, id) FROM dahua_devices 
-LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE feature & ?1 = ?1
+SELECT
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  coalesce(seed, id)
+FROM
+  dahua_devices
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
+WHERE
+  feature & ?1 = ?1
 `
 
 type listDahuaDeviceByFeatureRow struct {
@@ -1911,9 +2120,11 @@ func (q *Queries) listDahuaDeviceByFeature(ctx context.Context, feature models.D
 }
 
 const updateDahuaStreamDefault = `-- name: updateDahuaStreamDefault :exec
-UPDATE dahua_streams SET 
+UPDATE dahua_streams
+SET
   internal = false
-WHERE device_id = ?
+WHERE
+  device_id = ?
 `
 
 func (q *Queries) updateDahuaStreamDefault(ctx context.Context, deviceID int64) error {

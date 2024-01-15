@@ -5,6 +5,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/spf13/afero"
 )
 
 type ThumbnailForeignKeys struct {
@@ -12,11 +13,29 @@ type ThumbnailForeignKeys struct {
 	EmailAttachmentID int64
 }
 
-func CreateThumbnail(ctx context.Context, db repo.DB, fk ThumbnailForeignKeys, width, height int64) (repo.DahuaThumbnail, error) {
-	return db.CreateDahuaThumbnail(ctx, repo.CreateDahuaThumbnailParams{
+type Thumbnail struct {
+	AferoFile
+	repo.DahuaThumbnail
+}
+
+func CreateThumbnail(ctx context.Context, db repo.DB, afs afero.Fs, fk ThumbnailForeignKeys, width, height int64, aferoFileName string) (Thumbnail, error) {
+	thumbnail, err := db.CreateDahuaThumbnail(ctx, repo.CreateDahuaThumbnailParams{
 		EmailAttachmentID: core.Int64ToNullInt64(fk.EmailAttachmentID),
 		FileID:            core.Int64ToNullInt64(fk.FileID),
 		Width:             int64(width),
 		Height:            int64(height),
 	})
+	if err != nil {
+		return Thumbnail{}, err
+	}
+
+	aferoFile, err := CreateAferoFile(ctx, db, afs, AferoForeignKeys{ThumbnailID: thumbnail.ID}, aferoFileName)
+	if err != nil {
+		return Thumbnail{}, err
+	}
+
+	return Thumbnail{
+		AferoFile:      aferoFile,
+		DahuaThumbnail: thumbnail,
+	}, err
 }
