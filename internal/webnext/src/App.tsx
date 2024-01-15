@@ -1,22 +1,24 @@
-import { TwirpFetchTransport } from "@protobuf-ts/twirp-transport";
-import { createSignal } from "solid-js";
-import { HelloWorldClient } from "./twirp/rpc.client";
-import { Timestamp } from "./twirp/google/protobuf/timestamp";
+import "./index.css";
+import { Route, Router } from '@solidjs/router'
+import { ClientProvider } from './providers/client'
+
+import { useTheme } from "./ui/theme";
+import { Layout } from './pages'
+import { Debug } from './pages/debug'
+import { NotFound } from './pages/404'
+import { Home } from "./pages/Home";
 
 function App() {
-  let transport = new TwirpFetchTransport({ baseUrl: "/twirp" });
-  let client = new HelloWorldClient(transport);
-
-  const [text, setText] = createSignal("")
-
-  client.hello({ subject: "World", currentTime: Timestamp.now() }).then((req) => {
-    setText(req.response.text + "! " + Timestamp.toDate(Timestamp.create(req.response.currentTime)))
-  })
+  useTheme()
 
   return (
-    <>
-      {text()}
-    </>
+    <ClientProvider>
+      <Router base="/next" root={Layout}>
+        <Debug />
+        <Route path="/" component={Home} />
+        <Route path="*404" component={NotFound} />
+      </Router>
+    </ClientProvider>
   )
 }
 

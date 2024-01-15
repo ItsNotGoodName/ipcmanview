@@ -19,7 +19,11 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": false, // NOTE: this was disabled because of google/protobuf/timestamp.ts
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    "paths": {
+      "~/*": ["./src/*"]
+    }
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
