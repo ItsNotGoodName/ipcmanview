@@ -11,6 +11,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	webserver "github.com/ItsNotGoodName/ipcmanview/internal/web/server"
+	webview "github.com/ItsNotGoodName/ipcmanview/internal/web/view"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -110,9 +111,11 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// HTTP router
 	httpRouter := http.NewRouter()
-	if err := webserver.RegisterRenderer(httpRouter); err != nil {
+	webViewRenderer, err := webview.NewRenderer(webview.Config{})
+	if err != nil {
 		return err
 	}
+	httpRouter.Renderer = webViewRenderer
 
 	// WEB
 	webserver.

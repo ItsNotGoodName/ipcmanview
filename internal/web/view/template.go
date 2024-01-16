@@ -18,6 +18,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type Config struct {
+	BaseURI string
+}
+
 type Data map[string]any
 
 type Block struct {
@@ -25,7 +29,7 @@ type Block struct {
 	Data any
 }
 
-func parseTemplate(name string) (*template.Template, error) {
+func parseTemplate(name string, config Config) (*template.Template, error) {
 	return template.
 		New(name).
 		Funcs(sprig.FuncMap()).
@@ -113,7 +117,7 @@ type TemplateContext struct {
 	Data     any
 }
 
-func NewRenderer() (Renderer, error) {
+func NewRenderer(config Config) (Renderer, error) {
 	files, err := web.ViewsFS().ReadDir("views")
 	if err != nil {
 		return Renderer{}, err
@@ -124,19 +128,21 @@ func NewRenderer() (Renderer, error) {
 		if !f.IsDir() {
 			name := f.Name()
 			baseName, _ := strings.CutSuffix(name, filepath.Ext(name))
-			templates[baseName] = template.Must(parseTemplate(name))
+			templates[baseName] = template.Must(parseTemplate(name, config))
 		}
 	}
 
 	return Renderer{
 		templates: templates,
 		head:      web.Head(),
+		config:    config,
 	}, nil
 }
 
 type Renderer struct {
 	templates map[string]*template.Template
 	head      template.HTML
+	config    Config
 }
 
 func (t Renderer) Render(w io.Writer, name string, data any, c echo.Context) error {

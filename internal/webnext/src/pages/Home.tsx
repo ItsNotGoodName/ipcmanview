@@ -1,3 +1,4 @@
 export function Home() {
-  return <>Hello World</>
+  return <>Page: Home</>
 }
+

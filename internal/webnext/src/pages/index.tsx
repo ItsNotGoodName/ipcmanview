@@ -1,10 +1,129 @@
-import { ParentProps } from "solid-js";
+import { cva } from "class-variance-authority"
+import { As, DropdownMenu } from "@kobalte/core";
+import { JSX, ParentProps, createEffect, createSignal, splitProps } from "solid-js";
+import { Button } from "~/ui/Button";
+import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
+import { A } from "@solidjs/router";
+import { RiBuildingsHomeLine, RiSystemEyeLine, RiSystemMenuLine } from "solid-icons/ri";
+import { ThemeIcon } from "~/ui/ThemeIcon";
+import { Theme, currentTheme, toggleTheme } from "~/ui/theme";
 
-export function Layout(props: ParentProps) {
+const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
+  variants: {
+    variant: {
+      active: "bg-primary text-primary-foreground",
+      inactive: "focus:bg-primary focus:text-primary-foreground"
+    }
+  }
+})
+
+function DropdownMenuLinks() {
   return (
     <>
-      <div>IPCManView</div>
-      <>{props.children}</>
+      <DropdownMenu.Item asChild>
+        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ variant: "inactive" })}
+          href="/" end><RiBuildingsHomeLine class="h-4 w-4" />Home</As>
+      </DropdownMenu.Item>
+      <DropdownMenu.Item asChild>
+        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ variant: "inactive" })}
+          href="/view"><RiSystemEyeLine class="h-4 w-4" />View</As>
+      </DropdownMenu.Item>
+    </>
+  )
+}
+
+function MenuLinks() {
+  return (
+    <div class="flex flex-col p-2">
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ variant: "inactive" })}
+        href="/" end><RiBuildingsHomeLine class="h-4 w-4" />Home</A>
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ variant: "inactive" })}
+        href="/view"><RiSystemEyeLine class="h-4 w-4" />View</A>
+    </div>
+  )
+}
+
+function Header(props: { onMenuClick: () => void }) {
+  const themeTitle = () => {
+    switch (currentTheme()) {
+      case Theme.System:
+        return "System Theme"
+      case Theme.Light:
+        return "Light Theme"
+      case Theme.Dark:
+        return "Dark Theme"
+    }
+  }
+
+  return (
+    <div
+      class="bg-background text-foreground border-b-border sticky top-0 z-10 h-14 w-full border-b md:top-auto">
+      <div
+        class="flex h-full items-center gap-2 px-2"
+      >
+        <DropdownMenuRoot>
+          <DropdownMenuTrigger asChild>
+            <As component={Button} size='icon' variant='ghost' title="Menu" class="md:hidden">
+              <RiSystemMenuLine class="h-6 w-6" />
+            </As>
+          </DropdownMenuTrigger>
+          <DropdownMenuPortal>
+            <DropdownMenuContent>
+              <DropdownMenuArrow />
+              <DropdownMenuLinks />
+            </DropdownMenuContent>
+          </DropdownMenuPortal>
+        </DropdownMenuRoot>
+        <Button onClick={props.onMenuClick} size='icon' variant='ghost' title="Menu" class="hidden md:flex">
+          <RiSystemMenuLine class="h-6 w-6" />
+        </Button>
+        <div class="flex flex-1 items-center truncate text-xl">
+          IPCManView
+        </div>
+        <Button size='icon' variant='ghost' onClick={toggleTheme} title={themeTitle()}>
+          <ThemeIcon class="h-6 w-6" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuOpen?: boolean }) {
+  const [_, rest] = splitProps(props, ["children"])
+
+  let refs: HTMLDivElement[] = []
+
+  createEffect(() => {
+    if (props.menuOpen) {
+      refs.forEach(r => r.dataset.open = "")
+    } else {
+      refs.forEach(r => delete r.dataset.open)
+    }
+  })
+
+  return (
+    <div ref={refs[0]} class="border-border border-r-0 transition-all duration-200 md:data-[open=]:border-r" {...rest}>
+      <div ref={refs[1]} class="sticky bottom-0 top-0 w-0 overflow-x-hidden transition-all duration-200 md:data-[open=]:w-48">
+        {props.children}
+      </div>
+    </div>
+  )
+}
+
+export function Layout(props: ParentProps) {
+  const [menuOpen, setMenuOpen] = createSignal(true)
+
+  return (
+    <>
+      <Header onMenuClick={() => setMenuOpen((prev) => !prev)} />
+      <div class="flex min-h-screen">
+        <Menu menuOpen={menuOpen()}>
+          <MenuLinks />
+        </Menu>
+        <div class="flex-1">
+          {props.children}
+        </div>
+      </div >
     </>
   )
 }

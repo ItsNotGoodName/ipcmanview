@@ -26,15 +26,6 @@ import (
 	"github.com/spf13/afero"
 )
 
-func RegisterRenderer(e *echo.Echo) error {
-	r, err := view.NewRenderer()
-	if err != nil {
-		return err
-	}
-	e.Renderer = r
-	return nil
-}
-
 func (w Server) Register(e *echo.Echo) {
 	e.DELETE("/dahua/events", w.DahuaEventsDELETE)
 	e.DELETE("/dahua/streams/:id", w.DahuaStreamsIDDELETE)

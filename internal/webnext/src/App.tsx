@@ -7,6 +7,7 @@ import { Layout } from './pages'
 import { Debug } from './pages/debug'
 import { NotFound } from './pages/404'
 import { Home } from "./pages/Home";
+import { View } from "./pages/View";
 
 function App() {
   useTheme()
@@ -16,6 +17,7 @@ function App() {
       <Router base="/next" root={Layout}>
         <Debug />
         <Route path="/" component={Home} />
+        <Route path="/view" component={View} />
         <Route path="*404" component={NotFound} />
       </Router>
     </ClientProvider>
