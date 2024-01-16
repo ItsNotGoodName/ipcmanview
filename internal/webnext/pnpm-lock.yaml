@@ -17,6 +17,15 @@ dependencies:
   '@protobuf-ts/twirp-transport':
     specifier: ^2.9.3
     version: 2.9.3
+  '@solid-primitives/mouse':
+    specifier: ^2.0.16
+    version: 2.0.16(solid-js@1.8.7)
+  '@solid-primitives/resize-observer':
+    specifier: ^2.0.22
+    version: 2.0.22(solid-js@1.8.7)
+  '@solid-primitives/storage':
+    specifier: ^2.1.1
+    version: 2.1.1(solid-js@1.8.7)
   '@solidjs/router':
     specifier: ^0.10.9
     version: 0.10.9(solid-js@1.8.7)
@@ -921,6 +930,18 @@ packages:
       solid-js: 1.8.7
     dev: false
 
+  /@solid-primitives/mouse@2.0.16(solid-js@1.8.7):
+    resolution: {integrity: sha512-/TuguoUt4Vvz6CgWB9yscg/+mnSy57UAdLiFYeeD1bOXQ2BD4OI3hj4USPtG58+NgQ2PT27lYfAuuUbw7i1esA==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/event-listener': 2.3.0(solid-js@1.8.7)
+      '@solid-primitives/rootless': 1.4.2(solid-js@1.8.7)
+      '@solid-primitives/static-store': 0.0.5(solid-js@1.8.7)
+      '@solid-primitives/utils': 6.2.1(solid-js@1.8.7)
+      solid-js: 1.8.7
+    dev: false
+
   /@solid-primitives/props@3.1.8(solid-js@1.8.7):
     resolution: {integrity: sha512-38ERNFhl87emUDPRlYvCmlbvEcK2mOJB38SU22YS2QXFDK7TQf/7P46XZacs7oODc/fckhfZTitht71FMEDe2g==}
     peerDependencies:
@@ -939,6 +960,18 @@ packages:
       solid-js: 1.8.7
     dev: false
 
+  /@solid-primitives/resize-observer@2.0.22(solid-js@1.8.7):
+    resolution: {integrity: sha512-ps8UIFiGsNxZaWBKSH0Py0Nx5PDd7NtUGHkN/04SNRYgtTvlPF768rk0ksPlDgpIwYmBLIoC9qvQmQPaHF4F5w==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/event-listener': 2.3.0(solid-js@1.8.7)
+      '@solid-primitives/rootless': 1.4.2(solid-js@1.8.7)
+      '@solid-primitives/static-store': 0.0.5(solid-js@1.8.7)
+      '@solid-primitives/utils': 6.2.1(solid-js@1.8.7)
+      solid-js: 1.8.7
+    dev: false
+
   /@solid-primitives/rootless@1.4.2(solid-js@1.8.7):
     resolution: {integrity: sha512-ynI/2aEOPyc14IKCX6yDBqnsAYCoLbaP9V/jejEWMVKOT2ZdV2ZxdftaLimOpWPpvjyti5DUJIGTOfLaNb7jlg==}
     peerDependencies:
@@ -952,6 +985,19 @@ packages:
     resolution: {integrity: sha512-ssQ+s/wrlFAEE4Zw8GV499yBfvWx7SMm+ZVc11wvao4T5xg9VfXCL9Oa+x4h+vPMvSV/Knv5LrsLiUa+wlJUXQ==}
     peerDependencies:
       solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/utils': 6.2.1(solid-js@1.8.7)
+      solid-js: 1.8.7
+    dev: false
+
+  /@solid-primitives/storage@2.1.1(solid-js@1.8.7):
+    resolution: {integrity: sha512-GDbELt4Xjp0ySsHZ+RHzup0YIl1epHz8A2SVQYNRZPgkIEJk0Fyrt2vW6Etym2yUruTt8yT3d8106LVb71KIWg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+      solid-start: '>=0.2.26'
+    peerDependenciesMeta:
+      solid-start:
+        optional: true
     dependencies:
       '@solid-primitives/utils': 6.2.1(solid-js@1.8.7)
       solid-js: 1.8.7

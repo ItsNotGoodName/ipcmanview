@@ -15,8 +15,7 @@ import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxIco
 import { PopoverArrow, PopoverCloseButton, PopoverCloseIcon, PopoverContent, PopoverDescription, PopoverPortal, PopoverRoot, PopoverTitle, PopoverTrigger } from "~/ui/Popover";
 import { DialogCloseButton, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
-import { ToastCloseButton, ToastContent, ToastDescription, ToastList, ToastProgressFill, ToastProgressTrack, ToastRegion, ToastTitle, toast } from "~/ui/Toast";
-import { Portal } from "solid-js/web";
+import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, ToastProgressTrack, ToastTitle, toast } from "~/ui/Toast";
 import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 
@@ -37,11 +36,6 @@ export function Ui() {
 
   return (
     <div class="flex flex-col gap-4 p-4">
-      <Portal>
-        <ToastRegion>
-          <ToastList />
-        </ToastRegion>
-      </Portal>
       <Button onClick={toggleTheme} size="icon">
         <ThemeIcon class="h-6 w-6" />
       </Button>

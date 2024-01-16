@@ -7,12 +7,15 @@ import { A } from "@solidjs/router";
 import { RiBuildingsHomeLine, RiSystemEyeLine, RiSystemMenuLine } from "solid-icons/ri";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { Theme, currentTheme, toggleTheme } from "~/ui/theme";
+import { makePersisted } from "@solid-primitives/storage";
+import { Portal } from "solid-js/web";
+import { ToastList, ToastRegion } from "~/ui/Toast";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
     variant: {
       active: "bg-primary text-primary-foreground",
-      inactive: "focus:bg-primary focus:text-primary-foreground"
+      inactive: "hover:bg-primary hover:text-primary-foreground"
     }
   }
 })
@@ -36,9 +39,9 @@ function MenuLinks() {
   return (
     <div class="flex flex-col p-2">
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ variant: "inactive" })}
-        href="/" end><RiBuildingsHomeLine class="h-4 w-4" />Home</A>
+        href="/" noScroll end><RiBuildingsHomeLine class="h-4 w-4" />Home</A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ variant: "inactive" })}
-        href="/view"><RiSystemEyeLine class="h-4 w-4" />View</A>
+        href="/view" noScroll><RiSystemEyeLine class="h-4 w-4" />View</A>
     </div>
   )
 }
@@ -57,7 +60,7 @@ function Header(props: { onMenuClick: () => void }) {
 
   return (
     <div
-      class="bg-background text-foreground border-b-border sticky top-0 z-10 h-14 w-full border-b md:top-auto">
+      class="bg-background text-foreground border-b-border z-10 h-14 w-full border-b">
       <div
         class="flex h-full items-center gap-2 px-2"
       >
@@ -103,20 +106,26 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuO
 
   return (
     <div ref={refs[0]} class="border-border border-r-0 transition-all duration-200 md:data-[open=]:border-r" {...rest}>
-      <div ref={refs[1]} class="sticky bottom-0 top-0 w-0 overflow-x-hidden transition-all duration-200 md:data-[open=]:w-48">
-        {props.children}
+      <div ref={refs[1]} class="sticky top-0 w-0 transition-all duration-200 md:data-[open=]:w-48">
+        <div class="h-screen overflow-y-auto">
+          {props.children}
+        </div>
       </div>
     </div>
   )
 }
 
 export function Layout(props: ParentProps) {
-  const [menuOpen, setMenuOpen] = createSignal(true)
-
+  const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
   return (
     <>
+      <Portal>
+        <ToastRegion>
+          <ToastList />
+        </ToastRegion>
+      </Portal>
       <Header onMenuClick={() => setMenuOpen((prev) => !prev)} />
-      <div class="flex min-h-screen">
+      <div class="flex">
         <Menu menuOpen={menuOpen()}>
           <MenuLinks />
         </Menu>
