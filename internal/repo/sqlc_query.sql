@@ -1,3 +1,75 @@
+-- name: CreateUser :one
+INSERT INTO
+  users (email, username, password, created_at, updated_at)
+VALUES
+  (?, ?, ?, ?, ?) RETURNING id;
+
+-- name: GetUser :one
+SELECT
+  *
+FROM
+  users
+where
+  id = ?;
+
+-- name: GetUserByUsernameOrEmail :one
+SELECT
+  *
+FROM
+  users
+where
+  username = sqlc.arg ('usernameOrEmail')
+  OR email = sqlc.arg ('usernameOrEmail');
+
+-- name: SessionGetUserBySession :one
+SELECT
+  user_sessions.user_id as id,
+  users.username,
+  admins.user_id IS NOT NULL as 'admin',
+  user_sessions.expired_at
+FROM
+  user_sessions
+  LEFT JOIN users ON users.id = user_sessions.user_id
+  LEFT JOIN admins ON admins.user_id = user_sessions.user_id
+WHERE
+  session = ?;
+
+-- name: ListUser :many
+SELECT
+  *
+FROM
+  users
+LIMIT
+  ?
+OFFSET
+  ?;
+
+-- name: UpdateUser :one
+UPDATE users
+SET
+  email = ?,
+  username = ?,
+  password = ?,
+  updated_at = ?
+WHERE
+  id = ? RETURNING id;
+
+-- name: CreateUserSession :exec
+INSERT INTO
+  user_sessions (user_id, session, created_at, expired_at)
+VALUES
+  (?, ?, ?, ?);
+
+-- name: DeleteUserSession :exec
+DELETE FROM user_sessions
+WHERE
+  session = ?;
+
+-- name: ExpiredDeleteUserSession :exec
+DELETE FROM user_sessions
+WHERE
+  expired_at < ?;
+
 -- name: createDahuaDevice :one
 INSERT INTO
   dahua_devices (
@@ -14,9 +86,9 @@ INSERT INTO
 VALUES
   (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
 
--- name: dahuaDeviceExists :one
+-- name: CheckDahuaDevice :one
 SELECT
-  COUNT(id)
+  COUNT(*) = 1
 FROM
   dahua_devices
 WHERE
@@ -112,7 +184,7 @@ LIMIT
 -- name: UpdateSettings :one
 UPDATE settings
 SET
-  default_location = coalesce(sqlc.narg ('default_location'), default_location),
+  location = coalesce(sqlc.narg ('location'), location),
   site_name = coalesce(sqlc.narg ('site_name'), site_name)
 WHERE
   1 = 1 RETURNING *;
@@ -131,7 +203,7 @@ WHERE
       device_id = ?1
       OR device_id IS NULL
     ORDER BY
-      device_id asc
+      device_id ASC
     LIMIT
       1
   );

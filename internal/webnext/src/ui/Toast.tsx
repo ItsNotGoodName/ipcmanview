@@ -9,7 +9,7 @@ export function ToastRegion(props: ComponentProps<typeof Toast.Region>) {
   const [_, rest] = splitProps(props, ["class"])
   return <Toast.Region
     class={cn(
-      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
+      "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-auto sm:right-0 sm:top-0 sm:flex-col md:max-w-[420px]",
       props.class
     )}
     {...rest}
@@ -20,7 +20,7 @@ export function ToastList(props: ComponentProps<typeof Toast.List>) {
   const [_, rest] = splitProps(props, ["class"])
   return <Toast.List
     class={cn(
-      "fixed left-0 right-0 top-0 z-50 m-0 flex max-h-screen w-full flex-col-reverse gap-2 p-4 sm:left-auto md:max-w-md ",
+      "left-0 right-0 top-0 z-50 m-0 flex max-h-screen w-full flex-col-reverse gap-2 p-4 sm:left-auto md:max-w-md",
       props.class
     )}
     {...rest}

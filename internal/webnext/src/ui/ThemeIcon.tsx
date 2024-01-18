@@ -7,16 +7,16 @@ import { Component, Match, Switch } from "solid-js";
 import { IconProps } from "solid-icons";
 import {
   Theme,
-  currentTheme,
+  useCurrentTheme,
 } from "./theme";
 
 export const ThemeIcon: Component<IconProps> = (props) => {
   return (
     <Switch fallback={<RiDesignContrastLine {...props} />}>
-      <Match when={currentTheme() == Theme.Dark}>
+      <Match when={useCurrentTheme() == Theme.Dark}>
         <RiWeatherMoonLine {...props} />
       </Match>
-      <Match when={currentTheme() == Theme.Light}>
+      <Match when={useCurrentTheme() == Theme.Light}>
         <RiWeatherSunLine {...props} />
       </Match>
     </Switch>

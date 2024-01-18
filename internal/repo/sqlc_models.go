@@ -12,6 +12,11 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
+type Admin struct {
+	UserID    int64
+	CreatedAt types.Time
+}
+
 type DahuaAferoFile struct {
 	ID                int64
 	FileID            sql.NullInt64
@@ -125,6 +130,14 @@ type DahuaFileCursor struct {
 	ScanType     models.DahuaScanType
 }
 
+type DahuaPermission struct {
+	UserID   sql.NullInt64
+	GroupID  sql.NullInt64
+	DeviceID int64
+	Read     bool
+	Write    bool
+}
+
 type DahuaSeed struct {
 	Seed     int64
 	DeviceID sql.NullInt64
@@ -159,7 +172,40 @@ type DahuaThumbnail struct {
 	Height            int64
 }
 
+type Group struct {
+	ID          int64
+	Name        string
+	Description string
+	CreatedAt   types.Time
+	UpdatedAt   types.Time
+}
+
+type GroupUser struct {
+	UserID    int64
+	GroupID   int64
+	CreatedAt types.Time
+}
+
 type Setting struct {
-	SiteName        string
-	DefaultLocation types.Location
+	Setup       bool
+	SiteName    string
+	Location    string
+	Coordinates string
+}
+
+type User struct {
+	ID        int64
+	Email     string
+	Username  string
+	Password  string
+	CreatedAt types.Time
+	UpdatedAt types.Time
+}
+
+type UserSession struct {
+	ID        int64
+	UserID    int64
+	Session   string
+	CreatedAt types.Time
+	ExpiredAt types.Time
 }

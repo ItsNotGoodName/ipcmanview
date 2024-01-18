@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
+	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
@@ -43,6 +44,12 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super := suture.New("root", suture.Spec{
 		EventHook: sutureext.EventHook(),
 	})
+
+	// Secret
+	_, err := c.useSecret()
+	if err != nil {
+		return err
+	}
 
 	// Database
 	db, err := c.useDB(ctx)
@@ -127,8 +134,15 @@ func (c *CmdServe) Run(ctx *Context) error {
 		NewServer(pub, db, dahuaStore, dahuaAFS).
 		Register(httpRouter)
 
-	// RPC
-	rpcserver.Register(httpRouter, rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}))
+		// RPC
+	{
+		authSessionMiddleware := auth.SessionMiddleware(db)
+		twirpLogger := rpcserver.LoggerHooks()
+		twirpAuth := rpcserver.AuthHooks()
+		rpcserver.Register(httpRouter, rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, twirpLogger), authSessionMiddleware)
+		rpcserver.Register(httpRouter, rpc.NewAuthServer(&rpcserver.Auth{DB: db}, twirpLogger), authSessionMiddleware)
+		rpcserver.Register(httpRouter, rpc.NewPageServer(&rpcserver.Page{DB: db}, twirpLogger, twirpAuth), authSessionMiddleware)
+	}
 
 	// HTTP server
 	httpServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPPort)))

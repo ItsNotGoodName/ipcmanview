@@ -521,6 +521,1552 @@ func (s *helloWorldServer) PathPrefix() string {
 	return baseServicePath(s.pathPrefix, "", "HelloWorld")
 }
 
+// ==============
+// Auth Interface
+// ==============
+
+type Auth interface {
+	SignUp(context.Context, *AuthSignUpReq) (*AuthSignUpResp, error)
+
+	SignIn(context.Context, *AuthSignInReq) (*AuthSignInResp, error)
+
+	ResetPassword(context.Context, *AuthResetPasswordReq) (*AuthResetPasswordResp, error)
+}
+
+// ====================
+// Auth Protobuf Client
+// ====================
+
+type authProtobufClient struct {
+	client      HTTPClient
+	urls        [3]string
+	interceptor twirp.Interceptor
+	opts        twirp.ClientOptions
+}
+
+// NewAuthProtobufClient creates a Protobuf client that implements the Auth interface.
+// It communicates using Protobuf and can be configured with a custom HTTPClient.
+func NewAuthProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) Auth {
+	if c, ok := client.(*http.Client); ok {
+		client = withoutRedirects(c)
+	}
+
+	clientOpts := twirp.ClientOptions{}
+	for _, o := range opts {
+		o(&clientOpts)
+	}
+
+	// Using ReadOpt allows backwards and forwards compatibility with new options in the future
+	literalURLs := false
+	_ = clientOpts.ReadOpt("literalURLs", &literalURLs)
+	var pathPrefix string
+	if ok := clientOpts.ReadOpt("pathPrefix", &pathPrefix); !ok {
+		pathPrefix = "/twirp" // default prefix
+	}
+
+	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
+	serviceURL := sanitizeBaseURL(baseURL)
+	serviceURL += baseServicePath(pathPrefix, "", "Auth")
+	urls := [3]string{
+		serviceURL + "SignUp",
+		serviceURL + "SignIn",
+		serviceURL + "ResetPassword",
+	}
+
+	return &authProtobufClient{
+		client:      client,
+		urls:        urls,
+		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
+		opts:        clientOpts,
+	}
+}
+
+func (c *authProtobufClient) SignUp(ctx context.Context, in *AuthSignUpReq) (*AuthSignUpResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Auth")
+	ctx = ctxsetters.WithMethodName(ctx, "SignUp")
+	caller := c.callSignUp
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *AuthSignUpReq) (*AuthSignUpResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthSignUpReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthSignUpReq) when calling interceptor")
+					}
+					return c.callSignUp(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthSignUpResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthSignUpResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *authProtobufClient) callSignUp(ctx context.Context, in *AuthSignUpReq) (*AuthSignUpResp, error) {
+	out := new(AuthSignUpResp)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *authProtobufClient) SignIn(ctx context.Context, in *AuthSignInReq) (*AuthSignInResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Auth")
+	ctx = ctxsetters.WithMethodName(ctx, "SignIn")
+	caller := c.callSignIn
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *AuthSignInReq) (*AuthSignInResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthSignInReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthSignInReq) when calling interceptor")
+					}
+					return c.callSignIn(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthSignInResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthSignInResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *authProtobufClient) callSignIn(ctx context.Context, in *AuthSignInReq) (*AuthSignInResp, error) {
+	out := new(AuthSignInResp)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *authProtobufClient) ResetPassword(ctx context.Context, in *AuthResetPasswordReq) (*AuthResetPasswordResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Auth")
+	ctx = ctxsetters.WithMethodName(ctx, "ResetPassword")
+	caller := c.callResetPassword
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *AuthResetPasswordReq) (*AuthResetPasswordResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthResetPasswordReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthResetPasswordReq) when calling interceptor")
+					}
+					return c.callResetPassword(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthResetPasswordResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthResetPasswordResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *authProtobufClient) callResetPassword(ctx context.Context, in *AuthResetPasswordReq) (*AuthResetPasswordResp, error) {
+	out := new(AuthResetPasswordResp)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+// ================
+// Auth JSON Client
+// ================
+
+type authJSONClient struct {
+	client      HTTPClient
+	urls        [3]string
+	interceptor twirp.Interceptor
+	opts        twirp.ClientOptions
+}
+
+// NewAuthJSONClient creates a JSON client that implements the Auth interface.
+// It communicates using JSON and can be configured with a custom HTTPClient.
+func NewAuthJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) Auth {
+	if c, ok := client.(*http.Client); ok {
+		client = withoutRedirects(c)
+	}
+
+	clientOpts := twirp.ClientOptions{}
+	for _, o := range opts {
+		o(&clientOpts)
+	}
+
+	// Using ReadOpt allows backwards and forwards compatibility with new options in the future
+	literalURLs := false
+	_ = clientOpts.ReadOpt("literalURLs", &literalURLs)
+	var pathPrefix string
+	if ok := clientOpts.ReadOpt("pathPrefix", &pathPrefix); !ok {
+		pathPrefix = "/twirp" // default prefix
+	}
+
+	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
+	serviceURL := sanitizeBaseURL(baseURL)
+	serviceURL += baseServicePath(pathPrefix, "", "Auth")
+	urls := [3]string{
+		serviceURL + "SignUp",
+		serviceURL + "SignIn",
+		serviceURL + "ResetPassword",
+	}
+
+	return &authJSONClient{
+		client:      client,
+		urls:        urls,
+		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
+		opts:        clientOpts,
+	}
+}
+
+func (c *authJSONClient) SignUp(ctx context.Context, in *AuthSignUpReq) (*AuthSignUpResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Auth")
+	ctx = ctxsetters.WithMethodName(ctx, "SignUp")
+	caller := c.callSignUp
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *AuthSignUpReq) (*AuthSignUpResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthSignUpReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthSignUpReq) when calling interceptor")
+					}
+					return c.callSignUp(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthSignUpResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthSignUpResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *authJSONClient) callSignUp(ctx context.Context, in *AuthSignUpReq) (*AuthSignUpResp, error) {
+	out := new(AuthSignUpResp)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *authJSONClient) SignIn(ctx context.Context, in *AuthSignInReq) (*AuthSignInResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Auth")
+	ctx = ctxsetters.WithMethodName(ctx, "SignIn")
+	caller := c.callSignIn
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *AuthSignInReq) (*AuthSignInResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthSignInReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthSignInReq) when calling interceptor")
+					}
+					return c.callSignIn(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthSignInResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthSignInResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *authJSONClient) callSignIn(ctx context.Context, in *AuthSignInReq) (*AuthSignInResp, error) {
+	out := new(AuthSignInResp)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *authJSONClient) ResetPassword(ctx context.Context, in *AuthResetPasswordReq) (*AuthResetPasswordResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Auth")
+	ctx = ctxsetters.WithMethodName(ctx, "ResetPassword")
+	caller := c.callResetPassword
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *AuthResetPasswordReq) (*AuthResetPasswordResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthResetPasswordReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthResetPasswordReq) when calling interceptor")
+					}
+					return c.callResetPassword(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthResetPasswordResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthResetPasswordResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *authJSONClient) callResetPassword(ctx context.Context, in *AuthResetPasswordReq) (*AuthResetPasswordResp, error) {
+	out := new(AuthResetPasswordResp)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+// ===================
+// Auth Server Handler
+// ===================
+
+type authServer struct {
+	Auth
+	interceptor      twirp.Interceptor
+	hooks            *twirp.ServerHooks
+	pathPrefix       string // prefix for routing
+	jsonSkipDefaults bool   // do not include unpopulated fields (default values) in the response
+	jsonCamelCase    bool   // JSON fields are serialized as lowerCamelCase rather than keeping the original proto names
+}
+
+// NewAuthServer builds a TwirpServer that can be used as an http.Handler to handle
+// HTTP requests that are routed to the right method in the provided svc implementation.
+// The opts are twirp.ServerOption modifiers, for example twirp.WithServerHooks(hooks).
+func NewAuthServer(svc Auth, opts ...interface{}) TwirpServer {
+	serverOpts := newServerOpts(opts)
+
+	// Using ReadOpt allows backwards and forwards compatibility with new options in the future
+	jsonSkipDefaults := false
+	_ = serverOpts.ReadOpt("jsonSkipDefaults", &jsonSkipDefaults)
+	jsonCamelCase := false
+	_ = serverOpts.ReadOpt("jsonCamelCase", &jsonCamelCase)
+	var pathPrefix string
+	if ok := serverOpts.ReadOpt("pathPrefix", &pathPrefix); !ok {
+		pathPrefix = "/twirp" // default prefix
+	}
+
+	return &authServer{
+		Auth:             svc,
+		hooks:            serverOpts.Hooks,
+		interceptor:      twirp.ChainInterceptors(serverOpts.Interceptors...),
+		pathPrefix:       pathPrefix,
+		jsonSkipDefaults: jsonSkipDefaults,
+		jsonCamelCase:    jsonCamelCase,
+	}
+}
+
+// writeError writes an HTTP response with a valid Twirp error format, and triggers hooks.
+// If err is not a twirp.Error, it will get wrapped with twirp.InternalErrorWith(err)
+func (s *authServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
+	writeError(ctx, resp, err, s.hooks)
+}
+
+// handleRequestBodyError is used to handle error when the twirp server cannot read request
+func (s *authServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
+	if context.Canceled == ctx.Err() {
+		s.writeError(ctx, resp, twirp.NewError(twirp.Canceled, "failed to read request: context canceled"))
+		return
+	}
+	if context.DeadlineExceeded == ctx.Err() {
+		s.writeError(ctx, resp, twirp.NewError(twirp.DeadlineExceeded, "failed to read request: deadline exceeded"))
+		return
+	}
+	s.writeError(ctx, resp, twirp.WrapError(malformedRequestError(msg), err))
+}
+
+// AuthPathPrefix is a convenience constant that may identify URL paths.
+// Should be used with caution, it only matches routes generated by Twirp Go clients,
+// with the default "/twirp" prefix and default CamelCase service and method names.
+// More info: https://twitchtv.github.io/twirp/docs/routing.html
+const AuthPathPrefix = "/twirp/Auth/"
+
+func (s *authServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Auth")
+	ctx = ctxsetters.WithResponseWriter(ctx, resp)
+
+	var err error
+	ctx, err = callRequestReceived(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	if req.Method != "POST" {
+		msg := fmt.Sprintf("unsupported method %q (only POST is allowed)", req.Method)
+		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
+		return
+	}
+
+	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
+	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
+	if pkgService != "Auth" {
+		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
+		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
+		return
+	}
+	if prefix != s.pathPrefix {
+		msg := fmt.Sprintf("invalid path prefix %q, expected %q, on path %q", prefix, s.pathPrefix, req.URL.Path)
+		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
+		return
+	}
+
+	switch method {
+	case "SignUp":
+		s.serveSignUp(ctx, resp, req)
+		return
+	case "SignIn":
+		s.serveSignIn(ctx, resp, req)
+		return
+	case "ResetPassword":
+		s.serveResetPassword(ctx, resp, req)
+		return
+	default:
+		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
+		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
+		return
+	}
+}
+
+func (s *authServer) serveSignUp(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveSignUpJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveSignUpProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *authServer) serveSignUpJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "SignUp")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(AuthSignUpReq)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Auth.SignUp
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *AuthSignUpReq) (*AuthSignUpResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthSignUpReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthSignUpReq) when calling interceptor")
+					}
+					return s.Auth.SignUp(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthSignUpResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthSignUpResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *AuthSignUpResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthSignUpResp and nil error while calling SignUp. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *authServer) serveSignUpProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "SignUp")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(AuthSignUpReq)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Auth.SignUp
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *AuthSignUpReq) (*AuthSignUpResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthSignUpReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthSignUpReq) when calling interceptor")
+					}
+					return s.Auth.SignUp(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthSignUpResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthSignUpResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *AuthSignUpResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthSignUpResp and nil error while calling SignUp. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *authServer) serveSignIn(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveSignInJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveSignInProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *authServer) serveSignInJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "SignIn")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(AuthSignInReq)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Auth.SignIn
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *AuthSignInReq) (*AuthSignInResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthSignInReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthSignInReq) when calling interceptor")
+					}
+					return s.Auth.SignIn(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthSignInResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthSignInResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *AuthSignInResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthSignInResp and nil error while calling SignIn. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *authServer) serveSignInProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "SignIn")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(AuthSignInReq)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Auth.SignIn
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *AuthSignInReq) (*AuthSignInResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthSignInReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthSignInReq) when calling interceptor")
+					}
+					return s.Auth.SignIn(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthSignInResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthSignInResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *AuthSignInResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthSignInResp and nil error while calling SignIn. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *authServer) serveResetPassword(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveResetPasswordJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveResetPasswordProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *authServer) serveResetPasswordJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "ResetPassword")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(AuthResetPasswordReq)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Auth.ResetPassword
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *AuthResetPasswordReq) (*AuthResetPasswordResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthResetPasswordReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthResetPasswordReq) when calling interceptor")
+					}
+					return s.Auth.ResetPassword(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthResetPasswordResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthResetPasswordResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *AuthResetPasswordResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthResetPasswordResp and nil error while calling ResetPassword. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *authServer) serveResetPasswordProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "ResetPassword")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(AuthResetPasswordReq)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Auth.ResetPassword
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *AuthResetPasswordReq) (*AuthResetPasswordResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*AuthResetPasswordReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*AuthResetPasswordReq) when calling interceptor")
+					}
+					return s.Auth.ResetPassword(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*AuthResetPasswordResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*AuthResetPasswordResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *AuthResetPasswordResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *AuthResetPasswordResp and nil error while calling ResetPassword. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *authServer) ServiceDescriptor() ([]byte, int) {
+	return twirpFileDescriptor0, 1
+}
+
+func (s *authServer) ProtocGenTwirpVersion() string {
+	return "v8.1.3"
+}
+
+// PathPrefix returns the base service path, in the form: "/<prefix>/<package>.<Service>/"
+// that is everything in a Twirp route except for the <Method>. This can be used for routing,
+// for example to identify the requests that are targeted to this service in a mux.
+func (s *authServer) PathPrefix() string {
+	return baseServicePath(s.pathPrefix, "", "Auth")
+}
+
+// ==============
+// Page Interface
+// ==============
+
+type Page interface {
+	Profile(context.Context, *PageProfileReq) (*PageProfileResp, error)
+}
+
+// ====================
+// Page Protobuf Client
+// ====================
+
+type pageProtobufClient struct {
+	client      HTTPClient
+	urls        [1]string
+	interceptor twirp.Interceptor
+	opts        twirp.ClientOptions
+}
+
+// NewPageProtobufClient creates a Protobuf client that implements the Page interface.
+// It communicates using Protobuf and can be configured with a custom HTTPClient.
+func NewPageProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) Page {
+	if c, ok := client.(*http.Client); ok {
+		client = withoutRedirects(c)
+	}
+
+	clientOpts := twirp.ClientOptions{}
+	for _, o := range opts {
+		o(&clientOpts)
+	}
+
+	// Using ReadOpt allows backwards and forwards compatibility with new options in the future
+	literalURLs := false
+	_ = clientOpts.ReadOpt("literalURLs", &literalURLs)
+	var pathPrefix string
+	if ok := clientOpts.ReadOpt("pathPrefix", &pathPrefix); !ok {
+		pathPrefix = "/twirp" // default prefix
+	}
+
+	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
+	serviceURL := sanitizeBaseURL(baseURL)
+	serviceURL += baseServicePath(pathPrefix, "", "Page")
+	urls := [1]string{
+		serviceURL + "Profile",
+	}
+
+	return &pageProtobufClient{
+		client:      client,
+		urls:        urls,
+		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
+		opts:        clientOpts,
+	}
+}
+
+func (c *pageProtobufClient) Profile(ctx context.Context, in *PageProfileReq) (*PageProfileResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Page")
+	ctx = ctxsetters.WithMethodName(ctx, "Profile")
+	caller := c.callProfile
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *PageProfileReq) (*PageProfileResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*PageProfileReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*PageProfileReq) when calling interceptor")
+					}
+					return c.callProfile(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*PageProfileResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*PageProfileResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *pageProtobufClient) callProfile(ctx context.Context, in *PageProfileReq) (*PageProfileResp, error) {
+	out := new(PageProfileResp)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+// ================
+// Page JSON Client
+// ================
+
+type pageJSONClient struct {
+	client      HTTPClient
+	urls        [1]string
+	interceptor twirp.Interceptor
+	opts        twirp.ClientOptions
+}
+
+// NewPageJSONClient creates a JSON client that implements the Page interface.
+// It communicates using JSON and can be configured with a custom HTTPClient.
+func NewPageJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) Page {
+	if c, ok := client.(*http.Client); ok {
+		client = withoutRedirects(c)
+	}
+
+	clientOpts := twirp.ClientOptions{}
+	for _, o := range opts {
+		o(&clientOpts)
+	}
+
+	// Using ReadOpt allows backwards and forwards compatibility with new options in the future
+	literalURLs := false
+	_ = clientOpts.ReadOpt("literalURLs", &literalURLs)
+	var pathPrefix string
+	if ok := clientOpts.ReadOpt("pathPrefix", &pathPrefix); !ok {
+		pathPrefix = "/twirp" // default prefix
+	}
+
+	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
+	serviceURL := sanitizeBaseURL(baseURL)
+	serviceURL += baseServicePath(pathPrefix, "", "Page")
+	urls := [1]string{
+		serviceURL + "Profile",
+	}
+
+	return &pageJSONClient{
+		client:      client,
+		urls:        urls,
+		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
+		opts:        clientOpts,
+	}
+}
+
+func (c *pageJSONClient) Profile(ctx context.Context, in *PageProfileReq) (*PageProfileResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Page")
+	ctx = ctxsetters.WithMethodName(ctx, "Profile")
+	caller := c.callProfile
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *PageProfileReq) (*PageProfileResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*PageProfileReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*PageProfileReq) when calling interceptor")
+					}
+					return c.callProfile(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*PageProfileResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*PageProfileResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *pageJSONClient) callProfile(ctx context.Context, in *PageProfileReq) (*PageProfileResp, error) {
+	out := new(PageProfileResp)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+// ===================
+// Page Server Handler
+// ===================
+
+type pageServer struct {
+	Page
+	interceptor      twirp.Interceptor
+	hooks            *twirp.ServerHooks
+	pathPrefix       string // prefix for routing
+	jsonSkipDefaults bool   // do not include unpopulated fields (default values) in the response
+	jsonCamelCase    bool   // JSON fields are serialized as lowerCamelCase rather than keeping the original proto names
+}
+
+// NewPageServer builds a TwirpServer that can be used as an http.Handler to handle
+// HTTP requests that are routed to the right method in the provided svc implementation.
+// The opts are twirp.ServerOption modifiers, for example twirp.WithServerHooks(hooks).
+func NewPageServer(svc Page, opts ...interface{}) TwirpServer {
+	serverOpts := newServerOpts(opts)
+
+	// Using ReadOpt allows backwards and forwards compatibility with new options in the future
+	jsonSkipDefaults := false
+	_ = serverOpts.ReadOpt("jsonSkipDefaults", &jsonSkipDefaults)
+	jsonCamelCase := false
+	_ = serverOpts.ReadOpt("jsonCamelCase", &jsonCamelCase)
+	var pathPrefix string
+	if ok := serverOpts.ReadOpt("pathPrefix", &pathPrefix); !ok {
+		pathPrefix = "/twirp" // default prefix
+	}
+
+	return &pageServer{
+		Page:             svc,
+		hooks:            serverOpts.Hooks,
+		interceptor:      twirp.ChainInterceptors(serverOpts.Interceptors...),
+		pathPrefix:       pathPrefix,
+		jsonSkipDefaults: jsonSkipDefaults,
+		jsonCamelCase:    jsonCamelCase,
+	}
+}
+
+// writeError writes an HTTP response with a valid Twirp error format, and triggers hooks.
+// If err is not a twirp.Error, it will get wrapped with twirp.InternalErrorWith(err)
+func (s *pageServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
+	writeError(ctx, resp, err, s.hooks)
+}
+
+// handleRequestBodyError is used to handle error when the twirp server cannot read request
+func (s *pageServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
+	if context.Canceled == ctx.Err() {
+		s.writeError(ctx, resp, twirp.NewError(twirp.Canceled, "failed to read request: context canceled"))
+		return
+	}
+	if context.DeadlineExceeded == ctx.Err() {
+		s.writeError(ctx, resp, twirp.NewError(twirp.DeadlineExceeded, "failed to read request: deadline exceeded"))
+		return
+	}
+	s.writeError(ctx, resp, twirp.WrapError(malformedRequestError(msg), err))
+}
+
+// PagePathPrefix is a convenience constant that may identify URL paths.
+// Should be used with caution, it only matches routes generated by Twirp Go clients,
+// with the default "/twirp" prefix and default CamelCase service and method names.
+// More info: https://twitchtv.github.io/twirp/docs/routing.html
+const PagePathPrefix = "/twirp/Page/"
+
+func (s *pageServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Page")
+	ctx = ctxsetters.WithResponseWriter(ctx, resp)
+
+	var err error
+	ctx, err = callRequestReceived(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	if req.Method != "POST" {
+		msg := fmt.Sprintf("unsupported method %q (only POST is allowed)", req.Method)
+		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
+		return
+	}
+
+	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
+	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
+	if pkgService != "Page" {
+		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
+		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
+		return
+	}
+	if prefix != s.pathPrefix {
+		msg := fmt.Sprintf("invalid path prefix %q, expected %q, on path %q", prefix, s.pathPrefix, req.URL.Path)
+		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
+		return
+	}
+
+	switch method {
+	case "Profile":
+		s.serveProfile(ctx, resp, req)
+		return
+	default:
+		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
+		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
+		return
+	}
+}
+
+func (s *pageServer) serveProfile(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveProfileJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveProfileProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *pageServer) serveProfileJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Profile")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(PageProfileReq)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Page.Profile
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *PageProfileReq) (*PageProfileResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*PageProfileReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*PageProfileReq) when calling interceptor")
+					}
+					return s.Page.Profile(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*PageProfileResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*PageProfileResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *PageProfileResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *PageProfileResp and nil error while calling Profile. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *pageServer) serveProfileProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Profile")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(PageProfileReq)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Page.Profile
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *PageProfileReq) (*PageProfileResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*PageProfileReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*PageProfileReq) when calling interceptor")
+					}
+					return s.Page.Profile(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*PageProfileResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*PageProfileResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *PageProfileResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *PageProfileResp and nil error while calling Profile. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *pageServer) ServiceDescriptor() ([]byte, int) {
+	return twirpFileDescriptor0, 2
+}
+
+func (s *pageServer) ProtocGenTwirpVersion() string {
+	return "v8.1.3"
+}
+
+// PathPrefix returns the base service path, in the form: "/<prefix>/<package>.<Service>/"
+// that is everything in a Twirp route except for the <Method>. This can be used for routing,
+// for example to identify the requests that are targeted to this service in a mux.
+func (s *pageServer) PathPrefix() string {
+	return baseServicePath(s.pathPrefix, "", "Page")
+}
+
 // =====
 // Utils
 // =====
@@ -1087,18 +2633,33 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 197 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0xcf, 0xb1, 0xae, 0x82, 0x30,
-	0x18, 0x05, 0xe0, 0x40, 0xee, 0x45, 0xfb, 0xe3, 0xd4, 0x89, 0x30, 0x28, 0x61, 0x62, 0x30, 0x3f,
-	0x09, 0xce, 0x2e, 0x4e, 0xcc, 0xc4, 0xc4, 0xc4, 0x41, 0x23, 0xb5, 0x12, 0x4d, 0xb1, 0xb5, 0x94,
-	0xc4, 0xc7, 0x37, 0x14, 0xea, 0x0b, 0xb8, 0xf5, 0x34, 0x27, 0xdf, 0x69, 0x81, 0x68, 0xc5, 0x50,
-	0x69, 0x69, 0x64, 0xbc, 0x6a, 0xa4, 0x6c, 0x04, 0xcf, 0x6d, 0xaa, 0xfb, 0x5b, 0x6e, 0xee, 0x2d,
-	0xef, 0xcc, 0xa5, 0x55, 0x63, 0x21, 0x65, 0x30, 0x2f, 0xb9, 0x10, 0xb2, 0xe2, 0x2f, 0x1a, 0xc1,
-	0xac, 0xeb, 0xeb, 0x07, 0x67, 0x26, 0xf2, 0x12, 0x2f, 0x23, 0x95, 0x8b, 0x74, 0x0b, 0x0b, 0xd6,
-	0x6b, 0xcd, 0x9f, 0xe6, 0x3c, 0x00, 0x91, 0x9f, 0x78, 0x59, 0x58, 0xc4, 0x38, 0xea, 0xe8, 0x74,
-	0xdc, 0x3b, 0xbd, 0x0a, 0xa7, 0xfe, 0x70, 0x93, 0x9e, 0x80, 0x4c, 0x23, 0x9d, 0xa2, 0x14, 0xfe,
-	0x0c, 0x7f, 0xbb, 0x09, 0x7b, 0xfe, 0xd1, 0x2f, 0xd6, 0x00, 0xd6, 0x3f, 0x48, 0x2d, 0xae, 0x74,
-	0x09, 0xff, 0x36, 0x51, 0x82, 0xee, 0x6b, 0x31, 0xe0, 0xf7, 0x01, 0x3b, 0x28, 0xfd, 0x63, 0x80,
-	0x98, 0x6b, 0xc5, 0xea, 0xc0, 0xd2, 0x9b, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x72, 0xf8, 0x6d,
-	0xe4, 0x33, 0x01, 0x00, 0x00,
+	// 448 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x52, 0x41, 0x6b, 0xd4, 0x40,
+	0x18, 0x25, 0xdb, 0xed, 0xb6, 0xf9, 0x6a, 0x9b, 0x32, 0xb4, 0x1a, 0x72, 0xd0, 0x92, 0x83, 0xac,
+	0xb0, 0xcc, 0x42, 0xf4, 0xe2, 0x41, 0x61, 0x05, 0xa1, 0x3d, 0xb9, 0x44, 0x8b, 0x20, 0x68, 0xc9,
+	0x26, 0x5f, 0x63, 0x34, 0x9b, 0x99, 0xce, 0x4c, 0xd0, 0x1f, 0xe3, 0xcd, 0x3f, 0x2a, 0x93, 0xcc,
+	0xec, 0x26, 0x61, 0x45, 0xa1, 0xb7, 0xbc, 0xc9, 0xfb, 0xde, 0xe3, 0x7b, 0xef, 0x03, 0x57, 0xf0,
+	0x94, 0x72, 0xc1, 0x14, 0x0b, 0x9e, 0xe4, 0x8c, 0xe5, 0x25, 0xce, 0x1b, 0xb4, 0xaa, 0x6f, 0xe7,
+	0xaa, 0x58, 0xa3, 0x54, 0xc9, 0x9a, 0xb7, 0x84, 0x30, 0x85, 0xc3, 0x4b, 0x2c, 0x4b, 0x16, 0xe3,
+	0x1d, 0xf1, 0xe1, 0x40, 0xd6, 0xab, 0x6f, 0x98, 0x2a, 0xdf, 0xb9, 0x70, 0xa6, 0x6e, 0x6c, 0x21,
+	0x79, 0x05, 0x0f, 0xd2, 0x5a, 0x08, 0xac, 0xd4, 0x8d, 0x16, 0xf0, 0x47, 0x17, 0xce, 0xf4, 0x28,
+	0x0a, 0x68, 0xab, 0x4e, 0xad, 0x3a, 0xfd, 0x60, 0xd5, 0xe3, 0x23, 0xc3, 0xd7, 0x2f, 0xe1, 0x17,
+	0x70, 0x8d, 0x89, 0xe4, 0x84, 0xc0, 0x58, 0xe1, 0x4f, 0x6b, 0xd1, 0x7c, 0xdf, 0x57, 0xff, 0x33,
+	0x1c, 0x2f, 0x6a, 0xf5, 0xf5, 0x7d, 0x91, 0x57, 0xd7, 0x5c, 0x6f, 0x72, 0x06, 0xfb, 0xb8, 0x4e,
+	0x8a, 0xd2, 0x98, 0xb4, 0x80, 0x04, 0x70, 0x58, 0x4b, 0x14, 0x55, 0x62, 0x1c, 0xdc, 0x78, 0x83,
+	0xf5, 0x3f, 0x9e, 0x48, 0xf9, 0x83, 0x89, 0xcc, 0xdf, 0x6b, 0xff, 0x59, 0x1c, 0x9e, 0xc2, 0x49,
+	0x57, 0x5e, 0xf2, 0xf0, 0x7a, 0x6b, 0x78, 0x55, 0x69, 0xc3, 0x29, 0x78, 0x56, 0xea, 0x9d, 0x78,
+	0xdb, 0xb1, 0x1e, 0x3e, 0xf7, 0x8c, 0x46, 0x03, 0xa3, 0xa7, 0x5b, 0x23, 0x2d, 0x2b, 0xb9, 0x5e,
+	0x44, 0xb1, 0xef, 0x58, 0xd9, 0x45, 0x1a, 0x10, 0xce, 0xe0, 0x4c, 0xf3, 0x62, 0x94, 0xa8, 0x96,
+	0x66, 0xf8, 0xaf, 0x6b, 0x87, 0x8f, 0xe0, 0x7c, 0x07, 0x5b, 0x72, 0xbd, 0xd7, 0x32, 0xc9, 0x71,
+	0x29, 0xd8, 0x6d, 0x51, 0x62, 0x8c, 0x77, 0xe1, 0x6f, 0x07, 0xbc, 0xde, 0x93, 0xe4, 0xbd, 0xd4,
+	0x9c, 0x41, 0x6a, 0x2f, 0x01, 0x52, 0x81, 0x89, 0xc2, 0xec, 0x26, 0x51, 0xff, 0xd1, 0x9a, 0x6b,
+	0xd8, 0x0b, 0xa5, 0x47, 0x6b, 0x9e, 0xd9, 0xd1, 0xbd, 0x7f, 0x8f, 0x1a, 0xf6, 0x42, 0x45, 0x33,
+	0x80, 0xe6, 0x9c, 0x3e, 0x32, 0x51, 0x66, 0xe4, 0x31, 0xec, 0x37, 0x88, 0xb8, 0xd4, 0x5e, 0x72,
+	0x00, 0x74, 0x73, 0x6f, 0xd1, 0x2f, 0x07, 0xc6, 0x7a, 0x7f, 0xf2, 0x0c, 0x26, 0x6d, 0x85, 0xe4,
+	0x84, 0xf6, 0xce, 0x25, 0xf0, 0x68, 0xbf, 0x5f, 0x4b, 0xbd, 0xaa, 0x3a, 0xd4, 0xa6, 0xe8, 0x0e,
+	0xd5, 0x34, 0xf4, 0x1a, 0x8e, 0x7b, 0xc9, 0x92, 0x73, 0xba, 0xab, 0x9b, 0xe0, 0x21, 0xdd, 0x59,
+	0x42, 0xf4, 0x02, 0xc6, 0x3a, 0x71, 0x32, 0x83, 0x03, 0x93, 0x3a, 0xf1, 0x68, 0xbf, 0x96, 0xe0,
+	0x94, 0x0e, 0x4a, 0x79, 0x03, 0x97, 0xa3, 0x4f, 0x13, 0x4a, 0xe7, 0x82, 0xa7, 0xab, 0x49, 0x93,
+	0xd6, 0xf3, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x2f, 0xc6, 0x42, 0x75, 0xf7, 0x03, 0x00, 0x00,
 }

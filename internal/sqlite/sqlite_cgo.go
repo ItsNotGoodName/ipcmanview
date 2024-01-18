@@ -4,8 +4,9 @@ package sqlite
 
 import (
 	"database/sql"
+	"errors"
 
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/mattn/go-sqlite3"
 )
 
 func connect(dbPath string) (*sql.DB, error) {
@@ -16,4 +17,15 @@ func connect(dbPath string) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func AsError(err error) (Error, bool) {
+	var sqliteErr sqlite3.Error
+	if errors.As(err, &sqliteErr) {
+		return Error{
+			Code: int(sqliteErr.ExtendedCode),
+			Msg:  sqliteErr.Error(),
+		}, true
+	}
+	return Error{}, false
 }

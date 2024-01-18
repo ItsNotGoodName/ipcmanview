@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"os"
 	"path/filepath"
 
@@ -46,6 +47,34 @@ func (c Shared) useDahuaAFS() (afero.Fs, error) {
 	return afero.NewBasePathFs(afero.NewOsFs(), dir), nil
 }
 
+func (c Shared) useSecret() ([]byte, error) {
+	dir, err := c.useDir()
+	if err != nil {
+		return nil, err
+	}
+
+	filePath := filepath.Join(dir, "secret")
+
+	b, err := os.ReadFile(filePath)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return nil, err
+		}
+		b = make([]byte, 64)
+
+		_, err := rand.Read(b)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := os.WriteFile(filePath, b, 0600); err != nil {
+			return nil, err
+		}
+	}
+
+	return b, nil
+}
+
 func (c Shared) useDB(ctx *Context) (repo.DB, error) {
 	dir, err := c.useDir()
 	if err != nil {
@@ -69,7 +98,7 @@ func (c Shared) useDB(ctx *Context) (repo.DB, error) {
 
 	err = migrations.Normalize(ctx, db)
 	if err != nil {
-		return repo.DB{}, nil
+		return repo.DB{}, err
 	}
 
 	return db, nil

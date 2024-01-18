@@ -32,7 +32,7 @@ export const buttonVariants = cva(
   }
 )
 
-export type ButtonProps = JSX.HTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>
+export type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & VariantProps<typeof buttonVariants>
 
 export function Button(props: ButtonProps) {
   const [_, rest] = splitProps(props, ["class", "variant", "size"])

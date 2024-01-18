@@ -15,6 +15,22 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
+const checkDahuaDevice = `-- name: CheckDahuaDevice :one
+SELECT
+  COUNT(*) = 1
+FROM
+  dahua_devices
+WHERE
+  id = ?
+`
+
+func (q *Queries) CheckDahuaDevice(ctx context.Context, id int64) (bool, error) {
+	row := q.db.QueryRowContext(ctx, checkDahuaDevice, id)
+	var column_1 bool
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const createDahuaAferoFile = `-- name: CreateDahuaAferoFile :one
 INSERT INTO
   dahua_afero_files (
@@ -310,6 +326,58 @@ func (q *Queries) CreateDahuaThumbnail(ctx context.Context, arg CreateDahuaThumb
 	return i, err
 }
 
+const createUser = `-- name: CreateUser :one
+INSERT INTO
+  users (email, username, password, created_at, updated_at)
+VALUES
+  (?, ?, ?, ?, ?) RETURNING id
+`
+
+type CreateUserParams struct {
+	Email     string
+	Username  string
+	Password  string
+	CreatedAt types.Time
+	UpdatedAt types.Time
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createUser,
+		arg.Email,
+		arg.Username,
+		arg.Password,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const createUserSession = `-- name: CreateUserSession :exec
+INSERT INTO
+  user_sessions (user_id, session, created_at, expired_at)
+VALUES
+  (?, ?, ?, ?)
+`
+
+type CreateUserSessionParams struct {
+	UserID    int64
+	Session   string
+	CreatedAt types.Time
+	ExpiredAt types.Time
+}
+
+func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionParams) error {
+	_, err := q.db.ExecContext(ctx, createUserSession,
+		arg.UserID,
+		arg.Session,
+		arg.CreatedAt,
+		arg.ExpiredAt,
+	)
+	return err
+}
+
 const deleteDahuaAferoFile = `-- name: DeleteDahuaAferoFile :exec
 DELETE FROM dahua_afero_files
 WHERE
@@ -397,6 +465,28 @@ WHERE
 
 func (q *Queries) DeleteDahuaStream(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteDahuaStream, id)
+	return err
+}
+
+const deleteUserSession = `-- name: DeleteUserSession :exec
+DELETE FROM user_sessions
+WHERE
+  session = ?
+`
+
+func (q *Queries) DeleteUserSession(ctx context.Context, session string) error {
+	_, err := q.db.ExecContext(ctx, deleteUserSession, session)
+	return err
+}
+
+const expiredDeleteUserSession = `-- name: ExpiredDeleteUserSession :exec
+DELETE FROM user_sessions
+WHERE
+  expired_at < ?
+`
+
+func (q *Queries) ExpiredDeleteUserSession(ctx context.Context, expiredAt types.Time) error {
+	_, err := q.db.ExecContext(ctx, expiredDeleteUserSession, expiredAt)
 	return err
 }
 
@@ -794,7 +884,7 @@ func (q *Queries) GetOldestDahuaFileStartTime(ctx context.Context, deviceID int6
 
 const getSettings = `-- name: GetSettings :one
 SELECT
-  site_name, default_location
+  setup, site_name, location, coordinates
 FROM
   settings
 LIMIT
@@ -804,7 +894,59 @@ LIMIT
 func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 	row := q.db.QueryRowContext(ctx, getSettings)
 	var i Setting
-	err := row.Scan(&i.SiteName, &i.DefaultLocation)
+	err := row.Scan(
+		&i.Setup,
+		&i.SiteName,
+		&i.Location,
+		&i.Coordinates,
+	)
+	return i, err
+}
+
+const getUser = `-- name: GetUser :one
+SELECT
+  id, email, username, password, created_at, updated_at
+FROM
+  users
+where
+  id = ?
+`
+
+func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUser, id)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserByUsernameOrEmail = `-- name: GetUserByUsernameOrEmail :one
+SELECT
+  id, email, username, password, created_at, updated_at
+FROM
+  users
+where
+  username = ?1
+  OR email = ?1
+`
+
+func (q *Queries) GetUserByUsernameOrEmail(ctx context.Context, usernameoremail string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsernameOrEmail, usernameoremail)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Username,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
 	return i, err
 }
 
@@ -1286,6 +1428,52 @@ func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) (
 	return items, nil
 }
 
+const listUser = `-- name: ListUser :many
+SELECT
+  id, email, username, password, created_at, updated_at
+FROM
+  users
+LIMIT
+  ?
+OFFSET
+  ?
+`
+
+type ListUserParams struct {
+	Limit  int64
+	Offset int64
+}
+
+func (q *Queries) ListUser(ctx context.Context, arg ListUserParams) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, listUser, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Username,
+			&i.Password,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const normalizeDahuaFileCursor = `-- name: NormalizeDahuaFileCursor :exec
 INSERT OR IGNORE INTO
   dahua_file_cursors (
@@ -1416,6 +1604,39 @@ func (q *Queries) ReadyDahuaAferoFile(ctx context.Context, arg ReadyDahuaAferoFi
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const sessionGetUserBySession = `-- name: SessionGetUserBySession :one
+SELECT
+  user_sessions.user_id as id,
+  users.username,
+  admins.user_id IS NOT NULL as 'admin',
+  user_sessions.expired_at
+FROM
+  user_sessions
+  LEFT JOIN users ON users.id = user_sessions.user_id
+  LEFT JOIN admins ON admins.user_id = user_sessions.user_id
+WHERE
+  session = ?
+`
+
+type SessionGetUserBySessionRow struct {
+	ID        int64
+	Username  sql.NullString
+	Admin     bool
+	ExpiredAt types.Time
+}
+
+func (q *Queries) SessionGetUserBySession(ctx context.Context, session string) (SessionGetUserBySessionRow, error) {
+	row := q.db.QueryRowContext(ctx, sessionGetUserBySession, session)
+	var i SessionGetUserBySessionRow
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Admin,
+		&i.ExpiredAt,
+	)
+	return i, err
 }
 
 const updateDahuaDevice = `-- name: UpdateDahuaDevice :one
@@ -1728,22 +1949,59 @@ func (q *Queries) UpdateDahuaStream(ctx context.Context, arg UpdateDahuaStreamPa
 const updateSettings = `-- name: UpdateSettings :one
 UPDATE settings
 SET
-  default_location = coalesce(?1, default_location),
+  location = coalesce(?1, location),
   site_name = coalesce(?2, site_name)
 WHERE
-  1 = 1 RETURNING site_name, default_location
+  1 = 1 RETURNING setup, site_name, location, coordinates
 `
 
 type UpdateSettingsParams struct {
-	DefaultLocation types.Location
-	SiteName        sql.NullString
+	Location sql.NullString
+	SiteName sql.NullString
 }
 
 func (q *Queries) UpdateSettings(ctx context.Context, arg UpdateSettingsParams) (Setting, error) {
-	row := q.db.QueryRowContext(ctx, updateSettings, arg.DefaultLocation, arg.SiteName)
+	row := q.db.QueryRowContext(ctx, updateSettings, arg.Location, arg.SiteName)
 	var i Setting
-	err := row.Scan(&i.SiteName, &i.DefaultLocation)
+	err := row.Scan(
+		&i.Setup,
+		&i.SiteName,
+		&i.Location,
+		&i.Coordinates,
+	)
 	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+SET
+  email = ?,
+  username = ?,
+  password = ?,
+  updated_at = ?
+WHERE
+  id = ? RETURNING id
+`
+
+type UpdateUserParams struct {
+	Email     string
+	Username  string
+	Password  string
+	UpdatedAt types.Time
+	ID        int64
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
+		arg.Email,
+		arg.Username,
+		arg.Password,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const allocateDahuaSeed = `-- name: allocateDahuaSeed :exec
@@ -1760,7 +2018,7 @@ WHERE
       device_id = ?1
       OR device_id IS NULL
     ORDER BY
-      device_id asc
+      device_id ASC
     LIMIT
       1
   )
@@ -1972,22 +2230,6 @@ func (q *Queries) createDahuaStreamDefault(ctx context.Context, arg createDahuaS
 	var id int64
 	err := row.Scan(&id)
 	return id, err
-}
-
-const dahuaDeviceExists = `-- name: dahuaDeviceExists :one
-SELECT
-  COUNT(id)
-FROM
-  dahua_devices
-WHERE
-  id = ?
-`
-
-func (q *Queries) dahuaDeviceExists(ctx context.Context, id int64) (int64, error) {
-	row := q.db.QueryRowContext(ctx, dahuaDeviceExists, id)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
 }
 
 const getDahuaEventRuleByEvent = `-- name: getDahuaEventRuleByEvent :many

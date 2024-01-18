@@ -4,7 +4,9 @@ package sqlite
 
 import (
 	"database/sql"
-	_ "modernc.org/sqlite"
+	"errors"
+
+	"modernc.org/sqlite"
 )
 
 func connect(dbPath string) (*sql.DB, error) {
@@ -15,4 +17,15 @@ func connect(dbPath string) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func AsError(err error) (Error, bool) {
+	var sqliteErr *sqlite.Error
+	if errors.As(err, &sqliteErr) {
+		return Error{
+			Code: sqliteErr.Code(),
+			Msg:  sqliteErr.Error(),
+		}, true
+	}
+	return Error{}, false
 }

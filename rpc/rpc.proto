@@ -20,3 +20,46 @@ message HelloResp {
   google.protobuf.Timestamp current_time = 2;
 }
 
+
+service Auth {
+  rpc SignUp(AuthSignUpReq) returns (AuthSignUpResp);
+  rpc SignIn(AuthSignInReq) returns (AuthSignInResp);
+  rpc ResetPassword(AuthResetPasswordReq) returns (AuthResetPasswordResp);
+}
+
+service Page {
+  rpc Profile(PageProfileReq) returns (PageProfileResp);
+}
+
+message AuthSignUpReq {
+  string email = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message AuthSignUpResp {
+}
+
+message AuthSignInReq {
+  string usernameOrEmail = 1;
+  string password = 2;
+}
+
+message AuthSignInResp {
+  string token = 1;
+}
+
+message AuthResetPasswordReq {
+  string email = 1;
+}
+
+message AuthResetPasswordResp {
+}
+
+message PageProfileReq {}
+
+message PageProfileResp {
+  string username = 1;
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}

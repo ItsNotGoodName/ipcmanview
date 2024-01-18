@@ -7,7 +7,9 @@ const labelVariants = cva(
   "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 )
 
-export function Label(props: JSX.LabelHTMLAttributes<HTMLLabelElement> & VariantProps<typeof labelVariants>) {
+export type LabelProps = JSX.LabelHTMLAttributes<HTMLLabelElement> & VariantProps<typeof labelVariants>
+
+export function Label(props: LabelProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <label
     class={cn(labelVariants(), props.class)}

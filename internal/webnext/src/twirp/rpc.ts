@@ -30,6 +30,86 @@ export interface HelloResp {
      */
     currentTime?: Timestamp;
 }
+/**
+ * @generated from protobuf message AuthSignUpReq
+ */
+export interface AuthSignUpReq {
+    /**
+     * @generated from protobuf field: string email = 1;
+     */
+    email: string;
+    /**
+     * @generated from protobuf field: string username = 2;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: string password = 3;
+     */
+    password: string;
+}
+/**
+ * @generated from protobuf message AuthSignUpResp
+ */
+export interface AuthSignUpResp {
+}
+/**
+ * @generated from protobuf message AuthSignInReq
+ */
+export interface AuthSignInReq {
+    /**
+     * @generated from protobuf field: string usernameOrEmail = 1;
+     */
+    usernameOrEmail: string;
+    /**
+     * @generated from protobuf field: string password = 2;
+     */
+    password: string;
+}
+/**
+ * @generated from protobuf message AuthSignInResp
+ */
+export interface AuthSignInResp {
+    /**
+     * @generated from protobuf field: string token = 1;
+     */
+    token: string;
+}
+/**
+ * @generated from protobuf message AuthResetPasswordReq
+ */
+export interface AuthResetPasswordReq {
+    /**
+     * @generated from protobuf field: string email = 1;
+     */
+    email: string;
+}
+/**
+ * @generated from protobuf message AuthResetPasswordResp
+ */
+export interface AuthResetPasswordResp {
+}
+/**
+ * @generated from protobuf message PageProfileReq
+ */
+export interface PageProfileReq {
+}
+/**
+ * @generated from protobuf message PageProfileResp
+ */
+export interface PageProfileResp {
+    /**
+     * @generated from protobuf field: string username = 1;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp created_at = 2;
+     */
+    createdAt?: Timestamp;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp updated_at = 3;
+     */
+    updatedAt?: Timestamp;
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class HelloReq$Type extends MessageType<HelloReq> {
     constructor() {
@@ -56,9 +136,118 @@ class HelloResp$Type extends MessageType<HelloResp> {
  * @generated MessageType for protobuf message HelloResp
  */
 export const HelloResp = new HelloResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AuthSignUpReq$Type extends MessageType<AuthSignUpReq> {
+    constructor() {
+        super("AuthSignUpReq", [
+            { no: 1, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message AuthSignUpReq
+ */
+export const AuthSignUpReq = new AuthSignUpReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AuthSignUpResp$Type extends MessageType<AuthSignUpResp> {
+    constructor() {
+        super("AuthSignUpResp", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message AuthSignUpResp
+ */
+export const AuthSignUpResp = new AuthSignUpResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AuthSignInReq$Type extends MessageType<AuthSignInReq> {
+    constructor() {
+        super("AuthSignInReq", [
+            { no: 1, name: "usernameOrEmail", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message AuthSignInReq
+ */
+export const AuthSignInReq = new AuthSignInReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AuthSignInResp$Type extends MessageType<AuthSignInResp> {
+    constructor() {
+        super("AuthSignInResp", [
+            { no: 1, name: "token", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message AuthSignInResp
+ */
+export const AuthSignInResp = new AuthSignInResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AuthResetPasswordReq$Type extends MessageType<AuthResetPasswordReq> {
+    constructor() {
+        super("AuthResetPasswordReq", [
+            { no: 1, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message AuthResetPasswordReq
+ */
+export const AuthResetPasswordReq = new AuthResetPasswordReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class AuthResetPasswordResp$Type extends MessageType<AuthResetPasswordResp> {
+    constructor() {
+        super("AuthResetPasswordResp", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message AuthResetPasswordResp
+ */
+export const AuthResetPasswordResp = new AuthResetPasswordResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class PageProfileReq$Type extends MessageType<PageProfileReq> {
+    constructor() {
+        super("PageProfileReq", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message PageProfileReq
+ */
+export const PageProfileReq = new PageProfileReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class PageProfileResp$Type extends MessageType<PageProfileResp> {
+    constructor() {
+        super("PageProfileResp", [
+            { no: 1, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "created_at", kind: "message", T: () => Timestamp },
+            { no: 3, name: "updated_at", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message PageProfileResp
+ */
+export const PageProfileResp = new PageProfileResp$Type();
 /**
  * @generated ServiceType for protobuf service HelloWorld
  */
 export const HelloWorld = new ServiceType("HelloWorld", [
     { name: "Hello", options: {}, I: HelloReq, O: HelloResp }
+]);
+/**
+ * @generated ServiceType for protobuf service Auth
+ */
+export const Auth = new ServiceType("Auth", [
+    { name: "SignUp", options: {}, I: AuthSignUpReq, O: AuthSignUpResp },
+    { name: "SignIn", options: {}, I: AuthSignInReq, O: AuthSignInResp },
+    { name: "ResetPassword", options: {}, I: AuthResetPasswordReq, O: AuthResetPasswordResp }
+]);
+/**
+ * @generated ServiceType for protobuf service Page
+ */
+export const Page = new ServiceType("Page", [
+    { name: "Profile", options: {}, I: PageProfileReq, O: PageProfileResp }
 ]);

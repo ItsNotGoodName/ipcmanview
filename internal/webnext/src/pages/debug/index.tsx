@@ -5,17 +5,18 @@ import { FormAction } from './FormAction'
 import { loadHello } from './Twirp.data'
 import { Cva } from './Cva'
 import { Ui } from './Ui'
+import { linkVariants } from '~/ui/Link'
 
 export function Debug() {
   return (
     <Route path="/debug">
       <Route path="/*" component={() =>
         <ul>
-          <li><A href='./home'>Home</A></li>
-          <li><A href='./twirp'>Twirp</A></li>
-          <li><A href='./formaction'>FormAction</A></li>
-          <li><A href='./cva'>Cva</A></li>
-          <li><A href='./ui'>Ui</A></li>
+          <li><A class={linkVariants()} href='./home'>Home</A></li>
+          <li><A class={linkVariants()} href='./twirp'>Twirp</A></li>
+          <li><A class={linkVariants()} href='./formaction'>FormAction</A></li>
+          <li><A class={linkVariants()} href='./cva'>Cva</A></li>
+          <li><A class={linkVariants()} href='./ui'>Ui</A></li>
         </ul>
       } />
       <Route path="/home" component={Home} />

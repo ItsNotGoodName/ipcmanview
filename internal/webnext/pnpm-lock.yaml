@@ -8,6 +8,9 @@ dependencies:
   '@kobalte/core':
     specifier: ^0.12.0
     version: 0.12.0(solid-js@1.8.7)
+  '@modular-forms/solid':
+    specifier: ^0.20.0
+    version: 0.20.0(solid-js@1.8.7)
   '@protobuf-ts/runtime':
     specifier: ^2.9.3
     version: 2.9.3
@@ -17,9 +20,6 @@ dependencies:
   '@protobuf-ts/twirp-transport':
     specifier: ^2.9.3
     version: 2.9.3
-  '@solid-primitives/mouse':
-    specifier: ^2.0.16
-    version: 2.0.16(solid-js@1.8.7)
   '@solid-primitives/resize-observer':
     specifier: ^2.0.22
     version: 2.0.22(solid-js@1.8.7)
@@ -722,6 +722,14 @@ packages:
       solid-js: 1.8.7
     dev: false
 
+  /@modular-forms/solid@0.20.0(solid-js@1.8.7):
+    resolution: {integrity: sha512-CyXoeo2cwNel2N753c+iDzA+4DgtBrLNAS87DY/aODFZG7QoY0A9YSxdUxRf0N5NDwkzmn1O0XqwMP+EAiOHbA==}
+    peerDependencies:
+      solid-js: ^1.3.1
+    dependencies:
+      solid-js: 1.8.7
+    dev: false
+
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
     engines: {node: '>= 8'}
@@ -920,18 +928,6 @@ packages:
 
   /@solid-primitives/media@2.2.5(solid-js@1.8.7):
     resolution: {integrity: sha512-wTESNFteSwOZsNIBPLMIVLuOHIIzt2AIZdaCYYxfsJIr/xjDqSomlmdFlAmxfJD3ondO7fwtWfc0rcmAvjoPCA==}
-    peerDependencies:
-      solid-js: ^1.6.12
-    dependencies:
-      '@solid-primitives/event-listener': 2.3.0(solid-js@1.8.7)
-      '@solid-primitives/rootless': 1.4.2(solid-js@1.8.7)
-      '@solid-primitives/static-store': 0.0.5(solid-js@1.8.7)
-      '@solid-primitives/utils': 6.2.1(solid-js@1.8.7)
-      solid-js: 1.8.7
-    dev: false
-
-  /@solid-primitives/mouse@2.0.16(solid-js@1.8.7):
-    resolution: {integrity: sha512-/TuguoUt4Vvz6CgWB9yscg/+mnSy57UAdLiFYeeD1bOXQ2BD4OI3hj4USPtG58+NgQ2PT27lYfAuuUbw7i1esA==}
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:

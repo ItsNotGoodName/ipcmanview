@@ -1,6 +1,7 @@
 export DIR=ipcmanview_data
 export VITE_HOST=127.0.0.1
 export WEBNEXT_PATH=internal/webnext
+export WEB_PATH=internal/web
 
 -include .env
 
@@ -13,7 +14,7 @@ migrate:
 clean:
 	rm -rf $(DIR)
 
-generate:
+build:
 	go generate ./...
 
 run:
@@ -22,7 +23,7 @@ run:
 debug:
 	go run ./cmd/ipcmanview debug
 
-preview: generate run
+preview: build run
 
 nightly:
 	task nightly
@@ -38,8 +39,11 @@ hash:
 dev:
 	air
 
+dev-proxy:
+	go run ./scripts/dev-proxy
+
 dev-web:
-	cd internal/web && pnpm install && pnpm run dev
+	cd "$(WEB_PATH)" && pnpm install && pnpm run dev
 
 dev-webnext:
 	cd "$(WEBNEXT_PATH)" && pnpm install && pnpm run dev
@@ -55,7 +59,7 @@ gen-pubsub:
 	sh ./scripts/generate-pubsub-events.sh ./internal/models/event.go
 
 gen-bus:
-	go run ./scripts/generate-bus.go -input ./internal/models/event.go -output ./internal/core/bus.gen.go
+	go run ./scripts/generate-bus -input ./internal/models/event.go -output ./internal/core/bus.gen.go
 
 gen-proto:
 	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto

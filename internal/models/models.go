@@ -26,3 +26,10 @@ const (
 	// StorageNFS   Storage = "nfs"
 	// StorageSMB   Storage = "smb"
 )
+
+type User struct {
+	ID       int64
+	Email    string `validate:"required,lte=128,email,excludes= "`
+	Username string `validate:"gte=3,lte=64,excludes=@,excludes= "`
+	Password string `validate:"gte=8"`
+}

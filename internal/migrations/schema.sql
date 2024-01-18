@@ -1,8 +1,51 @@
 CREATE TABLE settings (
+  setup BOOLEAN NOT NULL,
   site_name TEXT NOT NULL,
-  default_location TEXT NOT NULL
+  location TEXT NOT NULL,
+  coordinates TEXT NOT NULL
 );
 
+CREATE TABLE users (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  email TEXT NOT NULL UNIQUE,
+  username TEXT NOT NULL UNIQUE,
+  password TEXT NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL
+);
+
+CREATE TABLE user_sessions (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  session TEXT NOT NULL,
+  created_at DATETIME NOT NULL,
+  expired_at DATETIME NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE admins (
+  user_id INTEGER NOT NULL,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE groups (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL
+);
+
+CREATE TABLE group_users (
+  user_id INTEGER NOT NULL,
+  group_id INTEGER NOT NULL,
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (group_id) REFERENCES groups (id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Dahua
 CREATE TABLE dahua_devices (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
@@ -14,6 +57,19 @@ CREATE TABLE dahua_devices (
   feature INTEGER NOT NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL
+);
+
+CREATE TABLE dahua_permissions (
+  user_id INTEGER,
+  group_id INTEGER,
+  device_id INTEGER NOT NULL,
+  read BOOLEAN NOT NULL,
+  write BOOLEAN NOT NULL,
+  UNIQUE (user_id, device_id),
+  UNIQUE (group_id, device_id),
+  FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (group_id) REFERENCES groups (id) ON UPDATE CASCADE ON DELETE CASCADE,
+  FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE dahua_seeds (
@@ -41,6 +97,7 @@ CREATE TABLE dahua_event_rules (
   ignore_mqtt BOOLEAN NOT NULL DEFAULT false
 );
 
+-- TODO: remove this if I decide not to add per device event rules
 CREATE TABLE dahua_event_device_rules (
   device_id INTEGER NOT NULL,
   code TEXT NOT NULL,
@@ -51,6 +108,7 @@ CREATE TABLE dahua_event_device_rules (
   FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+-- TODO: move this to a logs table
 CREATE TABLE dahua_event_worker_states (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   device_id INTEGER NOT NULL,
@@ -61,6 +119,7 @@ CREATE TABLE dahua_event_worker_states (
 );
 
 CREATE TABLE dahua_afero_files (
+  -- 
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   file_id INTEGER UNIQUE,
   thumbnail_id INTEGER UNIQUE,
@@ -119,7 +178,7 @@ CREATE TABLE dahua_file_cursors (
   quick_cursor DATETIME NOT NULL, -- (scanned) <- quick_cursor -> (not scanned / volatile)
   full_cursor DATETIME NOT NULL, -- (not scanned) <- full_cursor -> (scanned)
   full_epoch DATETIME NOT NULL,
-  full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED,
+  full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED, -- TODO: this is cool but am I going to use it?
   scan BOOLEAN NOT NULL,
   scan_percent REAL NOT NULL,
   scan_type TEXT NOT NULL,

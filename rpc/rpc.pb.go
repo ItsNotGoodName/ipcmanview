@@ -131,6 +131,395 @@ func (x *HelloResp) GetCurrentTime() *timestamppb.Timestamp {
 	return nil
 }
 
+type AuthSignUpReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Email    string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+	Username string `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Password string `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+}
+
+func (x *AuthSignUpReq) Reset() {
+	*x = AuthSignUpReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_rpc_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthSignUpReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthSignUpReq) ProtoMessage() {}
+
+func (x *AuthSignUpReq) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthSignUpReq.ProtoReflect.Descriptor instead.
+func (*AuthSignUpReq) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *AuthSignUpReq) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+func (x *AuthSignUpReq) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *AuthSignUpReq) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type AuthSignUpResp struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *AuthSignUpResp) Reset() {
+	*x = AuthSignUpResp{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_rpc_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthSignUpResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthSignUpResp) ProtoMessage() {}
+
+func (x *AuthSignUpResp) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthSignUpResp.ProtoReflect.Descriptor instead.
+func (*AuthSignUpResp) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{3}
+}
+
+type AuthSignInReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	UsernameOrEmail string `protobuf:"bytes,1,opt,name=usernameOrEmail,proto3" json:"usernameOrEmail,omitempty"`
+	Password        string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+}
+
+func (x *AuthSignInReq) Reset() {
+	*x = AuthSignInReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_rpc_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthSignInReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthSignInReq) ProtoMessage() {}
+
+func (x *AuthSignInReq) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthSignInReq.ProtoReflect.Descriptor instead.
+func (*AuthSignInReq) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *AuthSignInReq) GetUsernameOrEmail() string {
+	if x != nil {
+		return x.UsernameOrEmail
+	}
+	return ""
+}
+
+func (x *AuthSignInReq) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+type AuthSignInResp struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Token string `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+}
+
+func (x *AuthSignInResp) Reset() {
+	*x = AuthSignInResp{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_rpc_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthSignInResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthSignInResp) ProtoMessage() {}
+
+func (x *AuthSignInResp) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthSignInResp.ProtoReflect.Descriptor instead.
+func (*AuthSignInResp) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *AuthSignInResp) GetToken() string {
+	if x != nil {
+		return x.Token
+	}
+	return ""
+}
+
+type AuthResetPasswordReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Email string `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
+}
+
+func (x *AuthResetPasswordReq) Reset() {
+	*x = AuthResetPasswordReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_rpc_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthResetPasswordReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthResetPasswordReq) ProtoMessage() {}
+
+func (x *AuthResetPasswordReq) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthResetPasswordReq.ProtoReflect.Descriptor instead.
+func (*AuthResetPasswordReq) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *AuthResetPasswordReq) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
+}
+
+type AuthResetPasswordResp struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *AuthResetPasswordResp) Reset() {
+	*x = AuthResetPasswordResp{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_rpc_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AuthResetPasswordResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AuthResetPasswordResp) ProtoMessage() {}
+
+func (x *AuthResetPasswordResp) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AuthResetPasswordResp.ProtoReflect.Descriptor instead.
+func (*AuthResetPasswordResp) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{7}
+}
+
+type PageProfileReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *PageProfileReq) Reset() {
+	*x = PageProfileReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_rpc_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PageProfileReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PageProfileReq) ProtoMessage() {}
+
+func (x *PageProfileReq) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PageProfileReq.ProtoReflect.Descriptor instead.
+func (*PageProfileReq) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{8}
+}
+
+type PageProfileResp struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Username  string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+}
+
+func (x *PageProfileResp) Reset() {
+	*x = PageProfileResp{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_rpc_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PageProfileResp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PageProfileResp) ProtoMessage() {}
+
+func (x *PageProfileResp) ProtoReflect() protoreflect.Message {
+	mi := &file_rpc_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PageProfileResp.ProtoReflect.Descriptor instead.
+func (*PageProfileResp) Descriptor() ([]byte, []int) {
+	return file_rpc_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *PageProfileResp) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *PageProfileResp) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *PageProfileResp) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
 var File_rpc_proto protoreflect.FileDescriptor
 
 var file_rpc_proto_rawDesc = []byte{
@@ -149,11 +538,55 @@ var file_rpc_proto_rawDesc = []byte{
 	0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
 	0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73,
 	0x74, 0x61, 0x6d, 0x70, 0x52, 0x0b, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x54, 0x69, 0x6d,
-	0x65, 0x32, 0x2c, 0x0a, 0x0a, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0x12,
-	0x1e, 0x0a, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x12, 0x09, 0x2e, 0x48, 0x65, 0x6c, 0x6c, 0x6f,
-	0x52, 0x65, 0x71, 0x1a, 0x0a, 0x2e, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x42,
-	0x0a, 0x48, 0x02, 0x5a, 0x06, 0x2e, 0x2e, 0x2f, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x65, 0x22, 0x5d, 0x0a, 0x0d, 0x41, 0x75, 0x74, 0x68, 0x53, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x52,
+	0x65, 0x71, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x6d, 0x61, 0x69, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x05, 0x65, 0x6d, 0x61, 0x69, 0x6c, 0x12, 0x1a, 0x0a, 0x08, 0x75, 0x73, 0x65, 0x72,
+	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x75, 0x73, 0x65, 0x72,
+	0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
+	0x22, 0x10, 0x0a, 0x0e, 0x41, 0x75, 0x74, 0x68, 0x53, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x52, 0x65,
+	0x73, 0x70, 0x22, 0x55, 0x0a, 0x0d, 0x41, 0x75, 0x74, 0x68, 0x53, 0x69, 0x67, 0x6e, 0x49, 0x6e,
+	0x52, 0x65, 0x71, 0x12, 0x28, 0x0a, 0x0f, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x4f,
+	0x72, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x75, 0x73,
+	0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x4f, 0x72, 0x45, 0x6d, 0x61, 0x69, 0x6c, 0x12, 0x1a, 0x0a,
+	0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0x26, 0x0a, 0x0e, 0x41, 0x75, 0x74,
+	0x68, 0x53, 0x69, 0x67, 0x6e, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x12, 0x14, 0x0a, 0x05, 0x74,
+	0x6f, 0x6b, 0x65, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x74, 0x6f, 0x6b, 0x65,
+	0x6e, 0x22, 0x2c, 0x0a, 0x14, 0x41, 0x75, 0x74, 0x68, 0x52, 0x65, 0x73, 0x65, 0x74, 0x50, 0x61,
+	0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x71, 0x12, 0x14, 0x0a, 0x05, 0x65, 0x6d, 0x61,
+	0x69, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x65, 0x6d, 0x61, 0x69, 0x6c, 0x22,
+	0x17, 0x0a, 0x15, 0x41, 0x75, 0x74, 0x68, 0x52, 0x65, 0x73, 0x65, 0x74, 0x50, 0x61, 0x73, 0x73,
+	0x77, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x22, 0x10, 0x0a, 0x0e, 0x50, 0x61, 0x67, 0x65,
+	0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x22, 0xa3, 0x01, 0x0a, 0x0f, 0x50,
+	0x61, 0x67, 0x65, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x12, 0x1a,
+	0x0a, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x39, 0x0a, 0x0a, 0x63, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a,
+	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x09, 0x63, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x64, 0x41, 0x74, 0x12, 0x39, 0x0a, 0x0a, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64,
+	0x5f, 0x61, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
+	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x09, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x41, 0x74,
+	0x32, 0x2c, 0x0a, 0x0a, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0x12, 0x1e,
+	0x0a, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x12, 0x09, 0x2e, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52,
+	0x65, 0x71, 0x1a, 0x0a, 0x2e, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x32, 0x9c,
+	0x01, 0x0a, 0x04, 0x41, 0x75, 0x74, 0x68, 0x12, 0x29, 0x0a, 0x06, 0x53, 0x69, 0x67, 0x6e, 0x55,
+	0x70, 0x12, 0x0e, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x53, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x52, 0x65,
+	0x71, 0x1a, 0x0f, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x53, 0x69, 0x67, 0x6e, 0x55, 0x70, 0x52, 0x65,
+	0x73, 0x70, 0x12, 0x29, 0x0a, 0x06, 0x53, 0x69, 0x67, 0x6e, 0x49, 0x6e, 0x12, 0x0e, 0x2e, 0x41,
+	0x75, 0x74, 0x68, 0x53, 0x69, 0x67, 0x6e, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x1a, 0x0f, 0x2e, 0x41,
+	0x75, 0x74, 0x68, 0x53, 0x69, 0x67, 0x6e, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x12, 0x3e, 0x0a,
+	0x0d, 0x52, 0x65, 0x73, 0x65, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x12, 0x15,
+	0x2e, 0x41, 0x75, 0x74, 0x68, 0x52, 0x65, 0x73, 0x65, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f,
+	0x72, 0x64, 0x52, 0x65, 0x71, 0x1a, 0x16, 0x2e, 0x41, 0x75, 0x74, 0x68, 0x52, 0x65, 0x73, 0x65,
+	0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x32, 0x34, 0x0a,
+	0x04, 0x50, 0x61, 0x67, 0x65, 0x12, 0x2c, 0x0a, 0x07, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65,
+	0x12, 0x0f, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x52, 0x65,
+	0x71, 0x1a, 0x10, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x50, 0x72, 0x6f, 0x66, 0x69, 0x6c, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x42, 0x0a, 0x48, 0x02, 0x5a, 0x06, 0x2e, 0x2e, 0x2f, 0x72, 0x70, 0x63, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -168,22 +601,40 @@ func file_rpc_proto_rawDescGZIP() []byte {
 	return file_rpc_proto_rawDescData
 }
 
-var file_rpc_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_rpc_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_rpc_proto_goTypes = []interface{}{
 	(*HelloReq)(nil),              // 0: HelloReq
 	(*HelloResp)(nil),             // 1: HelloResp
-	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
+	(*AuthSignUpReq)(nil),         // 2: AuthSignUpReq
+	(*AuthSignUpResp)(nil),        // 3: AuthSignUpResp
+	(*AuthSignInReq)(nil),         // 4: AuthSignInReq
+	(*AuthSignInResp)(nil),        // 5: AuthSignInResp
+	(*AuthResetPasswordReq)(nil),  // 6: AuthResetPasswordReq
+	(*AuthResetPasswordResp)(nil), // 7: AuthResetPasswordResp
+	(*PageProfileReq)(nil),        // 8: PageProfileReq
+	(*PageProfileResp)(nil),       // 9: PageProfileResp
+	(*timestamppb.Timestamp)(nil), // 10: google.protobuf.Timestamp
 }
 var file_rpc_proto_depIdxs = []int32{
-	2, // 0: HelloReq.current_time:type_name -> google.protobuf.Timestamp
-	2, // 1: HelloResp.current_time:type_name -> google.protobuf.Timestamp
-	0, // 2: HelloWorld.Hello:input_type -> HelloReq
-	1, // 3: HelloWorld.Hello:output_type -> HelloResp
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	10, // 0: HelloReq.current_time:type_name -> google.protobuf.Timestamp
+	10, // 1: HelloResp.current_time:type_name -> google.protobuf.Timestamp
+	10, // 2: PageProfileResp.created_at:type_name -> google.protobuf.Timestamp
+	10, // 3: PageProfileResp.updated_at:type_name -> google.protobuf.Timestamp
+	0,  // 4: HelloWorld.Hello:input_type -> HelloReq
+	2,  // 5: Auth.SignUp:input_type -> AuthSignUpReq
+	4,  // 6: Auth.SignIn:input_type -> AuthSignInReq
+	6,  // 7: Auth.ResetPassword:input_type -> AuthResetPasswordReq
+	8,  // 8: Page.Profile:input_type -> PageProfileReq
+	1,  // 9: HelloWorld.Hello:output_type -> HelloResp
+	3,  // 10: Auth.SignUp:output_type -> AuthSignUpResp
+	5,  // 11: Auth.SignIn:output_type -> AuthSignInResp
+	7,  // 12: Auth.ResetPassword:output_type -> AuthResetPasswordResp
+	9,  // 13: Page.Profile:output_type -> PageProfileResp
+	9,  // [9:14] is the sub-list for method output_type
+	4,  // [4:9] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_rpc_proto_init() }
@@ -216,6 +667,102 @@ func file_rpc_proto_init() {
 				return nil
 			}
 		}
+		file_rpc_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AuthSignUpReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_rpc_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AuthSignUpResp); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_rpc_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AuthSignInReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_rpc_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AuthSignInResp); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_rpc_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AuthResetPasswordReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_rpc_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AuthResetPasswordResp); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_rpc_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PageProfileReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_rpc_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PageProfileResp); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -223,9 +770,9 @@ func file_rpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_rpc_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   10,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   3,
 		},
 		GoTypes:           file_rpc_proto_goTypes,
 		DependencyIndexes: file_rpc_proto_depIdxs,

@@ -28,7 +28,7 @@ type client struct {
 func NewClient(conn dahuarpc.ConnSession) Client {
 	return Client{
 		conn:   conn,
-		client: newClient(conn.Session(context.Background())),
+		client: newClient(""),
 	}
 }
 

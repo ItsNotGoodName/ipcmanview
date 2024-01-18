@@ -25,30 +25,35 @@ export function View() {
   const panels = [
     () => {
       console.log("render", 1)
-      return <div class="bg-red-500 w-full h-full">1</div>
+      return <div class="h-full w-full bg-red-500">1</div>
     },
     () => {
       console.log("render", 2)
-      return <div class="bg-green-500 w-full h-full">2</div>
+      return <div class="h-full w-full bg-green-500">2</div>
     },
     () => {
       console.log("render", 3)
-      return <div class="bg-blue-500 w-full h-full">3</div>
+      return <div class="h-full w-full bg-blue-500">3</div>
     },
     () => {
       console.log("render", 4)
-      return <div class="bg-yellow-500 w-full h-full">4</div>
+      return <div class="h-full w-full bg-yellow-500">4</div>
     },
   ];
 
   return (
-    <div class="flex h-full w-full flex-col">
+    <div class="flex h-screen flex-col">
       <Positioner class="flex-1 overflow-hidden" rectangles={rectangles} panels={panels} />
-      <div class="flex gap-2 p-2">
-        <Button onClick={() => setRectangles((_, i) => i == 0, "y", y => y - 10)}>Up</Button>
-        <Button onClick={() => setRectangles((_, i) => i == 0, "x", x => x - 10)}>Left</Button>
-        <Button onClick={() => setRectangles((_, i) => i == 0, "x", x => x + 10)}>Right</Button>
-        <Button onClick={() => setRectangles((_, i) => i == 0, "y", y => y + 10)}>Down</Button>
+      <div class="flex justify-between gap-2 p-2 overflow-x-auto">
+        <div class="flex gap-2">
+          <Button onClick={() => setRectangles((_, i) => i == 1, "y", y => y - 10)}>Up</Button>
+          <Button onClick={() => setRectangles((_, i) => i == 1, "x", x => x - 10)}>Left</Button>
+          <Button onClick={() => setRectangles((_, i) => i == 1, "x", x => x + 10)}>Right</Button>
+          <Button onClick={() => setRectangles((_, i) => i == 1, "y", y => y + 10)}>Down</Button>
+        </div>
+        <div class="flex gap-2">
+          <Button>Edit</Button>
+        </div>
       </div>
     </div>
   )

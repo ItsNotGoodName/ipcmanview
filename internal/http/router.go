@@ -2,6 +2,7 @@ package http
 
 import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
+	"github.com/ItsNotGoodName/ipcmanview/internal/webnext"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/echoext"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -9,6 +10,7 @@ import (
 
 func NewRouter() *echo.Echo {
 	e := echo.New()
+	e.IPExtractor = echo.ExtractIPFromXFFHeader()
 	echoext.WithErrorLogging(e)
 
 	// Middleware
@@ -29,7 +31,18 @@ func NewRouter() *echo.Echo {
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Filesystem: web.AssetFS(),
 	}))
-	useWebNext(e)
+	e.Group("/next", middleware.StaticWithConfig(middleware.StaticConfig{
+		// Skipper: func(c echo.Context) bool {
+		// 	// Prevent API 404's from being overwritten
+		// 	return strings.HasPrefix(c.Request().RequestURI, "/api")
+		// },
+		Root:       "dist",
+		Index:      "index.html",
+		Browse:     false,
+		HTML5:      true,
+		Filesystem: webnext.DistFS(),
+		IgnoreBase: true,
+	}))
 
 	return e
 }
