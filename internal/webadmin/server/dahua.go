@@ -10,7 +10,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/web/view"
+	"github.com/ItsNotGoodName/ipcmanview/internal/webadmin/view"
 	"github.com/rs/zerolog/log"
 )
 

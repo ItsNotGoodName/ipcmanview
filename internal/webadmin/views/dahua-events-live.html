@@ -15,7 +15,7 @@
   <main class="min-h-screen">
     <div class="breadcrumbs px-4 text-sm">
       <ul>
-        <li><a href="/dahua/events">Events</a></li>
+        <li><a href="/admin/dahua/events">Events</a></li>
         <li>Live</li>
       </ul>
     </div>
@@ -103,7 +103,7 @@
             {{ if .Data.Params.Data }}
               <a
                 class="btn join-item btn-sm"
-                {{ $url := URLQuery .URL.Path .Data.Params `Data` false }}
+                {{ $url := print .URL.Path (Query .Data.Params `Data` false) }}
                 href="{{ $url }}"
                 hx-get="{{ $url }}"
                 >Hide Data</a
@@ -111,7 +111,7 @@
             {{ else }}
               <a
                 class="btn join-item btn-sm"
-                {{ $url := URLQuery .URL.Path .Data.Params `Data` true }}
+                {{ $url := print .URL.Path (Query .Data.Params `Data` true) }}
                 href="{{ $url }}"
                 hx-get="{{ $url }}"
                 >Show Data</a
@@ -132,7 +132,7 @@
               </thead>
               <tbody
                 hx-ext="sse"
-                sse-connect="{{ URLQuery `/dahua/events/stream` .Data.Params }}"
+                sse-connect="{{ print `/dahua/events/stream` (Query .Data.Params) }}"
                 hx-target="this"
               >
                 <tr class="hidden" sse-swap="message" hx-swap="afterend"></tr>
@@ -154,7 +154,7 @@
         {{ .ID }}
       </th>
       <td>
-        <a class="link" href="/dahua/devices/{{ .DeviceID }}">
+        <a class="link" href="/admin/dahua/devices/{{ .DeviceID }}">
           {{ .DeviceName }}
         </a>
       </td>
@@ -176,7 +176,7 @@
           {{ else }}
             <button
               class="btn btn-sm no-animation w-full"
-              hx-get="/dahua/events/{{ .ID }}/data"
+              hx-get="/admin/dahua/events/{{ .ID }}/data"
               hx-swap="outerHTML"
               hx-target="this"
             >

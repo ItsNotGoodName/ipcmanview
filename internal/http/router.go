@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/ItsNotGoodName/ipcmanview/internal/web"
+	"github.com/ItsNotGoodName/ipcmanview/internal/webadmin"
 	"github.com/ItsNotGoodName/ipcmanview/internal/webnext"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/echoext"
 	"github.com/labstack/echo/v4"
@@ -29,7 +29,7 @@ func NewRouter() *echo.Echo {
 		LogErrorFunc: echoext.RecoverLogErrorFunc,
 	}))
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-		Filesystem: web.AssetFS(),
+		Filesystem: webadmin.AssetFS(),
 	}))
 	e.Group("/next", middleware.StaticWithConfig(middleware.StaticConfig{
 		// Skipper: func(c echo.Context) bool {

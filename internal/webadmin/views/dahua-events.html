@@ -131,7 +131,7 @@
             {{ if .Data.Params.Data }}
               <a
                 class="btn btn-sm"
-                {{ $url := URLQuery .URL.Path .Data.Params `Data` false }}
+                {{ $url := print .URL.Path (Query .Data.Params `Data` false) }}
                 href="{{ $url }}"
                 hx-get="{{ $url }}"
                 >Hide Data</a
@@ -139,7 +139,7 @@
             {{ else }}
               <a
                 class="btn btn-sm"
-                {{ $url := URLQuery .URL.Path .Data.Params `Data` true }}
+                {{ $url := print .URL.Path (Query .Data.Params `Data` true) }}
                 href="{{ $url }}"
                 hx-get="{{ $url }}"
                 >Show Data</a
@@ -169,7 +169,10 @@
                         {{ .ID }}
                       </th>
                       <td>
-                        <a class="link" href="/dahua/devices/{{ .DeviceID }}">
+                        <a
+                          class="link"
+                          href="/admin/dahua/devices/{{ .DeviceID }}"
+                        >
                           {{ .DeviceName }}
                         </a>
                       </td>
@@ -231,7 +234,7 @@
 
       <div class="form-control">
         <select
-          hx-get="{{ URLQuery .URL.Path .Data.Params }}"
+          hx-get="{{ print .URL.Path (Query .Data.Params) }}"
           name="PerPage"
           class="select select-bordered"
         >
@@ -246,7 +249,7 @@
     </div>
 
     <div class="flex justify-end gap-4">
-      {{ $url := URLQuery .URL.Path .Data.Params `Ascending` (not .Data.Params.Ascending) }}
+      {{ $url := print .URL.Path (Query .Data.Params `Ascending` (not .Data.Params.Ascending)) }}
       <a class="btn" href="{{ $url }}" hx-get="{{ $url }}">
         {{ if .Data.Params.Ascending }}
           ASC
@@ -258,7 +261,7 @@
         <a
           class="join-item btn"
           {{ if .Data.Events.HasPrevious }}
-            {{ $url:= URLQuery .URL.Path .Data.Params `Page` .Data.Events.Previous }}
+            {{ $url:= print .URL.Path (Query .Data.Params `Page` .Data.Events.Previous) }}
             hx-get="{{ $url }}" href="{{ $url }}"
           {{ else }}
             disabled
@@ -269,7 +272,7 @@
         <a
           class="join-item btn"
           {{ if .Data.Events.HasNext }}
-            {{ $url:= URLQuery .URL.Path .Data.Params `Page` .Data.Events.Next }}
+            {{ $url:= print .URL.Path (Query .Data.Params `Page` .Data.Events.Next) }}
             hx-get="{{ $url }}" href="{{ $url }}"
           {{ else }}
             disabled

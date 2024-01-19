@@ -35,7 +35,7 @@
       <li>
         <a
           hx-boost="true"
-          href="/dahua"
+          href="/admin/dahua"
           {{ if eq "/dahua" .URL.Path }}class="active"{{ end }}
         >
           Home
@@ -44,7 +44,7 @@
       <li>
         <a
           hx-boost="true"
-          href="/dahua/devices"
+          href="/admin/dahua/devices"
           {{ if hasPrefix "/dahua/devices" .URL.Path }}class="active"{{ end }}
         >
           Devices
@@ -53,7 +53,7 @@
       <li>
         <a
           hx-boost="true"
-          href="/dahua/streams"
+          href="/admin/dahua/streams"
           {{ if hasPrefix "/dahua/streams" .URL.Path }}class="active"{{ end }}
         >
           Streams
@@ -62,7 +62,7 @@
       <li>
         <a
           hx-boost="true"
-          href="/dahua/snapshots"
+          href="/admin/dahua/snapshots"
           {{ if hasPrefix "/dahua/snapshots" .URL.Path }}class="active"{{ end }}
         >
           Snapshots
@@ -71,7 +71,7 @@
       <li>
         <a
           hx-boost="true"
-          href="/dahua/files"
+          href="/admin/dahua/files"
           {{ if hasPrefix "/dahua/files" .URL.Path }}class="active"{{ end }}
         >
           Files
@@ -80,7 +80,7 @@
       <li>
         <a
           hx-boost="true"
-          href="/dahua/storage"
+          href="/admin/dahua/storage"
           {{ if hasPrefix "/dahua/storage" .URL.Path }}
             class="active"
           {{ end }}
@@ -91,7 +91,7 @@
       <li>
         <a
           hx-boost="true"
-          href="/dahua/events"
+          href="/admin/dahua/events"
           {{ if eq "/dahua/events" .URL.Path }}class="active"{{ end }}
         >
           Events
@@ -100,7 +100,7 @@
           <li>
             <a
               hx-boost="true"
-              href="/dahua/events/live"
+              href="/admin/dahua/events/live"
               {{ if eq "/dahua/events/live" .URL.Path }}
                 class="active"
               {{ end }}
@@ -111,7 +111,7 @@
           <li>
             <a
               hx-boost="true"
-              href="/dahua/events/rules"
+              href="/admin/dahua/events/rules"
               {{ if eq "/dahua/events/rules" .URL.Path }}
                 class="active"
               {{ end }}

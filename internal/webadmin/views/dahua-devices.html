@@ -23,7 +23,7 @@
       <form
         class="flex flex-col gap-4 px-4"
         method="post"
-        hx-post="/dahua/devices"
+        hx-post="/admin/dahua/devices"
       >
         {{ block "htmx-devices" . }}
           <div class="border-b-base-content flex justify-between gap-4">
@@ -39,7 +39,10 @@
               Delete
             </button>
             <div class="flex flex-1 justify-end">
-              <a href="/dahua/devices/create" class="btn btn-sm btn-primary">
+              <a
+                href="/admin/dahua/devices/create"
+                class="btn btn-sm btn-primary"
+              >
                 Create
               </a>
             </div>
@@ -117,13 +120,13 @@
                       <div class="join">
                         <a
                           class="btn-xs join-item btn"
-                          href="/dahua/devices/{{ $val.ID }}"
+                          href="/admin/dahua/devices/{{ $val.ID }}"
                         >
                           View
                         </a>
                         <a
                           class="btn-xs btn join-item btn-primary"
-                          href="/dahua/devices/{{ $val.ID }}/update"
+                          href="/admin/dahua/devices/{{ $val.ID }}/update"
                         >
                           Update
                         </a>
@@ -144,8 +147,8 @@
       <form
         class="flex flex-col gap-4 px-4"
         method="post"
-        action="/dahua/devices/file-cursors"
-        hx-post="/dahua/devices/file-cursors"
+        action="/admin/dahua/devices/file-cursors"
+        hx-post="/admin/dahua/devices/file-cursors"
       >
         {{ block "htmx-file-cursors" . }}
           <div class="border-b-base-content flex gap-4">
@@ -190,7 +193,7 @@
               <button
                 class="btn btn-sm"
                 type="submit"
-                hx-get="/dahua/devices/file-cursors"
+                hx-get="/admin/dahua/devices/file-cursors"
                 hx-target="closest form"
               >
                 Refresh
@@ -384,7 +387,7 @@
 
     <div
       class="flex justify-center"
-      hx-get="/dahua/devices"
+      hx-get="/admin/dahua/devices"
       hx-swap="outerHTML"
       hx-trigger="load"
     >

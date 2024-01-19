@@ -1,6 +1,6 @@
 //go:build !dev
 
-package web
+package webadmin
 
 import (
 	"embed"

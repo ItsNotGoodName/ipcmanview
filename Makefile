@@ -1,7 +1,7 @@
 export DIR=ipcmanview_data
 export VITE_HOST=127.0.0.1
 export WEBNEXT_PATH=internal/webnext
-export WEB_PATH=internal/web
+export WEBADMIN_PATH=internal/webadmin
 
 -include .env
 
@@ -42,8 +42,8 @@ dev:
 dev-proxy:
 	go run ./scripts/dev-proxy
 
-dev-web:
-	cd "$(WEB_PATH)" && pnpm install && pnpm run dev
+dev-webadmin:
+	cd "$(WEBADMIN_PATH)" && pnpm install && pnpm run dev
 
 dev-webnext:
 	cd "$(WEBNEXT_PATH)" && pnpm install && pnpm run dev

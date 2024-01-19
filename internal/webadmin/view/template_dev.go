@@ -6,9 +6,9 @@ import (
 	"html/template"
 )
 
-func (t Renderer) Template(name string) (*template.Template, error) {
+func (r Renderer) Template(name string) (*template.Template, error) {
 	nameHTML := name + ".html"
-	tmpl, err := parseTemplate(nameHTML, t.config)
+	tmpl, err := r.parser.Template(nameHTML)
 	if err != nil {
 		return nil, err
 	}

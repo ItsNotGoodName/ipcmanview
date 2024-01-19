@@ -15,7 +15,7 @@
   <main class="min-h-screen">
     <div class="breadcrumbs px-4 text-sm">
       <ul>
-        <li><a href="/dahua/events">Events</a></li>
+        <li><a href="/admin/dahua/events">Events</a></li>
         <li>Rules</li>
       </ul>
     </div>
@@ -28,8 +28,8 @@
       {{ block "create" . }}
         <form
           method="post"
-          action="/dahua/events/rules/create"
-          hx-post="/dahua/events/rules/create"
+          action="/admin/dahua/events/rules/create"
+          hx-post="/admin/dahua/events/rules/create"
         >
           <label class="form-control">
             <div class="label">
@@ -56,7 +56,7 @@
         <form
           class="mx-auto flex w-full max-w-xl flex-col gap-4 px-4"
           method="post"
-          hx-post="/dahua/events/rules"
+          hx-post="/admin/dahua/events/rules"
           hx-target="#htmx"
         >
           <div class="border-b-base-content flex gap-4">
@@ -70,7 +70,10 @@
               Delete
             </button>
             <div class="join flex-1 justify-end">
-              <button class="btn btn-sm join-item" hx-get="/dahua/events/rules">
+              <button
+                class="btn btn-sm join-item"
+                hx-get="/admin/dahua/events/rules"
+              >
                 Refresh
               </button>
               <button

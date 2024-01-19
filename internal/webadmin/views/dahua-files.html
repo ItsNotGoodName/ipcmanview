@@ -100,14 +100,14 @@
         <div class="flex flex-col gap-4 px-4">
           <div class="flex justify-end join">
             <button
-              hx-post="{{ URLQuery `/dahua/files/download` .Data.Params }}"
+              hx-post="{{ print `/dahua/files/download` (Query .Data.Params) }}"
               hx-swap="none"
               class="btn btn-sm btn-info join-item"
             >
               Download
             </button>
             <button
-              hx-post="{{ URLQuery `/dahua/files` .Data.Params }}"
+              hx-post="{{ print `/dahua/files` (Query .Data.Params) }}"
               class="btn btn-sm btn-info join-item"
             >
               Quick Scan
@@ -127,7 +127,7 @@
                     <svg
                       class="h-full"
                       hx-trigger="load"
-                      hx-get="/dahua/files/{{ .ID }}/thumbnail"
+                      hx-get="/admin/dahua/files/{{ .ID }}/thumbnail"
                       hx-target="this"
                       hx-swap="outerHTML"
                       xmlns="http://www.w3.org/2000/svg"
@@ -156,7 +156,7 @@
                       <div>
                         <a
                           class="link"
-                          href="/v1/dahua/{{ .DeviceID }}/files/{{ .FilePath }}"
+                          href="/v1/dahua/devices/{{ .DeviceID }}/files/{{ .FilePath }}"
                         >
                           {{ .Type }}
                         </a>
@@ -164,7 +164,7 @@
                     </div>
                     <button
                       class="btn btn-sm"
-                      hx-post="/dahua/files/{{ .ID }}/download"
+                      hx-post="/admin/dahua/files/{{ .ID }}/download"
                       hx-swap="none"
                     >
                       Download
@@ -196,7 +196,7 @@
 
       <div class="form-control">
         <select
-          hx-get="{{ URLQuery .URL.Path .Data.Params }}"
+          hx-get="{{ print .URL.Path (Query .Data.Params) }}"
           name="PerPage"
           class="select select-bordered"
         >
@@ -211,7 +211,7 @@
     </div>
 
     <div class="flex justify-end gap-4">
-      {{ $url := URLQuery .URL.Path .Data.Params `Ascending` (not .Data.Params.Ascending) }}
+      {{ $url := print .URL.Path (Query .Data.Params `Ascending` (not .Data.Params.Ascending)) }}
       <a class="btn" href="{{ $url }}" hx-get="{{ $url }}">
         {{ if .Data.Params.Ascending }}
           ASC
@@ -223,7 +223,7 @@
         <a
           class="join-item btn"
           {{ if .Data.Files.HasPrevious }}
-            {{ $url:= URLQuery .URL.Path .Data.Params `Page` .Data.Files.Previous }}
+            {{ $url:= print .URL.Path (Query .Data.Params `Page` .Data.Files.Previous ) }}
             hx-get="{{ $url }}" href="{{ $url }}"
           {{ else }}
             disabled
@@ -234,7 +234,7 @@
         <a
           class="join-item btn"
           {{ if .Data.Files.HasNext }}
-            {{ $url:= URLQuery .URL.Path .Data.Params `Page` .Data.Files.Next }}
+            {{ $url:= print .URL.Path (Query .Data.Params `Page` .Data.Files.Next) }}
             hx-get="{{ $url }}" href="{{ $url }}"
           {{ else }}
             disabled
@@ -253,7 +253,7 @@
     {{ else }}
       <svg
         class="h-full"
-        hx-get="/dahua/files/{{ .File.ID }}/thumbnail"
+        hx-get="/admin/dahua/files/{{ .File.ID }}/thumbnail"
         hx-target="this"
         hx-swap="outerHTML"
         xmlns="http://www.w3.org/2000/svg"

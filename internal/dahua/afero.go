@@ -14,11 +14,11 @@ import (
 	"github.com/spf13/afero"
 )
 
-const AferoEchoRoute = "/v1/dahua-afero-files/*"
-const AferoEchoRoutePrefix = "/v1/dahua-afero-files"
+const AferoEchoRoute = "/v1/dahua/afs/*"
+const AferoEchoRoutePrefix = "/v1/dahua/afs"
 
 func AferoFileURI(name string) string {
-	return "/v1/dahua-afero-files/" + name
+	return "/v1/dahua/afs/" + name
 }
 
 func NewAferoFileName(extension string) string {

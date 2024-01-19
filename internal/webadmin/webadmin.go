@@ -1,5 +1,5 @@
 // web contains the MPA.
-package web
+package webadmin
 
 //go:generate pnpm install
 //go:generate pnpm run build

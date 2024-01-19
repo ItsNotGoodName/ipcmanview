@@ -15,8 +15,13 @@
   <main class="min-h-screen">
     <div class="breadcrumbs px-4 text-sm">
       <ul>
-        <li><a href="/dahua/devices">Devices</a></li>
-        <li>Create</li>
+        <li><a href="/admin/dahua/devices">Devices</a></li>
+        <li>
+          <a href="/admin/dahua/devices/{{ .Data.Device.ID }}"
+            >{{ .Data.Device.ID }}</a
+          >
+        </li>
+        <li>Update</li>
       </ul>
     </div>
 
@@ -24,8 +29,8 @@
       method="post"
       class="mx-auto flex w-full max-w-md flex-col gap-4 px-4"
     >
-      <div class="card-title">Create Device</div>
-      <div class="form-control">
+      <div class="card-title">Update Device</div>
+      <div class="form-control w-full">
         <label for="name" class="label">
           <span class="label-text">Name</span>
         </label>
@@ -34,10 +39,11 @@
           name="name"
           type="text"
           placeholder="Name"
-          class="input input-bordered"
+          class="input input-bordered w-full"
+          value="{{ .Data.Device.Name }}"
         />
       </div>
-      <div class="form-control">
+      <div class="form-control w-full">
         <label for="url" class="label">
           <span class="label-text">URL</span>
         </label>
@@ -46,10 +52,11 @@
           name="Url"
           type="text"
           placeholder="URL"
-          class="input input-bordered"
+          class="input input-bordered w-full"
+          value="{{ .Data.Device.Url }}"
         />
       </div>
-      <div class="form-control">
+      <div class="form-control w-full">
         <label for="username" class="label">
           <span class="label-text">Username</span>
         </label>
@@ -57,11 +64,12 @@
           id="username"
           name="username"
           type="text"
-          placeholder="Username"
-          class="input input-bordered"
+          placeholder="admin"
+          class="input input-bordered w-full"
+          value="{{ .Data.Device.Username }}"
         />
       </div>
-      <div class="form-control">
+      <div class="form-control w-full">
         <label for="password" class="label">
           <span class="label-text">Password</span>
         </label>
@@ -70,20 +78,20 @@
           name="password"
           type="password"
           placeholder="Password"
-          class="input input-bordered"
-          required
+          class="input input-bordered w-full"
         />
       </div>
-      <div class="form-control">
+      <div class="form-control w-full">
         <label class="label">
           <span class="label-text">Location</span>
         </label>
         <select id="location" name="location" class="select select-bordered">
-          {{ with first .Data.Locations }}
-            <option selected value="{{ . }}">{{ . }}</option>
-          {{ end }}
-          {{ range rest .Data.Locations }}
-            <option>{{ . }}</option>
+          {{ range .Data.Locations }}
+            <option
+              {{ if eq . $.Data.Device.Location.String }}selected{{ end }}
+            >
+              {{ . }}
+            </option>
           {{ end }}
         </select>
       </div>
@@ -98,13 +106,11 @@
           multiple
         >
           <option>None</option>
-          {{ with first .Data.Features }}
-            <option value="{{ .Key }}" selected>
-              {{ .Name }}
-            </option>
-          {{ end }}
-          {{ range rest .Data.Features }}
-            <option value="{{ .Key }}">
+          {{ range .Data.Features }}
+            <option
+              value="{{ .Key }}"
+              {{ if (.EQ $.Data.Device.Feature) }}selected{{ end }}
+            >
               {{ .Name }}
             </option>
           {{ end }}

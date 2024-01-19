@@ -49,9 +49,9 @@ func CreateUser(ctx context.Context, db repo.DB, arg models.User) (int64, error)
 	})
 }
 
-func UpdateUser(ctx context.Context, db repo.DB, arg models.User, password string) (int64, error) {
-	if password != "" {
-		arg.Password = password
+func UpdateUser(ctx context.Context, db repo.DB, arg models.User, newPassword string) (int64, error) {
+	if newPassword != "" {
+		arg.Password = newPassword
 	}
 
 	normalizeUser(&arg)
@@ -60,7 +60,7 @@ func UpdateUser(ctx context.Context, db repo.DB, arg models.User, password strin
 		return 0, err
 	}
 
-	if password != "" {
+	if newPassword != "" {
 		if err := hashUserPassword(&arg); err != nil {
 			return 0, err
 		}

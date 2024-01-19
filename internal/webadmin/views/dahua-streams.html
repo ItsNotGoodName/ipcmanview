@@ -31,7 +31,7 @@
                 {{ range $stream := $device.Streams }}
                   <a
                     hx-target="closest figure"
-                    hx-get="/dahua/streams?id={{ $stream.ID }}"
+                    hx-get="/admin/dahua/streams?id={{ $stream.ID }}"
                     role="tab"
                     {{ if eq $selectedStream.ID $stream.ID }}
                       class="tab tab-active"

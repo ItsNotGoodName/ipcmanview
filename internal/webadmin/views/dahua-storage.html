@@ -23,8 +23,8 @@
       <form
         class="flex flex-col gap-4 px-4"
         method="post"
-        action="/dahua/storage/destinations"
-        hx-post="/dahua/storage/destinations"
+        action="/admin/dahua/storage/destinations"
+        hx-post="/admin/dahua/storage/destinations"
         hx-target="this"
       >
         {{ block "htmx-storage-destination" . }}
@@ -47,13 +47,13 @@
                 <button
                   class="btn btn-sm join-item"
                   type="submit"
-                  hx-get="/dahua/storage"
+                  hx-get="/admin/dahua/storage"
                   hx-target="closest form"
                 >
                   Refresh
                 </button>
                 <a
-                  href="/dahua/storage/destinations/create"
+                  href="/admin/dahua/storage/destinations/create"
                   class="btn btn-sm btn-primary join-item"
                 >
                   Create
@@ -112,7 +112,7 @@
                       <div class="join">
                         <button
                           class="btn-xs btn join-item"
-                          hx-post="/dahua/storage/destinations/{{ .ID }}/test"
+                          hx-post="/admin/dahua/storage/destinations/{{ .ID }}/test"
                           hx-target="this"
                           hx-swap="outerHTML"
                         >
@@ -120,7 +120,7 @@
                         </button>
                         <a
                           class="btn-xs btn btn-primary join-item"
-                          href="/dahua/storage/destinations/{{ .ID }}"
+                          href="/admin/dahua/storage/destinations/{{ .ID }}"
                         >
                           Update
                         </a>
@@ -144,7 +144,7 @@
     {{ if .OK }}
       <div
         class="btn-xs btn join-item btn-success"
-        hx-post="/dahua/storage/destinations/{{ .ID }}/test"
+        hx-post="/admin/dahua/storage/destinations/{{ .ID }}/test"
         hx-target="this"
         hx-swap="outerHTML"
       >
@@ -153,7 +153,7 @@
     {{ else }}
       <div
         class="btn-xs btn join-item btn-error"
-        hx-post="/dahua/storage/destinations/{{ .ID }}/test"
+        hx-post="/admin/dahua/storage/destinations/{{ .ID }}/test"
         hx-target="this"
         hx-swap="outerHTML"
       >
