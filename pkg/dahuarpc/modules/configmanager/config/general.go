@@ -21,7 +21,7 @@ type General struct {
 }
 
 func (c General) Merge(js string) (string, error) {
-	return configmanager.Merge(js, []configmanager.MergeOption{
+	return configmanager.Merge(js, []configmanager.MergeValues{
 		{Path: "LocalNo", Value: c.LocalNo},
 		{Path: "LockLoginEnable", Value: c.LockLoginEnable},
 		{Path: "LockLoginTimes", Value: c.LockLoginTimes},

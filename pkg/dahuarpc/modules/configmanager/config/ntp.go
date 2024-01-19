@@ -22,7 +22,7 @@ type NTP struct {
 }
 
 func (c NTP) Merge(js string) (string, error) {
-	return configmanager.Merge(js, []configmanager.MergeOption{
+	return configmanager.Merge(js, []configmanager.MergeValues{
 		{Path: "Address", Value: c.Address},
 		{Path: "Enable", Value: c.Enable},
 		{Path: "Port", Value: c.Port},

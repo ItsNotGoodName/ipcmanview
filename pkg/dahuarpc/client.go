@@ -347,12 +347,12 @@ func (c Client) close(ctx context.Context, wait bool) error {
 	return nil
 }
 
-// CloseNoWait closes the connection without waiting for it to fully close.
+// CloseNoWait closes the connection without waiting for it to finish closing.
 func (c Client) CloseNoWait(ctx context.Context) error {
 	return c.close(ctx, false)
 }
 
-// Close fully closes the connection.
+// Close closes the connection.
 func (c Client) Close(ctx context.Context) error {
 	return c.close(ctx, true)
 }

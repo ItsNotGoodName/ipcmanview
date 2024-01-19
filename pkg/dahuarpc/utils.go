@@ -38,19 +38,17 @@ func (a AuthParam) HashPassword(username, password string) string {
 
 type Timestamp string
 
-// NewTimestamp converts the given UTC time to the given location and returns the timestamp.
-func NewTimestamp(date time.Time, cameraLocation *time.Location) Timestamp {
-	return Timestamp(date.In(cameraLocation).Format("2006-01-02 15:04:05"))
+func NewTimestamp(date time.Time, deviceLocation *time.Location) Timestamp {
+	return Timestamp(date.In(deviceLocation).Format("2006-01-02 15:04:05"))
 }
 
-// Parse returns the UTC time for the given timestamp and camera location.
-func (t Timestamp) Parse(cameraLocation *time.Location) (time.Time, error) {
+func (t Timestamp) Parse(deviceLocation *time.Location) (time.Time, error) {
 	var format = "2006-01-02 15:04:05"
 	if strings.HasSuffix(string(t), "PM") || strings.HasSuffix(string(t), "AM") {
 		format = "2006-01-02 03:04:05 PM"
 	}
 
-	date, err := time.ParseInLocation(format, string(t), cameraLocation)
+	date, err := time.ParseInLocation(format, string(t), deviceLocation)
 	if err != nil {
 		return date, err
 	}
@@ -58,7 +56,8 @@ func (t Timestamp) Parse(cameraLocation *time.Location) (time.Time, error) {
 	return date.UTC(), nil
 }
 
-// ExtractFilePathTags extracts tags that are surrounded by brackets from the given file path.
+// ExtractFilePathTags extracts tags from the file path.
+// Tags are strings surrounded by brackets
 func ExtractFilePathTags(filePath string) []string {
 	search := filePath
 	idx := strings.LastIndex(filePath, "/")
@@ -77,7 +76,7 @@ func ExtractFilePathTags(filePath string) []string {
 	return tags
 }
 
-// Integer is for types that are supposed to integer but for some reason the camera returns a float.
+// Integer is for types that are supposed to be integers but for some reason the device returns a float.
 type Integer int64
 
 func (s *Integer) UnmarshalJSON(data []byte) error {
@@ -95,29 +94,36 @@ func (s Integer) Integer() int64 {
 	return int64(s)
 }
 
+// URL is the HTTP RPC API URL.
 func URL(u *url.URL) string {
 	return fmt.Sprintf("%s://%s/RPC2", u.Scheme, u.Hostname())
 }
 
+// LoginURL is the HTTP RPC API URL for login.
 func LoginURL(u *url.URL) string {
 	return fmt.Sprintf("%s://%s/RPC2_Login", u.Scheme, u.Hostname())
 }
 
-func LoadFileURL(u *url.URL, path string) string {
-	return fmt.Sprintf("%s://%s/RPC_Loadfile%s", u.Scheme, u.Hostname(), path)
+// LoadFileURL is the HTTP URL for accessing files.
+// The file path must be absolute.
+func LoadFileURL(u *url.URL, filePath string) string {
+	return fmt.Sprintf("%s://%s/RPC_Loadfile%s", u.Scheme, u.Hostname(), filePath)
 }
 
+// Cookie creates a session cookie.
 func Cookie(session string) string {
 	return fmt.Sprintf("WebClientSessionID=%s; DWebClientSessionID=%s; DhWebClientSessionID=%s", session, session, session)
 }
 
-var DefaultTimeSection TimeSection = TimeSection{
-	Number: 0,
-	Start:  0,
-	End:    24 * time.Hour,
+func DefaultTimeSection() TimeSection {
+	return TimeSection{
+		Number: 0,
+		Start:  0,
+		End:    24 * time.Hour,
+	}
 }
 
-// NewTimeSectionFromString (e.g. "1 08:01:45-16:16:22")
+// NewTimeSectionFromString (e.g. "1 08:01:45-16:16:22").
 func NewTimeSectionFromString(s string) (TimeSection, error) {
 	splitBySpace := strings.Split(s, " ")
 	if len(splitBySpace) != 2 {

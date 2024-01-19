@@ -29,7 +29,7 @@ func (c VideoAnalyseRules) Merge(js string) (string, error) {
 	var err error
 	for i, v := range c {
 		prefix := strconv.Itoa(i) + "."
-		js, err = configmanager.Merge(js, []configmanager.MergeOption{
+		js, err = configmanager.Merge(js, []configmanager.MergeValues{
 			{Path: prefix + "Class", Value: v.Class},
 			{Path: prefix + "Enable", Value: v.Enable},
 			{Path: prefix + "Id", Value: v.ID},

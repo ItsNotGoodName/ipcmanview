@@ -35,7 +35,7 @@ type Email struct {
 }
 
 func (c Email) Merge(js string) (string, error) {
-	return configmanager.Merge(js, []configmanager.MergeOption{
+	return configmanager.Merge(js, []configmanager.MergeValues{
 		{Path: "Address", Value: c.Address},
 		{Path: "Anonymous", Value: c.Anonymous},
 		{Path: "AttachEnable", Value: c.AttachEnable},

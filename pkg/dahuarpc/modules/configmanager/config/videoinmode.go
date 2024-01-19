@@ -20,7 +20,7 @@ type VideoInMode struct {
 }
 
 func (c VideoInMode) Merge(js string) (string, error) {
-	return configmanager.Merge(js, []configmanager.MergeOption{
+	return configmanager.Merge(js, []configmanager.MergeValues{
 		{Path: "Config", Value: c.Config},
 		{Path: "Mode", Value: c.Mode},
 		{Path: "TimeSection", Value: c.TimeSection},

@@ -70,7 +70,7 @@ func AudioStreamGet(ctx context.Context, c Conn, channel int, httpType HTTPType)
 //   this does not work if the body is infinite like what we are doing.
 // - I swear that my camera (SD2A500-GN-A-PV, Build Date: 2022-08-26) has a broken AudioStreamPost CGI API.
 //   I tested it with cURL and it would keep doing a connection reset after sending a bit of audio data.
-// - The current Conn interface does not support POST, but that is an easy fix the HTTP digest library is fixed.
+// - The current Conn interface does not support POST, but that is an easy fix when the HTTP digest library is fixed.
 
 // func AudioStreamPost(ctx context.Context, c Conn, channel int, httpType HTTPType, contentType string, body io.Reader) error {
 // 	if channel == 0 {

@@ -21,7 +21,7 @@ const (
 	StateClosed
 )
 
-// State is used to keep track of connection states.
+// State is the connection state.
 type State int
 
 func (s State) String() string {
@@ -56,7 +56,7 @@ type ConnLogin interface {
 	SetSession(session string)
 }
 
-// SendRaw sends RPC request to camera without checking if the response contains an error field.
+// SendRaw sends the RPC request.
 func SendRaw[T any](ctx context.Context, c Conn, rb RequestBuilder) (Response[T], error) {
 	var res Response[T]
 
@@ -84,7 +84,7 @@ func SendRaw[T any](ctx context.Context, c Conn, rb RequestBuilder) (Response[T]
 	return res, nil
 }
 
-// Send RPC request to device and check the response's error field.
+// Send sends the RPC request and checks the response's error field.
 func Send[T any](ctx context.Context, c Conn, rb RequestBuilder) (Response[T], error) {
 	res, err := SendRaw[T](ctx, c, rb)
 	if err != nil {
@@ -97,7 +97,7 @@ func Send[T any](ctx context.Context, c Conn, rb RequestBuilder) (Response[T], e
 	return res, nil
 }
 
-// DoRaw executes the RPC request and returns the body.
+// DoRaw executes the RPC request.
 func DoRaw(ctx context.Context, rb RequestBuilder, httpClient *http.Client, urL string) (io.ReadCloser, error) {
 	b, err := json.Marshal(rb.Request)
 	if err != nil {

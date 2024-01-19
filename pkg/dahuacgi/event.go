@@ -94,7 +94,7 @@ func (er EventReader) Poll() error {
 	}
 }
 
-// ReadEvent parses the next event. Should be called after Poll.
+// ReadEvent reads and parses the next event. This should be called after Poll.
 func (er EventReader) ReadEvent() (Event, error) {
 	// Parse headers
 	headers, err := er.seekAfterEmptyLine()

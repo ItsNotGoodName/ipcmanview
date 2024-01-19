@@ -113,18 +113,17 @@ type FindNextFileInfo struct {
 	WorkDirSN int `json:"WorkDirSN"`
 }
 
-// UniqueTime returns StartTime and EndTime that are unique.
+// UniqueTime returns start and end times that do not conflict with other files.
 //
-// Dahua devices can only handle timestamps that are precise up to the second, we use the leftover microseconds (.000_000) to create a unique time.
-// Unique means it won't conflict with other media files on the camera.
-// An affixSeed can optionally be passed to make the media file not conflict with other cameras.
-func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Location) (time.Time, time.Time, error) {
-	startTime, err := f.StartTime.Parse(cameraLocation)
+// Dahua devices can only handle timestamps that are precise up to the second (e.g. "2006-01-02 15:04:05"), the leftover microseconds (.000_000) are used create a unique time.
+// A seed can optionally be passed to not conflict with other devices.
+func (f FindNextFileInfo) UniqueTime(seed int, deviceLocation *time.Location) (time.Time, time.Time, error) {
+	startTime, err := f.StartTime.Parse(deviceLocation)
 	if err != nil {
 		return time.Time{}, time.Time{}, err
 	}
 
-	endTime, err := f.EndTime.Parse(cameraLocation)
+	endTime, err := f.EndTime.Parse(deviceLocation)
 	if err != nil {
 		return time.Time{}, time.Time{}, err
 	}
@@ -144,12 +143,12 @@ func (f FindNextFileInfo) UniqueTime(affixSeed int, cameraLocation *time.Locatio
 		prefixSeed += int(c)
 	}
 
-	seed := (time.Duration((prefixSeed % 999)) * time.Millisecond) + (time.Duration((affixSeed % 999)) * time.Microsecond)
+	finalSeed := (time.Duration((prefixSeed % 999)) * time.Millisecond) + (time.Duration((seed % 999)) * time.Microsecond)
 
-	return startTime.Add(seed), endTime.Add(seed), nil
+	return startTime.Add(finalSeed), endTime.Add(finalSeed), nil
 }
 
-// Local checks if the file is stored directly disk which allows it to be loaded through RPC_Loadfile.
+// Local checks if the file is stored directly on disk which allows it to be loaded through RPC_Loadfile.
 func (f FindNextFileInfo) Local() bool {
 	return strings.HasPrefix(f.FilePath, "/")
 }
