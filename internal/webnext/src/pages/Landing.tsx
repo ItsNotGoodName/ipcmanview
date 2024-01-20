@@ -1,9 +1,7 @@
 import { FormError, createForm, required, reset } from "@modular-forms/solid";
-import { RpcError } from "@protobuf-ts/runtime-rpc";
-import { A, useNavigate } from "@solidjs/router";
+import { A, action, redirect, revalidate, useAction } from "@solidjs/router";
 import { ParentProps, Show } from "solid-js";
 
-import { useAuth } from "~/providers/auth";
 import { useClient } from "~/providers/client";
 import { Button } from "~/ui/Button";
 import { CardRoot } from "~/ui/Card";
@@ -11,8 +9,11 @@ import { FieldControl, FieldRoot, FieldLabel, FieldMessage, FormMessage } from "
 import { Input } from "~/ui/Input";
 import { linkVariants } from "~/ui/Link";
 import { ThemeIcon } from "~/ui/ThemeIcon";
-import { toast } from "~/ui/Toast";
 import { toggleTheme, useThemeTitle } from "~/ui/theme";
+import { CheckboxControl, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { throwAsFormError } from "~/lib/utils";
+import { getSession } from "~/providers/session";
+import { toast } from "~/ui/Toast";
 
 function Header() {
   return (
@@ -47,39 +48,37 @@ function Footer(props: ParentProps) {
   )
 }
 
-type SigninForm = {
+type SignInForm = {
   usernameOrEmail: string
   password: string
+  rememberMe: boolean
 }
 
-function createSigninSubmit() {
-  const auth = useAuth()
-  const client = useClient()
-  return async (form: SigninForm) => {
-    try {
-      const resp = await client.auth.signIn(form)
-      auth.setSession(resp.response.token)
-    } catch (e) {
-      if (e instanceof RpcError)
-        // @ts-ignore
-        throw new FormError(e.message, e.meta ?? {})
-      if (e instanceof Error)
-        throw new FormError(e.message)
-      throw new FormError("Unknown error has occured.")
+const actionSignIn = action((form: SignInForm) =>
+  fetch("/v1/session", {
+    credentials: "include",
+    headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
+    method: "POST",
+    body: JSON.stringify(form),
+  }).then(async (resp) => {
+    if (!resp.ok) {
+      const json = await resp.json()
+      throw new Error(json.message)
     }
-  }
-}
+    return revalidate(getSession.key)
+  }).catch(throwAsFormError)
+)
 
-export function Signin() {
-  const [signinForm, { Field, Form }] = createForm<SigninForm>();
-  const signinSubmit = createSigninSubmit()
+export function SignIn() {
+  const [signInForm, { Field, Form }] = createForm<SignInForm>();
+  const signIn = useAction(actionSignIn)
 
   return (
     <div class="mx-auto flex max-w-xs flex-col gap-4 pt-10">
       <Header />
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign in</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={signinSubmit}>
+        <Form class="flex flex-col gap-4" onSubmit={signIn}>
           <Field name="usernameOrEmail" validate={required("Please enter your username or email.")}>
             {(field, props) => (
               <FieldRoot class="gap-1.5">
@@ -90,7 +89,6 @@ export function Signin() {
                     autocomplete="username"
                     placeholder="Username or email"
                     value={field.value}
-                    required
                   />
                 </FieldControl>
                 <FieldMessage field={field} />
@@ -113,21 +111,30 @@ export function Signin() {
                     {...props}
                     autocomplete="current-password"
                     placeholder="Password"
-                    value={field.value}
                     type="password"
-                    required
+                    value={field.value}
                   />
                 </FieldControl>
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
           </Field>
-          <Button type="submit" disabled={signinForm.submitting}>
-            <Show when={signinForm.submitting} fallback={<>Sign in</>} >
+          <Field name="rememberMe" type="boolean">
+            {(field, props) => (
+              <CheckboxRoot validationState={field.error ? "invalid" : "valid"}>
+                <CheckboxInput {...props} />
+                <CheckboxControl />
+                <CheckboxLabel>Remember me</CheckboxLabel>
+                <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
+              </CheckboxRoot>
+            )}
+          </Field>
+          <Button type="submit" disabled={signInForm.submitting}>
+            <Show when={signInForm.submitting} fallback={<>Sign in</>} >
               Signing in
             </Show>
           </Button>
-          <FormMessage form={signinForm} />
+          <FormMessage form={signInForm} />
         </Form>
       </CardRoot>
       <Footer>
@@ -137,46 +144,34 @@ export function Signin() {
   )
 }
 
-type SignupForm = {
+type SignUpForm = {
   email: string
   username: string
   password: string
   confirmPassword: string
 }
 
-function createSignupSubmit() {
-  const navigate = useNavigate()
-  const client = useClient()
-  return async (form: SignupForm) => {
-    if (form.password != form.confirmPassword) {
-      throw new FormError<SignupForm>("", { confirmPassword: "Password does not match." })
-    }
-
-    try {
-      await client.auth.signUp(form)
-    } catch (e) {
-      if (e instanceof RpcError)
-        // @ts-ignore
-        throw new FormError(e.message, e.meta ?? {})
-      if (e instanceof Error)
-        throw new FormError(e.message)
-      throw new FormError("Unknown error has occured.")
-    }
-
-    navigate('/signin')
+const actionSignUp = action((form: SignUpForm) => {
+  if (form.password != form.confirmPassword) {
+    throw new FormError<SignUpForm>("", { confirmPassword: "Password does not match." })
   }
-}
+  return useClient()
+    .auth.signUp(form)
+    .then()
+    .catch(throwAsFormError)
+    .then(() => { throw redirect("/signup") })
+})
 
 export function Signup() {
-  const [signupForm, { Field, Form }] = createForm<SignupForm>();
-  const signupSubmit = createSignupSubmit()
+  const [signUpForm, { Field, Form }] = createForm<SignUpForm>();
+  const signUp = useAction(actionSignUp)
 
   return (
     <div class="mx-auto flex max-w-xs flex-col gap-4 pt-10">
       <Header />
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign up</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={signupSubmit}>
+        <Form class="flex flex-col gap-4" onSubmit={signUp}>
           <Field name="email" validate={required('Please enter your email.')}>
             {(field, props) => (
               <FieldRoot class="gap-1.5">
@@ -184,10 +179,9 @@ export function Signup() {
                 <FieldControl field={field}>
                   <Input
                     {...props}
-                    type="email"
                     placeholder="Email"
+                    type="email"
                     value={field.value}
-                    required
                   />
                 </FieldControl>
                 <FieldMessage field={field} />
@@ -204,7 +198,6 @@ export function Signup() {
                     autocomplete="username"
                     placeholder="Username"
                     value={field.value}
-                    required
                   />
                 </FieldControl>
                 <FieldMessage field={field} />
@@ -224,9 +217,8 @@ export function Signup() {
                     {...props}
                     autocomplete="new-password"
                     placeholder="Password"
-                    value={field.value}
                     type="password"
-                    required
+                    value={field.value}
                   />
                 </FieldControl>
                 <FieldMessage field={field} />
@@ -246,21 +238,20 @@ export function Signup() {
                     {...props}
                     autocomplete="new-password"
                     placeholder="Confirm password"
-                    value={field.value}
                     type="password"
-                    required
+                    value={field.value}
                   />
                 </FieldControl>
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
           </Field>
-          <Button type="submit" disabled={signupForm.submitting}>
-            <Show when={signupForm.submitting} fallback={<>Sign up</>} >
+          <Button type="submit" disabled={signUpForm.submitting}>
+            <Show when={signUpForm.submitting} fallback={<>Sign up</>} >
               Signing up
             </Show>
           </Button>
-          <FormMessage form={signupForm} />
+          <FormMessage form={signUpForm} />
         </Form>
       </CardRoot>
       <Footer>
@@ -274,28 +265,14 @@ type ForgotForm = {
   email: string
 }
 
-function createForgotSubmit() {
-  const client = useClient()
-  return async (form: ForgotForm) => {
-    try {
-      await client.auth.resetPassword(form)
-    } catch (e) {
-      if (e instanceof RpcError)
-        // @ts-ignore
-        throw new FormError(e.message, e.meta ?? {})
-      if (e instanceof Error)
-        throw new FormError(e.message)
-      throw new FormError("Unknown error has occured.")
-    }
-
-    toast.success("Sent password reset email.")
-  }
-}
+const actionForgot = action((form: ForgotForm) => useClient()
+  .auth.forgot(form)
+  .then(() => { toast.success("Sent password reset email.") })
+  .catch(throwAsFormError))
 
 export function Forgot() {
   const [forgetForm, { Field, Form }] = createForm<ForgotForm>({ initialValues: { email: "" } });
-  const forgotSubmit = createForgotSubmit()
-
+  const forgotSubmit = useAction(actionForgot)
 
   return (
     <div class="mx-auto flex max-w-xs flex-col gap-4 pt-10">
@@ -310,8 +287,8 @@ export function Forgot() {
                 <FieldControl field={field}>
                   <Input
                     {...props}
-                    type="email"
                     placeholder="Email"
+                    type="email"
                     value={field.value}
                   />
                 </FieldControl>

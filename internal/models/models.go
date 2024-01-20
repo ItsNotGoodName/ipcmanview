@@ -33,3 +33,11 @@ type User struct {
 	Username string `validate:"gte=3,lte=64,excludes=@,excludes= "`
 	Password string `validate:"gte=8"`
 }
+
+type AuthSession struct {
+	SessionID int64
+	UserID    int64
+	Username  string
+	Session   string
+	Admin     bool
+}

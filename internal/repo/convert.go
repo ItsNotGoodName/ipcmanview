@@ -178,3 +178,12 @@ func (c DahuaStorageDestination) Convert() models.DahuaStorageDestination {
 		RemoteDirectory: c.RemoteDirectory,
 	}
 }
+
+func (c User) Convert() models.User {
+	return models.User{
+		ID:       c.ID,
+		Email:    c.Email,
+		Username: c.Username,
+		Password: c.Password,
+	}
+}

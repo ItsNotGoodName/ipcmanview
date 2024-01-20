@@ -11,6 +11,14 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
 
+func SplitAddress(address string) [2]string {
+	s := strings.SplitN(address, ":", 2)
+	if len(s) != 2 {
+		return [2]string{address}
+	}
+	return [2]string{s[0], s[1]}
+}
+
 func Address(host string, port int) string {
 	return host + ":" + strconv.Itoa(port)
 }

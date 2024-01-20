@@ -1,18 +1,35 @@
 import { TwirpFetchTransport } from "@protobuf-ts/twirp-transport";
-import { AuthClient, HelloWorldClient, PageClient } from "~/twirp/rpc.client";
+import { AuthClient, HelloWorldClient, PageClient, UserClient } from "~/twirp/rpc.client";
 import {
   createContext,
   ParentComponent,
   useContext,
 } from "solid-js";
+import { MethodInfo, NextUnaryFn, RpcError, RpcOptions, UnaryCall } from "@protobuf-ts/runtime-rpc";
+import { revalidate } from "@solidjs/router";
+import { getSession } from "./session";
 
 function createStore(): ClientContextType {
-  let transport = new TwirpFetchTransport({ baseUrl: "/twirp" });
+  let transport = new TwirpFetchTransport({
+    baseUrl: "/twirp",
+    interceptors: [{
+      interceptUnary(next: NextUnaryFn, method: MethodInfo, input: object, options: RpcOptions): UnaryCall {
+        const call = next(method, input, options)
+        call.status.catch((e: RpcError) => {
+          if (e.code == "unauthenticated") {
+            return revalidate(getSession.key)
+          }
+        })
+        return call
+      }
+    }]
+  });
 
   return {
     helloWorld: new HelloWorldClient(transport),
     auth: new AuthClient(transport),
-    page: new PageClient(transport)
+    page: new PageClient(transport),
+    user: new UserClient(transport)
   };
 }
 
@@ -20,6 +37,7 @@ type ClientContextType = {
   helloWorld: HelloWorldClient
   auth: AuthClient
   page: PageClient
+  user: UserClient
 };
 
 const ClientContext = createContext<ClientContextType>();

@@ -203,9 +203,13 @@ type User struct {
 }
 
 type UserSession struct {
-	ID        int64
-	UserID    int64
-	Session   string
-	CreatedAt types.Time
-	ExpiredAt types.Time
+	ID         int64
+	UserID     int64
+	Session    string
+	UserAgent  string
+	Ip         string
+	LastIp     string
+	LastUsedAt types.Time
+	CreatedAt  types.Time
+	ExpiredAt  types.Time
 }

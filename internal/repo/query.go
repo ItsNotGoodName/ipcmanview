@@ -414,3 +414,21 @@ func (db DB) CreateDahuaEmail(ctx context.Context, arg CreateDahuaEmailMessagePa
 		Attachments: atts,
 	}, tx.Commit()
 }
+
+func (db DB) CreateUserSessionAndDeletePrevious(ctx context.Context, args CreateUserSessionParams, previousSession string) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := db.CreateUserSession(ctx, args); err != nil {
+		return err
+	}
+
+	if err := db.DeleteUserSessionBySession(ctx, previousSession); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}

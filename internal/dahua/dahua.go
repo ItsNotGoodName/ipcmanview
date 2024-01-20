@@ -28,6 +28,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func NewScanLockStore() ScanLockStore {
+	return ScanLockStore{core.NewLockStore[int64]()}
+}
+
+type ScanLockStore struct{ *core.LockStore[int64] }
+
 func NewClient(conn models.DahuaConn) Client {
 	rpcHTTPClient := &http.Client{
 		Timeout: 5 * time.Second,
@@ -415,8 +421,6 @@ func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location,
 		TimeSection: cfg.Tables[0].Data.TimeSection[0][0],
 	}, nil
 }
-
-type ScanLockStore = core.LockStore[int64]
 
 func NewFileCursor() repo.CreateDahuaFileCursorParams {
 	now := time.Now()

@@ -356,22 +356,39 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, 
 
 const createUserSession = `-- name: CreateUserSession :exec
 INSERT INTO
-  user_sessions (user_id, session, created_at, expired_at)
+  user_sessions (
+    user_id,
+    session,
+    user_agent,
+    ip,
+    last_ip,
+    last_used_at,
+    created_at,
+    expired_at
+  )
 VALUES
-  (?, ?, ?, ?)
+  (?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateUserSessionParams struct {
-	UserID    int64
-	Session   string
-	CreatedAt types.Time
-	ExpiredAt types.Time
+	UserID     int64
+	Session    string
+	UserAgent  string
+	Ip         string
+	LastIp     string
+	LastUsedAt types.Time
+	CreatedAt  types.Time
+	ExpiredAt  types.Time
 }
 
 func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionParams) error {
 	_, err := q.db.ExecContext(ctx, createUserSession,
 		arg.UserID,
 		arg.Session,
+		arg.UserAgent,
+		arg.Ip,
+		arg.LastIp,
+		arg.LastUsedAt,
 		arg.CreatedAt,
 		arg.ExpiredAt,
 	)
@@ -468,25 +485,59 @@ func (q *Queries) DeleteDahuaStream(ctx context.Context, id int64) error {
 	return err
 }
 
-const deleteUserSession = `-- name: DeleteUserSession :exec
-DELETE FROM user_sessions
-WHERE
-  session = ?
-`
-
-func (q *Queries) DeleteUserSession(ctx context.Context, session string) error {
-	_, err := q.db.ExecContext(ctx, deleteUserSession, session)
-	return err
-}
-
-const expiredDeleteUserSession = `-- name: ExpiredDeleteUserSession :exec
+const deleteUserSessionByExpired = `-- name: DeleteUserSessionByExpired :exec
 DELETE FROM user_sessions
 WHERE
   expired_at < ?
 `
 
-func (q *Queries) ExpiredDeleteUserSession(ctx context.Context, expiredAt types.Time) error {
-	_, err := q.db.ExecContext(ctx, expiredDeleteUserSession, expiredAt)
+func (q *Queries) DeleteUserSessionByExpired(ctx context.Context, expiredAt types.Time) error {
+	_, err := q.db.ExecContext(ctx, deleteUserSessionByExpired, expiredAt)
+	return err
+}
+
+const deleteUserSessionBySession = `-- name: DeleteUserSessionBySession :exec
+DELETE FROM user_sessions
+WHERE
+  session = ?
+`
+
+func (q *Queries) DeleteUserSessionBySession(ctx context.Context, session string) error {
+	_, err := q.db.ExecContext(ctx, deleteUserSessionBySession, session)
+	return err
+}
+
+const deleteUserSessionForUser = `-- name: DeleteUserSessionForUser :exec
+DELETE FROM user_sessions
+WHERE
+  id = ?
+  AND user_id = ?
+`
+
+type DeleteUserSessionForUserParams struct {
+	ID     int64
+	UserID int64
+}
+
+func (q *Queries) DeleteUserSessionForUser(ctx context.Context, arg DeleteUserSessionForUserParams) error {
+	_, err := q.db.ExecContext(ctx, deleteUserSessionForUser, arg.ID, arg.UserID)
+	return err
+}
+
+const deleteUserSessionForUserAndNotSession = `-- name: DeleteUserSessionForUserAndNotSession :exec
+DELETE FROM user_sessions
+WHERE
+  user_id = ?
+  AND session != ?
+`
+
+type DeleteUserSessionForUserAndNotSessionParams struct {
+	UserID  int64
+	Session string
+}
+
+func (q *Queries) DeleteUserSessionForUserAndNotSession(ctx context.Context, arg DeleteUserSessionForUserAndNotSessionParams) error {
+	_, err := q.db.ExecContext(ctx, deleteUserSessionForUserAndNotSession, arg.UserID, arg.Session)
 	return err
 }
 
@@ -922,6 +973,48 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserBySession = `-- name: GetUserBySession :one
+SELECT
+  user_sessions.id as id,
+  user_sessions.user_id as user_id,
+  users.username,
+  admins.user_id IS NOT NULL as 'admin',
+  user_sessions.last_ip,
+  user_sessions.last_used_at,
+  user_sessions.expired_at
+FROM
+  user_sessions
+  LEFT JOIN users ON users.id = user_sessions.user_id
+  LEFT JOIN admins ON admins.user_id = user_sessions.user_id
+WHERE
+  session = ?
+`
+
+type GetUserBySessionRow struct {
+	ID         int64
+	UserID     int64
+	Username   sql.NullString
+	Admin      bool
+	LastIp     string
+	LastUsedAt types.Time
+	ExpiredAt  types.Time
+}
+
+func (q *Queries) GetUserBySession(ctx context.Context, session string) (GetUserBySessionRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserBySession, session)
+	var i GetUserBySessionRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Username,
+		&i.Admin,
+		&i.LastIp,
+		&i.LastUsedAt,
+		&i.ExpiredAt,
 	)
 	return i, err
 }
@@ -1474,6 +1567,54 @@ func (q *Queries) ListUser(ctx context.Context, arg ListUserParams) ([]User, err
 	return items, nil
 }
 
+const listUserSessionForUserAndNotExpired = `-- name: ListUserSessionForUserAndNotExpired :many
+SELECT
+  id, user_id, session, user_agent, ip, last_ip, last_used_at, created_at, expired_at
+FROM
+  user_sessions
+WHERE
+  user_id = ?
+  AND expired_at > ?2
+`
+
+type ListUserSessionForUserAndNotExpiredParams struct {
+	UserID int64
+	Now    types.Time
+}
+
+func (q *Queries) ListUserSessionForUserAndNotExpired(ctx context.Context, arg ListUserSessionForUserAndNotExpiredParams) ([]UserSession, error) {
+	rows, err := q.db.QueryContext(ctx, listUserSessionForUserAndNotExpired, arg.UserID, arg.Now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UserSession
+	for rows.Next() {
+		var i UserSession
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.Session,
+			&i.UserAgent,
+			&i.Ip,
+			&i.LastIp,
+			&i.LastUsedAt,
+			&i.CreatedAt,
+			&i.ExpiredAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const normalizeDahuaFileCursor = `-- name: NormalizeDahuaFileCursor :exec
 INSERT OR IGNORE INTO
   dahua_file_cursors (
@@ -1604,39 +1745,6 @@ func (q *Queries) ReadyDahuaAferoFile(ctx context.Context, arg ReadyDahuaAferoFi
 	var id int64
 	err := row.Scan(&id)
 	return id, err
-}
-
-const sessionGetUserBySession = `-- name: SessionGetUserBySession :one
-SELECT
-  user_sessions.user_id as id,
-  users.username,
-  admins.user_id IS NOT NULL as 'admin',
-  user_sessions.expired_at
-FROM
-  user_sessions
-  LEFT JOIN users ON users.id = user_sessions.user_id
-  LEFT JOIN admins ON admins.user_id = user_sessions.user_id
-WHERE
-  session = ?
-`
-
-type SessionGetUserBySessionRow struct {
-	ID        int64
-	Username  sql.NullString
-	Admin     bool
-	ExpiredAt types.Time
-}
-
-func (q *Queries) SessionGetUserBySession(ctx context.Context, session string) (SessionGetUserBySessionRow, error) {
-	row := q.db.QueryRowContext(ctx, sessionGetUserBySession, session)
-	var i SessionGetUserBySessionRow
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.Admin,
-		&i.ExpiredAt,
-	)
-	return i, err
 }
 
 const updateDahuaDevice = `-- name: UpdateDahuaDevice :one
@@ -2002,6 +2110,26 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (int64, 
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+const updateUserSession = `-- name: UpdateUserSession :exec
+UPDATE user_sessions
+SET
+  last_ip = ?,
+  last_used_at = ?
+WHERE
+  session = ?
+`
+
+type UpdateUserSessionParams struct {
+	LastIp     string
+	LastUsedAt types.Time
+	Session    string
+}
+
+func (q *Queries) UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserSession, arg.LastIp, arg.LastUsedAt, arg.Session)
+	return err
 }
 
 const allocateDahuaSeed = `-- name: allocateDahuaSeed :exec

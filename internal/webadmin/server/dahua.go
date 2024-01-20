@@ -6,7 +6,6 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -151,7 +150,7 @@ type DahuaFileCursor struct {
 	Locked bool
 }
 
-func useDahuaFileCursors(ctx context.Context, db repo.DB, scanLockStore *core.LockStore[int64]) ([]DahuaFileCursor, error) {
+func useDahuaFileCursors(ctx context.Context, db repo.DB, scanLockStore dahua.ScanLockStore) ([]DahuaFileCursor, error) {
 	fileCursors, err := db.ListDahuaFileCursor(ctx)
 	if err != nil {
 		return nil, err

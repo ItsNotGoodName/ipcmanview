@@ -19,7 +19,7 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-func DefaultWorkerFactory(bus *core.Bus, pub pubsub.Pub, db repo.DB, store *Store, scanLockStore *ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
+func DefaultWorkerFactory(bus *core.Bus, pub pubsub.Pub, db repo.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
 	return func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
@@ -195,7 +195,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 	}
 }
 
-func NewQuickScanWorker(pub pubsub.Pub, db repo.DB, store *Store, scanLockStore *ScanLockStore, deviceID int64) QuickScanWorker {
+func NewQuickScanWorker(pub pubsub.Pub, db repo.DB, store *Store, scanLockStore ScanLockStore, deviceID int64) QuickScanWorker {
 	return QuickScanWorker{
 		pub:           pub,
 		db:            db,
@@ -209,7 +209,7 @@ type QuickScanWorker struct {
 	pub           pubsub.Pub
 	db            repo.DB
 	store         *Store
-	scanLockStore *ScanLockStore
+	scanLockStore ScanLockStore
 	deviceID      int64
 }
 

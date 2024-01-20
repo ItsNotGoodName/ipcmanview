@@ -26,8 +26,8 @@ import (
 	"github.com/spf13/afero"
 )
 
-func (w Server) Register(e *echo.Echo) {
-	g := e.Group("/admin")
+func (w Server) Register(e *echo.Echo, m ...echo.MiddlewareFunc) {
+	g := e.Group("/admin", m...)
 
 	g.DELETE("/dahua/events", w.DahuaEventsDELETE)
 	g.DELETE("/dahua/streams/:id", w.DahuaStreamsIDDELETE)
@@ -73,10 +73,10 @@ type Server struct {
 	dahuaStore         *dahua.Store
 	dahuaFileFS        afero.Fs
 	dahuaFileService   dahua.FileService
-	dahuaScanLockStore *dahua.ScanLockStore
+	dahuaScanLockStore dahua.ScanLockStore
 }
 
-func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, mediamtxConfig mediamtx.Config, dahuaStore *dahua.Store, dahuaFileFS afero.Fs, dahuaFileService dahua.FileService, dahuaScanLockStore *dahua.ScanLockStore) Server {
+func New(db repo.DB, pub pubsub.Pub, bus *core.Bus, mediamtxConfig mediamtx.Config, dahuaStore *dahua.Store, dahuaFileFS afero.Fs, dahuaFileService dahua.FileService, dahuaScanLockStore dahua.ScanLockStore) Server {
 	return Server{
 		db:                 db,
 		pub:                pub,

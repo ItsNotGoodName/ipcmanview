@@ -11,7 +11,7 @@ import { toggleTheme } from "~/ui/theme";
 import { CardRoot, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/ui/Card";
 import { For } from "solid-js";
 import { Badge } from "~/ui/Badge";
-import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxIcon, CheckboxIndicator, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { PopoverArrow, PopoverCloseButton, PopoverCloseIcon, PopoverContent, PopoverDescription, PopoverPortal, PopoverRoot, PopoverTitle, PopoverTrigger } from "~/ui/Popover";
 import { DialogCloseButton, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
@@ -153,11 +153,7 @@ export function Ui() {
       </div>
       <CheckboxRoot>
         <CheckboxInput />
-        <CheckboxControl>
-          <CheckboxIndicator>
-            <CheckboxIcon />
-          </CheckboxIndicator>
-        </CheckboxControl>
+        <CheckboxControl />
         <CheckboxLabel>Checkbox Label</CheckboxLabel>
         <CheckboxDescription>Checkbox Description</CheckboxDescription>
         <CheckboxErrorMessage>Checkbox Error Message</CheckboxErrorMessage>
@@ -205,11 +201,7 @@ export function Ui() {
           <TableRow>
             <TableHead>
               <CheckboxRoot>
-                <CheckboxControl>
-                  <CheckboxIndicator>
-                    <CheckboxIcon />
-                  </CheckboxIndicator>
-                </CheckboxControl>
+                <CheckboxControl />
               </CheckboxRoot>
             </TableHead>
             <TableHead>Head</TableHead>
@@ -219,11 +211,7 @@ export function Ui() {
           <TableRow>
             <TableCell>
               <CheckboxRoot>
-                <CheckboxControl>
-                  <CheckboxIndicator>
-                    <CheckboxIcon />
-                  </CheckboxIndicator>
-                </CheckboxControl>
+                <CheckboxControl />
               </CheckboxRoot>
             </TableCell>
             <TableCell>Cell</TableCell>
@@ -231,11 +219,7 @@ export function Ui() {
           <TableRow>
             <TableCell>
               <CheckboxRoot>
-                <CheckboxControl>
-                  <CheckboxIndicator>
-                    <CheckboxIcon />
-                  </CheckboxIndicator>
-                </CheckboxControl>
+                <CheckboxControl />
               </CheckboxRoot>
             </TableCell>
             <TableCell>Cell</TableCell>

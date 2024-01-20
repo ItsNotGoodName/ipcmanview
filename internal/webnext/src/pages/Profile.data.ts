@@ -3,7 +3,6 @@ import { useClient } from "~/providers/client";
 
 export const getProfile = cache(() => useClient().page.profile({}).then((req) => req.response), "profile")
 
-export default function() {
+export function loadProfile() {
   void getProfile()
 }
-

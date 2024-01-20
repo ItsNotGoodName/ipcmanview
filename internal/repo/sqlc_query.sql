@@ -21,11 +21,14 @@ where
   username = sqlc.arg ('usernameOrEmail')
   OR email = sqlc.arg ('usernameOrEmail');
 
--- name: SessionGetUserBySession :one
+-- name: GetUserBySession :one
 SELECT
-  user_sessions.user_id as id,
+  user_sessions.id as id,
+  user_sessions.user_id as user_id,
   users.username,
   admins.user_id IS NOT NULL as 'admin',
+  user_sessions.last_ip,
+  user_sessions.last_used_at,
   user_sessions.expired_at
 FROM
   user_sessions
@@ -56,19 +59,57 @@ WHERE
 
 -- name: CreateUserSession :exec
 INSERT INTO
-  user_sessions (user_id, session, created_at, expired_at)
+  user_sessions (
+    user_id,
+    session,
+    user_agent,
+    ip,
+    last_ip,
+    last_used_at,
+    created_at,
+    expired_at
+  )
 VALUES
-  (?, ?, ?, ?);
+  (?, ?, ?, ?, ?, ?, ?, ?);
 
--- name: DeleteUserSession :exec
+-- name: DeleteUserSessionForUser :exec
 DELETE FROM user_sessions
 WHERE
-  session = ?;
+  id = ?
+  AND user_id = ?;
 
--- name: ExpiredDeleteUserSession :exec
+-- name: DeleteUserSessionByExpired :exec
 DELETE FROM user_sessions
 WHERE
   expired_at < ?;
+
+-- name: ListUserSessionForUserAndNotExpired :many
+SELECT
+  *
+FROM
+  user_sessions
+WHERE
+  user_id = ?
+  AND expired_at > sqlc.arg ('now');
+
+-- name: UpdateUserSession :exec
+UPDATE user_sessions
+SET
+  last_ip = ?,
+  last_used_at = ?
+WHERE
+  session = ?;
+
+-- name: DeleteUserSessionForUserAndNotSession :exec
+DELETE FROM user_sessions
+WHERE
+  user_id = ?
+  AND session != ?;
+
+-- name: DeleteUserSessionBySession :exec
+DELETE FROM user_sessions
+WHERE
+  session = ?;
 
 -- name: createDahuaDevice :one
 INSERT INTO

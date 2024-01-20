@@ -17,7 +17,12 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
 	echo "github.com/labstack/echo/v4"
+	"github.com/spf13/afero"
 )
+
+func (s *Server) DahuaAfero(route string) echo.HandlerFunc {
+	return echo.WrapHandler(http.StripPrefix(route, http.FileServer(afero.NewHttpFs(s.dahuaFileFS))))
+}
 
 func (s *Server) DahuaDevices(c echo.Context) error {
 	ctx := c.Request().Context()

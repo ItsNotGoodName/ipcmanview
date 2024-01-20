@@ -6,6 +6,17 @@ option optimize_for = CODE_SIZE;
 
 import "google/protobuf/timestamp.proto";
 
+message Session {
+  int64 id = 1;
+  string user_agent = 2;
+  string ip = 3;
+  string last_ip = 4;
+  google.protobuf.Timestamp last_used_at = 5;
+  google.protobuf.Timestamp created_at = 6;
+  bool active = 7;
+  bool current = 8;
+}
+
 service HelloWorld {
   rpc Hello(HelloReq) returns (HelloResp);
 }
@@ -20,15 +31,9 @@ message HelloResp {
   google.protobuf.Timestamp current_time = 2;
 }
 
-
 service Auth {
   rpc SignUp(AuthSignUpReq) returns (AuthSignUpResp);
-  rpc SignIn(AuthSignInReq) returns (AuthSignInResp);
-  rpc ResetPassword(AuthResetPasswordReq) returns (AuthResetPasswordResp);
-}
-
-service Page {
-  rpc Profile(PageProfileReq) returns (PageProfileResp);
+  rpc Forgot(AuthForgotReq) returns (AuthForgotResp);
 }
 
 message AuthSignUpReq {
@@ -40,26 +45,60 @@ message AuthSignUpReq {
 message AuthSignUpResp {
 }
 
-message AuthSignInReq {
-  string usernameOrEmail = 1;
-  string password = 2;
-}
-
-message AuthSignInResp {
-  string token = 1;
-}
-
-message AuthResetPasswordReq {
+message AuthForgotReq {
   string email = 1;
 }
 
-message AuthResetPasswordResp {
+message AuthForgotResp {
+}
+
+service Page {
+  rpc Profile(PageProfileReq) returns (PageProfileResp);
 }
 
 message PageProfileReq {}
 
 message PageProfileResp {
   string username = 1;
-  google.protobuf.Timestamp created_at = 2;
-  google.protobuf.Timestamp updated_at = 3;
+  string email = 2;
+  bool admin = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+  repeated Session sessions = 6;
 }
+
+service User {
+  rpc UpdateUsername(UserUpdateUsernameReq) returns (UserUpdateUsernameResp);
+  rpc UpdatePassword(UserUpdatePasswordReq) returns (UserUpdatePasswordResp);
+  rpc RevokeSession(UserRevokeSessionReq) returns (UserRevokeSessionResp);
+  rpc RevokeAllSessions(UserRevokeAllSessionsReq) returns (UserRevokeAllSessionsResp);
+}
+
+message UserUpdateUsernameReq {
+  string new_username = 1;
+}
+
+message UserUpdateUsernameResp {
+}
+
+message UserUpdatePasswordReq {
+  string old_password = 1;
+  string new_password = 2;
+}
+
+message UserUpdatePasswordResp {
+}
+
+message UserRevokeSessionReq {
+  int64 session_id = 1;
+}
+
+message UserRevokeSessionResp {
+}
+
+message UserRevokeAllSessionsReq {
+}
+
+message UserRevokeAllSessionsResp {
+}
+

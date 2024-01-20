@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -12,18 +13,27 @@ import (
 	"github.com/twitchtv/twirp"
 )
 
-var errNotImplemented = twirp.Internal.Error("Not implemented.")
+// ---------- Server
+
+func NewServer(e *echo.Echo) Server {
+	return Server{e: e}
+}
+
+type Server struct {
+	e *echo.Echo
+}
 
 type TwirpHandler interface {
 	http.Handler
 	PathPrefix() string
 }
 
-func Register(e *echo.Echo, t TwirpHandler, middleware ...echo.MiddlewareFunc) {
-	e.Any(t.PathPrefix()+"*", echo.WrapHandler(t), middleware...)
+func (s Server) Register(t TwirpHandler, middleware ...echo.MiddlewareFunc) Server {
+	s.e.Any(t.PathPrefix()+"*", echo.WrapHandler(t), middleware...)
+	return s
 }
 
-func LoggerHooks() twirp.ServerOption {
+func Logger() twirp.ServerOption {
 	return twirp.WithServerHooks(&twirp.ServerHooks{
 		Error: func(ctx context.Context, err twirp.Error) context.Context {
 			log.Err(err).Send()
@@ -32,11 +42,13 @@ func LoggerHooks() twirp.ServerOption {
 	})
 }
 
-func AuthHooks() twirp.ServerOption {
+// ---------- Middleware
+
+func AuthSession() twirp.ServerOption {
 	return twirp.WithServerHooks(&twirp.ServerHooks{
 		RequestReceived: func(ctx context.Context) (context.Context, error) {
-			user, ok := auth.GetSessionUser(ctx)
-			if !ok || !user.Valid {
+			_, ok := auth.UseSession(ctx)
+			if !ok {
 				return ctx, twirp.Unauthenticated.Error("Invalid session or not signed in.")
 			}
 			return ctx, nil
@@ -44,16 +56,36 @@ func AuthHooks() twirp.ServerOption {
 	})
 }
 
-func useSessionUser(ctx context.Context) (auth.SessionUser, error) {
-	u, ok := auth.GetSessionUser(ctx)
+func useAuthSession(ctx context.Context) models.AuthSession {
+	u, ok := auth.UseSession(ctx)
 	if !ok {
-		return auth.SessionUser{}, twirp.InternalError("Failed to get user by session.")
+		panic("rpcserver.useAuthSession must be called after rpcserver.AuthSessionMiddleware")
 	}
-	return u, nil
+	return u
 }
 
-func validationError(errs validator.ValidationErrors, message string, lookup [][2]string) twirp.Error {
-	twirpErr := twirp.InvalidArgument.Error(message)
+// ---------- Error
+
+type Error struct {
+	msg string
+}
+
+func NewError(err error, msg ...string) Error {
+	if err != nil {
+		log.Err(err).Send()
+	}
+	if len(msg) == 0 {
+		return Error{msg: "Something went wrong."}
+	}
+	return Error{msg: msg[0]}
+}
+
+func (e Error) Field(field string, fieldErr error) twirp.Error {
+	return twirp.InvalidArgument.Error(e.msg).WithMeta(field, fieldErr.Error())
+}
+
+func (e Error) Validation(errs validator.ValidationErrors, lookup [][2]string) twirp.Error {
+	twirpErr := twirp.InvalidArgument.Error(e.msg)
 	for _, f := range errs {
 		field := f.Field()
 		for _, kv := range lookup {
@@ -65,8 +97,8 @@ func validationError(errs validator.ValidationErrors, message string, lookup [][
 	return twirpErr
 }
 
-func constraintError(constraintErr sqlite.ConstraintError, message string, lookup [][3]string) twirp.Error {
-	twirpErr := twirp.InvalidArgument.Error(message)
+func (e Error) Constraint(constraintErr sqlite.ConstraintError, lookup [][3]string) twirp.Error {
+	twirpErr := twirp.InvalidArgument.Error(e.msg)
 	for _, kv := range lookup {
 		if constraintErr.IsField(kv[0]) {
 			twirpErr = twirpErr.WithMeta(kv[1], kv[2])
@@ -76,6 +108,10 @@ func constraintError(constraintErr sqlite.ConstraintError, message string, looku
 	return twirpErr
 }
 
-func internalError(err error) twirp.Error {
-	return twirp.InternalError(err.Error())
+func (w Error) Internal() twirp.Error {
+	return twirp.InternalError(w.msg)
+}
+
+func (w Error) NotImplemented() twirp.Error {
+	return twirp.InternalError("Not implemented.")
 }

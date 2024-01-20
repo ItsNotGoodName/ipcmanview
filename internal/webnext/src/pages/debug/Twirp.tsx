@@ -2,7 +2,7 @@ import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { createAsync, revalidate, useSearchParams } from "@solidjs/router";
 import { ErrorBoundary, Suspense, resetErrorBoundaries } from "solid-js";
 import { getHello } from "./Twirp.data"
-import { useLoading } from "~/hooks";
+import { createLoading } from "~/lib/utils";
 
 function queryInt(str: string | undefined) {
   if (!str) {
@@ -19,7 +19,7 @@ function queryInt(str: string | undefined) {
 
 export function Twirp() {
   const data = createAsync(getHello)
-  const [loading, refreshData] = useLoading(() => revalidate(getHello.key).then(resetErrorBoundaries))
+  const [loading, refreshData] = createLoading(() => revalidate(getHello.key).then(resetErrorBoundaries))
   const text = () => data() ? data()!.text + " " + Timestamp.toDate(Timestamp.create(data()!.currentTime)) : ""
 
   const [searchParams, setSearchParams] = useSearchParams()

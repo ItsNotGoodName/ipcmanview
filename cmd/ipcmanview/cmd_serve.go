@@ -11,8 +11,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
-	webserver "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/server"
-	webview "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/view"
+	webadminserver "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/server"
+	webadminview "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/view"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -84,7 +84,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	defer dahuaStore.Close()
 	super.Add(dahuaStore)
 
-	dahuaScanLockStore := core.NewLockStore[int64]()
+	dahuaScanLockStore := dahua.NewScanLockStore()
 
 	dahuaWorkerStore := dahua.
 		NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahuaScanLockStore, dahua.NewDefaultEventHooks(bus, db))).
@@ -118,14 +118,17 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// HTTP router
 	httpRouter := http.NewRouter()
-	webViewRenderer, err := webview.NewRenderer(webview.Config{})
+	webAdminRenderer, err := webadminview.NewRenderer(webadminview.Config{})
 	if err != nil {
 		return err
 	}
-	httpRouter.Renderer = webViewRenderer
+	httpRouter.Renderer = webAdminRenderer
+
+	// HTTP middleware
+	httpRouter.Use(auth.SessionMiddleware(db))
 
 	// WEB
-	webserver.
+	webadminserver.
 		New(db, pub, bus, mediamtxConfig, dahuaStore, dahuaAFS, dahuaFileService, dahuaScanLockStore).
 		Register(httpRouter)
 
@@ -134,15 +137,14 @@ func (c *CmdServe) Run(ctx *Context) error {
 		NewServer(pub, db, dahuaStore, dahuaAFS).
 		Register(httpRouter)
 
-		// RPC
-	{
-		authSessionMiddleware := auth.SessionMiddleware(db)
-		twirpLogger := rpcserver.LoggerHooks()
-		twirpAuth := rpcserver.AuthHooks()
-		rpcserver.Register(httpRouter, rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, twirpLogger), authSessionMiddleware)
-		rpcserver.Register(httpRouter, rpc.NewAuthServer(&rpcserver.Auth{DB: db}, twirpLogger), authSessionMiddleware)
-		rpcserver.Register(httpRouter, rpc.NewPageServer(&rpcserver.Page{DB: db}, twirpLogger, twirpAuth), authSessionMiddleware)
-	}
+	// RPC
+	rpcLogger := rpcserver.Logger()
+	rpcAuthSession := rpcserver.AuthSession()
+	rpcserver.NewServer(httpRouter).
+		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
+		Register(rpc.NewAuthServer(&rpcserver.Auth{DB: db}, rpcLogger)).
+		Register(rpc.NewPageServer(&rpcserver.Page{DB: db}, rpcLogger, rpcAuthSession)).
+		Register(rpc.NewUserServer(&rpcserver.User{DB: db}, rpcLogger, rpcAuthSession))
 
 	// HTTP server
 	httpServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPPort)))

@@ -1,14 +1,19 @@
 import { cva } from "class-variance-authority"
 import { As, DropdownMenu } from "@kobalte/core";
-import { JSX, ParentProps, createEffect, createSignal, splitProps } from "solid-js";
+import { JSX, ParentProps, Show, Suspense, createEffect, createSignal, splitProps } from "solid-js";
+import { A, action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router";
+import { RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemEyeLine, RiSystemLoader4Line, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesUserLine } from "solid-icons/ri";
+import { Portal } from "solid-js/web";
+
 import { Button } from "~/ui/Button";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
-import { A, useLocation } from "@solidjs/router";
-import { RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemEyeLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesUserLine } from "solid-icons/ri";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { toggleTheme, useThemeTitle } from "~/ui/theme";
 import { makePersisted } from "@solid-primitives/storage";
-import { useAuth } from "~/providers/auth";
+import { ToastList, ToastRegion } from "~/ui/Toast";
+import { cn, toastError } from "~/lib/utils";
+import { getSession, useSession } from "~/providers/session";
+import { Loading } from "./ui/Loading";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none hover:bg-primary hover:text-primary-foreground ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
@@ -22,6 +27,7 @@ const menuLinkVariants = cva("ui-disabled:pointer-events-none hover:bg-primary h
   }
 })
 
+// FIXME: dropdown menu item <A> links are broken on IOS
 function DropdownMenuLinks() {
   return (
     <>
@@ -48,12 +54,24 @@ function MenuLinks() {
   )
 }
 
+const actionSignOut = action(() =>
+  fetch("/v1/session", {
+    credentials: "include",
+    headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
+    method: "DELETE"
+  }).then(async (resp) => {
+    if (!resp.ok) {
+      const json = await resp.json()
+      throw new Error(json.message)
+    }
+    return revalidate(getSession.key)
+  }).catch(toastError)
+)
+
 function Header(props: { onMenuClick: () => void }) {
-  const auth = useAuth()
-  const loc = useLocation()
-  createEffect(() => {
-    console.log(loc.key)
-  })
+  const signOutSubmission = useSubmission(actionSignOut)
+  const signOutAction = useAction(actionSignOut)
+  const signOut = () => signOutAction().catch(toastError)
 
   return (
     <div
@@ -101,7 +119,7 @@ function Header(props: { onMenuClick: () => void }) {
                     <RiUserFacesUserLine class="h-5 w-5" />Profile
                   </As>
                 </DropdownMenu.Item>
-                <DropdownMenu.Item class={menuLinkVariants()} onClick={auth.clear}>
+                <DropdownMenu.Item class={menuLinkVariants()} onClick={signOut} disabled={signOutSubmission.pending}>
                   <RiSystemLogoutBoxRFill class="h-5 w-5" />Sign out
                 </DropdownMenu.Item>
               </DropdownMenuContent>
@@ -140,19 +158,32 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuO
   )
 }
 
-export function AuthLayout(props: ParentProps) {
+export function Layout(props: ParentProps) {
+  useSession()
   const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
+  const session = createAsync(getSession)
+  const toastClass = () => session() ? "top-12 sm:top-12" : ""
+
   return (
     <>
-      <Header onMenuClick={() => setMenuOpen((prev) => !prev)} />
-      <div class="flex">
-        <Menu menuOpen={menuOpen()}>
-          <MenuLinks />
-        </Menu>
-        <div class="w-full">
-          {props.children}
-        </div>
-      </div >
+      <Portal>
+        <ToastRegion class={toastClass()}>
+          <ToastList class={toastClass()} />
+        </ToastRegion>
+      </Portal>
+      <Suspense fallback={<Loading class="pt-10" />}>
+        <Show when={session()} fallback={<>{props.children}</>}>
+          <Header onMenuClick={() => setMenuOpen((prev) => !prev)} />
+          <div class="flex">
+            <Menu menuOpen={menuOpen()}>
+              <MenuLinks />
+            </Menu>
+            <div class="w-full overflow-x-auto"> {/* FIXME: overflow-x-auto is needed to fix overflowing tables BUT it also breaks something and I forgot what it was ¯\_(ツ)_/¯ */}
+              {props.children}
+            </div>
+          </div >
+        </Show>
+      </Suspense>
     </>
   )
 }
