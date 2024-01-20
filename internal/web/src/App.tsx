@@ -20,7 +20,7 @@ function App() {
 
   return (
     <ClientProvider>
-      <Router base="/next" root={Layout}>
+      <Router root={Layout}> {/* FIXME: solid-router explicitLinks={true} is broken, https://github.com/solidjs/solid-router/issues/356 */}
         <Debug />
         <Switch>
           <Match when={session()}>

@@ -29,6 +29,8 @@ type Server struct {
 	dahuaFileFS afero.Fs
 }
 
+const Route = "/v1"
+
 func (s *Server) Register(e *echo.Echo, m ...echo.MiddlewareFunc) {
 	g := e.Group("", m...)
 

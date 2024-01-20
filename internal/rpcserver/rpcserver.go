@@ -13,6 +13,8 @@ import (
 	"github.com/twitchtv/twirp"
 )
 
+const Route = "/twirp"
+
 // ---------- Server
 
 func NewServer(e *echo.Echo) Server {

@@ -44,7 +44,7 @@ func NewSession(ctx context.Context, db repo.DB, userAgent, ip string, userID in
 	}, nil
 }
 
-func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
+func Session(db repo.DB) echo.MiddlewareFunc {
 	sessionUpdateLock := core.NewLockStore[string]()
 	sessionUpdateThrottle := time.Minute
 	return func(next echo.HandlerFunc) echo.HandlerFunc {

@@ -422,11 +422,11 @@ func (db DB) CreateUserSessionAndDeletePrevious(ctx context.Context, args Create
 	}
 	defer tx.Rollback()
 
-	if err := db.CreateUserSession(ctx, args); err != nil {
+	if err := tx.CreateUserSession(ctx, args); err != nil {
 		return err
 	}
 
-	if err := db.DeleteUserSessionBySession(ctx, previousSession); err != nil {
+	if err := tx.DeleteUserSessionBySession(ctx, previousSession); err != nil {
 		return err
 	}
 

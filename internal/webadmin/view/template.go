@@ -116,10 +116,10 @@ type TemplateContext struct {
 	Data     any
 }
 
-func NewRenderer(config Config) (Renderer, error) {
+func WithRenderer(e *echo.Echo, config Config) (*echo.Echo, error) {
 	files, err := webadmin.ViewsFS().ReadDir("views")
 	if err != nil {
-		return Renderer{}, err
+		return nil, err
 	}
 
 	parser := parser{
@@ -136,11 +136,13 @@ func NewRenderer(config Config) (Renderer, error) {
 		}
 	}
 
-	return Renderer{
+	e.Renderer = Renderer{
 		head:      webadmin.Head(),
 		templates: templates,
 		parser:    parser,
-	}, nil
+	}
+
+	return e, nil
 }
 
 type Renderer struct {

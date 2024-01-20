@@ -9,7 +9,11 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
+	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
+	"github.com/ItsNotGoodName/ipcmanview/internal/web"
+	"github.com/ItsNotGoodName/ipcmanview/internal/webadmin"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/echoext"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -20,25 +24,21 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	routes := []struct {
-		URL   string
-		Route string
+	servers := []struct {
+		URL    string
+		Routes []string
 	}{
 		{
-			URL:   "http://127.0.0.1:5174",
-			Route: "/next/*",
+			URL: "http://127.0.0.1:8080",
+			Routes: []string{
+				webadmin.Route, webadmin.Route + "/*",
+				api.Route, api.Route + "/*",
+				rpcserver.Route, rpcserver.Route + "/*",
+			},
 		},
 		{
-			URL:   "http://127.0.0.1:5174",
-			Route: "/next",
-		},
-		{
-			URL:   "http://127.0.0.1:8080",
-			Route: "/*",
-		},
-		{
-			URL:   "http://127.0.0.1:8080",
-			Route: "/",
+			URL:    "http://127.0.0.1:5174",
+			Routes: []string{web.Route, web.Route + "*"},
 		},
 	}
 	address := ":3000"
@@ -46,15 +46,17 @@ func main() {
 	e := echo.New()
 	e.Use(echoext.Logger())
 
-	for _, route := range routes {
-		urL := must(url.Parse(route.URL))
+	for _, server := range servers {
+		urL := must(url.Parse(server.URL))
 		func(urL *url.URL) {
-			e.Any(route.Route, echo.WrapHandler(&httputil.ReverseProxy{
-				Rewrite: func(r *httputil.ProxyRequest) {
-					r.SetURL(urL)
-					r.SetXForwarded()
-				},
-			}))
+			for _, route := range server.Routes {
+				e.Any(route, echo.WrapHandler(&httputil.ReverseProxy{
+					Rewrite: func(r *httputil.ProxyRequest) {
+						r.SetURL(urL)
+						r.SetXForwarded()
+					},
+				}))
+			}
 		}(urL)
 	}
 

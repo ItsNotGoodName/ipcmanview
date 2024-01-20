@@ -4,7 +4,6 @@ import path from "path";
 
 export default defineConfig({
   plugins: [solid()],
-  base: "/next",
   resolve: {
     alias: {
       "~": path.resolve(__dirname, "./src"),

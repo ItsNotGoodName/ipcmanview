@@ -53,9 +53,9 @@ func Head() template.HTML {
 
 	var headTags string
 	for _, v := range manifest.CSS {
-		headTags += fmt.Sprintf(`<link rel="stylesheet" href="/%s" />`, v)
+		headTags += fmt.Sprintf(`<link rel="stylesheet" href="%s/%s" />`, Route, v)
 	}
-	headTags += fmt.Sprintf(`<script type="module" src="/%s"></script>`, manifest.File)
+	headTags += fmt.Sprintf(`<script type="module" src="%s/%s"></script>`, Route, manifest.File)
 
 	return template.HTML(headTags)
 }

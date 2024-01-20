@@ -17,21 +17,30 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
+	"github.com/ItsNotGoodName/ipcmanview/internal/webadmin"
 	"github.com/ItsNotGoodName/ipcmanview/internal/webadmin/view"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/htmx"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 )
 
-func (w Server) Register(e *echo.Echo, m ...echo.MiddlewareFunc) {
-	g := e.Group("/admin", m...)
+func (w Server) Register(e *echo.Echo) {
+	g := e.Group("/admin")
 
+	g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		Filesystem: webadmin.AssetFS(),
+	}))
+
+	g.GET("", w.Index)
+	g.GET("/", w.Index)
+
+	// Dahua
 	g.DELETE("/dahua/events", w.DahuaEventsDELETE)
 	g.DELETE("/dahua/streams/:id", w.DahuaStreamsIDDELETE)
-	g.GET("/", w.Index)
 	g.GET("/dahua", w.Dahua)
 	g.GET("/dahua/devices", w.DahuaDevices)
 	g.GET("/dahua/devices/:id/update", w.DahuaDevicesUpdate)

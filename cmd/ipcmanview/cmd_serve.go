@@ -11,6 +11,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
+	"github.com/ItsNotGoodName/ipcmanview/internal/web"
+	"github.com/ItsNotGoodName/ipcmanview/internal/webadmin"
 	webadminserver "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/server"
 	webadminview "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/view"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
@@ -117,15 +119,14 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super.Add(dahuaSMTPServer)
 
 	// HTTP router
-	httpRouter := http.NewRouter()
-	webAdminRenderer, err := webadminview.NewRenderer(webadminview.Config{})
+	httpRouter, err := webadminview.WithRenderer(http.NewRouter(), webadminview.Config{})
 	if err != nil {
 		return err
 	}
-	httpRouter.Renderer = webAdminRenderer
 
 	// HTTP middleware
-	httpRouter.Use(auth.SessionMiddleware(db))
+	httpRouter.Use(web.FS(api.Route, rpcserver.Route, webadmin.Route))
+	httpRouter.Use(auth.Session(db))
 
 	// WEB
 	webadminserver.
