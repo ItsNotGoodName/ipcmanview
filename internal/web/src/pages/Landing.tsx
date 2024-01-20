@@ -17,7 +17,7 @@ import { toast } from "~/ui/Toast";
 
 function Header() {
   return (
-    <div class="text-2xl text-center">IPCManView</div>
+    <div class="text-center text-2xl">IPCManView</div>
   )
 }
 
@@ -155,11 +155,14 @@ const actionSignUp = action((form: SignUpForm) => {
   if (form.password != form.confirmPassword) {
     throw new FormError<SignUpForm>("", { confirmPassword: "Password does not match." })
   }
+
   return useClient()
     .auth.signUp(form)
     .then()
     .catch(throwAsFormError)
-    .then(() => { throw redirect("/signup") })
+    .then(async () => {
+      throw redirect("/signin")
+    })
 })
 
 export function Signup() {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/ffmpeg"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -50,7 +51,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 
 		width, height := 480, 320
 		extension := "jpg"
-		inputPath := baseURL + dahua.FileURI(file.DeviceID, file.FilePath)
+		inputPath := baseURL + api.FileURI(file.DeviceID, file.FilePath)
 		videoPosition := 5 * time.Second
 
 		if err := func() error {

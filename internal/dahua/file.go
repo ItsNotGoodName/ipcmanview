@@ -3,7 +3,6 @@ package dahua
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"io"
 	"net"
 	"net/url"
@@ -19,12 +18,6 @@ import (
 	"github.com/spf13/afero"
 	"golang.org/x/crypto/ssh"
 )
-
-const FileEchoRoute = "/v1/dahua/devices/:id/files/*"
-
-func FileURI(deviceID int64, filePath string) string {
-	return fmt.Sprintf("/v1/dahua/devices/%d/files/%s", deviceID, filePath)
-}
 
 func FileFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (io.ReadCloser, error) {
 	u, err := url.Parse(fileFilePath)

@@ -29,7 +29,7 @@ import (
 )
 
 func (w Server) Register(e *echo.Echo) {
-	g := e.Group("/admin")
+	g := e.Group(webadmin.Route)
 
 	g.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Filesystem: webadmin.AssetFS(),
@@ -360,7 +360,7 @@ func (s Server) DahuaFilesIDThumbnail(c echo.Context) error {
 
 	if file.Name.Valid && file.Ready.Bool {
 		return c.Render(http.StatusOK, "dahua-files", view.Block{Name: "htmx-thumbnail", Data: view.Data{
-			"URL": dahua.AferoFileURI(file.Name.String),
+			"URL": api.AferoFileURI(file.Name.String),
 		}})
 	}
 
@@ -431,7 +431,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 	}
 	defer sub.Close()
 
-	w := useEventStream(c)
+	stream := newEventStream(c)
 	buf := new(bytes.Buffer)
 
 	for event := range eventsC {
@@ -459,7 +459,7 @@ func (s Server) DahuaEventStream(c echo.Context) error {
 			return err
 		}
 
-		err := sendEventStream(w, formatEventStream("message", buf.String()))
+		err := writeEventStream(stream, "message", buf.String())
 		if err != nil {
 			return err
 		}
@@ -591,7 +591,7 @@ func (s Server) DahuaDevicesCreatePOST(c echo.Context) error {
 		return err
 	}
 
-	return c.Redirect(http.StatusSeeOther, "/dahua/devices")
+	return c.Redirect(http.StatusSeeOther, "/admin/dahua/devices")
 }
 
 func (s Server) DahuaDevicesFileCursorsPOST(c echo.Context) error {
@@ -684,7 +684,7 @@ func (s Server) DahuaDevicesFileCursors(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	if !isHTMX(c) {
-		return c.Redirect(http.StatusSeeOther, "/dahua/devices#file-cursors")
+		return c.Redirect(http.StatusSeeOther, "/admin/dahua/devices#file-cursors")
 	}
 
 	fileCursors, err := useDahuaFileCursors(ctx, s.db, s.dahuaScanLockStore)
@@ -765,7 +765,7 @@ func (s Server) DahuaDevicesUpdatePOST(c echo.Context) error {
 		return err
 	}
 
-	return c.Redirect(http.StatusSeeOther, "/dahua/devices")
+	return c.Redirect(http.StatusSeeOther, "/admin/dahua/devices")
 }
 
 func (s Server) DahuaSnapshots(c echo.Context) error {
@@ -1107,7 +1107,7 @@ func (s Server) DahuaStorageDestinationsCreatePOST(c echo.Context) error {
 		return err
 	}
 
-	return c.Redirect(http.StatusSeeOther, "/dahua/storage")
+	return c.Redirect(http.StatusSeeOther, "/admin/dahua/storage")
 }
 
 func (s Server) DahuaStorageDestinationsIDPOST(c echo.Context) error {
@@ -1159,7 +1159,7 @@ func (s Server) DahuaStorageDestinationsIDPOST(c echo.Context) error {
 		return err
 	}
 
-	return c.Redirect(http.StatusSeeOther, "/dahua/storage")
+	return c.Redirect(http.StatusSeeOther, "/admin/dahua/storage")
 }
 
 func (s Server) DahuaStorageDestinationsIDTestPOST(c echo.Context) error {

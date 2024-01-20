@@ -9,7 +9,6 @@ import (
 func NewRouter() *echo.Echo {
 	e := echo.New()
 	e.IPExtractor = echo.ExtractIPFromXFFHeader()
-	echoext.WithErrorLogging(e)
 
 	// Middleware
 	e.Use(echoext.LoggerWithConfig(echoext.LoggerConfig{

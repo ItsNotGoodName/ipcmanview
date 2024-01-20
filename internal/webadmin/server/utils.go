@@ -7,6 +7,13 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// isHTMX checks if request is an htmx request but not a boosted htmx request.
+func isHTMX(c echo.Context) bool {
+	return htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request())
+}
+
+// ---------- Toast
+
 func toast(message string) htmx.Event {
 	return htmx.NewEvent("toast", message)
 }
@@ -15,33 +22,29 @@ func toastError(message string) htmx.Event {
 	return htmx.NewEvent("toast-error", message)
 }
 
-// isHTMX checks if request is an htmx request but not a boosted htmx request.
-func isHTMX(c echo.Context) bool {
-	return htmx.GetRequest(c.Request()) && !htmx.GetBoosted(c.Request())
-}
+// ---------- EventStream
 
-func useEventStream(c echo.Context) *echo.Response {
+func newEventStream(c echo.Context) *echo.Response {
 	w := c.Response()
-	w.Header().Set(echo.HeaderContentType, "text/event-stream")
-	w.Header().Set(echo.HeaderCacheControl, "no-cache")
-	w.Header().Set(echo.HeaderConnection, "keep-alive")
+	h := w.Header()
+	h.Set(echo.HeaderContentType, "text/event-stream")
+	h.Set(echo.HeaderCacheControl, "no-cache")
+	h.Set(echo.HeaderConnection, "keep-alive")
 	return w
 }
 
-func sendEventStream(w *echo.Response, data []byte) error {
+func writeEventStream(w *echo.Response, event, message string) error {
+	eventPayload := "event: " + event + "\n"
+	dataLines := strings.Split(message, "\n")
+	for _, line := range dataLines {
+		eventPayload = eventPayload + "data: " + line + "\n"
+	}
+	data := []byte(eventPayload + "\n")
+
 	_, err := w.Write(data)
 	if err != nil {
 		return err
 	}
 	w.Flush()
 	return nil
-}
-
-func formatEventStream(event string, data string) []byte {
-	eventPayload := "event: " + event + "\n"
-	dataLines := strings.Split(data, "\n")
-	for _, line := range dataLines {
-		eventPayload = eventPayload + "data: " + line + "\n"
-	}
-	return []byte(eventPayload + "\n")
 }

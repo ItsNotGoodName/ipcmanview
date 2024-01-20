@@ -38,7 +38,6 @@ func (s Server) Register(t TwirpHandler, middleware ...echo.MiddlewareFunc) Serv
 func Logger() twirp.ServerOption {
 	return twirp.WithServerHooks(&twirp.ServerHooks{
 		Error: func(ctx context.Context, err twirp.Error) context.Context {
-			log.Err(err).Send()
 			return ctx
 		},
 	})
@@ -74,7 +73,7 @@ type Error struct {
 
 func NewError(err error, msg ...string) Error {
 	if err != nil {
-		log.Err(err).Send()
+		log.Err(err).Str("package", "rpcserver").Send()
 	}
 	if len(msg) == 0 {
 		return Error{msg: "Something went wrong."}

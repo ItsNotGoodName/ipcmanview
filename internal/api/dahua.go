@@ -186,22 +186,22 @@ func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 		}
 		reader := manager.Reader()
 
-		stream := useStream(c)
+		stream := newStream(c)
 
 		for {
 			err := reader.Poll()
 			if err != nil {
-				return sendStreamError(c, stream, err)
+				return writeStreamError(c, stream, err)
 			}
 
 			event, err := reader.ReadEvent()
 			if err != nil {
-				return sendStreamError(c, stream, err)
+				return writeStreamError(c, stream, err)
 			}
 
 			data := dahua.NewDahuaEvent(client.Conn.ID, event)
 
-			if err := sendStream(c, stream, data); err != nil {
+			if err := writeStream(c, stream, data); err != nil {
 				return err
 			}
 		}
@@ -214,7 +214,7 @@ func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 		}
 		defer sub.Close()
 
-		stream := useStream(c)
+		stream := newStream(c)
 
 		for event := range eventsC {
 			evt, ok := event.(models.EventDahuaEvent)
@@ -222,14 +222,14 @@ func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 				continue
 			}
 
-			err := sendStream(c, stream, evt.Event)
+			err := writeStream(c, stream, evt.Event)
 			if err != nil {
-				return sendStreamError(c, stream, err)
+				return writeStreamError(c, stream, err)
 			}
 		}
 
 		if err := sub.Error(); err != nil {
-			return sendStreamError(c, stream, err)
+			return writeStreamError(c, stream, err)
 		}
 
 		return nil
@@ -250,7 +250,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 	}
 	defer sub.Close()
 
-	stream := useStream(c)
+	stream := newStream(c)
 
 	for event := range eventsC {
 		evt, ok := event.(models.EventDahuaEvent)
@@ -262,13 +262,13 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 			continue
 		}
 
-		if err := sendStream(c, stream, evt.Event); err != nil {
-			return sendStreamError(c, stream, err)
+		if err := writeStream(c, stream, evt.Event); err != nil {
+			return writeStreamError(c, stream, err)
 		}
 	}
 
 	if err := sub.Error(); err != nil {
-		return sendStreamError(c, stream, err)
+		return writeStreamError(c, stream, err)
 	}
 
 	return nil
@@ -298,7 +298,7 @@ func (s *Server) DahuaDevicesIDFiles(c echo.Context) error {
 	iterator := dahua.NewScannerPeriodIterator(timeRange)
 
 	filesC := make(chan []mediafilefind.FindNextFileInfo)
-	stream := useStream(c)
+	stream := newStream(c)
 
 	for period, ok := iterator.Next(); ok; period, ok = iterator.Next() {
 		cancel, errC := dahua.ScannerScan(ctx, client.RPC, period, client.Conn.Location, filesC)
@@ -308,20 +308,20 @@ func (s *Server) DahuaDevicesIDFiles(c echo.Context) error {
 		for {
 			select {
 			case <-ctx.Done():
-				return sendStreamError(c, stream, ctx.Err())
+				return writeStreamError(c, stream, ctx.Err())
 			case err := <-errC:
 				if err != nil {
-					return sendStreamError(c, stream, err)
+					return writeStreamError(c, stream, err)
 				}
 				break inner
 			case files := <-filesC:
 				res, err := dahua.NewDahuaFiles(client.Conn.ID, files, dahua.GetSeed(client.Conn), client.Conn.Location)
 				if err != nil {
-					return sendStreamError(c, stream, err)
+					return writeStreamError(c, stream, err)
 				}
 
-				if err := sendStream(c, stream, res); err != nil {
-					return sendStreamError(c, stream, err)
+				if err := writeStream(c, stream, res); err != nil {
+					return writeStreamError(c, stream, err)
 				}
 			}
 		}

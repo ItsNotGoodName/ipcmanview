@@ -10,11 +10,11 @@ hljs.registerLanguage('json', json);
 @customElement('x-json')
 export class XJson extends LitElement {
   @property()
-  json = '{}';
+  value = '{}';
 
   render() {
     const template = document.createElement('code');
-    template.innerHTML = hljs.highlight(this.json, { language: "json" }).value;
+    template.innerHTML = hljs.highlight(this.value, { language: "json" }).value;
     template.className = "hljs"
     return html`
       <pre>${template}</pre>

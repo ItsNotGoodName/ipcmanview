@@ -2,6 +2,7 @@ package echoext
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -11,14 +12,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
-
-func WithErrorLogging(e *echo.Echo) {
-	parent := e.HTTPErrorHandler
-	e.HTTPErrorHandler = func(err error, c echo.Context) {
-		log.Err(err).Send()
-		parent(err, c)
-	}
-}
 
 type (
 	// LoggerConfig defines the config for Logger middleware.
@@ -126,12 +119,21 @@ func LoggerWithConfig(config LoggerConfig) echo.MiddlewareFunc {
 			}
 			stop := time.Now()
 
-			var log *zerolog.Event
-			if res.Status >= 500 {
-				log = config.Logger.Error()
-			} else {
-				log = config.Logger.Info()
-			}
+			log := func() *zerolog.Event {
+				if err == nil {
+					return config.Logger.Info()
+				}
+
+				var e *echo.HTTPError
+				if errors.As(err, &e) {
+					if e.Internal == nil {
+						return config.Logger.Error()
+					}
+					return config.Logger.Err(e.Internal)
+				}
+
+				return config.Logger.Err(err)
+			}()
 
 			fn := func(log *zerolog.Event, tag string) (*zerolog.Event, error) {
 				switch tag {

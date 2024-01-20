@@ -71,13 +71,13 @@ import "./x-json.ts"
 
 // ---------- Checkbox
 
-// @ts-ignore
+// @ts-expect-error
 window.tableCheckbox = function(ele: HTMLInputElement) {
-  ele.
-    closest("table")?.
-    querySelectorAll(`th input[type="checkbox"]`).
-    // @ts-ignore
-    forEach((e: HTMLInputElement, _) => {
+  ele
+    .closest("table")
+    ?.querySelectorAll(`th input[type="checkbox"]`)
+    // @ts-expect-error
+    .forEach((e: HTMLInputElement, _) => {
       if (!e.disabled)
         e.checked = ele.checked
     })

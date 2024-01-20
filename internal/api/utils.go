@@ -32,7 +32,7 @@ func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Clien
 
 // ---------- Stream
 
-func useStream(c echo.Context) *json.Encoder {
+func newStream(c echo.Context) *json.Encoder {
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
 	return json.NewEncoder(c.Response())
@@ -44,7 +44,7 @@ type StreamPayload struct {
 	OK      bool    `json:"ok"`
 }
 
-func sendStreamError(c echo.Context, enc *json.Encoder, err error) error {
+func writeStreamError(c echo.Context, enc *json.Encoder, err error) error {
 	str := err.Error()
 	if encodeErr := enc.Encode(StreamPayload{
 		OK:      false,
@@ -58,13 +58,13 @@ func sendStreamError(c echo.Context, enc *json.Encoder, err error) error {
 	return err
 }
 
-func sendStream(c echo.Context, enc *json.Encoder, data any) error {
+func writeStream(c echo.Context, enc *json.Encoder, data any) error {
 	err := enc.Encode(StreamPayload{
 		OK:   true,
 		Data: data,
 	})
 	if err != nil {
-		return sendStreamError(c, enc, err)
+		return writeStreamError(c, enc, err)
 	}
 
 	c.Response().Flush()
