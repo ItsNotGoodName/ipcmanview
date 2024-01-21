@@ -72,6 +72,7 @@ func (lhs DahuaConn) EQ(rhs DahuaConn) bool {
 type DahuaDeviceConn struct {
 	DahuaDevice
 	DahuaConn
+	Level DahuaPermissionLevel
 }
 
 type DahuaFeature int
@@ -226,4 +227,25 @@ type DahuaStorageDestination struct {
 	Username        string
 	Password        string
 	RemoteDirectory string
+}
+
+type DahuaPermissionLevel int
+
+const (
+	DahuaPermissionLevelUser DahuaPermissionLevel = iota
+	DahuaPermissionLevelOperator
+	DahuaPermissionLevelAdmin
+)
+
+func (l DahuaPermissionLevel) String() string {
+	switch l {
+	case DahuaPermissionLevelUser:
+		return "user"
+	case DahuaPermissionLevelOperator:
+		return "operator"
+	case DahuaPermissionLevelAdmin:
+		return "admin"
+	default:
+		return "unknown"
+	}
 }

@@ -15,6 +15,8 @@ import type { UserUpdateUsernameReq } from "./rpc";
 import { Page } from "./rpc";
 import type { PageProfileResp } from "./rpc";
 import type { PageProfileReq } from "./rpc";
+import type { PageHomeResp } from "./rpc";
+import type { PageHomeReq } from "./rpc";
 import { Auth } from "./rpc";
 import type { AuthForgotResp } from "./rpc";
 import type { AuthForgotReq } from "./rpc";
@@ -96,6 +98,10 @@ export class AuthClient implements IAuthClient, ServiceInfo {
  */
 export interface IPageClient {
     /**
+     * @generated from protobuf rpc: Home(PageHomeReq) returns (PageHomeResp);
+     */
+    home(input: PageHomeReq, options?: RpcOptions): UnaryCall<PageHomeReq, PageHomeResp>;
+    /**
      * @generated from protobuf rpc: Profile(PageProfileReq) returns (PageProfileResp);
      */
     profile(input: PageProfileReq, options?: RpcOptions): UnaryCall<PageProfileReq, PageProfileResp>;
@@ -110,10 +116,17 @@ export class PageClient implements IPageClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
+     * @generated from protobuf rpc: Home(PageHomeReq) returns (PageHomeResp);
+     */
+    home(input: PageHomeReq, options?: RpcOptions): UnaryCall<PageHomeReq, PageHomeResp> {
+        const method = this.methods[0], opt = this._transport.mergeOptions(options);
+        return stackIntercept<PageHomeReq, PageHomeResp>("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: Profile(PageProfileReq) returns (PageProfileResp);
      */
     profile(input: PageProfileReq, options?: RpcOptions): UnaryCall<PageProfileReq, PageProfileResp> {
-        const method = this.methods[0], opt = this._transport.mergeOptions(options);
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
         return stackIntercept<PageProfileReq, PageProfileResp>("unary", this._transport, method, opt, input);
     }
 }

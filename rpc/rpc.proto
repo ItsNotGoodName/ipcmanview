@@ -59,7 +59,14 @@ message AuthForgotResp {
 }
 
 service Page {
+  rpc Home(PageHomeReq) returns (PageHomeResp);
   rpc Profile(PageProfileReq) returns (PageProfileResp);
+}
+
+message PageHomeReq {}
+
+message PageHomeResp {
+  int64 device_count = 1;
 }
 
 message PageProfileReq {}

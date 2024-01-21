@@ -2,8 +2,10 @@ package rpcserver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -12,6 +14,26 @@ import (
 
 type Page struct {
 	DB repo.DB
+}
+
+func (p *Page) Home(ctx context.Context, req *rpc.PageHomeReq) (*rpc.PageHomeResp, error) {
+	authSession := useAuthSession(ctx)
+
+	dbDevices, err := p.DB.ListDahuaDeviceForUser(ctx, repo.ListDahuaDeviceForUserParams{
+		Admin:  authSession.Admin,
+		UserID: core.Int64ToNullInt64(authSession.UserID),
+	})
+	if err != nil {
+		return nil, NewError(err).Internal()
+	}
+
+	for _, lddfur := range dbDevices {
+		fmt.Println(lddfur.ID, lddfur.Level)
+	}
+
+	return &rpc.PageHomeResp{
+		DeviceCount: int64(len(dbDevices)),
+	}, nil
 }
 
 func (p *Page) Profile(ctx context.Context, req *rpc.PageProfileReq) (*rpc.PageProfileResp, error) {

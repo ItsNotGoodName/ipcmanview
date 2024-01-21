@@ -121,6 +121,20 @@ export interface AuthForgotReq {
 export interface AuthForgotResp {
 }
 /**
+ * @generated from protobuf message PageHomeReq
+ */
+export interface PageHomeReq {
+}
+/**
+ * @generated from protobuf message PageHomeResp
+ */
+export interface PageHomeResp {
+    /**
+     * @generated from protobuf field: int64 device_count = 1;
+     */
+    deviceCount: bigint;
+}
+/**
  * @generated from protobuf message PageProfileReq
  */
 export interface PageProfileReq {
@@ -330,6 +344,28 @@ class AuthForgotResp$Type extends MessageType<AuthForgotResp> {
  */
 export const AuthForgotResp = new AuthForgotResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class PageHomeReq$Type extends MessageType<PageHomeReq> {
+    constructor() {
+        super("PageHomeReq", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message PageHomeReq
+ */
+export const PageHomeReq = new PageHomeReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class PageHomeResp$Type extends MessageType<PageHomeResp> {
+    constructor() {
+        super("PageHomeResp", [
+            { no: 1, name: "device_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message PageHomeResp
+ */
+export const PageHomeResp = new PageHomeResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class PageProfileReq$Type extends MessageType<PageProfileReq> {
     constructor() {
         super("PageProfileReq", []);
@@ -482,6 +518,7 @@ export const Auth = new ServiceType("Auth", [
  * @generated ServiceType for protobuf service Page
  */
 export const Page = new ServiceType("Page", [
+    { name: "Home", options: {}, I: PageHomeReq, O: PageHomeResp },
     { name: "Profile", options: {}, I: PageProfileReq, O: PageProfileResp }
 ]);
 /**

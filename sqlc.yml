@@ -38,3 +38,5 @@ sql:
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.DahuaScanType"
           - column: "dahua_email_messages.`to`"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.StringSlice"
+          - column: "dahua_permissions.level"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.DahuaPermissionLevel"

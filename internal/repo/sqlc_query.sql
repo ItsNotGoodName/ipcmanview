@@ -114,8 +114,11 @@ WHERE
 -- name: ListGroupForUser :many
 SELECT
   g.*
-FROM groups AS g LEFT JOIN group_users AS gu ON gu.group_id = g.id
-WHERE gu.user_id = ?;
+FROM
+  groups AS g
+  LEFT JOIN group_users AS gu ON gu.group_id = g.id
+WHERE
+  gu.user_id = ?;
 
 -- name: createDahuaDevice :one
 INSERT INTO
@@ -204,6 +207,31 @@ FROM
   LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 WHERE
   id IN (sqlc.slice ('ids'));
+
+-- name: ListDahuaDeviceForUser :many
+SELECT
+  d.*,
+  coalesce(s.seed, d.id) AS seed,
+  coalesce(p.level, 2)
+FROM
+  dahua_devices as d
+  LEFT JOIN dahua_seeds AS s ON s.device_id = d.id
+  LEFT JOIN dahua_permissions AS p ON p.device_id = d.id
+WHERE
+  true = sqlc.arg ('admin')
+  OR p.user_id = sqlc.arg ('user_id')
+  OR p.group_id IN (
+    SELECT
+      group_id
+    FROM
+      group_users
+    WHERE
+      user_id = sqlc.arg ('user_id')
+  )
+GROUP BY
+  d.id
+ORDER BY
+  p.level DESC;
 
 -- name: listDahuaDeviceByFeature :many
 SELECT
