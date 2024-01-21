@@ -17,6 +17,12 @@ message Session {
   bool current = 8;
 }
 
+message Group {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+
 service HelloWorld {
   rpc Hello(HelloReq) returns (HelloResp);
 }
@@ -72,6 +78,7 @@ service User {
   rpc UpdatePassword(UserUpdatePasswordReq) returns (UserUpdatePasswordResp);
   rpc RevokeSession(UserRevokeSessionReq) returns (UserRevokeSessionResp);
   rpc RevokeAllSessions(UserRevokeAllSessionsReq) returns (UserRevokeAllSessionsResp);
+  rpc ListGroup(UserListGroupReq) returns(UserListGroupResp);
 }
 
 message UserUpdateUsernameReq {
@@ -102,3 +109,10 @@ message UserRevokeAllSessionsReq {
 message UserRevokeAllSessionsResp {
 }
 
+
+message UserListGroupReq {
+}
+
+message UserListGroupResp {
+  repeated Group groups = 1;
+}

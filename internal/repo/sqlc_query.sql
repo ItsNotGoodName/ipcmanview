@@ -111,6 +111,12 @@ DELETE FROM user_sessions
 WHERE
   session = ?;
 
+-- name: ListGroupForUser :many
+SELECT
+  g.*
+FROM groups AS g LEFT JOIN group_users AS gu ON gu.group_id = g.id
+WHERE gu.user_id = ?;
+
 -- name: createDahuaDevice :one
 INSERT INTO
   dahua_devices (

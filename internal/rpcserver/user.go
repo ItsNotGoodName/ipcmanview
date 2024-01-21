@@ -103,3 +103,25 @@ func (u *User) RevokeSession(ctx context.Context, req *rpc.UserRevokeSessionReq)
 
 	return &rpc.UserRevokeSessionResp{}, nil
 }
+
+func (u *User) ListGroup(ctx context.Context, req *rpc.UserListGroupReq) (*rpc.UserListGroupResp, error) {
+	authSession := useAuthSession(ctx)
+	
+	dbGroups, err := u.DB.ListGroupForUser(ctx, authSession.UserID)
+	if err != nil{
+		return nil, NewError(err).Internal()
+	}
+
+	groups := make([]*rpc.Group, 0, len(dbGroups))
+	for _, v := range dbGroups {
+		groups = append(groups, &rpc.Group{
+			Id:          v.ID,
+			Name:        v.Name,
+			Description: v.Description,
+		})
+	}
+
+	return &rpc.UserListGroupResp{
+		Groups: groups,
+	}, nil
+}

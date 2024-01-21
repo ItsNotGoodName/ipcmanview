@@ -2,6 +2,8 @@
 // @generated from protobuf file "rpc.proto" (syntax proto3)
 // tslint:disable
 import { User } from "./rpc";
+import type { UserListGroupResp } from "./rpc";
+import type { UserListGroupReq } from "./rpc";
 import type { UserRevokeAllSessionsResp } from "./rpc";
 import type { UserRevokeAllSessionsReq } from "./rpc";
 import type { UserRevokeSessionResp } from "./rpc";
@@ -135,6 +137,10 @@ export interface IUserClient {
      * @generated from protobuf rpc: RevokeAllSessions(UserRevokeAllSessionsReq) returns (UserRevokeAllSessionsResp);
      */
     revokeAllSessions(input: UserRevokeAllSessionsReq, options?: RpcOptions): UnaryCall<UserRevokeAllSessionsReq, UserRevokeAllSessionsResp>;
+    /**
+     * @generated from protobuf rpc: ListGroup(UserListGroupReq) returns (UserListGroupResp);
+     */
+    listGroup(input: UserListGroupReq, options?: RpcOptions): UnaryCall<UserListGroupReq, UserListGroupResp>;
 }
 /**
  * @generated from protobuf service User
@@ -172,5 +178,12 @@ export class UserClient implements IUserClient, ServiceInfo {
     revokeAllSessions(input: UserRevokeAllSessionsReq, options?: RpcOptions): UnaryCall<UserRevokeAllSessionsReq, UserRevokeAllSessionsResp> {
         const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<UserRevokeAllSessionsReq, UserRevokeAllSessionsResp>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ListGroup(UserListGroupReq) returns (UserListGroupResp);
+     */
+    listGroup(input: UserListGroupReq, options?: RpcOptions): UnaryCall<UserListGroupReq, UserListGroupResp> {
+        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        return stackIntercept<UserListGroupReq, UserListGroupResp>("unary", this._transport, method, opt, input);
     }
 }

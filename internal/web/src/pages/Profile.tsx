@@ -5,7 +5,7 @@ import { FormError, createForm, required, reset } from "@modular-forms/solid"
 
 import { formatDate, parseDate, createLoading, toastError, throwAsFormError } from "~/lib/utils"
 import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
-import { getProfile } from "./Profile.data"
+import { getProfile, getListGroup } from "./Profile.data"
 import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
@@ -18,6 +18,7 @@ import { Seperator } from "~/ui/Seperator"
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form"
 import { Input } from "~/ui/Input"
 import { Loading } from "~/ui/Loading"
+import { Skeleton } from "~/ui/Skeleton"
 
 export const actionRevokeAllSessions = action(() => useClient()
   .user.revokeAllSessions({})
@@ -37,7 +38,7 @@ export function Profile() {
   return (
     <div class="p-4">
       <ErrorBoundary fallback={(error) => (
-        <AlertRoot>
+        <AlertRoot variant="destructive">
           <AlertTitle>{error.message}</AlertTitle>
           <AlertDescription>
             <Button onClick={refreshData} disabled={loading()}>Retry</Button>
@@ -164,10 +165,50 @@ export function Profile() {
                 </For>
               </TableBody>
             </TableRoot>
+            <div class="flex flex-col gap-2">
+              <div class="text-xl">Groups</div>
+              <Seperator />
+            </div>
+            <GroupTable />
           </div>
         </Suspense>
       </ErrorBoundary>
     </div>
+  )
+}
+
+
+function GroupTable() {
+  const data = createAsync(getListGroup)
+
+  return (
+    <ErrorBoundary fallback={(error: Error) =>
+      <AlertRoot variant="destructive">
+        <AlertTitle>{error.message}</AlertTitle>
+      </AlertRoot>
+    }>
+      <Suspense fallback={<Skeleton class="w-full h-32" />}>
+        <TableRoot>
+          <TableCaption>{data()?.groups.length} Groups(s)</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Description</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <For each={data()?.groups}>
+              {(group) =>
+                <TableRow>
+                  <TableCell>{group.name}</TableCell>
+                  <TableCell>{group.description}</TableCell>
+                </TableRow>
+              }
+            </For>
+          </TableBody>
+        </TableRoot>
+      </Suspense>
+    </ErrorBoundary>
   )
 }
 

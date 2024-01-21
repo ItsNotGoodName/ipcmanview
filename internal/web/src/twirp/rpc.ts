@@ -42,6 +42,23 @@ export interface Session {
     current: boolean;
 }
 /**
+ * @generated from protobuf message Group
+ */
+export interface Group {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string description = 3;
+     */
+    description: string;
+}
+/**
  * @generated from protobuf message HelloReq
  */
 export interface HelloReq {
@@ -193,6 +210,20 @@ export interface UserRevokeAllSessionsReq {
  */
 export interface UserRevokeAllSessionsResp {
 }
+/**
+ * @generated from protobuf message UserListGroupReq
+ */
+export interface UserListGroupReq {
+}
+/**
+ * @generated from protobuf message UserListGroupResp
+ */
+export interface UserListGroupResp {
+    /**
+     * @generated from protobuf field: repeated Group groups = 1;
+     */
+    groups: Group[];
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class Session$Type extends MessageType<Session> {
     constructor() {
@@ -212,6 +243,20 @@ class Session$Type extends MessageType<Session> {
  * @generated MessageType for protobuf message Session
  */
 export const Session = new Session$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class Group$Type extends MessageType<Group> {
+    constructor() {
+        super("Group", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message Group
+ */
+export const Group = new Group$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class HelloReq$Type extends MessageType<HelloReq> {
     constructor() {
@@ -398,6 +443,28 @@ class UserRevokeAllSessionsResp$Type extends MessageType<UserRevokeAllSessionsRe
  * @generated MessageType for protobuf message UserRevokeAllSessionsResp
  */
 export const UserRevokeAllSessionsResp = new UserRevokeAllSessionsResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UserListGroupReq$Type extends MessageType<UserListGroupReq> {
+    constructor() {
+        super("UserListGroupReq", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UserListGroupReq
+ */
+export const UserListGroupReq = new UserListGroupReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UserListGroupResp$Type extends MessageType<UserListGroupResp> {
+    constructor() {
+        super("UserListGroupResp", [
+            { no: 1, name: "groups", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Group }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UserListGroupResp
+ */
+export const UserListGroupResp = new UserListGroupResp$Type();
 /**
  * @generated ServiceType for protobuf service HelloWorld
  */
@@ -424,5 +491,6 @@ export const User = new ServiceType("User", [
     { name: "UpdateUsername", options: {}, I: UserUpdateUsernameReq, O: UserUpdateUsernameResp },
     { name: "UpdatePassword", options: {}, I: UserUpdatePasswordReq, O: UserUpdatePasswordResp },
     { name: "RevokeSession", options: {}, I: UserRevokeSessionReq, O: UserRevokeSessionResp },
-    { name: "RevokeAllSessions", options: {}, I: UserRevokeAllSessionsReq, O: UserRevokeAllSessionsResp }
+    { name: "RevokeAllSessions", options: {}, I: UserRevokeAllSessionsReq, O: UserRevokeAllSessionsResp },
+    { name: "ListGroup", options: {}, I: UserListGroupReq, O: UserListGroupResp }
 ]);

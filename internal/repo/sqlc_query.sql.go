@@ -1521,6 +1521,42 @@ func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) (
 	return items, nil
 }
 
+const listGroupForUser = `-- name: ListGroupForUser :many
+SELECT
+  g.id, g.name, g.description, g.created_at, g.updated_at
+FROM groups AS g LEFT JOIN group_users AS gu ON gu.group_id = g.id
+WHERE gu.user_id = ?
+`
+
+func (q *Queries) ListGroupForUser(ctx context.Context, userID int64) ([]Group, error) {
+	rows, err := q.db.QueryContext(ctx, listGroupForUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Group
+	for rows.Next() {
+		var i Group
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listUser = `-- name: ListUser :many
 SELECT
   id, email, username, password, created_at, updated_at
