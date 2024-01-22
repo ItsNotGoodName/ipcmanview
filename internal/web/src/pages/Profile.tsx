@@ -6,7 +6,6 @@ import { FormError, createForm, required, reset } from "@modular-forms/solid"
 import { formatDate, parseDate, catchAsToast, throwAsFormError } from "~/lib/utils"
 import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
 import { getListMyGroups, getProfile, } from "./Profile.data"
-import { AlertRoot, AlertTitle } from "~/ui/Alert"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
@@ -19,32 +18,34 @@ import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "
 import { Input } from "~/ui/Input"
 import { Skeleton } from "~/ui/Skeleton"
 import { getSession } from "~/providers/session"
-import { PageError, PageLoading } from "~/ui/Page"
+import { PageError } from "~/ui/Page"
 
 export const actionRevokeAllSessions = action(() => useClient()
   .user.revokeAllSessions({})
-  .then(() => revalidate(getProfile.key)))
+  .then(() => revalidate(getProfile.key))
+  .catch(catchAsToast))
 export const actionRevokeSession = action((input: RevokeSessionReq) => useClient()
   .user.revokeSession(input)
-  .then(() => revalidate(getProfile.key)))
+  .then(() => revalidate(getProfile.key))
+  .catch(catchAsToast))
 
 export function Profile() {
   const data = createAsync(getProfile)
 
   const revokeAllSessionsSubmission = useSubmission(actionRevokeAllSessions)
-  const revokeAllSessionsAction = useAction(actionRevokeAllSessions)
-  const revokeAllSessions = () => revokeAllSessionsAction().catch(catchAsToast)
+  const revokeAllSessions = useAction(actionRevokeAllSessions)
 
   return (
     <div class="p-4">
       <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
-        <Suspense fallback={<PageLoading />}>
-          <div class="mx-auto flex max-w-4xl flex-col gap-4">
-            <CardRoot>
-              <CardHeader>
-                <CardTitle>Profile</CardTitle>
-              </CardHeader>
-              <CardContent class="overflow-x-auto">
+        <div class="mx-auto flex max-w-4xl flex-col gap-4">
+
+          <CardRoot>
+            <CardHeader>
+              <CardTitle>Profile</CardTitle>
+            </CardHeader>
+            <CardContent class="overflow-x-auto">
+              <Suspense fallback={<Skeleton class="h-32" />}>
                 <table>
                   <tbody>
                     <tr>
@@ -73,26 +74,31 @@ export function Profile() {
                     </tr>
                   </tbody>
                 </table>
-              </CardContent>
-            </CardRoot>
-            <div class="flex flex-col gap-2">
-              <div class="text-xl">Change username</div>
-              <Seperator />
-            </div>
-            <Center>
-              <ChangeUsernameForm />
-            </Center>
-            <div class="flex flex-col gap-2">
-              <div class="text-xl">Change password</div>
-              <Seperator />
-            </div>
-            <Center>
-              <ChangePasswordForm />
-            </Center>
-            <div class="flex flex-col gap-2">
-              <div class="text-xl">Sessions</div>
-              <Seperator />
-            </div>
+              </Suspense>
+            </CardContent>
+          </CardRoot>
+
+          <div class="flex flex-col gap-2">
+            <div class="text-xl">Change username</div>
+            <Seperator />
+          </div>
+          <Center>
+            <ChangeUsernameForm />
+          </Center>
+
+          <div class="flex flex-col gap-2">
+            <div class="text-xl">Change password</div>
+            <Seperator />
+          </div>
+          <Center>
+            <ChangePasswordForm />
+          </Center>
+
+          <div class="flex flex-col gap-2">
+            <div class="text-xl">Sessions</div>
+            <Seperator />
+          </div>
+          <Suspense fallback={<Skeleton class="h-32" />}>
             <div class="flex">
               <ConfirmButton
                 message="Are you sure you wish to revoke all sessions?"
@@ -121,8 +127,7 @@ export function Profile() {
                   {
                     (session) => {
                       const revokeSessionSubmission = useSubmission(actionRevokeSession)
-                      const revokeSessionAction = useAction(actionRevokeSession)
-                      const revokeSession = (input: RevokeSessionReq) => revokeSessionAction(input).catch(catchAsToast)
+                      const revokeSession = useAction(actionRevokeSession)
 
                       return (
                         <TableRow>
@@ -158,13 +163,15 @@ export function Profile() {
                 </For>
               </TableBody>
             </TableRoot>
-            <div class="flex flex-col gap-2">
-              <div class="text-xl">Groups</div>
-              <Seperator />
-            </div>
-            <GroupTable />
+          </Suspense>
+
+          <div class="flex flex-col gap-2">
+            <div class="text-xl">Groups</div>
+            <Seperator />
           </div>
-        </Suspense>
+          <GroupTable />
+
+        </div>
       </ErrorBoundary>
     </div>
   )
@@ -174,12 +181,8 @@ function GroupTable() {
   const data = createAsync(getListMyGroups)
 
   return (
-    <ErrorBoundary fallback={(error: Error) =>
-      <AlertRoot variant="destructive">
-        <AlertTitle>{error.message}</AlertTitle>
-      </AlertRoot>
-    }>
-      <Suspense fallback={<Skeleton class="w-full h-32" />}>
+    <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+      <Suspense fallback={<Skeleton class="h-32" />}>
         <TableRoot>
           <TableCaption>{data()?.groups.length} Groups(s)</TableCaption>
           <TableHeader>

@@ -11,7 +11,7 @@ export function Home() {
   return (
     <div class="flex p-4">
       <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
-        <Suspense fallback={<PageLoading />}>
+        <Suspense fallback={<PageLoading class="flex-1" />}>
           <CardRoot class="flex gap-2 p-4">
             <div class="flex items-center">
               <BiRegularCctv class="h-8 w-8" />
