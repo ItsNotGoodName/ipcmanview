@@ -1299,9 +1299,9 @@ func (s *authServer) PathPrefix() string {
 // ==============
 
 type Page interface {
-	Home(context.Context, *PageHomeReq) (*PageHomeResp, error)
+	Home(context.Context, *HomeReq) (*HomeResp, error)
 
-	Profile(context.Context, *PageProfileReq) (*PageProfileResp, error)
+	Profile(context.Context, *ProfileReq) (*ProfileResp, error)
 }
 
 // ====================
@@ -1351,26 +1351,26 @@ func NewPageProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Clie
 	}
 }
 
-func (c *pageProtobufClient) Home(ctx context.Context, in *PageHomeReq) (*PageHomeResp, error) {
+func (c *pageProtobufClient) Home(ctx context.Context, in *HomeReq) (*HomeResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Page")
 	ctx = ctxsetters.WithMethodName(ctx, "Home")
 	caller := c.callHome
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *PageHomeReq) (*PageHomeResp, error) {
+		caller = func(ctx context.Context, req *HomeReq) (*HomeResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*PageHomeReq)
+					typedReq, ok := req.(*HomeReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*PageHomeReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*HomeReq) when calling interceptor")
 					}
 					return c.callHome(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*PageHomeResp)
+				typedResp, ok := resp.(*HomeResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*PageHomeResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*HomeResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1380,8 +1380,8 @@ func (c *pageProtobufClient) Home(ctx context.Context, in *PageHomeReq) (*PageHo
 	return caller(ctx, in)
 }
 
-func (c *pageProtobufClient) callHome(ctx context.Context, in *PageHomeReq) (*PageHomeResp, error) {
-	out := new(PageHomeResp)
+func (c *pageProtobufClient) callHome(ctx context.Context, in *HomeReq) (*HomeResp, error) {
+	out := new(HomeResp)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -1397,26 +1397,26 @@ func (c *pageProtobufClient) callHome(ctx context.Context, in *PageHomeReq) (*Pa
 	return out, nil
 }
 
-func (c *pageProtobufClient) Profile(ctx context.Context, in *PageProfileReq) (*PageProfileResp, error) {
+func (c *pageProtobufClient) Profile(ctx context.Context, in *ProfileReq) (*ProfileResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Page")
 	ctx = ctxsetters.WithMethodName(ctx, "Profile")
 	caller := c.callProfile
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *PageProfileReq) (*PageProfileResp, error) {
+		caller = func(ctx context.Context, req *ProfileReq) (*ProfileResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*PageProfileReq)
+					typedReq, ok := req.(*ProfileReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*PageProfileReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ProfileReq) when calling interceptor")
 					}
 					return c.callProfile(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*PageProfileResp)
+				typedResp, ok := resp.(*ProfileResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*PageProfileResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ProfileResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1426,8 +1426,8 @@ func (c *pageProtobufClient) Profile(ctx context.Context, in *PageProfileReq) (*
 	return caller(ctx, in)
 }
 
-func (c *pageProtobufClient) callProfile(ctx context.Context, in *PageProfileReq) (*PageProfileResp, error) {
-	out := new(PageProfileResp)
+func (c *pageProtobufClient) callProfile(ctx context.Context, in *ProfileReq) (*ProfileResp, error) {
+	out := new(ProfileResp)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -1490,26 +1490,26 @@ func NewPageJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOp
 	}
 }
 
-func (c *pageJSONClient) Home(ctx context.Context, in *PageHomeReq) (*PageHomeResp, error) {
+func (c *pageJSONClient) Home(ctx context.Context, in *HomeReq) (*HomeResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Page")
 	ctx = ctxsetters.WithMethodName(ctx, "Home")
 	caller := c.callHome
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *PageHomeReq) (*PageHomeResp, error) {
+		caller = func(ctx context.Context, req *HomeReq) (*HomeResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*PageHomeReq)
+					typedReq, ok := req.(*HomeReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*PageHomeReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*HomeReq) when calling interceptor")
 					}
 					return c.callHome(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*PageHomeResp)
+				typedResp, ok := resp.(*HomeResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*PageHomeResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*HomeResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1519,8 +1519,8 @@ func (c *pageJSONClient) Home(ctx context.Context, in *PageHomeReq) (*PageHomeRe
 	return caller(ctx, in)
 }
 
-func (c *pageJSONClient) callHome(ctx context.Context, in *PageHomeReq) (*PageHomeResp, error) {
-	out := new(PageHomeResp)
+func (c *pageJSONClient) callHome(ctx context.Context, in *HomeReq) (*HomeResp, error) {
+	out := new(HomeResp)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -1536,26 +1536,26 @@ func (c *pageJSONClient) callHome(ctx context.Context, in *PageHomeReq) (*PageHo
 	return out, nil
 }
 
-func (c *pageJSONClient) Profile(ctx context.Context, in *PageProfileReq) (*PageProfileResp, error) {
+func (c *pageJSONClient) Profile(ctx context.Context, in *ProfileReq) (*ProfileResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Page")
 	ctx = ctxsetters.WithMethodName(ctx, "Profile")
 	caller := c.callProfile
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *PageProfileReq) (*PageProfileResp, error) {
+		caller = func(ctx context.Context, req *ProfileReq) (*ProfileResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*PageProfileReq)
+					typedReq, ok := req.(*ProfileReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*PageProfileReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ProfileReq) when calling interceptor")
 					}
 					return c.callProfile(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*PageProfileResp)
+				typedResp, ok := resp.(*ProfileResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*PageProfileResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ProfileResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1565,8 +1565,8 @@ func (c *pageJSONClient) Profile(ctx context.Context, in *PageProfileReq) (*Page
 	return caller(ctx, in)
 }
 
-func (c *pageJSONClient) callProfile(ctx context.Context, in *PageProfileReq) (*PageProfileResp, error) {
-	out := new(PageProfileResp)
+func (c *pageJSONClient) callProfile(ctx context.Context, in *ProfileReq) (*ProfileResp, error) {
+	out := new(ProfileResp)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -1725,7 +1725,7 @@ func (s *pageServer) serveHomeJSON(ctx context.Context, resp http.ResponseWriter
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(PageHomeReq)
+	reqContent := new(HomeReq)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -1734,20 +1734,20 @@ func (s *pageServer) serveHomeJSON(ctx context.Context, resp http.ResponseWriter
 
 	handler := s.Page.Home
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *PageHomeReq) (*PageHomeResp, error) {
+		handler = func(ctx context.Context, req *HomeReq) (*HomeResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*PageHomeReq)
+					typedReq, ok := req.(*HomeReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*PageHomeReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*HomeReq) when calling interceptor")
 					}
 					return s.Page.Home(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*PageHomeResp)
+				typedResp, ok := resp.(*HomeResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*PageHomeResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*HomeResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1756,7 +1756,7 @@ func (s *pageServer) serveHomeJSON(ctx context.Context, resp http.ResponseWriter
 	}
 
 	// Call service method
-	var respContent *PageHomeResp
+	var respContent *HomeResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1767,7 +1767,7 @@ func (s *pageServer) serveHomeJSON(ctx context.Context, resp http.ResponseWriter
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *PageHomeResp and nil error while calling Home. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *HomeResp and nil error while calling Home. nil responses are not supported"))
 		return
 	}
 
@@ -1807,7 +1807,7 @@ func (s *pageServer) serveHomeProtobuf(ctx context.Context, resp http.ResponseWr
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(PageHomeReq)
+	reqContent := new(HomeReq)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -1815,20 +1815,20 @@ func (s *pageServer) serveHomeProtobuf(ctx context.Context, resp http.ResponseWr
 
 	handler := s.Page.Home
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *PageHomeReq) (*PageHomeResp, error) {
+		handler = func(ctx context.Context, req *HomeReq) (*HomeResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*PageHomeReq)
+					typedReq, ok := req.(*HomeReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*PageHomeReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*HomeReq) when calling interceptor")
 					}
 					return s.Page.Home(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*PageHomeResp)
+				typedResp, ok := resp.(*HomeResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*PageHomeResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*HomeResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1837,7 +1837,7 @@ func (s *pageServer) serveHomeProtobuf(ctx context.Context, resp http.ResponseWr
 	}
 
 	// Call service method
-	var respContent *PageHomeResp
+	var respContent *HomeResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1848,7 +1848,7 @@ func (s *pageServer) serveHomeProtobuf(ctx context.Context, resp http.ResponseWr
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *PageHomeResp and nil error while calling Home. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *HomeResp and nil error while calling Home. nil responses are not supported"))
 		return
 	}
 
@@ -1905,7 +1905,7 @@ func (s *pageServer) serveProfileJSON(ctx context.Context, resp http.ResponseWri
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(PageProfileReq)
+	reqContent := new(ProfileReq)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
@@ -1914,20 +1914,20 @@ func (s *pageServer) serveProfileJSON(ctx context.Context, resp http.ResponseWri
 
 	handler := s.Page.Profile
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *PageProfileReq) (*PageProfileResp, error) {
+		handler = func(ctx context.Context, req *ProfileReq) (*ProfileResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*PageProfileReq)
+					typedReq, ok := req.(*ProfileReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*PageProfileReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ProfileReq) when calling interceptor")
 					}
 					return s.Page.Profile(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*PageProfileResp)
+				typedResp, ok := resp.(*ProfileResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*PageProfileResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ProfileResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -1936,7 +1936,7 @@ func (s *pageServer) serveProfileJSON(ctx context.Context, resp http.ResponseWri
 	}
 
 	// Call service method
-	var respContent *PageProfileResp
+	var respContent *ProfileResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -1947,7 +1947,7 @@ func (s *pageServer) serveProfileJSON(ctx context.Context, resp http.ResponseWri
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *PageProfileResp and nil error while calling Profile. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ProfileResp and nil error while calling Profile. nil responses are not supported"))
 		return
 	}
 
@@ -1987,7 +1987,7 @@ func (s *pageServer) serveProfileProtobuf(ctx context.Context, resp http.Respons
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(PageProfileReq)
+	reqContent := new(ProfileReq)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
@@ -1995,20 +1995,20 @@ func (s *pageServer) serveProfileProtobuf(ctx context.Context, resp http.Respons
 
 	handler := s.Page.Profile
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *PageProfileReq) (*PageProfileResp, error) {
+		handler = func(ctx context.Context, req *ProfileReq) (*ProfileResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*PageProfileReq)
+					typedReq, ok := req.(*ProfileReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*PageProfileReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*ProfileReq) when calling interceptor")
 					}
 					return s.Page.Profile(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*PageProfileResp)
+				typedResp, ok := resp.(*ProfileResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*PageProfileResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*ProfileResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2017,7 +2017,7 @@ func (s *pageServer) serveProfileProtobuf(ctx context.Context, resp http.Respons
 	}
 
 	// Call service method
-	var respContent *PageProfileResp
+	var respContent *ProfileResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -2028,7 +2028,7 @@ func (s *pageServer) serveProfileProtobuf(ctx context.Context, resp http.Respons
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *PageProfileResp and nil error while calling Profile. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *ProfileResp and nil error while calling Profile. nil responses are not supported"))
 		return
 	}
 
@@ -2072,13 +2072,13 @@ func (s *pageServer) PathPrefix() string {
 // ==============
 
 type User interface {
-	UpdateUsername(context.Context, *UpdateUsernameReq) (*UpdateUsernameResp, error)
+	UpdateMyUsername(context.Context, *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error)
 
-	UpdatePassword(context.Context, *UpdatePasswordReq) (*UpdatePasswordResp, error)
+	UpdateMyPassword(context.Context, *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error)
 
-	RevokeSession(context.Context, *RevokeSessionReq) (*RevokeSessionResp, error)
+	RevokeMySession(context.Context, *RevokeMySessionReq) (*RevokeMySessionResp, error)
 
-	RevokeAllSessions(context.Context, *RevokeAllSessionsReq) (*RevokeAllSessionsResp, error)
+	RevokeAllMySessions(context.Context, *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error)
 
 	ListMyGroups(context.Context, *ListMyGroupsReq) (*ListMyGroupsResp, error)
 }
@@ -2118,10 +2118,10 @@ func NewUserProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Clie
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "User")
 	urls := [5]string{
-		serviceURL + "UpdateUsername",
-		serviceURL + "UpdatePassword",
-		serviceURL + "RevokeSession",
-		serviceURL + "RevokeAllSessions",
+		serviceURL + "UpdateMyUsername",
+		serviceURL + "UpdateMyPassword",
+		serviceURL + "RevokeMySession",
+		serviceURL + "RevokeAllMySessions",
 		serviceURL + "ListMyGroups",
 	}
 
@@ -2133,26 +2133,26 @@ func NewUserProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Clie
 	}
 }
 
-func (c *userProtobufClient) UpdateUsername(ctx context.Context, in *UpdateUsernameReq) (*UpdateUsernameResp, error) {
+func (c *userProtobufClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "UpdateUsername")
-	caller := c.callUpdateUsername
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyUsername")
+	caller := c.callUpdateMyUsername
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UpdateUsernameReq) (*UpdateUsernameResp, error) {
+		caller = func(ctx context.Context, req *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UpdateUsernameReq)
+					typedReq, ok := req.(*UpdateMyUsernameReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UpdateUsernameReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateMyUsernameReq) when calling interceptor")
 					}
-					return c.callUpdateUsername(ctx, typedReq)
+					return c.callUpdateMyUsername(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateUsernameResp)
+				typedResp, ok := resp.(*UpdateMyUsernameResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateUsernameResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyUsernameResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2162,8 +2162,8 @@ func (c *userProtobufClient) UpdateUsername(ctx context.Context, in *UpdateUsern
 	return caller(ctx, in)
 }
 
-func (c *userProtobufClient) callUpdateUsername(ctx context.Context, in *UpdateUsernameReq) (*UpdateUsernameResp, error) {
-	out := new(UpdateUsernameResp)
+func (c *userProtobufClient) callUpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
+	out := new(UpdateMyUsernameResp)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2179,26 +2179,26 @@ func (c *userProtobufClient) callUpdateUsername(ctx context.Context, in *UpdateU
 	return out, nil
 }
 
-func (c *userProtobufClient) UpdatePassword(ctx context.Context, in *UpdatePasswordReq) (*UpdatePasswordResp, error) {
+func (c *userProtobufClient) UpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "UpdatePassword")
-	caller := c.callUpdatePassword
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyPassword")
+	caller := c.callUpdateMyPassword
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UpdatePasswordReq) (*UpdatePasswordResp, error) {
+		caller = func(ctx context.Context, req *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UpdatePasswordReq)
+					typedReq, ok := req.(*UpdateMyPasswordReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UpdatePasswordReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateMyPasswordReq) when calling interceptor")
 					}
-					return c.callUpdatePassword(ctx, typedReq)
+					return c.callUpdateMyPassword(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdatePasswordResp)
+				typedResp, ok := resp.(*UpdateMyPasswordResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdatePasswordResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyPasswordResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2208,8 +2208,8 @@ func (c *userProtobufClient) UpdatePassword(ctx context.Context, in *UpdatePassw
 	return caller(ctx, in)
 }
 
-func (c *userProtobufClient) callUpdatePassword(ctx context.Context, in *UpdatePasswordReq) (*UpdatePasswordResp, error) {
-	out := new(UpdatePasswordResp)
+func (c *userProtobufClient) callUpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
+	out := new(UpdateMyPasswordResp)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2225,26 +2225,26 @@ func (c *userProtobufClient) callUpdatePassword(ctx context.Context, in *UpdateP
 	return out, nil
 }
 
-func (c *userProtobufClient) RevokeSession(ctx context.Context, in *RevokeSessionReq) (*RevokeSessionResp, error) {
+func (c *userProtobufClient) RevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*RevokeMySessionResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "RevokeSession")
-	caller := c.callRevokeSession
+	ctx = ctxsetters.WithMethodName(ctx, "RevokeMySession")
+	caller := c.callRevokeMySession
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *RevokeSessionReq) (*RevokeSessionResp, error) {
+		caller = func(ctx context.Context, req *RevokeMySessionReq) (*RevokeMySessionResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*RevokeSessionReq)
+					typedReq, ok := req.(*RevokeMySessionReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*RevokeSessionReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RevokeMySessionReq) when calling interceptor")
 					}
-					return c.callRevokeSession(ctx, typedReq)
+					return c.callRevokeMySession(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeSessionResp)
+				typedResp, ok := resp.(*RevokeMySessionResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeSessionResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RevokeMySessionResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2254,8 +2254,8 @@ func (c *userProtobufClient) RevokeSession(ctx context.Context, in *RevokeSessio
 	return caller(ctx, in)
 }
 
-func (c *userProtobufClient) callRevokeSession(ctx context.Context, in *RevokeSessionReq) (*RevokeSessionResp, error) {
-	out := new(RevokeSessionResp)
+func (c *userProtobufClient) callRevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*RevokeMySessionResp, error) {
+	out := new(RevokeMySessionResp)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2271,26 +2271,26 @@ func (c *userProtobufClient) callRevokeSession(ctx context.Context, in *RevokeSe
 	return out, nil
 }
 
-func (c *userProtobufClient) RevokeAllSessions(ctx context.Context, in *RevokeAllSessionsReq) (*RevokeAllSessionsResp, error) {
+func (c *userProtobufClient) RevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllSessions")
-	caller := c.callRevokeAllSessions
+	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllMySessions")
+	caller := c.callRevokeAllMySessions
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *RevokeAllSessionsReq) (*RevokeAllSessionsResp, error) {
+		caller = func(ctx context.Context, req *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*RevokeAllSessionsReq)
+					typedReq, ok := req.(*RevokeAllMySessionsReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*RevokeAllSessionsReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RevokeAllMySessionsReq) when calling interceptor")
 					}
-					return c.callRevokeAllSessions(ctx, typedReq)
+					return c.callRevokeAllMySessions(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeAllSessionsResp)
+				typedResp, ok := resp.(*RevokeAllMySessionsResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllSessionsResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllMySessionsResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2300,8 +2300,8 @@ func (c *userProtobufClient) RevokeAllSessions(ctx context.Context, in *RevokeAl
 	return caller(ctx, in)
 }
 
-func (c *userProtobufClient) callRevokeAllSessions(ctx context.Context, in *RevokeAllSessionsReq) (*RevokeAllSessionsResp, error) {
-	out := new(RevokeAllSessionsResp)
+func (c *userProtobufClient) callRevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
+	out := new(RevokeAllMySessionsResp)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2398,10 +2398,10 @@ func NewUserJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOp
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "User")
 	urls := [5]string{
-		serviceURL + "UpdateUsername",
-		serviceURL + "UpdatePassword",
-		serviceURL + "RevokeSession",
-		serviceURL + "RevokeAllSessions",
+		serviceURL + "UpdateMyUsername",
+		serviceURL + "UpdateMyPassword",
+		serviceURL + "RevokeMySession",
+		serviceURL + "RevokeAllMySessions",
 		serviceURL + "ListMyGroups",
 	}
 
@@ -2413,26 +2413,26 @@ func NewUserJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOp
 	}
 }
 
-func (c *userJSONClient) UpdateUsername(ctx context.Context, in *UpdateUsernameReq) (*UpdateUsernameResp, error) {
+func (c *userJSONClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "UpdateUsername")
-	caller := c.callUpdateUsername
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyUsername")
+	caller := c.callUpdateMyUsername
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UpdateUsernameReq) (*UpdateUsernameResp, error) {
+		caller = func(ctx context.Context, req *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UpdateUsernameReq)
+					typedReq, ok := req.(*UpdateMyUsernameReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UpdateUsernameReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateMyUsernameReq) when calling interceptor")
 					}
-					return c.callUpdateUsername(ctx, typedReq)
+					return c.callUpdateMyUsername(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateUsernameResp)
+				typedResp, ok := resp.(*UpdateMyUsernameResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateUsernameResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyUsernameResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2442,8 +2442,8 @@ func (c *userJSONClient) UpdateUsername(ctx context.Context, in *UpdateUsernameR
 	return caller(ctx, in)
 }
 
-func (c *userJSONClient) callUpdateUsername(ctx context.Context, in *UpdateUsernameReq) (*UpdateUsernameResp, error) {
-	out := new(UpdateUsernameResp)
+func (c *userJSONClient) callUpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
+	out := new(UpdateMyUsernameResp)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2459,26 +2459,26 @@ func (c *userJSONClient) callUpdateUsername(ctx context.Context, in *UpdateUsern
 	return out, nil
 }
 
-func (c *userJSONClient) UpdatePassword(ctx context.Context, in *UpdatePasswordReq) (*UpdatePasswordResp, error) {
+func (c *userJSONClient) UpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "UpdatePassword")
-	caller := c.callUpdatePassword
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyPassword")
+	caller := c.callUpdateMyPassword
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UpdatePasswordReq) (*UpdatePasswordResp, error) {
+		caller = func(ctx context.Context, req *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UpdatePasswordReq)
+					typedReq, ok := req.(*UpdateMyPasswordReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UpdatePasswordReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateMyPasswordReq) when calling interceptor")
 					}
-					return c.callUpdatePassword(ctx, typedReq)
+					return c.callUpdateMyPassword(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdatePasswordResp)
+				typedResp, ok := resp.(*UpdateMyPasswordResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdatePasswordResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyPasswordResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2488,8 +2488,8 @@ func (c *userJSONClient) UpdatePassword(ctx context.Context, in *UpdatePasswordR
 	return caller(ctx, in)
 }
 
-func (c *userJSONClient) callUpdatePassword(ctx context.Context, in *UpdatePasswordReq) (*UpdatePasswordResp, error) {
-	out := new(UpdatePasswordResp)
+func (c *userJSONClient) callUpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
+	out := new(UpdateMyPasswordResp)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2505,26 +2505,26 @@ func (c *userJSONClient) callUpdatePassword(ctx context.Context, in *UpdatePassw
 	return out, nil
 }
 
-func (c *userJSONClient) RevokeSession(ctx context.Context, in *RevokeSessionReq) (*RevokeSessionResp, error) {
+func (c *userJSONClient) RevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*RevokeMySessionResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "RevokeSession")
-	caller := c.callRevokeSession
+	ctx = ctxsetters.WithMethodName(ctx, "RevokeMySession")
+	caller := c.callRevokeMySession
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *RevokeSessionReq) (*RevokeSessionResp, error) {
+		caller = func(ctx context.Context, req *RevokeMySessionReq) (*RevokeMySessionResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*RevokeSessionReq)
+					typedReq, ok := req.(*RevokeMySessionReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*RevokeSessionReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RevokeMySessionReq) when calling interceptor")
 					}
-					return c.callRevokeSession(ctx, typedReq)
+					return c.callRevokeMySession(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeSessionResp)
+				typedResp, ok := resp.(*RevokeMySessionResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeSessionResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RevokeMySessionResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2534,8 +2534,8 @@ func (c *userJSONClient) RevokeSession(ctx context.Context, in *RevokeSessionReq
 	return caller(ctx, in)
 }
 
-func (c *userJSONClient) callRevokeSession(ctx context.Context, in *RevokeSessionReq) (*RevokeSessionResp, error) {
-	out := new(RevokeSessionResp)
+func (c *userJSONClient) callRevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*RevokeMySessionResp, error) {
+	out := new(RevokeMySessionResp)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2551,26 +2551,26 @@ func (c *userJSONClient) callRevokeSession(ctx context.Context, in *RevokeSessio
 	return out, nil
 }
 
-func (c *userJSONClient) RevokeAllSessions(ctx context.Context, in *RevokeAllSessionsReq) (*RevokeAllSessionsResp, error) {
+func (c *userJSONClient) RevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllSessions")
-	caller := c.callRevokeAllSessions
+	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllMySessions")
+	caller := c.callRevokeAllMySessions
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *RevokeAllSessionsReq) (*RevokeAllSessionsResp, error) {
+		caller = func(ctx context.Context, req *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*RevokeAllSessionsReq)
+					typedReq, ok := req.(*RevokeAllMySessionsReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*RevokeAllSessionsReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RevokeAllMySessionsReq) when calling interceptor")
 					}
-					return c.callRevokeAllSessions(ctx, typedReq)
+					return c.callRevokeAllMySessions(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeAllSessionsResp)
+				typedResp, ok := resp.(*RevokeAllMySessionsResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllSessionsResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllMySessionsResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2580,8 +2580,8 @@ func (c *userJSONClient) RevokeAllSessions(ctx context.Context, in *RevokeAllSes
 	return caller(ctx, in)
 }
 
-func (c *userJSONClient) callRevokeAllSessions(ctx context.Context, in *RevokeAllSessionsReq) (*RevokeAllSessionsResp, error) {
-	out := new(RevokeAllSessionsResp)
+func (c *userJSONClient) callRevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
+	out := new(RevokeAllMySessionsResp)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2740,17 +2740,17 @@ func (s *userServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	switch method {
-	case "UpdateUsername":
-		s.serveUpdateUsername(ctx, resp, req)
+	case "UpdateMyUsername":
+		s.serveUpdateMyUsername(ctx, resp, req)
 		return
-	case "UpdatePassword":
-		s.serveUpdatePassword(ctx, resp, req)
+	case "UpdateMyPassword":
+		s.serveUpdateMyPassword(ctx, resp, req)
 		return
-	case "RevokeSession":
-		s.serveRevokeSession(ctx, resp, req)
+	case "RevokeMySession":
+		s.serveRevokeMySession(ctx, resp, req)
 		return
-	case "RevokeAllSessions":
-		s.serveRevokeAllSessions(ctx, resp, req)
+	case "RevokeAllMySessions":
+		s.serveRevokeAllMySessions(ctx, resp, req)
 		return
 	case "ListMyGroups":
 		s.serveListMyGroups(ctx, resp, req)
@@ -2762,7 +2762,7 @@ func (s *userServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func (s *userServer) serveUpdateUsername(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveUpdateMyUsername(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -2770,9 +2770,9 @@ func (s *userServer) serveUpdateUsername(ctx context.Context, resp http.Response
 	}
 	switch strings.TrimSpace(strings.ToLower(header[:i])) {
 	case "application/json":
-		s.serveUpdateUsernameJSON(ctx, resp, req)
+		s.serveUpdateMyUsernameJSON(ctx, resp, req)
 	case "application/protobuf":
-		s.serveUpdateUsernameProtobuf(ctx, resp, req)
+		s.serveUpdateMyUsernameProtobuf(ctx, resp, req)
 	default:
 		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
 		twerr := badRouteError(msg, req.Method, req.URL.Path)
@@ -2780,9 +2780,9 @@ func (s *userServer) serveUpdateUsername(ctx context.Context, resp http.Response
 	}
 }
 
-func (s *userServer) serveUpdateUsernameJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveUpdateMyUsernameJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "UpdateUsername")
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyUsername")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -2795,29 +2795,29 @@ func (s *userServer) serveUpdateUsernameJSON(ctx context.Context, resp http.Resp
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(UpdateUsernameReq)
+	reqContent := new(UpdateMyUsernameReq)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
 
-	handler := s.User.UpdateUsername
+	handler := s.User.UpdateMyUsername
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UpdateUsernameReq) (*UpdateUsernameResp, error) {
+		handler = func(ctx context.Context, req *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UpdateUsernameReq)
+					typedReq, ok := req.(*UpdateMyUsernameReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UpdateUsernameReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateMyUsernameReq) when calling interceptor")
 					}
-					return s.User.UpdateUsername(ctx, typedReq)
+					return s.User.UpdateMyUsername(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateUsernameResp)
+				typedResp, ok := resp.(*UpdateMyUsernameResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateUsernameResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyUsernameResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2826,7 +2826,7 @@ func (s *userServer) serveUpdateUsernameJSON(ctx context.Context, resp http.Resp
 	}
 
 	// Call service method
-	var respContent *UpdateUsernameResp
+	var respContent *UpdateMyUsernameResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -2837,7 +2837,7 @@ func (s *userServer) serveUpdateUsernameJSON(ctx context.Context, resp http.Resp
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateUsernameResp and nil error while calling UpdateUsername. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateMyUsernameResp and nil error while calling UpdateMyUsername. nil responses are not supported"))
 		return
 	}
 
@@ -2863,9 +2863,9 @@ func (s *userServer) serveUpdateUsernameJSON(ctx context.Context, resp http.Resp
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userServer) serveUpdateUsernameProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveUpdateMyUsernameProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "UpdateUsername")
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyUsername")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -2877,28 +2877,28 @@ func (s *userServer) serveUpdateUsernameProtobuf(ctx context.Context, resp http.
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(UpdateUsernameReq)
+	reqContent := new(UpdateMyUsernameReq)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
 	}
 
-	handler := s.User.UpdateUsername
+	handler := s.User.UpdateMyUsername
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UpdateUsernameReq) (*UpdateUsernameResp, error) {
+		handler = func(ctx context.Context, req *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UpdateUsernameReq)
+					typedReq, ok := req.(*UpdateMyUsernameReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UpdateUsernameReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateMyUsernameReq) when calling interceptor")
 					}
-					return s.User.UpdateUsername(ctx, typedReq)
+					return s.User.UpdateMyUsername(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateUsernameResp)
+				typedResp, ok := resp.(*UpdateMyUsernameResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateUsernameResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyUsernameResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2907,7 +2907,7 @@ func (s *userServer) serveUpdateUsernameProtobuf(ctx context.Context, resp http.
 	}
 
 	// Call service method
-	var respContent *UpdateUsernameResp
+	var respContent *UpdateMyUsernameResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -2918,7 +2918,7 @@ func (s *userServer) serveUpdateUsernameProtobuf(ctx context.Context, resp http.
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateUsernameResp and nil error while calling UpdateUsername. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateMyUsernameResp and nil error while calling UpdateMyUsername. nil responses are not supported"))
 		return
 	}
 
@@ -2942,7 +2942,7 @@ func (s *userServer) serveUpdateUsernameProtobuf(ctx context.Context, resp http.
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userServer) serveUpdatePassword(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveUpdateMyPassword(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -2950,9 +2950,9 @@ func (s *userServer) serveUpdatePassword(ctx context.Context, resp http.Response
 	}
 	switch strings.TrimSpace(strings.ToLower(header[:i])) {
 	case "application/json":
-		s.serveUpdatePasswordJSON(ctx, resp, req)
+		s.serveUpdateMyPasswordJSON(ctx, resp, req)
 	case "application/protobuf":
-		s.serveUpdatePasswordProtobuf(ctx, resp, req)
+		s.serveUpdateMyPasswordProtobuf(ctx, resp, req)
 	default:
 		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
 		twerr := badRouteError(msg, req.Method, req.URL.Path)
@@ -2960,9 +2960,9 @@ func (s *userServer) serveUpdatePassword(ctx context.Context, resp http.Response
 	}
 }
 
-func (s *userServer) serveUpdatePasswordJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveUpdateMyPasswordJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "UpdatePassword")
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyPassword")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -2975,29 +2975,29 @@ func (s *userServer) serveUpdatePasswordJSON(ctx context.Context, resp http.Resp
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(UpdatePasswordReq)
+	reqContent := new(UpdateMyPasswordReq)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
 
-	handler := s.User.UpdatePassword
+	handler := s.User.UpdateMyPassword
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UpdatePasswordReq) (*UpdatePasswordResp, error) {
+		handler = func(ctx context.Context, req *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UpdatePasswordReq)
+					typedReq, ok := req.(*UpdateMyPasswordReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UpdatePasswordReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateMyPasswordReq) when calling interceptor")
 					}
-					return s.User.UpdatePassword(ctx, typedReq)
+					return s.User.UpdateMyPassword(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdatePasswordResp)
+				typedResp, ok := resp.(*UpdateMyPasswordResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdatePasswordResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyPasswordResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3006,7 +3006,7 @@ func (s *userServer) serveUpdatePasswordJSON(ctx context.Context, resp http.Resp
 	}
 
 	// Call service method
-	var respContent *UpdatePasswordResp
+	var respContent *UpdateMyPasswordResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3017,7 +3017,7 @@ func (s *userServer) serveUpdatePasswordJSON(ctx context.Context, resp http.Resp
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdatePasswordResp and nil error while calling UpdatePassword. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateMyPasswordResp and nil error while calling UpdateMyPassword. nil responses are not supported"))
 		return
 	}
 
@@ -3043,9 +3043,9 @@ func (s *userServer) serveUpdatePasswordJSON(ctx context.Context, resp http.Resp
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userServer) serveUpdatePasswordProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveUpdateMyPasswordProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "UpdatePassword")
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyPassword")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -3057,28 +3057,28 @@ func (s *userServer) serveUpdatePasswordProtobuf(ctx context.Context, resp http.
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(UpdatePasswordReq)
+	reqContent := new(UpdateMyPasswordReq)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
 	}
 
-	handler := s.User.UpdatePassword
+	handler := s.User.UpdateMyPassword
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UpdatePasswordReq) (*UpdatePasswordResp, error) {
+		handler = func(ctx context.Context, req *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*UpdatePasswordReq)
+					typedReq, ok := req.(*UpdateMyPasswordReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*UpdatePasswordReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateMyPasswordReq) when calling interceptor")
 					}
-					return s.User.UpdatePassword(ctx, typedReq)
+					return s.User.UpdateMyPassword(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdatePasswordResp)
+				typedResp, ok := resp.(*UpdateMyPasswordResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdatePasswordResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyPasswordResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3087,7 +3087,7 @@ func (s *userServer) serveUpdatePasswordProtobuf(ctx context.Context, resp http.
 	}
 
 	// Call service method
-	var respContent *UpdatePasswordResp
+	var respContent *UpdateMyPasswordResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3098,7 +3098,7 @@ func (s *userServer) serveUpdatePasswordProtobuf(ctx context.Context, resp http.
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdatePasswordResp and nil error while calling UpdatePassword. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateMyPasswordResp and nil error while calling UpdateMyPassword. nil responses are not supported"))
 		return
 	}
 
@@ -3122,7 +3122,7 @@ func (s *userServer) serveUpdatePasswordProtobuf(ctx context.Context, resp http.
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userServer) serveRevokeSession(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveRevokeMySession(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -3130,9 +3130,9 @@ func (s *userServer) serveRevokeSession(ctx context.Context, resp http.ResponseW
 	}
 	switch strings.TrimSpace(strings.ToLower(header[:i])) {
 	case "application/json":
-		s.serveRevokeSessionJSON(ctx, resp, req)
+		s.serveRevokeMySessionJSON(ctx, resp, req)
 	case "application/protobuf":
-		s.serveRevokeSessionProtobuf(ctx, resp, req)
+		s.serveRevokeMySessionProtobuf(ctx, resp, req)
 	default:
 		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
 		twerr := badRouteError(msg, req.Method, req.URL.Path)
@@ -3140,9 +3140,9 @@ func (s *userServer) serveRevokeSession(ctx context.Context, resp http.ResponseW
 	}
 }
 
-func (s *userServer) serveRevokeSessionJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveRevokeMySessionJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "RevokeSession")
+	ctx = ctxsetters.WithMethodName(ctx, "RevokeMySession")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -3155,29 +3155,29 @@ func (s *userServer) serveRevokeSessionJSON(ctx context.Context, resp http.Respo
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(RevokeSessionReq)
+	reqContent := new(RevokeMySessionReq)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
 
-	handler := s.User.RevokeSession
+	handler := s.User.RevokeMySession
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *RevokeSessionReq) (*RevokeSessionResp, error) {
+		handler = func(ctx context.Context, req *RevokeMySessionReq) (*RevokeMySessionResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*RevokeSessionReq)
+					typedReq, ok := req.(*RevokeMySessionReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*RevokeSessionReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RevokeMySessionReq) when calling interceptor")
 					}
-					return s.User.RevokeSession(ctx, typedReq)
+					return s.User.RevokeMySession(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeSessionResp)
+				typedResp, ok := resp.(*RevokeMySessionResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeSessionResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RevokeMySessionResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3186,7 +3186,7 @@ func (s *userServer) serveRevokeSessionJSON(ctx context.Context, resp http.Respo
 	}
 
 	// Call service method
-	var respContent *RevokeSessionResp
+	var respContent *RevokeMySessionResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3197,7 +3197,7 @@ func (s *userServer) serveRevokeSessionJSON(ctx context.Context, resp http.Respo
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeSessionResp and nil error while calling RevokeSession. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeMySessionResp and nil error while calling RevokeMySession. nil responses are not supported"))
 		return
 	}
 
@@ -3223,9 +3223,9 @@ func (s *userServer) serveRevokeSessionJSON(ctx context.Context, resp http.Respo
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userServer) serveRevokeSessionProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveRevokeMySessionProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "RevokeSession")
+	ctx = ctxsetters.WithMethodName(ctx, "RevokeMySession")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -3237,28 +3237,28 @@ func (s *userServer) serveRevokeSessionProtobuf(ctx context.Context, resp http.R
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(RevokeSessionReq)
+	reqContent := new(RevokeMySessionReq)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
 	}
 
-	handler := s.User.RevokeSession
+	handler := s.User.RevokeMySession
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *RevokeSessionReq) (*RevokeSessionResp, error) {
+		handler = func(ctx context.Context, req *RevokeMySessionReq) (*RevokeMySessionResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*RevokeSessionReq)
+					typedReq, ok := req.(*RevokeMySessionReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*RevokeSessionReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RevokeMySessionReq) when calling interceptor")
 					}
-					return s.User.RevokeSession(ctx, typedReq)
+					return s.User.RevokeMySession(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeSessionResp)
+				typedResp, ok := resp.(*RevokeMySessionResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeSessionResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RevokeMySessionResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3267,7 +3267,7 @@ func (s *userServer) serveRevokeSessionProtobuf(ctx context.Context, resp http.R
 	}
 
 	// Call service method
-	var respContent *RevokeSessionResp
+	var respContent *RevokeMySessionResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3278,7 +3278,7 @@ func (s *userServer) serveRevokeSessionProtobuf(ctx context.Context, resp http.R
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeSessionResp and nil error while calling RevokeSession. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeMySessionResp and nil error while calling RevokeMySession. nil responses are not supported"))
 		return
 	}
 
@@ -3302,7 +3302,7 @@ func (s *userServer) serveRevokeSessionProtobuf(ctx context.Context, resp http.R
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userServer) serveRevokeAllSessions(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveRevokeAllMySessions(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	header := req.Header.Get("Content-Type")
 	i := strings.Index(header, ";")
 	if i == -1 {
@@ -3310,9 +3310,9 @@ func (s *userServer) serveRevokeAllSessions(ctx context.Context, resp http.Respo
 	}
 	switch strings.TrimSpace(strings.ToLower(header[:i])) {
 	case "application/json":
-		s.serveRevokeAllSessionsJSON(ctx, resp, req)
+		s.serveRevokeAllMySessionsJSON(ctx, resp, req)
 	case "application/protobuf":
-		s.serveRevokeAllSessionsProtobuf(ctx, resp, req)
+		s.serveRevokeAllMySessionsProtobuf(ctx, resp, req)
 	default:
 		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
 		twerr := badRouteError(msg, req.Method, req.URL.Path)
@@ -3320,9 +3320,9 @@ func (s *userServer) serveRevokeAllSessions(ctx context.Context, resp http.Respo
 	}
 }
 
-func (s *userServer) serveRevokeAllSessionsJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveRevokeAllMySessionsJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllSessions")
+	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllMySessions")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -3335,29 +3335,29 @@ func (s *userServer) serveRevokeAllSessionsJSON(ctx context.Context, resp http.R
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
-	reqContent := new(RevokeAllSessionsReq)
+	reqContent := new(RevokeAllMySessionsReq)
 	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
 	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
 		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
 		return
 	}
 
-	handler := s.User.RevokeAllSessions
+	handler := s.User.RevokeAllMySessions
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *RevokeAllSessionsReq) (*RevokeAllSessionsResp, error) {
+		handler = func(ctx context.Context, req *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*RevokeAllSessionsReq)
+					typedReq, ok := req.(*RevokeAllMySessionsReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*RevokeAllSessionsReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RevokeAllMySessionsReq) when calling interceptor")
 					}
-					return s.User.RevokeAllSessions(ctx, typedReq)
+					return s.User.RevokeAllMySessions(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeAllSessionsResp)
+				typedResp, ok := resp.(*RevokeAllMySessionsResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllSessionsResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllMySessionsResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3366,7 +3366,7 @@ func (s *userServer) serveRevokeAllSessionsJSON(ctx context.Context, resp http.R
 	}
 
 	// Call service method
-	var respContent *RevokeAllSessionsResp
+	var respContent *RevokeAllMySessionsResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3377,7 +3377,7 @@ func (s *userServer) serveRevokeAllSessionsJSON(ctx context.Context, resp http.R
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeAllSessionsResp and nil error while calling RevokeAllSessions. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeAllMySessionsResp and nil error while calling RevokeAllMySessions. nil responses are not supported"))
 		return
 	}
 
@@ -3403,9 +3403,9 @@ func (s *userServer) serveRevokeAllSessionsJSON(ctx context.Context, resp http.R
 	callResponseSent(ctx, s.hooks)
 }
 
-func (s *userServer) serveRevokeAllSessionsProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+func (s *userServer) serveRevokeAllMySessionsProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
 	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllSessions")
+	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllMySessions")
 	ctx, err = callRequestRouted(ctx, s.hooks)
 	if err != nil {
 		s.writeError(ctx, resp, err)
@@ -3417,28 +3417,28 @@ func (s *userServer) serveRevokeAllSessionsProtobuf(ctx context.Context, resp ht
 		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
 		return
 	}
-	reqContent := new(RevokeAllSessionsReq)
+	reqContent := new(RevokeAllMySessionsReq)
 	if err = proto.Unmarshal(buf, reqContent); err != nil {
 		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
 		return
 	}
 
-	handler := s.User.RevokeAllSessions
+	handler := s.User.RevokeAllMySessions
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *RevokeAllSessionsReq) (*RevokeAllSessionsResp, error) {
+		handler = func(ctx context.Context, req *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*RevokeAllSessionsReq)
+					typedReq, ok := req.(*RevokeAllMySessionsReq)
 					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*RevokeAllSessionsReq) when calling interceptor")
+						return nil, twirp.InternalError("failed type assertion req.(*RevokeAllMySessionsReq) when calling interceptor")
 					}
-					return s.User.RevokeAllSessions(ctx, typedReq)
+					return s.User.RevokeAllMySessions(ctx, typedReq)
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeAllSessionsResp)
+				typedResp, ok := resp.(*RevokeAllMySessionsResp)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllSessionsResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllMySessionsResp) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3447,7 +3447,7 @@ func (s *userServer) serveRevokeAllSessionsProtobuf(ctx context.Context, resp ht
 	}
 
 	// Call service method
-	var respContent *RevokeAllSessionsResp
+	var respContent *RevokeAllMySessionsResp
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3458,7 +3458,7 @@ func (s *userServer) serveRevokeAllSessionsProtobuf(ctx context.Context, resp ht
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeAllSessionsResp and nil error while calling RevokeAllSessions. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeAllMySessionsResp and nil error while calling RevokeAllMySessions. nil responses are not supported"))
 		return
 	}
 
@@ -4737,66 +4737,66 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 961 bytes of a gzipped FileDescriptorProto
+	// 967 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0xdd, 0x6e, 0xe3, 0x44,
-	0x14, 0x56, 0x9c, 0xff, 0x13, 0xe7, 0x6f, 0xb6, 0xdb, 0x35, 0x96, 0xd8, 0x4d, 0x0d, 0x17, 0x41,
-	0x5a, 0xa6, 0xda, 0xac, 0x54, 0x89, 0x0b, 0x10, 0x29, 0x02, 0x5a, 0x09, 0xa4, 0xca, 0x4b, 0x85,
-	0xca, 0x05, 0x96, 0x6b, 0xcf, 0x06, 0x2f, 0x8e, 0x67, 0xea, 0x19, 0xb7, 0xf0, 0x04, 0x5c, 0xf2,
-	0x06, 0x48, 0x3c, 0x00, 0xef, 0x88, 0x66, 0x3c, 0x76, 0x6c, 0xa7, 0xab, 0x08, 0x71, 0xe7, 0xf3,
-	0xcd, 0xf9, 0xf7, 0xf9, 0x3e, 0x18, 0xa6, 0x2c, 0xc0, 0x2c, 0xa5, 0x82, 0xda, 0x2f, 0x36, 0x94,
-	0x6e, 0x62, 0x72, 0xaa, 0xac, 0xdb, 0xec, 0xed, 0xa9, 0x88, 0xb6, 0x84, 0x0b, 0x7f, 0xcb, 0x72,
-	0x07, 0xe7, 0x2f, 0x03, 0xfa, 0x6f, 0x08, 0xe7, 0x11, 0x4d, 0xd0, 0x04, 0x8c, 0x28, 0xb4, 0x5a,
-	0x8b, 0xd6, 0xb2, 0xed, 0x1a, 0x51, 0x88, 0x3e, 0x04, 0xc8, 0x38, 0x49, 0x3d, 0x7f, 0x43, 0x12,
-	0x61, 0x19, 0x8b, 0xd6, 0x72, 0xe8, 0x0e, 0x25, 0xb2, 0x96, 0x80, 0x72, 0x67, 0x56, 0x5b, 0xc1,
-	0x46, 0xc4, 0xd0, 0x33, 0xe8, 0xc7, 0x3e, 0x17, 0x5e, 0xc4, 0xac, 0x8e, 0x02, 0x7b, 0xd2, 0xbc,
-	0x64, 0xe8, 0x6b, 0x98, 0xab, 0x87, 0x8c, 0x93, 0xd0, 0xf3, 0x85, 0x27, 0x7b, 0xb0, 0xba, 0x8b,
-	0xd6, 0x72, 0xb4, 0xb2, 0x71, 0xde, 0x20, 0x2e, 0x1a, 0xc4, 0x3f, 0x14, 0x0d, 0xba, 0x13, 0x19,
-	0x74, 0xcd, 0x49, 0xb8, 0x16, 0x12, 0x44, 0xe7, 0x30, 0x0d, 0x52, 0xe2, 0x8b, 0x4a, 0x92, 0xde,
-	0xc1, 0x24, 0x63, 0x1d, 0xa2, 0x73, 0x1c, 0x43, 0xcf, 0x0f, 0x44, 0x74, 0x4f, 0xac, 0xfe, 0xa2,
-	0xb5, 0x1c, 0xb8, 0xda, 0x42, 0x16, 0xf4, 0x83, 0x2c, 0x4d, 0xe5, 0x9c, 0x03, 0xf5, 0x50, 0x98,
-	0xce, 0x9f, 0x2d, 0xe8, 0x7e, 0x9b, 0xd2, 0x8c, 0xed, 0xad, 0x07, 0x41, 0x27, 0xf1, 0xb7, 0x44,
-	0x2f, 0x46, 0x7d, 0xa3, 0x05, 0x8c, 0x42, 0xc2, 0x83, 0x34, 0x62, 0x22, 0xa2, 0x89, 0x5e, 0x4e,
-	0x15, 0x42, 0x5f, 0xc2, 0xe4, 0x1d, 0x8d, 0x92, 0xca, 0x10, 0x9d, 0x83, 0x43, 0x98, 0x79, 0x44,
-	0x3e, 0x83, 0x13, 0xc0, 0xe0, 0x82, 0xc4, 0x31, 0x75, 0xc9, 0x9d, 0xec, 0x9b, 0x67, 0xb7, 0xef,
-	0x48, 0x20, 0x54, 0x63, 0x43, 0xb7, 0x30, 0xd1, 0xe7, 0x60, 0xea, 0x11, 0xf2, 0x2a, 0xc6, 0xc1,
-	0x2a, 0x23, 0xed, 0xaf, 0x8a, 0xfc, 0x0c, 0x43, 0x5d, 0x84, 0x33, 0x39, 0xa9, 0x20, 0xbf, 0x15,
-	0x25, 0xd4, 0xf7, 0xff, 0xcd, 0x7f, 0x03, 0xc3, 0x37, 0xd1, 0x26, 0xb9, 0x66, 0x72, 0x8a, 0x23,
-	0xe8, 0x92, 0xad, 0x1f, 0xc5, 0xba, 0x40, 0x6e, 0x20, 0x1b, 0x06, 0xf2, 0xd8, 0x2a, 0x3b, 0x2e,
-	0x6d, 0xf9, 0xc6, 0x7c, 0xce, 0x1f, 0x68, 0x1a, 0xea, 0x25, 0x97, 0xb6, 0x63, 0x02, 0x14, 0xa9,
-	0x39, 0x73, 0x3e, 0x81, 0xf9, 0x37, 0x34, 0xdd, 0x50, 0x71, 0xa5, 0xdf, 0xdf, 0x5b, 0xd0, 0x39,
-	0x02, 0xd4, 0x74, 0xe5, 0xcc, 0x19, 0xc3, 0xe8, 0xca, 0xdf, 0x90, 0x0b, 0xba, 0x25, 0x2e, 0xb9,
-	0x73, 0x5e, 0x81, 0xb9, 0x33, 0x39, 0x43, 0x27, 0x60, 0x86, 0xe4, 0x3e, 0x0a, 0x88, 0x17, 0xd0,
-	0x2c, 0x11, 0xfa, 0x3e, 0x46, 0x39, 0xf6, 0x95, 0x84, 0x9c, 0x19, 0x4c, 0x64, 0xc8, 0x55, 0x4a,
-	0xdf, 0x46, 0xb1, 0x4a, 0xf2, 0x87, 0x01, 0xd3, 0x1a, 0xc4, 0x59, 0x6d, 0xdc, 0x56, 0x63, 0xdc,
-	0xb2, 0x5f, 0xa3, 0xba, 0xa0, 0x23, 0xe8, 0xfa, 0xe1, 0x36, 0xca, 0xcf, 0x6c, 0xe0, 0xe6, 0xc6,
-	0x63, 0x34, 0xe9, 0xfc, 0x57, 0x9a, 0x9c, 0xc3, 0x34, 0x63, 0x61, 0x2d, 0xc7, 0x61, 0xbe, 0x8e,
-	0x75, 0x88, 0xce, 0xf1, 0x31, 0x0c, 0x78, 0x2e, 0x2c, 0xdc, 0xea, 0x2d, 0xda, 0xcb, 0xd1, 0x6a,
-	0x80, 0xb5, 0xd2, 0xb8, 0xe5, 0x8b, 0x73, 0x06, 0xf3, 0x6b, 0x15, 0x76, 0xad, 0x67, 0x95, 0xbf,
-	0xe7, 0x04, 0xcc, 0x84, 0x3c, 0x78, 0x8d, 0x75, 0x8c, 0x12, 0xf2, 0x50, 0x78, 0xc9, 0x7f, 0xd5,
-	0x8c, 0xe3, 0xcc, 0xb9, 0x29, 0xb2, 0x55, 0x7f, 0xf6, 0x09, 0x98, 0x34, 0x0e, 0xbd, 0xf2, 0x5e,
-	0x74, 0x36, 0x1a, 0x87, 0x85, 0x57, 0x51, 0xb0, 0x74, 0x31, 0xca, 0x82, 0x85, 0xcb, 0xae, 0x60,
-	0xed, 0x38, 0x5e, 0xc1, 0xcc, 0x25, 0xf7, 0xf4, 0x57, 0x52, 0x4c, 0x46, 0xee, 0xa4, 0x6c, 0xea,
-	0xf1, 0xbc, 0x52, 0x2f, 0x86, 0x1a, 0xb9, 0x0c, 0x9d, 0x27, 0x30, 0x6f, 0x84, 0x70, 0xe6, 0x1c,
-	0xc3, 0x51, 0x0e, 0xae, 0xe3, 0x58, 0xe3, 0x5c, 0x1e, 0xca, 0x33, 0x78, 0xfa, 0x08, 0xce, 0x99,
-	0x33, 0x87, 0xe9, 0x77, 0x11, 0x17, 0xdf, 0xff, 0xae, 0xb4, 0x49, 0xf9, 0xae, 0x60, 0x56, 0x87,
-	0x38, 0x43, 0xcf, 0xa1, 0xb7, 0x51, 0x96, 0xd5, 0x52, 0xbf, 0xa0, 0x87, 0xd5, 0xa3, 0xab, 0x51,
-	0xe7, 0x0b, 0x18, 0xcb, 0x98, 0x32, 0x89, 0xa4, 0x3a, 0xf3, 0x37, 0xf9, 0xca, 0xbb, 0xae, 0xfa,
-	0x46, 0x1f, 0xc0, 0x80, 0x91, 0xd4, 0x53, 0xb8, 0xa1, 0xf0, 0x3e, 0x23, 0xa9, 0xbc, 0x5f, 0xe7,
-	0xef, 0x16, 0x4c, 0xaa, 0x09, 0x0e, 0x97, 0x2c, 0x2b, 0x18, 0xef, 0xa9, 0xd0, 0xae, 0x55, 0x40,
-	0x2f, 0x60, 0x24, 0xa8, 0xf0, 0x63, 0xf5, 0xc8, 0xd5, 0x29, 0xb7, 0x5d, 0x50, 0x90, 0x7c, 0xe7,
-	0x3b, 0x87, 0x48, 0x90, 0x2d, 0x57, 0x77, 0x5a, 0x38, 0x5c, 0x4a, 0x64, 0xf5, 0x12, 0x40, 0x49,
-	0xd9, 0x8f, 0x34, 0x8d, 0x43, 0xf4, 0x1c, 0xba, 0xca, 0x42, 0x43, 0x5c, 0xa8, 0xa8, 0x0d, 0xb8,
-	0xd4, 0xba, 0x55, 0x08, 0x9d, 0x75, 0x26, 0x7e, 0x41, 0x27, 0xd0, 0xcb, 0x55, 0x04, 0x01, 0x2e,
-	0x95, 0xca, 0x1e, 0xe1, 0x9d, 0xb4, 0xa0, 0xcf, 0x60, 0x52, 0xd7, 0x0b, 0x84, 0xf0, 0x9e, 0xd6,
-	0xd8, 0x4f, 0xf0, 0xbe, 0xa8, 0xac, 0x6e, 0xa0, 0xa3, 0xa6, 0xfb, 0x08, 0x3a, 0x52, 0x49, 0x90,
-	0x89, 0x2b, 0x1a, 0x63, 0x8f, 0x71, 0x4d, 0x62, 0x5e, 0x42, 0x5f, 0x0b, 0x05, 0x9a, 0xe2, 0xba,
-	0x92, 0xd8, 0x33, 0xdc, 0xd0, 0x91, 0xd5, 0x3f, 0x06, 0x74, 0x24, 0x29, 0x64, 0x7b, 0x75, 0x8a,
-	0x20, 0x84, 0xf7, 0xb8, 0x66, 0x3f, 0xc1, 0xfb, 0x3c, 0xda, 0x85, 0x56, 0x26, 0xdb, 0x23, 0x56,
-	0x19, 0x5a, 0x9d, 0x0c, 0x9d, 0xc1, 0xb8, 0x76, 0xde, 0x68, 0x8e, 0x9b, 0x0c, 0xb1, 0x11, 0xde,
-	0x63, 0x00, 0x3a, 0x2f, 0x68, 0x51, 0xb9, 0x74, 0xf4, 0x14, 0x3f, 0xc6, 0x0a, 0xfb, 0x18, 0x3f,
-	0x4a, 0x0a, 0xf4, 0x1a, 0xcc, 0x2a, 0x03, 0xd0, 0x0c, 0x37, 0x38, 0x62, 0xcf, 0x71, 0x93, 0x22,
-	0xab, 0x33, 0xe8, 0xae, 0x95, 0x70, 0x7e, 0x0a, 0xb0, 0x3b, 0x65, 0x34, 0xc1, 0x35, 0x62, 0xd8,
-	0x53, 0x5c, 0xbf, 0xf3, 0x73, 0xb8, 0x30, 0x7e, 0xea, 0x61, 0x7c, 0x9a, 0xb2, 0xe0, 0xb6, 0xa7,
-	0xe4, 0xf0, 0xf5, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xd5, 0x0e, 0xd5, 0x28, 0x7a, 0x09, 0x00,
-	0x00,
+	0x14, 0x56, 0x9c, 0x3f, 0xfb, 0x38, 0x9b, 0xb4, 0xd3, 0xb4, 0xf5, 0x1a, 0xb1, 0x9b, 0x5a, 0x7b,
+	0x11, 0x24, 0x76, 0x2a, 0xa5, 0x12, 0x02, 0x89, 0xbf, 0x14, 0x01, 0xad, 0x44, 0xa5, 0xca, 0x4b,
+	0x85, 0x00, 0x89, 0xc8, 0xb5, 0x67, 0x83, 0x17, 0x27, 0x33, 0xf5, 0x8c, 0x5b, 0x7a, 0xcd, 0x03,
+	0xf0, 0x06, 0x48, 0x3c, 0x0c, 0xef, 0x85, 0x66, 0x3c, 0x76, 0xec, 0x24, 0x55, 0x84, 0xb8, 0xf3,
+	0xf9, 0xce, 0xff, 0xf8, 0x7c, 0x1f, 0x58, 0x29, 0x0b, 0x31, 0x4b, 0xa9, 0xa0, 0xee, 0xcb, 0x39,
+	0xa5, 0xf3, 0x84, 0x9c, 0x2a, 0xeb, 0x36, 0x7b, 0x7b, 0x2a, 0xe2, 0x05, 0xe1, 0x22, 0x58, 0xb0,
+	0x3c, 0xc0, 0xfb, 0xcb, 0x80, 0xee, 0x1b, 0xc2, 0x79, 0x4c, 0x97, 0xa8, 0x0f, 0x46, 0x1c, 0x39,
+	0x8d, 0x51, 0x63, 0xdc, 0xf4, 0x8d, 0x38, 0x42, 0xef, 0x03, 0x64, 0x9c, 0xa4, 0xb3, 0x60, 0x4e,
+	0x96, 0xc2, 0x31, 0x46, 0x8d, 0xb1, 0xe5, 0x5b, 0x12, 0x99, 0x4a, 0x40, 0x85, 0x33, 0xa7, 0xa9,
+	0x60, 0x23, 0x66, 0xe8, 0x18, 0xba, 0x49, 0xc0, 0xc5, 0x2c, 0x66, 0x4e, 0x4b, 0x81, 0x1d, 0x69,
+	0x5e, 0x32, 0xf4, 0x35, 0xec, 0x2b, 0x47, 0xc6, 0x49, 0x34, 0x0b, 0xc4, 0x4c, 0xce, 0xe0, 0xb4,
+	0x47, 0x8d, 0xb1, 0x3d, 0x71, 0x71, 0x3e, 0x20, 0x2e, 0x06, 0xc4, 0xdf, 0x17, 0x03, 0xfa, 0x7d,
+	0x99, 0x74, 0xc3, 0x49, 0x34, 0x15, 0x12, 0x44, 0xe7, 0x30, 0x08, 0x53, 0x12, 0x88, 0x4a, 0x91,
+	0xce, 0xce, 0x22, 0xcf, 0x74, 0x8a, 0xae, 0x71, 0x04, 0x9d, 0x20, 0x14, 0xf1, 0x3d, 0x71, 0xba,
+	0xa3, 0xc6, 0xd8, 0xf4, 0xb5, 0x85, 0x1c, 0xe8, 0x86, 0x59, 0x9a, 0xca, 0x3d, 0x4d, 0xe5, 0x28,
+	0x4c, 0xef, 0xcf, 0x06, 0xb4, 0xbf, 0x4d, 0x69, 0xc6, 0x36, 0x9e, 0x07, 0x41, 0x6b, 0x19, 0x2c,
+	0x88, 0x7e, 0x18, 0xf5, 0x8d, 0x46, 0x60, 0x47, 0x84, 0x87, 0x69, 0xcc, 0x44, 0x4c, 0x97, 0xfa,
+	0x71, 0xaa, 0x10, 0xfa, 0x12, 0xfa, 0xef, 0x68, 0xbc, 0xac, 0x2c, 0xd1, 0xda, 0xb9, 0x44, 0x2f,
+	0xcf, 0xc8, 0x77, 0xf0, 0x42, 0x30, 0x2f, 0x48, 0x92, 0x50, 0x9f, 0xdc, 0xc9, 0xb9, 0x79, 0x76,
+	0xfb, 0x8e, 0x84, 0x42, 0x0d, 0x66, 0xf9, 0x85, 0x89, 0x3e, 0x83, 0x9e, 0x5e, 0x21, 0xef, 0x62,
+	0xec, 0xec, 0x62, 0xeb, 0x78, 0xd5, 0xe4, 0x17, 0xb0, 0x74, 0x13, 0xce, 0xe4, 0xa6, 0x82, 0xfc,
+	0x5e, 0xb4, 0x50, 0xdf, 0xff, 0xb7, 0xfe, 0x8f, 0x60, 0xbd, 0x89, 0xe7, 0xcb, 0x1b, 0x26, 0xb7,
+	0x18, 0x42, 0x9b, 0x2c, 0x82, 0x38, 0xd1, 0x0d, 0x72, 0x03, 0xb9, 0x60, 0xca, 0x63, 0xab, 0xbc,
+	0x71, 0x69, 0x4b, 0x1f, 0x0b, 0x38, 0x7f, 0xa0, 0x69, 0xa4, 0x1f, 0xb9, 0xb4, 0xbd, 0x1e, 0x40,
+	0x51, 0x9a, 0x33, 0xef, 0x03, 0xd8, 0xff, 0x86, 0xa6, 0x73, 0x2a, 0xae, 0xb5, 0xff, 0xc9, 0x86,
+	0xde, 0x10, 0xd0, 0x7a, 0x28, 0x67, 0x9e, 0x05, 0xdd, 0x0b, 0xba, 0x20, 0x3e, 0xb9, 0xf3, 0x5e,
+	0x83, 0x99, 0x7f, 0x72, 0x86, 0x4e, 0xa0, 0x17, 0x91, 0xfb, 0x38, 0x24, 0xb3, 0x90, 0x66, 0x4b,
+	0xa1, 0xef, 0xc2, 0xce, 0xb1, 0xaf, 0x24, 0x24, 0x07, 0xb9, 0x4e, 0xe9, 0xdb, 0x38, 0x51, 0xc9,
+	0x7f, 0x18, 0x60, 0x97, 0x26, 0x67, 0xb5, 0xf5, 0x1a, 0x6b, 0xeb, 0x95, 0xf3, 0x19, 0xd5, 0x07,
+	0x19, 0x42, 0x3b, 0x88, 0x16, 0x71, 0x7e, 0x56, 0xa6, 0x9f, 0x1b, 0xdb, 0x68, 0xd1, 0xfa, 0xaf,
+	0xb4, 0x38, 0x87, 0x41, 0xc6, 0xa2, 0x5a, 0x8d, 0xdd, 0xfc, 0x7c, 0xa6, 0x53, 0x74, 0x8d, 0x57,
+	0x60, 0xf2, 0x5c, 0x48, 0xb8, 0xd3, 0x19, 0x35, 0xc7, 0xf6, 0xc4, 0xc4, 0x5a, 0x59, 0xfc, 0xd2,
+	0xe3, 0x7d, 0x0c, 0x07, 0x37, 0x2a, 0xed, 0xea, 0xf1, 0x46, 0x6f, 0x2b, 0x7f, 0xc8, 0x09, 0xf4,
+	0x96, 0xe4, 0x61, 0xb6, 0xf6, 0x20, 0xf6, 0x92, 0x3c, 0x14, 0x51, 0xde, 0x11, 0x0c, 0x37, 0x33,
+	0x39, 0xf3, 0x7e, 0x5e, 0x55, 0xac, 0xfe, 0xe2, 0x13, 0xe8, 0xd1, 0x24, 0x9a, 0x95, 0x57, 0xa2,
+	0x2b, 0xd2, 0x24, 0x2a, 0xa2, 0x8a, 0xa6, 0x65, 0x88, 0x51, 0x36, 0x2d, 0x42, 0xaa, 0x4d, 0x6b,
+	0x47, 0x71, 0x06, 0xc8, 0x27, 0xf7, 0xf4, 0x37, 0x72, 0xf5, 0x58, 0xec, 0x48, 0xee, 0xa4, 0x60,
+	0xea, 0x45, 0x67, 0xa5, 0x52, 0x58, 0x1a, 0xb9, 0x8c, 0xbc, 0x43, 0x38, 0xd8, 0x48, 0xe2, 0xcc,
+	0x73, 0xe0, 0x28, 0x87, 0xa7, 0x49, 0x52, 0x7a, 0xb8, 0x3c, 0x99, 0xe7, 0x70, 0xbc, 0xd5, 0xc3,
+	0x99, 0xb7, 0x0f, 0x83, 0xef, 0x62, 0x2e, 0xae, 0x1e, 0x95, 0x36, 0xa9, 0xe8, 0x09, 0xec, 0xd5,
+	0x21, 0xce, 0xd0, 0x0b, 0xe8, 0xcc, 0x95, 0xe5, 0x34, 0xd4, 0x2f, 0xe9, 0x60, 0xe5, 0xf4, 0x35,
+	0xea, 0x7d, 0x0e, 0xcf, 0x64, 0x4e, 0x59, 0x44, 0x52, 0x9d, 0x05, 0xf3, 0xfc, 0x07, 0xb4, 0x7d,
+	0xf5, 0x8d, 0x9e, 0x83, 0xc9, 0x48, 0x3a, 0x53, 0xb8, 0xa1, 0xf0, 0x2e, 0x23, 0xe9, 0x75, 0x30,
+	0x27, 0xde, 0xdf, 0x0d, 0xe8, 0x57, 0x0b, 0xec, 0x6e, 0x59, 0x76, 0x30, 0x9e, 0xe8, 0xd0, 0xac,
+	0x75, 0x40, 0x2f, 0xc1, 0x16, 0x54, 0x04, 0x89, 0x72, 0x72, 0x75, 0xda, 0x4d, 0x1f, 0x14, 0x24,
+	0xfd, 0x7c, 0x15, 0x10, 0x0b, 0xb2, 0xe0, 0xea, 0x6e, 0x8b, 0x80, 0x4b, 0x89, 0x4c, 0x3e, 0x04,
+	0x50, 0x52, 0xf6, 0x03, 0x4d, 0x93, 0x08, 0xbd, 0x80, 0xb6, 0xb2, 0x90, 0x85, 0x0b, 0x15, 0x75,
+	0x01, 0x97, 0x5a, 0x37, 0x89, 0xa0, 0x35, 0xcd, 0xc4, 0xaf, 0xe8, 0x04, 0x3a, 0xb9, 0x8a, 0x20,
+	0xc0, 0xa5, 0x52, 0xb9, 0x36, 0x5e, 0x49, 0x0b, 0xfa, 0x04, 0xfa, 0x75, 0xbd, 0x40, 0x08, 0x6f,
+	0x68, 0x8d, 0x7b, 0x80, 0x37, 0x45, 0x65, 0x72, 0x09, 0x2d, 0xb5, 0xdd, 0x7b, 0xd0, 0x92, 0x8a,
+	0x82, 0x4c, 0xac, 0x35, 0xc6, 0xb5, 0x70, 0x29, 0x31, 0xaf, 0xa0, 0xab, 0x05, 0x03, 0xd9, 0x78,
+	0xa5, 0x24, 0x6e, 0x0f, 0x57, 0x74, 0x64, 0xf2, 0x8f, 0x01, 0x2d, 0x49, 0x08, 0xf4, 0x05, 0xec,
+	0xad, 0x13, 0x04, 0x0d, 0xf1, 0x16, 0xb6, 0xb9, 0x87, 0x78, 0x1b, 0x93, 0xaa, 0x05, 0xca, 0x8d,
+	0x56, 0x05, 0xaa, 0x3b, 0x1d, 0xe2, 0x6d, 0xac, 0x40, 0x9f, 0xc2, 0x60, 0xed, 0xc0, 0xd1, 0x01,
+	0xde, 0xe4, 0x89, 0x3b, 0xc4, 0x5b, 0x78, 0x80, 0x2e, 0x0a, 0x7a, 0xd4, 0xae, 0x1d, 0x1d, 0xe3,
+	0xed, 0xec, 0x70, 0x1d, 0xfc, 0x04, 0x39, 0xd0, 0x19, 0xf4, 0xaa, 0x4c, 0x40, 0x7b, 0x78, 0x8d,
+	0x2b, 0xee, 0x3e, 0x5e, 0xa7, 0xca, 0xe4, 0x23, 0x68, 0x4f, 0x95, 0xa0, 0xbe, 0x06, 0x58, 0x9d,
+	0x34, 0xea, 0xe3, 0x1a, 0x41, 0xdc, 0x01, 0xae, 0xdf, 0xfb, 0x39, 0x5c, 0x18, 0x3f, 0x75, 0x30,
+	0x3e, 0x4d, 0x59, 0x78, 0xdb, 0x51, 0x32, 0x79, 0xf6, 0x6f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x39,
+	0x83, 0x1d, 0xb5, 0x82, 0x09, 0x00, 0x00,
 }

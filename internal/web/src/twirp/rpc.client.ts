@@ -7,19 +7,19 @@ import type { ListGroupsReq } from "./rpc";
 import { User } from "./rpc";
 import type { ListMyGroupsResp } from "./rpc";
 import type { ListMyGroupsReq } from "./rpc";
-import type { RevokeAllSessionsResp } from "./rpc";
-import type { RevokeAllSessionsReq } from "./rpc";
-import type { RevokeSessionResp } from "./rpc";
-import type { RevokeSessionReq } from "./rpc";
-import type { UpdatePasswordResp } from "./rpc";
-import type { UpdatePasswordReq } from "./rpc";
-import type { UpdateUsernameResp } from "./rpc";
-import type { UpdateUsernameReq } from "./rpc";
+import type { RevokeAllMySessionsResp } from "./rpc";
+import type { RevokeAllMySessionsReq } from "./rpc";
+import type { RevokeMySessionResp } from "./rpc";
+import type { RevokeMySessionReq } from "./rpc";
+import type { UpdateMyPasswordResp } from "./rpc";
+import type { UpdateMyPasswordReq } from "./rpc";
+import type { UpdateMyUsernameResp } from "./rpc";
+import type { UpdateMyUsernameReq } from "./rpc";
 import { Page } from "./rpc";
-import type { PageProfileResp } from "./rpc";
-import type { PageProfileReq } from "./rpc";
-import type { PageHomeResp } from "./rpc";
-import type { PageHomeReq } from "./rpc";
+import type { ProfileResp } from "./rpc";
+import type { ProfileReq } from "./rpc";
+import type { HomeResp } from "./rpc";
+import type { HomeReq } from "./rpc";
 import { Auth } from "./rpc";
 import type { ForgotPasswordResp } from "./rpc";
 import type { ForgotPasswordReq } from "./rpc";
@@ -111,13 +111,13 @@ export class AuthClient implements IAuthClient, ServiceInfo {
  */
 export interface IPageClient {
     /**
-     * @generated from protobuf rpc: Home(PageHomeReq) returns (PageHomeResp);
+     * @generated from protobuf rpc: Home(HomeReq) returns (HomeResp);
      */
-    home(input: PageHomeReq, options?: RpcOptions): UnaryCall<PageHomeReq, PageHomeResp>;
+    home(input: HomeReq, options?: RpcOptions): UnaryCall<HomeReq, HomeResp>;
     /**
-     * @generated from protobuf rpc: Profile(PageProfileReq) returns (PageProfileResp);
+     * @generated from protobuf rpc: Profile(ProfileReq) returns (ProfileResp);
      */
-    profile(input: PageProfileReq, options?: RpcOptions): UnaryCall<PageProfileReq, PageProfileResp>;
+    profile(input: ProfileReq, options?: RpcOptions): UnaryCall<ProfileReq, ProfileResp>;
 }
 // ---------- Page
 
@@ -131,18 +131,18 @@ export class PageClient implements IPageClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: Home(PageHomeReq) returns (PageHomeResp);
+     * @generated from protobuf rpc: Home(HomeReq) returns (HomeResp);
      */
-    home(input: PageHomeReq, options?: RpcOptions): UnaryCall<PageHomeReq, PageHomeResp> {
+    home(input: HomeReq, options?: RpcOptions): UnaryCall<HomeReq, HomeResp> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<PageHomeReq, PageHomeResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<HomeReq, HomeResp>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: Profile(PageProfileReq) returns (PageProfileResp);
+     * @generated from protobuf rpc: Profile(ProfileReq) returns (ProfileResp);
      */
-    profile(input: PageProfileReq, options?: RpcOptions): UnaryCall<PageProfileReq, PageProfileResp> {
+    profile(input: ProfileReq, options?: RpcOptions): UnaryCall<ProfileReq, ProfileResp> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<PageProfileReq, PageProfileResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<ProfileReq, ProfileResp>("unary", this._transport, method, opt, input);
     }
 }
 // ---------- User
@@ -152,21 +152,21 @@ export class PageClient implements IPageClient, ServiceInfo {
  */
 export interface IUserClient {
     /**
-     * @generated from protobuf rpc: UpdateUsername(UpdateUsernameReq) returns (UpdateUsernameResp);
+     * @generated from protobuf rpc: UpdateMyUsername(UpdateMyUsernameReq) returns (UpdateMyUsernameResp);
      */
-    updateUsername(input: UpdateUsernameReq, options?: RpcOptions): UnaryCall<UpdateUsernameReq, UpdateUsernameResp>;
+    updateMyUsername(input: UpdateMyUsernameReq, options?: RpcOptions): UnaryCall<UpdateMyUsernameReq, UpdateMyUsernameResp>;
     /**
-     * @generated from protobuf rpc: UpdatePassword(UpdatePasswordReq) returns (UpdatePasswordResp);
+     * @generated from protobuf rpc: UpdateMyPassword(UpdateMyPasswordReq) returns (UpdateMyPasswordResp);
      */
-    updatePassword(input: UpdatePasswordReq, options?: RpcOptions): UnaryCall<UpdatePasswordReq, UpdatePasswordResp>;
+    updateMyPassword(input: UpdateMyPasswordReq, options?: RpcOptions): UnaryCall<UpdateMyPasswordReq, UpdateMyPasswordResp>;
     /**
-     * @generated from protobuf rpc: RevokeSession(RevokeSessionReq) returns (RevokeSessionResp);
+     * @generated from protobuf rpc: RevokeMySession(RevokeMySessionReq) returns (RevokeMySessionResp);
      */
-    revokeSession(input: RevokeSessionReq, options?: RpcOptions): UnaryCall<RevokeSessionReq, RevokeSessionResp>;
+    revokeMySession(input: RevokeMySessionReq, options?: RpcOptions): UnaryCall<RevokeMySessionReq, RevokeMySessionResp>;
     /**
-     * @generated from protobuf rpc: RevokeAllSessions(RevokeAllSessionsReq) returns (RevokeAllSessionsResp);
+     * @generated from protobuf rpc: RevokeAllMySessions(RevokeAllMySessionsReq) returns (RevokeAllMySessionsResp);
      */
-    revokeAllSessions(input: RevokeAllSessionsReq, options?: RpcOptions): UnaryCall<RevokeAllSessionsReq, RevokeAllSessionsResp>;
+    revokeAllMySessions(input: RevokeAllMySessionsReq, options?: RpcOptions): UnaryCall<RevokeAllMySessionsReq, RevokeAllMySessionsResp>;
     /**
      * @generated from protobuf rpc: ListMyGroups(ListMyGroupsReq) returns (ListMyGroupsResp);
      */
@@ -184,32 +184,32 @@ export class UserClient implements IUserClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: UpdateUsername(UpdateUsernameReq) returns (UpdateUsernameResp);
+     * @generated from protobuf rpc: UpdateMyUsername(UpdateMyUsernameReq) returns (UpdateMyUsernameResp);
      */
-    updateUsername(input: UpdateUsernameReq, options?: RpcOptions): UnaryCall<UpdateUsernameReq, UpdateUsernameResp> {
+    updateMyUsername(input: UpdateMyUsernameReq, options?: RpcOptions): UnaryCall<UpdateMyUsernameReq, UpdateMyUsernameResp> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<UpdateUsernameReq, UpdateUsernameResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<UpdateMyUsernameReq, UpdateMyUsernameResp>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: UpdatePassword(UpdatePasswordReq) returns (UpdatePasswordResp);
+     * @generated from protobuf rpc: UpdateMyPassword(UpdateMyPasswordReq) returns (UpdateMyPasswordResp);
      */
-    updatePassword(input: UpdatePasswordReq, options?: RpcOptions): UnaryCall<UpdatePasswordReq, UpdatePasswordResp> {
+    updateMyPassword(input: UpdateMyPasswordReq, options?: RpcOptions): UnaryCall<UpdateMyPasswordReq, UpdateMyPasswordResp> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<UpdatePasswordReq, UpdatePasswordResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<UpdateMyPasswordReq, UpdateMyPasswordResp>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: RevokeSession(RevokeSessionReq) returns (RevokeSessionResp);
+     * @generated from protobuf rpc: RevokeMySession(RevokeMySessionReq) returns (RevokeMySessionResp);
      */
-    revokeSession(input: RevokeSessionReq, options?: RpcOptions): UnaryCall<RevokeSessionReq, RevokeSessionResp> {
+    revokeMySession(input: RevokeMySessionReq, options?: RpcOptions): UnaryCall<RevokeMySessionReq, RevokeMySessionResp> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RevokeSessionReq, RevokeSessionResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<RevokeMySessionReq, RevokeMySessionResp>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: RevokeAllSessions(RevokeAllSessionsReq) returns (RevokeAllSessionsResp);
+     * @generated from protobuf rpc: RevokeAllMySessions(RevokeAllMySessionsReq) returns (RevokeAllMySessionsResp);
      */
-    revokeAllSessions(input: RevokeAllSessionsReq, options?: RpcOptions): UnaryCall<RevokeAllSessionsReq, RevokeAllSessionsResp> {
+    revokeAllMySessions(input: RevokeAllMySessionsReq, options?: RpcOptions): UnaryCall<RevokeAllMySessionsReq, RevokeAllMySessionsResp> {
         const method = this.methods[3], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RevokeAllSessionsReq, RevokeAllSessionsResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<RevokeAllMySessionsReq, RevokeAllMySessionsResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ListMyGroups(ListMyGroupsReq) returns (ListMyGroupsResp);

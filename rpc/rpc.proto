@@ -63,19 +63,19 @@ message ForgotPasswordResp {}
 // ---------- Page
 
 service Page {
-  rpc Home(PageHomeReq) returns (PageHomeResp);
-  rpc Profile(PageProfileReq) returns (PageProfileResp);
+  rpc Home(HomeReq) returns (HomeResp);
+  rpc Profile(ProfileReq) returns (ProfileResp);
 }
 
-message PageHomeReq {}
+message HomeReq {}
 
-message PageHomeResp {
+message HomeResp {
   int64 device_count = 1;
 }
 
-message PageProfileReq {}
+message ProfileReq {}
 
-message PageProfileResp {
+message ProfileResp {
   string username = 1;
   string email = 2;
   bool admin = 3;
@@ -87,35 +87,35 @@ message PageProfileResp {
 // ---------- User
 
 service User {
-  rpc UpdateUsername(UpdateUsernameReq) returns (UpdateUsernameResp);
-  rpc UpdatePassword(UpdatePasswordReq) returns (UpdatePasswordResp);
-  rpc RevokeSession(RevokeSessionReq) returns (RevokeSessionResp);
-  rpc RevokeAllSessions(RevokeAllSessionsReq) returns (RevokeAllSessionsResp);
+  rpc UpdateMyUsername(UpdateMyUsernameReq) returns (UpdateMyUsernameResp);
+  rpc UpdateMyPassword(UpdateMyPasswordReq) returns (UpdateMyPasswordResp);
+  rpc RevokeMySession(RevokeMySessionReq) returns (RevokeMySessionResp);
+  rpc RevokeAllMySessions(RevokeAllMySessionsReq) returns (RevokeAllMySessionsResp);
   rpc ListMyGroups(ListMyGroupsReq) returns (ListMyGroupsResp);
 }
 
-message UpdateUsernameReq {
+message UpdateMyUsernameReq {
   string new_username = 1;
 }
 
-message UpdateUsernameResp {}
+message UpdateMyUsernameResp {}
 
-message UpdatePasswordReq {
+message UpdateMyPasswordReq {
   string old_password = 1;
   string new_password = 2;
 }
 
-message UpdatePasswordResp {}
+message UpdateMyPasswordResp {}
 
-message RevokeSessionReq {
+message RevokeMySessionReq {
   int64 session_id = 1;
 }
 
-message RevokeSessionResp {}
+message RevokeMySessionResp {}
 
-message RevokeAllSessionsReq {}
+message RevokeAllMySessionsReq {}
 
-message RevokeAllSessionsResp {}
+message RevokeAllMySessionsResp {}
 
 message ListMyGroupsReq {}
 

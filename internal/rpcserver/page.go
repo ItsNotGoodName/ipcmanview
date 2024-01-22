@@ -22,7 +22,7 @@ type Page struct {
 	db repo.DB
 }
 
-func (p *Page) Home(ctx context.Context, req *rpc.PageHomeReq) (*rpc.PageHomeResp, error) {
+func (p *Page) Home(ctx context.Context, req *rpc.HomeReq) (*rpc.HomeResp, error) {
 	authSession := useAuthSession(ctx)
 
 	dbDevices, err := p.db.ListDahuaDeviceForUser(ctx, repo.ListDahuaDeviceForUserParams{
@@ -37,12 +37,12 @@ func (p *Page) Home(ctx context.Context, req *rpc.PageHomeReq) (*rpc.PageHomeRes
 		fmt.Println(lddfur.ID, lddfur.Level)
 	}
 
-	return &rpc.PageHomeResp{
+	return &rpc.HomeResp{
 		DeviceCount: int64(len(dbDevices)),
 	}, nil
 }
 
-func (p *Page) Profile(ctx context.Context, req *rpc.PageProfileReq) (*rpc.PageProfileResp, error) {
+func (p *Page) Profile(ctx context.Context, req *rpc.ProfileReq) (*rpc.ProfileResp, error) {
 	authSession := useAuthSession(ctx)
 
 	user, err := p.db.GetUser(ctx, authSession.UserID)
@@ -73,7 +73,7 @@ func (p *Page) Profile(ctx context.Context, req *rpc.PageProfileReq) (*rpc.PageP
 		})
 	}
 
-	return &rpc.PageProfileResp{
+	return &rpc.ProfileResp{
 		Username:      user.Username,
 		Email:         user.Email,
 		Admin:         authSession.Admin,

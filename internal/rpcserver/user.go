@@ -22,7 +22,7 @@ type User struct {
 	db repo.DB
 }
 
-func (u *User) UpdatePassword(ctx context.Context, req *rpc.UpdatePasswordReq) (*rpc.UpdatePasswordResp, error) {
+func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*rpc.UpdateMyPasswordResp, error) {
 	authSession := useAuthSession(ctx)
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
@@ -52,10 +52,10 @@ func (u *User) UpdatePassword(ctx context.Context, req *rpc.UpdatePasswordReq) (
 		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.UpdatePasswordResp{}, nil
+	return &rpc.UpdateMyPasswordResp{}, nil
 }
 
-func (u *User) UpdateUsername(ctx context.Context, req *rpc.UpdateUsernameReq) (*rpc.UpdateUsernameResp, error) {
+func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameReq) (*rpc.UpdateMyUsernameResp, error) {
 	authSession := useAuthSession(ctx)
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
@@ -82,10 +82,10 @@ func (u *User) UpdateUsername(ctx context.Context, req *rpc.UpdateUsernameReq) (
 		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.UpdateUsernameResp{}, nil
+	return &rpc.UpdateMyUsernameResp{}, nil
 }
 
-func (u *User) RevokeAllSessions(ctx context.Context, req *rpc.RevokeAllSessionsReq) (*rpc.RevokeAllSessionsResp, error) {
+func (u *User) RevokeAllMySessions(ctx context.Context, req *rpc.RevokeAllMySessionsReq) (*rpc.RevokeAllMySessionsResp, error) {
 	authSession := useAuthSession(ctx)
 
 	if err := u.db.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
@@ -95,10 +95,10 @@ func (u *User) RevokeAllSessions(ctx context.Context, req *rpc.RevokeAllSessions
 		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.RevokeAllSessionsResp{}, nil
+	return &rpc.RevokeAllMySessionsResp{}, nil
 }
 
-func (u *User) RevokeSession(ctx context.Context, req *rpc.RevokeSessionReq) (*rpc.RevokeSessionResp, error) {
+func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq) (*rpc.RevokeMySessionResp, error) {
 	authSession := useAuthSession(ctx)
 
 	if err := u.db.DeleteUserSessionForUser(ctx, repo.DeleteUserSessionForUserParams{
@@ -108,7 +108,7 @@ func (u *User) RevokeSession(ctx context.Context, req *rpc.RevokeSessionReq) (*r
 		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.RevokeSessionResp{}, nil
+	return &rpc.RevokeMySessionResp{}, nil
 }
 
 func (u *User) ListMyGroups(ctx context.Context, req *rpc.ListMyGroupsReq) (*rpc.ListMyGroupsResp, error) {

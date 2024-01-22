@@ -12,7 +12,7 @@ import { useClient } from "~/providers/client"
 import { PopoverArrow, PopoverCloseButton, PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "~/ui/Popover"
 import { As } from "@kobalte/core"
 import { Badge } from "~/ui/Badge"
-import { RevokeSessionReq } from "~/twirp/rpc"
+import { RevokeMySessionReq } from "~/twirp/rpc"
 import { Seperator } from "~/ui/Seperator"
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form"
 import { Input } from "~/ui/Input"
@@ -20,20 +20,21 @@ import { Skeleton } from "~/ui/Skeleton"
 import { getSession } from "~/providers/session"
 import { PageError } from "~/ui/Page"
 
-export const actionRevokeAllSessions = action(() => useClient()
-  .user.revokeAllSessions({})
+const actionRevokeAllMySessions = action(() => useClient()
+  .user.revokeAllMySessions({})
   .then(() => revalidate(getProfile.key))
   .catch(catchAsToast))
-export const actionRevokeSession = action((input: RevokeSessionReq) => useClient()
-  .user.revokeSession(input)
+
+const actionRevokeMySession = action((input: RevokeMySessionReq) => useClient()
+  .user.revokeMySession(input)
   .then(() => revalidate(getProfile.key))
   .catch(catchAsToast))
 
 export function Profile() {
   const data = createAsync(getProfile)
 
-  const revokeAllSessionsSubmission = useSubmission(actionRevokeAllSessions)
-  const revokeAllSessions = useAction(actionRevokeAllSessions)
+  const revokeAllMySessionsSubmission = useSubmission(actionRevokeAllMySessions)
+  const revokeAllMySessions = useAction(actionRevokeAllMySessions)
 
   return (
     <div class="p-4">
@@ -102,8 +103,8 @@ export function Profile() {
             <div class="flex">
               <ConfirmButton
                 message="Are you sure you wish to revoke all sessions?"
-                pending={revokeAllSessionsSubmission.pending}
-                onYes={revokeAllSessions}
+                pending={revokeAllMySessionsSubmission.pending}
+                onYes={revokeAllMySessions}
                 variant="destructive"
               >
                 Revoke all sessions
@@ -126,8 +127,8 @@ export function Profile() {
                 <For each={data()?.sessions}>
                   {
                     (session) => {
-                      const revokeSessionSubmission = useSubmission(actionRevokeSession)
-                      const revokeSession = useAction(actionRevokeSession)
+                      const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
+                      const revokeMySession = useAction(actionRevokeMySession)
 
                       return (
                         <TableRow>
@@ -147,8 +148,8 @@ export function Profile() {
                             }>
                               <ConfirmButton
                                 message="Are you sure you wish to revoke this session?"
-                                pending={revokeSessionSubmission.pending}
-                                onYes={() => revokeSession({ sessionId: session.id })}
+                                pending={revokeMySessionSubmission.pending}
+                                onYes={() => revokeMySession({ sessionId: session.id })}
                                 variant="destructive"
                                 size="sm"
                               >
@@ -213,17 +214,17 @@ type ChangeUsernameForm = {
   newUsername: string
 }
 
-const actionChangeUsername = action((form: ChangeUsernameForm) => useClient()
-  .user.updateUsername(form)
+const actionUpdateMyUsername = action((form: ChangeUsernameForm) => useClient()
+  .user.updateMyUsername(form)
   .then(() => revalidate([getProfile.key, getSession.key]))
   .catch(throwAsFormError))
 
 function ChangeUsernameForm() {
   const [changeUsernameForm, { Field, Form }] = createForm<ChangeUsernameForm>({ initialValues: { newUsername: "" } });
-  const changeUsername = useAction(actionChangeUsername)
+  const submit = useAction(actionUpdateMyUsername)
 
   return (
-    <Form class="flex w-full max-w-xs flex-col gap-4" onSubmit={(form) => changeUsername(form).then(() => reset(changeUsernameForm))}>
+    <Form class="flex w-full max-w-xs flex-col gap-4" onSubmit={(form) => submit(form).then(() => reset(changeUsernameForm))}>
       <Field name="newUsername" validate={required("Please enter a new username.")}>
         {(field, props) => (
           <FieldRoot class="gap-1.5">
@@ -255,22 +256,22 @@ type ChangePasswordForm = {
   confirmPassword: string
 }
 
-const actionChangePassword = action((form: ChangePasswordForm) => {
+const actionUpdateMyPassword = action((form: ChangePasswordForm) => {
   if (form.newPassword != form.confirmPassword) {
     throw new FormError<ChangePasswordForm>("", { confirmPassword: "Password does not match." })
   }
   return useClient()
-    .user.updatePassword(form)
+    .user.updateMyPassword(form)
     .then(() => revalidate(getProfile.key))
     .catch(throwAsFormError)
 })
 
 function ChangePasswordForm() {
   const [changePasswordForm, { Field, Form }] = createForm<ChangePasswordForm>({ initialValues: { oldPassword: "", newPassword: "", confirmPassword: "" } });
-  const changePassword = useAction(actionChangePassword)
+  const submit = useAction(actionUpdateMyPassword)
 
   return (
-    <Form class="flex w-full max-w-xs flex-col gap-4" onSubmit={(form) => changePassword(form).then(() => reset(changePasswordForm))}>
+    <Form class="flex w-full max-w-xs flex-col gap-4" onSubmit={(form) => submit(form).then(() => reset(changePasswordForm))}>
       <input class="hidden" type="text" name="username" autocomplete="username" />
       <Field name="oldPassword" validate={required("Please enter your old password.")}>
         {(field, props) => (
