@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority"
 import { As, DropdownMenu } from "@kobalte/core";
-import { JSX, ParentProps, Show, Suspense, createEffect, createSignal, splitProps } from "solid-js";
+import { ErrorBoundary, JSX, ParentProps, Show, Suspense, createEffect, createSignal, splitProps } from "solid-js";
 import { A, action, createAsync, revalidate, useAction, useLocation, useNavigate, useSubmission } from "@solidjs/router";
 import { RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemEyeLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
@@ -12,7 +12,7 @@ import { toggleTheme, useThemeTitle } from "~/ui/theme";
 import { ToastList, ToastRegion } from "~/ui/Toast";
 import { cn, catchAsToast } from "~/lib/utils";
 import { getSession } from "~/providers/session";
-import { Loading } from "./ui/Loading";
+import { PageError, PageLoading } from "./ui/Page";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
@@ -80,13 +80,13 @@ const actionSignOut = action(() =>
   }).catch(catchAsToast)
 )
 
-function Header(props: { onMenuClick: () => void }) {
+function Header(props: ParentProps<{ onMenuClick: () => void }>) {
   const signOutSubmission = useSubmission(actionSignOut)
   const signOutAction = useAction(actionSignOut)
   const signOut = () => signOutAction().catch(catchAsToast)
+  const session = createAsync(getSession)
   const location = useLocation()
   const navigate = useNavigate()
-  const session = createAsync(getSession)
 
   return (
     <div
@@ -99,9 +99,9 @@ function Header(props: { onMenuClick: () => void }) {
             <RiSystemMenuLine class="h-6 w-6" />
           </DropdownMenuTrigger>
           <DropdownMenuPortal>
-            <DropdownMenuContent>
+            <DropdownMenuContent class="md:hidden">
               <DropdownMenuArrow />
-              <DropdownMenuLinks />
+              {props.children}
             </DropdownMenuContent>
           </DropdownMenuPortal>
         </DropdownMenuRoot>
@@ -181,20 +181,21 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuO
 }
 
 export function Layout(props: ParentProps) {
-  const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
   const session = createAsync(getSession)
-  const toastClass = () => session() ? "top-12 sm:top-12" : ""
+  const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
 
   return (
-    <>
-      <Portal>
-        <ToastRegion class={toastClass()}>
-          <ToastList class={toastClass()} />
-        </ToastRegion>
-      </Portal>
-      <Suspense fallback={<Loading class="pt-10" />}>
+    <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+      <Suspense fallback={<PageLoading class="pt-10" />}>
+        <Portal>
+          <ToastRegion class={session()?.valid ? "top-12 sm:top-12" : ""}>
+            <ToastList class={session()?.valid ? "top-12 sm:top-12" : ""} />
+          </ToastRegion>
+        </Portal>
         <Show when={session()?.valid} fallback={<>{props.children}</>}>
-          <Header onMenuClick={() => setMenuOpen((prev) => !prev)} />
+          <Header onMenuClick={() => setMenuOpen((prev) => !prev)}>
+            <DropdownMenuLinks />
+          </Header>
           <div class="flex">
             <Menu menuOpen={menuOpen()}>
               <MenuLinks />
@@ -204,7 +205,7 @@ export function Layout(props: ParentProps) {
             </div>
           </div >
         </Show>
-      </Suspense>
-    </>
+      </Suspense >
+    </ErrorBoundary>
   )
 }

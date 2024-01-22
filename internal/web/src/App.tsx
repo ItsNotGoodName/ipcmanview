@@ -3,7 +3,7 @@ import "./index.css";
 import { Navigate, Route, Router, } from '@solidjs/router'
 import { Show, lazy } from "solid-js";
 
-import { useTheme } from "./ui/theme";
+import { provideTheme } from "./ui/theme";
 import { NotFound } from './pages/404'
 import { Home } from "./pages/Home";
 import { View } from "./pages/View";
@@ -12,13 +12,13 @@ import { Profile } from "./pages/Profile";
 import { loadProfile } from "./pages/Profile.data";
 import { Layout } from "./Layout";
 import { ClientProvider } from "./providers/client";
-import { session } from "./providers/session";
 import { AdminHome } from "./pages/admin/Home";
+import { sessionCache } from "./providers/session";
 
 const Debug = lazy(() => import("./pages/debug"));
 
 function App() {
-  useTheme()
+  provideTheme()
 
   return (
     <ClientProvider>
@@ -28,7 +28,7 @@ function App() {
             <Debug />
           </Route>
         </Show>
-        <Show when={session.valid} fallback={
+        <Show when={sessionCache.valid} fallback={
           <>
             <Route path="/signin" component={SignIn} />
             <Route path="/signup" component={Signup} />
@@ -39,7 +39,7 @@ function App() {
           <Route path="/" component={Home} />
           <Route path="/profile" component={Profile} load={loadProfile} />
           <Route path="/view" component={View} />
-          <Show when={session.admin} fallback={<Route path="/admin" component={() => <>Your are not an admin.</>}></Route>}>
+          <Show when={sessionCache.admin} fallback={<Route path="/admin/*" component={() => <>You are not an admin.</>}></Route>}>
             <Route path="/admin" component={AdminHome} />
           </Show>
           <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />

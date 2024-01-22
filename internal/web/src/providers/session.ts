@@ -8,18 +8,20 @@ export type Session = {
   admin: boolean
 }
 
-export const [session, setSession] = makePersisted(createStore<Session>({ valid: false, username: "", admin: false }), { name: "session" })
+// HACK: this is to allow switching routes based on session
+export const [sessionCache, setSessionCache] = makePersisted(createStore<Session>({ valid: false, username: "", admin: false }), { name: "session" })
 
-export const getSession = cache(() => fetch("/v1/session", {
-  credentials: "include",
-  headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
-}).then((resp) => {
-  if (resp.ok || resp.status == 401) {
-    return resp.json()
-  }
+export const getSession = cache(() =>
+  fetch("/v1/session", {
+    credentials: "include",
+    headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
+  }).then(async (resp) => {
+    if (resp.ok || resp.status == 401) {
+      return resp.json()
+    }
 
-  throw new Error(`Invalid status code ${resp.status}`)
-}).then((data: Session) => {
-  setSession(data)
-  return data
-}), "session")
+    throw new Error(`Invalid status code ${resp.status}`)
+  }).then((data: Session) => {
+    setSessionCache(data)
+    return data
+  }), "session")

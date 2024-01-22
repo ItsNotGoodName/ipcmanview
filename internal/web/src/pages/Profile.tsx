@@ -1,12 +1,12 @@
 import { action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router"
 import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
-import { ComponentProps, ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, resetErrorBoundaries, splitProps } from "solid-js"
+import { ComponentProps, ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, splitProps } from "solid-js"
 import { FormError, createForm, required, reset } from "@modular-forms/solid"
 
-import { formatDate, parseDate, createLoading, catchAsToast, throwAsFormError } from "~/lib/utils"
+import { formatDate, parseDate, catchAsToast, throwAsFormError } from "~/lib/utils"
 import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
 import { getListMyGroups, getProfile, } from "./Profile.data"
-import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert"
+import { AlertRoot, AlertTitle } from "~/ui/Alert"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
@@ -17,8 +17,9 @@ import { RevokeSessionReq } from "~/twirp/rpc"
 import { Seperator } from "~/ui/Seperator"
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form"
 import { Input } from "~/ui/Input"
-import { Loading } from "~/ui/Loading"
 import { Skeleton } from "~/ui/Skeleton"
+import { getSession } from "~/providers/session"
+import { PageError, PageLoading } from "~/ui/Page"
 
 export const actionRevokeAllSessions = action(() => useClient()
   .user.revokeAllSessions({})
@@ -29,7 +30,6 @@ export const actionRevokeSession = action((input: RevokeSessionReq) => useClient
 
 export function Profile() {
   const data = createAsync(getProfile)
-  const [loading, refreshData] = createLoading(() => revalidate(getProfile.key).then(resetErrorBoundaries))
 
   const revokeAllSessionsSubmission = useSubmission(actionRevokeAllSessions)
   const revokeAllSessionsAction = useAction(actionRevokeAllSessions)
@@ -37,15 +37,8 @@ export function Profile() {
 
   return (
     <div class="p-4">
-      <ErrorBoundary fallback={(error) => (
-        <AlertRoot variant="destructive">
-          <AlertTitle>{error.message}</AlertTitle>
-          <AlertDescription>
-            <Button onClick={refreshData} disabled={loading()}>Retry</Button>
-          </AlertDescription>
-        </AlertRoot>
-      )}>
-        <Suspense fallback={<Loading />}>
+      <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+        <Suspense fallback={<PageLoading />}>
           <div class="mx-auto flex max-w-4xl flex-col gap-4">
             <CardRoot>
               <CardHeader>
@@ -177,7 +170,6 @@ export function Profile() {
   )
 }
 
-
 function GroupTable() {
   const data = createAsync(getListMyGroups)
 
@@ -220,7 +212,7 @@ type ChangeUsernameForm = {
 
 const actionChangeUsername = action((form: ChangeUsernameForm) => useClient()
   .user.updateUsername(form)
-  .then(() => revalidate(getProfile.key))
+  .then(() => revalidate([getProfile.key, getSession.key]))
   .catch(throwAsFormError))
 
 function ChangeUsernameForm() {

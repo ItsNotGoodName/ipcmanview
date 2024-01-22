@@ -12,8 +12,8 @@ import { ThemeIcon } from "~/ui/ThemeIcon";
 import { toggleTheme, useThemeTitle } from "~/ui/theme";
 import { CheckboxControl, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { throwAsFormError } from "~/lib/utils";
-import { getSession } from "~/providers/session";
 import { toast } from "~/ui/Toast";
+import { getSession } from "~/providers/session";
 
 function Header() {
   return (

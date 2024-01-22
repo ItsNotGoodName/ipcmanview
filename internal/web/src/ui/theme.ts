@@ -51,7 +51,7 @@ const themeClass = () => {
   return useCurrentTheme() == Theme.Dark ? DARK_THEME_CLASS : LIGHT_THEME_CLASS;
 };
 
-export const useTheme = () => {
+export const provideTheme = () => {
   return createEffect(() => {
     document.getElementsByTagName("body")![0].className = themeClass()
   })
