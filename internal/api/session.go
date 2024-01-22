@@ -8,15 +8,25 @@ import (
 	echo "github.com/labstack/echo/v4"
 )
 
+type SesionResp struct {
+	Valid    bool   `json:"valid"`
+	Username string `json:"username"`
+	Admin    bool   `json:"admin"`
+}
+
 func (s *Server) Session(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	_, ok := auth.UseSession(ctx)
+	authSession, ok := auth.UseSession(ctx)
 	if !ok {
-		return c.JSON(http.StatusUnauthorized, nil)
+		return c.JSON(http.StatusUnauthorized, SesionResp{})
 	}
 
-	return c.JSON(http.StatusOK, nil)
+	return c.JSON(http.StatusOK, SesionResp{
+		Valid:    true,
+		Username: authSession.Username,
+		Admin:    authSession.Admin,
+	})
 }
 
 func (s *Server) SessionPOST(c echo.Context) error {

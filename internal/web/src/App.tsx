@@ -1,7 +1,7 @@
 import "./index.css";
 
 import { Navigate, Route, Router, } from '@solidjs/router'
-import { Match, Show, Switch, lazy } from "solid-js";
+import { Show, lazy } from "solid-js";
 
 import { useTheme } from "./ui/theme";
 import { NotFound } from './pages/404'
@@ -28,26 +28,25 @@ function App() {
             <Debug />
           </Route>
         </Show>
-        <Switch>
-          <Match when={session()}>
-            <Route path="/" component={Home} />
-            <Route path="/profile" component={Profile} load={loadProfile} />
-            <Route path="/view" component={View} />
-            <Show when={true} fallback={<Route path="/admin" component={() => <>Your not an admin.</>}></Route>}>
-              <Route path="/admin" component={AdminHome} />
-            </Show>
-            <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />
-            <Route path="*404" component={NotFound} />
-          </Match>
-          <Match when={!session()}>
+        <Show when={session.valid} fallback={
+          <>
             <Route path="/signin" component={SignIn} />
             <Route path="/signup" component={Signup} />
             <Route path="/forgot" component={Forgot} />
             <Route path="*404" component={() => <Navigate href="/signin" />} />
-          </Match>
-        </Switch>
+          </>
+        }>
+          <Route path="/" component={Home} />
+          <Route path="/profile" component={Profile} load={loadProfile} />
+          <Route path="/view" component={View} />
+          <Show when={session.admin} fallback={<Route path="/admin" component={() => <>Your not an admin.</>}></Route>}>
+            <Route path="/admin" component={AdminHome} />
+          </Show>
+          <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />
+          <Route path="*404" component={NotFound} />
+        </Show>
       </Router>
-    </ClientProvider>
+    </ClientProvider >
   )
 }
 

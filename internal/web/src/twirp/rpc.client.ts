@@ -2,8 +2,6 @@
 // @generated from protobuf file "rpc.proto" (syntax proto3)
 // tslint:disable
 import { User } from "./rpc";
-import type { UserGetMeResp } from "./rpc";
-import type { UserGetMeReq } from "./rpc";
 import type { UserListGroupResp } from "./rpc";
 import type { UserListGroupReq } from "./rpc";
 import type { UserRevokeAllSessionsResp } from "./rpc";
@@ -32,6 +30,8 @@ import type { HelloResp } from "./rpc";
 import type { HelloReq } from "./rpc";
 import type { UnaryCall } from "@protobuf-ts/runtime-rpc";
 import type { RpcOptions } from "@protobuf-ts/runtime-rpc";
+// ---------- HelloWorld
+
 /**
  * @generated from protobuf service HelloWorld
  */
@@ -41,6 +41,8 @@ export interface IHelloWorldClient {
      */
     hello(input: HelloReq, options?: RpcOptions): UnaryCall<HelloReq, HelloResp>;
 }
+// ---------- HelloWorld
+
 /**
  * @generated from protobuf service HelloWorld
  */
@@ -58,6 +60,8 @@ export class HelloWorldClient implements IHelloWorldClient, ServiceInfo {
         return stackIntercept<HelloReq, HelloResp>("unary", this._transport, method, opt, input);
     }
 }
+// ---------- Auth
+
 /**
  * @generated from protobuf service Auth
  */
@@ -71,6 +75,8 @@ export interface IAuthClient {
      */
     forgot(input: AuthForgotReq, options?: RpcOptions): UnaryCall<AuthForgotReq, AuthForgotResp>;
 }
+// ---------- Auth
+
 /**
  * @generated from protobuf service Auth
  */
@@ -95,6 +101,8 @@ export class AuthClient implements IAuthClient, ServiceInfo {
         return stackIntercept<AuthForgotReq, AuthForgotResp>("unary", this._transport, method, opt, input);
     }
 }
+// ---------- Page
+
 /**
  * @generated from protobuf service Page
  */
@@ -108,6 +116,8 @@ export interface IPageClient {
      */
     profile(input: PageProfileReq, options?: RpcOptions): UnaryCall<PageProfileReq, PageProfileResp>;
 }
+// ---------- Page
+
 /**
  * @generated from protobuf service Page
  */
@@ -132,6 +142,8 @@ export class PageClient implements IPageClient, ServiceInfo {
         return stackIntercept<PageProfileReq, PageProfileResp>("unary", this._transport, method, opt, input);
     }
 }
+// ---------- User
+
 /**
  * @generated from protobuf service User
  */
@@ -156,11 +168,9 @@ export interface IUserClient {
      * @generated from protobuf rpc: ListGroup(UserListGroupReq) returns (UserListGroupResp);
      */
     listGroup(input: UserListGroupReq, options?: RpcOptions): UnaryCall<UserListGroupReq, UserListGroupResp>;
-    /**
-     * @generated from protobuf rpc: GetMe(UserGetMeReq) returns (UserGetMeResp);
-     */
-    getMe(input: UserGetMeReq, options?: RpcOptions): UnaryCall<UserGetMeReq, UserGetMeResp>;
 }
+// ---------- User
+
 /**
  * @generated from protobuf service User
  */
@@ -204,12 +214,5 @@ export class UserClient implements IUserClient, ServiceInfo {
     listGroup(input: UserListGroupReq, options?: RpcOptions): UnaryCall<UserListGroupReq, UserListGroupResp> {
         const method = this.methods[4], opt = this._transport.mergeOptions(options);
         return stackIntercept<UserListGroupReq, UserListGroupResp>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * @generated from protobuf rpc: GetMe(UserGetMeReq) returns (UserGetMeResp);
-     */
-    getMe(input: UserGetMeReq, options?: RpcOptions): UnaryCall<UserGetMeReq, UserGetMeResp> {
-        const method = this.methods[5], opt = this._transport.mergeOptions(options);
-        return stackIntercept<UserGetMeReq, UserGetMeResp>("unary", this._transport, method, opt, input);
     }
 }

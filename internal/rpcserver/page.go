@@ -12,14 +12,20 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+func NewPage(db repo.DB) *Page {
+	return &Page{
+		db: db,
+	}
+}
+
 type Page struct {
-	DB repo.DB
+	db repo.DB
 }
 
 func (p *Page) Home(ctx context.Context, req *rpc.PageHomeReq) (*rpc.PageHomeResp, error) {
 	authSession := useAuthSession(ctx)
 
-	dbDevices, err := p.DB.ListDahuaDeviceForUser(ctx, repo.ListDahuaDeviceForUserParams{
+	dbDevices, err := p.db.ListDahuaDeviceForUser(ctx, repo.ListDahuaDeviceForUserParams{
 		Admin:  authSession.Admin,
 		UserID: core.Int64ToNullInt64(authSession.UserID),
 	})
@@ -39,12 +45,12 @@ func (p *Page) Home(ctx context.Context, req *rpc.PageHomeReq) (*rpc.PageHomeRes
 func (p *Page) Profile(ctx context.Context, req *rpc.PageProfileReq) (*rpc.PageProfileResp, error) {
 	authSession := useAuthSession(ctx)
 
-	user, err := p.DB.GetUser(ctx, authSession.UserID)
+	user, err := p.db.GetUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, NewError(err).Internal()
 	}
 
-	dbSessions, err := p.DB.ListUserSessionForUserAndNotExpired(ctx, repo.ListUserSessionForUserAndNotExpiredParams{
+	dbSessions, err := p.db.ListUserSessionForUserAndNotExpired(ctx, repo.ListUserSessionForUserAndNotExpiredParams{
 		UserID: authSession.UserID,
 		Now:    types.NewTime(time.Now()),
 	})

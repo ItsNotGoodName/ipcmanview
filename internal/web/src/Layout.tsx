@@ -11,9 +11,8 @@ import { ThemeIcon } from "~/ui/ThemeIcon";
 import { toggleTheme, useThemeTitle } from "~/ui/theme";
 import { ToastList, ToastRegion } from "~/ui/Toast";
 import { cn, catchAsToast } from "~/lib/utils";
-import { getSession, useSession } from "~/providers/session";
+import { getSession } from "~/providers/session";
 import { Loading } from "./ui/Loading";
-import { getMe } from "./data";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
@@ -87,7 +86,7 @@ function Header(props: { onMenuClick: () => void }) {
   const signOut = () => signOutAction().catch(catchAsToast)
   const location = useLocation()
   const navigate = useNavigate()
-  const me = createAsync(getMe)
+  const session = createAsync(getSession)
 
   return (
     <div
@@ -121,7 +120,7 @@ function Header(props: { onMenuClick: () => void }) {
               <RiDevelopmentBugLine class="h-6 w-6" />
             </A>
           </Show>
-          <Show when={me()?.admin}>
+          <Show when={session()?.admin}>
             <A class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}
               href="/admin" title="Admin">
               <RiUserFacesAdminLine class="h-6 w-6" />
@@ -135,7 +134,7 @@ function Header(props: { onMenuClick: () => void }) {
               <DropdownMenuContent class="z-[200]">
                 <DropdownMenuArrow />
                 <DropdownMenu.Item class="truncate px-2 pb-1.5 text-lg font-semibold">
-                  {me()?.username}
+                  {session()?.username}
                 </DropdownMenu.Item>
                 <DropdownMenu.Item asChild onSelect={() => navigate("/profile")}>
                   <As component={A} inactiveClass={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })}
@@ -182,7 +181,6 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuO
 }
 
 export function Layout(props: ParentProps) {
-  useSession()
   const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
   const session = createAsync(getSession)
   const toastClass = () => session() ? "top-12 sm:top-12" : ""
@@ -195,7 +193,7 @@ export function Layout(props: ParentProps) {
         </ToastRegion>
       </Portal>
       <Suspense fallback={<Loading class="pt-10" />}>
-        <Show when={session()} fallback={<>{props.children}</>}>
+        <Show when={session()?.valid} fallback={<>{props.children}</>}>
           <Header onMenuClick={() => setMenuOpen((prev) => !prev)} />
           <div class="flex">
             <Menu menuOpen={menuOpen()}>

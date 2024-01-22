@@ -131,9 +131,9 @@ func (c *CmdServe) Run(ctx *Context) error {
 	rpcAuthSession := rpcserver.AuthSession()
 	rpcserver.NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
-		Register(rpc.NewAuthServer(&rpcserver.Auth{DB: db}, rpcLogger)).
-		Register(rpc.NewPageServer(&rpcserver.Page{DB: db}, rpcLogger, rpcAuthSession)).
-		Register(rpc.NewUserServer(&rpcserver.User{DB: db}, rpcLogger, rpcAuthSession))
+		Register(rpc.NewAuthServer(rpcserver.NewAuth(db), rpcLogger)).
+		Register(rpc.NewPageServer(rpcserver.NewPage(db), rpcLogger, rpcAuthSession)).
+		Register(rpc.NewUserServer(rpcserver.NewUser(db), rpcLogger, rpcAuthSession))
 
 	// HTTP server
 	httpServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPPort)))

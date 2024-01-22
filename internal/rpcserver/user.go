@@ -11,22 +11,20 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type User struct {
-	DB repo.DB
+func NewUser(db repo.DB) *User {
+	return &User{
+		db: db,
+	}
 }
 
-func (u *User) GetMe(ctx context.Context, req *rpc.UserGetMeReq) (*rpc.UserGetMeResp, error) {
-	authSession := useAuthSession(ctx)
-	return &rpc.UserGetMeResp{
-		Username: authSession.Username,
-		Admin:    authSession.Admin,
-	}, nil
+type User struct {
+	db repo.DB
 }
 
 func (u *User) UpdatePassword(ctx context.Context, req *rpc.UserUpdatePasswordReq) (*rpc.UserUpdatePasswordResp, error) {
 	authSession := useAuthSession(ctx)
 
-	dbUser, err := u.DB.GetUser(ctx, authSession.UserID)
+	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, NewError(err).Internal()
 	}
@@ -36,7 +34,7 @@ func (u *User) UpdatePassword(ctx context.Context, req *rpc.UserUpdatePasswordRe
 		return nil, NewError(err, "Failed to update password.").Field("oldPassword", fmt.Errorf("Old password is invalid."))
 	}
 
-	if _, err := auth.UpdateUser(ctx, u.DB, user, req.NewPassword); err != nil {
+	if _, err := auth.UpdateUser(ctx, u.db, user, req.NewPassword); err != nil {
 		if errs, ok := err.(validator.ValidationErrors); ok {
 			return nil, NewError(err, "Failed to update password.").Validation(errs, [][2]string{
 				{"Password", "newPassword"},
@@ -46,7 +44,7 @@ func (u *User) UpdatePassword(ctx context.Context, req *rpc.UserUpdatePasswordRe
 		return nil, NewError(err).Internal()
 	}
 
-	if err := u.DB.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
+	if err := u.db.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
 		UserID:  authSession.UserID,
 		Session: authSession.Session,
 	}); err != nil {
@@ -59,7 +57,7 @@ func (u *User) UpdatePassword(ctx context.Context, req *rpc.UserUpdatePasswordRe
 func (u *User) UpdateUsername(ctx context.Context, req *rpc.UserUpdateUsernameReq) (*rpc.UserUpdateUsernameResp, error) {
 	authSession := useAuthSession(ctx)
 
-	dbUser, err := u.DB.GetUser(ctx, authSession.UserID)
+	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, NewError(err).Internal()
 	}
@@ -67,7 +65,7 @@ func (u *User) UpdateUsername(ctx context.Context, req *rpc.UserUpdateUsernameRe
 
 	user.Username = req.NewUsername
 
-	if _, err := auth.UpdateUser(ctx, u.DB, user, ""); err != nil {
+	if _, err := auth.UpdateUser(ctx, u.db, user, ""); err != nil {
 		if errs, ok := err.(validator.ValidationErrors); ok {
 			return nil, NewError(err, "Failed to update username.").Validation(errs, [][2]string{
 				{"Username", "newUsername"},
@@ -89,7 +87,7 @@ func (u *User) UpdateUsername(ctx context.Context, req *rpc.UserUpdateUsernameRe
 func (u *User) RevokeAllSessions(ctx context.Context, req *rpc.UserRevokeAllSessionsReq) (*rpc.UserRevokeAllSessionsResp, error) {
 	authSession := useAuthSession(ctx)
 
-	if err := u.DB.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
+	if err := u.db.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
 		UserID:  authSession.UserID,
 		Session: authSession.Session,
 	}); err != nil {
@@ -102,7 +100,7 @@ func (u *User) RevokeAllSessions(ctx context.Context, req *rpc.UserRevokeAllSess
 func (u *User) RevokeSession(ctx context.Context, req *rpc.UserRevokeSessionReq) (*rpc.UserRevokeSessionResp, error) {
 	authSession := useAuthSession(ctx)
 
-	if err := u.DB.DeleteUserSessionForUser(ctx, repo.DeleteUserSessionForUserParams{
+	if err := u.db.DeleteUserSessionForUser(ctx, repo.DeleteUserSessionForUserParams{
 		ID:     req.SessionId,
 		UserID: authSession.UserID,
 	}); err != nil {
@@ -115,7 +113,7 @@ func (u *User) RevokeSession(ctx context.Context, req *rpc.UserRevokeSessionReq)
 func (u *User) ListGroup(ctx context.Context, req *rpc.UserListGroupReq) (*rpc.UserListGroupResp, error) {
 	authSession := useAuthSession(ctx)
 
-	dbGroups, err := u.DB.ListGroupForUser(ctx, authSession.UserID)
+	dbGroups, err := u.db.ListGroupForUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, NewError(err).Internal()
 	}

@@ -11,12 +11,18 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+func NewAuth(db repo.DB) *Auth {
+	return &Auth{
+		db: db,
+	}
+}
+
 type Auth struct {
-	DB repo.DB
+	db repo.DB
 }
 
 func (a *Auth) SignUp(ctx context.Context, req *rpc.AuthSignUpReq) (*rpc.AuthSignUpResp, error) {
-	_, err := auth.CreateUser(ctx, a.DB, models.User{
+	_, err := auth.CreateUser(ctx, a.db, models.User{
 		Email:    req.Email,
 		Username: req.Username,
 		Password: req.Password,

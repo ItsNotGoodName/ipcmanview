@@ -91,7 +91,6 @@ service User {
   rpc RevokeSession(UserRevokeSessionReq) returns (UserRevokeSessionResp);
   rpc RevokeAllSessions(UserRevokeAllSessionsReq) returns (UserRevokeAllSessionsResp);
   rpc ListGroup(UserListGroupReq) returns (UserListGroupResp);
-  rpc GetMe(UserGetMeReq) returns (UserGetMeResp);
 }
 
 message UserUpdateUsernameReq {
@@ -121,11 +120,4 @@ message UserListGroupReq {}
 
 message UserListGroupResp {
   repeated Group groups = 1;
-}
-
-message UserGetMeReq {}
-
-message UserGetMeResp {
-  string username = 1;
-  bool admin = 2;
 }

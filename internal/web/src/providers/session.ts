@@ -1,33 +1,25 @@
 import { makePersisted } from "@solid-primitives/storage"
-import { cache, createAsync } from "@solidjs/router"
-import { createEffect, createSignal } from "solid-js"
+import { cache } from "@solidjs/router"
+import { createStore } from "solid-js/store"
 
-// HACK: allow App.tsx access to the session
-export const [session, setSession] = makePersisted(createSignal(false), { name: "session" })
-export function useSession() {
-  const session = createAsync(getSession)
-
-  createEffect(() => {
-    const value = session()
-    if (value != undefined) {
-      setSession(value)
-    }
-  })
+export type Session = {
+  valid: boolean
+  username: string
+  admin: boolean
 }
+
+export const [session, setSession] = makePersisted(createStore<Session>({ valid: false, username: "", admin: false }), { name: "session" })
 
 export const getSession = cache(() => fetch("/v1/session", {
   credentials: "include",
   headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
 }).then((resp) => {
-  if (resp.ok) {
-    return true
+  if (resp.ok || resp.status == 401) {
+    return resp.json()
   }
-  if (resp.status == 401) {
-    return false
-  }
-  throw new Error(`Invalid status code ${resp.status}`)
-}), "session")
 
-export default function() {
-  void getSession()
-}
+  throw new Error(`Invalid status code ${resp.status}`)
+}).then((data: Session) => {
+  setSession(data)
+  return data
+}), "session")
