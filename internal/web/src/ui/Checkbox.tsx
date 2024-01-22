@@ -37,7 +37,14 @@ export function CheckboxControl(props: ComponentProps<typeof Checkbox.Control>) 
 }
 
 export const CheckboxLabel = Checkbox.Label
-export const CheckboxDescription = Checkbox.Description
+
+export function CheckboxDescription(props: ComponentProps<typeof Checkbox.Description>) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Checkbox.Description
+    class={cn("w-full text-sm font-medium")}
+    {...rest}
+  />
+}
 
 export function CheckboxErrorMessage(props: ComponentProps<typeof Checkbox.ErrorMessage>) {
   const [_, rest] = splitProps(props, ["class"])

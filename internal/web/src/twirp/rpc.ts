@@ -238,6 +238,24 @@ export interface UserListGroupResp {
      */
     groups: Group[];
 }
+/**
+ * @generated from protobuf message UserGetMeReq
+ */
+export interface UserGetMeReq {
+}
+/**
+ * @generated from protobuf message UserGetMeResp
+ */
+export interface UserGetMeResp {
+    /**
+     * @generated from protobuf field: string username = 1;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: bool admin = 2;
+     */
+    admin: boolean;
+}
 // @generated message type with reflection information, may provide speed optimized methods
 class Session$Type extends MessageType<Session> {
     constructor() {
@@ -501,6 +519,29 @@ class UserListGroupResp$Type extends MessageType<UserListGroupResp> {
  * @generated MessageType for protobuf message UserListGroupResp
  */
 export const UserListGroupResp = new UserListGroupResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UserGetMeReq$Type extends MessageType<UserGetMeReq> {
+    constructor() {
+        super("UserGetMeReq", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UserGetMeReq
+ */
+export const UserGetMeReq = new UserGetMeReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UserGetMeResp$Type extends MessageType<UserGetMeResp> {
+    constructor() {
+        super("UserGetMeResp", [
+            { no: 1, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "admin", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UserGetMeResp
+ */
+export const UserGetMeResp = new UserGetMeResp$Type();
 /**
  * @generated ServiceType for protobuf service HelloWorld
  */
@@ -529,5 +570,6 @@ export const User = new ServiceType("User", [
     { name: "UpdatePassword", options: {}, I: UserUpdatePasswordReq, O: UserUpdatePasswordResp },
     { name: "RevokeSession", options: {}, I: UserRevokeSessionReq, O: UserRevokeSessionResp },
     { name: "RevokeAllSessions", options: {}, I: UserRevokeAllSessionsReq, O: UserRevokeAllSessionsResp },
-    { name: "ListGroup", options: {}, I: UserListGroupReq, O: UserListGroupResp }
+    { name: "ListGroup", options: {}, I: UserListGroupReq, O: UserListGroupResp },
+    { name: "GetMe", options: {}, I: UserGetMeReq, O: UserGetMeResp }
 ]);

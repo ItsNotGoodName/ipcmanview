@@ -1,10 +1,9 @@
 syntax = "proto3";
 
-option go_package = "../rpc";
-
-option optimize_for = CODE_SIZE;
-
 import "google/protobuf/timestamp.proto";
+
+option go_package = "../rpc";
+option optimize_for = CODE_SIZE;
 
 message Session {
   int64 id = 1;
@@ -23,6 +22,8 @@ message Group {
   string description = 3;
 }
 
+// ---------- HelloWorld
+
 service HelloWorld {
   rpc Hello(HelloReq) returns (HelloResp);
 }
@@ -37,6 +38,8 @@ message HelloResp {
   google.protobuf.Timestamp current_time = 2;
 }
 
+// ---------- Auth
+
 service Auth {
   rpc SignUp(AuthSignUpReq) returns (AuthSignUpResp);
   rpc Forgot(AuthForgotReq) returns (AuthForgotResp);
@@ -48,15 +51,15 @@ message AuthSignUpReq {
   string password = 3;
 }
 
-message AuthSignUpResp {
-}
+message AuthSignUpResp {}
 
 message AuthForgotReq {
   string email = 1;
 }
 
-message AuthForgotResp {
-}
+message AuthForgotResp {}
+
+// ---------- Page
 
 service Page {
   rpc Home(PageHomeReq) returns (PageHomeResp);
@@ -80,46 +83,49 @@ message PageProfileResp {
   repeated Session sessions = 6;
 }
 
+// ---------- User
+
 service User {
   rpc UpdateUsername(UserUpdateUsernameReq) returns (UserUpdateUsernameResp);
   rpc UpdatePassword(UserUpdatePasswordReq) returns (UserUpdatePasswordResp);
   rpc RevokeSession(UserRevokeSessionReq) returns (UserRevokeSessionResp);
   rpc RevokeAllSessions(UserRevokeAllSessionsReq) returns (UserRevokeAllSessionsResp);
-  rpc ListGroup(UserListGroupReq) returns(UserListGroupResp);
+  rpc ListGroup(UserListGroupReq) returns (UserListGroupResp);
+  rpc GetMe(UserGetMeReq) returns (UserGetMeResp);
 }
 
 message UserUpdateUsernameReq {
   string new_username = 1;
 }
 
-message UserUpdateUsernameResp {
-}
+message UserUpdateUsernameResp {}
 
 message UserUpdatePasswordReq {
   string old_password = 1;
   string new_password = 2;
 }
 
-message UserUpdatePasswordResp {
-}
+message UserUpdatePasswordResp {}
 
 message UserRevokeSessionReq {
   int64 session_id = 1;
 }
 
-message UserRevokeSessionResp {
-}
+message UserRevokeSessionResp {}
 
-message UserRevokeAllSessionsReq {
-}
+message UserRevokeAllSessionsReq {}
 
-message UserRevokeAllSessionsResp {
-}
+message UserRevokeAllSessionsResp {}
 
-
-message UserListGroupReq {
-}
+message UserListGroupReq {}
 
 message UserListGroupResp {
   repeated Group groups = 1;
+}
+
+message UserGetMeReq {}
+
+message UserGetMeResp {
+  string username = 1;
+  bool admin = 2;
 }

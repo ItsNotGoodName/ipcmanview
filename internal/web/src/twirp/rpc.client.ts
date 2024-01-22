@@ -2,6 +2,8 @@
 // @generated from protobuf file "rpc.proto" (syntax proto3)
 // tslint:disable
 import { User } from "./rpc";
+import type { UserGetMeResp } from "./rpc";
+import type { UserGetMeReq } from "./rpc";
 import type { UserListGroupResp } from "./rpc";
 import type { UserListGroupReq } from "./rpc";
 import type { UserRevokeAllSessionsResp } from "./rpc";
@@ -154,6 +156,10 @@ export interface IUserClient {
      * @generated from protobuf rpc: ListGroup(UserListGroupReq) returns (UserListGroupResp);
      */
     listGroup(input: UserListGroupReq, options?: RpcOptions): UnaryCall<UserListGroupReq, UserListGroupResp>;
+    /**
+     * @generated from protobuf rpc: GetMe(UserGetMeReq) returns (UserGetMeResp);
+     */
+    getMe(input: UserGetMeReq, options?: RpcOptions): UnaryCall<UserGetMeReq, UserGetMeResp>;
 }
 /**
  * @generated from protobuf service User
@@ -198,5 +204,12 @@ export class UserClient implements IUserClient, ServiceInfo {
     listGroup(input: UserListGroupReq, options?: RpcOptions): UnaryCall<UserListGroupReq, UserListGroupResp> {
         const method = this.methods[4], opt = this._transport.mergeOptions(options);
         return stackIntercept<UserListGroupReq, UserListGroupResp>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetMe(UserGetMeReq) returns (UserGetMeResp);
+     */
+    getMe(input: UserGetMeReq, options?: RpcOptions): UnaryCall<UserGetMeReq, UserGetMeResp> {
+        const method = this.methods[5], opt = this._transport.mergeOptions(options);
+        return stackIntercept<UserGetMeReq, UserGetMeResp>("unary", this._transport, method, opt, input);
     }
 }

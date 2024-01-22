@@ -129,7 +129,7 @@ export function SignIn() {
             )}
           </Field>
           <Button type="submit" disabled={signInForm.submitting}>
-            <Show when={signInForm.submitting} fallback={<>Sign in</>} >
+            <Show when={signInForm.submitting} fallback={<>Sign in</>}>
               Signing in
             </Show>
           </Button>
@@ -138,7 +138,7 @@ export function SignIn() {
       </CardRoot>
       <Footer>
         <A href="/signup" class={linkVariants()}>Sign up</A>
-      </Footer >
+      </Footer>
     </div>
   )
 }
@@ -249,7 +249,7 @@ export function Signup() {
             )}
           </Field>
           <Button type="submit" disabled={signUpForm.submitting}>
-            <Show when={signUpForm.submitting} fallback={<>Sign up</>} >
+            <Show when={signUpForm.submitting} fallback={<>Sign up</>}>
               Signing up
             </Show>
           </Button>
@@ -258,8 +258,8 @@ export function Signup() {
       </CardRoot>
       <Footer>
         <A href="/signin" class={linkVariants()}>Sign in</A>
-      </Footer >
-    </div >
+      </Footer>
+    </div>
   )
 }
 
@@ -299,7 +299,7 @@ export function Forgot() {
             )}
           </Field>
           <Button type="submit" disabled={forgetForm.submitting}>
-            <Show when={forgetForm.submitting} fallback={<>Send password reset email</>} >
+            <Show when={forgetForm.submitting} fallback={<>Send password reset email</>}>
               Sending password reset email
             </Show>
           </Button>

@@ -29,7 +29,7 @@ export function formatDate(value: Date): string {
   return value.toLocaleString()
 }
 
-export function toastError(e: Error) {
+export function catchAsToast(e: Error) {
   toast.error("Error", e.message)
 }
 

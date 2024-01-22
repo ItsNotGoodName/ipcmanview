@@ -3,7 +3,7 @@ import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
 import { ComponentProps, ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, resetErrorBoundaries, splitProps } from "solid-js"
 import { FormError, createForm, required, reset } from "@modular-forms/solid"
 
-import { formatDate, parseDate, createLoading, toastError, throwAsFormError } from "~/lib/utils"
+import { formatDate, parseDate, createLoading, catchAsToast, throwAsFormError } from "~/lib/utils"
 import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
 import { getProfile, getListGroup } from "./Profile.data"
 import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert"
@@ -33,7 +33,7 @@ export function Profile() {
 
   const revokeAllSessionsSubmission = useSubmission(actionRevokeAllSessions)
   const revokeAllSessionsAction = useAction(actionRevokeAllSessions)
-  const revokeAllSessions = () => revokeAllSessionsAction().catch(toastError)
+  const revokeAllSessions = () => revokeAllSessionsAction().catch(catchAsToast)
 
   return (
     <div class="p-4">
@@ -129,7 +129,7 @@ export function Profile() {
                     (session) => {
                       const revokeSessionSubmission = useSubmission(actionRevokeSession)
                       const revokeSessionAction = useAction(actionRevokeSession)
-                      const revokeSession = (input: UserRevokeSessionReq) => revokeSessionAction(input).catch(toastError)
+                      const revokeSession = (input: UserRevokeSessionReq) => revokeSessionAction(input).catch(catchAsToast)
 
                       return (
                         <TableRow>
@@ -243,7 +243,7 @@ function ChangeUsernameForm() {
         )}
       </Field>
       <Button type="submit" disabled={changeUsernameForm.submitting}>
-        <Show when={changeUsernameForm.submitting} fallback={<>Update username</>} >
+        <Show when={changeUsernameForm.submitting} fallback={<>Update username</>}>
           Updating username
         </Show>
       </Button>
@@ -327,7 +327,7 @@ function ChangePasswordForm() {
         )}
       </Field>
       <Button type="submit" disabled={changePasswordForm.submitting}>
-        <Show when={changePasswordForm.submitting} fallback={<>Update password</>} >
+        <Show when={changePasswordForm.submitting} fallback={<>Update password</>}>
           Updating password
         </Show>
       </Button>
@@ -355,7 +355,7 @@ function ConfirmButton(props: ConfirmButtonProps) {
         </As>
       </PopoverTrigger>
       <PopoverPortal>
-        <PopoverContent class="flex flex-col gap-2" >
+        <PopoverContent class="flex flex-col gap-2">
           <PopoverArrow />
           <div>{props.message}</div>
           <div class="flex gap-4">

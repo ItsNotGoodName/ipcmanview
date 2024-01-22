@@ -151,7 +151,7 @@ export function Ui() {
           }
         </For>
       </div>
-      <CheckboxRoot>
+      <CheckboxRoot validationState="invalid">
         <CheckboxInput />
         <CheckboxControl />
         <CheckboxLabel>Checkbox Label</CheckboxLabel>

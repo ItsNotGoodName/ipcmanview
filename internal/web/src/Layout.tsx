@@ -1,19 +1,19 @@
 import { cva } from "class-variance-authority"
 import { As, DropdownMenu } from "@kobalte/core";
 import { JSX, ParentProps, Show, Suspense, createEffect, createSignal, splitProps } from "solid-js";
-import { A, action, createAsync, revalidate, useAction, useLocation, useSubmission } from "@solidjs/router";
+import { A, action, createAsync, revalidate, useAction, useLocation, useNavigate, useSubmission } from "@solidjs/router";
 import { RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemEyeLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
 import { makePersisted } from "@solid-primitives/storage";
 
-import { Button } from "~/ui/Button";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { toggleTheme, useThemeTitle } from "~/ui/theme";
 import { ToastList, ToastRegion } from "~/ui/Toast";
-import { cn, toastError } from "~/lib/utils";
+import { cn, catchAsToast } from "~/lib/utils";
 import { getSession, useSession } from "~/providers/session";
 import { Loading } from "./ui/Loading";
+import { getMe } from "./data";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
@@ -31,17 +31,22 @@ const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacit
   }
 })
 
-// FIXME: dropdown menu item <A> links are broken on IOS
 function DropdownMenuLinks() {
+  const navigate = useNavigate()
+
   return (
     <>
-      <DropdownMenu.Item asChild>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/")}>
         <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/" end><RiBuildingsHomeLine class="h-5 w-5" />Home</As>
+          href="/" end>
+          <RiBuildingsHomeLine class="h-5 w-5" />Home
+        </As>
       </DropdownMenu.Item>
-      <DropdownMenu.Item asChild>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/view")}>
         <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/view"><RiSystemEyeLine class="h-5 w-5" />View</As>
+          href="/view">
+          <RiSystemEyeLine class="h-5 w-5" />View
+        </As>
       </DropdownMenu.Item>
     </>
   )
@@ -51,9 +56,13 @@ function MenuLinks() {
   return (
     <div class="flex flex-col p-2">
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-        href="/" noScroll end><RiBuildingsHomeLine class="h-5 w-5" />Home</A>
+        href="/" noScroll end>
+        <RiBuildingsHomeLine class="h-5 w-5" />Home
+      </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-        href="/view" noScroll><RiSystemEyeLine class="h-5 w-5" />View</A>
+        href="/view" noScroll>
+        <RiSystemEyeLine class="h-5 w-5" />View
+      </A>
     </div>
   )
 }
@@ -69,14 +78,16 @@ const actionSignOut = action(() =>
       throw new Error(json.message)
     }
     return revalidate(getSession.key)
-  }).catch(toastError)
+  }).catch(catchAsToast)
 )
 
 function Header(props: { onMenuClick: () => void }) {
   const signOutSubmission = useSubmission(actionSignOut)
   const signOutAction = useAction(actionSignOut)
-  const signOut = () => signOutAction().catch(toastError)
+  const signOut = () => signOutAction().catch(catchAsToast)
   const location = useLocation()
+  const navigate = useNavigate()
+  const me = createAsync(getMe)
 
   return (
     <div
@@ -105,13 +116,17 @@ function Header(props: { onMenuClick: () => void }) {
         </div>
         <div class="flex gap-1">
           <Show when={import.meta.env.DEV}>
-            <A href="/debug" title="Debug" class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })} end>
+            <A class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}
+              href="/debug" title="Debug" end>
               <RiDevelopmentBugLine class="h-6 w-6" />
             </A>
           </Show>
-          <A href="/admin" title="Admin" class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}>
-            <RiUserFacesAdminLine class="h-6 w-6" />
-          </A>
+          <Show when={me()?.admin}>
+            <A class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}
+              href="/admin" title="Admin">
+              <RiUserFacesAdminLine class="h-6 w-6" />
+            </A>
+          </Show>
           <DropdownMenuRoot>
             <DropdownMenuTrigger class={menuLinkVariants({ size: "icon", variant: location.pathname.startsWith("/profile") ? "active" : "default" })} title="User">
               <RiUserFacesUserLine class="h-6 w-6" />
@@ -119,13 +134,16 @@ function Header(props: { onMenuClick: () => void }) {
             <DropdownMenuPortal>
               <DropdownMenuContent class="z-[200]">
                 <DropdownMenuArrow />
-                <DropdownMenu.Item asChild>
+                <DropdownMenu.Item class="truncate px-2 pb-1.5 text-lg font-semibold">
+                  {me()?.username}
+                </DropdownMenu.Item>
+                <DropdownMenu.Item asChild onSelect={() => navigate("/profile")}>
                   <As component={A} inactiveClass={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })}
                     href="/profile" end>
                     <RiUserFacesUserLine class="h-5 w-5" />Profile
                   </As>
                 </DropdownMenu.Item>
-                <DropdownMenu.Item class={menuLinkVariants()} onClick={signOut} disabled={signOutSubmission.pending}>
+                <DropdownMenu.Item class={menuLinkVariants()} onSelect={signOut} disabled={signOutSubmission.pending}>
                   <RiSystemLogoutBoxRFill class="h-5 w-5" />Sign out
                 </DropdownMenu.Item>
               </DropdownMenuContent>
@@ -144,7 +162,6 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuO
   const [_, rest] = splitProps(props, ["children"])
 
   let refs: HTMLDivElement[] = []
-
   createEffect(() => {
     if (props.menuOpen) {
       refs.forEach(r => r.dataset.open = "")

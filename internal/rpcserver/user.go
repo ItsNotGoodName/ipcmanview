@@ -15,6 +15,14 @@ type User struct {
 	DB repo.DB
 }
 
+func (u *User) GetMe(ctx context.Context, req *rpc.UserGetMeReq) (*rpc.UserGetMeResp, error) {
+	authSession := useAuthSession(ctx)
+	return &rpc.UserGetMeResp{
+		Username: authSession.Username,
+		Admin:    authSession.Admin,
+	}, nil
+}
+
 func (u *User) UpdatePassword(ctx context.Context, req *rpc.UserUpdatePasswordReq) (*rpc.UserUpdatePasswordResp, error) {
 	authSession := useAuthSession(ctx)
 
@@ -106,9 +114,9 @@ func (u *User) RevokeSession(ctx context.Context, req *rpc.UserRevokeSessionReq)
 
 func (u *User) ListGroup(ctx context.Context, req *rpc.UserListGroupReq) (*rpc.UserListGroupResp, error) {
 	authSession := useAuthSession(ctx)
-	
+
 	dbGroups, err := u.DB.ListGroupForUser(ctx, authSession.UserID)
-	if err != nil{
+	if err != nil {
 		return nil, NewError(err).Internal()
 	}
 
