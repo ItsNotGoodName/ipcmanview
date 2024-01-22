@@ -1,8 +1,8 @@
 import { cva } from "class-variance-authority"
 import { As, DropdownMenu } from "@kobalte/core";
 import { JSX, ParentProps, Show, Suspense, createEffect, createSignal, splitProps } from "solid-js";
-import { A, action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router";
-import { RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemEyeLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesUserLine } from "solid-icons/ri";
+import { A, action, createAsync, revalidate, useAction, useLocation, useSubmission } from "@solidjs/router";
+import { RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemEyeLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
 import { makePersisted } from "@solid-primitives/storage";
 
@@ -11,19 +11,23 @@ import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuPortal, DropdownMen
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { toggleTheme, useThemeTitle } from "~/ui/theme";
 import { ToastList, ToastRegion } from "~/ui/Toast";
-import { toastError } from "~/lib/utils";
+import { cn, toastError } from "~/lib/utils";
 import { getSession, useSession } from "~/providers/session";
 import { Loading } from "./ui/Loading";
 
-const menuLinkVariants = cva("ui-disabled:pointer-events-none hover:bg-primary hover:text-primary-foreground ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
+const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
     size: {
       default: "h-10 px-4 py-2",
       icon: "h-10 w-10",
     },
     variant: {
-      active: "bg-primary text-primary-foreground",
+      default: "hover:bg-accent hover:text-accent-foreground",
+      active: "bg-primary text-primary-foreground hover:bg-primary/90",
     }
+  },
+  defaultVariants: {
+    variant: "default"
   }
 })
 
@@ -72,18 +76,17 @@ function Header(props: { onMenuClick: () => void }) {
   const signOutSubmission = useSubmission(actionSignOut)
   const signOutAction = useAction(actionSignOut)
   const signOut = () => signOutAction().catch(toastError)
+  const location = useLocation()
 
   return (
     <div
       class="bg-background text-foreground border-b-border z-10 h-12 w-full overflow-x-hidden border-b">
       <div
-        class="flex h-full items-center gap-2 px-2"
+        class="flex h-full items-center gap-1 px-1"
       >
         <DropdownMenuRoot>
-          <DropdownMenuTrigger asChild>
-            <As component={Button} size='icon' variant='ghost' title="Menu" class="md:hidden">
-              <RiSystemMenuLine class="h-6 w-6" />
-            </As>
+          <DropdownMenuTrigger title="Menu" class={cn(menuLinkVariants(), "md:hidden")}>
+            <RiSystemMenuLine class="h-6 w-6" />
           </DropdownMenuTrigger>
           <DropdownMenuPortal>
             <DropdownMenuContent>
@@ -92,29 +95,32 @@ function Header(props: { onMenuClick: () => void }) {
             </DropdownMenuContent>
           </DropdownMenuPortal>
         </DropdownMenuRoot>
-        <Button onClick={props.onMenuClick} size='icon' variant='ghost' title="Menu" class="hidden md:inline-flex">
+        <button onClick={props.onMenuClick} title="Menu" class={cn(menuLinkVariants(), "hidden md:inline-flex")}>
           <RiSystemMenuLine class="h-6 w-6" />
-        </Button>
+        </button>
         <div class="flex flex-1 items-center truncate text-xl">
           IPCManView
         </div>
         <div>
         </div>
-        <div class="flex">
-          <A href="/debug" title="Debug" class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })} end>
-            <RiDevelopmentBugLine class="h-6 w-6" title="Debug" />
+        <div class="flex gap-1">
+          <Show when={import.meta.env.DEV}>
+            <A href="/debug" title="Debug" class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })} end>
+              <RiDevelopmentBugLine class="h-6 w-6" />
+            </A>
+          </Show>
+          <A href="/admin" title="Admin" class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}>
+            <RiUserFacesAdminLine class="h-6 w-6" />
           </A>
           <DropdownMenuRoot>
-            <DropdownMenuTrigger asChild>
-              <As component={Button} size='icon' variant='ghost' title="User">
-                <RiUserFacesUserLine class="h-6 w-6" />
-              </As>
+            <DropdownMenuTrigger class={menuLinkVariants({ size: "icon", variant: location.pathname.startsWith("/profile") ? "active" : "default" })} title="User">
+              <RiUserFacesUserLine class="h-6 w-6" />
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
               <DropdownMenuContent class="z-[200]">
                 <DropdownMenuArrow />
                 <DropdownMenu.Item asChild>
-                  <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })}
+                  <As component={A} inactiveClass={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })}
                     href="/profile" end>
                     <RiUserFacesUserLine class="h-5 w-5" />Profile
                   </As>
@@ -125,9 +131,9 @@ function Header(props: { onMenuClick: () => void }) {
               </DropdownMenuContent>
             </DropdownMenuPortal>
           </DropdownMenuRoot>
-          <Button size='icon' variant='ghost' onClick={toggleTheme} title={useThemeTitle()}>
+          <button class={menuLinkVariants({ size: "icon" })} onClick={toggleTheme} title={useThemeTitle()}>
             <ThemeIcon class="h-6 w-6" />
-          </Button>
+          </button>
         </div>
       </div>
     </div >

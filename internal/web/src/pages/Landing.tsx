@@ -40,8 +40,7 @@ function CardHeader(props: ParentProps) {
 function Footer(props: ParentProps) {
   return (
     <CardRoot class="p-4">
-      <div class="flex items-center justify-between gap-2">
-        <a href="/admin" class={linkVariants()}>Admin</a>
+      <div class="flex items-center justify-center">
         {props.children}
       </div>
     </CardRoot>

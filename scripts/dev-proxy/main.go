@@ -13,7 +13,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
-	"github.com/ItsNotGoodName/ipcmanview/internal/webadmin"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/echoext"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
@@ -31,13 +30,12 @@ func main() {
 		{
 			URL: "http://127.0.0.1:8080",
 			Routes: []string{
-				webadmin.Route, webadmin.Route + "/*",
 				api.Route, api.Route + "/*",
 				rpcserver.Route, rpcserver.Route + "/*",
 			},
 		},
 		{
-			URL:    "http://127.0.0.1:5174",
+			URL:    "http://127.0.0.1:5173",
 			Routes: []string{web.Route, web.Route + "*"},
 		},
 	}

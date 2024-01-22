@@ -8,13 +8,9 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuasmtp"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
-	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
-	"github.com/ItsNotGoodName/ipcmanview/internal/webadmin"
-	webadminserver "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/server"
-	webadminview "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/view"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -68,10 +64,10 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super.Add(bus)
 
 	// MediaMTX
-	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))
-	if err != nil {
-		return err
-	}
+	// mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))
+	// if err != nil {
+	// 	return err
+	// }
 
 	// Dahua
 
@@ -119,19 +115,11 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super.Add(dahuaSMTPServer)
 
 	// HTTP router
-	httpRouter, err := webadminview.WithRenderer(http.NewRouter(), webadminview.Config{})
-	if err != nil {
-		return err
-	}
+	httpRouter := http.NewRouter()
 
 	// HTTP middleware
-	httpRouter.Use(web.FS(api.Route, rpcserver.Route, webadmin.Route))
+	httpRouter.Use(web.FS(api.Route, rpcserver.Route))
 	httpRouter.Use(auth.Session(db))
-
-	// WEB
-	webadminserver.
-		New(db, pub, bus, mediamtxConfig, dahuaStore, dahuaAFS, dahuaFileService, dahuaScanLockStore).
-		Register(httpRouter)
 
 	// API
 	api.

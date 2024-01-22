@@ -75,7 +75,7 @@ export function FieldDescription(props: JSX.HTMLAttributes<HTMLParagraphElement>
   return (
     <p
       id={formDescriptionId}
-      class={cn("text-sm text-muted-foreground", props.class)}
+      class={cn("text-muted-foreground text-sm", props.class)}
       {...rest}
     />
   )
@@ -90,7 +90,7 @@ export function FieldMessage(props: JSX.HTMLAttributes<HTMLParagraphElement> & {
     <Show when={body()}>
       <p
         id={formMessageId}
-        class={cn("text-sm font-medium text-destructive", props.class)}
+        class={cn("text-destructive text-sm font-medium", props.class)}
         {...rest}
       >
         {body()}
@@ -106,7 +106,7 @@ export function FormMessage(props: JSX.HTMLAttributes<HTMLParagraphElement> & { 
   return (
     <Show when={body()}>
       <p
-        class={cn("text-sm font-medium text-destructive", props.class)}
+        class={cn("text-destructive text-sm font-medium", props.class)}
         {...rest}
       >
         {body()}
