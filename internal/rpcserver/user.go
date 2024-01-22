@@ -9,6 +9,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"github.com/go-playground/validator/v10"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func NewUser(db repo.DB) *User {
@@ -21,7 +22,7 @@ type User struct {
 	db repo.DB
 }
 
-func (u *User) UpdatePassword(ctx context.Context, req *rpc.UserUpdatePasswordReq) (*rpc.UserUpdatePasswordResp, error) {
+func (u *User) UpdatePassword(ctx context.Context, req *rpc.UpdatePasswordReq) (*rpc.UpdatePasswordResp, error) {
 	authSession := useAuthSession(ctx)
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
@@ -51,10 +52,10 @@ func (u *User) UpdatePassword(ctx context.Context, req *rpc.UserUpdatePasswordRe
 		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.UserUpdatePasswordResp{}, nil
+	return &rpc.UpdatePasswordResp{}, nil
 }
 
-func (u *User) UpdateUsername(ctx context.Context, req *rpc.UserUpdateUsernameReq) (*rpc.UserUpdateUsernameResp, error) {
+func (u *User) UpdateUsername(ctx context.Context, req *rpc.UpdateUsernameReq) (*rpc.UpdateUsernameResp, error) {
 	authSession := useAuthSession(ctx)
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
@@ -81,10 +82,10 @@ func (u *User) UpdateUsername(ctx context.Context, req *rpc.UserUpdateUsernameRe
 		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.UserUpdateUsernameResp{}, nil
+	return &rpc.UpdateUsernameResp{}, nil
 }
 
-func (u *User) RevokeAllSessions(ctx context.Context, req *rpc.UserRevokeAllSessionsReq) (*rpc.UserRevokeAllSessionsResp, error) {
+func (u *User) RevokeAllSessions(ctx context.Context, req *rpc.RevokeAllSessionsReq) (*rpc.RevokeAllSessionsResp, error) {
 	authSession := useAuthSession(ctx)
 
 	if err := u.db.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
@@ -94,10 +95,10 @@ func (u *User) RevokeAllSessions(ctx context.Context, req *rpc.UserRevokeAllSess
 		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.UserRevokeAllSessionsResp{}, nil
+	return &rpc.RevokeAllSessionsResp{}, nil
 }
 
-func (u *User) RevokeSession(ctx context.Context, req *rpc.UserRevokeSessionReq) (*rpc.UserRevokeSessionResp, error) {
+func (u *User) RevokeSession(ctx context.Context, req *rpc.RevokeSessionReq) (*rpc.RevokeSessionResp, error) {
 	authSession := useAuthSession(ctx)
 
 	if err := u.db.DeleteUserSessionForUser(ctx, repo.DeleteUserSessionForUserParams{
@@ -107,10 +108,10 @@ func (u *User) RevokeSession(ctx context.Context, req *rpc.UserRevokeSessionReq)
 		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.UserRevokeSessionResp{}, nil
+	return &rpc.RevokeSessionResp{}, nil
 }
 
-func (u *User) ListGroup(ctx context.Context, req *rpc.UserListGroupReq) (*rpc.UserListGroupResp, error) {
+func (u *User) ListMyGroups(ctx context.Context, req *rpc.ListMyGroupsReq) (*rpc.ListMyGroupsResp, error) {
 	authSession := useAuthSession(ctx)
 
 	dbGroups, err := u.db.ListGroupForUser(ctx, authSession.UserID)
@@ -121,13 +122,14 @@ func (u *User) ListGroup(ctx context.Context, req *rpc.UserListGroupReq) (*rpc.U
 	groups := make([]*rpc.Group, 0, len(dbGroups))
 	for _, v := range dbGroups {
 		groups = append(groups, &rpc.Group{
-			Id:          v.ID,
-			Name:        v.Name,
-			Description: v.Description,
+			Id:           v.ID,
+			Name:         v.Name,
+			Description:  v.Description,
+			JoinedAtTime: timestamppb.New(v.JoinedAt.Time),
 		})
 	}
 
-	return &rpc.UserListGroupResp{
+	return &rpc.ListMyGroupsResp{
 		Groups: groups,
 	}, nil
 }

@@ -21,7 +21,7 @@ type Auth struct {
 	db repo.DB
 }
 
-func (a *Auth) SignUp(ctx context.Context, req *rpc.AuthSignUpReq) (*rpc.AuthSignUpResp, error) {
+func (a *Auth) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpResp, error) {
 	_, err := auth.CreateUser(ctx, a.db, models.User{
 		Email:    req.Email,
 		Username: req.Username,
@@ -46,9 +46,9 @@ func (a *Auth) SignUp(ctx context.Context, req *rpc.AuthSignUpReq) (*rpc.AuthSig
 		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.AuthSignUpResp{}, nil
+	return &rpc.SignUpResp{}, nil
 }
 
-func (*Auth) Forgot(context.Context, *rpc.AuthForgotReq) (*rpc.AuthForgotResp, error) {
+func (*Auth) ForgotPassword(context.Context, *rpc.ForgotPasswordReq) (*rpc.ForgotPasswordResp, error) {
 	return nil, NewError(nil).NotImplemented()
 }

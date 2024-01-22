@@ -57,6 +57,22 @@ func AuthSession() twirp.ServerOption {
 	})
 }
 
+func AdminAuthSession() twirp.ServerOption {
+	return twirp.WithServerHooks(&twirp.ServerHooks{
+		RequestReceived: func(ctx context.Context) (context.Context, error) {
+			authSession, ok := auth.UseSession(ctx)
+			if !ok {
+				return ctx, twirp.Unauthenticated.Error("Invalid session or not signed in.")
+			}
+			if !authSession.Admin {
+				return ctx, twirp.PermissionDenied.Error("You are not an admin.")
+			}
+
+			return ctx, nil
+		},
+	})
+}
+
 func useAuthSession(ctx context.Context) models.AuthSession {
 	u, ok := auth.UseSession(ctx)
 	if !ok {

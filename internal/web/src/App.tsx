@@ -39,7 +39,7 @@ function App() {
           <Route path="/" component={Home} />
           <Route path="/profile" component={Profile} load={loadProfile} />
           <Route path="/view" component={View} />
-          <Show when={session.admin} fallback={<Route path="/admin" component={() => <>Your not an admin.</>}></Route>}>
+          <Show when={session.admin} fallback={<Route path="/admin" component={() => <>Your are not an admin.</>}></Route>}>
             <Route path="/admin" component={AdminHome} />
           </Show>
           <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />

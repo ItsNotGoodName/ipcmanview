@@ -133,7 +133,7 @@ function Header(props: { onMenuClick: () => void }) {
             <DropdownMenuPortal>
               <DropdownMenuContent class="z-[200]">
                 <DropdownMenuArrow />
-                <DropdownMenu.Item class="truncate px-2 pb-1.5 text-lg font-semibold">
+                <DropdownMenu.Item class="truncate px-2 pb-1.5 text-lg font-semibold" closeOnSelect={false}>
                   {session()?.username}
                 </DropdownMenu.Item>
                 <DropdownMenu.Item asChild onSelect={() => navigate("/profile")}>

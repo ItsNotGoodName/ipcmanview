@@ -5,7 +5,7 @@ import { FormError, createForm, required, reset } from "@modular-forms/solid"
 
 import { formatDate, parseDate, createLoading, catchAsToast, throwAsFormError } from "~/lib/utils"
 import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
-import { getProfile, getListGroup } from "./Profile.data"
+import { getListMyGroups, getProfile, } from "./Profile.data"
 import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
@@ -13,7 +13,7 @@ import { useClient } from "~/providers/client"
 import { PopoverArrow, PopoverCloseButton, PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "~/ui/Popover"
 import { As } from "@kobalte/core"
 import { Badge } from "~/ui/Badge"
-import { UserRevokeSessionReq } from "~/twirp/rpc"
+import { RevokeSessionReq } from "~/twirp/rpc"
 import { Seperator } from "~/ui/Seperator"
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form"
 import { Input } from "~/ui/Input"
@@ -23,7 +23,7 @@ import { Skeleton } from "~/ui/Skeleton"
 export const actionRevokeAllSessions = action(() => useClient()
   .user.revokeAllSessions({})
   .then(() => revalidate(getProfile.key)))
-export const actionRevokeSession = action((input: UserRevokeSessionReq) => useClient()
+export const actionRevokeSession = action((input: RevokeSessionReq) => useClient()
   .user.revokeSession(input)
   .then(() => revalidate(getProfile.key)))
 
@@ -72,11 +72,11 @@ export function Profile() {
                     </tr>
                     <tr>
                       <td class="pr-2"><Badge class="flex w-full justify-center">Created At</Badge></td>
-                      <td>{formatDate(parseDate(data()?.createdAt))}</td>
+                      <td>{formatDate(parseDate(data()?.createdAtTime))}</td>
                     </tr>
                     <tr>
                       <td class="pr-2"><Badge class="w-full">Updated At</Badge></td>
-                      <td>{formatDate(parseDate(data()?.updatedAt))}</td>
+                      <td>{formatDate(parseDate(data()?.updatedAtTime))}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -129,7 +129,7 @@ export function Profile() {
                     (session) => {
                       const revokeSessionSubmission = useSubmission(actionRevokeSession)
                       const revokeSessionAction = useAction(actionRevokeSession)
-                      const revokeSession = (input: UserRevokeSessionReq) => revokeSessionAction(input).catch(catchAsToast)
+                      const revokeSession = (input: RevokeSessionReq) => revokeSessionAction(input).catch(catchAsToast)
 
                       return (
                         <TableRow>
@@ -141,8 +141,8 @@ export function Profile() {
                           <TableCell>{session.userAgent}</TableCell>
                           <TableCell>{session.ip}</TableCell>
                           <TableCell>{session.lastIp}</TableCell>
-                          <TableCell>{formatDate(parseDate(session.lastUsedAt))}</TableCell>
-                          <TableCell>{formatDate(parseDate(session.createdAt))}</TableCell>
+                          <TableCell>{formatDate(parseDate(session.lastUsedAtTime))}</TableCell>
+                          <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
                           <TableCell>
                             <Show when={!session.current} fallback={
                               <Badge>Current</Badge>
@@ -179,7 +179,7 @@ export function Profile() {
 
 
 function GroupTable() {
-  const data = createAsync(getListGroup)
+  const data = createAsync(getListMyGroups)
 
   return (
     <ErrorBoundary fallback={(error: Error) =>
@@ -194,6 +194,7 @@ function GroupTable() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Description</TableHead>
+              <TableHead>Joined At</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -202,6 +203,7 @@ function GroupTable() {
                 <TableRow>
                   <TableCell>{group.name}</TableCell>
                   <TableCell>{group.description}</TableCell>
+                  <TableCell>{formatDate(parseDate(group.joinedAtTime))}</TableCell>
                 </TableRow>
               }
             </For>

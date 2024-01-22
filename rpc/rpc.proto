@@ -10,8 +10,8 @@ message Session {
   string user_agent = 2;
   string ip = 3;
   string last_ip = 4;
-  google.protobuf.Timestamp last_used_at = 5;
-  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp last_used_at_time = 5;
+  google.protobuf.Timestamp created_at_time = 6;
   bool active = 7;
   bool current = 8;
 }
@@ -20,6 +20,7 @@ message Group {
   int64 id = 1;
   string name = 2;
   string description = 3;
+  google.protobuf.Timestamp joined_at_time = 4;
 }
 
 // ---------- HelloWorld
@@ -41,23 +42,23 @@ message HelloResp {
 // ---------- Auth
 
 service Auth {
-  rpc SignUp(AuthSignUpReq) returns (AuthSignUpResp);
-  rpc Forgot(AuthForgotReq) returns (AuthForgotResp);
+  rpc SignUp(SignUpReq) returns (SignUpResp);
+  rpc ForgotPassword(ForgotPasswordReq) returns (ForgotPasswordResp);
 }
 
-message AuthSignUpReq {
+message SignUpReq {
   string email = 1;
   string username = 2;
   string password = 3;
 }
 
-message AuthSignUpResp {}
+message SignUpResp {}
 
-message AuthForgotReq {
+message ForgotPasswordReq {
   string email = 1;
 }
 
-message AuthForgotResp {}
+message ForgotPasswordResp {}
 
 // ---------- Page
 
@@ -78,46 +79,65 @@ message PageProfileResp {
   string username = 1;
   string email = 2;
   bool admin = 3;
-  google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp updated_at = 5;
+  google.protobuf.Timestamp created_at_time = 4;
+  google.protobuf.Timestamp updated_at_time = 5;
   repeated Session sessions = 6;
 }
 
 // ---------- User
 
 service User {
-  rpc UpdateUsername(UserUpdateUsernameReq) returns (UserUpdateUsernameResp);
-  rpc UpdatePassword(UserUpdatePasswordReq) returns (UserUpdatePasswordResp);
-  rpc RevokeSession(UserRevokeSessionReq) returns (UserRevokeSessionResp);
-  rpc RevokeAllSessions(UserRevokeAllSessionsReq) returns (UserRevokeAllSessionsResp);
-  rpc ListGroup(UserListGroupReq) returns (UserListGroupResp);
+  rpc UpdateUsername(UpdateUsernameReq) returns (UpdateUsernameResp);
+  rpc UpdatePassword(UpdatePasswordReq) returns (UpdatePasswordResp);
+  rpc RevokeSession(RevokeSessionReq) returns (RevokeSessionResp);
+  rpc RevokeAllSessions(RevokeAllSessionsReq) returns (RevokeAllSessionsResp);
+  rpc ListMyGroups(ListMyGroupsReq) returns (ListMyGroupsResp);
 }
 
-message UserUpdateUsernameReq {
+message UpdateUsernameReq {
   string new_username = 1;
 }
 
-message UserUpdateUsernameResp {}
+message UpdateUsernameResp {}
 
-message UserUpdatePasswordReq {
+message UpdatePasswordReq {
   string old_password = 1;
   string new_password = 2;
 }
 
-message UserUpdatePasswordResp {}
+message UpdatePasswordResp {}
 
-message UserRevokeSessionReq {
+message RevokeSessionReq {
   int64 session_id = 1;
 }
 
-message UserRevokeSessionResp {}
+message RevokeSessionResp {}
 
-message UserRevokeAllSessionsReq {}
+message RevokeAllSessionsReq {}
 
-message UserRevokeAllSessionsResp {}
+message RevokeAllSessionsResp {}
 
-message UserListGroupReq {}
+message ListMyGroupsReq {}
 
-message UserListGroupResp {
+message ListMyGroupsResp {
   repeated Group groups = 1;
+}
+
+// ---------- Admin
+
+service Admin {
+  rpc ListGroups(ListGroupsReq) returns (ListGroupsResp);
+}
+
+message ListGroupsReq {
+  int32 page = 1;
+  int32 per_page = 2;
+}
+
+message ListGroupsResp {
+  repeated Group groups = 1;
+  int32 page = 2;
+  int32 per_page = 3;
+  int64 total_pages = 4;
+  int64 total_items = 5;
 }

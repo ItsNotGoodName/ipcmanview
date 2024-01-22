@@ -62,23 +62,23 @@ func (p *Page) Profile(ctx context.Context, req *rpc.PageProfileReq) (*rpc.PageP
 	sessions := make([]*rpc.Session, 0, len(dbSessions))
 	for _, v := range dbSessions {
 		sessions = append(sessions, &rpc.Session{
-			Id:         v.ID,
-			UserAgent:  v.UserAgent,
-			Ip:         v.Ip,
-			LastIp:     v.LastIp,
-			LastUsedAt: timestamppb.New(v.LastUsedAt.Time),
-			CreatedAt:  timestamppb.New(v.CreatedAt.Time),
-			Active:     v.LastUsedAt.After(activeCutoff),
-			Current:    v.Session == authSession.Session,
+			Id:             v.ID,
+			UserAgent:      v.UserAgent,
+			Ip:             v.Ip,
+			LastIp:         v.LastIp,
+			LastUsedAtTime: timestamppb.New(v.LastUsedAt.Time),
+			CreatedAtTime:  timestamppb.New(v.CreatedAt.Time),
+			Active:         v.LastUsedAt.After(activeCutoff),
+			Current:        v.Session == authSession.Session,
 		})
 	}
 
 	return &rpc.PageProfileResp{
-		Username:  user.Username,
-		Email:     user.Email,
-		Admin:     authSession.Admin,
-		CreatedAt: timestamppb.New(user.CreatedAt.Time),
-		UpdatedAt: timestamppb.New(user.UpdatedAt.Time),
-		Sessions:  sessions,
+		Username:      user.Username,
+		Email:         user.Email,
+		Admin:         authSession.Admin,
+		CreatedAtTime: timestamppb.New(user.CreatedAt.Time),
+		UpdatedAtTime: timestamppb.New(user.UpdatedAt.Time),
+		Sessions:      sessions,
 	}, nil
 }

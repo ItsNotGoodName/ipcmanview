@@ -268,7 +268,7 @@ type ForgotForm = {
 }
 
 const actionForgot = action((form: ForgotForm) => useClient()
-  .auth.forgot(form)
+  .auth.forgotPassword(form)
   .then(() => { toast.success("Sent password reset email.") })
   .catch(throwAsFormError))
 

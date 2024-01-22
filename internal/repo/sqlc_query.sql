@@ -113,7 +113,8 @@ WHERE
 
 -- name: ListGroupForUser :many
 SELECT
-  g.*
+  g.*,
+  gu.created_at AS joined_at
 FROM
   groups AS g
   LEFT JOIN group_users AS gu ON gu.group_id = g.id

@@ -25,13 +25,13 @@ export interface Session {
      */
     lastIp: string;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp last_used_at = 5;
+     * @generated from protobuf field: google.protobuf.Timestamp last_used_at_time = 5;
      */
-    lastUsedAt?: Timestamp;
+    lastUsedAtTime?: Timestamp;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp created_at = 6;
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 6;
      */
-    createdAt?: Timestamp;
+    createdAtTime?: Timestamp;
     /**
      * @generated from protobuf field: bool active = 7;
      */
@@ -57,6 +57,10 @@ export interface Group {
      * @generated from protobuf field: string description = 3;
      */
     description: string;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp joined_at_time = 4;
+     */
+    joinedAtTime?: Timestamp;
 }
 /**
  * @generated from protobuf message HelloReq
@@ -85,9 +89,9 @@ export interface HelloResp {
     currentTime?: Timestamp;
 }
 /**
- * @generated from protobuf message AuthSignUpReq
+ * @generated from protobuf message SignUpReq
  */
-export interface AuthSignUpReq {
+export interface SignUpReq {
     /**
      * @generated from protobuf field: string email = 1;
      */
@@ -102,23 +106,23 @@ export interface AuthSignUpReq {
     password: string;
 }
 /**
- * @generated from protobuf message AuthSignUpResp
+ * @generated from protobuf message SignUpResp
  */
-export interface AuthSignUpResp {
+export interface SignUpResp {
 }
 /**
- * @generated from protobuf message AuthForgotReq
+ * @generated from protobuf message ForgotPasswordReq
  */
-export interface AuthForgotReq {
+export interface ForgotPasswordReq {
     /**
      * @generated from protobuf field: string email = 1;
      */
     email: string;
 }
 /**
- * @generated from protobuf message AuthForgotResp
+ * @generated from protobuf message ForgotPasswordResp
  */
-export interface AuthForgotResp {
+export interface ForgotPasswordResp {
 }
 /**
  * @generated from protobuf message PageHomeReq
@@ -156,36 +160,36 @@ export interface PageProfileResp {
      */
     admin: boolean;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp created_at = 4;
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 4;
      */
-    createdAt?: Timestamp;
+    createdAtTime?: Timestamp;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp updated_at = 5;
+     * @generated from protobuf field: google.protobuf.Timestamp updated_at_time = 5;
      */
-    updatedAt?: Timestamp;
+    updatedAtTime?: Timestamp;
     /**
      * @generated from protobuf field: repeated Session sessions = 6;
      */
     sessions: Session[];
 }
 /**
- * @generated from protobuf message UserUpdateUsernameReq
+ * @generated from protobuf message UpdateUsernameReq
  */
-export interface UserUpdateUsernameReq {
+export interface UpdateUsernameReq {
     /**
      * @generated from protobuf field: string new_username = 1;
      */
     newUsername: string;
 }
 /**
- * @generated from protobuf message UserUpdateUsernameResp
+ * @generated from protobuf message UpdateUsernameResp
  */
-export interface UserUpdateUsernameResp {
+export interface UpdateUsernameResp {
 }
 /**
- * @generated from protobuf message UserUpdatePasswordReq
+ * @generated from protobuf message UpdatePasswordReq
  */
-export interface UserUpdatePasswordReq {
+export interface UpdatePasswordReq {
     /**
      * @generated from protobuf field: string old_password = 1;
      */
@@ -196,47 +200,85 @@ export interface UserUpdatePasswordReq {
     newPassword: string;
 }
 /**
- * @generated from protobuf message UserUpdatePasswordResp
+ * @generated from protobuf message UpdatePasswordResp
  */
-export interface UserUpdatePasswordResp {
+export interface UpdatePasswordResp {
 }
 /**
- * @generated from protobuf message UserRevokeSessionReq
+ * @generated from protobuf message RevokeSessionReq
  */
-export interface UserRevokeSessionReq {
+export interface RevokeSessionReq {
     /**
      * @generated from protobuf field: int64 session_id = 1;
      */
     sessionId: bigint;
 }
 /**
- * @generated from protobuf message UserRevokeSessionResp
+ * @generated from protobuf message RevokeSessionResp
  */
-export interface UserRevokeSessionResp {
+export interface RevokeSessionResp {
 }
 /**
- * @generated from protobuf message UserRevokeAllSessionsReq
+ * @generated from protobuf message RevokeAllSessionsReq
  */
-export interface UserRevokeAllSessionsReq {
+export interface RevokeAllSessionsReq {
 }
 /**
- * @generated from protobuf message UserRevokeAllSessionsResp
+ * @generated from protobuf message RevokeAllSessionsResp
  */
-export interface UserRevokeAllSessionsResp {
+export interface RevokeAllSessionsResp {
 }
 /**
- * @generated from protobuf message UserListGroupReq
+ * @generated from protobuf message ListMyGroupsReq
  */
-export interface UserListGroupReq {
+export interface ListMyGroupsReq {
 }
 /**
- * @generated from protobuf message UserListGroupResp
+ * @generated from protobuf message ListMyGroupsResp
  */
-export interface UserListGroupResp {
+export interface ListMyGroupsResp {
     /**
      * @generated from protobuf field: repeated Group groups = 1;
      */
     groups: Group[];
+}
+/**
+ * @generated from protobuf message ListGroupsReq
+ */
+export interface ListGroupsReq {
+    /**
+     * @generated from protobuf field: int32 page = 1;
+     */
+    page: number;
+    /**
+     * @generated from protobuf field: int32 per_page = 2;
+     */
+    perPage: number;
+}
+/**
+ * @generated from protobuf message ListGroupsResp
+ */
+export interface ListGroupsResp {
+    /**
+     * @generated from protobuf field: repeated Group groups = 1;
+     */
+    groups: Group[];
+    /**
+     * @generated from protobuf field: int32 page = 2;
+     */
+    page: number;
+    /**
+     * @generated from protobuf field: int32 per_page = 3;
+     */
+    perPage: number;
+    /**
+     * @generated from protobuf field: int64 total_pages = 4;
+     */
+    totalPages: bigint;
+    /**
+     * @generated from protobuf field: int64 total_items = 5;
+     */
+    totalItems: bigint;
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class Session$Type extends MessageType<Session> {
@@ -246,8 +288,8 @@ class Session$Type extends MessageType<Session> {
             { no: 2, name: "user_agent", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "last_ip", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "last_used_at", kind: "message", T: () => Timestamp },
-            { no: 6, name: "created_at", kind: "message", T: () => Timestamp },
+            { no: 5, name: "last_used_at_time", kind: "message", T: () => Timestamp },
+            { no: 6, name: "created_at_time", kind: "message", T: () => Timestamp },
             { no: 7, name: "active", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
             { no: 8, name: "current", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
         ]);
@@ -263,7 +305,8 @@ class Group$Type extends MessageType<Group> {
         super("Group", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "joined_at_time", kind: "message", T: () => Timestamp }
         ]);
     }
 }
@@ -298,9 +341,9 @@ class HelloResp$Type extends MessageType<HelloResp> {
  */
 export const HelloResp = new HelloResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class AuthSignUpReq$Type extends MessageType<AuthSignUpReq> {
+class SignUpReq$Type extends MessageType<SignUpReq> {
     constructor() {
-        super("AuthSignUpReq", [
+        super("SignUpReq", [
             { no: 1, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
@@ -308,41 +351,41 @@ class AuthSignUpReq$Type extends MessageType<AuthSignUpReq> {
     }
 }
 /**
- * @generated MessageType for protobuf message AuthSignUpReq
+ * @generated MessageType for protobuf message SignUpReq
  */
-export const AuthSignUpReq = new AuthSignUpReq$Type();
+export const SignUpReq = new SignUpReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class AuthSignUpResp$Type extends MessageType<AuthSignUpResp> {
+class SignUpResp$Type extends MessageType<SignUpResp> {
     constructor() {
-        super("AuthSignUpResp", []);
+        super("SignUpResp", []);
     }
 }
 /**
- * @generated MessageType for protobuf message AuthSignUpResp
+ * @generated MessageType for protobuf message SignUpResp
  */
-export const AuthSignUpResp = new AuthSignUpResp$Type();
+export const SignUpResp = new SignUpResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class AuthForgotReq$Type extends MessageType<AuthForgotReq> {
+class ForgotPasswordReq$Type extends MessageType<ForgotPasswordReq> {
     constructor() {
-        super("AuthForgotReq", [
+        super("ForgotPasswordReq", [
             { no: 1, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message AuthForgotReq
+ * @generated MessageType for protobuf message ForgotPasswordReq
  */
-export const AuthForgotReq = new AuthForgotReq$Type();
+export const ForgotPasswordReq = new ForgotPasswordReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class AuthForgotResp$Type extends MessageType<AuthForgotResp> {
+class ForgotPasswordResp$Type extends MessageType<ForgotPasswordResp> {
     constructor() {
-        super("AuthForgotResp", []);
+        super("ForgotPasswordResp", []);
     }
 }
 /**
- * @generated MessageType for protobuf message AuthForgotResp
+ * @generated MessageType for protobuf message ForgotPasswordResp
  */
-export const AuthForgotResp = new AuthForgotResp$Type();
+export const ForgotPasswordResp = new ForgotPasswordResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class PageHomeReq$Type extends MessageType<PageHomeReq> {
     constructor() {
@@ -382,8 +425,8 @@ class PageProfileResp$Type extends MessageType<PageProfileResp> {
             { no: 1, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "admin", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
-            { no: 4, name: "created_at", kind: "message", T: () => Timestamp },
-            { no: 5, name: "updated_at", kind: "message", T: () => Timestamp },
+            { no: 4, name: "created_at_time", kind: "message", T: () => Timestamp },
+            { no: 5, name: "updated_at_time", kind: "message", T: () => Timestamp },
             { no: 6, name: "sessions", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Session }
         ]);
     }
@@ -393,114 +436,143 @@ class PageProfileResp$Type extends MessageType<PageProfileResp> {
  */
 export const PageProfileResp = new PageProfileResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserUpdateUsernameReq$Type extends MessageType<UserUpdateUsernameReq> {
+class UpdateUsernameReq$Type extends MessageType<UpdateUsernameReq> {
     constructor() {
-        super("UserUpdateUsernameReq", [
+        super("UpdateUsernameReq", [
             { no: 1, name: "new_username", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message UserUpdateUsernameReq
+ * @generated MessageType for protobuf message UpdateUsernameReq
  */
-export const UserUpdateUsernameReq = new UserUpdateUsernameReq$Type();
+export const UpdateUsernameReq = new UpdateUsernameReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserUpdateUsernameResp$Type extends MessageType<UserUpdateUsernameResp> {
+class UpdateUsernameResp$Type extends MessageType<UpdateUsernameResp> {
     constructor() {
-        super("UserUpdateUsernameResp", []);
+        super("UpdateUsernameResp", []);
     }
 }
 /**
- * @generated MessageType for protobuf message UserUpdateUsernameResp
+ * @generated MessageType for protobuf message UpdateUsernameResp
  */
-export const UserUpdateUsernameResp = new UserUpdateUsernameResp$Type();
+export const UpdateUsernameResp = new UpdateUsernameResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserUpdatePasswordReq$Type extends MessageType<UserUpdatePasswordReq> {
+class UpdatePasswordReq$Type extends MessageType<UpdatePasswordReq> {
     constructor() {
-        super("UserUpdatePasswordReq", [
+        super("UpdatePasswordReq", [
             { no: 1, name: "old_password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "new_password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message UserUpdatePasswordReq
+ * @generated MessageType for protobuf message UpdatePasswordReq
  */
-export const UserUpdatePasswordReq = new UserUpdatePasswordReq$Type();
+export const UpdatePasswordReq = new UpdatePasswordReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserUpdatePasswordResp$Type extends MessageType<UserUpdatePasswordResp> {
+class UpdatePasswordResp$Type extends MessageType<UpdatePasswordResp> {
     constructor() {
-        super("UserUpdatePasswordResp", []);
+        super("UpdatePasswordResp", []);
     }
 }
 /**
- * @generated MessageType for protobuf message UserUpdatePasswordResp
+ * @generated MessageType for protobuf message UpdatePasswordResp
  */
-export const UserUpdatePasswordResp = new UserUpdatePasswordResp$Type();
+export const UpdatePasswordResp = new UpdatePasswordResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserRevokeSessionReq$Type extends MessageType<UserRevokeSessionReq> {
+class RevokeSessionReq$Type extends MessageType<RevokeSessionReq> {
     constructor() {
-        super("UserRevokeSessionReq", [
+        super("RevokeSessionReq", [
             { no: 1, name: "session_id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message UserRevokeSessionReq
+ * @generated MessageType for protobuf message RevokeSessionReq
  */
-export const UserRevokeSessionReq = new UserRevokeSessionReq$Type();
+export const RevokeSessionReq = new RevokeSessionReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserRevokeSessionResp$Type extends MessageType<UserRevokeSessionResp> {
+class RevokeSessionResp$Type extends MessageType<RevokeSessionResp> {
     constructor() {
-        super("UserRevokeSessionResp", []);
+        super("RevokeSessionResp", []);
     }
 }
 /**
- * @generated MessageType for protobuf message UserRevokeSessionResp
+ * @generated MessageType for protobuf message RevokeSessionResp
  */
-export const UserRevokeSessionResp = new UserRevokeSessionResp$Type();
+export const RevokeSessionResp = new RevokeSessionResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserRevokeAllSessionsReq$Type extends MessageType<UserRevokeAllSessionsReq> {
+class RevokeAllSessionsReq$Type extends MessageType<RevokeAllSessionsReq> {
     constructor() {
-        super("UserRevokeAllSessionsReq", []);
+        super("RevokeAllSessionsReq", []);
     }
 }
 /**
- * @generated MessageType for protobuf message UserRevokeAllSessionsReq
+ * @generated MessageType for protobuf message RevokeAllSessionsReq
  */
-export const UserRevokeAllSessionsReq = new UserRevokeAllSessionsReq$Type();
+export const RevokeAllSessionsReq = new RevokeAllSessionsReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserRevokeAllSessionsResp$Type extends MessageType<UserRevokeAllSessionsResp> {
+class RevokeAllSessionsResp$Type extends MessageType<RevokeAllSessionsResp> {
     constructor() {
-        super("UserRevokeAllSessionsResp", []);
+        super("RevokeAllSessionsResp", []);
     }
 }
 /**
- * @generated MessageType for protobuf message UserRevokeAllSessionsResp
+ * @generated MessageType for protobuf message RevokeAllSessionsResp
  */
-export const UserRevokeAllSessionsResp = new UserRevokeAllSessionsResp$Type();
+export const RevokeAllSessionsResp = new RevokeAllSessionsResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserListGroupReq$Type extends MessageType<UserListGroupReq> {
+class ListMyGroupsReq$Type extends MessageType<ListMyGroupsReq> {
     constructor() {
-        super("UserListGroupReq", []);
+        super("ListMyGroupsReq", []);
     }
 }
 /**
- * @generated MessageType for protobuf message UserListGroupReq
+ * @generated MessageType for protobuf message ListMyGroupsReq
  */
-export const UserListGroupReq = new UserListGroupReq$Type();
+export const ListMyGroupsReq = new ListMyGroupsReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UserListGroupResp$Type extends MessageType<UserListGroupResp> {
+class ListMyGroupsResp$Type extends MessageType<ListMyGroupsResp> {
     constructor() {
-        super("UserListGroupResp", [
+        super("ListMyGroupsResp", [
             { no: 1, name: "groups", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Group }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message UserListGroupResp
+ * @generated MessageType for protobuf message ListMyGroupsResp
  */
-export const UserListGroupResp = new UserListGroupResp$Type();
+export const ListMyGroupsResp = new ListMyGroupsResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListGroupsReq$Type extends MessageType<ListGroupsReq> {
+    constructor() {
+        super("ListGroupsReq", [
+            { no: 1, name: "page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 2, name: "per_page", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListGroupsReq
+ */
+export const ListGroupsReq = new ListGroupsReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListGroupsResp$Type extends MessageType<ListGroupsResp> {
+    constructor() {
+        super("ListGroupsResp", [
+            { no: 1, name: "groups", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Group },
+            { no: 2, name: "page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 3, name: "per_page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "total_pages", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 5, name: "total_items", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListGroupsResp
+ */
+export const ListGroupsResp = new ListGroupsResp$Type();
 /**
  * @generated ServiceType for protobuf service HelloWorld
  */
@@ -511,8 +583,8 @@ export const HelloWorld = new ServiceType("HelloWorld", [
  * @generated ServiceType for protobuf service Auth
  */
 export const Auth = new ServiceType("Auth", [
-    { name: "SignUp", options: {}, I: AuthSignUpReq, O: AuthSignUpResp },
-    { name: "Forgot", options: {}, I: AuthForgotReq, O: AuthForgotResp }
+    { name: "SignUp", options: {}, I: SignUpReq, O: SignUpResp },
+    { name: "ForgotPassword", options: {}, I: ForgotPasswordReq, O: ForgotPasswordResp }
 ]);
 /**
  * @generated ServiceType for protobuf service Page
@@ -525,9 +597,15 @@ export const Page = new ServiceType("Page", [
  * @generated ServiceType for protobuf service User
  */
 export const User = new ServiceType("User", [
-    { name: "UpdateUsername", options: {}, I: UserUpdateUsernameReq, O: UserUpdateUsernameResp },
-    { name: "UpdatePassword", options: {}, I: UserUpdatePasswordReq, O: UserUpdatePasswordResp },
-    { name: "RevokeSession", options: {}, I: UserRevokeSessionReq, O: UserRevokeSessionResp },
-    { name: "RevokeAllSessions", options: {}, I: UserRevokeAllSessionsReq, O: UserRevokeAllSessionsResp },
-    { name: "ListGroup", options: {}, I: UserListGroupReq, O: UserListGroupResp }
+    { name: "UpdateUsername", options: {}, I: UpdateUsernameReq, O: UpdateUsernameResp },
+    { name: "UpdatePassword", options: {}, I: UpdatePasswordReq, O: UpdatePasswordResp },
+    { name: "RevokeSession", options: {}, I: RevokeSessionReq, O: RevokeSessionResp },
+    { name: "RevokeAllSessions", options: {}, I: RevokeAllSessionsReq, O: RevokeAllSessionsResp },
+    { name: "ListMyGroups", options: {}, I: ListMyGroupsReq, O: ListMyGroupsResp }
+]);
+/**
+ * @generated ServiceType for protobuf service Admin
+ */
+export const Admin = new ServiceType("Admin", [
+    { name: "ListGroups", options: {}, I: ListGroupsReq, O: ListGroupsResp }
 ]);
