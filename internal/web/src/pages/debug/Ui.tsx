@@ -19,6 +19,7 @@ import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, To
 import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
+import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 
 export function Ui() {
   const showToast = () => {
@@ -248,6 +249,26 @@ export function Ui() {
           <PaginationNext />
         </PaginationContent>
       </PaginationRoot>
-    </div>
+      <SelectRoot
+        defaultValue="Apple"
+        options={["Apple", "Banana", "Blueberry", "Grapes", "Pineapple"]}
+        placeholder="Select a fruit…"
+        itemComponent={props => (
+          <SelectItem item={props.item}>
+            {props.item.rawValue}
+          </SelectItem>
+        )}
+      >
+        <SelectTrigger aria-label="Fruit">
+          <SelectValue<string>>
+            {state => state.selectedOption()}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectListbox />
+        </SelectContent>
+      </SelectRoot>
+      <Skeleton class="h-screen" />
+    </div >
   )
 }

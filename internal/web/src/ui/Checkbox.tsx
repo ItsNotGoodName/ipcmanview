@@ -7,14 +7,14 @@ import { cn } from "~/lib/utils"
 export function CheckboxRoot(props: ComponentProps<typeof Checkbox.Root>) {
   const [_, rest] = splitProps(props, ["class"])
   return <Checkbox.Root
-    class={cn("flex flex-wrap items-center", props.class)}
+    class={cn("flex flex-wrap items-center space-x-2", props.class)}
     {...rest}
   />
 }
 
 export function CheckboxInput(props: ComponentProps<typeof Checkbox.Input>) {
   const [_, rest] = splitProps(props, ["class"])
-  return <Checkbox.Input class={cn("peer", props.class)} {...rest} />
+  return <Checkbox.Input hidden class={cn("peer", props.class)} {...rest} />
 }
 
 export function CheckboxControl(props: Omit<ComponentProps<typeof Checkbox.Control>, "children">) {

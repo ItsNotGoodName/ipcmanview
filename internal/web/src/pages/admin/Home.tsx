@@ -17,6 +17,7 @@ import { ConfirmButton } from "~/ui/Confirm";
 import { PageError } from "~/ui/Page";
 import { Skeleton } from "~/ui/Skeleton";
 import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
+import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 
 type SearchParams = {
   page: string
@@ -86,27 +87,48 @@ export function AdminHome() {
                 Refresh
               </Button>
             </div>
-            <PaginationRoot
-              page={data()?.pageResult?.page}
-              onPageChange={(p) => setSearchParams({ page: p.toString() } as SearchParams)}
-              count={Number(data()?.pageResult?.totalPages)}
-              itemComponent={props => (
-                <PaginationItem page={props.page}>
-                  <PaginationLink isActive={props.page == data()?.pageResult?.page}>
-                    {props.page}
-                  </PaginationLink>
-                </PaginationItem>
-              )}
-              ellipsisComponent={() => (
-                <PaginationEllipsis />
-              )}
-            >
-              <PaginationContent>
-                <PaginationPrevious onClick={() => setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as SearchParams)} />
-                <PaginationItems />
-                <PaginationNext onClick={() => setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as SearchParams)} />
-              </PaginationContent>
-            </PaginationRoot>
+            <div class="flex gap-2">
+              <PaginationRoot
+                page={data()?.pageResult?.page}
+                onPageChange={(p) => setSearchParams({ page: p.toString() } as SearchParams)}
+                count={Number(data()?.pageResult?.totalPages)}
+                itemComponent={props => (
+                  <PaginationItem page={props.page}>
+                    <PaginationLink isActive={props.page == data()?.pageResult?.page}>
+                      {props.page}
+                    </PaginationLink>
+                  </PaginationItem>
+                )}
+                ellipsisComponent={() => (
+                  <PaginationEllipsis />
+                )}
+              >
+                <PaginationContent>
+                  <PaginationPrevious onClick={() => setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as SearchParams)} />
+                  <PaginationItems />
+                  <PaginationNext onClick={() => setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as SearchParams)} />
+                </PaginationContent>
+              </PaginationRoot>
+              <SelectRoot
+                value={data()?.pageResult?.perPage || 10}
+                onChange={(value) => setSearchParams({ perPage: value })}
+                options={[10, 25, 50, 100]}
+                itemComponent={props => (
+                  <SelectItem item={props.item}>
+                    {props.item.rawValue}
+                  </SelectItem>
+                )}
+              >
+                <SelectTrigger aria-label="Per page">
+                  <SelectValue<number>>
+                    {state => state.selectedOption()}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectListbox />
+                </SelectContent>
+              </SelectRoot>
+            </div>
             <form>
               <TableRoot>
                 <TableCaption>{data()?.pageResult?.seenItems.toString()} / {data()?.pageResult?.totalItems.toString()} Groups</TableCaption>
