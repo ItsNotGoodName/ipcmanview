@@ -9,7 +9,7 @@ import { Label } from "~/ui/Label";
 import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchInput, SwitchLabel, SwitchRoot } from "~/ui/Switch";
 import { toggleTheme } from "~/ui/theme";
 import { CardRoot, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/ui/Card";
-import { For, createEffect, createSignal, onCleanup, onMount } from "solid-js";
+import { For, createSignal, onCleanup, } from "solid-js";
 import { Badge } from "~/ui/Badge";
 import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { PopoverArrow, PopoverCloseButton, PopoverCloseIcon, PopoverContent, PopoverDescription, PopoverPortal, PopoverRoot, PopoverTitle, PopoverTrigger } from "~/ui/Popover";
@@ -26,6 +26,7 @@ import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
 import { RiMapRocketLine } from "solid-icons/ri";
 import { AvatarFallback, AvatarImage, AvatarRoot } from "~/ui/Avatar";
 import { ProgressFill, ProgressLabel, ProgressRoot, ProgressTrack, ProgressValueLabel } from "~/ui/Progress";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from "~/ui/AlertDialog";
 
 export function Ui() {
   const showToast = () => {
@@ -448,6 +449,25 @@ export function Ui() {
           <ProgressFill />
         </ProgressTrack>
       </ProgressRoot>
+
+      <AlertDialogRoot>
+        <AlertDialogTrigger asChild>
+          <As component={Button} variant="outline">Show Dialog</As>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogRoot>
 
       <Skeleton class="h-screen" />
     </div >
