@@ -9,7 +9,7 @@ import { Label } from "~/ui/Label";
 import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchInput, SwitchLabel, SwitchRoot } from "~/ui/Switch";
 import { toggleTheme } from "~/ui/theme";
 import { CardRoot, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/ui/Card";
-import { For } from "solid-js";
+import { For, createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import { Badge } from "~/ui/Badge";
 import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { PopoverArrow, PopoverCloseButton, PopoverCloseIcon, PopoverContent, PopoverDescription, PopoverPortal, PopoverRoot, PopoverTitle, PopoverTrigger } from "~/ui/Popover";
@@ -23,6 +23,9 @@ import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, Se
 import { ConfirmButton } from "~/ui/Confirm";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
+import { RiMapRocketLine } from "solid-icons/ri";
+import { AvatarFallback, AvatarImage, AvatarRoot } from "~/ui/Avatar";
+import { ProgressFill, ProgressLabel, ProgressRoot, ProgressTrack, ProgressValueLabel } from "~/ui/Progress";
 
 export function Ui() {
   const showToast = () => {
@@ -39,12 +42,17 @@ export function Ui() {
     toast.show("Hello World")
   }
 
+  const [progress, setProgress] = createSignal(0)
+  const timer = setInterval(() => setProgress((prev) => (prev + 10) % 100), 200)
+  onCleanup(() => clearInterval(timer))
+
   return (
     <div class="flex flex-col gap-4 p-4">
       <Button onClick={toggleTheme} size="icon">
         <ThemeIcon class="h-6 w-6" />
       </Button>
       <AlertRoot>
+        <RiMapRocketLine class="h-4 w-4" />
         <AlertTitle>Alert Title</AlertTitle>
         <AlertDescription>Alert Description</AlertDescription>
       </AlertRoot>
@@ -420,6 +428,27 @@ export function Ui() {
         <TabsContent value="account">Tabs 1 Content</TabsContent>
         <TabsContent value="password">Tabs 2 Content</TabsContent>
       </TabsRoot>
+      <AvatarRoot fallbackDelay={600}>
+        <AvatarImage
+          class="image__img"
+          src="/vite.svg"
+          alt="Vite"
+        />
+        <AvatarFallback>VT</AvatarFallback>
+      </AvatarRoot>
+
+      <ProgressRoot value={progress()}>
+        <div class="flex justify-between">
+          <ProgressLabel>Loading</ProgressLabel>
+          <ProgressValueLabel>
+            {progress()}%
+          </ProgressValueLabel>
+        </div>
+        <ProgressTrack>
+          <ProgressFill />
+        </ProgressTrack>
+      </ProgressRoot>
+
       <Skeleton class="h-screen" />
     </div >
   )
