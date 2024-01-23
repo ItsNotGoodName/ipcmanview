@@ -18,6 +18,7 @@ import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, 
 import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, ToastProgressTrack, ToastTitle, toast } from "~/ui/Toast";
 import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
+import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 
 export function Ui() {
   const showToast = () => {
@@ -228,6 +229,25 @@ export function Ui() {
       </TableRoot>
       <Button onClick={showToast}>Toast</Button>
       <Skeleton class="h-32 rounded" />
+      <PaginationRoot
+        count={10}
+        itemComponent={props => (
+          <PaginationItem page={props.page}>
+            <PaginationLink>
+              {props.page}
+            </PaginationLink>
+          </PaginationItem>
+        )}
+        ellipsisComponent={() => (
+          <PaginationEllipsis />
+        )}
+      >
+        <PaginationContent>
+          <PaginationPrevious />
+          <PaginationItems />
+          <PaginationNext />
+        </PaginationContent>
+      </PaginationRoot>
     </div>
   )
 }

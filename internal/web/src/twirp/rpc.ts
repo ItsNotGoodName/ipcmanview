@@ -38,6 +38,18 @@ export interface PagePaginationResult {
      * @generated from protobuf field: int64 total_items = 4;
      */
     totalItems: bigint;
+    /**
+     * @generated from protobuf field: int64 seen_items = 5;
+     */
+    seenItems: bigint;
+    /**
+     * @generated from protobuf field: int32 previous_page = 6;
+     */
+    previousPage: number;
+    /**
+     * @generated from protobuf field: int32 next_page = 7;
+     */
+    nextPage: number;
 }
 /**
  * @generated from protobuf message Session
@@ -410,7 +422,10 @@ class PagePaginationResult$Type extends MessageType<PagePaginationResult> {
             { no: 1, name: "page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 2, name: "per_page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 3, name: "total_pages", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 4, name: "total_items", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 4, name: "total_items", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 5, name: "seen_items", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 6, name: "previous_page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 7, name: "next_page", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
         ]);
     }
 }

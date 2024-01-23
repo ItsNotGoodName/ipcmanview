@@ -16,6 +16,9 @@ message PagePaginationResult {
   int32 per_page = 2;
   int64 total_pages = 3;
   int64 total_items = 4;
+  int64 seen_items = 5;
+  int32 previous_page = 6;
+  int32 next_page = 7;
 }
 
 message Session {

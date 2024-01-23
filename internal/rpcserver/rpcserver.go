@@ -151,9 +151,12 @@ func parsePagePagination(v *rpc.PagePagination) pagination.Page {
 
 func convertPagePaginationResult(v pagination.PageResult) *rpc.PagePaginationResult {
 	return &rpc.PagePaginationResult{
-		Page:       int32(v.Page),
-		PerPage:    int32(v.PerPage),
-		TotalPages: int64(v.TotalPages),
-		TotalItems: int64(v.TotalItems),
+		Page:         int32(v.Page),
+		PerPage:      int32(v.PerPage),
+		TotalPages:   int64(v.TotalPages),
+		TotalItems:   int64(v.TotalItems),
+		SeenItems:    int64(v.Seen()),
+		PreviousPage: int32(v.Previous()),
+		NextPage:     int32(v.Next()),
 	}
 }

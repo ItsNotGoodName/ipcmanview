@@ -46,6 +46,9 @@ func (p PageResult) HasNext() bool {
 }
 
 func (p PageResult) Next() int {
+	if !p.HasNext() {
+		return p.Page
+	}
 	return p.Page + 1
 }
 
@@ -54,6 +57,9 @@ func (p PageResult) HasPrevious() bool {
 }
 
 func (p PageResult) Previous() int {
+	if !p.HasPrevious() {
+		return p.Page
+	}
 	return p.Page - 1
 }
 

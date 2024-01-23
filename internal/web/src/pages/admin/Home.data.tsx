@@ -5,5 +5,5 @@ import { ListGroupsReq } from "~/twirp/rpc";
 export const getListGroups = cache((input: ListGroupsReq) => useClient().admin.listGroups(input).then((req) => req.response), "listGroups")
 
 export function loadListGroups() {
-  void getListGroups({ page: 1, perPage: 100 })
+  void getListGroups({})
 }

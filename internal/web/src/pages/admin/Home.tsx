@@ -1,10 +1,9 @@
-import { action, createAsync, revalidate, useAction } from "@solidjs/router";
+import { action, createAsync, revalidate, useAction, useSearchParams } from "@solidjs/router";
 import { CheckboxControl, CheckboxInput, CheckboxRoot } from "~/ui/Checkbox";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
 import { getListGroups } from "./Home.data";
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form"
-import { ListGroupsReq } from "~/twirp/rpc";
-import { ErrorBoundary, For, Show, Suspense } from "solid-js";
+import { ErrorBoundary, For, Show, Suspense, createEffect } from "solid-js";
 import { createLoading, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
 import { Seperator } from "~/ui/Seperator";
 import { DialogCloseButton, DialogContent, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
@@ -17,15 +16,27 @@ import { useClient } from "~/providers/client";
 import { ConfirmButton } from "~/ui/Confirm";
 import { PageError } from "~/ui/Page";
 import { Skeleton } from "~/ui/Skeleton";
+import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
+
+type SearchParams = {
+  page: string
+  perPage: string
+}
 
 export function AdminHome() {
-  const input: ListGroupsReq = {
+  const [searchParams, setSearchParams] = useSearchParams<SearchParams>()
+
+  createEffect(() => {
+
+    console.log(searchParams.perPage)
+  })
+
+  const data = createAsync(() => getListGroups({
     page: {
-      page: 1,
-      perPage: 100,
+      page: Number(searchParams.page) || 1,
+      perPage: Number(searchParams.perPage) || 100
     }
-  }
-  const data = createAsync(() => getListGroups(input))
+  }))
   const [dataRefreshing, refreshData] = createLoading(() => revalidate(getListGroups.key))
 
   return (
@@ -75,9 +86,30 @@ export function AdminHome() {
                 Refresh
               </Button>
             </div>
+            <PaginationRoot
+              page={data()?.pageResult?.page}
+              onPageChange={(p) => setSearchParams({ page: p.toString() } as SearchParams)}
+              count={Number(data()?.pageResult?.totalPages)}
+              itemComponent={props => (
+                <PaginationItem page={props.page}>
+                  <PaginationLink isActive={props.page == data()?.pageResult?.page}>
+                    {props.page}
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+              ellipsisComponent={() => (
+                <PaginationEllipsis />
+              )}
+            >
+              <PaginationContent>
+                <PaginationPrevious onClick={() => setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as SearchParams)} />
+                <PaginationItems />
+                <PaginationNext onClick={() => setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as SearchParams)} />
+              </PaginationContent>
+            </PaginationRoot>
             <form>
               <TableRoot>
-                <TableCaption>{data()?.groups.length} / {data()?.pageResult?.totalItems.toString()} Groups</TableCaption>
+                <TableCaption>{data()?.pageResult?.seenItems.toString()} / {data()?.pageResult?.totalItems.toString()} Groups</TableCaption>
                 <TableHeader>
                   <TableRow>
                     <TableHead>
