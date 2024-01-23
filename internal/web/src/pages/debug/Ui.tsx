@@ -22,6 +22,7 @@ import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationItems,
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { ConfirmButton } from "~/ui/Confirm";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
+import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
 
 export function Ui() {
   const showToast = () => {
@@ -272,7 +273,6 @@ export function Ui() {
           <SelectListbox />
         </SelectContent>
       </SelectRoot>
-
       <MenubarRoot>
         <MenubarMenu>
           <MenubarTrigger>
@@ -412,7 +412,14 @@ export function Ui() {
           </MenubarContent>
         </MenubarMenu>
       </MenubarRoot>
-
+      <TabsRoot>
+        <TabsList>
+          <TabsTrigger value="account">Tabs 1 Trigger</TabsTrigger>
+          <TabsTrigger value="password">Tabs 2 Trigger</TabsTrigger>
+        </TabsList>
+        <TabsContent value="account">Tabs 1 Content</TabsContent>
+        <TabsContent value="password">Tabs 2 Content</TabsContent>
+      </TabsRoot>
       <Skeleton class="h-screen" />
     </div >
   )

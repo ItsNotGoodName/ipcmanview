@@ -4,6 +4,8 @@ import { ComponentProps, JSX, splitProps } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
+// FIXME: the animations are broken
+
 export const MenubarMenu = Menubar.Menu
 
 export const MenubarGroup = Menubar.Group
