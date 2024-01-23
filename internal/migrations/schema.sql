@@ -35,7 +35,7 @@ CREATE TABLE admins (
 
 CREATE TABLE groups (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
+  name TEXT NOT NULL UNIQUE,
   description TEXT NOT NULL,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL
@@ -45,6 +45,7 @@ CREATE TABLE group_users (
   user_id INTEGER NOT NULL,
   group_id INTEGER NOT NULL,
   created_at DATETIME NOT NULL,
+  UNIQUE (user_id, group_id),
   FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE,
   FOREIGN KEY (group_id) REFERENCES groups (id) ON UPDATE CASCADE ON DELETE CASCADE
 );

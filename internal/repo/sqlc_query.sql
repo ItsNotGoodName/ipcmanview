@@ -121,6 +121,54 @@ FROM
 WHERE
   gu.user_id = ?;
 
+-- name: ListGroup :many
+SELECT
+  g.*,
+  COUNT(gu.group_id) AS user_count
+FROM
+  groups AS g
+  LEFT JOIN group_users AS gu ON gu.group_id = g.id
+GROUP BY
+  g.id
+LIMIT
+  ?
+OFFSET
+  ?;
+
+-- name: CountGroup :one
+SELECT
+  count(*)
+FROM
+  groups;
+
+-- name: GetGroup :one
+SELECT
+  *
+FROM
+  groups
+where
+  id = ?;
+
+-- name: CreateGroup :one
+INSERT INTO
+  groups (name, description, created_at, updated_at)
+VALUES
+  (?, ?, ?, ?) RETURNING id;
+
+-- name: UpdateGroup :one
+UPDATE groups
+SET
+  name = ?,
+  description = ?,
+  updated_at = ?
+WHERE
+  id = ? RETURNING id;
+
+-- name: DeleteGroup :exec
+DELETE FROM groups
+WHERE
+  id = ?;
+
 -- name: createDahuaDevice :one
 INSERT INTO
   dahua_devices (

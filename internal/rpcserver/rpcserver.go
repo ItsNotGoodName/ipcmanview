@@ -7,6 +7,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
+	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -83,6 +85,11 @@ func useAuthSession(ctx context.Context) models.AuthSession {
 
 // ---------- Error
 
+func asValidationErrors(err error) (validator.ValidationErrors, bool) {
+	errs, ok := err.(validator.ValidationErrors)
+	return errs, ok
+}
+
 type Error struct {
 	msg string
 }
@@ -131,4 +138,22 @@ func (w Error) Internal() twirp.Error {
 
 func (w Error) NotImplemented() twirp.Error {
 	return twirp.InternalError("Not implemented.")
+}
+
+// ---------- Convert/Parse
+
+func parsePagePagination(v *rpc.PagePagination) pagination.Page {
+	return pagination.Page{
+		Page:    int(v.Page),
+		PerPage: int(v.PerPage),
+	}
+}
+
+func convertPagePaginationResult(v pagination.PageResult) *rpc.PagePaginationResult {
+	return &rpc.PagePaginationResult{
+		Page:       int32(v.Page),
+		PerPage:    int32(v.PerPage),
+		TotalPages: int64(v.TotalPages),
+		TotalItems: int64(v.TotalItems),
+	}
 }

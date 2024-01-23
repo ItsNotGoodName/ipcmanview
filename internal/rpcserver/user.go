@@ -8,7 +8,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
-	"github.com/go-playground/validator/v10"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -36,7 +35,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 	}
 
 	if _, err := auth.UpdateUser(ctx, u.db, user, req.NewPassword); err != nil {
-		if errs, ok := err.(validator.ValidationErrors); ok {
+		if errs, ok := asValidationErrors(err); ok {
 			return nil, NewError(err, "Failed to update password.").Validation(errs, [][2]string{
 				{"Password", "newPassword"},
 			})
@@ -67,7 +66,7 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 	user.Username = req.NewUsername
 
 	if _, err := auth.UpdateUser(ctx, u.db, user, ""); err != nil {
-		if errs, ok := err.(validator.ValidationErrors); ok {
+		if errs, ok := asValidationErrors(err); ok {
 			return nil, NewError(err, "Failed to update username.").Validation(errs, [][2]string{
 				{"Username", "newUsername"},
 			})
@@ -119,9 +118,9 @@ func (u *User) ListMyGroups(ctx context.Context, req *rpc.ListMyGroupsReq) (*rpc
 		return nil, NewError(err).Internal()
 	}
 
-	groups := make([]*rpc.Group, 0, len(dbGroups))
+	groups := make([]*rpc.MyGroup, 0, len(dbGroups))
 	for _, v := range dbGroups {
-		groups = append(groups, &rpc.Group{
+		groups = append(groups, &rpc.MyGroup{
 			Id:           v.ID,
 			Name:         v.Name,
 			Description:  v.Description,

@@ -34,6 +34,12 @@ type User struct {
 	Password string `validate:"gte=8"`
 }
 
+type Group struct {
+	ID          int64
+	Name        string `validate:"gte=3,lte=64"`
+	Description string `validate:"lte=1024"`
+}
+
 type AuthSession struct {
 	SessionID int64
 	UserID    int64

@@ -7,7 +7,7 @@ import { cn } from "~/lib/utils"
 export function CheckboxRoot(props: ComponentProps<typeof Checkbox.Root>) {
   const [_, rest] = splitProps(props, ["class"])
   return <Checkbox.Root
-    class={cn("flex flex-wrap items-center space-x-2", props.class)}
+    class={cn("flex flex-wrap items-center", props.class)}
     {...rest}
   />
 }
@@ -17,7 +17,7 @@ export function CheckboxInput(props: ComponentProps<typeof Checkbox.Input>) {
   return <Checkbox.Input class={cn("peer", props.class)} {...rest} />
 }
 
-export function CheckboxControl(props: ComponentProps<typeof Checkbox.Control>) {
+export function CheckboxControl(props: Omit<ComponentProps<typeof Checkbox.Control>, "children">) {
   const [_, rest] = splitProps(props, ["class"])
   return <Checkbox.Control
     class={cn(
@@ -28,7 +28,6 @@ export function CheckboxControl(props: ComponentProps<typeof Checkbox.Control>) 
   >
     <Checkbox.Indicator
       class={cn("flex items-center justify-center text-current")}
-      {...props}
     >
       <RiSystemCheckLine class="h-4 w-4" />
     </Checkbox.Indicator>

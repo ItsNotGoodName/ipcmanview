@@ -38,3 +38,4 @@ export function Button(props: ButtonProps) {
   const [_, rest] = splitProps(props, ["class", "variant", "size"])
   return <button class={cn(buttonVariants({ variant: props.variant, size: props.size, class: props.class }))} {...rest} />
 }
+

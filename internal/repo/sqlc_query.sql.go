@@ -31,6 +31,20 @@ func (q *Queries) CheckDahuaDevice(ctx context.Context, id int64) (bool, error) 
 	return column_1, err
 }
 
+const countGroup = `-- name: CountGroup :one
+SELECT
+  count(*)
+FROM
+  groups
+`
+
+func (q *Queries) CountGroup(ctx context.Context) (int64, error) {
+	row := q.db.QueryRowContext(ctx, countGroup)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createDahuaAferoFile = `-- name: CreateDahuaAferoFile :one
 INSERT INTO
   dahua_afero_files (
@@ -326,6 +340,32 @@ func (q *Queries) CreateDahuaThumbnail(ctx context.Context, arg CreateDahuaThumb
 	return i, err
 }
 
+const createGroup = `-- name: CreateGroup :one
+INSERT INTO
+  groups (name, description, created_at, updated_at)
+VALUES
+  (?, ?, ?, ?) RETURNING id
+`
+
+type CreateGroupParams struct {
+	Name        string
+	Description string
+	CreatedAt   types.Time
+	UpdatedAt   types.Time
+}
+
+func (q *Queries) CreateGroup(ctx context.Context, arg CreateGroupParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createGroup,
+		arg.Name,
+		arg.Description,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO
   users (email, username, password, created_at, updated_at)
@@ -482,6 +522,17 @@ WHERE
 
 func (q *Queries) DeleteDahuaStream(ctx context.Context, id int64) error {
 	_, err := q.db.ExecContext(ctx, deleteDahuaStream, id)
+	return err
+}
+
+const deleteGroup = `-- name: DeleteGroup :exec
+DELETE FROM groups
+WHERE
+  id = ?
+`
+
+func (q *Queries) DeleteGroup(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteGroup, id)
 	return err
 }
 
@@ -909,6 +960,28 @@ func (q *Queries) GetDahuaStream(ctx context.Context, id int64) (DahuaStream, er
 		&i.Subtype,
 		&i.Name,
 		&i.MediamtxPath,
+	)
+	return i, err
+}
+
+const getGroup = `-- name: GetGroup :one
+SELECT
+  id, name, description, created_at, updated_at
+FROM
+  groups
+where
+  id = ?
+`
+
+func (q *Queries) GetGroup(ctx context.Context, id int64) (Group, error) {
+	row := q.db.QueryRowContext(ctx, getGroup, id)
+	var i Group
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -1603,6 +1676,65 @@ func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) (
 	return items, nil
 }
 
+const listGroup = `-- name: ListGroup :many
+SELECT
+  g.id, g.name, g.description, g.created_at, g.updated_at,
+  COUNT(gu.group_id) AS user_count
+FROM
+  groups AS g
+  LEFT JOIN group_users AS gu ON gu.group_id = g.id
+GROUP BY
+  g.id
+LIMIT
+  ?
+OFFSET
+  ?
+`
+
+type ListGroupParams struct {
+	Limit  int64
+	Offset int64
+}
+
+type ListGroupRow struct {
+	ID          int64
+	Name        string
+	Description string
+	CreatedAt   types.Time
+	UpdatedAt   types.Time
+	UserCount   int64
+}
+
+func (q *Queries) ListGroup(ctx context.Context, arg ListGroupParams) ([]ListGroupRow, error) {
+	rows, err := q.db.QueryContext(ctx, listGroup, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListGroupRow
+	for rows.Next() {
+		var i ListGroupRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.UserCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listGroupForUser = `-- name: ListGroupForUser :many
 SELECT
   g.id, g.name, g.description, g.created_at, g.updated_at,
@@ -2184,6 +2316,35 @@ func (q *Queries) UpdateDahuaStream(ctx context.Context, arg UpdateDahuaStreamPa
 		&i.MediamtxPath,
 	)
 	return i, err
+}
+
+const updateGroup = `-- name: UpdateGroup :one
+UPDATE groups
+SET
+  name = ?,
+  description = ?,
+  updated_at = ?
+WHERE
+  id = ? RETURNING id
+`
+
+type UpdateGroupParams struct {
+	Name        string
+	Description string
+	UpdatedAt   types.Time
+	ID          int64
+}
+
+func (q *Queries) UpdateGroup(ctx context.Context, arg UpdateGroupParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, updateGroup,
+		arg.Name,
+		arg.Description,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateSettings = `-- name: UpdateSettings :one

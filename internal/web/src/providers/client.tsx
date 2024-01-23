@@ -1,5 +1,5 @@
 import { TwirpFetchTransport } from "@protobuf-ts/twirp-transport";
-import { AuthClient, HelloWorldClient, PageClient, UserClient } from "~/twirp/rpc.client";
+import { AdminClient, AuthClient, HelloWorldClient, PageClient, UserClient } from "~/twirp/rpc.client";
 import {
   createContext,
   ParentComponent,
@@ -29,7 +29,8 @@ function createStore(): ClientContextType {
     helloWorld: new HelloWorldClient(transport),
     auth: new AuthClient(transport),
     page: new PageClient(transport),
-    user: new UserClient(transport)
+    user: new UserClient(transport),
+    admin: new AdminClient(transport)
   };
 }
 
@@ -38,6 +39,7 @@ type ClientContextType = {
   auth: AuthClient
   page: PageClient
   user: UserClient
+  admin: AdminClient
 };
 
 const ClientContext = createContext<ClientContextType>();

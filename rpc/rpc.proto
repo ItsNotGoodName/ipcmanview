@@ -1,9 +1,22 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "../rpc";
 option optimize_for = CODE_SIZE;
+
+message PagePagination {
+  int32 page = 1;
+  int32 per_page = 2;
+}
+
+message PagePaginationResult {
+  int32 page = 1;
+  int32 per_page = 2;
+  int64 total_pages = 3;
+  int64 total_items = 4;
+}
 
 message Session {
   int64 id = 1;
@@ -16,11 +29,20 @@ message Session {
   bool current = 8;
 }
 
-message Group {
+message MyGroup {
   int64 id = 1;
   string name = 2;
   string description = 3;
   google.protobuf.Timestamp joined_at_time = 4;
+}
+
+message Group {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  int64 user_count = 4;
+  google.protobuf.Timestamp created_at_time = 5;
+  google.protobuf.Timestamp updated_at_time = 6;
 }
 
 // ---------- HelloWorld
@@ -120,24 +142,50 @@ message RevokeAllMySessionsResp {}
 message ListMyGroupsReq {}
 
 message ListMyGroupsResp {
-  repeated Group groups = 1;
+  repeated MyGroup groups = 1;
 }
 
 // ---------- Admin
 
 service Admin {
   rpc ListGroups(ListGroupsReq) returns (ListGroupsResp);
+  rpc GetGroup(GetGroupReq) returns (GetGroupResp);
+  rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
+  rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
+  rpc DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
 }
 
 message ListGroupsReq {
-  int32 page = 1;
-  int32 per_page = 2;
+  PagePagination page = 1;
 }
 
 message ListGroupsResp {
   repeated Group groups = 1;
-  int32 page = 2;
-  int32 per_page = 3;
-  int64 total_pages = 4;
-  int64 total_items = 5;
+  PagePaginationResult pageResult = 2;
+}
+
+message GetGroupReq {
+  int64 id = 1;
+}
+
+message GetGroupResp {
+  Group group = 1;
+}
+
+message CreateGroupReq {
+  string name = 1;
+  string description = 2;
+}
+
+message CreateGroupResp {
+  int64 id = 1;
+}
+
+message UpdateGroupReq {
+  string name = 1;
+  string description = 2;
+}
+
+message DeleteGroupReq {
+  int64 id = 1;
 }
