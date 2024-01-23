@@ -1,7 +1,8 @@
 import { As } from "@kobalte/core";
-import { Button } from "./Button";
-import { PopoverArrow, PopoverCloseButton, PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "./Popover";
 import { ComponentProps, createSignal, splitProps } from "solid-js";
+
+import { PopoverArrow, PopoverCloseButton, PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "./Popover";
+import { Button } from "./Button";
 
 export type ConfirmButtonProps = {
   message?: string,
@@ -20,32 +21,30 @@ export function ConfirmButton(props: ConfirmButtonProps) {
     }
   }
 
-  return (
-    <PopoverRoot open={open()} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <As component={Button} disabled={props.pending} {...rest}>
-          {props.children}
-        </As>
-      </PopoverTrigger>
-      <PopoverPortal>
-        <PopoverContent class="flex flex-col gap-2">
-          <PopoverArrow />
-          <div>{props.message}</div>
-          <div class="flex gap-4">
-            <PopoverCloseButton asChild>
-              <As component={Button} size="sm" disabled={props.pending}>No</As>
-            </PopoverCloseButton>
-            <Button
-              onClick={onYes}
-              disabled={props.pending}
-              size="sm"
-              variant={props.variant}
-            >
-              Yes
-            </Button>
-          </div>
-        </PopoverContent>
-      </PopoverPortal>
-    </PopoverRoot>
-  )
+  return <PopoverRoot open={open()} onOpenChange={setOpen}>
+    <PopoverTrigger asChild>
+      <As component={Button} disabled={props.pending} {...rest}>
+        {props.children}
+      </As>
+    </PopoverTrigger>
+    <PopoverPortal>
+      <PopoverContent class="flex flex-col gap-2">
+        <PopoverArrow />
+        <div>{props.message}</div>
+        <div class="flex gap-4">
+          <PopoverCloseButton asChild>
+            <As component={Button} size="sm" disabled={props.pending}>No</As>
+          </PopoverCloseButton>
+          <Button
+            onClick={onYes}
+            disabled={props.pending}
+            size="sm"
+            variant={props.variant}
+          >
+            Yes
+          </Button>
+        </div>
+      </PopoverContent>
+    </PopoverPortal>
+  </PopoverRoot>
 }

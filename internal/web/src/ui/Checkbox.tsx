@@ -32,7 +32,6 @@ export function CheckboxControl(props: Omit<ComponentProps<typeof Checkbox.Contr
       <RiSystemCheckLine class="h-4 w-4" />
     </Checkbox.Indicator>
   </Checkbox.Control>
-
 }
 
 export const CheckboxLabel = Checkbox.Label

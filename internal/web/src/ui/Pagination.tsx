@@ -31,7 +31,6 @@ type PaginationLinkProps = {
 
 export function PaginationLink(props: PaginationLinkProps) {
   const [_, rest] = splitProps(mergeProps({ size: "icon" }, props), ["class"])
-
   return <button
     class={cn(
       buttonVariants({
