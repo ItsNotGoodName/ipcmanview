@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@kobalte/core':
-    specifier: ^0.12.0
-    version: 0.12.0(solid-js@1.8.7)
+    specifier: ^0.12.1
+    version: 0.12.1(solid-js@1.8.7)
   '@modular-forms/solid':
     specifier: ^0.20.0
     version: 0.20.0(solid-js@1.8.7)
@@ -687,8 +687,8 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
-  /@kobalte/core@0.12.0(solid-js@1.8.7):
-    resolution: {integrity: sha512-TjUYlFCbfQ8T3g7M0pZI5s0BtkDmojLxDZR/pnsmhOzY6hNdERmnHpwe+7IxLeOx/Vwtudfa+YGm7xdOhZ0o8Q==}
+  /@kobalte/core@0.12.1(solid-js@1.8.7):
+    resolution: {integrity: sha512-/GvgH/jknZ/jr3qnc8PwnPnwNfp8pQHj9Ja0TjFUcTsnGKS/XoDXSWqCjiKOL3M6uBfZmmdn1A/3i3Na4w9Ujg==}
     peerDependencies:
       solid-js: ^1.7.11
     dependencies:

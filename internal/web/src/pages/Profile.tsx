@@ -1,6 +1,6 @@
 import { action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router"
 import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
-import { ComponentProps, ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, splitProps } from "solid-js"
+import { ErrorBoundary, For, ParentProps, Show, Suspense, } from "solid-js"
 import { FormError, createForm, required, reset } from "@modular-forms/solid"
 
 import { formatDate, parseDate, catchAsToast, throwAsFormError } from "~/lib/utils"
@@ -9,8 +9,6 @@ import { getListMyGroups, getProfile, } from "./Profile.data"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
-import { PopoverArrow, PopoverCloseButton, PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "~/ui/Popover"
-import { As } from "@kobalte/core"
 import { Badge } from "~/ui/Badge"
 import { RevokeMySessionReq } from "~/twirp/rpc"
 import { Seperator } from "~/ui/Seperator"
@@ -19,6 +17,7 @@ import { Input } from "~/ui/Input"
 import { Skeleton } from "~/ui/Skeleton"
 import { getSession } from "~/providers/session"
 import { PageError } from "~/ui/Page"
+import { ConfirmButton } from "~/ui/Confirm"
 
 const actionRevokeAllMySessions = action(() => useClient()
   .user.revokeAllMySessions({})
@@ -331,47 +330,6 @@ function ChangePasswordForm() {
       </Button>
       <FormMessage form={changePasswordForm} />
     </Form>
-  )
-}
-
-type ConfirmButtonProps = {
-  message: string,
-  pending: boolean,
-  onYes: () => Promise<unknown>
-} & Omit<ComponentProps<typeof Button>, "disabled">
-
-function ConfirmButton(props: ConfirmButtonProps) {
-  const [_, rest] = splitProps(props, ["message", "pending", "onYes"])
-  const [open, setOpen] = createSignal(false);
-  const onYes = () => props.onYes().then(() => setOpen(false))
-
-  return (
-    <PopoverRoot open={open()} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <As component={Button} disabled={props.pending} {...rest}>
-          {props.children}
-        </As>
-      </PopoverTrigger>
-      <PopoverPortal>
-        <PopoverContent class="flex flex-col gap-2">
-          <PopoverArrow />
-          <div>{props.message}</div>
-          <div class="flex gap-4">
-            <PopoverCloseButton asChild>
-              <As component={Button} size="sm" disabled={props.pending}>No</As>
-            </PopoverCloseButton>
-            <Button
-              onClick={onYes}
-              disabled={props.pending}
-              size="sm"
-              variant={props.variant}
-            >
-              Yes
-            </Button>
-          </div>
-        </PopoverContent>
-      </PopoverPortal>
-    </PopoverRoot>
   )
 }
 

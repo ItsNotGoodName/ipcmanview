@@ -20,6 +20,8 @@ import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
+import { ConfirmButton } from "~/ui/Confirm";
+import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 
 export function Ui() {
   const showToast = () => {
@@ -229,7 +231,9 @@ export function Ui() {
         </TableBody>
       </TableRoot>
       <Button onClick={showToast}>Toast</Button>
-      <Skeleton class="h-32 rounded" />
+      <ConfirmButton message="Are you sure?" variant="destructive">
+        Confirm Button
+      </ConfirmButton>
       <PaginationRoot
         count={10}
         itemComponent={props => (
@@ -268,6 +272,147 @@ export function Ui() {
           <SelectListbox />
         </SelectContent>
       </SelectRoot>
+
+      <MenubarRoot>
+        <MenubarMenu>
+          <MenubarTrigger>
+            Git
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem >
+              Commit <MenubarShortcut>⌘+K</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem>
+              Push <MenubarShortcut>⇧+⌘+K</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem disabled>
+              Update Project <MenubarShortcut>⌘+T</MenubarShortcut>
+            </MenubarItem>
+            <MenubarSub overlap gutter={4} shift={-8}>
+              <MenubarSubTrigger>
+                GitHub
+              </MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarItem>
+                  Create Pull Request…
+                </MenubarItem>
+                <MenubarItem>
+                  View Pull Requests
+                </MenubarItem>
+                <MenubarItem>Sync Fork</MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem>
+                  Open on GitHub
+                </MenubarItem>
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarCheckboxItem
+            >
+              Show Git Log
+            </MenubarCheckboxItem>
+            <MenubarCheckboxItem>
+              Show History
+            </MenubarCheckboxItem>
+            <MenubarSeparator />
+            <MenubarGroup>
+              <MenubarGroupLabel>
+                Branches
+              </MenubarGroupLabel>
+              <MenubarRadioGroup>
+                <MenubarRadioItem value="main">
+                  main
+                </MenubarRadioItem>
+                <MenubarRadioItem value="develop">
+                  develop
+                </MenubarRadioItem>
+              </MenubarRadioGroup>
+            </MenubarGroup>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>
+            File
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>
+              New Tab <MenubarShortcut>⌘+T</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem>
+              New Window <MenubarShortcut>⌘+N</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem disabled>
+              New Incognito Window
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarSub overlap gutter={4} shift={-8}>
+              <MenubarSubTrigger>
+                Share
+              </MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarItem>
+                  Email Link
+                </MenubarItem>
+                <MenubarItem>
+                  Messages
+                </MenubarItem>
+                <MenubarItem>
+                  Notes
+                </MenubarItem>
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarItem>
+              Print... <MenubarShortcut>⌘+P</MenubarShortcut>
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>
+            Edit
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>
+              Undo <MenubarShortcut>⌘+Z</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem>
+              Redo <MenubarShortcut>⇧+⌘+Z</MenubarShortcut>
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarSub overlap gutter={4} shift={-8}>
+              <MenubarSubTrigger>
+                Find
+              </MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarItem>
+                  Search The Web
+                </MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem>
+                  Find...
+                </MenubarItem>
+                <MenubarItem>
+                  Find Next
+                </MenubarItem>
+                <MenubarItem>
+                  Find Previous
+                </MenubarItem>
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarItem>
+              Cut
+            </MenubarItem>
+            <MenubarItem>
+              Copy
+            </MenubarItem>
+            <MenubarItem>
+              Paste
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </MenubarRoot>
+
       <Skeleton class="h-screen" />
     </div >
   )
