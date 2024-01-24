@@ -521,14 +521,14 @@ export function Ui() {
         </HoverCardContent>
       </HoverCardRoot>
       <TooltipRoot>
-        <TooltipTrigger>Hover</TooltipTrigger>
+        <TooltipTrigger>Tooltip</TooltipTrigger>
         <TooltipContent>
           <p>Add to library</p>
         </TooltipContent>
       </TooltipRoot>
       <AccordionRoot collapsible>
         <AccordionItem value="item-1">
-          <AccordionTrigger>Is it accessible?</AccordionTrigger>
+          <AccordionTrigger>Accordion</AccordionTrigger>
           <AccordionContent>
             Yes. It adheres to the WAI-ARIA design pattern.
           </AccordionContent>

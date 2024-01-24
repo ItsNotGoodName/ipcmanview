@@ -5,7 +5,7 @@ export const getProfile = cache(() => useClient().page.profile({}).then((req) =>
 
 export const getListMyGroups = cache(() => useClient().user.listMyGroups({}).then((req) => req.response), "getListGroup")
 
-export function loadProfile() {
+export default function() {
   void getProfile()
   void getListMyGroups()
 }

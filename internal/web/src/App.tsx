@@ -9,11 +9,13 @@ import { Home } from "./pages/Home";
 import { View } from "./pages/View";
 import { SignIn, Signup, Forgot } from "./pages/Landing";
 import { Profile } from "./pages/Profile";
-import { loadProfile } from "./pages/Profile.data";
+import loadProfile from "./pages/Profile.data";
 import { Layout } from "./Layout";
 import { ClientProvider } from "./providers/client";
-import { AdminHome } from "./pages/admin/Home";
 import { sessionCache } from "./providers/session";
+import { AdminGroups } from "./pages/admin/Groups";
+import loadAdminGroups from "./pages/admin/Groups.data";
+import { AdminHome } from "./pages/admin/Home";
 
 const Debug = lazy(() => import("./pages/debug"));
 
@@ -41,6 +43,7 @@ function App() {
           <Route path="/view" component={View} />
           <Show when={sessionCache.admin} fallback={<Route path="/admin/*" component={() => <>You are not an admin.</>}></Route>}>
             <Route path="/admin" component={AdminHome} />
+            <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />
           </Show>
           <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />
           <Route path="*404" component={NotFound} />

@@ -160,3 +160,25 @@ func convertPagePaginationResult(v pagination.PageResult) *rpc.PagePaginationRes
 		NextPage:     int32(v.Next()),
 	}
 }
+
+func convertOrderToSQL(o rpc.Order) string {
+	switch o {
+	case rpc.Order_DESC:
+		return " DESC"
+	case rpc.Order_ASC:
+		return " ASC"
+	default:
+		return ""
+	}
+}
+
+func orderBySQL(sql string, o rpc.Order) string {
+	switch o {
+	case rpc.Order_DESC:
+		return sql + " DESC"
+	case rpc.Order_ASC:
+		return sql + " ASC"
+	default:
+		return sql
+	}
+}

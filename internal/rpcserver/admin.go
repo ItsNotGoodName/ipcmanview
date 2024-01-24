@@ -7,7 +7,9 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
+	sq "github.com/Masterminds/squirrel"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -81,10 +83,59 @@ func (*Admin) UpdateGroup(context.Context, *rpc.UpdateGroupReq) (*emptypb.Empty,
 func (a *Admin) ListGroups(ctx context.Context, req *rpc.ListGroupsReq) (*rpc.ListGroupsResp, error) {
 	page := parsePagePagination(req.Page)
 
-	dbGroups, err := a.db.ListGroup(ctx, repo.ListGroupParams{
-		Limit:  int64(page.Limit()),
-		Offset: int64(page.Offset()),
-	})
+	groups, err := func() ([]*rpc.Group, error) {
+		// SELECT ...
+		sb := sq.
+			Select(
+				"groups.*",
+				"COUNT(group_users.group_id) AS user_count",
+			).
+			From("groups").
+			LeftJoin("group_users ON group_users.group_id = groups.id").
+			GroupBy("groups.id")
+		// ORDER BY
+		switch req.Sort {
+		case "name":
+			sb = sb.OrderBy(orderBySQL("name", req.Order))
+		case "userCount":
+			sb = sb.OrderBy(orderBySQL("user_count", req.Order))
+		case "createdAt":
+			sb = sb.OrderBy(orderBySQL("groups.created_at", req.Order))
+		}
+		// OFFSET ...
+		sb = sb.
+			Offset(uint64(page.Offset())).
+			Limit(uint64(page.Limit()))
+
+		rows, scanner, err := ssq.QueryRows(ctx, a.db, sb)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		var groups []*rpc.Group
+		for rows.Next() {
+			var v struct {
+				repo.Group
+				UserCount int64
+			}
+			err := scanner.Scan(&v)
+			if err != nil {
+				return nil, err
+			}
+
+			groups = append(groups, &rpc.Group{
+				Id:            v.ID,
+				Name:          v.Name,
+				Description:   v.Description,
+				UserCount:     v.UserCount,
+				CreatedAtTime: timestamppb.New(v.CreatedAt.Time),
+				UpdatedAtTime: timestamppb.New(v.UpdatedAt.Time),
+			})
+		}
+
+		return groups, nil
+	}()
 	if err != nil {
 		return nil, NewError(err).Internal()
 	}
@@ -94,20 +145,10 @@ func (a *Admin) ListGroups(ctx context.Context, req *rpc.ListGroupsReq) (*rpc.Li
 		return nil, NewError(err).Internal()
 	}
 
-	groups := make([]*rpc.Group, 0, len(dbGroups))
-	for _, v := range dbGroups {
-		groups = append(groups, &rpc.Group{
-			Id:            v.ID,
-			Name:          v.Name,
-			Description:   v.Description,
-			UserCount:     v.UserCount,
-			CreatedAtTime: timestamppb.New(v.CreatedAt.Time),
-			UpdatedAtTime: timestamppb.New(v.UpdatedAt.Time),
-		})
-	}
-
 	return &rpc.ListGroupsResp{
-		Groups:     groups,
+		Items:      groups,
 		PageResult: convertPagePaginationResult(page.Result(int(count))),
+		Sort:       req.Sort,
+		Order:      req.Order,
 	}, nil
 }

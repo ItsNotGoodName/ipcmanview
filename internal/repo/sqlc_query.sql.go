@@ -1676,65 +1676,6 @@ func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) (
 	return items, nil
 }
 
-const listGroup = `-- name: ListGroup :many
-SELECT
-  g.id, g.name, g.description, g.created_at, g.updated_at,
-  COUNT(gu.group_id) AS user_count
-FROM
-  groups AS g
-  LEFT JOIN group_users AS gu ON gu.group_id = g.id
-GROUP BY
-  g.id
-LIMIT
-  ?
-OFFSET
-  ?
-`
-
-type ListGroupParams struct {
-	Limit  int64
-	Offset int64
-}
-
-type ListGroupRow struct {
-	ID          int64
-	Name        string
-	Description string
-	CreatedAt   types.Time
-	UpdatedAt   types.Time
-	UserCount   int64
-}
-
-func (q *Queries) ListGroup(ctx context.Context, arg ListGroupParams) ([]ListGroupRow, error) {
-	rows, err := q.db.QueryContext(ctx, listGroup, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListGroupRow
-	for rows.Next() {
-		var i ListGroupRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.UserCount,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listGroupForUser = `-- name: ListGroupForUser :many
 SELECT
   g.id, g.name, g.description, g.created_at, g.updated_at,

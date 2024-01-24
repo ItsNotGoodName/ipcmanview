@@ -1,5 +1,5 @@
 import { Accordion } from "@kobalte/core"
-import { RiArrowsArrowDownSFill, RiArrowsArrowDownSLine } from "solid-icons/ri"
+import { RiArrowsArrowDownSLine } from "solid-icons/ri"
 import { splitProps } from "solid-js"
 
 import { cn } from "~/lib/utils"
@@ -30,11 +30,10 @@ export function AccordionTrigger(props: Accordion.AccordionTriggerProps) {
   </Accordion.Header>
 }
 
-
 export function AccordionContent(props: Accordion.AccordionContentProps) {
   const [_, rest] = splitProps(props, ["class", "children"])
   return <Accordion.Content
-    class="overflow-hidden text-sm transition-all ui-not-expanded:animate-accordion-up ui-expanded:animate-accordion-down"
+    class="ui-not-expanded:animate-accordion-up ui-expanded:animate-accordion-down overflow-hidden text-sm transition-all"
     {...rest}
   >
     <div class={cn("pb-4 pt-0", props.class)}>{props.children}</div>

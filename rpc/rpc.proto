@@ -6,6 +6,12 @@ import "google/protobuf/timestamp.proto";
 option go_package = "../rpc";
 option optimize_for = CODE_SIZE;
 
+enum Order {
+  ORDER_UNSPECIFIED = 0;
+  DESC = 1;
+  ASC = 2;
+}
+
 message PagePagination {
   int32 page = 1;
   int32 per_page = 2;
@@ -160,11 +166,15 @@ service Admin {
 
 message ListGroupsReq {
   PagePagination page = 1;
+  string sort = 2;
+  Order order = 3;
 }
 
 message ListGroupsResp {
-  repeated Group groups = 1;
+  repeated Group items = 1;
   PagePaginationResult pageResult = 2;
+  string sort = 3;
+  Order order = 4;
 }
 
 message GetGroupReq {

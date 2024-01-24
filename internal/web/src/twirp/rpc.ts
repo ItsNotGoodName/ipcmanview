@@ -326,19 +326,35 @@ export interface ListGroupsReq {
      * @generated from protobuf field: PagePagination page = 1;
      */
     page?: PagePagination;
+    /**
+     * @generated from protobuf field: string sort = 2;
+     */
+    sort: string;
+    /**
+     * @generated from protobuf field: Order order = 3;
+     */
+    order: Order;
 }
 /**
  * @generated from protobuf message ListGroupsResp
  */
 export interface ListGroupsResp {
     /**
-     * @generated from protobuf field: repeated Group groups = 1;
+     * @generated from protobuf field: repeated Group items = 1;
      */
-    groups: Group[];
+    items: Group[];
     /**
      * @generated from protobuf field: PagePaginationResult pageResult = 2;
      */
     pageResult?: PagePaginationResult;
+    /**
+     * @generated from protobuf field: string sort = 3;
+     */
+    sort: string;
+    /**
+     * @generated from protobuf field: Order order = 4;
+     */
+    order: Order;
 }
 /**
  * @generated from protobuf message GetGroupReq
@@ -401,6 +417,23 @@ export interface DeleteGroupReq {
      * @generated from protobuf field: int64 id = 1;
      */
     id: bigint;
+}
+/**
+ * @generated from protobuf enum Order
+ */
+export enum Order {
+    /**
+     * @generated from protobuf enum value: ORDER_UNSPECIFIED = 0;
+     */
+    ORDER_UNSPECIFIED = 0,
+    /**
+     * @generated from protobuf enum value: DESC = 1;
+     */
+    DESC = 1,
+    /**
+     * @generated from protobuf enum value: ASC = 2;
+     */
+    ASC = 2
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class PagePagination$Type extends MessageType<PagePagination> {
@@ -718,7 +751,9 @@ export const ListMyGroupsResp = new ListMyGroupsResp$Type();
 class ListGroupsReq$Type extends MessageType<ListGroupsReq> {
     constructor() {
         super("ListGroupsReq", [
-            { no: 1, name: "page", kind: "message", T: () => PagePagination }
+            { no: 1, name: "page", kind: "message", T: () => PagePagination },
+            { no: 2, name: "sort", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "order", kind: "enum", T: () => ["Order", Order] }
         ]);
     }
 }
@@ -730,8 +765,10 @@ export const ListGroupsReq = new ListGroupsReq$Type();
 class ListGroupsResp$Type extends MessageType<ListGroupsResp> {
     constructor() {
         super("ListGroupsResp", [
-            { no: 1, name: "groups", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Group },
-            { no: 2, name: "pageResult", kind: "message", T: () => PagePaginationResult }
+            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Group },
+            { no: 2, name: "pageResult", kind: "message", T: () => PagePaginationResult },
+            { no: 3, name: "sort", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "order", kind: "enum", T: () => ["Order", Order] }
         ]);
     }
 }

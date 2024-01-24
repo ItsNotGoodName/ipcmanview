@@ -121,20 +121,6 @@ FROM
 WHERE
   gu.user_id = ?;
 
--- name: ListGroup :many
-SELECT
-  g.*,
-  COUNT(gu.group_id) AS user_count
-FROM
-  groups AS g
-  LEFT JOIN group_users AS gu ON gu.group_id = g.id
-GROUP BY
-  g.id
-LIMIT
-  ?
-OFFSET
-  ?;
-
 -- name: CountGroup :one
 SELECT
   count(*)

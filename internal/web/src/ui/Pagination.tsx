@@ -53,7 +53,6 @@ export function PaginationPrevious(props: PaginationLinkProps) {
     <span>Previous</span>
   </PaginationLink>
 }
-PaginationPrevious.displayName = "PaginationPrevious"
 
 export function PaginationNext(props: PaginationLinkProps) {
   const [_, rest] = splitProps(props, ["class"])
@@ -67,7 +66,6 @@ export function PaginationNext(props: PaginationLinkProps) {
     <RiArrowsArrowRightSLine class="h-4 w-4" />
   </PaginationLink>
 }
-
 
 export function PaginationEllipsis(props: ComponentProps<typeof Pagination.Ellipsis>) {
   const [_, rest] = splitProps(props, ["class"])
