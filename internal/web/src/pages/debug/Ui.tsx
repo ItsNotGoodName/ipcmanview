@@ -9,7 +9,7 @@ import { Label } from "~/ui/Label";
 import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchInput, SwitchLabel, SwitchRoot } from "~/ui/Switch";
 import { toggleTheme } from "~/ui/theme";
 import { CardRoot, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/ui/Card";
-import { For, createSignal, onCleanup, } from "solid-js";
+import { For, Show, createSignal, onCleanup, } from "solid-js";
 import { Badge } from "~/ui/Badge";
 import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { PopoverArrow, PopoverCloseButton, PopoverCloseIcon, PopoverContent, PopoverDescription, PopoverPortal, PopoverRoot, PopoverTitle, PopoverTrigger } from "~/ui/Popover";
@@ -23,10 +23,11 @@ import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, Se
 import { ConfirmButton } from "~/ui/Confirm";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
-import { RiMapRocketLine } from "solid-icons/ri";
+import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine } from "solid-icons/ri";
 import { AvatarFallback, AvatarImage, AvatarRoot } from "~/ui/Avatar";
 import { ProgressFill, ProgressLabel, ProgressRoot, ProgressTrack, ProgressValueLabel } from "~/ui/Progress";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from "~/ui/AlertDialog";
+import { Toggle } from "~/ui/Toggle";
 
 export function Ui() {
   const showToast = () => {
@@ -265,7 +266,7 @@ export function Ui() {
       </PaginationRoot>
       <SelectRoot
         defaultValue="Apple"
-        options={["Apple", "Banana", "Blueberry", "Grapes", "Pineapple"]}
+        options={["Apple", "Banana", "Blueberry", "Grapes", "Pineapple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple",]}
         placeholder="Select a fruit…"
         itemComponent={props => (
           <SelectItem item={props.item}>
@@ -437,7 +438,6 @@ export function Ui() {
         />
         <AvatarFallback>VT</AvatarFallback>
       </AvatarRoot>
-
       <ProgressRoot value={progress()}>
         <div class="flex justify-between">
           <ProgressLabel>Loading</ProgressLabel>
@@ -449,7 +449,6 @@ export function Ui() {
           <ProgressFill />
         </ProgressTrack>
       </ProgressRoot>
-
       <AlertDialogRoot>
         <AlertDialogTrigger asChild>
           <As component={Button} variant="outline">Show Dialog</As>
@@ -468,7 +467,15 @@ export function Ui() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialogRoot>
-
+      <div>
+        <Toggle>
+          {state => (
+            <Show when={state.pressed()} fallback={<RiMediaVolumeUpLine class="h-6 w-6" />}>
+              <RiMediaVolumeDownLine class="h-6 w-6" />
+            </Show>
+          )}
+        </Toggle>
+      </div>
       <Skeleton class="h-screen" />
     </div >
   )

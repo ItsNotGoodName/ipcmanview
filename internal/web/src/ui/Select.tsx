@@ -65,7 +65,7 @@ export function SelectContent(props: ComponentProps<typeof Select.Content>) {
     <Select.Content
       style={{ "max-width": "var(--kb-popper-content-available-width)", "transform-origin": "var(--kb-menu-content-transform-origin)" }}
       class={cn(
-        "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border shadow-md",
+        "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 relative z-50 min-w-[8rem] overflow-hidden rounded-md border shadow-md",
         props.class
       )}
       {...rest}
@@ -75,7 +75,7 @@ export function SelectContent(props: ComponentProps<typeof Select.Content>) {
 }
 
 export function SelectListbox() {
-  return <Select.Listbox class="p-1 w-full overflow-y-auto" />
+  return <Select.Listbox class="p-1 max-h-96 overflow-y-auto" />
 }
 
 export function SelectLabel(props: ComponentProps<typeof Select.Label>) {
