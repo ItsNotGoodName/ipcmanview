@@ -1,8 +1,8 @@
 import { cache } from "@solidjs/router";
 import { useClient } from "~/providers/client";
 
-export const getHome = cache(() => useClient().page.home({}).then((req) => req.response), "getHome")
+export const getHomePage = cache(() => useClient().page.getHomePage({}).then((req) => req.response), "getHomePage")
 
-export function loadHome() {
-  void getHome()
+export default function() {
+  void getHomePage()
 }

@@ -214,28 +214,18 @@ export interface ForgotPasswordReq {
 export interface ForgotPasswordResp {
 }
 /**
- * @generated from protobuf message HomeReq
+ * @generated from protobuf message GetHomePageResp
  */
-export interface HomeReq {
-}
-/**
- * @generated from protobuf message HomeResp
- */
-export interface HomeResp {
+export interface GetHomePageResp {
     /**
      * @generated from protobuf field: int64 device_count = 1;
      */
     deviceCount: bigint;
 }
 /**
- * @generated from protobuf message ProfileReq
+ * @generated from protobuf message GetProfilePageResp
  */
-export interface ProfileReq {
-}
-/**
- * @generated from protobuf message ProfileResp
- */
-export interface ProfileResp {
+export interface GetProfilePageResp {
     /**
      * @generated from protobuf field: string username = 1;
      */
@@ -608,41 +598,21 @@ class ForgotPasswordResp$Type extends MessageType<ForgotPasswordResp> {
  */
 export const ForgotPasswordResp = new ForgotPasswordResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class HomeReq$Type extends MessageType<HomeReq> {
+class GetHomePageResp$Type extends MessageType<GetHomePageResp> {
     constructor() {
-        super("HomeReq", []);
-    }
-}
-/**
- * @generated MessageType for protobuf message HomeReq
- */
-export const HomeReq = new HomeReq$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class HomeResp$Type extends MessageType<HomeResp> {
-    constructor() {
-        super("HomeResp", [
+        super("GetHomePageResp", [
             { no: 1, name: "device_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message HomeResp
+ * @generated MessageType for protobuf message GetHomePageResp
  */
-export const HomeResp = new HomeResp$Type();
+export const GetHomePageResp = new GetHomePageResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ProfileReq$Type extends MessageType<ProfileReq> {
+class GetProfilePageResp$Type extends MessageType<GetProfilePageResp> {
     constructor() {
-        super("ProfileReq", []);
-    }
-}
-/**
- * @generated MessageType for protobuf message ProfileReq
- */
-export const ProfileReq = new ProfileReq$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class ProfileResp$Type extends MessageType<ProfileResp> {
-    constructor() {
-        super("ProfileResp", [
+        super("GetProfilePageResp", [
             { no: 1, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "admin", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
@@ -653,9 +623,9 @@ class ProfileResp$Type extends MessageType<ProfileResp> {
     }
 }
 /**
- * @generated MessageType for protobuf message ProfileResp
+ * @generated MessageType for protobuf message GetProfilePageResp
  */
-export const ProfileResp = new ProfileResp$Type();
+export const GetProfilePageResp = new GetProfilePageResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class UpdateMyUsernameReq$Type extends MessageType<UpdateMyUsernameReq> {
     constructor() {
@@ -883,8 +853,8 @@ export const Auth = new ServiceType("Auth", [
  * @generated ServiceType for protobuf service Page
  */
 export const Page = new ServiceType("Page", [
-    { name: "Home", options: {}, I: HomeReq, O: HomeResp },
-    { name: "Profile", options: {}, I: ProfileReq, O: ProfileResp }
+    { name: "GetHomePage", options: {}, I: Empty, O: GetHomePageResp },
+    { name: "GetProfilePage", options: {}, I: Empty, O: GetProfilePageResp }
 ]);
 /**
  * @generated ServiceType for protobuf service User

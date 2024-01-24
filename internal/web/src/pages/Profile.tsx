@@ -5,7 +5,7 @@ import { FormError, createForm, required, reset } from "@modular-forms/solid"
 
 import { formatDate, parseDate, catchAsToast, throwAsFormError } from "~/lib/utils"
 import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
-import { getListMyGroups, getProfile, } from "./Profile.data"
+import { getListMyGroups, getProfilePage, } from "./Profile.data"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
@@ -21,16 +21,16 @@ import { ConfirmButton } from "~/ui/Confirm"
 
 const actionRevokeAllMySessions = action(() => useClient()
   .user.revokeAllMySessions({})
-  .then(() => revalidate(getProfile.key))
+  .then(() => revalidate(getProfilePage.key))
   .catch(catchAsToast))
 
 const actionRevokeMySession = action((input: RevokeMySessionReq) => useClient()
   .user.revokeMySession(input)
-  .then(() => revalidate(getProfile.key))
+  .then(() => revalidate(getProfilePage.key))
   .catch(catchAsToast))
 
 export function Profile() {
-  const data = createAsync(getProfile)
+  const data = createAsync(getProfilePage)
 
   const revokeAllMySessionsSubmission = useSubmission(actionRevokeAllMySessions)
   const revokeAllMySessions = useAction(actionRevokeAllMySessions)
@@ -215,7 +215,7 @@ type ChangeUsernameForm = {
 
 const actionUpdateMyUsername = action((form: ChangeUsernameForm) => useClient()
   .user.updateMyUsername(form)
-  .then(() => revalidate([getProfile.key, getSession.key]))
+  .then(() => revalidate([getProfilePage.key, getSession.key]))
   .catch(throwAsFormError))
 
 function ChangeUsernameForm() {
@@ -261,7 +261,7 @@ const actionUpdateMyPassword = action((form: ChangePasswordForm) => {
   }
   return useClient()
     .user.updateMyPassword(form)
-    .then(() => revalidate(getProfile.key))
+    .then(() => revalidate(getProfilePage.key))
     .catch(throwAsFormError)
 })
 

@@ -1,12 +1,12 @@
 import { createAsync } from "@solidjs/router"
 import { CardRoot } from "~/ui/Card"
-import { getHome } from "./Home.data"
+import { getHomePage } from "./Home.data"
 import { ErrorBoundary, Suspense } from "solid-js"
 import { BiRegularCctv } from "solid-icons/bi"
 import { PageError, PageLoading } from "~/ui/Page"
 
 export function Home() {
-  const data = createAsync(getHome)
+  const data = createAsync(getHomePage)
 
   return (
     <div class="flex p-4">

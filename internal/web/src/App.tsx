@@ -6,6 +6,7 @@ import { Show, lazy } from "solid-js";
 import { provideTheme } from "./ui/theme";
 import { NotFound } from './pages/404'
 import { Home } from "./pages/Home";
+import loadHome from "./pages/Home.data";
 import { View } from "./pages/View";
 import { SignIn, Signup, Forgot } from "./pages/Landing";
 import { Profile } from "./pages/Profile";
@@ -38,7 +39,7 @@ function App() {
             <Route path="*404" component={() => <Navigate href="/signin" />} />
           </>
         }>
-          <Route path="/" component={Home} />
+          <Route path="/" component={Home} load={loadHome} />
           <Route path="/profile" component={Profile} load={loadProfile} />
           <Route path="/view" component={View} />
           <Show when={sessionCache.admin} fallback={<Route path="/admin/*" component={() => <>You are not an admin.</>}></Route>}>

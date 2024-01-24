@@ -99,19 +99,15 @@ message ForgotPasswordResp {}
 // ---------- Page
 
 service Page {
-  rpc Home(HomeReq) returns (HomeResp);
-  rpc Profile(ProfileReq) returns (ProfileResp);
+  rpc GetHomePage(google.protobuf.Empty) returns (GetHomePageResp);
+  rpc GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
 }
 
-message HomeReq {}
-
-message HomeResp {
+message GetHomePageResp {
   int64 device_count = 1;
 }
 
-message ProfileReq {}
-
-message ProfileResp {
+message GetProfilePageResp {
   string username = 1;
   string email = 2;
   bool admin = 3;

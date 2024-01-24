@@ -3,7 +3,6 @@
 // tslint:disable
 import { Admin } from "./rpc";
 import type { DeleteGroupReq } from "./rpc";
-import type { Empty } from "./google/protobuf/empty";
 import type { UpdateGroupReq } from "./rpc";
 import type { CreateGroupResp } from "./rpc";
 import type { CreateGroupReq } from "./rpc";
@@ -23,10 +22,9 @@ import type { UpdateMyPasswordReq } from "./rpc";
 import type { UpdateMyUsernameResp } from "./rpc";
 import type { UpdateMyUsernameReq } from "./rpc";
 import { Page } from "./rpc";
-import type { ProfileResp } from "./rpc";
-import type { ProfileReq } from "./rpc";
-import type { HomeResp } from "./rpc";
-import type { HomeReq } from "./rpc";
+import type { GetProfilePageResp } from "./rpc";
+import type { GetHomePageResp } from "./rpc";
+import type { Empty } from "./google/protobuf/empty";
 import { Auth } from "./rpc";
 import type { ForgotPasswordResp } from "./rpc";
 import type { ForgotPasswordReq } from "./rpc";
@@ -118,13 +116,13 @@ export class AuthClient implements IAuthClient, ServiceInfo {
  */
 export interface IPageClient {
     /**
-     * @generated from protobuf rpc: Home(HomeReq) returns (HomeResp);
+     * @generated from protobuf rpc: GetHomePage(google.protobuf.Empty) returns (GetHomePageResp);
      */
-    home(input: HomeReq, options?: RpcOptions): UnaryCall<HomeReq, HomeResp>;
+    getHomePage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetHomePageResp>;
     /**
-     * @generated from protobuf rpc: Profile(ProfileReq) returns (ProfileResp);
+     * @generated from protobuf rpc: GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
      */
-    profile(input: ProfileReq, options?: RpcOptions): UnaryCall<ProfileReq, ProfileResp>;
+    getProfilePage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetProfilePageResp>;
 }
 // ---------- Page
 
@@ -138,18 +136,18 @@ export class PageClient implements IPageClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: Home(HomeReq) returns (HomeResp);
+     * @generated from protobuf rpc: GetHomePage(google.protobuf.Empty) returns (GetHomePageResp);
      */
-    home(input: HomeReq, options?: RpcOptions): UnaryCall<HomeReq, HomeResp> {
+    getHomePage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetHomePageResp> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<HomeReq, HomeResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<Empty, GetHomePageResp>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: Profile(ProfileReq) returns (ProfileResp);
+     * @generated from protobuf rpc: GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
      */
-    profile(input: ProfileReq, options?: RpcOptions): UnaryCall<ProfileReq, ProfileResp> {
+    getProfilePage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetProfilePageResp> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ProfileReq, ProfileResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<Empty, GetProfilePageResp>("unary", this._transport, method, opt, input);
     }
 }
 // ---------- User

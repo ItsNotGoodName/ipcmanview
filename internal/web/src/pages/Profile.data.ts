@@ -1,11 +1,11 @@
 import { cache } from "@solidjs/router";
 import { useClient } from "~/providers/client";
 
-export const getProfile = cache(() => useClient().page.profile({}).then((req) => req.response), "getProfile")
+export const getProfilePage = cache(() => useClient().page.getProfilePage({}).then((req) => req.response), "getProfilePage")
 
-export const getListMyGroups = cache(() => useClient().user.listMyGroups({}).then((req) => req.response), "getListGroup")
+export const getListMyGroups = cache(() => useClient().user.listMyGroups({}).then((req) => req.response), "listMyGroups")
 
 export default function() {
-  void getProfile()
+  void getProfilePage()
   void getListMyGroups()
 }

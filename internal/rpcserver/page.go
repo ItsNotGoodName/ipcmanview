@@ -9,6 +9,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -22,7 +23,7 @@ type Page struct {
 	db repo.DB
 }
 
-func (p *Page) Home(ctx context.Context, req *rpc.HomeReq) (*rpc.HomeResp, error) {
+func (p *Page) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
 	authSession := useAuthSession(ctx)
 
 	dbDevices, err := p.db.ListDahuaDeviceForUser(ctx, repo.ListDahuaDeviceForUserParams{
@@ -37,12 +38,12 @@ func (p *Page) Home(ctx context.Context, req *rpc.HomeReq) (*rpc.HomeResp, error
 		fmt.Println(lddfur.ID, lddfur.Level)
 	}
 
-	return &rpc.HomeResp{
+	return &rpc.GetHomePageResp{
 		DeviceCount: int64(len(dbDevices)),
 	}, nil
 }
 
-func (p *Page) Profile(ctx context.Context, req *rpc.ProfileReq) (*rpc.ProfileResp, error) {
+func (p *Page) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetProfilePageResp, error) {
 	authSession := useAuthSession(ctx)
 
 	user, err := p.db.GetUser(ctx, authSession.UserID)
@@ -73,7 +74,7 @@ func (p *Page) Profile(ctx context.Context, req *rpc.ProfileReq) (*rpc.ProfileRe
 		})
 	}
 
-	return &rpc.ProfileResp{
+	return &rpc.GetProfilePageResp{
 		Username:      user.Username,
 		Email:         user.Email,
 		Admin:         authSession.Admin,
