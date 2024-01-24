@@ -59,7 +59,7 @@ export function SelectTrigger(props: ComponentProps<typeof Select.Trigger>) {
 // SelectScrollDownButton.displayName =
 //   SelectPrimitive.ScrollDownButton.displayName
 
-export function SelectContent(props: ComponentProps<typeof Select.Content>) {
+export function SelectContent(props: Omit<Select.SelectContentProps, "style">) {
   const [_, rest] = splitProps(props, ["class"])
   return <Select.Portal>
     <Select.Content

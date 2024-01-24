@@ -32,7 +32,7 @@ export function DropdownMenuSubTriggerIndicator() {
   return <RiArrowsArrowRightSLine class="ml-auto h-4 w-4" />
 }
 
-export function DropdownMenuSubContent(props: ComponentProps<typeof DropdownMenu.SubContent>) {
+export function DropdownMenuSubContent(props: Omit<DropdownMenu.DropdownMenuSubContentProps, "style">) {
   const [_, rest] = splitProps(props, ["class"])
   return <DropdownMenu.SubContent
     style={{ "max-width": "var(--kb-popper-content-available-width)", "transform-origin": "var(--kb-menu-content-transform-origin)" }}
@@ -44,7 +44,7 @@ export function DropdownMenuSubContent(props: ComponentProps<typeof DropdownMenu
   />
 }
 
-export function DropdownMenuContent(props: ComponentProps<typeof DropdownMenu.Content>) {
+export function DropdownMenuContent(props: Omit<DropdownMenu.DropdownMenuContentProps, "style">) {
   const [_, rest] = splitProps(props, ["class"])
   return <DropdownMenu.Content
     style={{ "max-width": "var(--kb-popper-content-available-width)", "transform-origin": "var(--kb-menu-content-transform-origin)" }}

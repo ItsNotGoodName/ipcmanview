@@ -1,6 +1,6 @@
 import { Popover } from "@kobalte/core";
 import { RiSystemCloseLine } from "solid-icons/ri";
-import { ComponentProps, splitProps } from "solid-js";
+import { splitProps } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
@@ -9,7 +9,7 @@ export const PopoverTrigger = Popover.Trigger
 export const PopoverAnchor = Popover.Anchor
 export const PopoverPortal = Popover.Portal
 
-export function PopoverContent(props: ComponentProps<typeof Popover.Content>) {
+export function PopoverContent(props: Omit<Popover.PopoverContentProps, "style">) {
   const [_, rest] = splitProps(props, ["class"])
   return <Popover.Content
     style={{ "max-width": "var(--kb-popper-content-available-width)", "transform-origin": "var(--kb-menu-content-transform-origin)" }}

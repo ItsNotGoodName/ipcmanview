@@ -29,6 +29,8 @@ import { ProgressFill, ProgressLabel, ProgressRoot, ProgressTrack, ProgressValue
 import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from "~/ui/AlertDialog";
 import { Toggle } from "~/ui/Toggle";
 import { SheetCloseButton, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetRoot, SheetTitle, SheetTrigger } from "~/ui/Sheet";
+import { HoverCardArrow, HoverCardContent, HoverCardRoot, HoverCardTrigger } from "~/ui/HoverCard";
+import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 
 export function Ui() {
   const showToast = () => {
@@ -508,6 +510,21 @@ export function Ui() {
           </SheetFooter>
         </SheetContent>
       </SheetRoot>
+      <HoverCardRoot>
+        <HoverCardTrigger asChild>
+          <As component={Button} variant="link">Hover Card</As>
+        </HoverCardTrigger>
+        <HoverCardContent class="w-80">
+          <HoverCardArrow />
+          Hover Card Content
+        </HoverCardContent>
+      </HoverCardRoot>
+      <TooltipRoot>
+        <TooltipTrigger>Hover</TooltipTrigger>
+        <TooltipContent>
+          <p>Add to library</p>
+        </TooltipContent>
+      </TooltipRoot>
       <Skeleton class="h-screen" />
     </div >
   )
