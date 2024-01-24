@@ -11,7 +11,9 @@ export default function({ params }: any) {
       page: Number(params.page) || 1,
       perPage: Number(params.perPage) || 10
     },
-    sort: params.sort || "",
-    order: parseOrder(params.order),
+    sort: {
+      field: params.sort || "",
+      order: parseOrder(params.order),
+    }
   })
 }

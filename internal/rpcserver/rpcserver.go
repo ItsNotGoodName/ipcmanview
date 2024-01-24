@@ -143,6 +143,9 @@ func (w Error) NotImplemented() twirp.Error {
 // ---------- Convert/Parse
 
 func parsePagePagination(v *rpc.PagePagination) pagination.Page {
+	if v == nil {
+		return pagination.Page{}
+	}
 	return pagination.Page{
 		Page:    int(v.Page),
 		PerPage: int(v.PerPage),

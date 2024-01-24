@@ -94,13 +94,13 @@ func (a *Admin) ListGroups(ctx context.Context, req *rpc.ListGroupsReq) (*rpc.Li
 			LeftJoin("group_users ON group_users.group_id = groups.id").
 			GroupBy("groups.id")
 		// ORDER BY
-		switch req.Sort {
+		switch req.Sort.GetField() {
 		case "name":
-			sb = sb.OrderBy(orderBySQL("name", req.Order))
+			sb = sb.OrderBy(orderBySQL("name", req.Sort.GetOrder()))
 		case "userCount":
-			sb = sb.OrderBy(orderBySQL("user_count", req.Order))
+			sb = sb.OrderBy(orderBySQL("user_count", req.Sort.GetOrder()))
 		case "createdAt":
-			sb = sb.OrderBy(orderBySQL("groups.created_at", req.Order))
+			sb = sb.OrderBy(orderBySQL("groups.created_at", req.Sort.GetOrder()))
 		}
 		// OFFSET ...
 		sb = sb.
@@ -149,6 +149,5 @@ func (a *Admin) ListGroups(ctx context.Context, req *rpc.ListGroupsReq) (*rpc.Li
 		Items:      groups,
 		PageResult: convertPagePaginationResult(page.Result(int(count))),
 		Sort:       req.Sort,
-		Order:      req.Order,
 	}, nil
 }

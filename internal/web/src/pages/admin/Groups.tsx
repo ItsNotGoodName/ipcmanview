@@ -5,7 +5,7 @@ import { RiArrowsArrowDownSLine, RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { cn, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
-import { Order } from "~/twirp/rpc";
+import { Order, Sort } from "~/twirp/rpc";
 import { encodeOrder, nextOrder, parseOrder } from "~/lib/order";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -16,7 +16,7 @@ import { Input } from "~/ui/Input";
 import { Textarea } from "~/ui/Textarea";
 import { DialogCloseButton, DialogContent, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
 import { As } from "@kobalte/core";
-import { CheckboxControl, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
 
 type SearchParams = {
@@ -33,8 +33,10 @@ export function AdminGroups() {
       page: Number(searchParams.page) || 1,
       perPage: Number(searchParams.perPage) || 10
     },
-    sort: searchParams.sort || "",
-    order: parseOrder(searchParams.order)
+    sort: {
+      field: searchParams.sort || "",
+      order: parseOrder(searchParams.order)
+    }
   }))
   const navigate = useNavigate()
 
@@ -45,8 +47,8 @@ export function AdminGroups() {
   const nextDisabled = () => groups()?.pageResult?.nextPage == groups()?.pageResult?.page
   const next = () => !nextDisabled() && setSearchParams({ page: groups()?.pageResult?.nextPage.toString() } as SearchParams)
   const toggleSort = (value: string) => {
-    if (value == groups()?.sort) {
-      const order = nextOrder(groups()?.order ?? Order.ORDER_UNSPECIFIED)
+    if (value == groups()?.sort?.field) {
+      const order = nextOrder(groups()?.sort?.order ?? Order.ORDER_UNSPECIFIED)
 
       if (order == Order.ORDER_UNSPECIFIED) {
         return setSearchParams({ sort: undefined, order: undefined })
@@ -129,7 +131,6 @@ export function AdminGroups() {
                     name="name"
                     onClick={toggleSort}
                     sort={groups()?.sort}
-                    order={groups()?.order}
                   >
                     Name
                   </SortButton>
@@ -139,7 +140,6 @@ export function AdminGroups() {
                     name="userCount"
                     onClick={toggleSort}
                     sort={groups()?.sort}
-                    order={groups()?.order}
                   >
                     Users
                   </SortButton>
@@ -149,7 +149,6 @@ export function AdminGroups() {
                     name="createdAt"
                     onClick={toggleSort}
                     sort={groups()?.sort}
-                    order={groups()?.order}
                   >
                     Created At
                   </SortButton>
@@ -302,6 +301,7 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
       </Button>
       <FormMessage form={createGroupForm} />
       <CheckboxRoot checked={keepOpen()} onChange={setKeepOpen}>
+        <CheckboxInput />
         <CheckboxControl />
         <CheckboxLabel>Keep open</CheckboxLabel>
       </CheckboxRoot>
@@ -309,13 +309,13 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
   )
 }
 
-function SortButton(props: ParentProps<{ onClick: (name: string) => void, name: string, sort?: string, order?: Order }>) {
+function SortButton(props: ParentProps<{ onClick: (name: string) => void, name: string, sort?: Sort }>) {
   return <button
     onClick={[props.onClick, props.name]}
-    class={cn("text-nowrap flex items-center whitespace-nowrap text-lg", props.name == props.sort && 'text-blue-500')}
+    class={cn("text-nowrap flex items-center whitespace-nowrap text-lg", props.name == props.sort?.field && 'text-blue-500')}
   >
     {props.children}
-    <Show when={props.sort == props.name && props.order == Order.ASC} fallback={
+    <Show when={props.sort?.field == props.name && props.sort.order == Order.ASC} fallback={
       <RiArrowsArrowDownSLine class="h-5 w-5" />
     }>
       <RiArrowsArrowUpSLine class="h-5 w-5" />

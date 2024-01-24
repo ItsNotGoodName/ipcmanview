@@ -12,6 +12,11 @@ enum Order {
   ASC = 2;
 }
 
+message Sort {
+  string field = 1;
+  Order order = 2;
+}
+
 message PagePagination {
   int32 page = 1;
   int32 per_page = 2;
@@ -166,15 +171,13 @@ service Admin {
 
 message ListGroupsReq {
   PagePagination page = 1;
-  string sort = 2;
-  Order order = 3;
+  Sort sort = 2;
 }
 
 message ListGroupsResp {
   repeated Group items = 1;
   PagePaginationResult pageResult = 2;
-  string sort = 3;
-  Order order = 4;
+  Sort sort = 3;
 }
 
 message GetGroupReq {

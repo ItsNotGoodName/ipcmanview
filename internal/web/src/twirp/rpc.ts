@@ -6,6 +6,19 @@ import { ServiceType } from "@protobuf-ts/runtime-rpc";
 import { MessageType } from "@protobuf-ts/runtime";
 import { Timestamp } from "./google/protobuf/timestamp";
 /**
+ * @generated from protobuf message Sort
+ */
+export interface Sort {
+    /**
+     * @generated from protobuf field: string field = 1;
+     */
+    field: string;
+    /**
+     * @generated from protobuf field: Order order = 2;
+     */
+    order: Order;
+}
+/**
  * @generated from protobuf message PagePagination
  */
 export interface PagePagination {
@@ -327,13 +340,9 @@ export interface ListGroupsReq {
      */
     page?: PagePagination;
     /**
-     * @generated from protobuf field: string sort = 2;
+     * @generated from protobuf field: Sort sort = 2;
      */
-    sort: string;
-    /**
-     * @generated from protobuf field: Order order = 3;
-     */
-    order: Order;
+    sort?: Sort;
 }
 /**
  * @generated from protobuf message ListGroupsResp
@@ -348,13 +357,9 @@ export interface ListGroupsResp {
      */
     pageResult?: PagePaginationResult;
     /**
-     * @generated from protobuf field: string sort = 3;
+     * @generated from protobuf field: Sort sort = 3;
      */
-    sort: string;
-    /**
-     * @generated from protobuf field: Order order = 4;
-     */
-    order: Order;
+    sort?: Sort;
 }
 /**
  * @generated from protobuf message GetGroupReq
@@ -435,6 +440,19 @@ export enum Order {
      */
     ASC = 2
 }
+// @generated message type with reflection information, may provide speed optimized methods
+class Sort$Type extends MessageType<Sort> {
+    constructor() {
+        super("Sort", [
+            { no: 1, name: "field", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "order", kind: "enum", T: () => ["Order", Order] }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message Sort
+ */
+export const Sort = new Sort$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class PagePagination$Type extends MessageType<PagePagination> {
     constructor() {
@@ -752,8 +770,7 @@ class ListGroupsReq$Type extends MessageType<ListGroupsReq> {
     constructor() {
         super("ListGroupsReq", [
             { no: 1, name: "page", kind: "message", T: () => PagePagination },
-            { no: 2, name: "sort", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "order", kind: "enum", T: () => ["Order", Order] }
+            { no: 2, name: "sort", kind: "message", T: () => Sort }
         ]);
     }
 }
@@ -767,8 +784,7 @@ class ListGroupsResp$Type extends MessageType<ListGroupsResp> {
         super("ListGroupsResp", [
             { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Group },
             { no: 2, name: "pageResult", kind: "message", T: () => PagePaginationResult },
-            { no: 3, name: "sort", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "order", kind: "enum", T: () => ["Order", Order] }
+            { no: 3, name: "sort", kind: "message", T: () => Sort }
         ]);
     }
 }
