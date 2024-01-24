@@ -31,6 +31,7 @@ import { Toggle } from "~/ui/Toggle";
 import { SheetCloseButton, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetRoot, SheetTitle, SheetTrigger } from "~/ui/Sheet";
 import { HoverCardArrow, HoverCardContent, HoverCardRoot, HoverCardTrigger } from "~/ui/HoverCard";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
+import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from "~/ui/Accordion";
 
 export function Ui() {
   const showToast = () => {
@@ -525,6 +526,21 @@ export function Ui() {
           <p>Add to library</p>
         </TooltipContent>
       </TooltipRoot>
+      <AccordionRoot collapsible>
+        <AccordionItem value="item-1">
+          <AccordionTrigger>Is it accessible?</AccordionTrigger>
+          <AccordionContent>
+            Yes. It adheres to the WAI-ARIA design pattern.
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="item-2">
+          <AccordionTrigger>Is it accessible?</AccordionTrigger>
+          <AccordionContent>
+            Yes. It adheres to the WAI-ARIA design pattern.
+          </AccordionContent>
+        </AccordionItem>
+      </AccordionRoot>
+
       <Skeleton class="h-screen" />
     </div >
   )
