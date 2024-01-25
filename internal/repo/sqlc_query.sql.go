@@ -1123,7 +1123,7 @@ func (q *Queries) GetUserByUsernameOrEmail(ctx context.Context, usernameoremail 
 	return i, err
 }
 
-const listDahuaDevice = `-- name: ListDahuaDevice :many
+const listDahuaDevices = `-- name: ListDahuaDevices :many
 SELECT
   dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
   coalesce(seed, id)
@@ -1132,7 +1132,7 @@ FROM
   LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
 `
 
-type ListDahuaDeviceRow struct {
+type ListDahuaDevicesRow struct {
 	ID         int64
 	Name       string
 	Ip         string
@@ -1147,15 +1147,15 @@ type ListDahuaDeviceRow struct {
 	Seed       int64
 }
 
-func (q *Queries) ListDahuaDevice(ctx context.Context) ([]ListDahuaDeviceRow, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaDevice)
+func (q *Queries) ListDahuaDevices(ctx context.Context) ([]ListDahuaDevicesRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaDevices)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListDahuaDeviceRow
+	var items []ListDahuaDevicesRow
 	for rows.Next() {
-		var i ListDahuaDeviceRow
+		var i ListDahuaDevicesRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -1183,7 +1183,7 @@ func (q *Queries) ListDahuaDevice(ctx context.Context) ([]ListDahuaDeviceRow, er
 	return items, nil
 }
 
-const listDahuaDeviceByIDs = `-- name: ListDahuaDeviceByIDs :many
+const listDahuaDevicesByIDs = `-- name: ListDahuaDevicesByIDs :many
 SELECT
   dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
   coalesce(seed, id)
@@ -1194,7 +1194,7 @@ WHERE
   id IN (/*SLICE:ids*/?)
 `
 
-type ListDahuaDeviceByIDsRow struct {
+type ListDahuaDevicesByIDsRow struct {
 	ID         int64
 	Name       string
 	Ip         string
@@ -1209,8 +1209,8 @@ type ListDahuaDeviceByIDsRow struct {
 	Seed       int64
 }
 
-func (q *Queries) ListDahuaDeviceByIDs(ctx context.Context, ids []int64) ([]ListDahuaDeviceByIDsRow, error) {
-	query := listDahuaDeviceByIDs
+func (q *Queries) ListDahuaDevicesByIDs(ctx context.Context, ids []int64) ([]ListDahuaDevicesByIDsRow, error) {
+	query := listDahuaDevicesByIDs
 	var queryParams []interface{}
 	if len(ids) > 0 {
 		for _, v := range ids {
@@ -1225,9 +1225,9 @@ func (q *Queries) ListDahuaDeviceByIDs(ctx context.Context, ids []int64) ([]List
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListDahuaDeviceByIDsRow
+	var items []ListDahuaDevicesByIDsRow
 	for rows.Next() {
-		var i ListDahuaDeviceByIDsRow
+		var i ListDahuaDevicesByIDsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -1255,7 +1255,7 @@ func (q *Queries) ListDahuaDeviceByIDs(ctx context.Context, ids []int64) ([]List
 	return items, nil
 }
 
-const listDahuaDeviceForUser = `-- name: ListDahuaDeviceForUser :many
+const listDahuaDevicesForUser = `-- name: ListDahuaDevicesForUser :many
 SELECT
   d.id, d.name, d.ip, d.url, d.username, d.password, d.location, d.feature, d.created_at, d.updated_at, d.disabled_at,
   coalesce(s.seed, d.id) AS seed,
@@ -1281,12 +1281,12 @@ ORDER BY
   p.level DESC
 `
 
-type ListDahuaDeviceForUserParams struct {
+type ListDahuaDevicesForUserParams struct {
 	Admin  interface{}
 	UserID sql.NullInt64
 }
 
-type ListDahuaDeviceForUserRow struct {
+type ListDahuaDevicesForUserRow struct {
 	ID         int64
 	Name       string
 	Ip         string
@@ -1302,15 +1302,15 @@ type ListDahuaDeviceForUserRow struct {
 	Level      models.DahuaPermissionLevel
 }
 
-func (q *Queries) ListDahuaDeviceForUser(ctx context.Context, arg ListDahuaDeviceForUserParams) ([]ListDahuaDeviceForUserRow, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaDeviceForUser, arg.Admin, arg.UserID)
+func (q *Queries) ListDahuaDevicesForUser(ctx context.Context, arg ListDahuaDevicesForUserParams) ([]ListDahuaDevicesForUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaDevicesForUser, arg.Admin, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListDahuaDeviceForUserRow
+	var items []ListDahuaDevicesForUserRow
 	for rows.Next() {
-		var i ListDahuaDeviceForUserRow
+		var i ListDahuaDevicesForUserRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -1399,15 +1399,15 @@ func (q *Queries) ListDahuaEventCodes(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
-const listDahuaEventRule = `-- name: ListDahuaEventRule :many
+const listDahuaEventRules = `-- name: ListDahuaEventRules :many
 SELECT
   id, code, ignore_db, ignore_live, ignore_mqtt
 FROM
   dahua_event_rules
 `
 
-func (q *Queries) ListDahuaEventRule(ctx context.Context) ([]DahuaEventRule, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaEventRule)
+func (q *Queries) ListDahuaEventRules(ctx context.Context) ([]DahuaEventRule, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaEventRules)
 	if err != nil {
 		return nil, err
 	}
@@ -1484,7 +1484,7 @@ func (q *Queries) ListDahuaEventWorkerState(ctx context.Context) ([]ListDahuaEve
 	return items, nil
 }
 
-const listDahuaFileCursor = `-- name: ListDahuaFileCursor :many
+const listDahuaFileCursors = `-- name: ListDahuaFileCursors :many
 SELECT
   c.device_id, c.quick_cursor, c.full_cursor, c.full_epoch, c.full_complete, c.scan, c.scan_percent, c.scan_type,
   count(f.device_id) AS files
@@ -1495,7 +1495,7 @@ GROUP BY
   c.device_id
 `
 
-type ListDahuaFileCursorRow struct {
+type ListDahuaFileCursorsRow struct {
 	DeviceID     int64
 	QuickCursor  types.Time
 	FullCursor   types.Time
@@ -1507,15 +1507,15 @@ type ListDahuaFileCursorRow struct {
 	Files        int64
 }
 
-func (q *Queries) ListDahuaFileCursor(ctx context.Context) ([]ListDahuaFileCursorRow, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaFileCursor)
+func (q *Queries) ListDahuaFileCursors(ctx context.Context) ([]ListDahuaFileCursorsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaFileCursors)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListDahuaFileCursorRow
+	var items []ListDahuaFileCursorsRow
 	for rows.Next() {
-		var i ListDahuaFileCursorRow
+		var i ListDahuaFileCursorsRow
 		if err := rows.Scan(
 			&i.DeviceID,
 			&i.QuickCursor,
@@ -1570,15 +1570,15 @@ func (q *Queries) ListDahuaFileTypes(ctx context.Context) ([]string, error) {
 	return items, nil
 }
 
-const listDahuaStorageDestination = `-- name: ListDahuaStorageDestination :many
+const listDahuaStorageDestinations = `-- name: ListDahuaStorageDestinations :many
 SELECT
   id, name, storage, server_address, port, username, password, remote_directory
 FROM
   dahua_storage_destinations
 `
 
-func (q *Queries) ListDahuaStorageDestination(ctx context.Context) ([]DahuaStorageDestination, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaStorageDestination)
+func (q *Queries) ListDahuaStorageDestinations(ctx context.Context) ([]DahuaStorageDestination, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaStorageDestinations)
 	if err != nil {
 		return nil, err
 	}
@@ -1609,7 +1609,7 @@ func (q *Queries) ListDahuaStorageDestination(ctx context.Context) ([]DahuaStora
 	return items, nil
 }
 
-const listDahuaStream = `-- name: ListDahuaStream :many
+const listDahuaStreams = `-- name: ListDahuaStreams :many
 SELECT
   id, internal, device_id, channel, subtype, name, mediamtx_path
 FROM
@@ -1618,8 +1618,8 @@ ORDER BY
   device_id
 `
 
-func (q *Queries) ListDahuaStream(ctx context.Context) ([]DahuaStream, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaStream)
+func (q *Queries) ListDahuaStreams(ctx context.Context) ([]DahuaStream, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaStreams)
 	if err != nil {
 		return nil, err
 	}
@@ -1649,7 +1649,7 @@ func (q *Queries) ListDahuaStream(ctx context.Context) ([]DahuaStream, error) {
 	return items, nil
 }
 
-const listDahuaStreamByDevice = `-- name: ListDahuaStreamByDevice :many
+const listDahuaStreamsByDevice = `-- name: ListDahuaStreamsByDevice :many
 SELECT
   id, internal, device_id, channel, subtype, name, mediamtx_path
 FROM
@@ -1658,8 +1658,8 @@ WHERE
   device_id = ?
 `
 
-func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) ([]DahuaStream, error) {
-	rows, err := q.db.QueryContext(ctx, listDahuaStreamByDevice, deviceID)
+func (q *Queries) ListDahuaStreamsByDevice(ctx context.Context, deviceID int64) ([]DahuaStream, error) {
+	rows, err := q.db.QueryContext(ctx, listDahuaStreamsByDevice, deviceID)
 	if err != nil {
 		return nil, err
 	}
@@ -1689,7 +1689,7 @@ func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) (
 	return items, nil
 }
 
-const listGroupForUser = `-- name: ListGroupForUser :many
+const listGroupsForUser = `-- name: ListGroupsForUser :many
 SELECT
   g.id, g.name, g.description, g.created_at, g.updated_at, g.disabled_at,
   gu.created_at AS joined_at
@@ -1700,7 +1700,7 @@ WHERE
   gu.user_id = ?
 `
 
-type ListGroupForUserRow struct {
+type ListGroupsForUserRow struct {
 	ID          int64
 	Name        string
 	Description string
@@ -1710,15 +1710,15 @@ type ListGroupForUserRow struct {
 	JoinedAt    sql.NullTime
 }
 
-func (q *Queries) ListGroupForUser(ctx context.Context, userID int64) ([]ListGroupForUserRow, error) {
-	rows, err := q.db.QueryContext(ctx, listGroupForUser, userID)
+func (q *Queries) ListGroupsForUser(ctx context.Context, userID int64) ([]ListGroupsForUserRow, error) {
+	rows, err := q.db.QueryContext(ctx, listGroupsForUser, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListGroupForUserRow
+	var items []ListGroupsForUserRow
 	for rows.Next() {
-		var i ListGroupForUserRow
+		var i ListGroupsForUserRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -1741,54 +1741,7 @@ func (q *Queries) ListGroupForUser(ctx context.Context, userID int64) ([]ListGro
 	return items, nil
 }
 
-const listUser = `-- name: ListUser :many
-SELECT
-  id, email, username, password, created_at, updated_at, disabled_at
-FROM
-  users
-LIMIT
-  ?
-OFFSET
-  ?
-`
-
-type ListUserParams struct {
-	Limit  int64
-	Offset int64
-}
-
-func (q *Queries) ListUser(ctx context.Context, arg ListUserParams) ([]User, error) {
-	rows, err := q.db.QueryContext(ctx, listUser, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []User
-	for rows.Next() {
-		var i User
-		if err := rows.Scan(
-			&i.ID,
-			&i.Email,
-			&i.Username,
-			&i.Password,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.DisabledAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listUserSessionForUserAndNotExpired = `-- name: ListUserSessionForUserAndNotExpired :many
+const listUserSessionsForUserAndNotExpired = `-- name: ListUserSessionsForUserAndNotExpired :many
 SELECT
   id, user_id, session, user_agent, ip, last_ip, last_used_at, created_at, expired_at
 FROM
@@ -1798,13 +1751,13 @@ WHERE
   AND expired_at > ?2
 `
 
-type ListUserSessionForUserAndNotExpiredParams struct {
+type ListUserSessionsForUserAndNotExpiredParams struct {
 	UserID int64
 	Now    types.Time
 }
 
-func (q *Queries) ListUserSessionForUserAndNotExpired(ctx context.Context, arg ListUserSessionForUserAndNotExpiredParams) ([]UserSession, error) {
-	rows, err := q.db.QueryContext(ctx, listUserSessionForUserAndNotExpired, arg.UserID, arg.Now)
+func (q *Queries) ListUserSessionsForUserAndNotExpired(ctx context.Context, arg ListUserSessionsForUserAndNotExpiredParams) ([]UserSession, error) {
+	rows, err := q.db.QueryContext(ctx, listUserSessionsForUserAndNotExpired, arg.UserID, arg.Now)
 	if err != nil {
 		return nil, err
 	}
@@ -1899,7 +1852,7 @@ func (q *Queries) OrphanDeleteDahuaThumbnail(ctx context.Context, createdAt type
 	return err
 }
 
-const orphanListDahuaAferoFile = `-- name: OrphanListDahuaAferoFile :many
+const orphanListDahuaAferoFiles = `-- name: OrphanListDahuaAferoFiles :many
 SELECT
   id, file_id, thumbnail_id, email_attachment_id, name, ready, size, created_at
 FROM
@@ -1913,8 +1866,8 @@ LIMIT
   ?
 `
 
-func (q *Queries) OrphanListDahuaAferoFile(ctx context.Context, limit int64) ([]DahuaAferoFile, error) {
-	rows, err := q.db.QueryContext(ctx, orphanListDahuaAferoFile, limit)
+func (q *Queries) OrphanListDahuaAferoFiles(ctx context.Context, limit int64) ([]DahuaAferoFile, error) {
+	rows, err := q.db.QueryContext(ctx, orphanListDahuaAferoFiles, limit)
 	if err != nil {
 		return nil, err
 	}

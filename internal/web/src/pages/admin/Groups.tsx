@@ -6,8 +6,7 @@ import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemDeleteBinLine,
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { catchAsToast, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
-import { Order, } from "~/twirp/rpc";
-import { encodeOrder, nextOrder, parseOrder } from "~/lib/order";
+import { encodeOrder, nextSort, parseOrder } from "~/lib/order";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { useClient } from "~/providers/client";
@@ -31,7 +30,7 @@ const actionDeleteGroup = action((id: bigint) => useClient()
 export function AdminGroups() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams<AdminGroupsPageSearchParams>()
-  const groups = createAsync(() => getAdminGroupsPage({
+  const data = createAsync(() => getAdminGroupsPage({
     page: {
       page: Number(searchParams.page) || 1,
       perPage: Number(searchParams.perPage) || 10
@@ -42,22 +41,13 @@ export function AdminGroups() {
     },
   }))
 
-  const previousDisabled = () => groups()?.pageResult?.previousPage == groups()?.pageResult?.page
-  const previous = () => !previousDisabled() && setSearchParams({ page: groups()?.pageResult?.previousPage.toString() } as AdminGroupsPageSearchParams)
-  const nextDisabled = () => groups()?.pageResult?.nextPage == groups()?.pageResult?.page
-  const next = () => !nextDisabled() && setSearchParams({ page: groups()?.pageResult?.nextPage.toString() } as AdminGroupsPageSearchParams)
-  const toggleSort = (value: string) => {
-    if (value == groups()?.sort?.field) {
-      const order = nextOrder(groups()?.sort?.order ?? Order.ORDER_UNSPECIFIED)
-
-      if (order == Order.ORDER_UNSPECIFIED) {
-        return setSearchParams({ sort: undefined, order: undefined })
-      }
-
-      return setSearchParams({ sort: value, order: encodeOrder(order) } as AdminGroupsPageSearchParams)
-    }
-
-    return setSearchParams({ sort: value, order: encodeOrder(Order.DESC) } as AdminGroupsPageSearchParams)
+  const previousDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
+  const previous = () => !previousDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminGroupsPageSearchParams)
+  const nextDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
+  const next = () => !nextDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminGroupsPageSearchParams)
+  const toggleSort = (field: string) => {
+    const sort = nextSort(data()?.sort, field)
+    return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminGroupsPageSearchParams)
   }
 
   const [createFormOpen, setCreateFormOpen] = createSignal(false);
@@ -85,7 +75,7 @@ export function AdminGroups() {
             <div class="flex justify-between gap-2">
               <SelectRoot
                 class="w-20"
-                value={groups()?.pageResult?.perPage}
+                value={data()?.pageResult?.perPage}
                 onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
                 options={[10, 25, 50, 100]}
                 itemComponent={props => (
@@ -129,7 +119,7 @@ export function AdminGroups() {
                     <TableSortButton
                       name="name"
                       onClick={toggleSort}
-                      sort={groups()?.sort}
+                      sort={data()?.sort}
                     >
                       Name
                     </TableSortButton>
@@ -138,7 +128,7 @@ export function AdminGroups() {
                     <TableSortButton
                       name="userCount"
                       onClick={toggleSort}
-                      sort={groups()?.sort}
+                      sort={data()?.sort}
                     >
                       Users
                     </TableSortButton>
@@ -147,7 +137,7 @@ export function AdminGroups() {
                     <TableSortButton
                       name="createdAt"
                       onClick={toggleSort}
-                      sort={groups()?.sort}
+                      sort={data()?.sort}
                     >
                       Created At
                     </TableSortButton>
@@ -172,7 +162,7 @@ export function AdminGroups() {
                 </tr>
               </TableHeader>
               <TableBody>
-                <For each={groups()?.items}>
+                <For each={data()?.items}>
                   {(group) => {
                     const onClick = () => navigate(`./${group.id}`)
 
@@ -214,7 +204,7 @@ export function AdminGroups() {
                 </For>
               </TableBody>
               <TableCaption>
-                <TableMetadata pageResult={groups()?.pageResult} />
+                <TableMetadata pageResult={data()?.pageResult} />
               </TableCaption>
             </TableRoot>
           </Suspense>

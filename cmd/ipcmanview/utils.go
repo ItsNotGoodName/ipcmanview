@@ -112,7 +112,7 @@ type SharedDevices struct {
 func (c SharedDevices) useDevices(ctx context.Context, db repo.DB) ([]models.DahuaDeviceConn, error) {
 	var devices []models.DahuaDeviceConn
 	if c.All {
-		dbDevices, err := db.ListDahuaDevice(ctx)
+		dbDevices, err := db.ListDahuaDevices(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +121,7 @@ func (c SharedDevices) useDevices(ctx context.Context, db repo.DB) ([]models.Dah
 			devices = append(devices, dbDevice.Convert())
 		}
 	} else {
-		dbDevices, err := db.ListDahuaDeviceByIDs(ctx, c.ID)
+		dbDevices, err := db.ListDahuaDevicesByIDs(ctx, c.ID)
 		if err != nil {
 			return nil, err
 		}

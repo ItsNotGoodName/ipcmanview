@@ -26,7 +26,7 @@ type Page struct {
 func (p *Page) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
 	authSession := useAuthSession(ctx)
 
-	dbDevices, err := p.db.ListDahuaDeviceForUser(ctx, repo.ListDahuaDeviceForUserParams{
+	dbDevices, err := p.db.ListDahuaDevicesForUser(ctx, repo.ListDahuaDevicesForUserParams{
 		Admin:  authSession.Admin,
 		UserID: core.Int64ToNullInt64(authSession.UserID),
 	})
@@ -51,7 +51,7 @@ func (p *Page) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 		return nil, NewError(err).Internal()
 	}
 
-	dbSessions, err := p.db.ListUserSessionForUserAndNotExpired(ctx, repo.ListUserSessionForUserAndNotExpiredParams{
+	dbSessions, err := p.db.ListUserSessionsForUserAndNotExpired(ctx, repo.ListUserSessionsForUserAndNotExpiredParams{
 		UserID: authSession.UserID,
 		Now:    types.NewTime(time.Now()),
 	})

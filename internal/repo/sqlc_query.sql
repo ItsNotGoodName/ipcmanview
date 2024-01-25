@@ -37,16 +37,6 @@ FROM
 WHERE
   session = ?;
 
--- name: ListUser :many
-SELECT
-  *
-FROM
-  users
-LIMIT
-  ?
-OFFSET
-  ?;
-
 -- name: UpdateUser :one
 UPDATE users
 SET
@@ -83,7 +73,7 @@ DELETE FROM user_sessions
 WHERE
   expired_at < ?;
 
--- name: ListUserSessionForUserAndNotExpired :many
+-- name: ListUserSessionsForUserAndNotExpired :many
 SELECT
   *
 FROM
@@ -111,7 +101,7 @@ DELETE FROM user_sessions
 WHERE
   session = ?;
 
--- name: ListGroupForUser :many
+-- name: ListGroupsForUser :many
 SELECT
   g.*,
   gu.created_at AS joined_at
@@ -225,7 +215,7 @@ WHERE
 LIMIT
   1;
 
--- name: ListDahuaDevice :many
+-- name: ListDahuaDevices :many
 SELECT
   dahua_devices.*,
   coalesce(seed, id)
@@ -233,7 +223,7 @@ FROM
   dahua_devices
   LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id;
 
--- name: ListDahuaDeviceByIDs :many
+-- name: ListDahuaDevicesByIDs :many
 SELECT
   dahua_devices.*,
   coalesce(seed, id)
@@ -243,7 +233,7 @@ FROM
 WHERE
   id IN (sqlc.slice ('ids'));
 
--- name: ListDahuaDeviceForUser :many
+-- name: ListDahuaDevicesForUser :many
 SELECT
   d.*,
   coalesce(s.seed, d.id) AS seed,
@@ -347,7 +337,7 @@ SET
 WHERE
   device_id = ? RETURNING *;
 
--- name: ListDahuaFileCursor :many
+-- name: ListDahuaFileCursors :many
 SELECT
   c.*,
   count(f.device_id) AS files
@@ -609,7 +599,7 @@ FROM
 WHERE
   id = ?;
 
--- name: ListDahuaEventRule :many
+-- name: ListDahuaEventRules :many
 SELECT
   *
 FROM
@@ -668,7 +658,7 @@ WHERE
   server_address = ?
   AND storage = ?;
 
--- name: ListDahuaStorageDestination :many
+-- name: ListDahuaStorageDestinations :many
 SELECT
   *
 FROM
@@ -735,7 +725,7 @@ DELETE FROM dahua_streams
 WHERE
   id = ?;
 
--- name: ListDahuaStreamByDevice :many
+-- name: ListDahuaStreamsByDevice :many
 SELECT
   *
 FROM
@@ -743,7 +733,7 @@ FROM
 WHERE
   device_id = ?;
 
--- name: ListDahuaStream :many
+-- name: ListDahuaStreams :many
 SELECT
   *
 FROM
@@ -824,7 +814,7 @@ DELETE FROM dahua_afero_files
 WHERE
   id = ?;
 
--- name: OrphanListDahuaAferoFile :many
+-- name: OrphanListDahuaAferoFiles :many
 SELECT
   *
 FROM

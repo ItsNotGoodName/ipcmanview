@@ -111,7 +111,7 @@ func (s *WorkerStore) Register(bus *core.Bus) *WorkerStore {
 }
 
 func (s *WorkerStore) Bootstrap(ctx context.Context, db repo.DB, store *Store) error {
-	dbDevices, err := db.ListDahuaDevice(ctx)
+	dbDevices, err := db.ListDahuaDevices(ctx)
 	if err != nil {
 		return err
 	}

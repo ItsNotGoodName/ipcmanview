@@ -49,7 +49,7 @@ func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, afs afero.Fs) (int,
 
 	var first repo.DahuaAferoFile
 	for {
-		files, err := db.OrphanListDahuaAferoFile(ctx, 20)
+		files, err := db.OrphanListDahuaAferoFiles(ctx, 20)
 		if err != nil {
 			return deleted, err
 		}

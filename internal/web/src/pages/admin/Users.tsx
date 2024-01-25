@@ -1,18 +1,16 @@
 import { createAsync, useNavigate, useSearchParams, } from "@solidjs/router";
-import { ErrorBoundary, For, Show, Suspense, createEffect, } from "solid-js";
+import { ErrorBoundary, For, Show, Suspense, } from "solid-js";
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiUserFacesAdminLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { formatDate, parseDate, } from "~/lib/utils";
-import { Order, } from "~/twirp/rpc";
-import { encodeOrder, nextOrder, parseOrder } from "~/lib/order";
+import { encodeOrder, nextSort, parseOrder } from "~/lib/order";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AdminUsersPageSearchParams, getAdminUsersPage } from "./Users.data";
-import { unwrap } from "solid-js/store";
 
 export function AdminUsers() {
   const navigate = useNavigate()
@@ -32,20 +30,10 @@ export function AdminUsers() {
   const previous = () => !previousDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminUsersPageSearchParams)
   const nextDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
   const next = () => !nextDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminUsersPageSearchParams)
-  const toggleSort = (value: string) => {
-    if (value == data()?.sort?.field) {
-      const order = nextOrder(data()?.sort?.order ?? Order.ORDER_UNSPECIFIED)
-
-      if (order == Order.ORDER_UNSPECIFIED) {
-        return setSearchParams({ sort: undefined, order: undefined })
-      }
-
-      return setSearchParams({ sort: value, order: encodeOrder(order) } as AdminUsersPageSearchParams)
-    }
-
-    return setSearchParams({ sort: value, order: encodeOrder(Order.DESC) } as AdminUsersPageSearchParams)
+  const toggleSort = (field: string) => {
+    const sort = nextSort(data()?.sort, field)
+    return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminUsersPageSearchParams)
   }
-
 
   return (
     <div class="flex justify-center p-4">

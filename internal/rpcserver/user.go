@@ -113,7 +113,7 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 func (u *User) ListMyGroups(ctx context.Context, req *rpc.ListMyGroupsReq) (*rpc.ListMyGroupsResp, error) {
 	authSession := useAuthSession(ctx)
 
-	dbGroups, err := u.db.ListGroupForUser(ctx, authSession.UserID)
+	dbGroups, err := u.db.ListGroupsForUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, NewError(err).Internal()
 	}

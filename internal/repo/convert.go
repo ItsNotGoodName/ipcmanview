@@ -4,7 +4,7 @@ import "github.com/ItsNotGoodName/ipcmanview/internal/models"
 
 // this is stupid
 
-func (c ListDahuaDeviceByIDsRow) Convert() models.DahuaDeviceConn {
+func (c ListDahuaDevicesByIDsRow) Convert() models.DahuaDeviceConn {
 	return models.DahuaDeviceConn{
 		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
@@ -82,7 +82,7 @@ func (c GetDahuaDeviceByIPRow) Convert() models.DahuaDeviceConn {
 	}
 }
 
-func (c ListDahuaDeviceRow) Convert() models.DahuaDeviceConn {
+func (c ListDahuaDevicesRow) Convert() models.DahuaDeviceConn {
 	return models.DahuaDeviceConn{
 		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
@@ -134,7 +134,7 @@ func (c ListDahuaDeviceByFeatureRow) Convert() models.DahuaDeviceConn {
 	}
 }
 
-func (c ListDahuaDeviceForUserRow) Convert() models.DahuaDeviceConn {
+func (c ListDahuaDevicesForUserRow) Convert() models.DahuaDeviceConn {
 	return models.DahuaDeviceConn{
 		DahuaDevice: models.DahuaDevice{
 			ID:        c.ID,
