@@ -48,7 +48,7 @@ func (p *Page) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 
 	user, err := p.db.GetUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, convertRepoErr(err)
 	}
 
 	dbSessions, err := p.db.ListUserSessionsForUserAndNotExpired(ctx, repo.ListUserSessionsForUserAndNotExpiredParams{

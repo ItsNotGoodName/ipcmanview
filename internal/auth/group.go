@@ -32,7 +32,7 @@ func CreateGroup(ctx context.Context, db repo.DB, arg models.Group) (int64, erro
 	})
 }
 
-func UpdateGroup(ctx context.Context, db repo.DB, arg models.Group, newPassword string) (int64, error) {
+func UpdateGroup(ctx context.Context, db repo.DB, arg models.Group) (int64, error) {
 	normalizeGroup(&arg)
 
 	if err := validate.Validate.Struct(arg); err != nil {

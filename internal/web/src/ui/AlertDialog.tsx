@@ -2,7 +2,7 @@ import { ComponentProps, JSX, splitProps } from "solid-js"
 import { AlertDialog } from "@kobalte/core"
 
 import { cn } from "~/lib/utils"
-import { buttonVariants } from "~/ui/Button"
+import { Button, buttonVariants } from "~/ui/Button"
 
 export const AlertDialogRoot = AlertDialog.Root
 
@@ -73,13 +73,7 @@ export function AlertDialogDescription(props: ComponentProps<typeof AlertDialog.
   />
 }
 
-export function AlertDialogAction(props: JSX.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const [_, rest] = splitProps(props, ["class"])
-  return <button
-    class={cn(buttonVariants(), props.class)}
-    {...rest}
-  />
-}
+export const AlertDialogAction = Button
 
 export function AlertDialogCancel(props: JSX.ButtonHTMLAttributes<HTMLButtonElement>) {
   const [_, rest] = splitProps(props, ["class"])

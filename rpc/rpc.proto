@@ -154,6 +154,7 @@ service Admin {
   rpc GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
 
   rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
+  rpc GetGroup(GetGroupReq) returns (GetGroupResp);
   rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
   rpc DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
 }
@@ -229,9 +230,19 @@ message CreateGroupResp {
   int64 id = 1;
 }
 
-message UpdateGroupReq {
+message GetGroupReq {
+  int64 id = 1;
+}
+
+message GetGroupResp {
   string name = 1;
   string description = 2;
+}
+
+message UpdateGroupReq {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
 }
 
 message DeleteGroupReq {

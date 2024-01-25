@@ -30,16 +30,16 @@ func (a *Auth) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpResp,
 	if err != nil {
 		if errs, ok := err.(validator.ValidationErrors); ok {
 			return nil, NewError(err, "Failed to sign up.").Validation(errs, [][2]string{
-				{"Email", "email"},
-				{"Username", "username"},
-				{"Password", "password"},
+				{"email", "Email"},
+				{"username", "Username"},
+				{"password", "Password"},
 			})
 		}
 
 		if constraintErr, ok := sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE); ok {
 			return nil, NewError(err, "Failed to sign up.").Constraint(constraintErr, [][3]string{
-				{"users.username", "username", "Name already taken."},
-				{"users.email", "email", "Email already taken."},
+				{"username", "users.username", "Name already taken."},
+				{"email", "users.email", "Email already taken."},
 			})
 		}
 

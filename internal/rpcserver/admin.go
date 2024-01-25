@@ -181,29 +181,53 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 	}, nil
 }
 
+func convertCreateUpdateGroupErr(msg string, err error) error {
+	if errs, ok := asValidationErrors(err); ok {
+		return NewError(err, msg).Validation(errs, [][2]string{
+			{"name", "Name"},
+			{"description", "Description"},
+		})
+	}
+
+	if constraintErr, ok := sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE); ok {
+		return NewError(err, msg).Constraint(constraintErr, [][3]string{
+			{"name", "groups.name", "Name already taken."},
+		})
+	}
+
+	return convertRepoErr(err, msg)
+}
+
 func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.CreateGroupResp, error) {
 	id, err := auth.CreateGroup(ctx, a.db, models.Group{
 		Name:        req.Name,
 		Description: req.Description,
 	})
 	if err != nil {
-		if errs, ok := asValidationErrors(err); ok {
-			return nil, NewError(err, "Failed to create group.").Validation(errs, [][2]string{
-				{"Name", "name"},
-				{"Description", "description"},
-			})
-		}
-
-		if constraintErr, ok := sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE); ok {
-			return nil, NewError(err, "Failed to create group.").Constraint(constraintErr, [][3]string{
-				{"groups.name", "name", "Name already taken."},
-			})
-		}
+		return nil, convertCreateUpdateGroupErr("Failed to create group.", err)
 	}
 
 	return &rpc.CreateGroupResp{
 		Id: id,
 	}, nil
+}
+
+func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
+	dbGroup, err := a.db.GetGroup(ctx, req.Id)
+	if err != nil {
+		return nil, convertRepoErr(err)
+	}
+	group := dbGroup.Convert()
+
+	group.Name = req.Name
+	group.Description = req.Description
+
+	_, err = auth.UpdateGroup(ctx, a.db, group)
+	if err != nil {
+		return nil, convertCreateUpdateGroupErr("Failed to update group.", err)
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*emptypb.Empty, error) {
@@ -217,12 +241,8 @@ func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*empt
 func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupIDPageReq) (*rpc.GetAdminGroupIDPageResp, error) {
 	dbGroup, err := a.db.GetGroup(ctx, req.Id)
 	if err != nil {
-		if repo.IsNotFound(err) {
-			return nil, NewError(err).NotFound()
-		}
-		return nil, NewError(err).Internal()
+		return nil, convertRepoErr(err)
 	}
-
 	return &rpc.GetAdminGroupIDPageResp{
 		Group: &rpc.GetAdminGroupIDPageResp_Group{
 			Id:             dbGroup.ID,
@@ -236,7 +256,13 @@ func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupI
 	}, nil
 }
 
-// UpdateGroup implements rpc.Admin.
-func (*Admin) UpdateGroup(context.Context, *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
-	return nil, NewError(nil).NotImplemented()
+func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGroupResp, error) {
+	dbGroup, err := a.db.GetGroup(ctx, req.Id)
+	if err != nil {
+		return nil, convertRepoErr(err)
+	}
+	return &rpc.GetGroupResp{
+		Name:        dbGroup.Name,
+		Description: dbGroup.Description,
+	}, nil
 }

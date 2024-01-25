@@ -26,7 +26,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, convertRepoErr(err)
 	}
 	user := dbUser.Convert()
 
@@ -35,13 +35,15 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 	}
 
 	if _, err := auth.UpdateUser(ctx, u.db, user, req.NewPassword); err != nil {
+		msg := "Failed to update password."
+
 		if errs, ok := asValidationErrors(err); ok {
-			return nil, NewError(err, "Failed to update password.").Validation(errs, [][2]string{
-				{"Password", "newPassword"},
+			return nil, NewError(err, msg).Validation(errs, [][2]string{
+				{"newPassword", "Password"},
 			})
 		}
 
-		return nil, NewError(err).Internal()
+		return nil, convertRepoErr(err)
 	}
 
 	if err := u.db.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
@@ -59,26 +61,28 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, convertRepoErr(err)
 	}
 	user := dbUser.Convert()
 
 	user.Username = req.NewUsername
 
 	if _, err := auth.UpdateUser(ctx, u.db, user, ""); err != nil {
+		msg := "Failed to update username."
+
 		if errs, ok := asValidationErrors(err); ok {
-			return nil, NewError(err, "Failed to update username.").Validation(errs, [][2]string{
-				{"Username", "newUsername"},
+			return nil, NewError(err, msg).Validation(errs, [][2]string{
+				{"newUsername", "Username"},
 			})
 		}
 
 		if constraintErr, ok := sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE); ok {
-			return nil, NewError(err, "Failed to update username.").Constraint(constraintErr, [][3]string{
-				{"users.username", "newUsername", "Name already taken."},
+			return nil, NewError(err, msg).Constraint(constraintErr, [][3]string{
+				{"newUsername", "users.username", "Name already taken."},
 			})
 		}
 
-		return nil, NewError(err).Internal()
+		return nil, convertRepoErr(err, msg)
 	}
 
 	return &rpc.UpdateMyUsernameResp{}, nil

@@ -11,6 +11,7 @@ import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AdminUsersPageSearchParams, getAdminUsersPage } from "./Users.data";
+import { paginateOptions } from "~/lib/paginate";
 
 export function AdminUsers() {
   const navigate = useNavigate()
@@ -47,7 +48,7 @@ export function AdminUsers() {
                 class="w-20"
                 value={data()?.pageResult?.perPage}
                 onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
-                options={[10, 25, 50, 100]}
+                options={paginateOptions}
                 itemComponent={props => (
                   <SelectItem item={props.item}>
                     {props.item.rawValue}

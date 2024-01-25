@@ -6,6 +6,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -113,8 +114,8 @@ func (e Error) Validation(errs validator.ValidationErrors, lookup [][2]string) t
 	for _, f := range errs {
 		field := f.Field()
 		for _, kv := range lookup {
-			if kv[0] == field {
-				twirpErr = twirpErr.WithMeta(kv[1], f.Error())
+			if kv[1] == field {
+				twirpErr = twirpErr.WithMeta(kv[0], f.Error())
 			}
 		}
 	}
@@ -124,8 +125,8 @@ func (e Error) Validation(errs validator.ValidationErrors, lookup [][2]string) t
 func (e Error) Constraint(constraintErr sqlite.ConstraintError, lookup [][3]string) twirp.Error {
 	twirpErr := twirp.InvalidArgument.Error(e.msg)
 	for _, kv := range lookup {
-		if constraintErr.IsField(kv[0]) {
-			twirpErr = twirpErr.WithMeta(kv[1], kv[2])
+		if constraintErr.IsField(kv[1]) {
+			twirpErr = twirpErr.WithMeta(kv[0], kv[2])
 			break
 		}
 	}
@@ -198,4 +199,11 @@ func orderBySQL(sql string, o rpc.Order) string {
 	default:
 		return sql
 	}
+}
+
+func convertRepoErr(err error, msg ...string) twirp.Error {
+	if repo.IsNotFound(err) {
+		return NewError(err, msg...).NotFound()
+	}
+	return NewError(err, msg...).Internal()
 }

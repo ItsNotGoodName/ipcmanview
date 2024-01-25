@@ -1,8 +1,9 @@
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
-import { AdminGroupsPageSearchParams, getAdminGroupsPage } from "./Groups.data";
+import { AdminGroupsPageSearchParams, getAdminGroupsPage, getGroup } from "./Groups.data";
 import { ErrorBoundary, For, Show, Suspense, createSignal } from "solid-js";
-import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemDeleteBinLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
+import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { catchAsToast, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
@@ -19,7 +20,7 @@ import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/u
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
-import { ConfirmButton } from "~/ui/Confirm";
+import { paginateOptions } from "~/lib/paginate";
 
 const actionDeleteGroup = action((id: bigint) => useClient()
   .admin.deleteGroup({ id })
@@ -52,6 +53,8 @@ export function AdminGroups() {
 
   const [createFormOpen, setCreateFormOpen] = createSignal(false);
 
+  const [updateGroupFormID, setUpdateGroupFormID] = createSignal<bigint>(BigInt(0))
+
   return (
     <div class="flex justify-center p-4">
       <DialogRoot open={createFormOpen()} onOpenChange={setCreateFormOpen}>
@@ -67,6 +70,20 @@ export function AdminGroups() {
         </DialogPortal>
       </DialogRoot>
 
+      <DialogRoot open={updateGroupFormID() != BigInt(0)} onOpenChange={() => setUpdateGroupFormID(BigInt(0))}>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogContent>
+            <DialogHeader>
+              <DialogCloseButton />
+              <DialogTitle>Update group</DialogTitle>
+            </DialogHeader>
+            <UpdateGroupForm setOpen={() => setUpdateGroupFormID(BigInt(0))} id={updateGroupFormID()} />
+          </DialogContent>
+        </DialogPortal>
+      </DialogRoot>
+
+
       <div class="flex w-full max-w-4xl flex-col gap-2">
         <div class="text-xl">Groups</div>
         <Seperator />
@@ -77,7 +94,7 @@ export function AdminGroups() {
                 class="w-20"
                 value={data()?.pageResult?.perPage}
                 onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
-                options={[10, 25, 50, 100]}
+                options={paginateOptions}
                 itemComponent={props => (
                   <SelectItem item={props.item}>
                     {props.item.rawValue}
@@ -166,39 +183,66 @@ export function AdminGroups() {
                   {(group) => {
                     const onClick = () => navigate(`./${group.id}`)
 
+                    const [deleteGroupAlertOpen, setDeleteGroupAlertOpen] = createSignal(false)
                     const deleteGroupSubmission = useSubmission(actionDeleteGroup)
                     const deleteGroupAction = useAction(actionDeleteGroup)
-                    const deleteGroup = () => deleteGroupAction(group.id)
+                    const deleteGroup = () => deleteGroupAction(group.id).then(() => setDeleteGroupAlertOpen(false))
+
 
                     return (
-                      <TableRow class="">
-                        <TableCell onClick={onClick} class="cursor-pointer select-none">{group.name}</TableCell>
-                        <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{group.userCount.toString()}</TableCell>
-                        <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(group.createdAtTime))}</TableCell>
-                        <TableCell class="py-0">
-                          <div class="flex gap-2">
-                            <Show when={group.disabled}>
-                              <TooltipRoot>
-                                <TooltipTrigger class="p-1">
-                                  <RiSystemLockLine class="h-5 w-5" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Disabled since {formatDate(parseDate(group.disabledAtTime))}
-                                </TooltipContent>
-                              </TooltipRoot>
-                            </Show>
-                            <ConfirmButton
-                              class="bg-destructive text-destructive-foreground rounded p-1 disabled:opacity-50"
-                              message={`Are you sure wish to delete ${group.name}?`}
-                              disabled={deleteGroupSubmission.pending}
-                              onYes={deleteGroup}
-                              title="Delete"
-                            >
-                              <RiSystemDeleteBinLine class="h-5 w-5" />
-                            </ConfirmButton>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                      <>
+                        <AlertDialogRoot open={deleteGroupAlertOpen()} onOpenChange={setDeleteGroupAlertOpen}>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure you wish to delete {group.name}?</AlertDialogTitle>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroup}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialogRoot>
+
+                        <TableRow class="">
+                          <TableCell onClick={onClick} class="cursor-pointer select-none">{group.name}</TableCell>
+                          <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{group.userCount.toString()}</TableCell>
+                          <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(group.createdAtTime))}</TableCell>
+                          <TableCell class="py-0">
+                            <div class="flex gap-2">
+                              <Show when={group.disabled}>
+                                <TooltipRoot>
+                                  <TooltipTrigger class="p-1">
+                                    <RiSystemLockLine class="h-5 w-5" />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    Disabled since {formatDate(parseDate(group.disabledAtTime))}
+                                  </TooltipContent>
+                                </TooltipRoot>
+                              </Show>
+                              <div class="flex items-center justify-end">
+                                <DropdownMenuRoot placement="bottom-end">
+                                  <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+                                    <RiSystemMore2Line class="h-5 w-5" />
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuPortal>
+                                    <DropdownMenuContent>
+                                      <DropdownMenuItem onSelect={() => setUpdateGroupFormID(group.id)}>
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onSelect={() => setDeleteGroupAlertOpen(true)}>
+                                        Delete
+                                      </DropdownMenuItem>
+                                      <DropdownMenuArrow />
+                                    </DropdownMenuContent>
+                                  </DropdownMenuPortal>
+                                </DropdownMenuRoot>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      </>
                     )
                   }}
                 </For>
@@ -283,61 +327,88 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
   )
 }
 
-// type UpdateGroupForm = {
-//   name: string
-//   description: string
-// }
-//
-// const actionUpdateGroupForm = action((form: UpdateGroupForm) => useClient()
-//   .admin.updateGroup(form)
-//   .then(() => revalidate(getListGroups.key))
-//   .catch(throwAsFormError)
-// )
-//
-// function UpdateGroupForm() {
-//   const [updateGroupForm, { Field, Form }] = createForm<UpdateGroupForm>({ initialValues: { name: "", description: "" } });
-//   const submit = useAction(actionUpdateGroupForm)
-//
-//   return (
-//     <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form).then(() => reset(updateGroupForm))}>
-//       <input class="hidden" type="text" name="username" autocomplete="username" />
-//       <Field name="name" validate={required("Please enter a name.")}>
-//         {(field, props) => (
-//           <FieldRoot class="gap-1.5">
-//             <FieldLabel field={field}>Name</FieldLabel>
-//             <FieldControl field={field}>
-//               <Input
-//                 {...props}
-//                 placeholder="Name"
-//                 value={field.value}
-//               />
-//             </FieldControl>
-//             <FieldMessage field={field} />
-//           </FieldRoot>
-//         )}
-//       </Field>
-//       <Field name="description">
-//         {(field, props) => (
-//           <FieldRoot class="gap-1.5">
-//             <FieldLabel field={field}>Description</FieldLabel>
-//             <FieldControl field={field}>
-//               <Textarea
-//                 {...props}
-//                 placeholder="Description"
-//               >
-//                 {field.value}
-//               </Textarea>
-//             </FieldControl>
-//             <FieldMessage field={field} />
-//           </FieldRoot>
-//         )}
-//       </Field>
-//       <Button type="submit" disabled={updateGroupForm.submitting}>
-//         <Show when={updateGroupForm.submitting} fallback={<>Update group</>}>
-//           Updating group
-//         </Show>
-//       </Button>
-//       <FormMessage form={updateGroupForm} />
-//     </Form>
-//   )
-// }
+type UpdateGroupForm = {
+  id: BigInt | any
+  name: string
+  description: string
+}
+
+const actionUpdateGroupForm = action((form: UpdateGroupForm) => useClient()
+  .admin.updateGroup(form)
+  .then(() => revalidate(getAdminGroupsPage.key))
+  .catch(throwAsFormError)
+)
+
+function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
+  const [updateGroupForm, { Field, Form }] = createForm<UpdateGroupForm>();
+  const updateGroupFormAction = useAction(actionUpdateGroupForm)
+  const submit = (form: UpdateGroupForm) => updateGroupFormAction(form).then(() => props.setOpen(false))
+  const disabled = createAsync(async () => {
+    if (props.id == BigInt(0))
+      return false
+
+    return getGroup(props.id).then(res => {
+      if (!updateGroupForm.submitted) {
+        reset(updateGroupForm, {
+          initialValues: {
+            id: props.id,
+            name: res.name || "",
+            description: res.description || "",
+          }
+        })
+      }
+      return false
+    })
+  })
+
+  return (
+    <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+      <Suspense fallback={<Skeleton class="h-32" />}>
+        <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
+          <Field name="id" type="number">
+            {(field, props) => <input {...props} type="hidden" value={field.value} />}
+          </Field>
+          <Field name="name" validate={required("Please enter a name.")}>
+            {(field, props) => (
+              <FieldRoot class="gap-1.5">
+                <FieldLabel field={field}>Name</FieldLabel>
+                <FieldControl field={field}>
+                  <Input
+                    {...props}
+                    disabled={disabled()}
+                    placeholder="Name"
+                    value={field.value}
+                  />
+                </FieldControl>
+                <FieldMessage field={field} />
+              </FieldRoot>
+            )}
+          </Field>
+          <Field name="description">
+            {(field, props) => (
+              <FieldRoot class="gap-1.5">
+                <FieldLabel field={field}>Description</FieldLabel>
+                <FieldControl field={field}>
+                  <Textarea
+                    {...props}
+                    disabled={disabled()}
+                    placeholder="Description"
+                  >
+                    {field.value}
+                  </Textarea>
+                </FieldControl>
+                <FieldMessage field={field} />
+              </FieldRoot>
+            )}
+          </Field>
+          <Button type="submit" disabled={disabled() || updateGroupForm.submitting}>
+            <Show when={updateGroupForm.submitting} fallback={<>Update group</>}>
+              Updating group
+            </Show>
+          </Button>
+          <FormMessage form={updateGroupForm} />
+        </Form>
+      </Suspense>
+    </ErrorBoundary>
+  )
+}

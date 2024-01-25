@@ -218,3 +218,11 @@ func (c User) Convert() models.User {
 		Password: c.Password,
 	}
 }
+
+func (c Group) Convert() models.Group {
+	return models.Group{
+		ID:          c.ID,
+		Name:        c.Name,
+		Description: c.Description,
+	}
+}

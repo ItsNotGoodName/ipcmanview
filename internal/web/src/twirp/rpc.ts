@@ -505,15 +505,41 @@ export interface CreateGroupResp {
     id: bigint;
 }
 /**
- * @generated from protobuf message UpdateGroupReq
+ * @generated from protobuf message GetGroupReq
  */
-export interface UpdateGroupReq {
+export interface GetGroupReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message GetGroupResp
+ */
+export interface GetGroupResp {
     /**
      * @generated from protobuf field: string name = 1;
      */
     name: string;
     /**
      * @generated from protobuf field: string description = 2;
+     */
+    description: string;
+}
+/**
+ * @generated from protobuf message UpdateGroupReq
+ */
+export interface UpdateGroupReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string description = 3;
      */
     description: string;
 }
@@ -1002,11 +1028,37 @@ class CreateGroupResp$Type extends MessageType<CreateGroupResp> {
  */
 export const CreateGroupResp = new CreateGroupResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetGroupReq$Type extends MessageType<GetGroupReq> {
+    constructor() {
+        super("GetGroupReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetGroupReq
+ */
+export const GetGroupReq = new GetGroupReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetGroupResp$Type extends MessageType<GetGroupResp> {
+    constructor() {
+        super("GetGroupResp", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetGroupResp
+ */
+export const GetGroupResp = new GetGroupResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class UpdateGroupReq$Type extends MessageType<UpdateGroupReq> {
     constructor() {
         super("UpdateGroupReq", [
-            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1064,6 +1116,7 @@ export const Admin = new ServiceType("Admin", [
     { name: "GetAdminGroupIDPage", options: {}, I: GetAdminGroupIDPageReq, O: GetAdminGroupIDPageResp },
     { name: "GetAdminUsersPage", options: {}, I: GetAdminUsersPageReq, O: GetAdminUsersPageResp },
     { name: "CreateGroup", options: {}, I: CreateGroupReq, O: CreateGroupResp },
+    { name: "GetGroup", options: {}, I: GetGroupReq, O: GetGroupResp },
     { name: "UpdateGroup", options: {}, I: UpdateGroupReq, O: Empty },
     { name: "DeleteGroup", options: {}, I: DeleteGroupReq, O: Empty }
 ]);
