@@ -3,9 +3,11 @@ import { Tooltip } from "@kobalte/core"
 
 import { cn } from "~/lib/utils"
 
+// FIXME: TooltipArrow does not work
+
 export const TooltipRoot = Tooltip.Root
 export const TooltipTrigger = Tooltip.Trigger
-export const TooltipArrow = Tooltip.Arrow
+// export const TooltipArrow = Tooltip.Arrow
 
 export function TooltipContent(props: Omit<Tooltip.TooltipContentProps, "style">) {
   const [_, rest] = splitProps(props, ["class"])

@@ -42,3 +42,6 @@ export function throwAsFormError(e: unknown) {
   throw new FormError("Unknown error has occured.")
 }
 
+export type PageProps<T> = {
+  params: Partial<T>
+}

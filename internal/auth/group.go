@@ -46,3 +46,7 @@ func UpdateGroup(ctx context.Context, db repo.DB, arg models.Group, newPassword 
 		ID:          arg.ID,
 	})
 }
+
+func DeleteGroup(ctx context.Context, db repo.DB, id int64) error {
+	return db.DeleteGroup(ctx, id)
+}

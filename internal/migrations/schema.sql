@@ -11,7 +11,8 @@ CREATE TABLE users (
   username TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   created_at DATETIME NOT NULL,
-  updated_at DATETIME NOT NULL
+  updated_at DATETIME NOT NULL,
+  disabled_at DATETIME
 );
 
 CREATE TABLE user_sessions (
@@ -38,7 +39,8 @@ CREATE TABLE groups (
   name TEXT NOT NULL UNIQUE,
   description TEXT NOT NULL,
   created_at DATETIME NOT NULL,
-  updated_at DATETIME NOT NULL
+  updated_at DATETIME NOT NULL,
+  disabled_at DATETIME
 );
 
 CREATE TABLE group_users (
@@ -61,7 +63,8 @@ CREATE TABLE dahua_devices (
   location TEXT NOT NULL,
   feature INTEGER NOT NULL,
   created_at DATETIME NOT NULL,
-  updated_at DATETIME NOT NULL
+  updated_at DATETIME NOT NULL,
+  disabled_at DATETIME
 );
 
 CREATE TABLE dahua_permissions (

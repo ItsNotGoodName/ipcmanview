@@ -29,16 +29,17 @@ type DahuaAferoFile struct {
 }
 
 type DahuaDevice struct {
-	ID        int64
-	Name      string
-	Ip        string
-	Url       types.URL
-	Username  string
-	Password  string
-	Location  types.Location
-	Feature   models.DahuaFeature
-	CreatedAt types.Time
-	UpdatedAt types.Time
+	ID         int64
+	Name       string
+	Ip         string
+	Url        types.URL
+	Username   string
+	Password   string
+	Location   types.Location
+	Feature    models.DahuaFeature
+	CreatedAt  types.Time
+	UpdatedAt  types.Time
+	DisabledAt types.NullTime
 }
 
 type DahuaEmailAttachment struct {
@@ -177,6 +178,7 @@ type Group struct {
 	Description string
 	CreatedAt   types.Time
 	UpdatedAt   types.Time
+	DisabledAt  types.NullTime
 }
 
 type GroupUser struct {
@@ -193,12 +195,13 @@ type Setting struct {
 }
 
 type User struct {
-	ID        int64
-	Email     string
-	Username  string
-	Password  string
-	CreatedAt types.Time
-	UpdatedAt types.Time
+	ID         int64
+	Email      string
+	Username   string
+	Password   string
+	CreatedAt  types.Time
+	UpdatedAt  types.Time
+	DisabledAt types.NullTime
 }
 
 type UserSession struct {

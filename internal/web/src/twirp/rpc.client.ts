@@ -6,10 +6,10 @@ import type { DeleteGroupReq } from "./rpc";
 import type { UpdateGroupReq } from "./rpc";
 import type { CreateGroupResp } from "./rpc";
 import type { CreateGroupReq } from "./rpc";
-import type { GetGroupResp } from "./rpc";
-import type { GetGroupReq } from "./rpc";
-import type { ListGroupsResp } from "./rpc";
-import type { ListGroupsReq } from "./rpc";
+import type { GetAdminGroupIDPageResp } from "./rpc";
+import type { GetAdminGroupIDPageReq } from "./rpc";
+import type { GetAdminGroupsPageResp } from "./rpc";
+import type { GetAdminGroupsPageReq } from "./rpc";
 import { User } from "./rpc";
 import type { ListMyGroupsResp } from "./rpc";
 import type { ListMyGroupsReq } from "./rpc";
@@ -231,13 +231,13 @@ export class UserClient implements IUserClient, ServiceInfo {
  */
 export interface IAdminClient {
     /**
-     * @generated from protobuf rpc: ListGroups(ListGroupsReq) returns (ListGroupsResp);
+     * @generated from protobuf rpc: GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
      */
-    listGroups(input: ListGroupsReq, options?: RpcOptions): UnaryCall<ListGroupsReq, ListGroupsResp>;
+    getAdminGroupsPage(input: GetAdminGroupsPageReq, options?: RpcOptions): UnaryCall<GetAdminGroupsPageReq, GetAdminGroupsPageResp>;
     /**
-     * @generated from protobuf rpc: GetGroup(GetGroupReq) returns (GetGroupResp);
+     * @generated from protobuf rpc: GetAdminGroupIDPage(GetAdminGroupIDPageReq) returns (GetAdminGroupIDPageResp);
      */
-    getGroup(input: GetGroupReq, options?: RpcOptions): UnaryCall<GetGroupReq, GetGroupResp>;
+    getAdminGroupIDPage(input: GetAdminGroupIDPageReq, options?: RpcOptions): UnaryCall<GetAdminGroupIDPageReq, GetAdminGroupIDPageResp>;
     /**
      * @generated from protobuf rpc: CreateGroup(CreateGroupReq) returns (CreateGroupResp);
      */
@@ -263,18 +263,18 @@ export class AdminClient implements IAdminClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: ListGroups(ListGroupsReq) returns (ListGroupsResp);
+     * @generated from protobuf rpc: GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
      */
-    listGroups(input: ListGroupsReq, options?: RpcOptions): UnaryCall<ListGroupsReq, ListGroupsResp> {
+    getAdminGroupsPage(input: GetAdminGroupsPageReq, options?: RpcOptions): UnaryCall<GetAdminGroupsPageReq, GetAdminGroupsPageResp> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ListGroupsReq, ListGroupsResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<GetAdminGroupsPageReq, GetAdminGroupsPageResp>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: GetGroup(GetGroupReq) returns (GetGroupResp);
+     * @generated from protobuf rpc: GetAdminGroupIDPage(GetAdminGroupIDPageReq) returns (GetAdminGroupIDPageResp);
      */
-    getGroup(input: GetGroupReq, options?: RpcOptions): UnaryCall<GetGroupReq, GetGroupResp> {
+    getAdminGroupIDPage(input: GetAdminGroupIDPageReq, options?: RpcOptions): UnaryCall<GetAdminGroupIDPageReq, GetAdminGroupIDPageResp> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<GetGroupReq, GetGroupResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<GetAdminGroupIDPageReq, GetAdminGroupIDPageResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: CreateGroup(CreateGroupReq) returns (CreateGroupResp);

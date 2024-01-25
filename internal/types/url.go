@@ -12,6 +12,7 @@ func NewURL(u *url.URL) URL {
 	}
 }
 
+// URL cannot be nil.
 type URL struct {
 	*url.URL
 }

@@ -24,6 +24,88 @@ type Admin struct {
 	db repo.DB
 }
 
+func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsPageReq) (*rpc.GetAdminGroupsPageResp, error) {
+	page := parsePagePagination(req.Page)
+
+	// WHERE
+	where := sq.Eq{}
+
+	groups, err := func() ([]*rpc.GetAdminGroupsPageResp_Group, error) {
+		var row struct {
+			repo.Group
+			UserCount int64
+		}
+		// SELECT ...
+		sb := sq.
+			Select(
+				"groups.*",
+				"COUNT(group_users.group_id) AS user_count",
+			).
+			From("groups").
+			Where(where).
+			LeftJoin("group_users ON group_users.group_id = groups.id").
+			GroupBy("groups.id")
+		// ORDER BY
+		switch req.Sort.GetField() {
+		case "name":
+			sb = sb.OrderBy(orderBySQL("name", req.Sort.GetOrder()))
+		case "userCount":
+			sb = sb.OrderBy(orderBySQL("user_count", req.Sort.GetOrder()))
+		case "createdAt":
+			sb = sb.OrderBy(orderBySQL("groups.created_at", req.Sort.GetOrder()))
+		}
+		// OFFSET ...
+		sb = sb.
+			Offset(uint64(page.Offset())).
+			Limit(uint64(page.Limit()))
+
+		rows, scanner, err := ssq.QueryRows(ctx, a.db, sb)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		var groups []*rpc.GetAdminGroupsPageResp_Group
+		for rows.Next() {
+			err := scanner.Scan(&row)
+			if err != nil {
+				return nil, err
+			}
+
+			groups = append(groups, &rpc.GetAdminGroupsPageResp_Group{
+				Id:             row.ID,
+				Name:           row.Name,
+				UserCount:      row.UserCount,
+				Disabled:       row.DisabledAt.Valid,
+				DisabledAtTime: timestamppb.New(row.DisabledAt.Time),
+				CreatedAtTime:  timestamppb.New(row.CreatedAt.Time),
+			})
+		}
+
+		return groups, nil
+	}()
+	if err != nil {
+		return nil, NewError(err).Internal()
+	}
+
+	count, err := func() (int64, error) {
+		var row struct{ Count int64 }
+		return row.Count, ssq.QueryOne(ctx, a.db, &row, sq.
+			Select("COUNT(*) AS count").
+			From("groups").
+			Where(where))
+	}()
+	if err != nil {
+		return nil, NewError(err).Internal()
+	}
+
+	return &rpc.GetAdminGroupsPageResp{
+		Items:      groups,
+		PageResult: convertPagePaginationResult(page.Result(int(count))),
+		Sort:       req.Sort,
+	}, nil
+}
+
 func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.CreateGroupResp, error) {
 	id, err := auth.CreateGroup(ctx, a.db, models.Group{
 		Name:        req.Name,
@@ -50,104 +132,36 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 }
 
 func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*emptypb.Empty, error) {
-	err := a.db.DeleteGroup(ctx, req.Id)
+	err := auth.DeleteGroup(ctx, a.db, req.Id)
 	if err != nil {
-		return nil, err
+		return nil, NewError(err).Internal()
 	}
-
 	return &emptypb.Empty{}, nil
 }
 
-func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGroupResp, error) {
-	v, err := a.db.GetGroup(ctx, req.Id)
+func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupIDPageReq) (*rpc.GetAdminGroupIDPageResp, error) {
+	dbGroup, err := a.db.GetGroup(ctx, req.Id)
 	if err != nil {
-		return nil, err
+		if repo.IsNotFound(err) {
+			return nil, NewError(err).NotFound()
+		}
+		return nil, NewError(err).Internal()
 	}
 
-	return &rpc.GetGroupResp{
-		Group: &rpc.Group{
-			Id:            v.ID,
-			Name:          v.Name,
-			Description:   v.Description,
-			CreatedAtTime: timestamppb.New(v.CreatedAt.Time),
-			UpdatedAtTime: timestamppb.New(v.UpdatedAt.Time),
+	return &rpc.GetAdminGroupIDPageResp{
+		Group: &rpc.GetAdminGroupIDPageResp_Group{
+			Id:             dbGroup.ID,
+			Name:           dbGroup.Name,
+			Description:    dbGroup.Description,
+			Disabled:       dbGroup.DisabledAt.Valid,
+			DisabledAtTime: timestamppb.New(dbGroup.DisabledAt.Time),
+			CreatedAtTime:  timestamppb.New(dbGroup.CreatedAt.Time),
+			UpdatedAtTime:  timestamppb.New(dbGroup.UpdatedAt.Time),
 		},
 	}, nil
 }
 
 // UpdateGroup implements rpc.Admin.
 func (*Admin) UpdateGroup(context.Context, *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
-	panic("unimplemented")
-}
-
-func (a *Admin) ListGroups(ctx context.Context, req *rpc.ListGroupsReq) (*rpc.ListGroupsResp, error) {
-	page := parsePagePagination(req.Page)
-
-	groups, err := func() ([]*rpc.Group, error) {
-		// SELECT ...
-		sb := sq.
-			Select(
-				"groups.*",
-				"COUNT(group_users.group_id) AS user_count",
-			).
-			From("groups").
-			LeftJoin("group_users ON group_users.group_id = groups.id").
-			GroupBy("groups.id")
-		// ORDER BY
-		switch req.Sort.GetField() {
-		case "name":
-			sb = sb.OrderBy(orderBySQL("name", req.Sort.GetOrder()))
-		case "userCount":
-			sb = sb.OrderBy(orderBySQL("user_count", req.Sort.GetOrder()))
-		case "createdAt":
-			sb = sb.OrderBy(orderBySQL("groups.created_at", req.Sort.GetOrder()))
-		}
-		// OFFSET ...
-		sb = sb.
-			Offset(uint64(page.Offset())).
-			Limit(uint64(page.Limit()))
-
-		rows, scanner, err := ssq.QueryRows(ctx, a.db, sb)
-		if err != nil {
-			return nil, err
-		}
-		defer rows.Close()
-
-		var groups []*rpc.Group
-		for rows.Next() {
-			var v struct {
-				repo.Group
-				UserCount int64
-			}
-			err := scanner.Scan(&v)
-			if err != nil {
-				return nil, err
-			}
-
-			groups = append(groups, &rpc.Group{
-				Id:            v.ID,
-				Name:          v.Name,
-				Description:   v.Description,
-				UserCount:     v.UserCount,
-				CreatedAtTime: timestamppb.New(v.CreatedAt.Time),
-				UpdatedAtTime: timestamppb.New(v.UpdatedAt.Time),
-			})
-		}
-
-		return groups, nil
-	}()
-	if err != nil {
-		return nil, NewError(err).Internal()
-	}
-
-	count, err := a.db.CountGroup(ctx)
-	if err != nil {
-		return nil, NewError(err).Internal()
-	}
-
-	return &rpc.ListGroupsResp{
-		Items:      groups,
-		PageResult: convertPagePaginationResult(page.Result(int(count))),
-		Sort:       req.Sort,
-	}, nil
+	return nil, NewError(nil).NotImplemented()
 }

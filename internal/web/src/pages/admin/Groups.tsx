@@ -1,11 +1,11 @@
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams } from "@solidjs/router";
-import { getListGroups } from "./Groups.data";
-import { For, ParentProps, Show, Suspense, createSignal } from "solid-js";
-import { RiArrowsArrowDownSLine, RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiArrowsArrowUpSLine } from "solid-icons/ri";
+import { AdminGroupsPageSearchParams, getAdminGroupsPage } from "./Groups.data";
+import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal } from "solid-js";
+import { RiArrowsArrowDownSLine, RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { cn, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
-import { Order, Sort } from "~/twirp/rpc";
+import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
 import { encodeOrder, nextOrder, parseOrder } from "~/lib/order";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -18,17 +18,13 @@ import { DialogCloseButton, DialogContent, DialogHeader, DialogOverlay, DialogPo
 import { As } from "@kobalte/core";
 import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
-
-type SearchParams = {
-  page: string
-  perPage: string
-  sort: string
-  order: string
-}
+import { PageError } from "~/ui/Page";
+import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 
 export function AdminGroups() {
-  const [searchParams, setSearchParams] = useSearchParams<SearchParams>()
-  const groups = createAsync(() => getListGroups({
+  const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams<AdminGroupsPageSearchParams>()
+  const groups = createAsync(() => getAdminGroupsPage({
     page: {
       page: Number(searchParams.page) || 1,
       perPage: Number(searchParams.perPage) || 10
@@ -36,16 +32,13 @@ export function AdminGroups() {
     sort: {
       field: searchParams.sort || "",
       order: parseOrder(searchParams.order)
-    }
+    },
   }))
-  const navigate = useNavigate()
-
-  const [createFormOpen, setCreateFormOpen] = createSignal(false);
 
   const previousDisabled = () => groups()?.pageResult?.previousPage == groups()?.pageResult?.page
-  const previous = () => !previousDisabled() && setSearchParams({ page: groups()?.pageResult?.previousPage.toString() } as SearchParams)
+  const previous = () => !previousDisabled() && setSearchParams({ page: groups()?.pageResult?.previousPage.toString() } as AdminGroupsPageSearchParams)
   const nextDisabled = () => groups()?.pageResult?.nextPage == groups()?.pageResult?.page
-  const next = () => !nextDisabled() && setSearchParams({ page: groups()?.pageResult?.nextPage.toString() } as SearchParams)
+  const next = () => !nextDisabled() && setSearchParams({ page: groups()?.pageResult?.nextPage.toString() } as AdminGroupsPageSearchParams)
   const toggleSort = (value: string) => {
     if (value == groups()?.sort?.field) {
       const order = nextOrder(groups()?.sort?.order ?? Order.ORDER_UNSPECIFIED)
@@ -54,11 +47,13 @@ export function AdminGroups() {
         return setSearchParams({ sort: undefined, order: undefined })
       }
 
-      return setSearchParams({ sort: value, order: encodeOrder(order) } as SearchParams)
+      return setSearchParams({ sort: value, order: encodeOrder(order) } as AdminGroupsPageSearchParams)
     }
 
-    return setSearchParams({ sort: value, order: encodeOrder(Order.DESC) } as SearchParams)
+    return setSearchParams({ sort: value, order: encodeOrder(Order.DESC) } as AdminGroupsPageSearchParams)
   }
+
+  const [createFormOpen, setCreateFormOpen] = createSignal(false);
 
   return (
     <div class="flex justify-center p-4">
@@ -82,100 +77,110 @@ export function AdminGroups() {
           </DialogRoot>
         </div>
         <Seperator />
-        <Suspense fallback={<Skeleton class="h-32" />}>
-          <div class="flex justify-between gap-2">
-            <SelectRoot
-              class="w-20"
-              value={groups()?.pageResult?.perPage}
-              onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
-              options={[10, 25, 50, 100]}
-              itemComponent={props => (
-                <SelectItem item={props.item}>
-                  {props.item.rawValue}
-                </SelectItem>
-              )}
-            >
-              <SelectTrigger aria-label="Per page">
-                <SelectValue<number>>
-                  {state => state.selectedOption()}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectListbox />
-              </SelectContent>
-            </SelectRoot>
-            <div class="flex gap-2">
-              <Button
-                title="Previous"
-                size="icon"
-                disabled={previousDisabled()}
-                onClick={previous}
+        <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+          <Suspense fallback={<Skeleton class="h-32" />}>
+            <div class="flex justify-between gap-2">
+              <SelectRoot
+                class="w-20"
+                value={groups()?.pageResult?.perPage}
+                onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
+                options={[10, 25, 50, 100]}
+                itemComponent={props => (
+                  <SelectItem item={props.item}>
+                    {props.item.rawValue}
+                  </SelectItem>
+                )}
               >
-                <RiArrowsArrowLeftSLine class="h-6 w-6" />
-              </Button>
-              <Button
-                title="Next"
-                size="icon"
-                disabled={nextDisabled()}
-                onClick={next}
-              >
-                <RiArrowsArrowRightSLine class="h-6 w-6" />
-              </Button>
+                <SelectTrigger aria-label="Per page">
+                  <SelectValue<number>>
+                    {state => state.selectedOption()}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectListbox />
+                </SelectContent>
+              </SelectRoot>
+              <div class="flex gap-2">
+                <Button
+                  title="Previous"
+                  size="icon"
+                  disabled={previousDisabled()}
+                  onClick={previous}
+                >
+                  <RiArrowsArrowLeftSLine class="h-6 w-6" />
+                </Button>
+                <Button
+                  title="Next"
+                  size="icon"
+                  disabled={nextDisabled()}
+                  onClick={next}
+                >
+                  <RiArrowsArrowRightSLine class="h-6 w-6" />
+                </Button>
+              </div>
             </div>
-          </div>
-          <TableRoot>
-            <TableHeader>
-              <tr class="border-b">
-                <TableHead class="w-full">
-                  <SortButton
-                    name="name"
-                    onClick={toggleSort}
-                    sort={groups()?.sort}
-                  >
-                    Name
-                  </SortButton>
-                </TableHead>
-                <TableHead>
-                  <SortButton
-                    name="userCount"
-                    onClick={toggleSort}
-                    sort={groups()?.sort}
-                  >
-                    Users
-                  </SortButton>
-                </TableHead>
-                <TableHead>
-                  <SortButton
-                    name="createdAt"
-                    onClick={toggleSort}
-                    sort={groups()?.sort}
-                  >
-                    Created At
-                  </SortButton>
-                </TableHead>
-              </tr>
-            </TableHeader>
-            <TableBody>
-              <For each={groups()?.items}>
-                {(group) =>
-                  <TableRow onClick={() => navigate(`./${group.id}`)} class="cursor-pointer select-none">
-                    <TableCell class="p-2">{group.name}</TableCell>
-                    <TableCell class="text-nowrap whitespace-nowrap p-2">{group.userCount.toString()}</TableCell>
-                    <TableCell class="text-nowrap whitespace-nowrap p-2">{formatDate(parseDate(group.createdAtTime))}</TableCell>
-                  </TableRow>
-                }
-              </For>
-            </TableBody>
-            <TableCaption>
-              <div>
-                {groups()?.pageResult?.seenItems.toString()} / {groups()?.pageResult?.totalItems.toString()}
-              </div>
-              <div>
-                Page {groups()?.pageResult?.page}
-              </div>
-            </TableCaption>
-          </TableRoot>
-        </Suspense>
+            <TableRoot>
+              <TableHeader>
+                <tr class="border-b">
+                  <TableHead class="w-full">
+                    <SortButton
+                      name="name"
+                      onClick={toggleSort}
+                      sort={groups()?.sort}
+                    >
+                      Name
+                    </SortButton>
+                  </TableHead>
+                  <TableHead>
+                    <SortButton
+                      name="userCount"
+                      onClick={toggleSort}
+                      sort={groups()?.sort}
+                    >
+                      Users
+                    </SortButton>
+                  </TableHead>
+                  <TableHead>
+                    <SortButton
+                      name="createdAt"
+                      onClick={toggleSort}
+                      sort={groups()?.sort}
+                    >
+                      Created At
+                    </SortButton>
+                  </TableHead>
+                  <TableHead />
+                </tr>
+              </TableHeader>
+              <TableBody>
+                <For each={groups()?.items}>
+                  {(group) =>
+                    <TableRow onClick={() => navigate(`./${group.id}`)} class="cursor-pointer select-none">
+                      <TableCell class="p-2">{group.name}</TableCell>
+                      <TableCell class="text-nowrap whitespace-nowrap p-2">{group.userCount.toString()}</TableCell>
+                      <TableCell class="text-nowrap whitespace-nowrap p-2">{formatDate(parseDate(group.createdAtTime))}</TableCell>
+                      <TableCell class="p-2">
+                        <Show when={group.disabled}>
+                          <TooltipRoot>
+                            <TooltipTrigger>
+                              <RiSystemLockLine class="h-4 w-4" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Disabled since {formatDate(parseDate(group.disabledAtTime))}
+                            </TooltipContent>
+                          </TooltipRoot>
+                        </Show>
+                      </TableCell>
+                    </TableRow>
+                  }
+                </For>
+              </TableBody>
+              <TableCaption>
+                <PageResultMetadata pageResult={groups()?.pageResult} />
+              </TableCaption>
+            </TableRoot>
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </div >
   )
@@ -247,7 +252,7 @@ type CreateGroupForm = {
 
 const actionCreateGroupForm = action((form: CreateGroupForm) => useClient()
   .admin.createGroup(form)
-  .then(() => revalidate(getListGroups.key))
+  .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError)
 )
 
@@ -310,15 +315,26 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
 }
 
 function SortButton(props: ParentProps<{ onClick: (name: string) => void, name: string, sort?: Sort }>) {
-  return <button
-    onClick={[props.onClick, props.name]}
-    class={cn("text-nowrap flex items-center whitespace-nowrap text-lg", props.name == props.sort?.field && 'text-blue-500')}
-  >
-    {props.children}
-    <Show when={props.sort?.field == props.name && props.sort.order == Order.ASC} fallback={
-      <RiArrowsArrowDownSLine class="h-5 w-5" />
-    }>
-      <RiArrowsArrowUpSLine class="h-5 w-5" />
-    </Show>
-  </button>
+  return (
+    <button
+      onClick={[props.onClick, props.name]}
+      class={cn("text-nowrap flex items-center whitespace-nowrap text-lg", props.name == props.sort?.field && 'text-blue-500')}
+    >
+      {props.children}
+      <RiArrowsArrowDownSLine data-selected={props.sort?.field == props.name && props.sort.order == Order.ASC} class="h-5 w-5 transition-all data-[selected=true]:rotate-180" />
+    </button>
+  )
+}
+
+function PageResultMetadata(props: { pageResult?: PagePaginationResult }) {
+  return (
+    <div class="flex justify-between">
+      <div>
+        {props.pageResult?.seenItems.toString() || 0} / {props.pageResult?.totalItems.toString() || 0}
+      </div>
+      <div>
+        Page {props.pageResult?.page || 0} / {props.pageResult?.totalPages || 0}
+      </div>
+    </div>
+  )
 }

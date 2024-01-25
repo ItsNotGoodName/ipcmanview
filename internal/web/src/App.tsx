@@ -17,6 +17,8 @@ import { sessionCache } from "./providers/session";
 import { AdminGroups } from "./pages/admin/Groups";
 import loadAdminGroups from "./pages/admin/Groups.data";
 import { AdminHome } from "./pages/admin/Home";
+import { AdminGroupsID } from "./pages/admin/GroupsID";
+import loadAdminGroupsID from "./pages/admin/GroupsID.data";
 
 const Debug = lazy(() => import("./pages/debug"));
 
@@ -45,6 +47,7 @@ function App() {
           <Show when={sessionCache.admin} fallback={<Route path="/admin/*" component={() => <>You are not an admin.</>}></Route>}>
             <Route path="/admin" component={AdminHome} />
             <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />
+            <Route path="/admin/groups/:id" component={AdminGroupsID} load={loadAdminGroupsID} />
           </Show>
           <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />
           <Route path="*404" component={NotFound} />

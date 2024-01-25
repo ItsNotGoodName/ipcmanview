@@ -140,15 +140,29 @@ func (w Error) NotImplemented() twirp.Error {
 	return twirp.InternalError("Not implemented.")
 }
 
+func (w Error) NotFound() twirp.Error {
+	return twirp.NotFoundError(w.msg)
+}
+
 // ---------- Convert/Parse
 
 func parsePagePagination(v *rpc.PagePagination) pagination.Page {
 	if v == nil {
 		return pagination.Page{}
 	}
+
+	page := int(v.Page)
+	perPage := int(v.PerPage)
+	if page < 1 {
+		page = 1
+	}
+	if v.PerPage < 1 || v.PerPage > 100 {
+		perPage = 10
+	}
+
 	return pagination.Page{
-		Page:    int(v.Page),
-		PerPage: int(v.PerPage),
+		Page:    page,
+		PerPage: perPage,
 	}
 }
 
@@ -156,7 +170,7 @@ func convertPagePaginationResult(v pagination.PageResult) *rpc.PagePaginationRes
 	return &rpc.PagePaginationResult{
 		Page:         int32(v.Page),
 		PerPage:      int32(v.PerPage),
-		TotalPages:   int64(v.TotalPages),
+		TotalPages:   int32(v.TotalPages),
 		TotalItems:   int64(v.TotalItems),
 		SeenItems:    int64(v.Seen()),
 		PreviousPage: int32(v.Previous()),

@@ -1,12 +1,21 @@
 import { cache } from "@solidjs/router"
 import { parseOrder } from "~/lib/order"
+import { PageProps } from "~/lib/utils"
 import { useClient } from "~/providers/client"
-import { ListGroupsReq } from "~/twirp/rpc"
+import { GetAdminGroupsPageReq } from "~/twirp/rpc"
 
-export const getListGroups = cache((input: ListGroupsReq) => useClient().admin.listGroups(input).then((req) => req.response), "listGroups")
+export const getAdminGroupsPage = cache((input: GetAdminGroupsPageReq) => useClient().admin.getAdminGroupsPage(input).then((req) => req.response), "getAdminGroupsPage")
 
-export default function({ params }: any) {
-  void getListGroups({
+export type AdminGroupsPageSearchParams = {
+  page: string
+  perPage: string
+  sort: string
+  order: string
+  filter: string
+}
+
+export default function({ params }: PageProps<AdminGroupsPageSearchParams>) {
+  void getAdminGroupsPage({
     page: {
       page: Number(params.page) || 1,
       perPage: Number(params.perPage) || 10
@@ -14,6 +23,6 @@ export default function({ params }: any) {
     sort: {
       field: params.sort || "",
       order: parseOrder(params.order),
-    }
+    },
   })
 }

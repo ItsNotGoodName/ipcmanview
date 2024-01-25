@@ -44,9 +44,9 @@ export interface PagePaginationResult {
      */
     perPage: number;
     /**
-     * @generated from protobuf field: int64 total_pages = 3;
+     * @generated from protobuf field: int32 total_pages = 3;
      */
-    totalPages: bigint;
+    totalPages: number;
     /**
      * @generated from protobuf field: int64 total_items = 4;
      */
@@ -121,35 +121,6 @@ export interface MyGroup {
      * @generated from protobuf field: google.protobuf.Timestamp joined_at_time = 4;
      */
     joinedAtTime?: Timestamp;
-}
-/**
- * @generated from protobuf message Group
- */
-export interface Group {
-    /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-    /**
-     * @generated from protobuf field: string name = 2;
-     */
-    name: string;
-    /**
-     * @generated from protobuf field: string description = 3;
-     */
-    description: string;
-    /**
-     * @generated from protobuf field: int64 user_count = 4;
-     */
-    userCount: bigint;
-    /**
-     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 5;
-     */
-    createdAtTime?: Timestamp;
-    /**
-     * @generated from protobuf field: google.protobuf.Timestamp updated_at_time = 6;
-     */
-    updatedAtTime?: Timestamp;
 }
 /**
  * @generated from protobuf message HelloReq
@@ -322,9 +293,9 @@ export interface ListMyGroupsResp {
     groups: MyGroup[];
 }
 /**
- * @generated from protobuf message ListGroupsReq
+ * @generated from protobuf message GetAdminGroupsPageReq
  */
-export interface ListGroupsReq {
+export interface GetAdminGroupsPageReq {
     /**
      * @generated from protobuf field: PagePagination page = 1;
      */
@@ -332,16 +303,16 @@ export interface ListGroupsReq {
     /**
      * @generated from protobuf field: Sort sort = 2;
      */
-    sort?: Sort;
+    sort?: Sort; // repeated string filters = 3;
 }
 /**
- * @generated from protobuf message ListGroupsResp
+ * @generated from protobuf message GetAdminGroupsPageResp
  */
-export interface ListGroupsResp {
+export interface GetAdminGroupsPageResp {
     /**
-     * @generated from protobuf field: repeated Group items = 1;
+     * @generated from protobuf field: repeated GetAdminGroupsPageResp.Group items = 1;
      */
-    items: Group[];
+    items: GetAdminGroupsPageResp_Group[];
     /**
      * @generated from protobuf field: PagePaginationResult pageResult = 2;
      */
@@ -352,22 +323,101 @@ export interface ListGroupsResp {
     sort?: Sort;
 }
 /**
- * @generated from protobuf message GetGroupReq
+ * @generated from protobuf message GetAdminGroupsPageResp.Group
  */
-export interface GetGroupReq {
+export interface GetAdminGroupsPageResp_Group {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: int64 user_count = 3;
+     */
+    userCount: bigint;
+    /**
+     * @generated from protobuf field: bool disabled = 4;
+     */
+    disabled: boolean;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp disabled_at_time = 5;
+     */
+    disabledAtTime?: Timestamp;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 6;
+     */
+    createdAtTime?: Timestamp;
+}
+/**
+ * @generated from protobuf message GetAdminGroupIDPageReq
+ */
+export interface GetAdminGroupIDPageReq {
     /**
      * @generated from protobuf field: int64 id = 1;
      */
     id: bigint;
 }
 /**
- * @generated from protobuf message GetGroupResp
+ * @generated from protobuf message GetAdminGroupIDPageResp
  */
-export interface GetGroupResp {
+export interface GetAdminGroupIDPageResp {
     /**
-     * @generated from protobuf field: Group group = 1;
+     * @generated from protobuf field: GetAdminGroupIDPageResp.Group group = 1;
      */
-    group?: Group;
+    group?: GetAdminGroupIDPageResp_Group;
+    /**
+     * @generated from protobuf field: repeated GetAdminGroupIDPageResp.User users = 2;
+     */
+    users: GetAdminGroupIDPageResp_User[];
+}
+/**
+ * @generated from protobuf message GetAdminGroupIDPageResp.Group
+ */
+export interface GetAdminGroupIDPageResp_Group {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string description = 3;
+     */
+    description: string;
+    /**
+     * @generated from protobuf field: bool disabled = 4;
+     */
+    disabled: boolean;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp disabled_at_time = 5;
+     */
+    disabledAtTime?: Timestamp;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 6;
+     */
+    createdAtTime?: Timestamp;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp updated_at_time = 7;
+     */
+    updatedAtTime?: Timestamp;
+}
+/**
+ * @generated from protobuf message GetAdminGroupIDPageResp.User
+ */
+export interface GetAdminGroupIDPageResp_User {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
 }
 /**
  * @generated from protobuf message CreateGroupReq
@@ -462,7 +512,7 @@ class PagePaginationResult$Type extends MessageType<PagePaginationResult> {
         super("PagePaginationResult", [
             { no: 1, name: "page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 2, name: "per_page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 3, name: "total_pages", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 3, name: "total_pages", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
             { no: 4, name: "total_items", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 5, name: "seen_items", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 6, name: "previous_page", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
@@ -508,23 +558,6 @@ class MyGroup$Type extends MessageType<MyGroup> {
  * @generated MessageType for protobuf message MyGroup
  */
 export const MyGroup = new MyGroup$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class Group$Type extends MessageType<Group> {
-    constructor() {
-        super("Group", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "user_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 5, name: "created_at_time", kind: "message", T: () => Timestamp },
-            { no: 6, name: "updated_at_time", kind: "message", T: () => Timestamp }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message Group
- */
-export const Group = new Group$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class HelloReq$Type extends MessageType<HelloReq> {
     constructor() {
@@ -736,56 +769,105 @@ class ListMyGroupsResp$Type extends MessageType<ListMyGroupsResp> {
  */
 export const ListMyGroupsResp = new ListMyGroupsResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ListGroupsReq$Type extends MessageType<ListGroupsReq> {
+class GetAdminGroupsPageReq$Type extends MessageType<GetAdminGroupsPageReq> {
     constructor() {
-        super("ListGroupsReq", [
+        super("GetAdminGroupsPageReq", [
             { no: 1, name: "page", kind: "message", T: () => PagePagination },
             { no: 2, name: "sort", kind: "message", T: () => Sort }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message ListGroupsReq
+ * @generated MessageType for protobuf message GetAdminGroupsPageReq
  */
-export const ListGroupsReq = new ListGroupsReq$Type();
+export const GetAdminGroupsPageReq = new GetAdminGroupsPageReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class ListGroupsResp$Type extends MessageType<ListGroupsResp> {
+class GetAdminGroupsPageResp$Type extends MessageType<GetAdminGroupsPageResp> {
     constructor() {
-        super("ListGroupsResp", [
-            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => Group },
+        super("GetAdminGroupsPageResp", [
+            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetAdminGroupsPageResp_Group },
             { no: 2, name: "pageResult", kind: "message", T: () => PagePaginationResult },
             { no: 3, name: "sort", kind: "message", T: () => Sort }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message ListGroupsResp
+ * @generated MessageType for protobuf message GetAdminGroupsPageResp
  */
-export const ListGroupsResp = new ListGroupsResp$Type();
+export const GetAdminGroupsPageResp = new GetAdminGroupsPageResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetGroupReq$Type extends MessageType<GetGroupReq> {
+class GetAdminGroupsPageResp_Group$Type extends MessageType<GetAdminGroupsPageResp_Group> {
     constructor() {
-        super("GetGroupReq", [
+        super("GetAdminGroupsPageResp.Group", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "user_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 4, name: "disabled", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "disabled_at_time", kind: "message", T: () => Timestamp },
+            { no: 6, name: "created_at_time", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetAdminGroupsPageResp.Group
+ */
+export const GetAdminGroupsPageResp_Group = new GetAdminGroupsPageResp_Group$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetAdminGroupIDPageReq$Type extends MessageType<GetAdminGroupIDPageReq> {
+    constructor() {
+        super("GetAdminGroupIDPageReq", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message GetGroupReq
+ * @generated MessageType for protobuf message GetAdminGroupIDPageReq
  */
-export const GetGroupReq = new GetGroupReq$Type();
+export const GetAdminGroupIDPageReq = new GetAdminGroupIDPageReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetGroupResp$Type extends MessageType<GetGroupResp> {
+class GetAdminGroupIDPageResp$Type extends MessageType<GetAdminGroupIDPageResp> {
     constructor() {
-        super("GetGroupResp", [
-            { no: 1, name: "group", kind: "message", T: () => Group }
+        super("GetAdminGroupIDPageResp", [
+            { no: 1, name: "group", kind: "message", T: () => GetAdminGroupIDPageResp_Group },
+            { no: 2, name: "users", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetAdminGroupIDPageResp_User }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message GetGroupResp
+ * @generated MessageType for protobuf message GetAdminGroupIDPageResp
  */
-export const GetGroupResp = new GetGroupResp$Type();
+export const GetAdminGroupIDPageResp = new GetAdminGroupIDPageResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetAdminGroupIDPageResp_Group$Type extends MessageType<GetAdminGroupIDPageResp_Group> {
+    constructor() {
+        super("GetAdminGroupIDPageResp.Group", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "disabled", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "disabled_at_time", kind: "message", T: () => Timestamp },
+            { no: 6, name: "created_at_time", kind: "message", T: () => Timestamp },
+            { no: 7, name: "updated_at_time", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetAdminGroupIDPageResp.Group
+ */
+export const GetAdminGroupIDPageResp_Group = new GetAdminGroupIDPageResp_Group$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetAdminGroupIDPageResp_User$Type extends MessageType<GetAdminGroupIDPageResp_User> {
+    constructor() {
+        super("GetAdminGroupIDPageResp.User", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetAdminGroupIDPageResp.User
+ */
+export const GetAdminGroupIDPageResp_User = new GetAdminGroupIDPageResp_User$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class CreateGroupReq$Type extends MessageType<CreateGroupReq> {
     constructor() {
@@ -870,8 +952,8 @@ export const User = new ServiceType("User", [
  * @generated ServiceType for protobuf service Admin
  */
 export const Admin = new ServiceType("Admin", [
-    { name: "ListGroups", options: {}, I: ListGroupsReq, O: ListGroupsResp },
-    { name: "GetGroup", options: {}, I: GetGroupReq, O: GetGroupResp },
+    { name: "GetAdminGroupsPage", options: {}, I: GetAdminGroupsPageReq, O: GetAdminGroupsPageResp },
+    { name: "GetAdminGroupIDPage", options: {}, I: GetAdminGroupIDPageReq, O: GetAdminGroupIDPageResp },
     { name: "CreateGroup", options: {}, I: CreateGroupReq, O: CreateGroupResp },
     { name: "UpdateGroup", options: {}, I: UpdateGroupReq, O: Empty },
     { name: "DeleteGroup", options: {}, I: DeleteGroupReq, O: Empty }

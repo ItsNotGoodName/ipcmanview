@@ -25,7 +25,7 @@ message PagePagination {
 message PagePaginationResult {
   int32 page = 1;
   int32 per_page = 2;
-  int64 total_pages = 3;
+  int32 total_pages = 3;
   int64 total_items = 4;
   int64 seen_items = 5;
   int32 previous_page = 6;
@@ -48,15 +48,6 @@ message MyGroup {
   string name = 2;
   string description = 3;
   google.protobuf.Timestamp joined_at_time = 4;
-}
-
-message Group {
-  int64 id = 1;
-  string name = 2;
-  string description = 3;
-  int64 user_count = 4;
-  google.protobuf.Timestamp created_at_time = 5;
-  google.protobuf.Timestamp updated_at_time = 6;
 }
 
 // ---------- HelloWorld
@@ -158,30 +149,55 @@ message ListMyGroupsResp {
 // ---------- Admin
 
 service Admin {
-  rpc ListGroups(ListGroupsReq) returns (ListGroupsResp);
-  rpc GetGroup(GetGroupReq) returns (GetGroupResp);
+  rpc GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
+  rpc GetAdminGroupIDPage(GetAdminGroupIDPageReq) returns (GetAdminGroupIDPageResp);
+
   rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
   rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
   rpc DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
 }
 
-message ListGroupsReq {
+message GetAdminGroupsPageReq {
   PagePagination page = 1;
   Sort sort = 2;
+  // repeated string filters = 3;
 }
 
-message ListGroupsResp {
+message GetAdminGroupsPageResp {
+  message Group {
+    int64 id = 1;
+    string name = 2;
+    int64 user_count = 3;
+    bool disabled = 4;
+    google.protobuf.Timestamp disabled_at_time = 5;
+    google.protobuf.Timestamp created_at_time = 6;
+  }
   repeated Group items = 1;
   PagePaginationResult pageResult = 2;
   Sort sort = 3;
 }
 
-message GetGroupReq {
+message GetAdminGroupIDPageReq {
   int64 id = 1;
 }
 
-message GetGroupResp {
+message GetAdminGroupIDPageResp {
+  message Group {
+    int64 id = 1;
+    string name = 2;
+    string description = 3;
+    bool disabled = 4;
+    google.protobuf.Timestamp disabled_at_time = 5;
+    google.protobuf.Timestamp created_at_time = 6;
+    google.protobuf.Timestamp updated_at_time = 7;
+  }
   Group group = 1;
+
+  message User {
+    int64 id = 1;
+    string name = 2;
+  }
+  repeated User users = 2;
 }
 
 message CreateGroupReq {

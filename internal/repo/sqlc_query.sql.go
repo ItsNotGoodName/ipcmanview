@@ -619,7 +619,7 @@ func (q *Queries) GetDahuaAferoFileByFileID(ctx context.Context, fileID sql.Null
 
 const getDahuaDevice = `-- name: GetDahuaDevice :one
 SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
   coalesce(seed, id)
 FROM
   dahua_devices
@@ -631,17 +631,18 @@ LIMIT
 `
 
 type GetDahuaDeviceRow struct {
-	ID        int64
-	Name      string
-	Ip        string
-	Url       types.URL
-	Username  string
-	Password  string
-	Location  types.Location
-	Feature   models.DahuaFeature
-	CreatedAt types.Time
-	UpdatedAt types.Time
-	Seed      int64
+	ID         int64
+	Name       string
+	Ip         string
+	Url        types.URL
+	Username   string
+	Password   string
+	Location   types.Location
+	Feature    models.DahuaFeature
+	CreatedAt  types.Time
+	UpdatedAt  types.Time
+	DisabledAt types.NullTime
+	Seed       int64
 }
 
 func (q *Queries) GetDahuaDevice(ctx context.Context, id int64) (GetDahuaDeviceRow, error) {
@@ -658,6 +659,7 @@ func (q *Queries) GetDahuaDevice(ctx context.Context, id int64) (GetDahuaDeviceR
 		&i.Feature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DisabledAt,
 		&i.Seed,
 	)
 	return i, err
@@ -665,7 +667,7 @@ func (q *Queries) GetDahuaDevice(ctx context.Context, id int64) (GetDahuaDeviceR
 
 const getDahuaDeviceByIP = `-- name: GetDahuaDeviceByIP :one
 SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
   coalesce(seed, id)
 FROM
   dahua_devices
@@ -677,17 +679,18 @@ LIMIT
 `
 
 type GetDahuaDeviceByIPRow struct {
-	ID        int64
-	Name      string
-	Ip        string
-	Url       types.URL
-	Username  string
-	Password  string
-	Location  types.Location
-	Feature   models.DahuaFeature
-	CreatedAt types.Time
-	UpdatedAt types.Time
-	Seed      int64
+	ID         int64
+	Name       string
+	Ip         string
+	Url        types.URL
+	Username   string
+	Password   string
+	Location   types.Location
+	Feature    models.DahuaFeature
+	CreatedAt  types.Time
+	UpdatedAt  types.Time
+	DisabledAt types.NullTime
+	Seed       int64
 }
 
 func (q *Queries) GetDahuaDeviceByIP(ctx context.Context, ip string) (GetDahuaDeviceByIPRow, error) {
@@ -704,6 +707,7 @@ func (q *Queries) GetDahuaDeviceByIP(ctx context.Context, ip string) (GetDahuaDe
 		&i.Feature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DisabledAt,
 		&i.Seed,
 	)
 	return i, err
@@ -966,7 +970,7 @@ func (q *Queries) GetDahuaStream(ctx context.Context, id int64) (DahuaStream, er
 
 const getGroup = `-- name: GetGroup :one
 SELECT
-  id, name, description, created_at, updated_at
+  id, name, description, created_at, updated_at, disabled_at
 FROM
   groups
 where
@@ -982,6 +986,7 @@ func (q *Queries) GetGroup(ctx context.Context, id int64) (Group, error) {
 		&i.Description,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DisabledAt,
 	)
 	return i, err
 }
@@ -1029,7 +1034,7 @@ func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 
 const getUser = `-- name: GetUser :one
 SELECT
-  id, email, username, password, created_at, updated_at
+  id, email, username, password, created_at, updated_at, disabled_at
 FROM
   users
 where
@@ -1046,6 +1051,7 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DisabledAt,
 	)
 	return i, err
 }
@@ -1094,7 +1100,7 @@ func (q *Queries) GetUserBySession(ctx context.Context, session string) (GetUser
 
 const getUserByUsernameOrEmail = `-- name: GetUserByUsernameOrEmail :one
 SELECT
-  id, email, username, password, created_at, updated_at
+  id, email, username, password, created_at, updated_at, disabled_at
 FROM
   users
 where
@@ -1112,13 +1118,14 @@ func (q *Queries) GetUserByUsernameOrEmail(ctx context.Context, usernameoremail 
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DisabledAt,
 	)
 	return i, err
 }
 
 const listDahuaDevice = `-- name: ListDahuaDevice :many
 SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
   coalesce(seed, id)
 FROM
   dahua_devices
@@ -1126,17 +1133,18 @@ FROM
 `
 
 type ListDahuaDeviceRow struct {
-	ID        int64
-	Name      string
-	Ip        string
-	Url       types.URL
-	Username  string
-	Password  string
-	Location  types.Location
-	Feature   models.DahuaFeature
-	CreatedAt types.Time
-	UpdatedAt types.Time
-	Seed      int64
+	ID         int64
+	Name       string
+	Ip         string
+	Url        types.URL
+	Username   string
+	Password   string
+	Location   types.Location
+	Feature    models.DahuaFeature
+	CreatedAt  types.Time
+	UpdatedAt  types.Time
+	DisabledAt types.NullTime
+	Seed       int64
 }
 
 func (q *Queries) ListDahuaDevice(ctx context.Context) ([]ListDahuaDeviceRow, error) {
@@ -1159,6 +1167,7 @@ func (q *Queries) ListDahuaDevice(ctx context.Context) ([]ListDahuaDeviceRow, er
 			&i.Feature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DisabledAt,
 			&i.Seed,
 		); err != nil {
 			return nil, err
@@ -1176,7 +1185,7 @@ func (q *Queries) ListDahuaDevice(ctx context.Context) ([]ListDahuaDeviceRow, er
 
 const listDahuaDeviceByIDs = `-- name: ListDahuaDeviceByIDs :many
 SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
   coalesce(seed, id)
 FROM
   dahua_devices
@@ -1186,17 +1195,18 @@ WHERE
 `
 
 type ListDahuaDeviceByIDsRow struct {
-	ID        int64
-	Name      string
-	Ip        string
-	Url       types.URL
-	Username  string
-	Password  string
-	Location  types.Location
-	Feature   models.DahuaFeature
-	CreatedAt types.Time
-	UpdatedAt types.Time
-	Seed      int64
+	ID         int64
+	Name       string
+	Ip         string
+	Url        types.URL
+	Username   string
+	Password   string
+	Location   types.Location
+	Feature    models.DahuaFeature
+	CreatedAt  types.Time
+	UpdatedAt  types.Time
+	DisabledAt types.NullTime
+	Seed       int64
 }
 
 func (q *Queries) ListDahuaDeviceByIDs(ctx context.Context, ids []int64) ([]ListDahuaDeviceByIDsRow, error) {
@@ -1229,6 +1239,7 @@ func (q *Queries) ListDahuaDeviceByIDs(ctx context.Context, ids []int64) ([]List
 			&i.Feature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DisabledAt,
 			&i.Seed,
 		); err != nil {
 			return nil, err
@@ -1246,7 +1257,7 @@ func (q *Queries) ListDahuaDeviceByIDs(ctx context.Context, ids []int64) ([]List
 
 const listDahuaDeviceForUser = `-- name: ListDahuaDeviceForUser :many
 SELECT
-  d.id, d.name, d.ip, d.url, d.username, d.password, d.location, d.feature, d.created_at, d.updated_at,
+  d.id, d.name, d.ip, d.url, d.username, d.password, d.location, d.feature, d.created_at, d.updated_at, d.disabled_at,
   coalesce(s.seed, d.id) AS seed,
   coalesce(p.level, 2)
 FROM
@@ -1276,18 +1287,19 @@ type ListDahuaDeviceForUserParams struct {
 }
 
 type ListDahuaDeviceForUserRow struct {
-	ID        int64
-	Name      string
-	Ip        string
-	Url       types.URL
-	Username  string
-	Password  string
-	Location  types.Location
-	Feature   models.DahuaFeature
-	CreatedAt types.Time
-	UpdatedAt types.Time
-	Seed      int64
-	Level     models.DahuaPermissionLevel
+	ID         int64
+	Name       string
+	Ip         string
+	Url        types.URL
+	Username   string
+	Password   string
+	Location   types.Location
+	Feature    models.DahuaFeature
+	CreatedAt  types.Time
+	UpdatedAt  types.Time
+	DisabledAt types.NullTime
+	Seed       int64
+	Level      models.DahuaPermissionLevel
 }
 
 func (q *Queries) ListDahuaDeviceForUser(ctx context.Context, arg ListDahuaDeviceForUserParams) ([]ListDahuaDeviceForUserRow, error) {
@@ -1310,6 +1322,7 @@ func (q *Queries) ListDahuaDeviceForUser(ctx context.Context, arg ListDahuaDevic
 			&i.Feature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DisabledAt,
 			&i.Seed,
 			&i.Level,
 		); err != nil {
@@ -1678,7 +1691,7 @@ func (q *Queries) ListDahuaStreamByDevice(ctx context.Context, deviceID int64) (
 
 const listGroupForUser = `-- name: ListGroupForUser :many
 SELECT
-  g.id, g.name, g.description, g.created_at, g.updated_at,
+  g.id, g.name, g.description, g.created_at, g.updated_at, g.disabled_at,
   gu.created_at AS joined_at
 FROM
   groups AS g
@@ -1693,6 +1706,7 @@ type ListGroupForUserRow struct {
 	Description string
 	CreatedAt   types.Time
 	UpdatedAt   types.Time
+	DisabledAt  types.NullTime
 	JoinedAt    sql.NullTime
 }
 
@@ -1711,6 +1725,7 @@ func (q *Queries) ListGroupForUser(ctx context.Context, userID int64) ([]ListGro
 			&i.Description,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DisabledAt,
 			&i.JoinedAt,
 		); err != nil {
 			return nil, err
@@ -1728,7 +1743,7 @@ func (q *Queries) ListGroupForUser(ctx context.Context, userID int64) ([]ListGro
 
 const listUser = `-- name: ListUser :many
 SELECT
-  id, email, username, password, created_at, updated_at
+  id, email, username, password, created_at, updated_at, disabled_at
 FROM
   users
 LIMIT
@@ -1758,6 +1773,7 @@ func (q *Queries) ListUser(ctx context.Context, arg ListUserParams) ([]User, err
 			&i.Password,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DisabledAt,
 		); err != nil {
 			return nil, err
 		}
@@ -2665,7 +2681,7 @@ func (q *Queries) getDahuaEventRuleByEvent(ctx context.Context, arg getDahuaEven
 
 const listDahuaDeviceByFeature = `-- name: listDahuaDeviceByFeature :many
 SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at,
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
   coalesce(seed, id)
 FROM
   dahua_devices
@@ -2675,17 +2691,18 @@ WHERE
 `
 
 type listDahuaDeviceByFeatureRow struct {
-	ID        int64
-	Name      string
-	Ip        string
-	Url       types.URL
-	Username  string
-	Password  string
-	Location  types.Location
-	Feature   models.DahuaFeature
-	CreatedAt types.Time
-	UpdatedAt types.Time
-	Seed      int64
+	ID         int64
+	Name       string
+	Ip         string
+	Url        types.URL
+	Username   string
+	Password   string
+	Location   types.Location
+	Feature    models.DahuaFeature
+	CreatedAt  types.Time
+	UpdatedAt  types.Time
+	DisabledAt types.NullTime
+	Seed       int64
 }
 
 func (q *Queries) listDahuaDeviceByFeature(ctx context.Context, feature models.DahuaFeature) ([]listDahuaDeviceByFeatureRow, error) {
@@ -2708,6 +2725,7 @@ func (q *Queries) listDahuaDeviceByFeature(ctx context.Context, feature models.D
 			&i.Feature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DisabledAt,
 			&i.Seed,
 		); err != nil {
 			return nil, err
