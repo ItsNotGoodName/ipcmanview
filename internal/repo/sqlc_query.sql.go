@@ -2257,6 +2257,26 @@ func (q *Queries) UpdateGroup(ctx context.Context, arg UpdateGroupParams) (int64
 	return id, err
 }
 
+const updateGroupDisabledAt = `-- name: UpdateGroupDisabledAt :one
+UPDATE groups
+SET
+  disabled_at = ?
+WHERE
+  id = ? RETURNING id
+`
+
+type UpdateGroupDisabledAtParams struct {
+	DisabledAt types.NullTime
+	ID         int64
+}
+
+func (q *Queries) UpdateGroupDisabledAt(ctx context.Context, arg UpdateGroupDisabledAtParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, updateGroupDisabledAt, arg.DisabledAt, arg.ID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const updateSettings = `-- name: UpdateSettings :one
 UPDATE settings
 SET
@@ -2310,6 +2330,26 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (int64, 
 		arg.UpdatedAt,
 		arg.ID,
 	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const updateUserDisabledAt = `-- name: UpdateUserDisabledAt :one
+UPDATE users
+SET
+  disabled_at = ?
+WHERE
+  id = ? RETURNING id
+`
+
+type UpdateUserDisabledAtParams struct {
+	DisabledAt types.NullTime
+	ID         int64
+}
+
+func (q *Queries) UpdateUserDisabledAt(ctx context.Context, arg UpdateUserDisabledAtParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, updateUserDisabledAt, arg.DisabledAt, arg.ID)
 	var id int64
 	err := row.Scan(&id)
 	return id, err

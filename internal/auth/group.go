@@ -50,3 +50,19 @@ func UpdateGroup(ctx context.Context, db repo.DB, arg models.Group) (int64, erro
 func DeleteGroup(ctx context.Context, db repo.DB, id int64) error {
 	return db.DeleteGroup(ctx, id)
 }
+
+func DisableGroup(ctx context.Context, db repo.DB, userID int64) error {
+	_, err := db.UpdateGroupDisabledAt(ctx, repo.UpdateGroupDisabledAtParams{
+		DisabledAt: types.NewNullTime(time.Now()),
+		ID:         userID,
+	})
+	return err
+}
+
+func EnableGroup(ctx context.Context, db repo.DB, userID int64) error {
+	_, err := db.UpdateGroupDisabledAt(ctx, repo.UpdateGroupDisabledAtParams{
+		DisabledAt: types.NullTime{},
+		ID:         userID,
+	})
+	return err
+}

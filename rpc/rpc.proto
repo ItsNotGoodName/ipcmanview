@@ -139,13 +139,18 @@ service Admin {
   rpc GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
   rpc GetAdminDevicesPage(GetAdminDevicesPageReq) returns (GetAdminDevicesPageResp);
 
-  // Group CRUD
+  // User
+  rpc SetUserDisable(SetUserDisableReq) returns (google.protobuf.Empty);
+
+  // Group
   rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
   rpc GetGroup(GetGroupReq) returns (GetGroupResp);
   rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
   rpc DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
 
-  // Device CRUD
+  rpc SetGroupDisable(SetGroupDisableReq) returns (google.protobuf.Empty);
+
+  // Device
   rpc CreateDevice(CreateDeviceReq) returns (CreateDeviceResp);
   rpc GetDevice(GetDeviceReq) returns (GetDeviceResp);
   rpc UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
@@ -234,6 +239,11 @@ message GetAdminDevicesPageResp {
   Sort sort = 3;
 }
 
+message SetUserDisableReq {
+  int64 id = 1;
+  bool disable = 2;
+}
+
 // Group
 
 message GroupModel {
@@ -265,6 +275,11 @@ message UpdateGroupReq {
 
 message DeleteGroupReq {
   int64 id = 1;
+}
+
+message SetGroupDisableReq {
+  int64 id = 1;
+  bool disable = 2;
 }
 
 // Device

@@ -22,9 +22,16 @@ import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { paginateOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
+import { SetGroupDisableReq } from "~/twirp/rpc";
 
 const actionDeleteGroup = action((id: bigint) => useClient()
   .admin.deleteGroup({ id })
+  .then(() => revalidate(getAdminGroupsPage.key))
+  .catch(catchAsToast)
+)
+
+const actionSetGroupDisable = action((input: SetGroupDisableReq) => useClient()
+  .admin.setGroupDisable(input)
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(catchAsToast)
 )
@@ -188,6 +195,9 @@ export function AdminGroups() {
                   const deleteGroupAction = useAction(actionDeleteGroup)
                   const deleteGroup = () => deleteGroupAction(group.id).then(() => setDeleteGroupAlertOpen(false))
 
+                  const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
+                  const setGroupDisableAction = useAction(actionSetGroupDisable)
+                  const setGroupDisable = () => setGroupDisableAction({ id: group.id, disable: !group.disabled })
 
                   return (
                     <>
@@ -210,7 +220,7 @@ export function AdminGroups() {
                         <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{group.userCount.toString()}</TableCell>
                         <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(group.createdAtTime))}</TableCell>
                         <TableCell class="py-0">
-                          <div class="flex gap-2">
+                          <div class="flex justify-end gap-2">
                             <Show when={group.disabled}>
                               <TooltipRoot>
                                 <TooltipTrigger class="p-1">
@@ -221,24 +231,27 @@ export function AdminGroups() {
                                 </TooltipContent>
                               </TooltipRoot>
                             </Show>
-                            <div class="flex items-center justify-end">
-                              <DropdownMenuRoot placement="bottom-end">
-                                <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                                  <RiSystemMore2Line class="h-5 w-5" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuPortal>
-                                  <DropdownMenuContent>
-                                    <DropdownMenuItem onSelect={() => setUpdateGroupFormID(group.id)}>
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setDeleteGroupAlertOpen(true)}>
-                                      Delete
-                                    </DropdownMenuItem>
-                                    <DropdownMenuArrow />
-                                  </DropdownMenuContent>
-                                </DropdownMenuPortal>
-                              </DropdownMenuRoot>
-                            </div>
+                            <DropdownMenuRoot placement="bottom-end">
+                              <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+                                <RiSystemMore2Line class="h-5 w-5" />
+                              </DropdownMenuTrigger>
+                              <DropdownMenuPortal>
+                                <DropdownMenuContent>
+                                  <DropdownMenuItem disabled={setGroupDisableSubmission.pending} onSelect={() => setGroupDisable()}>
+                                    <Show when={group.disabled} fallback={<>Disable</>}>
+                                      Enable
+                                    </Show>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => setUpdateGroupFormID(group.id)}>
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onSelect={() => setDeleteGroupAlertOpen(true)}>
+                                    Delete
+                                  </DropdownMenuItem>
+                                  <DropdownMenuArrow />
+                                </DropdownMenuContent>
+                              </DropdownMenuPortal>
+                            </DropdownMenuRoot>
                           </div>
                         </TableCell>
                       </TableRow>

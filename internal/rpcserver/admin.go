@@ -294,3 +294,33 @@ func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*empt
 	}
 	return &emptypb.Empty{}, nil
 }
+
+func (a *Admin) SetGroupDisable(ctx context.Context, req *rpc.SetGroupDisableReq) (*emptypb.Empty, error) {
+	if req.Disable {
+		err := auth.DisableGroup(ctx, a.db, req.Id)
+		if err != nil {
+			return nil, check(err)
+		}
+	} else {
+		err := auth.EnableGroup(ctx, a.db, req.Id)
+		if err != nil {
+			return nil, check(err)
+		}
+	}
+	return &emptypb.Empty{}, nil
+}
+
+func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) (*emptypb.Empty, error) {
+	if req.Disable {
+		err := auth.DisableUser(ctx, a.db, req.Id)
+		if err != nil {
+			return nil, check(err)
+		}
+	} else {
+		err := auth.EnableUser(ctx, a.db, req.Id)
+		if err != nil {
+			return nil, check(err)
+		}
+	}
+	return &emptypb.Empty{}, nil
+}

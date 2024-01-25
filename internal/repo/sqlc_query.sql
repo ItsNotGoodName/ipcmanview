@@ -47,6 +47,13 @@ SET
 WHERE
   id = ? RETURNING id;
 
+-- name: UpdateUserDisabledAt :one
+UPDATE users
+SET
+  disabled_at = ?
+WHERE
+  id = ? RETURNING id;
+
 -- name: CreateUserSession :exec
 INSERT INTO
   user_sessions (
@@ -144,6 +151,13 @@ WHERE
 DELETE FROM groups
 WHERE
   id = ?;
+
+-- name: UpdateGroupDisabledAt :one
+UPDATE groups
+SET
+  disabled_at = ?
+WHERE
+  id = ? RETURNING id;
 
 -- name: createDahuaDevice :one
 INSERT INTO

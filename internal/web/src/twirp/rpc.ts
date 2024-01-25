@@ -515,6 +515,19 @@ export interface GetAdminDevicesPageResp_Device {
      */
     createdAtTime?: Timestamp;
 }
+/**
+ * @generated from protobuf message SetUserDisableReq
+ */
+export interface SetUserDisableReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: bool disable = 2;
+     */
+    disable: boolean;
+}
 // Group
 
 /**
@@ -591,6 +604,19 @@ export interface DeleteGroupReq {
      * @generated from protobuf field: int64 id = 1;
      */
     id: bigint;
+}
+/**
+ * @generated from protobuf message SetGroupDisableReq
+ */
+export interface SetGroupDisableReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: bool disable = 2;
+     */
+    disable: boolean;
 }
 // Device
 
@@ -1120,6 +1146,19 @@ class GetAdminDevicesPageResp_Device$Type extends MessageType<GetAdminDevicesPag
  */
 export const GetAdminDevicesPageResp_Device = new GetAdminDevicesPageResp_Device$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class SetUserDisableReq$Type extends MessageType<SetUserDisableReq> {
+    constructor() {
+        super("SetUserDisableReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "disable", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message SetUserDisableReq
+ */
+export const SetUserDisableReq = new SetUserDisableReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class GroupModel$Type extends MessageType<GroupModel> {
     constructor() {
         super("GroupModel", [
@@ -1206,6 +1245,19 @@ class DeleteGroupReq$Type extends MessageType<DeleteGroupReq> {
  * @generated MessageType for protobuf message DeleteGroupReq
  */
 export const DeleteGroupReq = new DeleteGroupReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SetGroupDisableReq$Type extends MessageType<SetGroupDisableReq> {
+    constructor() {
+        super("SetGroupDisableReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "disable", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message SetGroupDisableReq
+ */
+export const SetGroupDisableReq = new SetGroupDisableReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class DeviceModel$Type extends MessageType<DeviceModel> {
     constructor() {
@@ -1329,10 +1381,12 @@ export const Admin = new ServiceType("Admin", [
     { name: "GetAdminGroupIDPage", options: {}, I: GetAdminGroupIDPageReq, O: GetAdminGroupIDPageResp },
     { name: "GetAdminUsersPage", options: {}, I: GetAdminUsersPageReq, O: GetAdminUsersPageResp },
     { name: "GetAdminDevicesPage", options: {}, I: GetAdminDevicesPageReq, O: GetAdminDevicesPageResp },
+    { name: "SetUserDisable", options: {}, I: SetUserDisableReq, O: Empty },
     { name: "CreateGroup", options: {}, I: CreateGroupReq, O: CreateGroupResp },
     { name: "GetGroup", options: {}, I: GetGroupReq, O: GetGroupResp },
     { name: "UpdateGroup", options: {}, I: UpdateGroupReq, O: Empty },
     { name: "DeleteGroup", options: {}, I: DeleteGroupReq, O: Empty },
+    { name: "SetGroupDisable", options: {}, I: SetGroupDisableReq, O: Empty },
     { name: "CreateDevice", options: {}, I: CreateDeviceReq, O: CreateDeviceResp },
     { name: "GetDevice", options: {}, I: GetDeviceReq, O: GetDeviceResp },
     { name: "UpdateDevice", options: {}, I: UpdateDeviceReq, O: Empty },

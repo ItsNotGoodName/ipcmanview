@@ -78,3 +78,19 @@ func UpdateUser(ctx context.Context, db repo.DB, arg models.User, newPassword st
 func CheckUserPassword(hash, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
+
+func DisableUser(ctx context.Context, db repo.DB, userID int64) error {
+	_, err := db.UpdateUserDisabledAt(ctx, repo.UpdateUserDisabledAtParams{
+		DisabledAt: types.NewNullTime(time.Now()),
+		ID:         userID,
+	})
+	return err
+}
+
+func EnableUser(ctx context.Context, db repo.DB, userID int64) error {
+	_, err := db.UpdateUserDisabledAt(ctx, repo.UpdateUserDisabledAtParams{
+		DisabledAt: types.NullTime{},
+		ID:         userID,
+	})
+	return err
+}
