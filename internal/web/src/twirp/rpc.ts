@@ -515,10 +515,12 @@ export interface GetAdminDevicesPageResp_Device {
      */
     createdAtTime?: Timestamp;
 }
+// Group
+
 /**
- * @generated from protobuf message CreateGroupReq
+ * @generated from protobuf message GroupModel
  */
-export interface CreateGroupReq {
+export interface GroupModel {
     /**
      * @generated from protobuf field: string name = 1;
      */
@@ -527,15 +529,6 @@ export interface CreateGroupReq {
      * @generated from protobuf field: string description = 2;
      */
     description: string;
-}
-/**
- * @generated from protobuf message CreateGroupResp
- */
-export interface CreateGroupResp {
-    /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
 }
 /**
  * @generated from protobuf message GetGroupReq
@@ -555,13 +548,27 @@ export interface GetGroupResp {
      */
     id: bigint;
     /**
-     * @generated from protobuf field: string name = 2;
+     * @generated from protobuf field: GroupModel model = 2;
      */
-    name: string;
+    model?: GroupModel;
+}
+/**
+ * @generated from protobuf message CreateGroupReq
+ */
+export interface CreateGroupReq {
     /**
-     * @generated from protobuf field: string description = 3;
+     * @generated from protobuf field: GroupModel model = 2;
      */
-    description: string;
+    model?: GroupModel;
+}
+/**
+ * @generated from protobuf message CreateGroupResp
+ */
+export interface CreateGroupResp {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
 }
 /**
  * @generated from protobuf message UpdateGroupReq
@@ -572,13 +579,9 @@ export interface UpdateGroupReq {
      */
     id: bigint;
     /**
-     * @generated from protobuf field: string name = 2;
+     * @generated from protobuf field: GroupModel model = 2;
      */
-    name: string;
-    /**
-     * @generated from protobuf field: string description = 3;
-     */
-    description: string;
+    model?: GroupModel;
 }
 /**
  * @generated from protobuf message DeleteGroupReq
@@ -589,10 +592,12 @@ export interface DeleteGroupReq {
      */
     id: bigint;
 }
+// Device
+
 /**
- * @generated from protobuf message CreateDeviceReq
+ * @generated from protobuf message DeviceModel
  */
-export interface CreateDeviceReq {
+export interface DeviceModel {
     /**
      * @generated from protobuf field: string name = 1;
      */
@@ -619,15 +624,6 @@ export interface CreateDeviceReq {
     features: number;
 }
 /**
- * @generated from protobuf message CreateDeviceResp
- */
-export interface CreateDeviceResp {
-    /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-}
-/**
  * @generated from protobuf message GetDeviceReq
  */
 export interface GetDeviceReq {
@@ -645,29 +641,27 @@ export interface GetDeviceResp {
      */
     id: bigint;
     /**
-     * @generated from protobuf field: string name = 2;
+     * @generated from protobuf field: DeviceModel model = 2;
      */
-    name: string;
+    model?: DeviceModel;
+}
+/**
+ * @generated from protobuf message CreateDeviceReq
+ */
+export interface CreateDeviceReq {
     /**
-     * @generated from protobuf field: string url = 3;
+     * @generated from protobuf field: DeviceModel model = 1;
      */
-    url: string;
+    model?: DeviceModel;
+}
+/**
+ * @generated from protobuf message CreateDeviceResp
+ */
+export interface CreateDeviceResp {
     /**
-     * @generated from protobuf field: string username = 4;
+     * @generated from protobuf field: int64 id = 1;
      */
-    username: string;
-    /**
-     * @generated from protobuf field: string password = 5;
-     */
-    password: string;
-    /**
-     * @generated from protobuf field: string location = 6;
-     */
-    location: string;
-    /**
-     * @generated from protobuf field: int32 features = 7;
-     */
-    features: number;
+    id: bigint;
 }
 /**
  * @generated from protobuf message UpdateDeviceReq
@@ -678,29 +672,9 @@ export interface UpdateDeviceReq {
      */
     id: bigint;
     /**
-     * @generated from protobuf field: string name = 2;
+     * @generated from protobuf field: DeviceModel model = 2;
      */
-    name: string;
-    /**
-     * @generated from protobuf field: string url = 3;
-     */
-    url: string;
-    /**
-     * @generated from protobuf field: string username = 4;
-     */
-    username: string;
-    /**
-     * @generated from protobuf field: string password = 5;
-     */
-    password: string;
-    /**
-     * @generated from protobuf field: string location = 6;
-     */
-    location: string;
-    /**
-     * @generated from protobuf field: int32 features = 7;
-     */
-    features: number;
+    model?: DeviceModel;
 }
 /**
  * @generated from protobuf message DeleteDeviceReq
@@ -1146,11 +1120,48 @@ class GetAdminDevicesPageResp_Device$Type extends MessageType<GetAdminDevicesPag
  */
 export const GetAdminDevicesPageResp_Device = new GetAdminDevicesPageResp_Device$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GroupModel$Type extends MessageType<GroupModel> {
+    constructor() {
+        super("GroupModel", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GroupModel
+ */
+export const GroupModel = new GroupModel$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetGroupReq$Type extends MessageType<GetGroupReq> {
+    constructor() {
+        super("GetGroupReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetGroupReq
+ */
+export const GetGroupReq = new GetGroupReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetGroupResp$Type extends MessageType<GetGroupResp> {
+    constructor() {
+        super("GetGroupResp", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "model", kind: "message", T: () => GroupModel }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetGroupResp
+ */
+export const GetGroupResp = new GetGroupResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class CreateGroupReq$Type extends MessageType<CreateGroupReq> {
     constructor() {
         super("CreateGroupReq", [
-            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "model", kind: "message", T: () => GroupModel }
         ]);
     }
 }
@@ -1171,38 +1182,11 @@ class CreateGroupResp$Type extends MessageType<CreateGroupResp> {
  */
 export const CreateGroupResp = new CreateGroupResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetGroupReq$Type extends MessageType<GetGroupReq> {
-    constructor() {
-        super("GetGroupReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GetGroupReq
- */
-export const GetGroupReq = new GetGroupReq$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class GetGroupResp$Type extends MessageType<GetGroupResp> {
-    constructor() {
-        super("GetGroupResp", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GetGroupResp
- */
-export const GetGroupResp = new GetGroupResp$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class UpdateGroupReq$Type extends MessageType<UpdateGroupReq> {
     constructor() {
         super("UpdateGroupReq", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "model", kind: "message", T: () => GroupModel }
         ]);
     }
 }
@@ -1223,15 +1207,52 @@ class DeleteGroupReq$Type extends MessageType<DeleteGroupReq> {
  */
 export const DeleteGroupReq = new DeleteGroupReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class CreateDeviceReq$Type extends MessageType<CreateDeviceReq> {
+class DeviceModel$Type extends MessageType<DeviceModel> {
     constructor() {
-        super("CreateDeviceReq", [
+        super("DeviceModel", [
             { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "features", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message DeviceModel
+ */
+export const DeviceModel = new DeviceModel$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceReq$Type extends MessageType<GetDeviceReq> {
+    constructor() {
+        super("GetDeviceReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceReq
+ */
+export const GetDeviceReq = new GetDeviceReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceResp$Type extends MessageType<GetDeviceResp> {
+    constructor() {
+        super("GetDeviceResp", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "model", kind: "message", T: () => DeviceModel }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceResp
+ */
+export const GetDeviceResp = new GetDeviceResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CreateDeviceReq$Type extends MessageType<CreateDeviceReq> {
+    constructor() {
+        super("CreateDeviceReq", [
+            { no: 1, name: "model", kind: "message", T: () => DeviceModel }
         ]);
     }
 }
@@ -1252,46 +1273,11 @@ class CreateDeviceResp$Type extends MessageType<CreateDeviceResp> {
  */
 export const CreateDeviceResp = new CreateDeviceResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetDeviceReq$Type extends MessageType<GetDeviceReq> {
-    constructor() {
-        super("GetDeviceReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GetDeviceReq
- */
-export const GetDeviceReq = new GetDeviceReq$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class GetDeviceResp$Type extends MessageType<GetDeviceResp> {
-    constructor() {
-        super("GetDeviceResp", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "features", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GetDeviceResp
- */
-export const GetDeviceResp = new GetDeviceResp$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class UpdateDeviceReq$Type extends MessageType<UpdateDeviceReq> {
     constructor() {
         super("UpdateDeviceReq", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "features", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+            { no: 2, name: "model", kind: "message", T: () => DeviceModel }
         ]);
     }
 }

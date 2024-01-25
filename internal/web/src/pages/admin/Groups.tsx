@@ -262,7 +262,7 @@ type CreateGroupForm = {
 }
 
 const actionCreateGroupForm = action((form: CreateGroupForm) => useClient()
-  .admin.createGroup(form)
+  .admin.createGroup({ model: form })
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError)
 )
@@ -335,7 +335,7 @@ type UpdateGroupForm = {
 }
 
 const actionUpdateGroupForm = action((form: UpdateGroupForm) => useClient()
-  .admin.updateGroup(form)
+  .admin.updateGroup({ id: form.id, model: form })
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError)
 )
@@ -354,7 +354,7 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
       }
 
       reset(updateGroupForm, {
-        initialValues: { ...res }
+        initialValues: { ...res, ...res.model }
       })
       return false
     })

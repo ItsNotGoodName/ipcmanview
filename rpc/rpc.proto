@@ -234,13 +234,11 @@ message GetAdminDevicesPageResp {
   Sort sort = 3;
 }
 
-message CreateGroupReq {
+// Group
+
+message GroupModel {
   string name = 1;
   string description = 2;
-}
-
-message CreateGroupResp {
-  int64 id = 1;
 }
 
 message GetGroupReq {
@@ -249,21 +247,29 @@ message GetGroupReq {
 
 message GetGroupResp {
   int64 id = 1;
-  string name = 2;
-  string description = 3;
+  GroupModel model = 2;
+}
+
+message CreateGroupReq {
+  GroupModel model = 2;
+}
+
+message CreateGroupResp {
+  int64 id = 1;
 }
 
 message UpdateGroupReq {
   int64 id = 1;
-  string name = 2;
-  string description = 3;
+  GroupModel model = 2;
 }
 
 message DeleteGroupReq {
   int64 id = 1;
 }
 
-message CreateDeviceReq {
+// Device
+
+message DeviceModel {
   string name = 1;
   string url = 2;
   string username = 3;
@@ -272,32 +278,26 @@ message CreateDeviceReq {
   int32 features = 6;
 }
 
-message CreateDeviceResp {
-  int64 id = 1;
-}
-
 message GetDeviceReq {
   int64 id = 1;
 }
 
 message GetDeviceResp {
   int64 id = 1;
-  string name = 2;
-  string url = 3;
-  string username = 4;
-  string password = 5;
-  string location = 6;
-  int32 features = 7;
+  DeviceModel model = 2;
+}
+
+message CreateDeviceReq {
+  DeviceModel model = 1;
+}
+
+message CreateDeviceResp {
+  int64 id = 1;
 }
 
 message UpdateDeviceReq {
   int64 id = 1;
-  string name = 2;
-  string url = 3;
-  string username = 4;
-  string password = 5;
-  string location = 6;
-  int32 features = 7;
+  DeviceModel model = 2;
 }
 
 message DeleteDeviceReq {

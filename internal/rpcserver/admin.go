@@ -230,9 +230,11 @@ func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGro
 		return nil, check(err)
 	}
 	return &rpc.GetGroupResp{
-		Id:          req.Id,
-		Name:        dbGroup.Name,
-		Description: dbGroup.Description,
+		Id: req.Id,
+		Model: &rpc.GroupModel{
+			Name:        dbGroup.Name,
+			Description: dbGroup.Description,
+		},
 	}, nil
 }
 
@@ -255,8 +257,8 @@ func convertCreateUpdateGroupError(msg string, err error) error {
 
 func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.CreateGroupResp, error) {
 	id, err := auth.CreateGroup(ctx, a.db, models.Group{
-		Name:        req.Name,
-		Description: req.Description,
+		Name:        req.Model.GetName(),
+		Description: req.Model.GetDescription(),
 	})
 	if err != nil {
 		return nil, convertCreateUpdateGroupError("Failed to create group.", err)
@@ -274,8 +276,8 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 	}
 	group := dbGroup.Convert()
 
-	group.Name = req.Name
-	group.Description = req.Description
+	group.Name = req.Model.GetName()
+	group.Description = req.Model.GetDescription()
 
 	_, err = auth.UpdateGroup(ctx, a.db, group)
 	if err != nil {
