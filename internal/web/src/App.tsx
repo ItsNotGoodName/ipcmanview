@@ -29,7 +29,7 @@ function App() {
 
   return (
     <ClientProvider>
-      <Router root={Root}> {/* FIXME: solid-router explicitLinks={true} is broken, https://github.com/solidjs/solid-router/issues/356 */}
+      <Router root={Root}>
         <Show when={import.meta.env.DEV}>
           <Route path="/debug">
             <Debug />

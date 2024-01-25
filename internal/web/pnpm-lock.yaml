@@ -27,8 +27,8 @@ dependencies:
     specifier: ^2.1.1
     version: 2.1.1(solid-js@1.8.7)
   '@solidjs/router':
-    specifier: ^0.10.9
-    version: 0.10.9(solid-js@1.8.7)
+    specifier: ^0.10.10
+    version: 0.10.10(solid-js@1.8.7)
   class-variance-authority:
     specifier: ^0.7.0
     version: 0.7.0
@@ -1016,8 +1016,8 @@ packages:
       solid-js: 1.8.7
     dev: false
 
-  /@solidjs/router@0.10.9(solid-js@1.8.7):
-    resolution: {integrity: sha512-TmipgAI2cU7A94fBO1MOEx7j9OYoKtddoOonSFb2221w5I1xxdjLk9W4CZDdyOVdO5z80f70KGJvNq83WFX/Qg==}
+  /@solidjs/router@0.10.10(solid-js@1.8.7):
+    resolution: {integrity: sha512-nGl7gMgsojuaupI5MAK2cFtkndmWWSAPhill/8La3IjujY3vMBamcQFymBsA2ejzxEYJjkOlEQHYgp2jNFkwuQ==}
     peerDependencies:
       solid-js: ^1.8.6
     dependencies:
