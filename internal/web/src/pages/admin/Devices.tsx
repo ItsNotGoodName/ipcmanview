@@ -314,8 +314,8 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
         )}
       </Field>
       <Button type="submit" disabled={createGroupForm.submitting}>
-        <Show when={createGroupForm.submitting} fallback={<>Create group</>}>
-          Creating group
+        <Show when={!createGroupForm.submitting} fallback={<>Creating group</>}>
+          Create group
         </Show>
       </Button>
       <FormMessage form={createGroupForm} />
@@ -401,8 +401,8 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
             )}
           </Field>
           <Button type="submit" disabled={disabled() || updateGroupForm.submitting}>
-            <Show when={updateGroupForm.submitting} fallback={<>Update group</>}>
-              Updating group
+            <Show when={!updateGroupForm.submitting} fallback={<>Updating group</>}>
+              Update group
             </Show>
           </Button>
           <FormMessage form={updateGroupForm} />

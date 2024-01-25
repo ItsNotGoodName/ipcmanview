@@ -1,7 +1,7 @@
 import { action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router"
 import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
 import { ErrorBoundary, For, ParentProps, Show, Suspense, } from "solid-js"
-import { FormError, createForm, required, reset } from "@modular-forms/solid"
+import { createForm, required, reset } from "@modular-forms/solid"
 
 import { formatDate, parseDate, catchAsToast, throwAsFormError } from "~/lib/utils"
 import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
@@ -231,8 +231,8 @@ function ChangeUsernameForm() {
         )}
       </Field>
       <Button type="submit" disabled={changeUsernameForm.submitting}>
-        <Show when={changeUsernameForm.submitting} fallback={<>Update username</>}>
-          Updating username
+        <Show when={!changeUsernameForm.submitting} fallback={<>Updating username</>}>
+          Update username
         </Show>
       </Button>
       <FormMessage form={changeUsernameForm} />
@@ -246,18 +246,24 @@ type ChangePasswordForm = {
   confirmPassword: string
 }
 
-const actionUpdateMyPassword = action((form: ChangePasswordForm) => {
-  if (form.newPassword != form.confirmPassword) {
-    throw new FormError<ChangePasswordForm>("", { confirmPassword: "Password does not match." })
-  }
-  return useClient()
-    .user.updateMyPassword(form)
-    .then(() => revalidate(getProfilePage.key))
-    .catch(throwAsFormError)
-})
+const actionUpdateMyPassword = action((form: ChangePasswordForm) => useClient()
+  .user.updateMyPassword(form)
+  .then(() => revalidate(getProfilePage.key))
+  .catch(throwAsFormError)
+)
 
 function ChangePasswordForm() {
-  const [changePasswordForm, { Field, Form }] = createForm<ChangePasswordForm>({ initialValues: { oldPassword: "", newPassword: "", confirmPassword: "" } });
+  const [changePasswordForm, { Field, Form }] = createForm<ChangePasswordForm>({
+    initialValues: { oldPassword: "", newPassword: "", confirmPassword: "" },
+    validate: (form) => {
+      if (form.newPassword != form.confirmPassword) {
+        return {
+          confirmPassword: "Password does not match."
+        }
+      }
+      return {}
+    }
+  });
   const submit = useAction(actionUpdateMyPassword)
 
   return (

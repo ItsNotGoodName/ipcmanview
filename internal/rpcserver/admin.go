@@ -65,7 +65,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 			LeftJoin("admins ON admins.user_id = users.id")
 		// ORDER BY
 		switch req.Sort.GetField() {
-		case "name":
+		case "username":
 			sb = sb.OrderBy(convertOrderToSQL("username", req.Sort.GetOrder()))
 		case "email":
 			sb = sb.OrderBy(convertOrderToSQL("email", req.Sort.GetOrder()))

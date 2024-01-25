@@ -1,4 +1,4 @@
-import { FormError, createForm, required, reset } from "@modular-forms/solid";
+import { createForm, required, reset } from "@modular-forms/solid";
 import { A, action, redirect, revalidate, useAction } from "@solidjs/router";
 import { ParentProps, Show } from "solid-js";
 
@@ -137,8 +137,8 @@ export function SignIn() {
             )}
           </Field>
           <Button type="submit" disabled={signInForm.submitting}>
-            <Show when={signInForm.submitting} fallback={<>Sign in</>}>
-              Signing in
+            <Show when={!signInForm.submitting} fallback={<>Signing in</>}>
+              Sign in
             </Show>
           </Button>
           <FormMessage form={signInForm} />
@@ -158,22 +158,23 @@ type SignUpForm = {
   confirmPassword: string
 }
 
-const actionSignUp = action((form: SignUpForm) => {
-  if (form.password != form.confirmPassword) {
-    throw new FormError<SignUpForm>("", { confirmPassword: "Password does not match." })
-  }
-
-  return useClient()
-    .auth.signUp(form)
-    .then()
-    .catch(throwAsFormError)
-    .then(async () => {
-      throw redirect("/signin")
-    })
-})
+const actionSignUp = action((form: SignUpForm) => useClient()
+  .auth.signUp(form)
+  .then()
+  .catch(throwAsFormError)
+  .then(async () => { throw redirect("/signin") }))
 
 export function Signup() {
-  const [signUpForm, { Field, Form }] = createForm<SignUpForm>();
+  const [signUpForm, { Field, Form }] = createForm<SignUpForm>({
+    validate: (form) => {
+      if (form.password != form.confirmPassword) {
+        return {
+          confirmPassword: "Password does not match."
+        }
+      }
+      return {}
+    }
+  });
   const signUp = useAction(actionSignUp)
 
   return (
@@ -257,8 +258,8 @@ export function Signup() {
             )}
           </Field>
           <Button type="submit" disabled={signUpForm.submitting}>
-            <Show when={signUpForm.submitting} fallback={<>Sign up</>}>
-              Signing up
+            <Show when={!signUpForm.submitting} fallback={<>Signing up</>}>
+              Sign up
             </Show>
           </Button>
           <FormMessage form={signUpForm} />
@@ -307,8 +308,8 @@ export function Forgot() {
             )}
           </Field>
           <Button type="submit" disabled={forgetForm.submitting}>
-            <Show when={forgetForm.submitting} fallback={<>Send password reset email</>}>
-              Sending password reset email
+            <Show when={!forgetForm.submitting} fallback={<>Sending password reset email</>}>
+              Send password reset email
             </Show>
           </Button>
           <FormMessage form={forgetForm} />

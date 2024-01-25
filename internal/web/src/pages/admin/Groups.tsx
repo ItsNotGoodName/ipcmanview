@@ -50,6 +50,7 @@ export function AdminGroups() {
     },
   }))
 
+  // List group
   const previousDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
   const previous = () => !previousDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminGroupsPageSearchParams)
   const nextDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
@@ -59,9 +60,21 @@ export function AdminGroups() {
     return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminGroupsPageSearchParams)
   }
 
+  // Create group
   const [createFormOpen, setCreateFormOpen] = createSignal(false);
 
+  // Update group
   const [updateGroupFormID, setUpdateGroupFormID] = createSignal<bigint>(BigInt(0))
+
+  // Delete group
+  const [deleteGroupSelection, setDeleteGroupSelection] = createSignal<{ name: string, id: bigint } | undefined>()
+  const deleteGroupSubmission = useSubmission(actionDeleteGroup)
+  const deleteGroupAction = useAction(actionDeleteGroup)
+  const deleteGroup = () => deleteGroupAction(deleteGroupSelection()!.id).then(() => setDeleteGroupSelection(undefined))
+
+  // Disable/Enable group
+  const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
+  const setGroupDisableAction = useAction(actionSetGroupDisable)
 
   return (
     <LayoutNormal>
@@ -90,6 +103,20 @@ export function AdminGroups() {
           </DialogContent>
         </DialogPortal>
       </DialogRoot>
+
+      <AlertDialogRoot open={deleteGroupSelection() != undefined} onOpenChange={() => setDeleteGroupSelection(undefined)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you wish to delete {deleteGroupSelection()?.name}?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroup}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogRoot>
 
       <div class="text-xl">Groups</div>
       <Seperator />
@@ -188,74 +215,50 @@ export function AdminGroups() {
             <TableBody>
               <For each={data()?.items}>
                 {(group) => {
-                  const onClick = () => navigate(`./${group.id}`)
-
-                  const [deleteGroupAlertOpen, setDeleteGroupAlertOpen] = createSignal(false)
-                  const deleteGroupSubmission = useSubmission(actionDeleteGroup)
-                  const deleteGroupAction = useAction(actionDeleteGroup)
-                  const deleteGroup = () => deleteGroupAction(group.id).then(() => setDeleteGroupAlertOpen(false))
-
-                  const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
-                  const setGroupDisableAction = useAction(actionSetGroupDisable)
-                  const setGroupDisable = () => setGroupDisableAction({ id: group.id, disable: !group.disabled })
+                  const navigateToGroup = () => navigate(`./${group.id}`)
+                  const toggleGroupDisable = () => setGroupDisableAction({ id: group.id, disable: !group.disabled })
 
                   return (
-                    <>
-                      <AlertDialogRoot open={deleteGroupAlertOpen()} onOpenChange={setDeleteGroupAlertOpen}>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure you wish to delete {group.name}?</AlertDialogTitle>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroup}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialogRoot>
-
-                      <TableRow class="">
-                        <TableCell onClick={onClick} class="cursor-pointer select-none">{group.name}</TableCell>
-                        <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{group.userCount.toString()}</TableCell>
-                        <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(group.createdAtTime))}</TableCell>
-                        <TableCell class="py-0">
-                          <div class="flex justify-end gap-2">
-                            <Show when={group.disabled}>
-                              <TooltipRoot>
-                                <TooltipTrigger class="p-1">
-                                  <RiSystemLockLine class="h-5 w-5" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Disabled since {formatDate(parseDate(group.disabledAtTime))}
-                                </TooltipContent>
-                              </TooltipRoot>
-                            </Show>
-                            <DropdownMenuRoot placement="bottom-end">
-                              <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                                <RiSystemMore2Line class="h-5 w-5" />
-                              </DropdownMenuTrigger>
-                              <DropdownMenuPortal>
-                                <DropdownMenuContent>
-                                  <DropdownMenuItem disabled={setGroupDisableSubmission.pending} onSelect={() => setGroupDisable()}>
-                                    <Show when={group.disabled} fallback={<>Disable</>}>
-                                      Enable
-                                    </Show>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={() => setUpdateGroupFormID(group.id)}>
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onSelect={() => setDeleteGroupAlertOpen(true)}>
-                                    Delete
-                                  </DropdownMenuItem>
-                                  <DropdownMenuArrow />
-                                </DropdownMenuContent>
-                              </DropdownMenuPortal>
-                            </DropdownMenuRoot>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    </>
+                    <TableRow class="">
+                      <TableCell onClick={navigateToGroup} class="cursor-pointer select-none">{group.name}</TableCell>
+                      <TableCell onClick={navigateToGroup} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{group.userCount.toString()}</TableCell>
+                      <TableCell onClick={navigateToGroup} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(group.createdAtTime))}</TableCell>
+                      <TableCell class="py-0">
+                        <div class="flex justify-end gap-2">
+                          <Show when={group.disabled}>
+                            <TooltipRoot>
+                              <TooltipTrigger class="p-1">
+                                <RiSystemLockLine class="h-5 w-5" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Disabled since {formatDate(parseDate(group.disabledAtTime))}
+                              </TooltipContent>
+                            </TooltipRoot>
+                          </Show>
+                          <DropdownMenuRoot placement="bottom-end">
+                            <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+                              <RiSystemMore2Line class="h-5 w-5" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem disabled={setGroupDisableSubmission.pending} onSelect={toggleGroupDisable}>
+                                  <Show when={group.disabled} fallback={<>Disable</>}>
+                                    Enable
+                                  </Show>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setUpdateGroupFormID(group.id)}>
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setDeleteGroupSelection(group)}>
+                                  Delete
+                                </DropdownMenuItem>
+                                <DropdownMenuArrow />
+                              </DropdownMenuContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuRoot>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   )
                 }}
               </For>
@@ -327,8 +330,8 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
         )}
       </Field>
       <Button type="submit" disabled={createGroupForm.submitting}>
-        <Show when={createGroupForm.submitting} fallback={<>Create group</>}>
-          Creating group
+        <Show when={!createGroupForm.submitting} fallback={<>Creating group</>}>
+          Create group
         </Show>
       </Button>
       <FormMessage form={createGroupForm} />
@@ -414,8 +417,8 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
             )}
           </Field>
           <Button type="submit" disabled={disabled() || updateGroupForm.submitting}>
-            <Show when={updateGroupForm.submitting} fallback={<>Update group</>}>
-              Updating group
+            <Show when={!updateGroupForm.submitting} fallback={<>Updating group</>}>
+              Update group
             </Show>
           </Button>
           <FormMessage form={updateGroupForm} />
