@@ -1,27 +1,26 @@
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
+import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
 import { AdminGroupsPageSearchParams, getAdminGroupsPage } from "./Groups.data";
-import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal } from "solid-js";
-import { RiArrowsArrowDownSLine, RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemDeleteBinLine, RiSystemLockLine } from "solid-icons/ri";
+import { ErrorBoundary, For, Show, Suspense, createSignal } from "solid-js";
+import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemDeleteBinLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { catchAsToast, cn, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
-import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
+import { catchAsToast, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
+import { Order, } from "~/twirp/rpc";
 import { encodeOrder, nextOrder, parseOrder } from "~/lib/order";
-import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
+import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { useClient } from "~/providers/client";
 import { createForm, required, reset } from "@modular-forms/solid";
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
 import { Input } from "~/ui/Input";
 import { Textarea } from "~/ui/Textarea";
-import { DialogCloseButton, DialogContent, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
-import { As } from "@kobalte/core";
+import { DialogCloseButton, DialogContent, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, } from "~/ui/Dialog";
 import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { ConfirmButton } from "~/ui/Confirm";
-
 
 const actionDeleteGroup = action((id: bigint) => useClient()
   .admin.deleteGroup({ id })
@@ -65,25 +64,21 @@ export function AdminGroups() {
 
   return (
     <div class="flex justify-center p-4">
+      <DialogRoot open={createFormOpen()} onOpenChange={setCreateFormOpen}>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogContent>
+            <DialogHeader>
+              <DialogCloseButton />
+              <DialogTitle>Create group</DialogTitle>
+            </DialogHeader>
+            <CreateGroupForm setOpen={setCreateFormOpen} />
+          </DialogContent>
+        </DialogPortal>
+      </DialogRoot>
+
       <div class="flex w-full max-w-4xl flex-col gap-2">
-        <div class="flex items-center justify-between gap-2">
-          <div class="text-xl">Groups</div>
-          <DialogRoot open={createFormOpen()} onOpenChange={setCreateFormOpen}>
-            <DialogTrigger asChild>
-              <As component={Button} size="sm">Create</As>
-            </DialogTrigger>
-            <DialogPortal>
-              <DialogOverlay />
-              <DialogContent>
-                <DialogHeader>
-                  <DialogCloseButton />
-                  <DialogTitle>Create group</DialogTitle>
-                </DialogHeader>
-                <CreateGroupForm setOpen={setCreateFormOpen} />
-              </DialogContent>
-            </DialogPortal>
-          </DialogRoot>
-        </div>
+        <div class="text-xl">Groups</div>
         <Seperator />
         <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
           <Suspense fallback={<Skeleton class="h-32" />}>
@@ -131,33 +126,49 @@ export function AdminGroups() {
               <TableHeader>
                 <tr class="border-b">
                   <TableHead class="w-full">
-                    <SortButton
+                    <TableSortButton
                       name="name"
                       onClick={toggleSort}
                       sort={groups()?.sort}
                     >
                       Name
-                    </SortButton>
+                    </TableSortButton>
                   </TableHead>
                   <TableHead>
-                    <SortButton
+                    <TableSortButton
                       name="userCount"
                       onClick={toggleSort}
                       sort={groups()?.sort}
                     >
                       Users
-                    </SortButton>
+                    </TableSortButton>
                   </TableHead>
                   <TableHead>
-                    <SortButton
+                    <TableSortButton
                       name="createdAt"
                       onClick={toggleSort}
                       sort={groups()?.sort}
                     >
                       Created At
-                    </SortButton>
+                    </TableSortButton>
                   </TableHead>
-                  <TableHead />
+                  <TableHead>
+                    <div class="flex items-center justify-end">
+                      <DropdownMenuRoot placement="bottom-end">
+                        <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+                          <RiSystemMore2Line class="h-5 w-5" />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={() => setCreateFormOpen(true)}>
+                              Create
+                            </DropdownMenuItem>
+                            <DropdownMenuArrow />
+                          </DropdownMenuContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuRoot>
+                    </div>
+                  </TableHead>
                 </tr>
               </TableHeader>
               <TableBody>
@@ -203,13 +214,82 @@ export function AdminGroups() {
                 </For>
               </TableBody>
               <TableCaption>
-                <PageResultMetadata pageResult={groups()?.pageResult} />
+                <TableMetadata pageResult={groups()?.pageResult} />
               </TableCaption>
             </TableRoot>
           </Suspense>
         </ErrorBoundary>
       </div>
-    </div >
+    </div>
+  )
+}
+
+type CreateGroupForm = {
+  name: string
+  description: string
+}
+
+const actionCreateGroupForm = action((form: CreateGroupForm) => useClient()
+  .admin.createGroup(form)
+  .then(() => revalidate(getAdminGroupsPage.key))
+  .catch(throwAsFormError)
+)
+
+function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
+  const [createGroupForm, { Field, Form }] = createForm<CreateGroupForm>({ initialValues: { name: "", description: "" } });
+  const createGroupFormAction = useAction(actionCreateGroupForm)
+  const [addMore, setAddMore] = createSignal(false)
+  const submit = (form: CreateGroupForm) => createGroupFormAction(form)
+    .then(() => {
+      props.setOpen(addMore())
+      reset(createGroupForm)
+    })
+
+  return (
+    <Form class="flex flex-col gap-4" onSubmit={submit}>
+      <input class="hidden" type="text" name="username" autocomplete="username" />
+      <Field name="name" validate={required("Please enter a name.")}>
+        {(field, props) => (
+          <FieldRoot class="gap-1.5">
+            <FieldLabel field={field}>Name</FieldLabel>
+            <FieldControl field={field}>
+              <Input
+                {...props}
+                placeholder="Name"
+                value={field.value}
+              />
+            </FieldControl>
+            <FieldMessage field={field} />
+          </FieldRoot>
+        )}
+      </Field>
+      <Field name="description">
+        {(field, props) => (
+          <FieldRoot class="gap-1.5">
+            <FieldLabel field={field}>Description</FieldLabel>
+            <FieldControl field={field}>
+              <Textarea
+                {...props}
+                value={field.value}
+                placeholder="Description"
+              />
+            </FieldControl>
+            <FieldMessage field={field} />
+          </FieldRoot>
+        )}
+      </Field>
+      <Button type="submit" disabled={createGroupForm.submitting}>
+        <Show when={createGroupForm.submitting} fallback={<>Create group</>}>
+          Creating group
+        </Show>
+      </Button>
+      <FormMessage form={createGroupForm} />
+      <CheckboxRoot checked={addMore()} onChange={setAddMore}>
+        <CheckboxInput />
+        <CheckboxControl />
+        <CheckboxLabel>Add more</CheckboxLabel>
+      </CheckboxRoot>
+    </Form>
   )
 }
 
@@ -271,97 +351,3 @@ export function AdminGroups() {
 //     </Form>
 //   )
 // }
-
-type CreateGroupForm = {
-  name: string
-  description: string
-}
-
-const actionCreateGroupForm = action((form: CreateGroupForm) => useClient()
-  .admin.createGroup(form)
-  .then(() => revalidate(getAdminGroupsPage.key))
-  .catch(throwAsFormError)
-)
-
-function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
-  const [createGroupForm, { Field, Form }] = createForm<CreateGroupForm>({ initialValues: { name: "", description: "" } });
-  const createGroupFormAction = useAction(actionCreateGroupForm)
-  const [keepOpen, setKeepOpen] = createSignal(false)
-  const submit = (form: CreateGroupForm) => createGroupFormAction(form)
-    .then(() => {
-      props.setOpen(keepOpen())
-      reset(createGroupForm)
-    })
-
-  return (
-    <Form class="flex flex-col gap-4" onSubmit={submit}>
-      <input class="hidden" type="text" name="username" autocomplete="username" />
-      <Field name="name" validate={required("Please enter a name.")}>
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Name</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="Name"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Field name="description">
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Description</FieldLabel>
-            <FieldControl field={field}>
-              <Textarea
-                {...props}
-                value={field.value}
-                placeholder="Description"
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Button type="submit" disabled={createGroupForm.submitting}>
-        <Show when={createGroupForm.submitting} fallback={<>Create group</>}>
-          Creating group
-        </Show>
-      </Button>
-      <FormMessage form={createGroupForm} />
-      <CheckboxRoot checked={keepOpen()} onChange={setKeepOpen}>
-        <CheckboxInput />
-        <CheckboxControl />
-        <CheckboxLabel>Keep open</CheckboxLabel>
-      </CheckboxRoot>
-    </Form>
-  )
-}
-
-function SortButton(props: ParentProps<{ onClick: (name: string) => void, name: string, sort?: Sort }>) {
-  return (
-    <button
-      onClick={[props.onClick, props.name]}
-      class={cn("text-nowrap flex items-center whitespace-nowrap text-lg", props.name == props.sort?.field && 'text-blue-500')}
-    >
-      {props.children}
-      <RiArrowsArrowDownSLine data-selected={props.sort?.field == props.name && props.sort.order == Order.ASC} class="h-5 w-5 transition-all data-[selected=true]:rotate-180" />
-    </button>
-  )
-}
-
-function PageResultMetadata(props: { pageResult?: PagePaginationResult }) {
-  return (
-    <div class="flex justify-between">
-      <div>
-        {props.pageResult?.seenItems.toString() || 0} / {props.pageResult?.totalItems.toString() || 0}
-      </div>
-      <div>
-        Page {props.pageResult?.page || 0} / {props.pageResult?.totalPages || 0}
-      </div>
-    </div>
-  )
-}
