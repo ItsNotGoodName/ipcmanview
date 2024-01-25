@@ -19,6 +19,8 @@ import loadAdminGroups from "./pages/admin/Groups.data";
 import { AdminHome } from "./pages/admin/Home";
 import { AdminGroupsID } from "./pages/admin/GroupsID";
 import loadAdminGroupsID from "./pages/admin/GroupsID.data";
+import { AdminUsers } from "./pages/admin/Users";
+import loadAdminUsers from "./pages/admin/Users.data";
 
 const Debug = lazy(() => import("./pages/debug"));
 
@@ -48,6 +50,7 @@ function App() {
             <Route path="/admin" component={AdminHome} />
             <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />
             <Route path="/admin/groups/:id" component={AdminGroupsID} load={loadAdminGroupsID} />
+            <Route path="/admin/users" component={AdminUsers} load={loadAdminUsers} />
           </Show>
           <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />
           <Route path="*404" component={NotFound} />

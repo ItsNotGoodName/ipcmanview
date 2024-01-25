@@ -151,6 +151,7 @@ message ListMyGroupsResp {
 service Admin {
   rpc GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
   rpc GetAdminGroupIDPage(GetAdminGroupIDPageReq) returns (GetAdminGroupIDPageResp);
+  rpc GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
 
   rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
   rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
@@ -160,7 +161,6 @@ service Admin {
 message GetAdminGroupsPageReq {
   PagePagination page = 1;
   Sort sort = 2;
-  // repeated string filters = 3;
 }
 
 message GetAdminGroupsPageResp {
@@ -198,6 +198,26 @@ message GetAdminGroupIDPageResp {
     string name = 2;
   }
   repeated User users = 2;
+}
+
+message GetAdminUsersPageReq {
+  PagePagination page = 1;
+  Sort sort = 2;
+}
+
+message GetAdminUsersPageResp {
+  message User {
+    int64 id = 1;
+    string username = 2;
+    string email = 3;
+    bool disabled = 4;
+    bool admin = 5;
+    google.protobuf.Timestamp disabled_at_time = 6;
+    google.protobuf.Timestamp created_at_time = 7;
+  }
+  repeated User items = 1;
+  PagePaginationResult pageResult = 2;
+  Sort sort = 3;
 }
 
 message CreateGroupReq {

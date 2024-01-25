@@ -6,6 +6,8 @@ import type { DeleteGroupReq } from "./rpc";
 import type { UpdateGroupReq } from "./rpc";
 import type { CreateGroupResp } from "./rpc";
 import type { CreateGroupReq } from "./rpc";
+import type { GetAdminUsersPageResp } from "./rpc";
+import type { GetAdminUsersPageReq } from "./rpc";
 import type { GetAdminGroupIDPageResp } from "./rpc";
 import type { GetAdminGroupIDPageReq } from "./rpc";
 import type { GetAdminGroupsPageResp } from "./rpc";
@@ -239,6 +241,10 @@ export interface IAdminClient {
      */
     getAdminGroupIDPage(input: GetAdminGroupIDPageReq, options?: RpcOptions): UnaryCall<GetAdminGroupIDPageReq, GetAdminGroupIDPageResp>;
     /**
+     * @generated from protobuf rpc: GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
+     */
+    getAdminUsersPage(input: GetAdminUsersPageReq, options?: RpcOptions): UnaryCall<GetAdminUsersPageReq, GetAdminUsersPageResp>;
+    /**
      * @generated from protobuf rpc: CreateGroup(CreateGroupReq) returns (CreateGroupResp);
      */
     createGroup(input: CreateGroupReq, options?: RpcOptions): UnaryCall<CreateGroupReq, CreateGroupResp>;
@@ -277,24 +283,31 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<GetAdminGroupIDPageReq, GetAdminGroupIDPageResp>("unary", this._transport, method, opt, input);
     }
     /**
+     * @generated from protobuf rpc: GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
+     */
+    getAdminUsersPage(input: GetAdminUsersPageReq, options?: RpcOptions): UnaryCall<GetAdminUsersPageReq, GetAdminUsersPageResp> {
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetAdminUsersPageReq, GetAdminUsersPageResp>("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: CreateGroup(CreateGroupReq) returns (CreateGroupResp);
      */
     createGroup(input: CreateGroupReq, options?: RpcOptions): UnaryCall<CreateGroupReq, CreateGroupResp> {
-        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<CreateGroupReq, CreateGroupResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
      */
     updateGroup(input: UpdateGroupReq, options?: RpcOptions): UnaryCall<UpdateGroupReq, Empty> {
-        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        const method = this.methods[4], opt = this._transport.mergeOptions(options);
         return stackIntercept<UpdateGroupReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
      */
     deleteGroup(input: DeleteGroupReq, options?: RpcOptions): UnaryCall<DeleteGroupReq, Empty> {
-        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        const method = this.methods[5], opt = this._transport.mergeOptions(options);
         return stackIntercept<DeleteGroupReq, Empty>("unary", this._transport, method, opt, input);
     }
 }
