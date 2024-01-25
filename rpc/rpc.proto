@@ -69,11 +69,18 @@ message ForgotPasswordReq {
 
 message ForgotPasswordResp {}
 
-// ---------- Page
+// ---------- User
 
-service Page {
+service User {
+  // Pages
   rpc GetHomePage(google.protobuf.Empty) returns (GetHomePageResp);
   rpc GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
+
+  // User
+  rpc UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
+  rpc UpdateMyPassword(UpdateMyPasswordReq) returns (google.protobuf.Empty);
+  rpc RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
+  rpc RevokeAllMySessions(RevokeAllMySessionsReq) returns (google.protobuf.Empty);
 }
 
 message GetHomePageResp {
@@ -108,15 +115,6 @@ message GetProfilePageResp {
   repeated Group groups = 7;
 }
 
-// ---------- User
-
-service User {
-  rpc UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
-  rpc UpdateMyPassword(UpdateMyPasswordReq) returns (google.protobuf.Empty);
-  rpc RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
-  rpc RevokeAllMySessions(RevokeAllMySessionsReq) returns (google.protobuf.Empty);
-}
-
 message UpdateMyUsernameReq {
   string new_username = 1;
 }
@@ -139,12 +137,19 @@ service Admin {
   rpc GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
   rpc GetAdminGroupIDPage(GetAdminGroupIDPageReq) returns (GetAdminGroupIDPageResp);
   rpc GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
+  rpc GetAdminDevicesPage(GetAdminDevicesPageReq) returns (GetAdminDevicesPageResp);
 
   // Group CRUD
   rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
   rpc GetGroup(GetGroupReq) returns (GetGroupResp);
   rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
   rpc DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
+
+  // Device CRUD
+  rpc CreateDevice(CreateDeviceReq) returns (CreateDeviceResp);
+  rpc GetDevice(GetDeviceReq) returns (GetDeviceResp);
+  rpc UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
+  rpc DeleteDevice(DeleteDeviceReq) returns (google.protobuf.Empty);
 }
 
 message GetAdminGroupsPageReq {
@@ -209,6 +214,26 @@ message GetAdminUsersPageResp {
   Sort sort = 3;
 }
 
+message GetAdminDevicesPageReq {
+  PagePagination page = 1;
+  Sort sort = 2;
+}
+
+message GetAdminDevicesPageResp {
+  message Device {
+    int64 id = 1;
+    string name = 2;
+    string url = 3;
+    string username = 4;
+    bool disabled = 5;
+    google.protobuf.Timestamp disabled_at_time = 6;
+    google.protobuf.Timestamp created_at_time = 7;
+  }
+  repeated Device items = 1;
+  PagePaginationResult pageResult = 2;
+  Sort sort = 3;
+}
+
 message CreateGroupReq {
   string name = 1;
   string description = 2;
@@ -235,5 +260,46 @@ message UpdateGroupReq {
 }
 
 message DeleteGroupReq {
+  int64 id = 1;
+}
+
+message CreateDeviceReq {
+  string name = 1;
+  string url = 2;
+  string username = 3;
+  string password = 4;
+  string location = 5;
+  int32 features = 6;
+}
+
+message CreateDeviceResp {
+  int64 id = 1;
+}
+
+message GetDeviceReq {
+  int64 id = 1;
+}
+
+message GetDeviceResp {
+  int64 id = 1;
+  string name = 2;
+  string url = 3;
+  string username = 4;
+  string password = 5;
+  string location = 6;
+  int32 features = 7;
+}
+
+message UpdateDeviceReq {
+  int64 id = 1;
+  string name = 2;
+  string url = 3;
+  string username = 4;
+  string password = 5;
+  string location = 6;
+  int32 features = 7;
+}
+
+message DeleteDeviceReq {
   int64 id = 1;
 }

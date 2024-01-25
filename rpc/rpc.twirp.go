@@ -1297,783 +1297,16 @@ func (s *authServer) PathPrefix() string {
 }
 
 // ==============
-// Page Interface
-// ==============
-
-type Page interface {
-	GetHomePage(context.Context, *google_protobuf.Empty) (*GetHomePageResp, error)
-
-	GetProfilePage(context.Context, *google_protobuf.Empty) (*GetProfilePageResp, error)
-}
-
-// ====================
-// Page Protobuf Client
-// ====================
-
-type pageProtobufClient struct {
-	client      HTTPClient
-	urls        [2]string
-	interceptor twirp.Interceptor
-	opts        twirp.ClientOptions
-}
-
-// NewPageProtobufClient creates a Protobuf client that implements the Page interface.
-// It communicates using Protobuf and can be configured with a custom HTTPClient.
-func NewPageProtobufClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) Page {
-	if c, ok := client.(*http.Client); ok {
-		client = withoutRedirects(c)
-	}
-
-	clientOpts := twirp.ClientOptions{}
-	for _, o := range opts {
-		o(&clientOpts)
-	}
-
-	// Using ReadOpt allows backwards and forwards compatibility with new options in the future
-	literalURLs := false
-	_ = clientOpts.ReadOpt("literalURLs", &literalURLs)
-	var pathPrefix string
-	if ok := clientOpts.ReadOpt("pathPrefix", &pathPrefix); !ok {
-		pathPrefix = "/twirp" // default prefix
-	}
-
-	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
-	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "", "Page")
-	urls := [2]string{
-		serviceURL + "GetHomePage",
-		serviceURL + "GetProfilePage",
-	}
-
-	return &pageProtobufClient{
-		client:      client,
-		urls:        urls,
-		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
-		opts:        clientOpts,
-	}
-}
-
-func (c *pageProtobufClient) GetHomePage(ctx context.Context, in *google_protobuf.Empty) (*GetHomePageResp, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "")
-	ctx = ctxsetters.WithServiceName(ctx, "Page")
-	ctx = ctxsetters.WithMethodName(ctx, "GetHomePage")
-	caller := c.callGetHomePage
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *google_protobuf.Empty) (*GetHomePageResp, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return c.callGetHomePage(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*GetHomePageResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*GetHomePageResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *pageProtobufClient) callGetHomePage(ctx context.Context, in *google_protobuf.Empty) (*GetHomePageResp, error) {
-	out := new(GetHomePageResp)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
-func (c *pageProtobufClient) GetProfilePage(ctx context.Context, in *google_protobuf.Empty) (*GetProfilePageResp, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "")
-	ctx = ctxsetters.WithServiceName(ctx, "Page")
-	ctx = ctxsetters.WithMethodName(ctx, "GetProfilePage")
-	caller := c.callGetProfilePage
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *google_protobuf.Empty) (*GetProfilePageResp, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return c.callGetProfilePage(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*GetProfilePageResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*GetProfilePageResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *pageProtobufClient) callGetProfilePage(ctx context.Context, in *google_protobuf.Empty) (*GetProfilePageResp, error) {
-	out := new(GetProfilePageResp)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
-// ================
-// Page JSON Client
-// ================
-
-type pageJSONClient struct {
-	client      HTTPClient
-	urls        [2]string
-	interceptor twirp.Interceptor
-	opts        twirp.ClientOptions
-}
-
-// NewPageJSONClient creates a JSON client that implements the Page interface.
-// It communicates using JSON and can be configured with a custom HTTPClient.
-func NewPageJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOption) Page {
-	if c, ok := client.(*http.Client); ok {
-		client = withoutRedirects(c)
-	}
-
-	clientOpts := twirp.ClientOptions{}
-	for _, o := range opts {
-		o(&clientOpts)
-	}
-
-	// Using ReadOpt allows backwards and forwards compatibility with new options in the future
-	literalURLs := false
-	_ = clientOpts.ReadOpt("literalURLs", &literalURLs)
-	var pathPrefix string
-	if ok := clientOpts.ReadOpt("pathPrefix", &pathPrefix); !ok {
-		pathPrefix = "/twirp" // default prefix
-	}
-
-	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
-	serviceURL := sanitizeBaseURL(baseURL)
-	serviceURL += baseServicePath(pathPrefix, "", "Page")
-	urls := [2]string{
-		serviceURL + "GetHomePage",
-		serviceURL + "GetProfilePage",
-	}
-
-	return &pageJSONClient{
-		client:      client,
-		urls:        urls,
-		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
-		opts:        clientOpts,
-	}
-}
-
-func (c *pageJSONClient) GetHomePage(ctx context.Context, in *google_protobuf.Empty) (*GetHomePageResp, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "")
-	ctx = ctxsetters.WithServiceName(ctx, "Page")
-	ctx = ctxsetters.WithMethodName(ctx, "GetHomePage")
-	caller := c.callGetHomePage
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *google_protobuf.Empty) (*GetHomePageResp, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return c.callGetHomePage(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*GetHomePageResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*GetHomePageResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *pageJSONClient) callGetHomePage(ctx context.Context, in *google_protobuf.Empty) (*GetHomePageResp, error) {
-	out := new(GetHomePageResp)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
-func (c *pageJSONClient) GetProfilePage(ctx context.Context, in *google_protobuf.Empty) (*GetProfilePageResp, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "")
-	ctx = ctxsetters.WithServiceName(ctx, "Page")
-	ctx = ctxsetters.WithMethodName(ctx, "GetProfilePage")
-	caller := c.callGetProfilePage
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *google_protobuf.Empty) (*GetProfilePageResp, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return c.callGetProfilePage(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*GetProfilePageResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*GetProfilePageResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *pageJSONClient) callGetProfilePage(ctx context.Context, in *google_protobuf.Empty) (*GetProfilePageResp, error) {
-	out := new(GetProfilePageResp)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
-// ===================
-// Page Server Handler
-// ===================
-
-type pageServer struct {
-	Page
-	interceptor      twirp.Interceptor
-	hooks            *twirp.ServerHooks
-	pathPrefix       string // prefix for routing
-	jsonSkipDefaults bool   // do not include unpopulated fields (default values) in the response
-	jsonCamelCase    bool   // JSON fields are serialized as lowerCamelCase rather than keeping the original proto names
-}
-
-// NewPageServer builds a TwirpServer that can be used as an http.Handler to handle
-// HTTP requests that are routed to the right method in the provided svc implementation.
-// The opts are twirp.ServerOption modifiers, for example twirp.WithServerHooks(hooks).
-func NewPageServer(svc Page, opts ...interface{}) TwirpServer {
-	serverOpts := newServerOpts(opts)
-
-	// Using ReadOpt allows backwards and forwards compatibility with new options in the future
-	jsonSkipDefaults := false
-	_ = serverOpts.ReadOpt("jsonSkipDefaults", &jsonSkipDefaults)
-	jsonCamelCase := false
-	_ = serverOpts.ReadOpt("jsonCamelCase", &jsonCamelCase)
-	var pathPrefix string
-	if ok := serverOpts.ReadOpt("pathPrefix", &pathPrefix); !ok {
-		pathPrefix = "/twirp" // default prefix
-	}
-
-	return &pageServer{
-		Page:             svc,
-		hooks:            serverOpts.Hooks,
-		interceptor:      twirp.ChainInterceptors(serverOpts.Interceptors...),
-		pathPrefix:       pathPrefix,
-		jsonSkipDefaults: jsonSkipDefaults,
-		jsonCamelCase:    jsonCamelCase,
-	}
-}
-
-// writeError writes an HTTP response with a valid Twirp error format, and triggers hooks.
-// If err is not a twirp.Error, it will get wrapped with twirp.InternalErrorWith(err)
-func (s *pageServer) writeError(ctx context.Context, resp http.ResponseWriter, err error) {
-	writeError(ctx, resp, err, s.hooks)
-}
-
-// handleRequestBodyError is used to handle error when the twirp server cannot read request
-func (s *pageServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
-	if context.Canceled == ctx.Err() {
-		s.writeError(ctx, resp, twirp.NewError(twirp.Canceled, "failed to read request: context canceled"))
-		return
-	}
-	if context.DeadlineExceeded == ctx.Err() {
-		s.writeError(ctx, resp, twirp.NewError(twirp.DeadlineExceeded, "failed to read request: deadline exceeded"))
-		return
-	}
-	s.writeError(ctx, resp, twirp.WrapError(malformedRequestError(msg), err))
-}
-
-// PagePathPrefix is a convenience constant that may identify URL paths.
-// Should be used with caution, it only matches routes generated by Twirp Go clients,
-// with the default "/twirp" prefix and default CamelCase service and method names.
-// More info: https://twitchtv.github.io/twirp/docs/routing.html
-const PagePathPrefix = "/twirp/Page/"
-
-func (s *pageServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	ctx = ctxsetters.WithPackageName(ctx, "")
-	ctx = ctxsetters.WithServiceName(ctx, "Page")
-	ctx = ctxsetters.WithResponseWriter(ctx, resp)
-
-	var err error
-	ctx, err = callRequestReceived(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	if req.Method != "POST" {
-		msg := fmt.Sprintf("unsupported method %q (only POST is allowed)", req.Method)
-		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
-		return
-	}
-
-	// Verify path format: [<prefix>]/<package>.<Service>/<Method>
-	prefix, pkgService, method := parseTwirpPath(req.URL.Path)
-	if pkgService != "Page" {
-		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
-		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
-		return
-	}
-	if prefix != s.pathPrefix {
-		msg := fmt.Sprintf("invalid path prefix %q, expected %q, on path %q", prefix, s.pathPrefix, req.URL.Path)
-		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
-		return
-	}
-
-	switch method {
-	case "GetHomePage":
-		s.serveGetHomePage(ctx, resp, req)
-		return
-	case "GetProfilePage":
-		s.serveGetProfilePage(ctx, resp, req)
-		return
-	default:
-		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
-		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
-		return
-	}
-}
-
-func (s *pageServer) serveGetHomePage(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	header := req.Header.Get("Content-Type")
-	i := strings.Index(header, ";")
-	if i == -1 {
-		i = len(header)
-	}
-	switch strings.TrimSpace(strings.ToLower(header[:i])) {
-	case "application/json":
-		s.serveGetHomePageJSON(ctx, resp, req)
-	case "application/protobuf":
-		s.serveGetHomePageProtobuf(ctx, resp, req)
-	default:
-		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
-		twerr := badRouteError(msg, req.Method, req.URL.Path)
-		s.writeError(ctx, resp, twerr)
-	}
-}
-
-func (s *pageServer) serveGetHomePageJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "GetHomePage")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	d := json.NewDecoder(req.Body)
-	rawReqBody := json.RawMessage{}
-	if err := d.Decode(&rawReqBody); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-	reqContent := new(google_protobuf.Empty)
-	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
-	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-
-	handler := s.Page.GetHomePage
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *google_protobuf.Empty) (*GetHomePageResp, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return s.Page.GetHomePage(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*GetHomePageResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*GetHomePageResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *GetHomePageResp
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetHomePageResp and nil error while calling GetHomePage. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
-	respBytes, err := marshaler.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/json")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
-func (s *pageServer) serveGetHomePageProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "GetHomePage")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	buf, err := io.ReadAll(req.Body)
-	if err != nil {
-		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
-		return
-	}
-	reqContent := new(google_protobuf.Empty)
-	if err = proto.Unmarshal(buf, reqContent); err != nil {
-		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
-		return
-	}
-
-	handler := s.Page.GetHomePage
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *google_protobuf.Empty) (*GetHomePageResp, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return s.Page.GetHomePage(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*GetHomePageResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*GetHomePageResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *GetHomePageResp
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetHomePageResp and nil error while calling GetHomePage. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	respBytes, err := proto.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/protobuf")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
-func (s *pageServer) serveGetProfilePage(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	header := req.Header.Get("Content-Type")
-	i := strings.Index(header, ";")
-	if i == -1 {
-		i = len(header)
-	}
-	switch strings.TrimSpace(strings.ToLower(header[:i])) {
-	case "application/json":
-		s.serveGetProfilePageJSON(ctx, resp, req)
-	case "application/protobuf":
-		s.serveGetProfilePageProtobuf(ctx, resp, req)
-	default:
-		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
-		twerr := badRouteError(msg, req.Method, req.URL.Path)
-		s.writeError(ctx, resp, twerr)
-	}
-}
-
-func (s *pageServer) serveGetProfilePageJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "GetProfilePage")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	d := json.NewDecoder(req.Body)
-	rawReqBody := json.RawMessage{}
-	if err := d.Decode(&rawReqBody); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-	reqContent := new(google_protobuf.Empty)
-	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
-	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-
-	handler := s.Page.GetProfilePage
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *google_protobuf.Empty) (*GetProfilePageResp, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return s.Page.GetProfilePage(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*GetProfilePageResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*GetProfilePageResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *GetProfilePageResp
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetProfilePageResp and nil error while calling GetProfilePage. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
-	respBytes, err := marshaler.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/json")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
-func (s *pageServer) serveGetProfilePageProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "GetProfilePage")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	buf, err := io.ReadAll(req.Body)
-	if err != nil {
-		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
-		return
-	}
-	reqContent := new(google_protobuf.Empty)
-	if err = proto.Unmarshal(buf, reqContent); err != nil {
-		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
-		return
-	}
-
-	handler := s.Page.GetProfilePage
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *google_protobuf.Empty) (*GetProfilePageResp, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*google_protobuf.Empty)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
-					}
-					return s.Page.GetProfilePage(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*GetProfilePageResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*GetProfilePageResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *GetProfilePageResp
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetProfilePageResp and nil error while calling GetProfilePage. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	respBytes, err := proto.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/protobuf")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
-func (s *pageServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor0, 2
-}
-
-func (s *pageServer) ProtocGenTwirpVersion() string {
-	return "v8.1.3"
-}
-
-// PathPrefix returns the base service path, in the form: "/<prefix>/<package>.<Service>/"
-// that is everything in a Twirp route except for the <Method>. This can be used for routing,
-// for example to identify the requests that are targeted to this service in a mux.
-func (s *pageServer) PathPrefix() string {
-	return baseServicePath(s.pathPrefix, "", "Page")
-}
-
-// ==============
 // User Interface
 // ==============
 
 type User interface {
+	// Pages
+	GetHomePage(context.Context, *google_protobuf.Empty) (*GetHomePageResp, error)
+
+	GetProfilePage(context.Context, *google_protobuf.Empty) (*GetProfilePageResp, error)
+
+	// User
 	UpdateMyUsername(context.Context, *UpdateMyUsernameReq) (*google_protobuf.Empty, error)
 
 	UpdateMyPassword(context.Context, *UpdateMyPasswordReq) (*google_protobuf.Empty, error)
@@ -2089,7 +1322,7 @@ type User interface {
 
 type userProtobufClient struct {
 	client      HTTPClient
-	urls        [4]string
+	urls        [6]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -2117,7 +1350,9 @@ func NewUserProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Clie
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "User")
-	urls := [4]string{
+	urls := [6]string{
+		serviceURL + "GetHomePage",
+		serviceURL + "GetProfilePage",
 		serviceURL + "UpdateMyUsername",
 		serviceURL + "UpdateMyPassword",
 		serviceURL + "RevokeMySession",
@@ -2130,6 +1365,98 @@ func NewUserProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Clie
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
 		opts:        clientOpts,
 	}
+}
+
+func (c *userProtobufClient) GetHomePage(ctx context.Context, in *google_protobuf.Empty) (*GetHomePageResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "User")
+	ctx = ctxsetters.WithMethodName(ctx, "GetHomePage")
+	caller := c.callGetHomePage
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *google_protobuf.Empty) (*GetHomePageResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*google_protobuf.Empty)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
+					}
+					return c.callGetHomePage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetHomePageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetHomePageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *userProtobufClient) callGetHomePage(ctx context.Context, in *google_protobuf.Empty) (*GetHomePageResp, error) {
+	out := new(GetHomePageResp)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *userProtobufClient) GetProfilePage(ctx context.Context, in *google_protobuf.Empty) (*GetProfilePageResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "User")
+	ctx = ctxsetters.WithMethodName(ctx, "GetProfilePage")
+	caller := c.callGetProfilePage
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *google_protobuf.Empty) (*GetProfilePageResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*google_protobuf.Empty)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
+					}
+					return c.callGetProfilePage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetProfilePageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetProfilePageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *userProtobufClient) callGetProfilePage(ctx context.Context, in *google_protobuf.Empty) (*GetProfilePageResp, error) {
+	out := new(GetProfilePageResp)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
 }
 
 func (c *userProtobufClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
@@ -2163,7 +1490,7 @@ func (c *userProtobufClient) UpdateMyUsername(ctx context.Context, in *UpdateMyU
 
 func (c *userProtobufClient) callUpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2209,7 +1536,7 @@ func (c *userProtobufClient) UpdateMyPassword(ctx context.Context, in *UpdateMyP
 
 func (c *userProtobufClient) callUpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2255,7 +1582,7 @@ func (c *userProtobufClient) RevokeMySession(ctx context.Context, in *RevokeMySe
 
 func (c *userProtobufClient) callRevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2301,7 +1628,7 @@ func (c *userProtobufClient) RevokeAllMySessions(ctx context.Context, in *Revoke
 
 func (c *userProtobufClient) callRevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2322,7 +1649,7 @@ func (c *userProtobufClient) callRevokeAllMySessions(ctx context.Context, in *Re
 
 type userJSONClient struct {
 	client      HTTPClient
-	urls        [4]string
+	urls        [6]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -2350,7 +1677,9 @@ func NewUserJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOp
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "User")
-	urls := [4]string{
+	urls := [6]string{
+		serviceURL + "GetHomePage",
+		serviceURL + "GetProfilePage",
 		serviceURL + "UpdateMyUsername",
 		serviceURL + "UpdateMyPassword",
 		serviceURL + "RevokeMySession",
@@ -2363,6 +1692,98 @@ func NewUserJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOp
 		interceptor: twirp.ChainInterceptors(clientOpts.Interceptors...),
 		opts:        clientOpts,
 	}
+}
+
+func (c *userJSONClient) GetHomePage(ctx context.Context, in *google_protobuf.Empty) (*GetHomePageResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "User")
+	ctx = ctxsetters.WithMethodName(ctx, "GetHomePage")
+	caller := c.callGetHomePage
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *google_protobuf.Empty) (*GetHomePageResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*google_protobuf.Empty)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
+					}
+					return c.callGetHomePage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetHomePageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetHomePageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *userJSONClient) callGetHomePage(ctx context.Context, in *google_protobuf.Empty) (*GetHomePageResp, error) {
+	out := new(GetHomePageResp)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *userJSONClient) GetProfilePage(ctx context.Context, in *google_protobuf.Empty) (*GetProfilePageResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "User")
+	ctx = ctxsetters.WithMethodName(ctx, "GetProfilePage")
+	caller := c.callGetProfilePage
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *google_protobuf.Empty) (*GetProfilePageResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*google_protobuf.Empty)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
+					}
+					return c.callGetProfilePage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetProfilePageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetProfilePageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *userJSONClient) callGetProfilePage(ctx context.Context, in *google_protobuf.Empty) (*GetProfilePageResp, error) {
+	out := new(GetProfilePageResp)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
 }
 
 func (c *userJSONClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
@@ -2396,7 +1817,7 @@ func (c *userJSONClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsern
 
 func (c *userJSONClient) callUpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2442,7 +1863,7 @@ func (c *userJSONClient) UpdateMyPassword(ctx context.Context, in *UpdateMyPassw
 
 func (c *userJSONClient) callUpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2488,7 +1909,7 @@ func (c *userJSONClient) RevokeMySession(ctx context.Context, in *RevokeMySessio
 
 func (c *userJSONClient) callRevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2534,7 +1955,7 @@ func (c *userJSONClient) RevokeAllMySessions(ctx context.Context, in *RevokeAllM
 
 func (c *userJSONClient) callRevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2646,6 +2067,12 @@ func (s *userServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	switch method {
+	case "GetHomePage":
+		s.serveGetHomePage(ctx, resp, req)
+		return
+	case "GetProfilePage":
+		s.serveGetProfilePage(ctx, resp, req)
+		return
 	case "UpdateMyUsername":
 		s.serveUpdateMyUsername(ctx, resp, req)
 		return
@@ -2663,6 +2090,366 @@ func (s *userServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
 		return
 	}
+}
+
+func (s *userServer) serveGetHomePage(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveGetHomePageJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveGetHomePageProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *userServer) serveGetHomePageJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "GetHomePage")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(google_protobuf.Empty)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.User.GetHomePage
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *google_protobuf.Empty) (*GetHomePageResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*google_protobuf.Empty)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
+					}
+					return s.User.GetHomePage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetHomePageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetHomePageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *GetHomePageResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetHomePageResp and nil error while calling GetHomePage. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *userServer) serveGetHomePageProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "GetHomePage")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(google_protobuf.Empty)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.User.GetHomePage
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *google_protobuf.Empty) (*GetHomePageResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*google_protobuf.Empty)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
+					}
+					return s.User.GetHomePage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetHomePageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetHomePageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *GetHomePageResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetHomePageResp and nil error while calling GetHomePage. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *userServer) serveGetProfilePage(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveGetProfilePageJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveGetProfilePageProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *userServer) serveGetProfilePageJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "GetProfilePage")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(google_protobuf.Empty)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.User.GetProfilePage
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *google_protobuf.Empty) (*GetProfilePageResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*google_protobuf.Empty)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
+					}
+					return s.User.GetProfilePage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetProfilePageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetProfilePageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *GetProfilePageResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetProfilePageResp and nil error while calling GetProfilePage. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *userServer) serveGetProfilePageProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "GetProfilePage")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(google_protobuf.Empty)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.User.GetProfilePage
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *google_protobuf.Empty) (*GetProfilePageResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*google_protobuf.Empty)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*google_protobuf.Empty) when calling interceptor")
+					}
+					return s.User.GetProfilePage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetProfilePageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetProfilePageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *GetProfilePageResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetProfilePageResp and nil error while calling GetProfilePage. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
 }
 
 func (s *userServer) serveUpdateMyUsername(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
@@ -3386,7 +3173,7 @@ func (s *userServer) serveRevokeAllMySessionsProtobuf(ctx context.Context, resp 
 }
 
 func (s *userServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor0, 3
+	return twirpFileDescriptor0, 2
 }
 
 func (s *userServer) ProtocGenTwirpVersion() string {
@@ -3412,6 +3199,8 @@ type Admin interface {
 
 	GetAdminUsersPage(context.Context, *GetAdminUsersPageReq) (*GetAdminUsersPageResp, error)
 
+	GetAdminDevicesPage(context.Context, *GetAdminDevicesPageReq) (*GetAdminDevicesPageResp, error)
+
 	// Group CRUD
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 
@@ -3420,6 +3209,15 @@ type Admin interface {
 	UpdateGroup(context.Context, *UpdateGroupReq) (*google_protobuf.Empty, error)
 
 	DeleteGroup(context.Context, *DeleteGroupReq) (*google_protobuf.Empty, error)
+
+	// Device CRUD
+	CreateDevice(context.Context, *CreateDeviceReq) (*CreateDeviceResp, error)
+
+	GetDevice(context.Context, *GetDeviceReq) (*GetDeviceResp, error)
+
+	UpdateDevice(context.Context, *UpdateDeviceReq) (*google_protobuf.Empty, error)
+
+	DeleteDevice(context.Context, *DeleteDeviceReq) (*google_protobuf.Empty, error)
 }
 
 // =====================
@@ -3428,7 +3226,7 @@ type Admin interface {
 
 type adminProtobufClient struct {
 	client      HTTPClient
-	urls        [7]string
+	urls        [12]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -3456,14 +3254,19 @@ func NewAdminProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Cli
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "Admin")
-	urls := [7]string{
+	urls := [12]string{
 		serviceURL + "GetAdminGroupsPage",
 		serviceURL + "GetAdminGroupIDPage",
 		serviceURL + "GetAdminUsersPage",
+		serviceURL + "GetAdminDevicesPage",
 		serviceURL + "CreateGroup",
 		serviceURL + "GetGroup",
 		serviceURL + "UpdateGroup",
 		serviceURL + "DeleteGroup",
+		serviceURL + "CreateDevice",
+		serviceURL + "GetDevice",
+		serviceURL + "UpdateDevice",
+		serviceURL + "DeleteDevice",
 	}
 
 	return &adminProtobufClient{
@@ -3612,6 +3415,52 @@ func (c *adminProtobufClient) callGetAdminUsersPage(ctx context.Context, in *Get
 	return out, nil
 }
 
+func (c *adminProtobufClient) GetAdminDevicesPage(ctx context.Context, in *GetAdminDevicesPageReq) (*GetAdminDevicesPageResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "GetAdminDevicesPage")
+	caller := c.callGetAdminDevicesPage
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *GetAdminDevicesPageReq) (*GetAdminDevicesPageResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*GetAdminDevicesPageReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*GetAdminDevicesPageReq) when calling interceptor")
+					}
+					return c.callGetAdminDevicesPage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetAdminDevicesPageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetAdminDevicesPageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminProtobufClient) callGetAdminDevicesPage(ctx context.Context, in *GetAdminDevicesPageReq) (*GetAdminDevicesPageResp, error) {
+	out := new(GetAdminDevicesPageResp)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 func (c *adminProtobufClient) CreateGroup(ctx context.Context, in *CreateGroupReq) (*CreateGroupResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Admin")
@@ -3643,7 +3492,7 @@ func (c *adminProtobufClient) CreateGroup(ctx context.Context, in *CreateGroupRe
 
 func (c *adminProtobufClient) callCreateGroup(ctx context.Context, in *CreateGroupReq) (*CreateGroupResp, error) {
 	out := new(CreateGroupResp)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -3689,7 +3538,7 @@ func (c *adminProtobufClient) GetGroup(ctx context.Context, in *GetGroupReq) (*G
 
 func (c *adminProtobufClient) callGetGroup(ctx context.Context, in *GetGroupReq) (*GetGroupResp, error) {
 	out := new(GetGroupResp)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -3735,7 +3584,7 @@ func (c *adminProtobufClient) UpdateGroup(ctx context.Context, in *UpdateGroupRe
 
 func (c *adminProtobufClient) callUpdateGroup(ctx context.Context, in *UpdateGroupReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -3781,7 +3630,191 @@ func (c *adminProtobufClient) DeleteGroup(ctx context.Context, in *DeleteGroupRe
 
 func (c *adminProtobufClient) callDeleteGroup(ctx context.Context, in *DeleteGroupReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[7], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *adminProtobufClient) CreateDevice(ctx context.Context, in *CreateDeviceReq) (*CreateDeviceResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "CreateDevice")
+	caller := c.callCreateDevice
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *CreateDeviceReq) (*CreateDeviceResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*CreateDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*CreateDeviceReq) when calling interceptor")
+					}
+					return c.callCreateDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*CreateDeviceResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*CreateDeviceResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminProtobufClient) callCreateDevice(ctx context.Context, in *CreateDeviceReq) (*CreateDeviceResp, error) {
+	out := new(CreateDeviceResp)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[8], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *adminProtobufClient) GetDevice(ctx context.Context, in *GetDeviceReq) (*GetDeviceResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "GetDevice")
+	caller := c.callGetDevice
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *GetDeviceReq) (*GetDeviceResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*GetDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*GetDeviceReq) when calling interceptor")
+					}
+					return c.callGetDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetDeviceResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetDeviceResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminProtobufClient) callGetDevice(ctx context.Context, in *GetDeviceReq) (*GetDeviceResp, error) {
+	out := new(GetDeviceResp)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[9], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *adminProtobufClient) UpdateDevice(ctx context.Context, in *UpdateDeviceReq) (*google_protobuf.Empty, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateDevice")
+	caller := c.callUpdateDevice
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *UpdateDeviceReq) (*google_protobuf.Empty, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*UpdateDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateDeviceReq) when calling interceptor")
+					}
+					return c.callUpdateDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*google_protobuf.Empty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminProtobufClient) callUpdateDevice(ctx context.Context, in *UpdateDeviceReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[10], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *adminProtobufClient) DeleteDevice(ctx context.Context, in *DeleteDeviceReq) (*google_protobuf.Empty, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteDevice")
+	caller := c.callDeleteDevice
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *DeleteDeviceReq) (*google_protobuf.Empty, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*DeleteDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*DeleteDeviceReq) when calling interceptor")
+					}
+					return c.callDeleteDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*google_protobuf.Empty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminProtobufClient) callDeleteDevice(ctx context.Context, in *DeleteDeviceReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[11], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -3802,7 +3835,7 @@ func (c *adminProtobufClient) callDeleteGroup(ctx context.Context, in *DeleteGro
 
 type adminJSONClient struct {
 	client      HTTPClient
-	urls        [7]string
+	urls        [12]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -3830,14 +3863,19 @@ func NewAdminJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientO
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "Admin")
-	urls := [7]string{
+	urls := [12]string{
 		serviceURL + "GetAdminGroupsPage",
 		serviceURL + "GetAdminGroupIDPage",
 		serviceURL + "GetAdminUsersPage",
+		serviceURL + "GetAdminDevicesPage",
 		serviceURL + "CreateGroup",
 		serviceURL + "GetGroup",
 		serviceURL + "UpdateGroup",
 		serviceURL + "DeleteGroup",
+		serviceURL + "CreateDevice",
+		serviceURL + "GetDevice",
+		serviceURL + "UpdateDevice",
+		serviceURL + "DeleteDevice",
 	}
 
 	return &adminJSONClient{
@@ -3986,6 +4024,52 @@ func (c *adminJSONClient) callGetAdminUsersPage(ctx context.Context, in *GetAdmi
 	return out, nil
 }
 
+func (c *adminJSONClient) GetAdminDevicesPage(ctx context.Context, in *GetAdminDevicesPageReq) (*GetAdminDevicesPageResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "GetAdminDevicesPage")
+	caller := c.callGetAdminDevicesPage
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *GetAdminDevicesPageReq) (*GetAdminDevicesPageResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*GetAdminDevicesPageReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*GetAdminDevicesPageReq) when calling interceptor")
+					}
+					return c.callGetAdminDevicesPage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetAdminDevicesPageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetAdminDevicesPageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminJSONClient) callGetAdminDevicesPage(ctx context.Context, in *GetAdminDevicesPageReq) (*GetAdminDevicesPageResp, error) {
+	out := new(GetAdminDevicesPageResp)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
 func (c *adminJSONClient) CreateGroup(ctx context.Context, in *CreateGroupReq) (*CreateGroupResp, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Admin")
@@ -4017,7 +4101,7 @@ func (c *adminJSONClient) CreateGroup(ctx context.Context, in *CreateGroupReq) (
 
 func (c *adminJSONClient) callCreateGroup(ctx context.Context, in *CreateGroupReq) (*CreateGroupResp, error) {
 	out := new(CreateGroupResp)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -4063,7 +4147,7 @@ func (c *adminJSONClient) GetGroup(ctx context.Context, in *GetGroupReq) (*GetGr
 
 func (c *adminJSONClient) callGetGroup(ctx context.Context, in *GetGroupReq) (*GetGroupResp, error) {
 	out := new(GetGroupResp)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -4109,7 +4193,7 @@ func (c *adminJSONClient) UpdateGroup(ctx context.Context, in *UpdateGroupReq) (
 
 func (c *adminJSONClient) callUpdateGroup(ctx context.Context, in *UpdateGroupReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[5], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -4155,7 +4239,191 @@ func (c *adminJSONClient) DeleteGroup(ctx context.Context, in *DeleteGroupReq) (
 
 func (c *adminJSONClient) callDeleteGroup(ctx context.Context, in *DeleteGroupReq) (*google_protobuf.Empty, error) {
 	out := new(google_protobuf.Empty)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[6], in, out)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[7], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *adminJSONClient) CreateDevice(ctx context.Context, in *CreateDeviceReq) (*CreateDeviceResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "CreateDevice")
+	caller := c.callCreateDevice
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *CreateDeviceReq) (*CreateDeviceResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*CreateDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*CreateDeviceReq) when calling interceptor")
+					}
+					return c.callCreateDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*CreateDeviceResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*CreateDeviceResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminJSONClient) callCreateDevice(ctx context.Context, in *CreateDeviceReq) (*CreateDeviceResp, error) {
+	out := new(CreateDeviceResp)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[8], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *adminJSONClient) GetDevice(ctx context.Context, in *GetDeviceReq) (*GetDeviceResp, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "GetDevice")
+	caller := c.callGetDevice
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *GetDeviceReq) (*GetDeviceResp, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*GetDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*GetDeviceReq) when calling interceptor")
+					}
+					return c.callGetDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetDeviceResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetDeviceResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminJSONClient) callGetDevice(ctx context.Context, in *GetDeviceReq) (*GetDeviceResp, error) {
+	out := new(GetDeviceResp)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[9], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *adminJSONClient) UpdateDevice(ctx context.Context, in *UpdateDeviceReq) (*google_protobuf.Empty, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateDevice")
+	caller := c.callUpdateDevice
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *UpdateDeviceReq) (*google_protobuf.Empty, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*UpdateDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateDeviceReq) when calling interceptor")
+					}
+					return c.callUpdateDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*google_protobuf.Empty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminJSONClient) callUpdateDevice(ctx context.Context, in *UpdateDeviceReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[10], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *adminJSONClient) DeleteDevice(ctx context.Context, in *DeleteDeviceReq) (*google_protobuf.Empty, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Admin")
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteDevice")
+	caller := c.callDeleteDevice
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *DeleteDeviceReq) (*google_protobuf.Empty, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*DeleteDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*DeleteDeviceReq) when calling interceptor")
+					}
+					return c.callDeleteDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*google_protobuf.Empty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *adminJSONClient) callDeleteDevice(ctx context.Context, in *DeleteDeviceReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[11], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -4276,6 +4544,9 @@ func (s *adminServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	case "GetAdminUsersPage":
 		s.serveGetAdminUsersPage(ctx, resp, req)
 		return
+	case "GetAdminDevicesPage":
+		s.serveGetAdminDevicesPage(ctx, resp, req)
+		return
 	case "CreateGroup":
 		s.serveCreateGroup(ctx, resp, req)
 		return
@@ -4287,6 +4558,18 @@ func (s *adminServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	case "DeleteGroup":
 		s.serveDeleteGroup(ctx, resp, req)
+		return
+	case "CreateDevice":
+		s.serveCreateDevice(ctx, resp, req)
+		return
+	case "GetDevice":
+		s.serveGetDevice(ctx, resp, req)
+		return
+	case "UpdateDevice":
+		s.serveUpdateDevice(ctx, resp, req)
+		return
+	case "DeleteDevice":
+		s.serveDeleteDevice(ctx, resp, req)
 		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
@@ -4812,6 +5095,186 @@ func (s *adminServer) serveGetAdminUsersPageProtobuf(ctx context.Context, resp h
 	}
 	if respContent == nil {
 		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetAdminUsersPageResp and nil error while calling GetAdminUsersPage. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *adminServer) serveGetAdminDevicesPage(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveGetAdminDevicesPageJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveGetAdminDevicesPageProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *adminServer) serveGetAdminDevicesPageJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "GetAdminDevicesPage")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(GetAdminDevicesPageReq)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Admin.GetAdminDevicesPage
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *GetAdminDevicesPageReq) (*GetAdminDevicesPageResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*GetAdminDevicesPageReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*GetAdminDevicesPageReq) when calling interceptor")
+					}
+					return s.Admin.GetAdminDevicesPage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetAdminDevicesPageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetAdminDevicesPageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *GetAdminDevicesPageResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetAdminDevicesPageResp and nil error while calling GetAdminDevicesPage. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *adminServer) serveGetAdminDevicesPageProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "GetAdminDevicesPage")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(GetAdminDevicesPageReq)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Admin.GetAdminDevicesPage
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *GetAdminDevicesPageReq) (*GetAdminDevicesPageResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*GetAdminDevicesPageReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*GetAdminDevicesPageReq) when calling interceptor")
+					}
+					return s.Admin.GetAdminDevicesPage(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetAdminDevicesPageResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetAdminDevicesPageResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *GetAdminDevicesPageResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetAdminDevicesPageResp and nil error while calling GetAdminDevicesPage. nil responses are not supported"))
 		return
 	}
 
@@ -5555,8 +6018,728 @@ func (s *adminServer) serveDeleteGroupProtobuf(ctx context.Context, resp http.Re
 	callResponseSent(ctx, s.hooks)
 }
 
+func (s *adminServer) serveCreateDevice(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveCreateDeviceJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveCreateDeviceProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *adminServer) serveCreateDeviceJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "CreateDevice")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(CreateDeviceReq)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Admin.CreateDevice
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *CreateDeviceReq) (*CreateDeviceResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*CreateDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*CreateDeviceReq) when calling interceptor")
+					}
+					return s.Admin.CreateDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*CreateDeviceResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*CreateDeviceResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *CreateDeviceResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *CreateDeviceResp and nil error while calling CreateDevice. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *adminServer) serveCreateDeviceProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "CreateDevice")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(CreateDeviceReq)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Admin.CreateDevice
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *CreateDeviceReq) (*CreateDeviceResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*CreateDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*CreateDeviceReq) when calling interceptor")
+					}
+					return s.Admin.CreateDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*CreateDeviceResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*CreateDeviceResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *CreateDeviceResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *CreateDeviceResp and nil error while calling CreateDevice. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *adminServer) serveGetDevice(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveGetDeviceJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveGetDeviceProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *adminServer) serveGetDeviceJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "GetDevice")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(GetDeviceReq)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Admin.GetDevice
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *GetDeviceReq) (*GetDeviceResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*GetDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*GetDeviceReq) when calling interceptor")
+					}
+					return s.Admin.GetDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetDeviceResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetDeviceResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *GetDeviceResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetDeviceResp and nil error while calling GetDevice. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *adminServer) serveGetDeviceProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "GetDevice")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(GetDeviceReq)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Admin.GetDevice
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *GetDeviceReq) (*GetDeviceResp, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*GetDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*GetDeviceReq) when calling interceptor")
+					}
+					return s.Admin.GetDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*GetDeviceResp)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*GetDeviceResp) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *GetDeviceResp
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *GetDeviceResp and nil error while calling GetDevice. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *adminServer) serveUpdateDevice(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveUpdateDeviceJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveUpdateDeviceProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *adminServer) serveUpdateDeviceJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateDevice")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(UpdateDeviceReq)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Admin.UpdateDevice
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *UpdateDeviceReq) (*google_protobuf.Empty, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*UpdateDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateDeviceReq) when calling interceptor")
+					}
+					return s.Admin.UpdateDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*google_protobuf.Empty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *google_protobuf.Empty
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling UpdateDevice. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *adminServer) serveUpdateDeviceProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "UpdateDevice")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(UpdateDeviceReq)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Admin.UpdateDevice
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *UpdateDeviceReq) (*google_protobuf.Empty, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*UpdateDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*UpdateDeviceReq) when calling interceptor")
+					}
+					return s.Admin.UpdateDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*google_protobuf.Empty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *google_protobuf.Empty
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling UpdateDevice. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *adminServer) serveDeleteDevice(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveDeleteDeviceJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveDeleteDeviceProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *adminServer) serveDeleteDeviceJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteDevice")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(DeleteDeviceReq)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Admin.DeleteDevice
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *DeleteDeviceReq) (*google_protobuf.Empty, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*DeleteDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*DeleteDeviceReq) when calling interceptor")
+					}
+					return s.Admin.DeleteDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*google_protobuf.Empty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *google_protobuf.Empty
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling DeleteDevice. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *adminServer) serveDeleteDeviceProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "DeleteDevice")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(DeleteDeviceReq)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Admin.DeleteDevice
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *DeleteDeviceReq) (*google_protobuf.Empty, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*DeleteDeviceReq)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*DeleteDeviceReq) when calling interceptor")
+					}
+					return s.Admin.DeleteDevice(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*google_protobuf.Empty)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *google_protobuf.Empty
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling DeleteDevice. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
 func (s *adminServer) ServiceDescriptor() ([]byte, int) {
-	return twirpFileDescriptor0, 4
+	return twirpFileDescriptor0, 3
 }
 
 func (s *adminServer) ProtocGenTwirpVersion() string {
@@ -6136,97 +7319,112 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 1462 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x57, 0x4b, 0x73, 0xdb, 0xd4,
-	0x17, 0xff, 0x5b, 0xb6, 0xfc, 0x38, 0x76, 0xed, 0xe4, 0xc6, 0x49, 0x5c, 0xe5, 0xdf, 0x36, 0x51,
-	0x17, 0x84, 0x0e, 0x73, 0x4b, 0xdd, 0xd2, 0x02, 0x33, 0x85, 0xa6, 0x89, 0xf3, 0x58, 0x94, 0x66,
-	0x94, 0xa6, 0x1d, 0x60, 0x06, 0x8f, 0x62, 0xdd, 0x1a, 0x15, 0x59, 0x92, 0x75, 0xe5, 0xb4, 0xdd,
-	0xb0, 0x81, 0x3d, 0x33, 0xfd, 0x00, 0x6c, 0x58, 0xf0, 0x11, 0xf8, 0x4a, 0x0c, 0x2b, 0x3e, 0x02,
-	0x73, 0x1f, 0x92, 0x65, 0x59, 0xa2, 0x18, 0xc2, 0x82, 0x9d, 0xce, 0xf3, 0xea, 0x9e, 0xc7, 0xef,
-	0x9e, 0x03, 0xb5, 0xc0, 0x1f, 0x60, 0x3f, 0xf0, 0x42, 0x4f, 0xdb, 0x18, 0x7a, 0xde, 0xd0, 0x21,
-	0x37, 0x39, 0x75, 0x36, 0x79, 0x7e, 0x93, 0x8c, 0xfc, 0xf0, 0xb5, 0x14, 0x5e, 0x4b, 0x0b, 0x43,
-	0x7b, 0x44, 0x68, 0x68, 0x8e, 0x7c, 0xa1, 0xa0, 0x7f, 0x0c, 0xa5, 0x13, 0x2f, 0x08, 0x51, 0x1b,
-	0xd4, 0xe7, 0x36, 0x71, 0xac, 0x4e, 0x61, 0xb3, 0xb0, 0x5d, 0x33, 0x04, 0x81, 0xfe, 0x0f, 0xaa,
-	0x17, 0x58, 0x24, 0xe8, 0x28, 0x9b, 0x85, 0xed, 0x66, 0xb7, 0x8c, 0x1f, 0x33, 0xca, 0x10, 0x4c,
-	0xfd, 0x53, 0x68, 0x1e, 0x9b, 0x43, 0x72, 0x6c, 0x0e, 0x6d, 0xd7, 0x0c, 0x6d, 0xcf, 0x45, 0x08,
-	0x4a, 0xbe, 0x39, 0x24, 0xdc, 0x89, 0x6a, 0xf0, 0x6f, 0x74, 0x19, 0xaa, 0x3e, 0x09, 0xfa, 0x9c,
-	0xaf, 0x70, 0x7e, 0xc5, 0x27, 0x01, 0x33, 0xd4, 0x7f, 0x2d, 0x40, 0x7b, 0xd6, 0x83, 0x41, 0xe8,
-	0xc4, 0x09, 0x17, 0xf4, 0x83, 0xae, 0x41, 0x3d, 0xf4, 0x42, 0xd3, 0xe1, 0x42, 0xda, 0x29, 0x72,
-	0x29, 0x70, 0x16, 0x93, 0xd3, 0xa9, 0x82, 0x1d, 0x92, 0x11, 0xed, 0x94, 0x36, 0x0b, 0xdb, 0x45,
-	0xa9, 0x70, 0xc4, 0x38, 0xe8, 0x0a, 0x00, 0x25, 0xc4, 0x95, 0x72, 0x95, 0xcb, 0x6b, 0x8c, 0x23,
-	0xc4, 0xd7, 0xe1, 0x92, 0x1f, 0x90, 0x73, 0xdb, 0x9b, 0x50, 0xf1, 0x03, 0x65, 0x7e, 0x44, 0x23,
-	0x62, 0xf2, 0xbf, 0xd8, 0x80, 0x9a, 0x4b, 0x5e, 0x85, 0x42, 0xa1, 0xc2, 0x15, 0xaa, 0x8c, 0xc1,
-	0xaf, 0x3a, 0x80, 0xea, 0x21, 0x71, 0x1c, 0xcf, 0x20, 0x63, 0xd4, 0x81, 0x0a, 0x9d, 0x9c, 0xbd,
-	0x20, 0x83, 0x50, 0x46, 0x3b, 0x22, 0xd1, 0x7d, 0x68, 0x0c, 0x26, 0x41, 0x40, 0xdc, 0xb0, 0xcf,
-	0x12, 0xc5, 0xef, 0x59, 0xef, 0x6a, 0x58, 0x64, 0x11, 0x47, 0x59, 0xc4, 0x4f, 0xa2, 0x2c, 0x1a,
-	0x75, 0xa9, 0xcf, 0x38, 0xfa, 0x57, 0x50, 0x93, 0x87, 0x50, 0x9f, 0xc5, 0x30, 0x24, 0xaf, 0xa2,
-	0x23, 0xf8, 0xf7, 0x3f, 0xf5, 0xff, 0x39, 0xd4, 0x4e, 0xec, 0xa1, 0x7b, 0xea, 0xb3, 0x5b, 0xb4,
-	0x41, 0x25, 0x23, 0xd3, 0x76, 0xa2, 0x8a, 0xe1, 0x04, 0xd2, 0xa0, 0x3a, 0xa1, 0x24, 0x70, 0x4d,
-	0xe9, 0xbd, 0x66, 0xc4, 0x34, 0x93, 0xf9, 0x26, 0xa5, 0x2f, 0xbd, 0xc0, 0xe2, 0x39, 0xaa, 0x19,
-	0x31, 0xad, 0x37, 0x00, 0x22, 0xd7, 0xd4, 0xd7, 0xdf, 0x85, 0xe5, 0x7d, 0x2f, 0x18, 0x7a, 0xe1,
-	0xb1, 0x94, 0xe7, 0x1e, 0xa8, 0xb7, 0x01, 0xa5, 0x55, 0xa9, 0xaf, 0xdf, 0x81, 0xd6, 0x01, 0x09,
-	0x0f, 0xbd, 0x11, 0xab, 0x2d, 0xc2, 0xe3, 0xb1, 0x05, 0x0d, 0x8b, 0x9c, 0xdb, 0x03, 0xd2, 0x1f,
-	0x78, 0x13, 0x57, 0xc4, 0xa5, 0x68, 0xd4, 0x05, 0x6f, 0x97, 0xb1, 0xf4, 0xef, 0xca, 0x80, 0x0e,
-	0x48, 0x78, 0x1c, 0x78, 0xcf, 0x6d, 0x67, 0x6a, 0x99, 0xbc, 0x53, 0x21, 0x75, 0xa7, 0xf8, 0xa7,
-	0x94, 0x64, 0x14, 0xda, 0xa0, 0x9a, 0xd6, 0xc8, 0x76, 0xf9, 0x35, 0xab, 0x86, 0x20, 0xd0, 0x43,
-	0x68, 0x0d, 0x02, 0x62, 0x86, 0xc4, 0xea, 0x9b, 0x32, 0x01, 0xa5, 0xb7, 0x26, 0xe0, 0x92, 0x34,
-	0xd9, 0xe1, 0x29, 0x60, 0x3e, 0x26, 0xbe, 0x35, 0xe3, 0x43, 0x7d, 0xbb, 0x0f, 0x69, 0x22, 0x7d,
-	0xdc, 0x83, 0x2a, 0x25, 0x94, 0xda, 0x9e, 0x4b, 0x3b, 0xe5, 0xcd, 0xe2, 0x76, 0xbd, 0xbb, 0x81,
-	0xe7, 0xaf, 0x8d, 0x4f, 0x84, 0x8e, 0x11, 0x2b, 0xa3, 0x5b, 0x50, 0x1e, 0x06, 0xde, 0xc4, 0xa7,
-	0x9d, 0x0a, 0x37, 0xbb, 0x9c, 0x65, 0x76, 0xc0, 0x34, 0x0c, 0xa9, 0xa8, 0xfd, 0xa8, 0x40, 0x45,
-	0x3a, 0x42, 0x4d, 0x50, 0x6c, 0x4b, 0xc6, 0x5d, 0xb1, 0x2d, 0xd6, 0x74, 0x2c, 0x8e, 0x7d, 0x73,
-	0x48, 0xdc, 0x50, 0x06, 0xb0, 0xc6, 0x38, 0x3b, 0x8c, 0xc1, 0xd5, 0x7d, 0x59, 0x28, 0x8a, 0xed,
-	0xa3, 0x75, 0xa8, 0x38, 0x26, 0x0d, 0xfb, 0xb6, 0xcf, 0xc3, 0x56, 0x33, 0xca, 0x8c, 0x3c, 0xf2,
-	0x51, 0x0f, 0x96, 0xb9, 0x60, 0x42, 0x17, 0x8a, 0x4a, 0x93, 0x19, 0x9d, 0xd2, 0x64, 0x68, 0xd3,
-	0xe9, 0x29, 0x2f, 0x9a, 0x9e, 0x35, 0x28, 0x9b, 0x83, 0xd0, 0x3e, 0x17, 0x00, 0x50, 0x35, 0x24,
-	0xc5, 0x5a, 0x5e, 0x36, 0x52, 0xa7, 0xca, 0x05, 0x11, 0xa9, 0xfd, 0x50, 0x00, 0x95, 0x87, 0x6c,
-	0x2e, 0x3c, 0x08, 0x4a, 0x89, 0x36, 0xe2, 0xdf, 0x68, 0x13, 0xea, 0x16, 0xa1, 0x83, 0xc0, 0xf6,
-	0x19, 0x5a, 0xca, 0xe0, 0x24, 0x59, 0xe8, 0x01, 0x34, 0x5f, 0x78, 0xb6, 0xbb, 0x50, 0x8d, 0x35,
-	0x84, 0x85, 0xb8, 0x83, 0xfe, 0x21, 0xac, 0x9c, 0xf2, 0x7a, 0x79, 0xf4, 0xfa, 0x54, 0x96, 0x39,
-	0x6b, 0xbf, 0x2d, 0x68, 0xb8, 0xe4, 0x65, 0x3f, 0xd5, 0x09, 0x75, 0x97, 0xbc, 0x8c, 0xb4, 0xf4,
-	0x2f, 0xa7, 0x96, 0xc9, 0xc6, 0xdd, 0x82, 0x86, 0xe7, 0x58, 0xfd, 0xb8, 0xf7, 0xa5, 0xa5, 0xe7,
-	0x58, 0x91, 0x56, 0xe4, 0x3c, 0x56, 0x51, 0x62, 0xe7, 0x91, 0x8a, 0x7e, 0x1b, 0x90, 0x41, 0xce,
-	0xbd, 0x6f, 0xc8, 0xa3, 0xd7, 0x51, 0x65, 0x92, 0xb1, 0x00, 0x6e, 0x4e, 0xf5, 0xe3, 0xe0, 0xd5,
-	0x24, 0xe7, 0xc8, 0xd2, 0x3b, 0xb0, 0x26, 0x8c, 0x76, 0x1c, 0x27, 0xb6, 0xa3, 0x06, 0x19, 0xeb,
-	0xcf, 0x60, 0xf5, 0x80, 0x84, 0x3b, 0xac, 0x31, 0x79, 0xf8, 0xa9, 0x28, 0xe0, 0x31, 0xba, 0x9e,
-	0x78, 0x7b, 0xea, 0xdd, 0x16, 0x4e, 0x3d, 0x50, 0xd1, 0x63, 0x54, 0xa2, 0x5e, 0x10, 0x4a, 0x00,
-	0x55, 0x31, 0x7b, 0x43, 0x0d, 0xce, 0xd2, 0xdf, 0x14, 0x61, 0x2d, 0xcb, 0x33, 0xf5, 0xd1, 0x6d,
-	0x50, 0xc5, 0x03, 0x53, 0xe0, 0xed, 0x73, 0x05, 0x67, 0xeb, 0xc9, 0x16, 0x12, 0xba, 0xe8, 0x03,
-	0x00, 0x5f, 0x08, 0x26, 0x4e, 0x74, 0xe0, 0x2a, 0xce, 0x7a, 0x36, 0x8d, 0x84, 0x62, 0xfc, 0x87,
-	0xc5, 0xb9, 0x3f, 0xd4, 0x7e, 0x5f, 0xa8, 0xe4, 0xa2, 0x2e, 0x15, 0xa8, 0x59, 0x14, 0x11, 0x66,
-	0x1c, 0x8e, 0x99, 0x0c, 0x1c, 0x2d, 0x9b, 0x9a, 0x67, 0x0e, 0xb1, 0x78, 0xa5, 0x55, 0x8d, 0x98,
-	0x46, 0x7b, 0xb0, 0x14, 0x7d, 0x2f, 0xd2, 0x97, 0x91, 0xcd, 0xc5, 0xf5, 0xa5, 0xbe, 0x9d, 0xca,
-	0xc9, 0xd1, 0x5e, 0x94, 0xee, 0x54, 0x08, 0xf4, 0xdf, 0x8a, 0xb0, 0x9e, 0xa9, 0x4a, 0x7d, 0x74,
-	0x07, 0x54, 0x0e, 0x6b, 0xb2, 0x36, 0xae, 0xe2, 0x1c, 0xc5, 0x28, 0x81, 0x5c, 0x99, 0x65, 0x9d,
-	0x85, 0x8b, 0x76, 0x94, 0xac, 0xac, 0x27, 0xac, 0x58, 0x1f, 0x19, 0x42, 0x57, 0xfb, 0x45, 0xb9,
-	0x58, 0x58, 0xf8, 0x4f, 0xa4, 0x29, 0xeb, 0x75, 0xab, 0x2c, 0xf8, 0xba, 0x69, 0x37, 0xa0, 0xc4,
-	0x02, 0xf9, 0x57, 0xe2, 0xa6, 0x3f, 0x85, 0x76, 0x94, 0x0c, 0x66, 0x73, 0x61, 0x18, 0xf0, 0x53,
-	0x71, 0x8a, 0x2e, 0x09, 0xc7, 0xd4, 0x47, 0xb7, 0x66, 0x21, 0x60, 0x03, 0x67, 0xaa, 0xc9, 0x52,
-	0xf8, 0xb7, 0x00, 0xe0, 0x7b, 0x25, 0x27, 0x46, 0x7f, 0x36, 0xbd, 0xc5, 0x93, 0x4e, 0x31, 0x35,
-	0xef, 0xe5, 0xd6, 0x55, 0x3c, 0x05, 0xa9, 0xc9, 0x29, 0x28, 0xab, 0xda, 0xca, 0x17, 0x51, 0x6d,
-	0x95, 0x45, 0x41, 0x61, 0x1f, 0x9a, 0xbb, 0x9c, 0x21, 0xda, 0x95, 0x8c, 0xe3, 0x1a, 0x29, 0xe4,
-	0xf7, 0x96, 0x32, 0xd7, 0x5b, 0xfa, 0x16, 0xb4, 0x66, 0xfc, 0xd0, 0xb9, 0xa6, 0xd5, 0xaf, 0x40,
-	0xfd, 0x80, 0x84, 0xf1, 0x39, 0x69, 0xf1, 0x13, 0x68, 0x4c, 0xc5, 0xf4, 0x82, 0x7a, 0x5e, 0x7f,
-	0x0a, 0x4d, 0xf1, 0x1c, 0xe7, 0x9d, 0xfb, 0x37, 0xfd, 0x6e, 0x42, 0x73, 0x8f, 0x38, 0x24, 0xdf,
-	0xef, 0x8d, 0x5b, 0xa0, 0xf2, 0x4d, 0x11, 0xad, 0xc2, 0xf2, 0x63, 0x63, 0xaf, 0x67, 0xf4, 0x4f,
-	0x3f, 0x3b, 0x39, 0xee, 0xed, 0x1e, 0xed, 0x1f, 0xf5, 0xf6, 0x96, 0xfe, 0x87, 0xaa, 0x50, 0xda,
-	0xeb, 0x9d, 0xec, 0x2e, 0x15, 0x50, 0x05, 0x8a, 0x3b, 0x27, 0xbb, 0x4b, 0x4a, 0xf7, 0x3d, 0x00,
-	0xbe, 0xbb, 0x3c, 0xf3, 0x02, 0xc7, 0x42, 0x57, 0x41, 0xe5, 0x14, 0xaa, 0xe1, 0x68, 0x6d, 0xd2,
-	0x00, 0xc7, 0xcb, 0x4d, 0xd7, 0x82, 0xd2, 0xce, 0x24, 0xfc, 0x1a, 0x6d, 0x41, 0x59, 0xac, 0x0d,
-	0x08, 0x70, 0xbc, 0x9a, 0x68, 0x75, 0x3c, 0xdd, 0x25, 0xd0, 0x47, 0xd0, 0x9c, 0x5d, 0x10, 0x10,
-	0xc2, 0x73, 0xcb, 0x85, 0xb6, 0x82, 0xe7, 0xb7, 0x88, 0xee, 0xb7, 0x50, 0xe2, 0x9b, 0xdd, 0x3d,
-	0x9e, 0xbd, 0x68, 0x9b, 0x40, 0x6b, 0x73, 0x25, 0xd6, 0x63, 0x2b, 0xb7, 0xb6, 0x84, 0xd3, 0x3b,
-	0xc7, 0x7d, 0x68, 0xce, 0x4e, 0xc8, 0xb9, 0xb6, 0x2b, 0x19, 0xa3, 0x74, 0xf7, 0x4d, 0xd4, 0xa7,
-	0x0f, 0x60, 0x29, 0x3d, 0x92, 0xa1, 0x36, 0xce, 0x98, 0xd2, 0xb4, 0x1c, 0xff, 0x49, 0x0f, 0x71,
-	0x1c, 0xa6, 0x1e, 0x92, 0x91, 0xc8, 0xf3, 0xf0, 0x09, 0xb4, 0x52, 0xf3, 0x17, 0x5a, 0xc1, 0xf3,
-	0x13, 0x59, 0xae, 0xfd, 0x3e, 0xac, 0x64, 0x8c, 0x62, 0x68, 0x1d, 0x67, 0x0f, 0x68, 0x79, 0x7e,
-	0xba, 0x3f, 0x17, 0x41, 0xe5, 0x88, 0x89, 0x7a, 0x7c, 0x5b, 0x4b, 0x0d, 0x50, 0x68, 0x2d, 0x73,
-	0xaa, 0x1a, 0x6b, 0xeb, 0x39, 0xd3, 0x16, 0x3a, 0x84, 0x95, 0x8c, 0x17, 0x19, 0xad, 0x67, 0xbf,
-	0xd3, 0x63, 0xad, 0x93, 0xf7, 0x80, 0xa3, 0x87, 0xb0, 0x3c, 0x07, 0xe7, 0x68, 0x35, 0x0b, 0xe2,
-	0xd9, 0xf5, 0xb2, 0x1f, 0x88, 0xf7, 0xa1, 0x9e, 0x00, 0x13, 0xd4, 0xc2, 0xb3, 0x10, 0xa5, 0x2d,
-	0xe1, 0x34, 0xd6, 0xbc, 0x03, 0xd5, 0x08, 0x3c, 0x50, 0x03, 0x27, 0x60, 0x46, 0xbb, 0x84, 0x67,
-	0x50, 0xe5, 0x2e, 0xd4, 0x13, 0x78, 0x80, 0x5a, 0x78, 0x16, 0x1d, 0x72, 0x33, 0x77, 0x17, 0xea,
-	0x89, 0x7e, 0x47, 0x2d, 0x3c, 0xdb, 0xfd, 0x79, 0x76, 0x0f, 0xe1, 0x50, 0xf9, 0xa2, 0x8c, 0xf1,
-	0xcd, 0xc0, 0x1f, 0x9c, 0x95, 0xb9, 0xec, 0xf6, 0x1f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x19, 0xae,
-	0x68, 0xe2, 0xb9, 0x12, 0x00, 0x00,
+	// 1698 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x18, 0xdb, 0x72, 0xdb, 0x44,
+	0xfb, 0xb7, 0x6c, 0xf9, 0xf0, 0xd9, 0xb1, 0x9d, 0xcd, 0xc9, 0x55, 0xfe, 0xb6, 0x89, 0x7a, 0x41,
+	0xe8, 0x30, 0x5b, 0xea, 0xf4, 0x04, 0x33, 0x85, 0xa6, 0x39, 0x5f, 0x94, 0x66, 0x94, 0xa6, 0xe5,
+	0x30, 0x83, 0x47, 0xb1, 0x36, 0x46, 0x45, 0xb6, 0x14, 0xad, 0x9c, 0x36, 0x77, 0xcc, 0xc0, 0x15,
+	0x37, 0xcc, 0xf0, 0x00, 0xdc, 0x30, 0x0c, 0x4f, 0xc0, 0xf4, 0x0d, 0x78, 0x16, 0x86, 0x2b, 0x1e,
+	0x81, 0xd9, 0xd5, 0x4a, 0x96, 0x64, 0x29, 0x8d, 0x21, 0x1d, 0xe0, 0x4e, 0xdf, 0x51, 0xfb, 0x9d,
+	0xf7, 0x5b, 0xa8, 0xb8, 0x4e, 0x17, 0x3b, 0xae, 0xed, 0xd9, 0xca, 0x62, 0xcf, 0xb6, 0x7b, 0x16,
+	0xb9, 0xc1, 0xa1, 0xc3, 0xe1, 0xd1, 0x0d, 0xd2, 0x77, 0xbc, 0x53, 0x41, 0xbc, 0x9a, 0x24, 0x7a,
+	0x66, 0x9f, 0x50, 0x4f, 0xef, 0x3b, 0x3e, 0x83, 0xfa, 0x3e, 0x14, 0xf6, 0x6d, 0xd7, 0x43, 0xb3,
+	0x20, 0x1f, 0x99, 0xc4, 0x32, 0x5a, 0xb9, 0xa5, 0xdc, 0x4a, 0x45, 0xf3, 0x01, 0xf4, 0x7f, 0x90,
+	0x6d, 0xd7, 0x20, 0x6e, 0x4b, 0x5a, 0xca, 0xad, 0xd4, 0xdb, 0x45, 0xfc, 0x98, 0x41, 0x9a, 0x8f,
+	0x54, 0x3f, 0x84, 0xfa, 0x9e, 0xde, 0x23, 0x7b, 0x7a, 0xcf, 0x1c, 0xe8, 0x9e, 0x69, 0x0f, 0x10,
+	0x82, 0x82, 0xa3, 0xf7, 0x08, 0x57, 0x22, 0x6b, 0xfc, 0x1b, 0x5d, 0x82, 0xb2, 0x43, 0xdc, 0x0e,
+	0xc7, 0x4b, 0x1c, 0x5f, 0x72, 0x88, 0xcb, 0x04, 0xd5, 0xdf, 0x72, 0x30, 0x1b, 0xd7, 0xa0, 0x11,
+	0x3a, 0xb4, 0xbc, 0x09, 0xf5, 0xa0, 0xab, 0x50, 0xf5, 0x6c, 0x4f, 0xb7, 0x38, 0x91, 0xb6, 0xf2,
+	0x9c, 0x0a, 0x1c, 0xc5, 0xe8, 0x74, 0xc4, 0x60, 0x7a, 0xa4, 0x4f, 0x5b, 0x85, 0xa5, 0xdc, 0x4a,
+	0x5e, 0x30, 0xec, 0x32, 0x0c, 0xba, 0x0c, 0x40, 0x09, 0x19, 0x08, 0xba, 0xcc, 0xe9, 0x15, 0x86,
+	0xf1, 0xc9, 0xd7, 0x60, 0xca, 0x71, 0xc9, 0x89, 0x69, 0x0f, 0xa9, 0x7f, 0x80, 0x22, 0xff, 0x45,
+	0x2d, 0x40, 0xf2, 0x53, 0x2c, 0x42, 0x65, 0x40, 0x5e, 0x7a, 0x3e, 0x43, 0x89, 0x33, 0x94, 0x19,
+	0x82, 0x9b, 0xda, 0x85, 0xf2, 0x0e, 0xb1, 0x2c, 0x5b, 0x23, 0xc7, 0xa8, 0x05, 0x25, 0x3a, 0x3c,
+	0x7c, 0x4e, 0xba, 0x9e, 0xf0, 0x76, 0x00, 0xa2, 0xfb, 0x50, 0xeb, 0x0e, 0x5d, 0x97, 0x0c, 0xbc,
+	0x0e, 0x0b, 0x14, 0xb7, 0xb3, 0xda, 0x56, 0xb0, 0x1f, 0x45, 0x1c, 0x44, 0x11, 0x3f, 0x09, 0xa2,
+	0xa8, 0x55, 0x05, 0x3f, 0xc3, 0xa8, 0x9f, 0x43, 0x45, 0xfc, 0x84, 0x3a, 0xcc, 0x87, 0x1e, 0x79,
+	0x19, 0xfc, 0x82, 0x7f, 0xff, 0x5d, 0xfd, 0x9f, 0x40, 0x65, 0xdf, 0xec, 0x0d, 0x0e, 0x1c, 0x66,
+	0xc5, 0x2c, 0xc8, 0xa4, 0xaf, 0x9b, 0x56, 0x90, 0x31, 0x1c, 0x40, 0x0a, 0x94, 0x87, 0x94, 0xb8,
+	0x03, 0x5d, 0x68, 0xaf, 0x68, 0x21, 0xcc, 0x68, 0x8e, 0x4e, 0xe9, 0x0b, 0xdb, 0x35, 0x78, 0x8c,
+	0x2a, 0x5a, 0x08, 0xab, 0x35, 0x80, 0x40, 0x35, 0x75, 0xd4, 0xb7, 0x61, 0x7a, 0xcb, 0x76, 0x7b,
+	0xb6, 0xb7, 0x27, 0xe8, 0x99, 0x3f, 0x54, 0x67, 0x01, 0x25, 0x59, 0xa9, 0xa3, 0xde, 0x82, 0xc6,
+	0x36, 0xf1, 0x76, 0xec, 0x3e, 0xcb, 0x2d, 0xc2, 0xfd, 0xb1, 0x0c, 0x35, 0x83, 0x9c, 0x98, 0x5d,
+	0xd2, 0xe9, 0xda, 0xc3, 0x81, 0xef, 0x97, 0xbc, 0x56, 0xf5, 0x71, 0xeb, 0x0c, 0xa5, 0x7e, 0x5d,
+	0x04, 0xb4, 0x4d, 0xbc, 0x3d, 0xd7, 0x3e, 0x32, 0xad, 0x91, 0x64, 0xd4, 0xa6, 0x5c, 0xc2, 0xa6,
+	0xf0, 0x50, 0x52, 0xd4, 0x0b, 0xb3, 0x20, 0xeb, 0x46, 0xdf, 0x1c, 0x70, 0x33, 0xcb, 0x9a, 0x0f,
+	0xa0, 0x87, 0xd0, 0xe8, 0xba, 0x44, 0xf7, 0x88, 0xd1, 0xd1, 0x45, 0x00, 0x0a, 0xaf, 0x0d, 0xc0,
+	0x94, 0x10, 0x59, 0xe3, 0x21, 0x60, 0x3a, 0x86, 0x8e, 0x11, 0xd3, 0x21, 0xbf, 0x5e, 0x87, 0x10,
+	0x11, 0x3a, 0xee, 0x42, 0x99, 0x12, 0x4a, 0x4d, 0x7b, 0x40, 0x5b, 0xc5, 0xa5, 0xfc, 0x4a, 0xb5,
+	0xbd, 0x88, 0xc7, 0xcd, 0xc6, 0xfb, 0x3e, 0x8f, 0x16, 0x32, 0xa3, 0x9b, 0x50, 0xec, 0xb9, 0xf6,
+	0xd0, 0xa1, 0xad, 0x12, 0x17, 0xbb, 0x94, 0x26, 0xb6, 0xcd, 0x38, 0x34, 0xc1, 0xa8, 0xfc, 0x20,
+	0x41, 0x49, 0x28, 0x42, 0x75, 0x90, 0x4c, 0x43, 0xf8, 0x5d, 0x32, 0x0d, 0x56, 0x74, 0xcc, 0x8f,
+	0x1d, 0xbd, 0x47, 0x06, 0x9e, 0x70, 0x60, 0x85, 0x61, 0xd6, 0x18, 0x82, 0xb3, 0x3b, 0x22, 0x51,
+	0x24, 0xd3, 0x41, 0x0b, 0x50, 0xb2, 0x74, 0xea, 0x75, 0x4c, 0x87, 0xbb, 0xad, 0xa2, 0x15, 0x19,
+	0xb8, 0xeb, 0xa0, 0x4d, 0x98, 0xe6, 0x84, 0x21, 0x9d, 0xc8, 0x2b, 0x75, 0x26, 0x74, 0x40, 0xa3,
+	0xae, 0x4d, 0x86, 0xa7, 0x38, 0x69, 0x78, 0xe6, 0xa1, 0xa8, 0x77, 0x3d, 0xf3, 0xc4, 0x6f, 0x00,
+	0x65, 0x4d, 0x40, 0xac, 0xe4, 0x45, 0x21, 0xb5, 0xca, 0x9c, 0x10, 0x80, 0xca, 0x77, 0x39, 0x90,
+	0xb9, 0xcb, 0xc6, 0xdc, 0x83, 0xa0, 0x10, 0x29, 0x23, 0xfe, 0x8d, 0x96, 0xa0, 0x6a, 0x10, 0xda,
+	0x75, 0x4d, 0x87, 0x75, 0x4b, 0xe1, 0x9c, 0x28, 0x0a, 0x3d, 0x80, 0xfa, 0x73, 0xdb, 0x1c, 0x4c,
+	0x94, 0x63, 0x35, 0x5f, 0xc2, 0xb7, 0x41, 0xbd, 0x07, 0x33, 0x07, 0x3c, 0x5f, 0x1e, 0x9d, 0x1e,
+	0x88, 0x34, 0x67, 0xe5, 0xb7, 0x0c, 0xb5, 0x01, 0x79, 0xd1, 0x49, 0x54, 0x42, 0x75, 0x40, 0x5e,
+	0x04, 0x5c, 0xea, 0x67, 0x23, 0xc9, 0x68, 0xe1, 0x2e, 0x43, 0xcd, 0xb6, 0x8c, 0x4e, 0x58, 0xfb,
+	0x42, 0xd2, 0xb6, 0x8c, 0x80, 0x2b, 0x50, 0x1e, 0xb2, 0x48, 0xa1, 0xf2, 0x80, 0x45, 0x5d, 0x05,
+	0xa4, 0x91, 0x13, 0xfb, 0x4b, 0xf2, 0xe8, 0x34, 0xc8, 0x4c, 0x72, 0xec, 0x37, 0x6e, 0x0e, 0x75,
+	0x42, 0xe7, 0x55, 0x04, 0x66, 0xd7, 0x50, 0x5b, 0x30, 0xef, 0x0b, 0xad, 0x59, 0x56, 0x28, 0x47,
+	0x35, 0x72, 0xac, 0x3e, 0x83, 0xb9, 0x6d, 0xe2, 0xad, 0xb1, 0xc2, 0xe4, 0xee, 0xa7, 0x7e, 0x02,
+	0x1f, 0xa3, 0x6b, 0x91, 0xd9, 0x53, 0x6d, 0x37, 0x70, 0x62, 0x40, 0x05, 0xc3, 0xa8, 0x40, 0x6d,
+	0xd7, 0x13, 0x0d, 0x54, 0xc6, 0x6c, 0x86, 0x6a, 0x1c, 0xa5, 0x7e, 0x9f, 0x87, 0xf9, 0x34, 0xcd,
+	0xd4, 0x41, 0xab, 0x20, 0xfb, 0x03, 0x26, 0xc7, 0xcb, 0xe7, 0x32, 0x4e, 0xe7, 0x13, 0x25, 0xe4,
+	0xf3, 0xa2, 0xdb, 0x00, 0x8e, 0x4f, 0x18, 0x5a, 0xc1, 0x0f, 0xe7, 0x70, 0xda, 0xd8, 0xd4, 0x22,
+	0x8c, 0xe1, 0x09, 0xf3, 0x63, 0x27, 0x54, 0xfe, 0x98, 0x28, 0xe5, 0x82, 0x2a, 0xf5, 0xbb, 0x66,
+	0xde, 0xf7, 0x30, 0xc3, 0xf0, 0x9e, 0xc9, 0x9a, 0xa3, 0x61, 0x52, 0xfd, 0xd0, 0x22, 0x06, 0xcf,
+	0xb4, 0xb2, 0x16, 0xc2, 0x68, 0x03, 0x9a, 0xc1, 0xf7, 0x24, 0x75, 0x19, 0xc8, 0x5c, 0x5c, 0x5d,
+	0xaa, 0x2b, 0x89, 0x98, 0xec, 0x6e, 0x04, 0xe1, 0x4e, 0xb8, 0x40, 0xfd, 0x3d, 0x0f, 0x0b, 0xa9,
+	0xac, 0xd4, 0x41, 0xb7, 0x40, 0xe6, 0x6d, 0x4d, 0xe4, 0xc6, 0x15, 0x9c, 0xc1, 0x18, 0x04, 0x90,
+	0x33, 0xb3, 0xa8, 0x33, 0x77, 0xd1, 0x96, 0x94, 0x16, 0xf5, 0x88, 0x14, 0xab, 0x23, 0xcd, 0xe7,
+	0x55, 0x5e, 0x49, 0x17, 0xdb, 0x16, 0xfe, 0x13, 0x61, 0x4a, 0x9b, 0x6e, 0xa5, 0x09, 0xa7, 0x9b,
+	0x72, 0x1d, 0x0a, 0xcc, 0x91, 0xe7, 0xf1, 0x9b, 0xfa, 0x14, 0x66, 0x83, 0x60, 0x30, 0x99, 0x0b,
+	0xeb, 0x01, 0x3f, 0xe6, 0x47, 0xdd, 0x25, 0xa2, 0x98, 0x3a, 0xe8, 0x66, 0xbc, 0x05, 0x2c, 0xe2,
+	0x54, 0x36, 0x91, 0x0a, 0x6f, 0xaa, 0x01, 0x7c, 0x23, 0x65, 0xf8, 0xe8, 0xac, 0xdb, 0x5b, 0x78,
+	0xd3, 0xc9, 0x27, 0xee, 0x7b, 0x99, 0x79, 0x15, 0xde, 0x82, 0xe4, 0xe8, 0x2d, 0x28, 0x2d, 0xdb,
+	0x8a, 0x17, 0x91, 0x6d, 0xa5, 0x49, 0x9b, 0xc2, 0xc7, 0xa3, 0xa6, 0xb0, 0xc1, 0x6f, 0x81, 0x17,
+	0x16, 0xff, 0x9f, 0x22, 0x4d, 0x24, 0xa6, 0x9a, 0x3a, 0xe8, 0x76, 0x3c, 0x03, 0xae, 0xe2, 0x0c,
+	0x46, 0xec, 0xc3, 0x6f, 0x2e, 0x0b, 0xbe, 0x92, 0xa0, 0xe8, 0xff, 0xe3, 0x5c, 0x3d, 0xa6, 0x09,
+	0xf9, 0xa1, 0x1b, 0x44, 0x9f, 0x7d, 0xc6, 0xb2, 0xa5, 0x30, 0x7e, 0xd7, 0x0f, 0xf3, 0x42, 0x3e,
+	0x47, 0xbf, 0xf9, 0x67, 0x32, 0x60, 0x0b, 0xea, 0xeb, 0x1c, 0xe1, 0x37, 0x6c, 0x72, 0x1c, 0x5a,
+	0x9e, 0xcb, 0xee, 0xae, 0xd2, 0x58, 0x77, 0x55, 0x97, 0xa1, 0x11, 0xd3, 0x43, 0xc7, 0xda, 0xb6,
+	0x7a, 0x19, 0xaa, 0xdb, 0xc4, 0x0b, 0xff, 0x93, 0x24, 0x3f, 0x81, 0xda, 0x88, 0x4c, 0x2f, 0xa8,
+	0xeb, 0xab, 0x4f, 0xa1, 0xee, 0x5f, 0xc8, 0xb2, 0xfe, 0xfb, 0x17, 0xf5, 0x2e, 0x41, 0x7d, 0x83,
+	0x58, 0x24, 0x5b, 0xaf, 0xfa, 0x73, 0x2e, 0x70, 0x89, 0x48, 0xe3, 0x0c, 0xdf, 0x8a, 0xac, 0x92,
+	0xd2, 0xb3, 0x2a, 0x7f, 0xc6, 0x06, 0x59, 0x88, 0x6f, 0x90, 0x8c, 0x66, 0xd9, 0x5d, 0x5e, 0x07,
+	0x3c, 0xe3, 0x2a, 0x5a, 0x08, 0x33, 0xda, 0x11, 0xd1, 0xbd, 0xa1, 0x4b, 0xa8, 0x58, 0xdd, 0x43,
+	0x58, 0x55, 0xa1, 0x19, 0x3f, 0x68, 0x4a, 0xf0, 0xae, 0xf0, 0xe8, 0x8c, 0x2c, 0x49, 0xd2, 0x7f,
+	0xc9, 0xc1, 0x54, 0x84, 0xe1, 0x9c, 0xf1, 0x9b, 0xb8, 0xa2, 0x42, 0xdb, 0xe5, 0x33, 0x6c, 0x2f,
+	0x9e, 0x61, 0x7b, 0x29, 0x61, 0xfb, 0xab, 0x1c, 0x34, 0xfc, 0x04, 0xc9, 0xb4, 0xed, 0x5f, 0x7a,
+	0xf2, 0x65, 0x68, 0xf8, 0x19, 0x98, 0x79, 0xf0, 0xeb, 0x37, 0x41, 0xe6, 0xcf, 0x55, 0x68, 0x0e,
+	0xa6, 0x1f, 0x6b, 0x1b, 0x9b, 0x5a, 0xe7, 0xe0, 0xa3, 0xfd, 0xbd, 0xcd, 0xf5, 0xdd, 0xad, 0xdd,
+	0xcd, 0x8d, 0xe6, 0xff, 0x50, 0x19, 0x0a, 0x1b, 0x9b, 0xfb, 0xeb, 0xcd, 0x1c, 0x2a, 0x41, 0x7e,
+	0x6d, 0x7f, 0xbd, 0x29, 0xb5, 0xdf, 0x01, 0xe0, 0x0f, 0x28, 0xcf, 0x6c, 0xd7, 0x32, 0xd0, 0x15,
+	0x90, 0x39, 0x84, 0x2a, 0x38, 0x78, 0xbb, 0x51, 0x00, 0x87, 0x2f, 0x2c, 0x6d, 0x03, 0x0a, 0x6b,
+	0x43, 0xef, 0x0b, 0xb4, 0x0c, 0x45, 0xff, 0xed, 0x02, 0x01, 0x0e, 0xdf, 0x47, 0x94, 0x2a, 0x1e,
+	0x3d, 0x68, 0xa0, 0xf7, 0xa0, 0x1e, 0x7f, 0xa5, 0x40, 0x08, 0x8f, 0xbd, 0x70, 0x28, 0x33, 0x78,
+	0xfc, 0x29, 0xa3, 0xfd, 0x6d, 0x5e, 0x0c, 0xeb, 0xbb, 0xbc, 0x83, 0x04, 0x6f, 0x1a, 0x68, 0x7e,
+	0xac, 0xcd, 0x6d, 0xf6, 0x1d, 0xef, 0x54, 0x69, 0xe2, 0xe4, 0xcb, 0xc7, 0x7d, 0xa8, 0xc7, 0xf7,
+	0xf4, 0x4c, 0xd9, 0x99, 0x94, 0x85, 0x1e, 0x3d, 0x80, 0x66, 0x72, 0x1f, 0x44, 0xb3, 0x38, 0x65,
+	0x45, 0x54, 0x32, 0xd4, 0x46, 0x35, 0x84, 0xf6, 0x8f, 0x34, 0x44, 0x3d, 0x90, 0xa5, 0xe1, 0x03,
+	0x68, 0x24, 0x96, 0x3f, 0x34, 0x83, 0xc7, 0xd7, 0xc1, 0x4c, 0xf9, 0x2d, 0x98, 0x49, 0xd9, 0x03,
+	0xd1, 0x02, 0x4e, 0xdf, 0x0e, 0xb3, 0xf4, 0xb4, 0x7f, 0x95, 0x41, 0xe6, 0xc3, 0x1a, 0x6d, 0xf2,
+	0xa7, 0xa2, 0xc4, 0xf6, 0x86, 0xe6, 0x53, 0x57, 0xba, 0x63, 0x65, 0x21, 0x63, 0xd5, 0x43, 0x3b,
+	0x30, 0x93, 0xb2, 0x0e, 0xa0, 0x85, 0xf4, 0x25, 0xe1, 0x58, 0x69, 0x65, 0x6d, 0x0f, 0xe8, 0x21,
+	0x4c, 0x8f, 0xdd, 0x25, 0xd1, 0x5c, 0xda, 0xfd, 0x92, 0x99, 0x97, 0x7e, 0x3b, 0x8d, 0x9c, 0x26,
+	0x72, 0x1b, 0x89, 0x9c, 0x26, 0x7e, 0x4f, 0x8a, 0x9c, 0x26, 0x79, 0xcb, 0x79, 0x17, 0xaa, 0x91,
+	0x89, 0x88, 0x1a, 0x38, 0x3e, 0x67, 0x95, 0x26, 0x4e, 0x0e, 0xcc, 0xb7, 0xa0, 0x1c, 0x4c, 0x40,
+	0x54, 0xc3, 0x91, 0x59, 0xa9, 0x4c, 0xe1, 0xd8, 0x68, 0xbc, 0x03, 0xd5, 0xc8, 0x50, 0x43, 0x0d,
+	0x1c, 0x1f, 0x71, 0x99, 0x39, 0x70, 0x07, 0xaa, 0x91, 0xa1, 0x85, 0x1a, 0x38, 0x3e, 0xc2, 0x32,
+	0xe5, 0x56, 0xa1, 0x16, 0x1d, 0x10, 0x28, 0x38, 0x7a, 0xd8, 0x79, 0x94, 0x69, 0x3c, 0x36, 0x41,
+	0xae, 0x43, 0x25, 0x1c, 0x08, 0x88, 0x1b, 0x30, 0x62, 0xaf, 0xe3, 0xf8, 0xac, 0xb8, 0x07, 0xb5,
+	0x68, 0x13, 0x46, 0x4d, 0x9c, 0xe8, 0xc9, 0x99, 0x47, 0xbb, 0x07, 0xb5, 0x68, 0x17, 0x44, 0x4d,
+	0x9c, 0x68, 0x8a, 0x59, 0x92, 0x0f, 0x61, 0x47, 0xfa, 0xb4, 0x88, 0xf1, 0x0d, 0xd7, 0xe9, 0x1e,
+	0x16, 0x39, 0x6d, 0xf5, 0xcf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xe3, 0x85, 0xce, 0x45, 0x55, 0x18,
+	0x00, 0x00,
 }

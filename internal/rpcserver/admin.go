@@ -23,6 +23,30 @@ type Admin struct {
 	db repo.DB
 }
 
+// ---------- Device
+
+func (*Admin) GetAdminDevicesPage(context.Context, *rpc.GetAdminDevicesPageReq) (*rpc.GetAdminDevicesPageResp, error) {
+	return nil, errNotImplemented
+}
+
+func (*Admin) GetDevice(context.Context, *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
+	return nil, errNotImplemented
+}
+
+func (*Admin) CreateDevice(context.Context, *rpc.CreateDeviceReq) (*rpc.CreateDeviceResp, error) {
+	return nil, errNotImplemented
+}
+
+func (*Admin) UpdateDevice(context.Context, *rpc.UpdateDeviceReq) (*emptypb.Empty, error) {
+	return nil, errNotImplemented
+}
+
+func (*Admin) DeleteDevice(context.Context, *rpc.DeleteDeviceReq) (*emptypb.Empty, error) {
+	return nil, errNotImplemented
+}
+
+// ---------- User
+
 func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPageReq) (*rpc.GetAdminUsersPageResp, error) {
 	page := parsePagePagination(req.Page)
 
@@ -103,6 +127,8 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 
 }
 
+// ---------- Group
+
 func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsPageReq) (*rpc.GetAdminGroupsPageResp, error) {
 	page := parsePagePagination(req.Page)
 
@@ -180,6 +206,36 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 	}, nil
 }
 
+func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupIDPageReq) (*rpc.GetAdminGroupIDPageResp, error) {
+	dbGroup, err := a.db.GetGroup(ctx, req.Id)
+	if err != nil {
+		return nil, check(err)
+	}
+	return &rpc.GetAdminGroupIDPageResp{
+		Group: &rpc.GetAdminGroupIDPageResp_Group{
+			Id:             dbGroup.ID,
+			Name:           dbGroup.Name,
+			Description:    dbGroup.Description,
+			Disabled:       dbGroup.DisabledAt.Valid,
+			DisabledAtTime: timestamppb.New(dbGroup.DisabledAt.Time),
+			CreatedAtTime:  timestamppb.New(dbGroup.CreatedAt.Time),
+			UpdatedAtTime:  timestamppb.New(dbGroup.UpdatedAt.Time),
+		},
+	}, nil
+}
+
+func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGroupResp, error) {
+	dbGroup, err := a.db.GetGroup(ctx, req.Id)
+	if err != nil {
+		return nil, check(err)
+	}
+	return &rpc.GetGroupResp{
+		Id:          req.Id,
+		Name:        dbGroup.Name,
+		Description: dbGroup.Description,
+	}, nil
+}
+
 func convertCreateUpdateGroupError(msg string, err error) error {
 	if errs, ok := asValidationErrors(err); ok {
 		return NewError(err, msg).Validation(errs, [][2]string{
@@ -235,34 +291,4 @@ func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*empt
 		return nil, check(err)
 	}
 	return &emptypb.Empty{}, nil
-}
-
-func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupIDPageReq) (*rpc.GetAdminGroupIDPageResp, error) {
-	dbGroup, err := a.db.GetGroup(ctx, req.Id)
-	if err != nil {
-		return nil, check(err)
-	}
-	return &rpc.GetAdminGroupIDPageResp{
-		Group: &rpc.GetAdminGroupIDPageResp_Group{
-			Id:             dbGroup.ID,
-			Name:           dbGroup.Name,
-			Description:    dbGroup.Description,
-			Disabled:       dbGroup.DisabledAt.Valid,
-			DisabledAtTime: timestamppb.New(dbGroup.DisabledAt.Time),
-			CreatedAtTime:  timestamppb.New(dbGroup.CreatedAt.Time),
-			UpdatedAtTime:  timestamppb.New(dbGroup.UpdatedAt.Time),
-		},
-	}, nil
-}
-
-func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGroupResp, error) {
-	dbGroup, err := a.db.GetGroup(ctx, req.Id)
-	if err != nil {
-		return nil, check(err)
-	}
-	return &rpc.GetGroupResp{
-		Id:          req.Id,
-		Name:        dbGroup.Name,
-		Description: dbGroup.Description,
-	}, nil
 }
