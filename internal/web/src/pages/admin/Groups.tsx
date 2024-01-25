@@ -1,10 +1,10 @@
-import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams } from "@solidjs/router";
+import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
 import { AdminGroupsPageSearchParams, getAdminGroupsPage } from "./Groups.data";
 import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal } from "solid-js";
-import { RiArrowsArrowDownSLine, RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine } from "solid-icons/ri";
+import { RiArrowsArrowDownSLine, RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemDeleteBinLine, RiSystemLockLine } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { cn, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
+import { catchAsToast, cn, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
 import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
 import { encodeOrder, nextOrder, parseOrder } from "~/lib/order";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
@@ -20,6 +20,14 @@ import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/u
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
+import { ConfirmButton } from "~/ui/Confirm";
+
+
+const actionDeleteGroup = action((id: bigint) => useClient()
+  .admin.deleteGroup({ id })
+  .then(() => revalidate(getAdminGroupsPage.key))
+  .catch(catchAsToast)
+)
 
 export function AdminGroups() {
   const navigate = useNavigate()
@@ -154,25 +162,44 @@ export function AdminGroups() {
               </TableHeader>
               <TableBody>
                 <For each={groups()?.items}>
-                  {(group) =>
-                    <TableRow onClick={() => navigate(`./${group.id}`)} class="cursor-pointer select-none">
-                      <TableCell class="p-2">{group.name}</TableCell>
-                      <TableCell class="text-nowrap whitespace-nowrap p-2">{group.userCount.toString()}</TableCell>
-                      <TableCell class="text-nowrap whitespace-nowrap p-2">{formatDate(parseDate(group.createdAtTime))}</TableCell>
-                      <TableCell class="p-2">
-                        <Show when={group.disabled}>
-                          <TooltipRoot>
-                            <TooltipTrigger>
-                              <RiSystemLockLine class="h-4 w-4" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              Disabled since {formatDate(parseDate(group.disabledAtTime))}
-                            </TooltipContent>
-                          </TooltipRoot>
-                        </Show>
-                      </TableCell>
-                    </TableRow>
-                  }
+                  {(group) => {
+                    const onClick = () => navigate(`./${group.id}`)
+
+                    const deleteGroupSubmission = useSubmission(actionDeleteGroup)
+                    const deleteGroupAction = useAction(actionDeleteGroup)
+                    const deleteGroup = () => deleteGroupAction(group.id)
+
+                    return (
+                      <TableRow class="">
+                        <TableCell onClick={onClick} class="cursor-pointer select-none">{group.name}</TableCell>
+                        <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{group.userCount.toString()}</TableCell>
+                        <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(group.createdAtTime))}</TableCell>
+                        <TableCell class="py-0">
+                          <div class="flex gap-2">
+                            <Show when={group.disabled}>
+                              <TooltipRoot>
+                                <TooltipTrigger class="p-1">
+                                  <RiSystemLockLine class="h-5 w-5" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Disabled since {formatDate(parseDate(group.disabledAtTime))}
+                                </TooltipContent>
+                              </TooltipRoot>
+                            </Show>
+                            <ConfirmButton
+                              class="bg-destructive text-destructive-foreground rounded p-1 disabled:opacity-50"
+                              message={`Are you sure wish to delete ${group.name}?`}
+                              disabled={deleteGroupSubmission.pending}
+                              onYes={deleteGroup}
+                              title="Delete"
+                            >
+                              <RiSystemDeleteBinLine class="h-5 w-5" />
+                            </ConfirmButton>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  }}
                 </For>
               </TableBody>
               <TableCaption>

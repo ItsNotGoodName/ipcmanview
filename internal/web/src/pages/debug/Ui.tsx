@@ -245,7 +245,7 @@ export function Ui() {
         </TableBody>
       </TableRoot>
       <Button onClick={showToast}>Toast</Button>
-      <ConfirmButton message="Are you sure?" variant="destructive">
+      <ConfirmButton message="Are you sure?">
         Confirm Button
       </ConfirmButton>
       <PaginationRoot

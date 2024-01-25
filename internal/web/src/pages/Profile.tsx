@@ -18,6 +18,7 @@ import { Skeleton } from "~/ui/Skeleton"
 import { getSession } from "~/providers/session"
 import { PageError } from "~/ui/Page"
 import { ConfirmButton } from "~/ui/Confirm"
+import { As } from "@kobalte/core"
 
 const actionRevokeAllMySessions = action(() => useClient()
   .user.revokeAllMySessions({})
@@ -102,11 +103,13 @@ export function Profile() {
             <div class="flex">
               <ConfirmButton
                 message="Are you sure you wish to revoke all sessions?"
-                pending={revokeAllMySessionsSubmission.pending}
+                disabled={revokeAllMySessionsSubmission.pending}
                 onYes={revokeAllMySessions}
-                variant="destructive"
+                asChild
               >
-                Revoke all sessions
+                <As component={Button} variant="destructive">
+                  Revoke all sessions
+                </As>
               </ConfirmButton>
             </div>
             <TableRoot>
@@ -141,18 +144,19 @@ export function Profile() {
                           <TableCell>{session.lastIp}</TableCell>
                           <TableCell>{formatDate(parseDate(session.lastUsedAtTime))}</TableCell>
                           <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
-                          <TableCell>
+                          <TableCell class="py-0">
                             <Show when={!session.current} fallback={
                               <Badge>Current</Badge>
                             }>
                               <ConfirmButton
                                 message="Are you sure you wish to revoke this session?"
-                                pending={revokeMySessionSubmission.pending}
+                                disabled={revokeMySessionSubmission.pending}
                                 onYes={() => revokeMySession({ sessionId: session.id })}
-                                variant="destructive"
-                                size="sm"
+                                asChild
                               >
-                                Revoke
+                                <As component={Button} variant="destructive" size="sm">
+                                  Revoke
+                                </As>
                               </ConfirmButton>
                             </Show>
                           </TableCell>
