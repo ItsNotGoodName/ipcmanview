@@ -2074,15 +2074,13 @@ func (s *pageServer) PathPrefix() string {
 // ==============
 
 type User interface {
-	UpdateMyUsername(context.Context, *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error)
+	UpdateMyUsername(context.Context, *UpdateMyUsernameReq) (*google_protobuf.Empty, error)
 
-	UpdateMyPassword(context.Context, *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error)
+	UpdateMyPassword(context.Context, *UpdateMyPasswordReq) (*google_protobuf.Empty, error)
 
-	RevokeMySession(context.Context, *RevokeMySessionReq) (*RevokeMySessionResp, error)
+	RevokeMySession(context.Context, *RevokeMySessionReq) (*google_protobuf.Empty, error)
 
-	RevokeAllMySessions(context.Context, *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error)
-
-	ListMyGroups(context.Context, *ListMyGroupsReq) (*ListMyGroupsResp, error)
+	RevokeAllMySessions(context.Context, *RevokeAllMySessionsReq) (*google_protobuf.Empty, error)
 }
 
 // ====================
@@ -2091,7 +2089,7 @@ type User interface {
 
 type userProtobufClient struct {
 	client      HTTPClient
-	urls        [5]string
+	urls        [4]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -2119,12 +2117,11 @@ func NewUserProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Clie
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "User")
-	urls := [5]string{
+	urls := [4]string{
 		serviceURL + "UpdateMyUsername",
 		serviceURL + "UpdateMyPassword",
 		serviceURL + "RevokeMySession",
 		serviceURL + "RevokeAllMySessions",
-		serviceURL + "ListMyGroups",
 	}
 
 	return &userProtobufClient{
@@ -2135,13 +2132,13 @@ func NewUserProtobufClient(baseURL string, client HTTPClient, opts ...twirp.Clie
 	}
 }
 
-func (c *userProtobufClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
+func (c *userProtobufClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
 	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyUsername")
 	caller := c.callUpdateMyUsername
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
+		caller = func(ctx context.Context, req *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UpdateMyUsernameReq)
@@ -2152,9 +2149,9 @@ func (c *userProtobufClient) UpdateMyUsername(ctx context.Context, in *UpdateMyU
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateMyUsernameResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyUsernameResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2164,8 +2161,8 @@ func (c *userProtobufClient) UpdateMyUsername(ctx context.Context, in *UpdateMyU
 	return caller(ctx, in)
 }
 
-func (c *userProtobufClient) callUpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
-	out := new(UpdateMyUsernameResp)
+func (c *userProtobufClient) callUpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2181,13 +2178,13 @@ func (c *userProtobufClient) callUpdateMyUsername(ctx context.Context, in *Updat
 	return out, nil
 }
 
-func (c *userProtobufClient) UpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
+func (c *userProtobufClient) UpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
 	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyPassword")
 	caller := c.callUpdateMyPassword
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
+		caller = func(ctx context.Context, req *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UpdateMyPasswordReq)
@@ -2198,9 +2195,9 @@ func (c *userProtobufClient) UpdateMyPassword(ctx context.Context, in *UpdateMyP
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateMyPasswordResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyPasswordResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2210,8 +2207,8 @@ func (c *userProtobufClient) UpdateMyPassword(ctx context.Context, in *UpdateMyP
 	return caller(ctx, in)
 }
 
-func (c *userProtobufClient) callUpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
-	out := new(UpdateMyPasswordResp)
+func (c *userProtobufClient) callUpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2227,13 +2224,13 @@ func (c *userProtobufClient) callUpdateMyPassword(ctx context.Context, in *Updat
 	return out, nil
 }
 
-func (c *userProtobufClient) RevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*RevokeMySessionResp, error) {
+func (c *userProtobufClient) RevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*google_protobuf.Empty, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
 	ctx = ctxsetters.WithMethodName(ctx, "RevokeMySession")
 	caller := c.callRevokeMySession
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *RevokeMySessionReq) (*RevokeMySessionResp, error) {
+		caller = func(ctx context.Context, req *RevokeMySessionReq) (*google_protobuf.Empty, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*RevokeMySessionReq)
@@ -2244,9 +2241,9 @@ func (c *userProtobufClient) RevokeMySession(ctx context.Context, in *RevokeMySe
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeMySessionResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeMySessionResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2256,8 +2253,8 @@ func (c *userProtobufClient) RevokeMySession(ctx context.Context, in *RevokeMySe
 	return caller(ctx, in)
 }
 
-func (c *userProtobufClient) callRevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*RevokeMySessionResp, error) {
-	out := new(RevokeMySessionResp)
+func (c *userProtobufClient) callRevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2273,13 +2270,13 @@ func (c *userProtobufClient) callRevokeMySession(ctx context.Context, in *Revoke
 	return out, nil
 }
 
-func (c *userProtobufClient) RevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
+func (c *userProtobufClient) RevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
 	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllMySessions")
 	caller := c.callRevokeAllMySessions
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
+		caller = func(ctx context.Context, req *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*RevokeAllMySessionsReq)
@@ -2290,9 +2287,9 @@ func (c *userProtobufClient) RevokeAllMySessions(ctx context.Context, in *Revoke
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeAllMySessionsResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllMySessionsResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2302,55 +2299,9 @@ func (c *userProtobufClient) RevokeAllMySessions(ctx context.Context, in *Revoke
 	return caller(ctx, in)
 }
 
-func (c *userProtobufClient) callRevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
-	out := new(RevokeAllMySessionsResp)
+func (c *userProtobufClient) callRevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
-func (c *userProtobufClient) ListMyGroups(ctx context.Context, in *ListMyGroupsReq) (*ListMyGroupsResp, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "")
-	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "ListMyGroups")
-	caller := c.callListMyGroups
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *ListMyGroupsReq) (*ListMyGroupsResp, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ListMyGroupsReq)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ListMyGroupsReq) when calling interceptor")
-					}
-					return c.callListMyGroups(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*ListMyGroupsResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ListMyGroupsResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *userProtobufClient) callListMyGroups(ctx context.Context, in *ListMyGroupsReq) (*ListMyGroupsResp, error) {
-	out := new(ListMyGroupsResp)
-	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2371,7 +2322,7 @@ func (c *userProtobufClient) callListMyGroups(ctx context.Context, in *ListMyGro
 
 type userJSONClient struct {
 	client      HTTPClient
-	urls        [5]string
+	urls        [4]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -2399,12 +2350,11 @@ func NewUserJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOp
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "User")
-	urls := [5]string{
+	urls := [4]string{
 		serviceURL + "UpdateMyUsername",
 		serviceURL + "UpdateMyPassword",
 		serviceURL + "RevokeMySession",
 		serviceURL + "RevokeAllMySessions",
-		serviceURL + "ListMyGroups",
 	}
 
 	return &userJSONClient{
@@ -2415,13 +2365,13 @@ func NewUserJSONClient(baseURL string, client HTTPClient, opts ...twirp.ClientOp
 	}
 }
 
-func (c *userJSONClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
+func (c *userJSONClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
 	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyUsername")
 	caller := c.callUpdateMyUsername
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
+		caller = func(ctx context.Context, req *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UpdateMyUsernameReq)
@@ -2432,9 +2382,9 @@ func (c *userJSONClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsern
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateMyUsernameResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyUsernameResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2444,8 +2394,8 @@ func (c *userJSONClient) UpdateMyUsername(ctx context.Context, in *UpdateMyUsern
 	return caller(ctx, in)
 }
 
-func (c *userJSONClient) callUpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
-	out := new(UpdateMyUsernameResp)
+func (c *userJSONClient) callUpdateMyUsername(ctx context.Context, in *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2461,13 +2411,13 @@ func (c *userJSONClient) callUpdateMyUsername(ctx context.Context, in *UpdateMyU
 	return out, nil
 }
 
-func (c *userJSONClient) UpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
+func (c *userJSONClient) UpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
 	ctx = ctxsetters.WithMethodName(ctx, "UpdateMyPassword")
 	caller := c.callUpdateMyPassword
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
+		caller = func(ctx context.Context, req *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UpdateMyPasswordReq)
@@ -2478,9 +2428,9 @@ func (c *userJSONClient) UpdateMyPassword(ctx context.Context, in *UpdateMyPassw
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateMyPasswordResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyPasswordResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2490,8 +2440,8 @@ func (c *userJSONClient) UpdateMyPassword(ctx context.Context, in *UpdateMyPassw
 	return caller(ctx, in)
 }
 
-func (c *userJSONClient) callUpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
-	out := new(UpdateMyPasswordResp)
+func (c *userJSONClient) callUpdateMyPassword(ctx context.Context, in *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2507,13 +2457,13 @@ func (c *userJSONClient) callUpdateMyPassword(ctx context.Context, in *UpdateMyP
 	return out, nil
 }
 
-func (c *userJSONClient) RevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*RevokeMySessionResp, error) {
+func (c *userJSONClient) RevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*google_protobuf.Empty, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
 	ctx = ctxsetters.WithMethodName(ctx, "RevokeMySession")
 	caller := c.callRevokeMySession
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *RevokeMySessionReq) (*RevokeMySessionResp, error) {
+		caller = func(ctx context.Context, req *RevokeMySessionReq) (*google_protobuf.Empty, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*RevokeMySessionReq)
@@ -2524,9 +2474,9 @@ func (c *userJSONClient) RevokeMySession(ctx context.Context, in *RevokeMySessio
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeMySessionResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeMySessionResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2536,8 +2486,8 @@ func (c *userJSONClient) RevokeMySession(ctx context.Context, in *RevokeMySessio
 	return caller(ctx, in)
 }
 
-func (c *userJSONClient) callRevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*RevokeMySessionResp, error) {
-	out := new(RevokeMySessionResp)
+func (c *userJSONClient) callRevokeMySession(ctx context.Context, in *RevokeMySessionReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -2553,13 +2503,13 @@ func (c *userJSONClient) callRevokeMySession(ctx context.Context, in *RevokeMySe
 	return out, nil
 }
 
-func (c *userJSONClient) RevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
+func (c *userJSONClient) RevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "User")
 	ctx = ctxsetters.WithMethodName(ctx, "RevokeAllMySessions")
 	caller := c.callRevokeAllMySessions
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
+		caller = func(ctx context.Context, req *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*RevokeAllMySessionsReq)
@@ -2570,9 +2520,9 @@ func (c *userJSONClient) RevokeAllMySessions(ctx context.Context, in *RevokeAllM
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeAllMySessionsResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllMySessionsResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2582,55 +2532,9 @@ func (c *userJSONClient) RevokeAllMySessions(ctx context.Context, in *RevokeAllM
 	return caller(ctx, in)
 }
 
-func (c *userJSONClient) callRevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
-	out := new(RevokeAllMySessionsResp)
+func (c *userJSONClient) callRevokeAllMySessions(ctx context.Context, in *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
+	out := new(google_protobuf.Empty)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
-	if err != nil {
-		twerr, ok := err.(twirp.Error)
-		if !ok {
-			twerr = twirp.InternalErrorWith(err)
-		}
-		callClientError(ctx, c.opts.Hooks, twerr)
-		return nil, err
-	}
-
-	callClientResponseReceived(ctx, c.opts.Hooks)
-
-	return out, nil
-}
-
-func (c *userJSONClient) ListMyGroups(ctx context.Context, in *ListMyGroupsReq) (*ListMyGroupsResp, error) {
-	ctx = ctxsetters.WithPackageName(ctx, "")
-	ctx = ctxsetters.WithServiceName(ctx, "User")
-	ctx = ctxsetters.WithMethodName(ctx, "ListMyGroups")
-	caller := c.callListMyGroups
-	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *ListMyGroupsReq) (*ListMyGroupsResp, error) {
-			resp, err := c.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ListMyGroupsReq)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ListMyGroupsReq) when calling interceptor")
-					}
-					return c.callListMyGroups(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*ListMyGroupsResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ListMyGroupsResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-	return caller(ctx, in)
-}
-
-func (c *userJSONClient) callListMyGroups(ctx context.Context, in *ListMyGroupsReq) (*ListMyGroupsResp, error) {
-	out := new(ListMyGroupsResp)
-	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[4], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -2754,9 +2658,6 @@ func (s *userServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	case "RevokeAllMySessions":
 		s.serveRevokeAllMySessions(ctx, resp, req)
 		return
-	case "ListMyGroups":
-		s.serveListMyGroups(ctx, resp, req)
-		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
 		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
@@ -2806,7 +2707,7 @@ func (s *userServer) serveUpdateMyUsernameJSON(ctx context.Context, resp http.Re
 
 	handler := s.User.UpdateMyUsername
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
+		handler = func(ctx context.Context, req *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UpdateMyUsernameReq)
@@ -2817,9 +2718,9 @@ func (s *userServer) serveUpdateMyUsernameJSON(ctx context.Context, resp http.Re
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateMyUsernameResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyUsernameResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2828,7 +2729,7 @@ func (s *userServer) serveUpdateMyUsernameJSON(ctx context.Context, resp http.Re
 	}
 
 	// Call service method
-	var respContent *UpdateMyUsernameResp
+	var respContent *google_protobuf.Empty
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -2839,7 +2740,7 @@ func (s *userServer) serveUpdateMyUsernameJSON(ctx context.Context, resp http.Re
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateMyUsernameResp and nil error while calling UpdateMyUsername. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling UpdateMyUsername. nil responses are not supported"))
 		return
 	}
 
@@ -2887,7 +2788,7 @@ func (s *userServer) serveUpdateMyUsernameProtobuf(ctx context.Context, resp htt
 
 	handler := s.User.UpdateMyUsername
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UpdateMyUsernameReq) (*UpdateMyUsernameResp, error) {
+		handler = func(ctx context.Context, req *UpdateMyUsernameReq) (*google_protobuf.Empty, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UpdateMyUsernameReq)
@@ -2898,9 +2799,9 @@ func (s *userServer) serveUpdateMyUsernameProtobuf(ctx context.Context, resp htt
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateMyUsernameResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyUsernameResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -2909,7 +2810,7 @@ func (s *userServer) serveUpdateMyUsernameProtobuf(ctx context.Context, resp htt
 	}
 
 	// Call service method
-	var respContent *UpdateMyUsernameResp
+	var respContent *google_protobuf.Empty
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -2920,7 +2821,7 @@ func (s *userServer) serveUpdateMyUsernameProtobuf(ctx context.Context, resp htt
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateMyUsernameResp and nil error while calling UpdateMyUsername. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling UpdateMyUsername. nil responses are not supported"))
 		return
 	}
 
@@ -2986,7 +2887,7 @@ func (s *userServer) serveUpdateMyPasswordJSON(ctx context.Context, resp http.Re
 
 	handler := s.User.UpdateMyPassword
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
+		handler = func(ctx context.Context, req *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UpdateMyPasswordReq)
@@ -2997,9 +2898,9 @@ func (s *userServer) serveUpdateMyPasswordJSON(ctx context.Context, resp http.Re
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateMyPasswordResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyPasswordResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3008,7 +2909,7 @@ func (s *userServer) serveUpdateMyPasswordJSON(ctx context.Context, resp http.Re
 	}
 
 	// Call service method
-	var respContent *UpdateMyPasswordResp
+	var respContent *google_protobuf.Empty
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3019,7 +2920,7 @@ func (s *userServer) serveUpdateMyPasswordJSON(ctx context.Context, resp http.Re
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateMyPasswordResp and nil error while calling UpdateMyPassword. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling UpdateMyPassword. nil responses are not supported"))
 		return
 	}
 
@@ -3067,7 +2968,7 @@ func (s *userServer) serveUpdateMyPasswordProtobuf(ctx context.Context, resp htt
 
 	handler := s.User.UpdateMyPassword
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *UpdateMyPasswordReq) (*UpdateMyPasswordResp, error) {
+		handler = func(ctx context.Context, req *UpdateMyPasswordReq) (*google_protobuf.Empty, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*UpdateMyPasswordReq)
@@ -3078,9 +2979,9 @@ func (s *userServer) serveUpdateMyPasswordProtobuf(ctx context.Context, resp htt
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*UpdateMyPasswordResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*UpdateMyPasswordResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3089,7 +2990,7 @@ func (s *userServer) serveUpdateMyPasswordProtobuf(ctx context.Context, resp htt
 	}
 
 	// Call service method
-	var respContent *UpdateMyPasswordResp
+	var respContent *google_protobuf.Empty
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3100,7 +3001,7 @@ func (s *userServer) serveUpdateMyPasswordProtobuf(ctx context.Context, resp htt
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *UpdateMyPasswordResp and nil error while calling UpdateMyPassword. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling UpdateMyPassword. nil responses are not supported"))
 		return
 	}
 
@@ -3166,7 +3067,7 @@ func (s *userServer) serveRevokeMySessionJSON(ctx context.Context, resp http.Res
 
 	handler := s.User.RevokeMySession
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *RevokeMySessionReq) (*RevokeMySessionResp, error) {
+		handler = func(ctx context.Context, req *RevokeMySessionReq) (*google_protobuf.Empty, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*RevokeMySessionReq)
@@ -3177,9 +3078,9 @@ func (s *userServer) serveRevokeMySessionJSON(ctx context.Context, resp http.Res
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeMySessionResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeMySessionResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3188,7 +3089,7 @@ func (s *userServer) serveRevokeMySessionJSON(ctx context.Context, resp http.Res
 	}
 
 	// Call service method
-	var respContent *RevokeMySessionResp
+	var respContent *google_protobuf.Empty
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3199,7 +3100,7 @@ func (s *userServer) serveRevokeMySessionJSON(ctx context.Context, resp http.Res
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeMySessionResp and nil error while calling RevokeMySession. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling RevokeMySession. nil responses are not supported"))
 		return
 	}
 
@@ -3247,7 +3148,7 @@ func (s *userServer) serveRevokeMySessionProtobuf(ctx context.Context, resp http
 
 	handler := s.User.RevokeMySession
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *RevokeMySessionReq) (*RevokeMySessionResp, error) {
+		handler = func(ctx context.Context, req *RevokeMySessionReq) (*google_protobuf.Empty, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*RevokeMySessionReq)
@@ -3258,9 +3159,9 @@ func (s *userServer) serveRevokeMySessionProtobuf(ctx context.Context, resp http
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeMySessionResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeMySessionResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3269,7 +3170,7 @@ func (s *userServer) serveRevokeMySessionProtobuf(ctx context.Context, resp http
 	}
 
 	// Call service method
-	var respContent *RevokeMySessionResp
+	var respContent *google_protobuf.Empty
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3280,7 +3181,7 @@ func (s *userServer) serveRevokeMySessionProtobuf(ctx context.Context, resp http
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeMySessionResp and nil error while calling RevokeMySession. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling RevokeMySession. nil responses are not supported"))
 		return
 	}
 
@@ -3346,7 +3247,7 @@ func (s *userServer) serveRevokeAllMySessionsJSON(ctx context.Context, resp http
 
 	handler := s.User.RevokeAllMySessions
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
+		handler = func(ctx context.Context, req *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*RevokeAllMySessionsReq)
@@ -3357,9 +3258,9 @@ func (s *userServer) serveRevokeAllMySessionsJSON(ctx context.Context, resp http
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeAllMySessionsResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllMySessionsResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3368,7 +3269,7 @@ func (s *userServer) serveRevokeAllMySessionsJSON(ctx context.Context, resp http
 	}
 
 	// Call service method
-	var respContent *RevokeAllMySessionsResp
+	var respContent *google_protobuf.Empty
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3379,7 +3280,7 @@ func (s *userServer) serveRevokeAllMySessionsJSON(ctx context.Context, resp http
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeAllMySessionsResp and nil error while calling RevokeAllMySessions. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling RevokeAllMySessions. nil responses are not supported"))
 		return
 	}
 
@@ -3427,7 +3328,7 @@ func (s *userServer) serveRevokeAllMySessionsProtobuf(ctx context.Context, resp 
 
 	handler := s.User.RevokeAllMySessions
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *RevokeAllMySessionsReq) (*RevokeAllMySessionsResp, error) {
+		handler = func(ctx context.Context, req *RevokeAllMySessionsReq) (*google_protobuf.Empty, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*RevokeAllMySessionsReq)
@@ -3438,9 +3339,9 @@ func (s *userServer) serveRevokeAllMySessionsProtobuf(ctx context.Context, resp 
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*RevokeAllMySessionsResp)
+				typedResp, ok := resp.(*google_protobuf.Empty)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*RevokeAllMySessionsResp) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*google_protobuf.Empty) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -3449,7 +3350,7 @@ func (s *userServer) serveRevokeAllMySessionsProtobuf(ctx context.Context, resp 
 	}
 
 	// Call service method
-	var respContent *RevokeAllMySessionsResp
+	var respContent *google_protobuf.Empty
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -3460,187 +3361,7 @@ func (s *userServer) serveRevokeAllMySessionsProtobuf(ctx context.Context, resp 
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *RevokeAllMySessionsResp and nil error while calling RevokeAllMySessions. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	respBytes, err := proto.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/protobuf")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
-func (s *userServer) serveListMyGroups(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	header := req.Header.Get("Content-Type")
-	i := strings.Index(header, ";")
-	if i == -1 {
-		i = len(header)
-	}
-	switch strings.TrimSpace(strings.ToLower(header[:i])) {
-	case "application/json":
-		s.serveListMyGroupsJSON(ctx, resp, req)
-	case "application/protobuf":
-		s.serveListMyGroupsProtobuf(ctx, resp, req)
-	default:
-		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
-		twerr := badRouteError(msg, req.Method, req.URL.Path)
-		s.writeError(ctx, resp, twerr)
-	}
-}
-
-func (s *userServer) serveListMyGroupsJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "ListMyGroups")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	d := json.NewDecoder(req.Body)
-	rawReqBody := json.RawMessage{}
-	if err := d.Decode(&rawReqBody); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-	reqContent := new(ListMyGroupsReq)
-	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
-	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
-		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
-		return
-	}
-
-	handler := s.User.ListMyGroups
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *ListMyGroupsReq) (*ListMyGroupsResp, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ListMyGroupsReq)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ListMyGroupsReq) when calling interceptor")
-					}
-					return s.User.ListMyGroups(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*ListMyGroupsResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ListMyGroupsResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *ListMyGroupsResp
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *ListMyGroupsResp and nil error while calling ListMyGroups. nil responses are not supported"))
-		return
-	}
-
-	ctx = callResponsePrepared(ctx, s.hooks)
-
-	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
-	respBytes, err := marshaler.Marshal(respContent)
-	if err != nil {
-		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
-		return
-	}
-
-	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
-	resp.Header().Set("Content-Type", "application/json")
-	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
-	resp.WriteHeader(http.StatusOK)
-
-	if n, err := resp.Write(respBytes); err != nil {
-		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
-		twerr := twirp.NewError(twirp.Unknown, msg)
-		ctx = callError(ctx, s.hooks, twerr)
-	}
-	callResponseSent(ctx, s.hooks)
-}
-
-func (s *userServer) serveListMyGroupsProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
-	var err error
-	ctx = ctxsetters.WithMethodName(ctx, "ListMyGroups")
-	ctx, err = callRequestRouted(ctx, s.hooks)
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-
-	buf, err := io.ReadAll(req.Body)
-	if err != nil {
-		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
-		return
-	}
-	reqContent := new(ListMyGroupsReq)
-	if err = proto.Unmarshal(buf, reqContent); err != nil {
-		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
-		return
-	}
-
-	handler := s.User.ListMyGroups
-	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *ListMyGroupsReq) (*ListMyGroupsResp, error) {
-			resp, err := s.interceptor(
-				func(ctx context.Context, req interface{}) (interface{}, error) {
-					typedReq, ok := req.(*ListMyGroupsReq)
-					if !ok {
-						return nil, twirp.InternalError("failed type assertion req.(*ListMyGroupsReq) when calling interceptor")
-					}
-					return s.User.ListMyGroups(ctx, typedReq)
-				},
-			)(ctx, req)
-			if resp != nil {
-				typedResp, ok := resp.(*ListMyGroupsResp)
-				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*ListMyGroupsResp) when calling interceptor")
-				}
-				return typedResp, err
-			}
-			return nil, err
-		}
-	}
-
-	// Call service method
-	var respContent *ListMyGroupsResp
-	func() {
-		defer ensurePanicResponses(ctx, resp, s.hooks)
-		respContent, err = handler(ctx, reqContent)
-	}()
-
-	if err != nil {
-		s.writeError(ctx, resp, err)
-		return
-	}
-	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *ListMyGroupsResp and nil error while calling ListMyGroups. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *google_protobuf.Empty and nil error while calling RevokeAllMySessions. nil responses are not supported"))
 		return
 	}
 
@@ -3684,12 +3405,14 @@ func (s *userServer) PathPrefix() string {
 // ===============
 
 type Admin interface {
+	// Pages
 	GetAdminGroupsPage(context.Context, *GetAdminGroupsPageReq) (*GetAdminGroupsPageResp, error)
 
 	GetAdminGroupIDPage(context.Context, *GetAdminGroupIDPageReq) (*GetAdminGroupIDPageResp, error)
 
 	GetAdminUsersPage(context.Context, *GetAdminUsersPageReq) (*GetAdminUsersPageResp, error)
 
+	// Group CRUD
 	CreateGroup(context.Context, *CreateGroupReq) (*CreateGroupResp, error)
 
 	GetGroup(context.Context, *GetGroupReq) (*GetGroupResp, error)
@@ -6413,101 +6136,97 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 1533 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x57, 0xcb, 0x72, 0xdb, 0x54,
-	0x18, 0xc6, 0xb2, 0xe5, 0xcb, 0x6f, 0xc7, 0x76, 0x4e, 0x9c, 0xc4, 0x55, 0x69, 0x9b, 0xa8, 0xcc,
-	0x10, 0x3a, 0xcc, 0x29, 0x75, 0xca, 0x75, 0xe8, 0x94, 0xdc, 0x9a, 0x64, 0x86, 0xd2, 0x8c, 0xd2,
-	0xb4, 0x03, 0xcc, 0xe0, 0x51, 0xac, 0x53, 0xa3, 0x22, 0x5b, 0x27, 0x3a, 0x72, 0xda, 0x6c, 0x58,
-	0xb1, 0x62, 0x07, 0x0f, 0xc0, 0x86, 0x05, 0x8f, 0xc0, 0x13, 0xf0, 0x2e, 0x0c, 0x2b, 0x1e, 0x81,
-	0x39, 0x17, 0xc9, 0xb2, 0x2c, 0x93, 0x06, 0xc2, 0x82, 0x9d, 0xfe, 0xeb, 0x39, 0xff, 0x7f, 0xfe,
-	0xcb, 0x27, 0xa8, 0x04, 0xb4, 0x87, 0x69, 0xe0, 0x87, 0xbe, 0x71, 0xb5, 0xef, 0xfb, 0x7d, 0x8f,
-	0xdc, 0x16, 0xd4, 0xf1, 0xe8, 0xd9, 0x6d, 0x32, 0xa0, 0xe1, 0x99, 0x12, 0xde, 0x48, 0x0b, 0x43,
-	0x77, 0x40, 0x58, 0x68, 0x0f, 0xa8, 0x54, 0x30, 0x3f, 0x82, 0xc2, 0xa1, 0x1f, 0x84, 0xa8, 0x05,
-	0xfa, 0x33, 0x97, 0x78, 0x4e, 0x3b, 0xb7, 0x92, 0x5b, 0xab, 0x58, 0x92, 0x40, 0xaf, 0x83, 0xee,
-	0x07, 0x0e, 0x09, 0xda, 0xda, 0x4a, 0x6e, 0xad, 0xde, 0x29, 0xe2, 0x47, 0x9c, 0xb2, 0x24, 0xd3,
-	0xbc, 0x0f, 0xf5, 0x03, 0xbb, 0x4f, 0x0e, 0xec, 0xbe, 0x3b, 0xb4, 0x43, 0xd7, 0x1f, 0x22, 0x04,
-	0x05, 0x6a, 0xf7, 0x89, 0x70, 0xa2, 0x5b, 0xe2, 0x1b, 0x5d, 0x81, 0x32, 0x25, 0x41, 0x57, 0xf0,
-	0x35, 0xc1, 0x2f, 0x51, 0x12, 0x70, 0x43, 0xf3, 0xf7, 0x1c, 0xb4, 0x26, 0x3d, 0x58, 0x84, 0x8d,
-	0xbc, 0xf0, 0x82, 0x7e, 0xd0, 0x0d, 0xa8, 0x86, 0x7e, 0x68, 0x7b, 0x42, 0xc8, 0xda, 0x79, 0x21,
-	0x05, 0xc1, 0xe2, 0x72, 0x36, 0x56, 0x70, 0x43, 0x32, 0x60, 0xed, 0xc2, 0x4a, 0x6e, 0x2d, 0xaf,
-	0x14, 0xf6, 0x39, 0x07, 0x5d, 0x03, 0x60, 0x84, 0x0c, 0x95, 0x5c, 0x17, 0xf2, 0x0a, 0xe7, 0x48,
-	0xf1, 0x4d, 0x98, 0xa3, 0x01, 0x39, 0x75, 0xfd, 0x11, 0x93, 0x17, 0x28, 0x8a, 0x23, 0x6a, 0x11,
-	0x53, 0xdc, 0xe2, 0x2a, 0x54, 0x86, 0xe4, 0x65, 0x28, 0x15, 0x4a, 0x42, 0xa1, 0xcc, 0x19, 0x22,
-	0xd4, 0x9f, 0x34, 0x28, 0x1d, 0x12, 0xc6, 0x78, 0x96, 0xea, 0xa0, 0xb9, 0x32, 0xd1, 0x79, 0x4b,
-	0x73, 0x1d, 0x7e, 0xf8, 0x88, 0x91, 0xa0, 0x6b, 0xf7, 0xc9, 0x30, 0x14, 0xb1, 0x55, 0xac, 0x0a,
-	0xe7, 0x6c, 0x70, 0x86, 0x50, 0xa7, 0x22, 0xa8, 0x8a, 0xa5, 0xb9, 0x14, 0x2d, 0x43, 0xc9, 0xb3,
-	0x59, 0xd8, 0x75, 0xa9, 0x08, 0xa4, 0x62, 0x15, 0x39, 0xb9, 0x4f, 0xd1, 0x0e, 0xcc, 0x0b, 0xc1,
-	0x88, 0x11, 0xa7, 0x6b, 0x87, 0x5d, 0xfe, 0xd6, 0x22, 0x96, 0x6a, 0xc7, 0xc0, 0xb2, 0x10, 0x70,
-	0x54, 0x08, 0xf8, 0x71, 0x54, 0x08, 0x56, 0x9d, 0x1b, 0x1d, 0x31, 0xe2, 0x6c, 0x84, 0x9c, 0x89,
-	0x36, 0xa1, 0xd1, 0x0b, 0x88, 0x1d, 0x26, 0x9c, 0x14, 0xcf, 0x75, 0x32, 0xa7, 0x4c, 0x94, 0x8f,
-	0x25, 0x28, 0xda, 0xbd, 0xd0, 0x3d, 0x95, 0x89, 0x28, 0x5b, 0x8a, 0x42, 0x6d, 0x28, 0xf5, 0x46,
-	0x41, 0xc0, 0xe3, 0x2c, 0x0b, 0x41, 0x44, 0x9a, 0x3f, 0xe4, 0xa0, 0xf4, 0xf0, 0x6c, 0x37, 0xf0,
-	0x47, 0x74, 0x2a, 0x41, 0x08, 0x0a, 0x43, 0x7b, 0x40, 0x54, 0x6a, 0xc4, 0x37, 0x5a, 0x81, 0xaa,
-	0x43, 0x58, 0x2f, 0x70, 0x29, 0xaf, 0x1b, 0x95, 0x9e, 0x24, 0x0b, 0x7d, 0x02, 0xf5, 0xe7, 0xbe,
-	0x3b, 0x4c, 0x84, 0x51, 0x38, 0x37, 0x8c, 0x9a, 0xb4, 0x90, 0x51, 0x98, 0x3d, 0x28, 0xef, 0x11,
-	0xcf, 0xf3, 0x2d, 0x72, 0xc2, 0x6f, 0xce, 0x46, 0xc7, 0xcf, 0x49, 0x2f, 0x54, 0x2d, 0x12, 0x91,
-	0xe8, 0x1e, 0xd4, 0x54, 0x10, 0xf2, 0x14, 0xed, 0xdc, 0x53, 0xaa, 0x4a, 0x5f, 0x1c, 0xf2, 0x15,
-	0x54, 0xd4, 0x21, 0x8c, 0xf2, 0x48, 0x43, 0xf2, 0x32, 0x3a, 0x42, 0x7c, 0xff, 0x5b, 0xff, 0x9f,
-	0x43, 0xe5, 0xd0, 0xed, 0x0f, 0x8f, 0x28, 0x8f, 0xa2, 0x05, 0x3a, 0x19, 0xd8, 0xae, 0x17, 0xb5,
-	0xb9, 0x20, 0x90, 0x01, 0x65, 0x5e, 0x6e, 0x89, 0x1c, 0xc7, 0x34, 0x97, 0x51, 0x9b, 0xb1, 0x17,
-	0x7e, 0xe0, 0xa8, 0x24, 0xc7, 0xb4, 0x59, 0x03, 0x88, 0x5c, 0x33, 0x6a, 0xbe, 0x05, 0xf3, 0x0f,
-	0xfc, 0xa0, 0xef, 0x87, 0x07, 0x4a, 0x3e, 0xf3, 0x40, 0xb3, 0x05, 0x28, 0xad, 0xca, 0xa8, 0x79,
-	0x17, 0x1a, 0xbb, 0x24, 0xdc, 0xf3, 0x07, 0x7c, 0x20, 0x10, 0x91, 0x8f, 0x55, 0xa8, 0x39, 0xe4,
-	0xd4, 0xed, 0x91, 0x6e, 0xcf, 0x1f, 0x0d, 0x43, 0x55, 0x13, 0x55, 0xc9, 0xdb, 0xe2, 0x2c, 0xf3,
-	0x7b, 0x0d, 0xd0, 0x2e, 0x09, 0x0f, 0x02, 0xff, 0x99, 0xeb, 0x8d, 0x2d, 0x93, 0x31, 0xe5, 0x52,
-	0x31, 0xc5, 0x97, 0xd2, 0x92, 0x59, 0x68, 0x81, 0x6e, 0x3b, 0x03, 0x57, 0xd6, 0x52, 0xd9, 0x92,
-	0x44, 0x56, 0x37, 0x14, 0x2e, 0xda, 0x0d, 0x9b, 0xd0, 0x18, 0x51, 0x67, 0xc2, 0xc7, 0xf9, 0x6d,
-	0x39, 0xa7, 0x4c, 0x94, 0x8f, 0x37, 0xa0, 0xcc, 0xe4, 0xfc, 0x60, 0xed, 0xe2, 0x4a, 0x7e, 0xad,
-	0xda, 0x29, 0x63, 0x35, 0x50, 0xac, 0x58, 0x62, 0x7e, 0x00, 0x0b, 0x47, 0xc2, 0xec, 0xe1, 0xd9,
-	0x91, 0x8a, 0x96, 0xbf, 0xc2, 0x2a, 0xd4, 0x86, 0xe4, 0x45, 0x37, 0x95, 0x90, 0xea, 0x90, 0xbc,
-	0x88, 0xb4, 0xcc, 0x25, 0x68, 0x4d, 0x5b, 0x32, 0x6a, 0x7e, 0x39, 0xf6, 0x98, 0x7c, 0xd7, 0x55,
-	0xa8, 0xf9, 0x9e, 0xd3, 0x8d, 0x4b, 0x43, 0x79, 0xf4, 0x3d, 0x27, 0xd2, 0x8a, 0x0e, 0x8d, 0x55,
-	0xb4, 0xf8, 0xd0, 0x48, 0x25, 0x79, 0xe8, 0x44, 0x25, 0xac, 0x03, 0xb2, 0xc8, 0xa9, 0xff, 0x0d,
-	0x79, 0x78, 0x16, 0xc5, 0x48, 0x4e, 0xe4, 0x90, 0x16, 0x54, 0x37, 0x1e, 0x0f, 0x15, 0xc5, 0xd9,
-	0x77, 0xcc, 0x45, 0x58, 0x98, 0x32, 0x62, 0xd4, 0x6c, 0xc3, 0x92, 0x64, 0x6f, 0x78, 0x5e, 0x2c,
-	0x61, 0x16, 0x39, 0x31, 0xaf, 0xc0, 0x72, 0xa6, 0x84, 0x51, 0x73, 0x1e, 0x1a, 0x9f, 0xba, 0x2c,
-	0x54, 0x03, 0x49, 0x68, 0xdf, 0x85, 0xe6, 0x24, 0x8b, 0x51, 0xb4, 0x02, 0xc5, 0xbe, 0xa0, 0xda,
-	0x39, 0xf5, 0x24, 0x4a, 0x6c, 0x29, 0xbe, 0xf9, 0x14, 0x16, 0x77, 0x49, 0xb8, 0xc1, 0x4b, 0x49,
-	0xda, 0xc9, 0x02, 0x3d, 0x41, 0x37, 0x13, 0x2b, 0xae, 0xda, 0x69, 0xe0, 0xd4, 0x1e, 0x8c, 0x76,
-	0x5e, 0x81, 0xf9, 0x41, 0xa8, 0x5a, 0x5e, 0xc7, 0x7c, 0x55, 0x5b, 0x82, 0x65, 0xfe, 0x98, 0x87,
-	0xa5, 0x2c, 0xcf, 0x8c, 0xa2, 0x75, 0xd0, 0xe5, 0x1e, 0x93, 0x97, 0xba, 0x86, 0xb3, 0xf5, 0xb0,
-	0xbc, 0xa9, 0xd4, 0x45, 0xef, 0x02, 0x50, 0x29, 0x18, 0x79, 0xd1, 0x81, 0x8b, 0x38, 0x6b, 0x3b,
-	0x5b, 0x09, 0xc5, 0xf8, 0x86, 0xf9, 0xa9, 0x1b, 0x1a, 0x7f, 0xe6, 0x40, 0x7f, 0xf5, 0x79, 0x1e,
-	0x2d, 0x41, 0xd9, 0xe7, 0x79, 0xf9, 0xb8, 0x9c, 0x23, 0xba, 0x9c, 0xb7, 0xb3, 0xe3, 0x32, 0xfb,
-	0xd8, 0x23, 0x8e, 0xe8, 0xbf, 0xb2, 0x15, 0xd3, 0x68, 0x1b, 0x9a, 0xd1, 0xf7, 0x45, 0xd6, 0x5e,
-	0x64, 0x73, 0x79, 0x6b, 0xcf, 0x5c, 0x4b, 0xbd, 0xc9, 0xfe, 0x76, 0xf4, 0xdc, 0xa9, 0x14, 0x98,
-	0x7f, 0xe4, 0x61, 0x39, 0x53, 0x95, 0x51, 0x74, 0x17, 0x74, 0x51, 0x3d, 0xaa, 0x36, 0xae, 0xe3,
-	0x19, 0x8a, 0xd1, 0x03, 0x0a, 0x65, 0xfe, 0xea, 0x3c, 0x5d, 0xac, 0xad, 0x65, 0xbd, 0x7a, 0xc2,
-	0x8a, 0xb7, 0xb7, 0x25, 0x75, 0x8d, 0x5f, 0xb5, 0x8b, 0xbc, 0xd1, 0xf9, 0x3b, 0xf7, 0x7f, 0xf1,
-	0x4c, 0x59, 0xf3, 0xb8, 0x74, 0xc1, 0x79, 0x6c, 0xdc, 0x82, 0x02, 0x4f, 0xe4, 0xab, 0xe4, 0xcd,
-	0x7c, 0x02, 0xad, 0xe8, 0x31, 0xb8, 0xcd, 0xa5, 0xcd, 0x80, 0x9f, 0xf3, 0xe3, 0xe9, 0x92, 0x70,
-	0xcc, 0x28, 0xba, 0x33, 0x39, 0x02, 0xae, 0xe2, 0x4c, 0x35, 0x55, 0x0a, 0xff, 0xd5, 0x00, 0xf8,
-	0x4e, 0x9b, 0x91, 0xa3, 0xbf, 0xc3, 0x1b, 0xf1, 0x6e, 0xce, 0xa7, 0x10, 0xca, 0xcc, 0xba, 0x8a,
-	0xf7, 0xb6, 0x9e, 0xdc, 0xdb, 0x59, 0xd5, 0x56, 0xbc, 0x8c, 0x6a, 0x2b, 0x5d, 0x74, 0x28, 0x3c,
-	0x80, 0xfa, 0x96, 0x60, 0xc8, 0x76, 0x25, 0x27, 0x71, 0x8d, 0xe4, 0x66, 0xf7, 0x96, 0x36, 0xd5,
-	0x5b, 0xe6, 0x2a, 0x34, 0x26, 0xfc, 0xb0, 0xa9, 0xa6, 0x35, 0xaf, 0x41, 0x75, 0x97, 0x84, 0xf1,
-	0x39, 0x69, 0xf1, 0x63, 0xa8, 0x8d, 0xc5, 0xec, 0x92, 0x7a, 0xde, 0x7c, 0x02, 0x75, 0xb9, 0xc4,
-	0x67, 0x9d, 0xfb, 0x0f, 0xfd, 0xae, 0x40, 0x7d, 0x9b, 0x78, 0x64, 0xb6, 0xdf, 0x5b, 0x77, 0x40,
-	0x17, 0x3f, 0xa4, 0x68, 0x11, 0xe6, 0x1f, 0x59, 0xdb, 0x3b, 0x56, 0xf7, 0xe8, 0xb3, 0xc3, 0x83,
-	0x9d, 0xad, 0xfd, 0x07, 0xfb, 0x3b, 0xdb, 0xcd, 0xd7, 0x50, 0x19, 0x0a, 0xdb, 0x3b, 0x87, 0x5b,
-	0xcd, 0x1c, 0x2a, 0x41, 0x7e, 0xe3, 0x70, 0xab, 0xa9, 0x75, 0xde, 0x06, 0x10, 0x68, 0xfb, 0xa9,
-	0x1f, 0x78, 0x0e, 0xba, 0x0e, 0xba, 0xa0, 0x50, 0x05, 0x47, 0x40, 0xdf, 0x00, 0x1c, 0xc3, 0xf1,
-	0x8e, 0x03, 0x85, 0x8d, 0x51, 0xf8, 0x35, 0x5a, 0x85, 0xa2, 0x04, 0xba, 0x08, 0x70, 0x0c, 0xa6,
-	0x8d, 0x2a, 0x1e, 0xa3, 0x5f, 0xf4, 0x21, 0xd4, 0x27, 0x21, 0x2d, 0x42, 0x78, 0x0a, 0x0e, 0x1b,
-	0x0b, 0x78, 0x1a, 0xf7, 0x76, 0xbe, 0x85, 0x82, 0xf8, 0x81, 0x7c, 0x5f, 0xbc, 0x5e, 0x84, 0x7f,
-	0xd1, 0xd2, 0x54, 0x89, 0xed, 0xf0, 0x3f, 0x7b, 0xa3, 0x89, 0xd3, 0x28, 0xf9, 0x1e, 0xd4, 0x27,
-	0x11, 0xf0, 0x4c, 0xdb, 0x05, 0x3c, 0x0d, 0x95, 0x3b, 0xbf, 0x45, 0x7d, 0x7a, 0x1f, 0x9a, 0x69,
-	0x0c, 0x88, 0x5a, 0x38, 0x03, 0x50, 0x1a, 0x8b, 0x38, 0x0b, 0x2c, 0x26, 0x1d, 0xc4, 0x69, 0x18,
-	0x3b, 0x48, 0x26, 0x62, 0x11, 0x67, 0x01, 0x3f, 0xf4, 0x31, 0x34, 0x52, 0x18, 0x0e, 0x2d, 0xe0,
-	0x69, 0x28, 0x68, 0xb4, 0x70, 0x06, 0xd4, 0x43, 0x7b, 0x11, 0x02, 0x9c, 0x00, 0x74, 0x68, 0x19,
-	0x67, 0x03, 0x40, 0xa3, 0x8d, 0x67, 0xe0, 0x3f, 0xb4, 0x0e, 0xb5, 0x24, 0xd8, 0x43, 0x4d, 0x9c,
-	0x82, 0x83, 0xc6, 0x3c, 0x4e, 0xa3, 0xc1, 0xce, 0x2f, 0x79, 0xd0, 0xc5, 0x90, 0x45, 0x3b, 0xe2,
-	0x97, 0x24, 0x85, 0xb9, 0xd0, 0x52, 0x26, 0x10, 0x3b, 0x31, 0x96, 0x67, 0x00, 0x34, 0x1e, 0x4f,
-	0xc6, 0x12, 0x47, 0xcb, 0xd9, 0xab, 0x9d, 0xc7, 0x33, 0x0b, 0x52, 0x6c, 0xc2, 0xfc, 0xd4, 0x06,
-	0x40, 0x8b, 0x59, 0x5b, 0xe1, 0xc4, 0x58, 0xca, 0x5e, 0x16, 0xe8, 0x1d, 0xa8, 0x26, 0xe6, 0x0f,
-	0x6a, 0xe0, 0xc9, 0xa9, 0x66, 0x34, 0x71, 0x7a, 0x3c, 0xbd, 0x09, 0xe5, 0x68, 0xde, 0xa0, 0x1a,
-	0x4e, 0x4c, 0x26, 0x63, 0x0e, 0x4f, 0x0c, 0xa2, 0xf7, 0xa0, 0x9a, 0x18, 0x21, 0xa8, 0x81, 0x27,
-	0x07, 0x8a, 0x31, 0xa3, 0x9c, 0xb9, 0x5d, 0x62, 0x44, 0xa0, 0x06, 0x9e, 0x1c, 0x18, 0xb3, 0xec,
-	0x36, 0x61, 0x4f, 0xfb, 0xa2, 0x88, 0xf1, 0xed, 0x80, 0xf6, 0x8e, 0x8b, 0x42, 0xb6, 0xfe, 0x57,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x80, 0x34, 0xda, 0x5b, 0x53, 0x13, 0x00, 0x00,
+	// 1462 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x57, 0x4b, 0x73, 0xdb, 0xd4,
+	0x17, 0xff, 0x5b, 0xb6, 0xfc, 0x38, 0x76, 0xed, 0xe4, 0xc6, 0x49, 0x5c, 0xe5, 0xdf, 0x36, 0x51,
+	0x17, 0x84, 0x0e, 0x73, 0x4b, 0xdd, 0xd2, 0x02, 0x33, 0x85, 0xa6, 0x89, 0xf3, 0x58, 0x94, 0x66,
+	0x94, 0xa6, 0x1d, 0x60, 0x06, 0x8f, 0x62, 0xdd, 0x1a, 0x15, 0x59, 0x92, 0x75, 0xe5, 0xb4, 0xdd,
+	0xb0, 0x81, 0x3d, 0x33, 0xfd, 0x00, 0x6c, 0x58, 0xf0, 0x11, 0xf8, 0x4a, 0x0c, 0x2b, 0x3e, 0x02,
+	0x73, 0x1f, 0x92, 0x65, 0x59, 0xa2, 0x18, 0xc2, 0x82, 0x9d, 0xce, 0xf3, 0xea, 0x9e, 0xc7, 0xef,
+	0x9e, 0x03, 0xb5, 0xc0, 0x1f, 0x60, 0x3f, 0xf0, 0x42, 0x4f, 0xdb, 0x18, 0x7a, 0xde, 0xd0, 0x21,
+	0x37, 0x39, 0x75, 0x36, 0x79, 0x7e, 0x93, 0x8c, 0xfc, 0xf0, 0xb5, 0x14, 0x5e, 0x4b, 0x0b, 0x43,
+	0x7b, 0x44, 0x68, 0x68, 0x8e, 0x7c, 0xa1, 0xa0, 0x7f, 0x0c, 0xa5, 0x13, 0x2f, 0x08, 0x51, 0x1b,
+	0xd4, 0xe7, 0x36, 0x71, 0xac, 0x4e, 0x61, 0xb3, 0xb0, 0x5d, 0x33, 0x04, 0x81, 0xfe, 0x0f, 0xaa,
+	0x17, 0x58, 0x24, 0xe8, 0x28, 0x9b, 0x85, 0xed, 0x66, 0xb7, 0x8c, 0x1f, 0x33, 0xca, 0x10, 0x4c,
+	0xfd, 0x53, 0x68, 0x1e, 0x9b, 0x43, 0x72, 0x6c, 0x0e, 0x6d, 0xd7, 0x0c, 0x6d, 0xcf, 0x45, 0x08,
+	0x4a, 0xbe, 0x39, 0x24, 0xdc, 0x89, 0x6a, 0xf0, 0x6f, 0x74, 0x19, 0xaa, 0x3e, 0x09, 0xfa, 0x9c,
+	0xaf, 0x70, 0x7e, 0xc5, 0x27, 0x01, 0x33, 0xd4, 0x7f, 0x2d, 0x40, 0x7b, 0xd6, 0x83, 0x41, 0xe8,
+	0xc4, 0x09, 0x17, 0xf4, 0x83, 0xae, 0x41, 0x3d, 0xf4, 0x42, 0xd3, 0xe1, 0x42, 0xda, 0x29, 0x72,
+	0x29, 0x70, 0x16, 0x93, 0xd3, 0xa9, 0x82, 0x1d, 0x92, 0x11, 0xed, 0x94, 0x36, 0x0b, 0xdb, 0x45,
+	0xa9, 0x70, 0xc4, 0x38, 0xe8, 0x0a, 0x00, 0x25, 0xc4, 0x95, 0x72, 0x95, 0xcb, 0x6b, 0x8c, 0x23,
+	0xc4, 0xd7, 0xe1, 0x92, 0x1f, 0x90, 0x73, 0xdb, 0x9b, 0x50, 0xf1, 0x03, 0x65, 0x7e, 0x44, 0x23,
+	0x62, 0xf2, 0xbf, 0xd8, 0x80, 0x9a, 0x4b, 0x5e, 0x85, 0x42, 0xa1, 0xc2, 0x15, 0xaa, 0x8c, 0xc1,
+	0xaf, 0x3a, 0x80, 0xea, 0x21, 0x71, 0x1c, 0xcf, 0x20, 0x63, 0xd4, 0x81, 0x0a, 0x9d, 0x9c, 0xbd,
+	0x20, 0x83, 0x50, 0x46, 0x3b, 0x22, 0xd1, 0x7d, 0x68, 0x0c, 0x26, 0x41, 0x40, 0xdc, 0xb0, 0xcf,
+	0x12, 0xc5, 0xef, 0x59, 0xef, 0x6a, 0x58, 0x64, 0x11, 0x47, 0x59, 0xc4, 0x4f, 0xa2, 0x2c, 0x1a,
+	0x75, 0xa9, 0xcf, 0x38, 0xfa, 0x57, 0x50, 0x93, 0x87, 0x50, 0x9f, 0xc5, 0x30, 0x24, 0xaf, 0xa2,
+	0x23, 0xf8, 0xf7, 0x3f, 0xf5, 0xff, 0x39, 0xd4, 0x4e, 0xec, 0xa1, 0x7b, 0xea, 0xb3, 0x5b, 0xb4,
+	0x41, 0x25, 0x23, 0xd3, 0x76, 0xa2, 0x8a, 0xe1, 0x04, 0xd2, 0xa0, 0x3a, 0xa1, 0x24, 0x70, 0x4d,
+	0xe9, 0xbd, 0x66, 0xc4, 0x34, 0x93, 0xf9, 0x26, 0xa5, 0x2f, 0xbd, 0xc0, 0xe2, 0x39, 0xaa, 0x19,
+	0x31, 0xad, 0x37, 0x00, 0x22, 0xd7, 0xd4, 0xd7, 0xdf, 0x85, 0xe5, 0x7d, 0x2f, 0x18, 0x7a, 0xe1,
+	0xb1, 0x94, 0xe7, 0x1e, 0xa8, 0xb7, 0x01, 0xa5, 0x55, 0xa9, 0xaf, 0xdf, 0x81, 0xd6, 0x01, 0x09,
+	0x0f, 0xbd, 0x11, 0xab, 0x2d, 0xc2, 0xe3, 0xb1, 0x05, 0x0d, 0x8b, 0x9c, 0xdb, 0x03, 0xd2, 0x1f,
+	0x78, 0x13, 0x57, 0xc4, 0xa5, 0x68, 0xd4, 0x05, 0x6f, 0x97, 0xb1, 0xf4, 0xef, 0xca, 0x80, 0x0e,
+	0x48, 0x78, 0x1c, 0x78, 0xcf, 0x6d, 0x67, 0x6a, 0x99, 0xbc, 0x53, 0x21, 0x75, 0xa7, 0xf8, 0xa7,
+	0x94, 0x64, 0x14, 0xda, 0xa0, 0x9a, 0xd6, 0xc8, 0x76, 0xf9, 0x35, 0xab, 0x86, 0x20, 0xd0, 0x43,
+	0x68, 0x0d, 0x02, 0x62, 0x86, 0xc4, 0xea, 0x9b, 0x32, 0x01, 0xa5, 0xb7, 0x26, 0xe0, 0x92, 0x34,
+	0xd9, 0xe1, 0x29, 0x60, 0x3e, 0x26, 0xbe, 0x35, 0xe3, 0x43, 0x7d, 0xbb, 0x0f, 0x69, 0x22, 0x7d,
+	0xdc, 0x83, 0x2a, 0x25, 0x94, 0xda, 0x9e, 0x4b, 0x3b, 0xe5, 0xcd, 0xe2, 0x76, 0xbd, 0xbb, 0x81,
+	0xe7, 0xaf, 0x8d, 0x4f, 0x84, 0x8e, 0x11, 0x2b, 0xa3, 0x5b, 0x50, 0x1e, 0x06, 0xde, 0xc4, 0xa7,
+	0x9d, 0x0a, 0x37, 0xbb, 0x9c, 0x65, 0x76, 0xc0, 0x34, 0x0c, 0xa9, 0xa8, 0xfd, 0xa8, 0x40, 0x45,
+	0x3a, 0x42, 0x4d, 0x50, 0x6c, 0x4b, 0xc6, 0x5d, 0xb1, 0x2d, 0xd6, 0x74, 0x2c, 0x8e, 0x7d, 0x73,
+	0x48, 0xdc, 0x50, 0x06, 0xb0, 0xc6, 0x38, 0x3b, 0x8c, 0xc1, 0xd5, 0x7d, 0x59, 0x28, 0x8a, 0xed,
+	0xa3, 0x75, 0xa8, 0x38, 0x26, 0x0d, 0xfb, 0xb6, 0xcf, 0xc3, 0x56, 0x33, 0xca, 0x8c, 0x3c, 0xf2,
+	0x51, 0x0f, 0x96, 0xb9, 0x60, 0x42, 0x17, 0x8a, 0x4a, 0x93, 0x19, 0x9d, 0xd2, 0x64, 0x68, 0xd3,
+	0xe9, 0x29, 0x2f, 0x9a, 0x9e, 0x35, 0x28, 0x9b, 0x83, 0xd0, 0x3e, 0x17, 0x00, 0x50, 0x35, 0x24,
+	0xc5, 0x5a, 0x5e, 0x36, 0x52, 0xa7, 0xca, 0x05, 0x11, 0xa9, 0xfd, 0x50, 0x00, 0x95, 0x87, 0x6c,
+	0x2e, 0x3c, 0x08, 0x4a, 0x89, 0x36, 0xe2, 0xdf, 0x68, 0x13, 0xea, 0x16, 0xa1, 0x83, 0xc0, 0xf6,
+	0x19, 0x5a, 0xca, 0xe0, 0x24, 0x59, 0xe8, 0x01, 0x34, 0x5f, 0x78, 0xb6, 0xbb, 0x50, 0x8d, 0x35,
+	0x84, 0x85, 0xb8, 0x83, 0xfe, 0x21, 0xac, 0x9c, 0xf2, 0x7a, 0x79, 0xf4, 0xfa, 0x54, 0x96, 0x39,
+	0x6b, 0xbf, 0x2d, 0x68, 0xb8, 0xe4, 0x65, 0x3f, 0xd5, 0x09, 0x75, 0x97, 0xbc, 0x8c, 0xb4, 0xf4,
+	0x2f, 0xa7, 0x96, 0xc9, 0xc6, 0xdd, 0x82, 0x86, 0xe7, 0x58, 0xfd, 0xb8, 0xf7, 0xa5, 0xa5, 0xe7,
+	0x58, 0x91, 0x56, 0xe4, 0x3c, 0x56, 0x51, 0x62, 0xe7, 0x91, 0x8a, 0x7e, 0x1b, 0x90, 0x41, 0xce,
+	0xbd, 0x6f, 0xc8, 0xa3, 0xd7, 0x51, 0x65, 0x92, 0xb1, 0x00, 0x6e, 0x4e, 0xf5, 0xe3, 0xe0, 0xd5,
+	0x24, 0xe7, 0xc8, 0xd2, 0x3b, 0xb0, 0x26, 0x8c, 0x76, 0x1c, 0x27, 0xb6, 0xa3, 0x06, 0x19, 0xeb,
+	0xcf, 0x60, 0xf5, 0x80, 0x84, 0x3b, 0xac, 0x31, 0x79, 0xf8, 0xa9, 0x28, 0xe0, 0x31, 0xba, 0x9e,
+	0x78, 0x7b, 0xea, 0xdd, 0x16, 0x4e, 0x3d, 0x50, 0xd1, 0x63, 0x54, 0xa2, 0x5e, 0x10, 0x4a, 0x00,
+	0x55, 0x31, 0x7b, 0x43, 0x0d, 0xce, 0xd2, 0xdf, 0x14, 0x61, 0x2d, 0xcb, 0x33, 0xf5, 0xd1, 0x6d,
+	0x50, 0xc5, 0x03, 0x53, 0xe0, 0xed, 0x73, 0x05, 0x67, 0xeb, 0xc9, 0x16, 0x12, 0xba, 0xe8, 0x03,
+	0x00, 0x5f, 0x08, 0x26, 0x4e, 0x74, 0xe0, 0x2a, 0xce, 0x7a, 0x36, 0x8d, 0x84, 0x62, 0xfc, 0x87,
+	0xc5, 0xb9, 0x3f, 0xd4, 0x7e, 0x5f, 0xa8, 0xe4, 0xa2, 0x2e, 0x15, 0xa8, 0x59, 0x14, 0x11, 0x66,
+	0x1c, 0x8e, 0x99, 0x0c, 0x1c, 0x2d, 0x9b, 0x9a, 0x67, 0x0e, 0xb1, 0x78, 0xa5, 0x55, 0x8d, 0x98,
+	0x46, 0x7b, 0xb0, 0x14, 0x7d, 0x2f, 0xd2, 0x97, 0x91, 0xcd, 0xc5, 0xf5, 0xa5, 0xbe, 0x9d, 0xca,
+	0xc9, 0xd1, 0x5e, 0x94, 0xee, 0x54, 0x08, 0xf4, 0xdf, 0x8a, 0xb0, 0x9e, 0xa9, 0x4a, 0x7d, 0x74,
+	0x07, 0x54, 0x0e, 0x6b, 0xb2, 0x36, 0xae, 0xe2, 0x1c, 0xc5, 0x28, 0x81, 0x5c, 0x99, 0x65, 0x9d,
+	0x85, 0x8b, 0x76, 0x94, 0xac, 0xac, 0x27, 0xac, 0x58, 0x1f, 0x19, 0x42, 0x57, 0xfb, 0x45, 0xb9,
+	0x58, 0x58, 0xf8, 0x4f, 0xa4, 0x29, 0xeb, 0x75, 0xab, 0x2c, 0xf8, 0xba, 0x69, 0x37, 0xa0, 0xc4,
+	0x02, 0xf9, 0x57, 0xe2, 0xa6, 0x3f, 0x85, 0x76, 0x94, 0x0c, 0x66, 0x73, 0x61, 0x18, 0xf0, 0x53,
+	0x71, 0x8a, 0x2e, 0x09, 0xc7, 0xd4, 0x47, 0xb7, 0x66, 0x21, 0x60, 0x03, 0x67, 0xaa, 0xc9, 0x52,
+	0xf8, 0xb7, 0x00, 0xe0, 0x7b, 0x25, 0x27, 0x46, 0x7f, 0x36, 0xbd, 0xc5, 0x93, 0x4e, 0x31, 0x35,
+	0xef, 0xe5, 0xd6, 0x55, 0x3c, 0x05, 0xa9, 0xc9, 0x29, 0x28, 0xab, 0xda, 0xca, 0x17, 0x51, 0x6d,
+	0x95, 0x45, 0x41, 0x61, 0x1f, 0x9a, 0xbb, 0x9c, 0x21, 0xda, 0x95, 0x8c, 0xe3, 0x1a, 0x29, 0xe4,
+	0xf7, 0x96, 0x32, 0xd7, 0x5b, 0xfa, 0x16, 0xb4, 0x66, 0xfc, 0xd0, 0xb9, 0xa6, 0xd5, 0xaf, 0x40,
+	0xfd, 0x80, 0x84, 0xf1, 0x39, 0x69, 0xf1, 0x13, 0x68, 0x4c, 0xc5, 0xf4, 0x82, 0x7a, 0x5e, 0x7f,
+	0x0a, 0x4d, 0xf1, 0x1c, 0xe7, 0x9d, 0xfb, 0x37, 0xfd, 0x6e, 0x42, 0x73, 0x8f, 0x38, 0x24, 0xdf,
+	0xef, 0x8d, 0x5b, 0xa0, 0xf2, 0x4d, 0x11, 0xad, 0xc2, 0xf2, 0x63, 0x63, 0xaf, 0x67, 0xf4, 0x4f,
+	0x3f, 0x3b, 0x39, 0xee, 0xed, 0x1e, 0xed, 0x1f, 0xf5, 0xf6, 0x96, 0xfe, 0x87, 0xaa, 0x50, 0xda,
+	0xeb, 0x9d, 0xec, 0x2e, 0x15, 0x50, 0x05, 0x8a, 0x3b, 0x27, 0xbb, 0x4b, 0x4a, 0xf7, 0x3d, 0x00,
+	0xbe, 0xbb, 0x3c, 0xf3, 0x02, 0xc7, 0x42, 0x57, 0x41, 0xe5, 0x14, 0xaa, 0xe1, 0x68, 0x6d, 0xd2,
+	0x00, 0xc7, 0xcb, 0x4d, 0xd7, 0x82, 0xd2, 0xce, 0x24, 0xfc, 0x1a, 0x6d, 0x41, 0x59, 0xac, 0x0d,
+	0x08, 0x70, 0xbc, 0x9a, 0x68, 0x75, 0x3c, 0xdd, 0x25, 0xd0, 0x47, 0xd0, 0x9c, 0x5d, 0x10, 0x10,
+	0xc2, 0x73, 0xcb, 0x85, 0xb6, 0x82, 0xe7, 0xb7, 0x88, 0xee, 0xb7, 0x50, 0xe2, 0x9b, 0xdd, 0x3d,
+	0x9e, 0xbd, 0x68, 0x9b, 0x40, 0x6b, 0x73, 0x25, 0xd6, 0x63, 0x2b, 0xb7, 0xb6, 0x84, 0xd3, 0x3b,
+	0xc7, 0x7d, 0x68, 0xce, 0x4e, 0xc8, 0xb9, 0xb6, 0x2b, 0x19, 0xa3, 0x74, 0xf7, 0x4d, 0xd4, 0xa7,
+	0x0f, 0x60, 0x29, 0x3d, 0x92, 0xa1, 0x36, 0xce, 0x98, 0xd2, 0xb4, 0x1c, 0xff, 0x49, 0x0f, 0x71,
+	0x1c, 0xa6, 0x1e, 0x92, 0x91, 0xc8, 0xf3, 0xf0, 0x09, 0xb4, 0x52, 0xf3, 0x17, 0x5a, 0xc1, 0xf3,
+	0x13, 0x59, 0xae, 0xfd, 0x3e, 0xac, 0x64, 0x8c, 0x62, 0x68, 0x1d, 0x67, 0x0f, 0x68, 0x79, 0x7e,
+	0xba, 0x3f, 0x17, 0x41, 0xe5, 0x88, 0x89, 0x7a, 0x7c, 0x5b, 0x4b, 0x0d, 0x50, 0x68, 0x2d, 0x73,
+	0xaa, 0x1a, 0x6b, 0xeb, 0x39, 0xd3, 0x16, 0x3a, 0x84, 0x95, 0x8c, 0x17, 0x19, 0xad, 0x67, 0xbf,
+	0xd3, 0x63, 0xad, 0x93, 0xf7, 0x80, 0xa3, 0x87, 0xb0, 0x3c, 0x07, 0xe7, 0x68, 0x35, 0x0b, 0xe2,
+	0xd9, 0xf5, 0xb2, 0x1f, 0x88, 0xf7, 0xa1, 0x9e, 0x00, 0x13, 0xd4, 0xc2, 0xb3, 0x10, 0xa5, 0x2d,
+	0xe1, 0x34, 0xd6, 0xbc, 0x03, 0xd5, 0x08, 0x3c, 0x50, 0x03, 0x27, 0x60, 0x46, 0xbb, 0x84, 0x67,
+	0x50, 0xe5, 0x2e, 0xd4, 0x13, 0x78, 0x80, 0x5a, 0x78, 0x16, 0x1d, 0x72, 0x33, 0x77, 0x17, 0xea,
+	0x89, 0x7e, 0x47, 0x2d, 0x3c, 0xdb, 0xfd, 0x79, 0x76, 0x0f, 0xe1, 0x50, 0xf9, 0xa2, 0x8c, 0xf1,
+	0xcd, 0xc0, 0x1f, 0x9c, 0x95, 0xb9, 0xec, 0xf6, 0x1f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x19, 0xae,
+	0x68, 0xe2, 0xb9, 0x12, 0x00, 0x00,
 }

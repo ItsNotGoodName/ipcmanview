@@ -60,9 +60,9 @@ func (p *Page) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 	}
 
 	activeCutoff := time.Now().Add(-24 * time.Hour)
-	sessions := make([]*rpc.Session, 0, len(dbSessions))
+	sessions := make([]*rpc.GetProfilePageResp_Session, 0, len(dbSessions))
 	for _, v := range dbSessions {
-		sessions = append(sessions, &rpc.Session{
+		sessions = append(sessions, &rpc.GetProfilePageResp_Session{
 			Id:             v.ID,
 			UserAgent:      v.UserAgent,
 			Ip:             v.Ip,
@@ -74,6 +74,21 @@ func (p *Page) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 		})
 	}
 
+	dbGroups, err := p.db.ListGroupsForUser(ctx, authSession.UserID)
+	if err != nil {
+		return nil, check(err)
+	}
+
+	groups := make([]*rpc.GetProfilePageResp_Group, 0, len(dbGroups))
+	for _, v := range dbGroups {
+		groups = append(groups, &rpc.GetProfilePageResp_Group{
+			Id:           v.ID,
+			Name:         v.Name,
+			Description:  v.Description,
+			JoinedAtTime: timestamppb.New(v.JoinedAt.Time),
+		})
+	}
+
 	return &rpc.GetProfilePageResp{
 		Username:      user.Username,
 		Email:         user.Email,
@@ -81,5 +96,6 @@ func (p *Page) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 		CreatedAtTime: timestamppb.New(user.CreatedAt.Time),
 		UpdatedAtTime: timestamppb.New(user.UpdatedAt.Time),
 		Sessions:      sessions,
+		Groups:        groups,
 	}, nil
 }

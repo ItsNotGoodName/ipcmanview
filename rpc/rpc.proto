@@ -32,24 +32,6 @@ message PagePaginationResult {
   int32 next_page = 7;
 }
 
-message Session {
-  int64 id = 1;
-  string user_agent = 2;
-  string ip = 3;
-  string last_ip = 4;
-  google.protobuf.Timestamp last_used_at_time = 5;
-  google.protobuf.Timestamp created_at_time = 6;
-  bool active = 7;
-  bool current = 8;
-}
-
-message MyGroup {
-  int64 id = 1;
-  string name = 2;
-  string description = 3;
-  google.protobuf.Timestamp joined_at_time = 4;
-}
-
 // ---------- HelloWorld
 
 service HelloWorld {
@@ -104,55 +86,61 @@ message GetProfilePageResp {
   bool admin = 3;
   google.protobuf.Timestamp created_at_time = 4;
   google.protobuf.Timestamp updated_at_time = 5;
+
+  message Session {
+    int64 id = 1;
+    string user_agent = 2;
+    string ip = 3;
+    string last_ip = 4;
+    google.protobuf.Timestamp last_used_at_time = 5;
+    google.protobuf.Timestamp created_at_time = 6;
+    bool active = 7;
+    bool current = 8;
+  }
   repeated Session sessions = 6;
+
+  message Group {
+    int64 id = 1;
+    string name = 2;
+    string description = 3;
+    google.protobuf.Timestamp joined_at_time = 4;
+  }
+  repeated Group groups = 7;
 }
 
 // ---------- User
 
 service User {
-  rpc UpdateMyUsername(UpdateMyUsernameReq) returns (UpdateMyUsernameResp);
-  rpc UpdateMyPassword(UpdateMyPasswordReq) returns (UpdateMyPasswordResp);
-  rpc RevokeMySession(RevokeMySessionReq) returns (RevokeMySessionResp);
-  rpc RevokeAllMySessions(RevokeAllMySessionsReq) returns (RevokeAllMySessionsResp);
-  rpc ListMyGroups(ListMyGroupsReq) returns (ListMyGroupsResp);
+  rpc UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
+  rpc UpdateMyPassword(UpdateMyPasswordReq) returns (google.protobuf.Empty);
+  rpc RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
+  rpc RevokeAllMySessions(RevokeAllMySessionsReq) returns (google.protobuf.Empty);
 }
 
 message UpdateMyUsernameReq {
   string new_username = 1;
 }
 
-message UpdateMyUsernameResp {}
-
 message UpdateMyPasswordReq {
   string old_password = 1;
   string new_password = 2;
 }
 
-message UpdateMyPasswordResp {}
-
 message RevokeMySessionReq {
   int64 session_id = 1;
 }
 
-message RevokeMySessionResp {}
-
 message RevokeAllMySessionsReq {}
-
-message RevokeAllMySessionsResp {}
-
-message ListMyGroupsReq {}
-
-message ListMyGroupsResp {
-  repeated MyGroup groups = 1;
-}
 
 // ---------- Admin
 
 service Admin {
+  // Pages
   rpc GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
   rpc GetAdminGroupIDPage(GetAdminGroupIDPageReq) returns (GetAdminGroupIDPageResp);
   rpc GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
 
+  // Group CRUD
   rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
   rpc GetGroup(GetGroupReq) returns (GetGroupResp);
   rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);

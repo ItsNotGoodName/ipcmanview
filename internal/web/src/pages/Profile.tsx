@@ -5,7 +5,7 @@ import { FormError, createForm, required, reset } from "@modular-forms/solid"
 
 import { formatDate, parseDate, catchAsToast, throwAsFormError } from "~/lib/utils"
 import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
-import { getListMyGroups, getProfilePage, } from "./Profile.data"
+import { getProfilePage } from "./Profile.data"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
@@ -173,19 +173,6 @@ export function Profile() {
           <div class="text-xl">Groups</div>
           <Seperator />
         </div>
-        <GroupTable />
-
-      </ErrorBoundary>
-    </LayoutNormal>
-  )
-}
-
-function GroupTable() {
-  const data = createAsync(getListMyGroups)
-
-  return (
-    <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
-      <Suspense fallback={<Skeleton class="h-32" />}>
         <TableRoot>
           <TableCaption>{data()?.groups.length} Groups(s)</TableCaption>
           <TableHeader>
@@ -207,8 +194,9 @@ function GroupTable() {
             </For>
           </TableBody>
         </TableRoot>
-      </Suspense>
-    </ErrorBoundary>
+
+      </ErrorBoundary>
+    </LayoutNormal>
   )
 }
 

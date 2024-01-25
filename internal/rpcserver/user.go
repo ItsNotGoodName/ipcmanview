@@ -7,7 +7,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func NewUser(db repo.DB) *User {
@@ -20,7 +20,7 @@ type User struct {
 	db repo.DB
 }
 
-func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*rpc.UpdateMyPasswordResp, error) {
+func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
@@ -52,10 +52,10 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 		return nil, check(err)
 	}
 
-	return &rpc.UpdateMyPasswordResp{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameReq) (*rpc.UpdateMyUsernameResp, error) {
+func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
@@ -84,10 +84,10 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 		return nil, check(err)
 	}
 
-	return &rpc.UpdateMyUsernameResp{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (u *User) RevokeAllMySessions(ctx context.Context, req *rpc.RevokeAllMySessionsReq) (*rpc.RevokeAllMySessionsResp, error) {
+func (u *User) RevokeAllMySessions(ctx context.Context, req *rpc.RevokeAllMySessionsReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
 	if err := u.db.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
@@ -97,10 +97,10 @@ func (u *User) RevokeAllMySessions(ctx context.Context, req *rpc.RevokeAllMySess
 		return nil, check(err)
 	}
 
-	return &rpc.RevokeAllMySessionsResp{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq) (*rpc.RevokeMySessionResp, error) {
+func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
 	if err := u.db.DeleteUserSessionForUser(ctx, repo.DeleteUserSessionForUserParams{
@@ -110,28 +110,14 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 		return nil, check(err)
 	}
 
-	return &rpc.RevokeMySessionResp{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (u *User) ListMyGroups(ctx context.Context, req *rpc.ListMyGroupsReq) (*rpc.ListMyGroupsResp, error) {
-	authSession := useAuthSession(ctx)
-
-	dbGroups, err := u.db.ListGroupsForUser(ctx, authSession.UserID)
-	if err != nil {
-		return nil, check(err)
-	}
-
-	groups := make([]*rpc.MyGroup, 0, len(dbGroups))
-	for _, v := range dbGroups {
-		groups = append(groups, &rpc.MyGroup{
-			Id:           v.ID,
-			Name:         v.Name,
-			Description:  v.Description,
-			JoinedAtTime: timestamppb.New(v.JoinedAt.Time),
-		})
-	}
-
-	return &rpc.ListMyGroupsResp{
-		Groups: groups,
-	}, nil
-}
+// func (u *User) ListMyGroups(ctx context.Context, req *rpc.ListMyGroupsReq) (*rpc.ListMyGroupsResp, error) {
+// 	authSession := useAuthSession(ctx)
+//
+//
+// 	return &rpc.ListMyGroupsResp{
+// 		Groups: groups,
+// 	}, nil
+// }

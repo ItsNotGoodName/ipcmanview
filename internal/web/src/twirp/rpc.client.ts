@@ -15,15 +15,9 @@ import type { GetAdminGroupIDPageReq } from "./rpc";
 import type { GetAdminGroupsPageResp } from "./rpc";
 import type { GetAdminGroupsPageReq } from "./rpc";
 import { User } from "./rpc";
-import type { ListMyGroupsResp } from "./rpc";
-import type { ListMyGroupsReq } from "./rpc";
-import type { RevokeAllMySessionsResp } from "./rpc";
 import type { RevokeAllMySessionsReq } from "./rpc";
-import type { RevokeMySessionResp } from "./rpc";
 import type { RevokeMySessionReq } from "./rpc";
-import type { UpdateMyPasswordResp } from "./rpc";
 import type { UpdateMyPasswordReq } from "./rpc";
-import type { UpdateMyUsernameResp } from "./rpc";
 import type { UpdateMyUsernameReq } from "./rpc";
 import { Page } from "./rpc";
 import type { GetProfilePageResp } from "./rpc";
@@ -161,25 +155,21 @@ export class PageClient implements IPageClient, ServiceInfo {
  */
 export interface IUserClient {
     /**
-     * @generated from protobuf rpc: UpdateMyUsername(UpdateMyUsernameReq) returns (UpdateMyUsernameResp);
+     * @generated from protobuf rpc: UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
      */
-    updateMyUsername(input: UpdateMyUsernameReq, options?: RpcOptions): UnaryCall<UpdateMyUsernameReq, UpdateMyUsernameResp>;
+    updateMyUsername(input: UpdateMyUsernameReq, options?: RpcOptions): UnaryCall<UpdateMyUsernameReq, Empty>;
     /**
-     * @generated from protobuf rpc: UpdateMyPassword(UpdateMyPasswordReq) returns (UpdateMyPasswordResp);
+     * @generated from protobuf rpc: UpdateMyPassword(UpdateMyPasswordReq) returns (google.protobuf.Empty);
      */
-    updateMyPassword(input: UpdateMyPasswordReq, options?: RpcOptions): UnaryCall<UpdateMyPasswordReq, UpdateMyPasswordResp>;
+    updateMyPassword(input: UpdateMyPasswordReq, options?: RpcOptions): UnaryCall<UpdateMyPasswordReq, Empty>;
     /**
-     * @generated from protobuf rpc: RevokeMySession(RevokeMySessionReq) returns (RevokeMySessionResp);
+     * @generated from protobuf rpc: RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
      */
-    revokeMySession(input: RevokeMySessionReq, options?: RpcOptions): UnaryCall<RevokeMySessionReq, RevokeMySessionResp>;
+    revokeMySession(input: RevokeMySessionReq, options?: RpcOptions): UnaryCall<RevokeMySessionReq, Empty>;
     /**
-     * @generated from protobuf rpc: RevokeAllMySessions(RevokeAllMySessionsReq) returns (RevokeAllMySessionsResp);
+     * @generated from protobuf rpc: RevokeAllMySessions(RevokeAllMySessionsReq) returns (google.protobuf.Empty);
      */
-    revokeAllMySessions(input: RevokeAllMySessionsReq, options?: RpcOptions): UnaryCall<RevokeAllMySessionsReq, RevokeAllMySessionsResp>;
-    /**
-     * @generated from protobuf rpc: ListMyGroups(ListMyGroupsReq) returns (ListMyGroupsResp);
-     */
-    listMyGroups(input: ListMyGroupsReq, options?: RpcOptions): UnaryCall<ListMyGroupsReq, ListMyGroupsResp>;
+    revokeAllMySessions(input: RevokeAllMySessionsReq, options?: RpcOptions): UnaryCall<RevokeAllMySessionsReq, Empty>;
 }
 // ---------- User
 
@@ -193,39 +183,32 @@ export class UserClient implements IUserClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: UpdateMyUsername(UpdateMyUsernameReq) returns (UpdateMyUsernameResp);
+     * @generated from protobuf rpc: UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
      */
-    updateMyUsername(input: UpdateMyUsernameReq, options?: RpcOptions): UnaryCall<UpdateMyUsernameReq, UpdateMyUsernameResp> {
+    updateMyUsername(input: UpdateMyUsernameReq, options?: RpcOptions): UnaryCall<UpdateMyUsernameReq, Empty> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<UpdateMyUsernameReq, UpdateMyUsernameResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<UpdateMyUsernameReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: UpdateMyPassword(UpdateMyPasswordReq) returns (UpdateMyPasswordResp);
+     * @generated from protobuf rpc: UpdateMyPassword(UpdateMyPasswordReq) returns (google.protobuf.Empty);
      */
-    updateMyPassword(input: UpdateMyPasswordReq, options?: RpcOptions): UnaryCall<UpdateMyPasswordReq, UpdateMyPasswordResp> {
+    updateMyPassword(input: UpdateMyPasswordReq, options?: RpcOptions): UnaryCall<UpdateMyPasswordReq, Empty> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<UpdateMyPasswordReq, UpdateMyPasswordResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<UpdateMyPasswordReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: RevokeMySession(RevokeMySessionReq) returns (RevokeMySessionResp);
+     * @generated from protobuf rpc: RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
      */
-    revokeMySession(input: RevokeMySessionReq, options?: RpcOptions): UnaryCall<RevokeMySessionReq, RevokeMySessionResp> {
+    revokeMySession(input: RevokeMySessionReq, options?: RpcOptions): UnaryCall<RevokeMySessionReq, Empty> {
         const method = this.methods[2], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RevokeMySessionReq, RevokeMySessionResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<RevokeMySessionReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: RevokeAllMySessions(RevokeAllMySessionsReq) returns (RevokeAllMySessionsResp);
+     * @generated from protobuf rpc: RevokeAllMySessions(RevokeAllMySessionsReq) returns (google.protobuf.Empty);
      */
-    revokeAllMySessions(input: RevokeAllMySessionsReq, options?: RpcOptions): UnaryCall<RevokeAllMySessionsReq, RevokeAllMySessionsResp> {
+    revokeAllMySessions(input: RevokeAllMySessionsReq, options?: RpcOptions): UnaryCall<RevokeAllMySessionsReq, Empty> {
         const method = this.methods[3], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RevokeAllMySessionsReq, RevokeAllMySessionsResp>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * @generated from protobuf rpc: ListMyGroups(ListMyGroupsReq) returns (ListMyGroupsResp);
-     */
-    listMyGroups(input: ListMyGroupsReq, options?: RpcOptions): UnaryCall<ListMyGroupsReq, ListMyGroupsResp> {
-        const method = this.methods[4], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ListMyGroupsReq, ListMyGroupsResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<RevokeAllMySessionsReq, Empty>("unary", this._transport, method, opt, input);
     }
 }
 // ---------- Admin
@@ -235,6 +218,8 @@ export class UserClient implements IUserClient, ServiceInfo {
  */
 export interface IAdminClient {
     /**
+     * Pages
+     *
      * @generated from protobuf rpc: GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
      */
     getAdminGroupsPage(input: GetAdminGroupsPageReq, options?: RpcOptions): UnaryCall<GetAdminGroupsPageReq, GetAdminGroupsPageResp>;
@@ -247,6 +232,8 @@ export interface IAdminClient {
      */
     getAdminUsersPage(input: GetAdminUsersPageReq, options?: RpcOptions): UnaryCall<GetAdminUsersPageReq, GetAdminUsersPageResp>;
     /**
+     * Group CRUD
+     *
      * @generated from protobuf rpc: CreateGroup(CreateGroupReq) returns (CreateGroupResp);
      */
     createGroup(input: CreateGroupReq, options?: RpcOptions): UnaryCall<CreateGroupReq, CreateGroupResp>;
@@ -275,6 +262,8 @@ export class AdminClient implements IAdminClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
+     * Pages
+     *
      * @generated from protobuf rpc: GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
      */
     getAdminGroupsPage(input: GetAdminGroupsPageReq, options?: RpcOptions): UnaryCall<GetAdminGroupsPageReq, GetAdminGroupsPageResp> {
@@ -296,6 +285,8 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<GetAdminUsersPageReq, GetAdminUsersPageResp>("unary", this._transport, method, opt, input);
     }
     /**
+     * Group CRUD
+     *
      * @generated from protobuf rpc: CreateGroup(CreateGroupReq) returns (CreateGroupResp);
      */
     createGroup(input: CreateGroupReq, options?: RpcOptions): UnaryCall<CreateGroupReq, CreateGroupResp> {
