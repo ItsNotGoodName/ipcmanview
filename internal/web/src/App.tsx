@@ -11,7 +11,7 @@ import { View } from "./pages/View";
 import { SignIn, Signup, Forgot } from "./pages/Landing";
 import { Profile } from "./pages/Profile";
 import loadProfile from "./pages/Profile.data";
-import { Layout } from "./Layout";
+import { Root } from "./Root";
 import { ClientProvider } from "./providers/client";
 import { sessionCache } from "./providers/session";
 import { AdminGroups } from "./pages/admin/Groups";
@@ -29,7 +29,7 @@ function App() {
 
   return (
     <ClientProvider>
-      <Router root={Layout}> {/* FIXME: solid-router explicitLinks={true} is broken, https://github.com/solidjs/solid-router/issues/356 */}
+      <Router root={Root}> {/* FIXME: solid-router explicitLinks={true} is broken, https://github.com/solidjs/solid-router/issues/356 */}
         <Show when={import.meta.env.DEV}>
           <Route path="/debug">
             <Debug />

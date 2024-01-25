@@ -15,6 +15,14 @@ import { throwAsFormError } from "~/lib/utils";
 import { toast } from "~/ui/Toast";
 import { getSession } from "~/providers/session";
 
+function Layout(props: ParentProps) {
+  return (
+    <div class="mx-auto flex max-w-xs flex-col gap-4 pt-10">
+      {props.children}
+    </div>
+  )
+}
+
 function Header() {
   return (
     <div class="text-center text-2xl">IPCManView</div>
@@ -73,7 +81,7 @@ export function SignIn() {
   const signIn = useAction(actionSignIn)
 
   return (
-    <div class="mx-auto flex max-w-xs flex-col gap-4 pt-10">
+    <Layout>
       <Header />
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign in</CardHeader>
@@ -139,7 +147,7 @@ export function SignIn() {
       <Footer>
         <A href="/signup" class={linkVariants()}>Sign up</A>
       </Footer>
-    </div>
+    </Layout>
   )
 }
 
@@ -169,7 +177,7 @@ export function Signup() {
   const signUp = useAction(actionSignUp)
 
   return (
-    <div class="mx-auto flex max-w-xs flex-col gap-4 pt-10">
+    <Layout>
       <Header />
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign up</CardHeader>
@@ -259,7 +267,7 @@ export function Signup() {
       <Footer>
         <A href="/signin" class={linkVariants()}>Sign in</A>
       </Footer>
-    </div>
+    </Layout>
   )
 }
 
@@ -277,7 +285,7 @@ export function Forgot() {
   const forgotSubmit = useAction(actionForgot)
 
   return (
-    <div class="mx-auto flex max-w-xs flex-col gap-4 pt-10">
+    <Layout>
       <Header />
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Forgot</CardHeader>
@@ -309,6 +317,6 @@ export function Forgot() {
       <Footer>
         <A href="/signin" class={linkVariants()}>Sign in</A>
       </Footer>
-    </div>
+    </Layout>
   )
 }

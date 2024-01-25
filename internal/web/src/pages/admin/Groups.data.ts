@@ -1,5 +1,5 @@
 import { cache } from "@solidjs/router"
-import { parseOrder } from "~/lib/order"
+import { parseOrder } from "~/lib/utils"
 import { PageProps } from "~/lib/utils"
 import { useClient } from "~/providers/client"
 import { GetAdminGroupsPageReq } from "~/twirp/rpc"

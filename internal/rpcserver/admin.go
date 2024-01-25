@@ -261,6 +261,7 @@ func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGro
 		return nil, check(err)
 	}
 	return &rpc.GetGroupResp{
+		Id:          req.Id,
 		Name:        dbGroup.Name,
 		Description: dbGroup.Description,
 	}, nil

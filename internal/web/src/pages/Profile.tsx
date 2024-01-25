@@ -19,6 +19,7 @@ import { getSession } from "~/providers/session"
 import { PageError } from "~/ui/Page"
 import { ConfirmButton } from "~/ui/Confirm"
 import { As } from "@kobalte/core"
+import { LayoutNormal } from "~/ui/Layout"
 
 const actionRevokeAllMySessions = action(() => useClient()
   .user.revokeAllMySessions({})
@@ -37,147 +38,145 @@ export function Profile() {
   const revokeAllMySessions = useAction(actionRevokeAllMySessions)
 
   return (
-    <div class="p-4">
+    <LayoutNormal>
       <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
-        <div class="mx-auto flex max-w-4xl flex-col gap-4">
 
-          <CardRoot>
-            <CardHeader>
-              <CardTitle>Profile</CardTitle>
-            </CardHeader>
-            <CardContent class="overflow-x-auto">
-              <Suspense fallback={<Skeleton class="h-32" />}>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td class="pr-2"><Badge class="flex w-full justify-center">Username</Badge></td>
-                      <td>{data()?.username}</td>
-                    </tr>
-                    <tr>
-                      <td class="pr-2"><Badge class="flex w-full justify-center">Email</Badge></td>
-                      <td>{data()?.email}</td>
-                    </tr>
-                    <tr>
-                      <td class="pr-2"><Badge class="flex w-full justify-center">Admin</Badge></td>
-                      <td>
-                        <Show when={data()?.admin} fallback={<RiSystemCloseLine class="h-6 w-6 text-red-500" />}>
-                          <RiSystemCheckLine class="h-6 w-6 text-green-500" />
-                        </Show>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="pr-2"><Badge class="flex w-full justify-center">Created At</Badge></td>
-                      <td>{formatDate(parseDate(data()?.createdAtTime))}</td>
-                    </tr>
-                    <tr>
-                      <td class="pr-2"><Badge class="w-full">Updated At</Badge></td>
-                      <td>{formatDate(parseDate(data()?.updatedAtTime))}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </Suspense>
-            </CardContent>
-          </CardRoot>
+        <CardRoot>
+          <CardHeader>
+            <CardTitle>Profile</CardTitle>
+          </CardHeader>
+          <CardContent class="overflow-x-auto">
+            <Suspense fallback={<Skeleton class="h-32" />}>
+              <table>
+                <tbody>
+                  <tr>
+                    <td class="pr-2"><Badge class="flex w-full justify-center">Username</Badge></td>
+                    <td>{data()?.username}</td>
+                  </tr>
+                  <tr>
+                    <td class="pr-2"><Badge class="flex w-full justify-center">Email</Badge></td>
+                    <td>{data()?.email}</td>
+                  </tr>
+                  <tr>
+                    <td class="pr-2"><Badge class="flex w-full justify-center">Admin</Badge></td>
+                    <td>
+                      <Show when={data()?.admin} fallback={<RiSystemCloseLine class="h-6 w-6 text-red-500" />}>
+                        <RiSystemCheckLine class="h-6 w-6 text-green-500" />
+                      </Show>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="pr-2"><Badge class="flex w-full justify-center">Created At</Badge></td>
+                    <td>{formatDate(parseDate(data()?.createdAtTime))}</td>
+                  </tr>
+                  <tr>
+                    <td class="pr-2"><Badge class="w-full">Updated At</Badge></td>
+                    <td>{formatDate(parseDate(data()?.updatedAtTime))}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </Suspense>
+          </CardContent>
+        </CardRoot>
 
-          <div class="flex flex-col gap-2">
-            <div class="text-xl">Change username</div>
-            <Seperator />
-          </div>
-          <Center>
-            <ChangeUsernameForm />
-          </Center>
-
-          <div class="flex flex-col gap-2">
-            <div class="text-xl">Change password</div>
-            <Seperator />
-          </div>
-          <Center>
-            <ChangePasswordForm />
-          </Center>
-
-          <div class="flex flex-col gap-2">
-            <div class="text-xl">Sessions</div>
-            <Seperator />
-          </div>
-          <Suspense fallback={<Skeleton class="h-32" />}>
-            <div class="flex">
-              <ConfirmButton
-                message="Are you sure you wish to revoke all sessions?"
-                disabled={revokeAllMySessionsSubmission.pending}
-                onYes={revokeAllMySessions}
-                asChild
-              >
-                <As component={Button} variant="destructive">
-                  Revoke all sessions
-                </As>
-              </ConfirmButton>
-            </div>
-            <TableRoot>
-              <TableCaption>{data()?.sessions.length} Session(s)</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Active</TableHead>
-                  <TableHead>User Agent</TableHead>
-                  <TableHead>IP</TableHead>
-                  <TableHead>Last IP</TableHead>
-                  <TableHead>Last Used At</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <For each={data()?.sessions}>
-                  {
-                    (session) => {
-                      const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
-                      const revokeMySession = useAction(actionRevokeMySession)
-
-                      return (
-                        <TableRow>
-                          <TableCell>
-                            <Show when={session.active} fallback={<div class="mx-auto h-4 w-4 rounded-full bg-gray-500" title="Inactive" />}>
-                              <div class="mx-auto h-4 w-4 rounded-full bg-green-500" title="Active" />
-                            </Show>
-                          </TableCell>
-                          <TableCell>{session.userAgent}</TableCell>
-                          <TableCell>{session.ip}</TableCell>
-                          <TableCell>{session.lastIp}</TableCell>
-                          <TableCell>{formatDate(parseDate(session.lastUsedAtTime))}</TableCell>
-                          <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
-                          <TableCell class="py-0">
-                            <Show when={!session.current} fallback={
-                              <Badge>Current</Badge>
-                            }>
-                              <ConfirmButton
-                                message="Are you sure you wish to revoke this session?"
-                                disabled={revokeMySessionSubmission.pending}
-                                onYes={() => revokeMySession({ sessionId: session.id })}
-                                asChild
-                              >
-                                <As component={Button} variant="destructive" size="sm">
-                                  Revoke
-                                </As>
-                              </ConfirmButton>
-                            </Show>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    }
-                  }
-                </For>
-              </TableBody>
-            </TableRoot>
-          </Suspense>
-
-          <div class="flex flex-col gap-2">
-            <div class="text-xl">Groups</div>
-            <Seperator />
-          </div>
-          <GroupTable />
-
+        <div class="flex flex-col gap-2">
+          <div class="text-xl">Change username</div>
+          <Seperator />
         </div>
+        <Center>
+          <ChangeUsernameForm />
+        </Center>
+
+        <div class="flex flex-col gap-2">
+          <div class="text-xl">Change password</div>
+          <Seperator />
+        </div>
+        <Center>
+          <ChangePasswordForm />
+        </Center>
+
+        <div class="flex flex-col gap-2">
+          <div class="text-xl">Sessions</div>
+          <Seperator />
+        </div>
+        <Suspense fallback={<Skeleton class="h-32" />}>
+          <div class="flex">
+            <ConfirmButton
+              message="Are you sure you wish to revoke all sessions?"
+              disabled={revokeAllMySessionsSubmission.pending}
+              onYes={revokeAllMySessions}
+              asChild
+            >
+              <As component={Button} variant="destructive">
+                Revoke all sessions
+              </As>
+            </ConfirmButton>
+          </div>
+          <TableRoot>
+            <TableCaption>{data()?.sessions.length} Session(s)</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Active</TableHead>
+                <TableHead>User Agent</TableHead>
+                <TableHead>IP</TableHead>
+                <TableHead>Last IP</TableHead>
+                <TableHead>Last Used At</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={data()?.sessions}>
+                {
+                  (session) => {
+                    const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
+                    const revokeMySession = useAction(actionRevokeMySession)
+
+                    return (
+                      <TableRow>
+                        <TableCell>
+                          <Show when={session.active} fallback={<div class="mx-auto h-4 w-4 rounded-full bg-gray-500" title="Inactive" />}>
+                            <div class="mx-auto h-4 w-4 rounded-full bg-green-500" title="Active" />
+                          </Show>
+                        </TableCell>
+                        <TableCell>{session.userAgent}</TableCell>
+                        <TableCell>{session.ip}</TableCell>
+                        <TableCell>{session.lastIp}</TableCell>
+                        <TableCell>{formatDate(parseDate(session.lastUsedAtTime))}</TableCell>
+                        <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
+                        <TableCell class="py-0">
+                          <Show when={!session.current} fallback={
+                            <Badge>Current</Badge>
+                          }>
+                            <ConfirmButton
+                              message="Are you sure you wish to revoke this session?"
+                              disabled={revokeMySessionSubmission.pending}
+                              onYes={() => revokeMySession({ sessionId: session.id })}
+                              asChild
+                            >
+                              <As component={Button} variant="destructive" size="sm">
+                                Revoke
+                              </As>
+                            </ConfirmButton>
+                          </Show>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  }
+                }
+              </For>
+            </TableBody>
+          </TableRoot>
+        </Suspense>
+
+        <div class="flex flex-col gap-2">
+          <div class="text-xl">Groups</div>
+          <Seperator />
+        </div>
+        <GroupTable />
+
       </ErrorBoundary>
-    </div>
+    </LayoutNormal>
   )
 }
 

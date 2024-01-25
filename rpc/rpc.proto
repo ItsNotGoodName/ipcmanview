@@ -235,8 +235,9 @@ message GetGroupReq {
 }
 
 message GetGroupResp {
-  string name = 1;
-  string description = 2;
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
 }
 
 message UpdateGroupReq {

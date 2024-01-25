@@ -518,11 +518,15 @@ export interface GetGroupReq {
  */
 export interface GetGroupResp {
     /**
-     * @generated from protobuf field: string name = 1;
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
      */
     name: string;
     /**
-     * @generated from protobuf field: string description = 2;
+     * @generated from protobuf field: string description = 3;
      */
     description: string;
 }
@@ -1043,8 +1047,9 @@ export const GetGroupReq = new GetGroupReq$Type();
 class GetGroupResp$Type extends MessageType<GetGroupResp> {
     constructor() {
         super("GetGroupResp", [
-            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

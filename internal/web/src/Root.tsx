@@ -180,7 +180,7 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuO
   )
 }
 
-export function Layout(props: ParentProps) {
+export function Root(props: ParentProps) {
   const session = createAsync(getSession)
   const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
 
