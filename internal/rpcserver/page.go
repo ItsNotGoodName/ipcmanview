@@ -31,7 +31,7 @@ func (p *Page) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		UserID: core.Int64ToNullInt64(authSession.UserID),
 	})
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	for _, lddfur := range dbDevices {
@@ -48,7 +48,7 @@ func (p *Page) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 
 	user, err := p.db.GetUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, convertRepoErr(err)
+		return nil, check(err)
 	}
 
 	dbSessions, err := p.db.ListUserSessionsForUserAndNotExpired(ctx, repo.ListUserSessionsForUserAndNotExpiredParams{
@@ -56,7 +56,7 @@ func (p *Page) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 		Now:    types.NewTime(time.Now()),
 	})
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	activeCutoff := time.Now().Add(-24 * time.Hour)

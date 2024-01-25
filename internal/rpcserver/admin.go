@@ -6,7 +6,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	sq "github.com/Masterminds/squirrel"
@@ -43,11 +42,11 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 		// ORDER BY
 		switch req.Sort.GetField() {
 		case "name":
-			sb = sb.OrderBy(orderBySQL("username", req.Sort.GetOrder()))
+			sb = sb.OrderBy(convertOrderToSQL("username", req.Sort.GetOrder()))
 		case "email":
-			sb = sb.OrderBy(orderBySQL("email", req.Sort.GetOrder()))
+			sb = sb.OrderBy(convertOrderToSQL("email", req.Sort.GetOrder()))
 		case "createdAt":
-			sb = sb.OrderBy(orderBySQL("users.created_at", req.Sort.GetOrder()))
+			sb = sb.OrderBy(convertOrderToSQL("users.created_at", req.Sort.GetOrder()))
 		default:
 			sb = sb.OrderBy("admin DESC")
 		}
@@ -83,7 +82,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 		return items, nil
 	}()
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	count, err := func() (int64, error) {
@@ -93,7 +92,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 			From("groups"))
 	}()
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	return &rpc.GetAdminUsersPageResp{
@@ -124,11 +123,11 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 		// ORDER BY
 		switch req.Sort.GetField() {
 		case "name":
-			sb = sb.OrderBy(orderBySQL("name", req.Sort.GetOrder()))
+			sb = sb.OrderBy(convertOrderToSQL("name", req.Sort.GetOrder()))
 		case "userCount":
-			sb = sb.OrderBy(orderBySQL("user_count", req.Sort.GetOrder()))
+			sb = sb.OrderBy(convertOrderToSQL("user_count", req.Sort.GetOrder()))
 		case "createdAt":
-			sb = sb.OrderBy(orderBySQL("groups.created_at", req.Sort.GetOrder()))
+			sb = sb.OrderBy(convertOrderToSQL("groups.created_at", req.Sort.GetOrder()))
 		}
 		// OFFSET ...
 		sb = sb.
@@ -161,7 +160,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 		return items, nil
 	}()
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	count, err := func() (int64, error) {
@@ -171,7 +170,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 			From("groups"))
 	}()
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	return &rpc.GetAdminGroupsPageResp{
@@ -181,7 +180,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 	}, nil
 }
 
-func convertCreateUpdateGroupErr(msg string, err error) error {
+func convertCreateUpdateGroupError(msg string, err error) error {
 	if errs, ok := asValidationErrors(err); ok {
 		return NewError(err, msg).Validation(errs, [][2]string{
 			{"name", "Name"},
@@ -189,13 +188,13 @@ func convertCreateUpdateGroupErr(msg string, err error) error {
 		})
 	}
 
-	if constraintErr, ok := sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE); ok {
+	if constraintErr, ok := asConstraintError(err); ok {
 		return NewError(err, msg).Constraint(constraintErr, [][3]string{
 			{"name", "groups.name", "Name already taken."},
 		})
 	}
 
-	return convertRepoErr(err, msg)
+	return check(err)
 }
 
 func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.CreateGroupResp, error) {
@@ -204,7 +203,7 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 		Description: req.Description,
 	})
 	if err != nil {
-		return nil, convertCreateUpdateGroupErr("Failed to create group.", err)
+		return nil, convertCreateUpdateGroupError("Failed to create group.", err)
 	}
 
 	return &rpc.CreateGroupResp{
@@ -215,7 +214,7 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
 	dbGroup, err := a.db.GetGroup(ctx, req.Id)
 	if err != nil {
-		return nil, convertRepoErr(err)
+		return nil, check(err)
 	}
 	group := dbGroup.Convert()
 
@@ -224,7 +223,7 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 
 	_, err = auth.UpdateGroup(ctx, a.db, group)
 	if err != nil {
-		return nil, convertCreateUpdateGroupErr("Failed to update group.", err)
+		return nil, convertCreateUpdateGroupError("Failed to update group.", err)
 	}
 
 	return &emptypb.Empty{}, nil
@@ -233,7 +232,7 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*emptypb.Empty, error) {
 	err := auth.DeleteGroup(ctx, a.db, req.Id)
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 	return &emptypb.Empty{}, nil
 }
@@ -241,7 +240,7 @@ func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*empt
 func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupIDPageReq) (*rpc.GetAdminGroupIDPageResp, error) {
 	dbGroup, err := a.db.GetGroup(ctx, req.Id)
 	if err != nil {
-		return nil, convertRepoErr(err)
+		return nil, check(err)
 	}
 	return &rpc.GetAdminGroupIDPageResp{
 		Group: &rpc.GetAdminGroupIDPageResp_Group{
@@ -259,7 +258,7 @@ func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupI
 func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGroupResp, error) {
 	dbGroup, err := a.db.GetGroup(ctx, req.Id)
 	if err != nil {
-		return nil, convertRepoErr(err)
+		return nil, check(err)
 	}
 	return &rpc.GetGroupResp{
 		Name:        dbGroup.Name,

@@ -18,6 +18,8 @@ import (
 
 const Route = "/twirp"
 
+var errNotImplemented = twirp.InternalError("Not implemented.")
+
 // ---------- Server
 
 func NewServer(e *echo.Echo) Server {
@@ -91,18 +93,26 @@ func asValidationErrors(err error) (validator.ValidationErrors, bool) {
 	return errs, ok
 }
 
+func asConstraintError(err error) (sqlite.ConstraintError, bool) {
+	return sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE)
+}
+
+func check(err error) twirp.Error {
+	if repo.IsNotFound(err) {
+		return NewError(err, "Not found.").NotFound()
+	}
+	return NewError(err, "Something went wrong.").Internal()
+}
+
 type Error struct {
 	msg string
 }
 
-func NewError(err error, msg ...string) Error {
+func NewError(err error, msg string) Error {
 	if err != nil {
 		log.Err(err).Str("package", "rpcserver").Send()
 	}
-	if len(msg) == 0 {
-		return Error{msg: "Something went wrong."}
-	}
-	return Error{msg: msg[0]}
+	return Error{msg: msg}
 }
 
 func (e Error) Field(field string, fieldErr error) twirp.Error {
@@ -137,10 +147,6 @@ func (w Error) Internal() twirp.Error {
 	return twirp.InternalError(w.msg)
 }
 
-func (w Error) NotImplemented() twirp.Error {
-	return twirp.InternalError("Not implemented.")
-}
-
 func (w Error) NotFound() twirp.Error {
 	return twirp.NotFoundError(w.msg)
 }
@@ -148,12 +154,15 @@ func (w Error) NotFound() twirp.Error {
 // ---------- Convert/Parse
 
 func parsePagePagination(v *rpc.PagePagination) pagination.Page {
-	if v == nil {
-		return pagination.Page{}
+	var (
+		page    int
+		perPage int
+	)
+	if v != nil {
+		page = int(v.Page)
+		perPage = int(v.PerPage)
 	}
 
-	page := int(v.Page)
-	perPage := int(v.PerPage)
 	if page < 1 {
 		page = 1
 	}
@@ -179,18 +188,7 @@ func convertPagePaginationResult(v pagination.PageResult) *rpc.PagePaginationRes
 	}
 }
 
-func convertOrderToSQL(o rpc.Order) string {
-	switch o {
-	case rpc.Order_DESC:
-		return " DESC"
-	case rpc.Order_ASC:
-		return " ASC"
-	default:
-		return ""
-	}
-}
-
-func orderBySQL(sql string, o rpc.Order) string {
+func convertOrderToSQL(sql string, o rpc.Order) string {
 	switch o {
 	case rpc.Order_DESC:
 		return sql + " DESC"
@@ -199,11 +197,4 @@ func orderBySQL(sql string, o rpc.Order) string {
 	default:
 		return sql
 	}
-}
-
-func convertRepoErr(err error, msg ...string) twirp.Error {
-	if repo.IsNotFound(err) {
-		return NewError(err, msg...).NotFound()
-	}
-	return NewError(err, msg...).Internal()
 }

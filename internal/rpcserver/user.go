@@ -6,7 +6,6 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -26,7 +25,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, convertRepoErr(err)
+		return nil, check(err)
 	}
 	user := dbUser.Convert()
 
@@ -43,14 +42,14 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 			})
 		}
 
-		return nil, convertRepoErr(err)
+		return nil, check(err)
 	}
 
 	if err := u.db.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
 		UserID:  authSession.UserID,
 		Session: authSession.Session,
 	}); err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	return &rpc.UpdateMyPasswordResp{}, nil
@@ -61,7 +60,7 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 
 	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, convertRepoErr(err)
+		return nil, check(err)
 	}
 	user := dbUser.Convert()
 
@@ -76,13 +75,13 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 			})
 		}
 
-		if constraintErr, ok := sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE); ok {
+		if constraintErr, ok := asConstraintError(err); ok {
 			return nil, NewError(err, msg).Constraint(constraintErr, [][3]string{
 				{"newUsername", "users.username", "Name already taken."},
 			})
 		}
 
-		return nil, convertRepoErr(err, msg)
+		return nil, check(err)
 	}
 
 	return &rpc.UpdateMyUsernameResp{}, nil
@@ -95,7 +94,7 @@ func (u *User) RevokeAllMySessions(ctx context.Context, req *rpc.RevokeAllMySess
 		UserID:  authSession.UserID,
 		Session: authSession.Session,
 	}); err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	return &rpc.RevokeAllMySessionsResp{}, nil
@@ -108,7 +107,7 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 		ID:     req.SessionId,
 		UserID: authSession.UserID,
 	}); err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	return &rpc.RevokeMySessionResp{}, nil
@@ -119,7 +118,7 @@ func (u *User) ListMyGroups(ctx context.Context, req *rpc.ListMyGroupsReq) (*rpc
 
 	dbGroups, err := u.db.ListGroupsForUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, NewError(err).Internal()
+		return nil, check(err)
 	}
 
 	groups := make([]*rpc.MyGroup, 0, len(dbGroups))
