@@ -79,18 +79,21 @@ func CheckUserPassword(hash, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
-func DisableUser(ctx context.Context, db repo.DB, userID int64) error {
-	_, err := db.UpdateUserDisabledAt(ctx, repo.UpdateUserDisabledAtParams{
-		DisabledAt: types.NewNullTime(time.Now()),
-		ID:         userID,
-	})
-	return err
-}
-
-func EnableUser(ctx context.Context, db repo.DB, userID int64) error {
+func UpdateUserDisable(ctx context.Context, db repo.DB, userID int64, disable bool) error {
+	if disable {
+		_, err := db.UpdateUserDisabledAt(ctx, repo.UpdateUserDisabledAtParams{
+			DisabledAt: types.NewNullTime(time.Now()),
+			ID:         userID,
+		})
+		return err
+	}
 	_, err := db.UpdateUserDisabledAt(ctx, repo.UpdateUserDisabledAtParams{
 		DisabledAt: types.NullTime{},
 		ID:         userID,
 	})
 	return err
+}
+
+func UpdateUserAdmin(ctx context.Context, db repo.DB, userId int64, admin bool) error {
+	return nil
 }

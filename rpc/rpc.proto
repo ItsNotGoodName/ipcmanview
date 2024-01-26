@@ -141,6 +141,7 @@ service Admin {
 
   // User
   rpc SetUserDisable(SetUserDisableReq) returns (google.protobuf.Empty);
+  rpc SetUserAdmin(SetUserAdminReq) returns (google.protobuf.Empty);
 
   // Group
   rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
@@ -245,6 +246,11 @@ message SetUserDisableReq {
     bool disable = 2;
   }
   repeated Item items = 1;
+}
+
+message SetUserAdminReq {
+  int64 id = 1;
+  bool admin = 2;
 }
 
 // Group

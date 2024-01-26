@@ -7,7 +7,7 @@ import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSy
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
-import { encodeOrder, toggleSortField, parseOrder } from "~/lib/utils";
+import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { useClient } from "~/providers/client";

@@ -113,7 +113,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 		var row struct{ Count int64 }
 		return row.Count, ssq.QueryOne(ctx, a.db, &row, sq.
 			Select("COUNT(*) AS count").
-			From("groups"))
+			From("users"))
 	}()
 	if err != nil {
 		return nil, check(err)
@@ -125,6 +125,38 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 		Sort:       req.Sort,
 	}, nil
 
+}
+
+func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) (*emptypb.Empty, error) {
+	authSession := useAuthSession(ctx)
+	for _, item := range req.Items {
+		if item.Id == authSession.UserID {
+			return nil, NewError(nil, "Cannot modify current user.").InvalidArgument("item")
+		}
+	}
+
+	for _, item := range req.Items {
+		err := auth.UpdateUserDisable(ctx, a.db, item.Id, item.Disable)
+		if err != nil {
+			return nil, check(err)
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*emptypb.Empty, error) {
+	authSession := useAuthSession(ctx)
+	if req.Id == authSession.UserID {
+		return nil, NewError(nil, "Cannot modify current user.").InvalidArgument("item")
+	}
+
+	err := auth.UpdateUserAdmin(ctx, a.db, req.Id, req.Admin)
+	if err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 // ---------- Group
@@ -314,29 +346,7 @@ func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*empt
 
 func (a *Admin) SetGroupDisable(ctx context.Context, req *rpc.SetGroupDisableReq) (*emptypb.Empty, error) {
 	for _, item := range req.Items {
-		if item.Disable {
-			err := auth.DisableGroup(ctx, a.db, item.Id)
-			if err != nil {
-				return nil, check(err)
-			}
-		} else {
-			err := auth.EnableGroup(ctx, a.db, item.Id)
-			if err != nil {
-				return nil, check(err)
-			}
-		}
-	}
-	return &emptypb.Empty{}, nil
-}
-
-func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) (*emptypb.Empty, error) {
-	if req.Disable {
-		err := auth.DisableUser(ctx, a.db, req.Id)
-		if err != nil {
-			return nil, check(err)
-		}
-	} else {
-		err := auth.EnableUser(ctx, a.db, req.Id)
+		err := auth.UpdateGroupDisable(ctx, a.db, item.Id, item.Disable)
 		if err != nil {
 			return nil, check(err)
 		}

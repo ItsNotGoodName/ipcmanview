@@ -151,6 +151,10 @@ func (w Error) NotFound() twirp.Error {
 	return twirp.NotFoundError(w.msg)
 }
 
+func (w Error) InvalidArgument(arg string) twirp.Error {
+	return twirp.InvalidArgumentError(arg, w.msg)
+}
+
 // ---------- Convert/Parse
 
 func parsePagePagination(v *rpc.PagePagination) pagination.Page {
