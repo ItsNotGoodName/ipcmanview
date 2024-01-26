@@ -6,7 +6,7 @@ import { ErrorBoundary, For, Show, Suspense, batch, createSignal } from "solid-j
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { catchAsToast, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
+import { catchAsToast, createRowSelection, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
 import { encodeOrder, nextSort, parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -23,7 +23,6 @@ import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { paginateOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { SetGroupDisableReq } from "~/twirp/rpc";
-import { createRowSelector } from "~/lib/row";
 
 const actionDeleteGroup = action((ids: bigint[]) => useClient()
   .admin.deleteGroup({ ids })
@@ -50,7 +49,7 @@ export function AdminGroups() {
       order: parseOrder(searchParams.order)
     },
   }))
-  const rowSelector = createRowSelector(() => data()?.items.map(v => v.id) || [])
+  const rowSelection = createRowSelection(() => data()?.items.map(v => v.id) || [])
 
   // List
   const previousDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
@@ -73,18 +72,21 @@ export function AdminGroups() {
   const deleteGroupAction = useAction(actionDeleteGroup)
 
   const [deleteGroupSelection, setDeleteGroupSelection] = createSignal<{ name: string, id: bigint } | undefined>()
-  const deleteGroupBySelection = () => deleteGroupAction([deleteGroupSelection()!.id])
-    .then(() => setDeleteGroupSelection(undefined))
+  const deleteGroupBySelection = () =>
+    deleteGroupAction([deleteGroupSelection()!.id])
+      .then(() => setDeleteGroupSelection(undefined))
 
   const [deleteGroupRowSelector, setDeleteGroupRowSelector] = createSignal(false)
-  const deleteGroupByRowSelector = () => deleteGroupAction(rowSelector.selected())
-    .then(() => setDeleteGroupRowSelector(false))
+  const deleteGroupByRowSelector = () =>
+    deleteGroupAction(rowSelection.selections())
+      .then(() => setDeleteGroupRowSelector(false))
 
   // Disable/Enable
   const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
   const setGroupDisableAction = useAction(actionSetGroupDisable)
-  const setGroupDisableActionByRowSelector = (disable: boolean) => setGroupDisableAction({ items: rowSelector.selected().map(v => ({ id: v, disable })) })
-    .then(() => rowSelector.checkAll(false))
+  const setGroupDisableActionByRowSelector = (disable: boolean) =>
+    setGroupDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+      .then(() => rowSelection.checkAll(false))
 
   return (
     <LayoutNormal>
@@ -131,7 +133,7 @@ export function AdminGroups() {
       <AlertDialogRoot open={deleteGroupRowSelector()} onOpenChange={setDeleteGroupRowSelector}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you wish to delete {rowSelector.selected().length} groups?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} groups?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -191,7 +193,7 @@ export function AdminGroups() {
             <TableHeader>
               <tr class="border-b">
                 <TableHead>
-                  <CheckboxRoot checked={rowSelector.multiple()} indeterminate={rowSelector.indeterminate()} onChange={(v) => rowSelector.checkAll(v)}>
+                  <CheckboxRoot checked={rowSelection.multiple()} indeterminate={rowSelection.indeterminate()} onChange={(v) => rowSelection.checkAll(v)}>
                     <CheckboxControl />
                   </CheckboxRoot>
                 </TableHead>
@@ -233,13 +235,13 @@ export function AdminGroups() {
                           <DropdownMenuItem onSelect={() => setCreateFormOpen(true)}>
                             Create
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => setGroupDisableActionByRowSelector(true)} disabled={rowSelector.selected().length == 0}>
+                          <DropdownMenuItem onSelect={() => setGroupDisableActionByRowSelector(true)} disabled={rowSelection.selections().length == 0}>
                             Disable
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => setGroupDisableActionByRowSelector(false)} disabled={rowSelector.selected().length == 0}>
+                          <DropdownMenuItem onSelect={() => setGroupDisableActionByRowSelector(false)} disabled={rowSelection.selections().length == 0}>
                             Enable
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => setDeleteGroupRowSelector(true)} disabled={rowSelector.selected().length == 0}>
+                          <DropdownMenuItem onSelect={() => setDeleteGroupRowSelector(true)} disabled={rowSelection.selections().length == 0}>
                             Delete
                           </DropdownMenuItem>
                           <DropdownMenuArrow />
@@ -259,7 +261,7 @@ export function AdminGroups() {
                   return (
                     <TableRow class="">
                       <TableHead>
-                        <CheckboxRoot checked={rowSelector.selections[index()]?.checked} onChange={(v) => rowSelector.check(group.id, v)}>
+                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.check(group.id, v)}>
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>

@@ -1,11 +1,12 @@
 import { PartialMessage } from "@protobuf-ts/runtime";
-import { Accessor, createSignal } from "solid-js";
+import { Accessor, createEffect, createSignal } from "solid-js";
 import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
 import { RpcError } from "@protobuf-ts/runtime-rpc";
 import { FormError } from "@modular-forms/solid";
 import { Order, Sort } from "~/twirp/rpc";
+import { createStore } from "solid-js/store";
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
@@ -78,3 +79,48 @@ export function nextSort(sort?: Sort, field?: string): { field?: string, order: 
 
   return { field: field, order: Order.DESC }
 }
+
+export type CreateRowSelectionReturn<T> = {
+  rows: Array<{ id: T, checked: boolean }>
+  selections: Accessor<Array<T>>
+  multiple: Accessor<boolean>
+  indeterminate: Accessor<boolean>
+  check: (id: T, value: boolean) => void
+  checkAll: (value: boolean) => void
+}
+
+export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelectionReturn<T> {
+  const [rows, setRows] = createStore<Array<{ id: T, checked: boolean }>>(ids().map(v => ({ id: v, checked: false })))
+  createEffect(() =>
+    setRows((prev) => ids().map(v => ({ id: v, checked: prev.find(p => p.id == v)?.checked || false }))))
+
+  const selections = () => rows.filter(v => v.checked == true).map(v => v.id)
+
+  return {
+    rows,
+    selections,
+    multiple: () => {
+      const length = selections().length
+      return length != 0 && length == rows.length
+    },
+    indeterminate: () => {
+      const length = selections().length
+      return length != 0 && length != rows.length
+    },
+    check: (id, value) => {
+      setRows(
+        (todo) => todo.id === id,
+        "checked",
+        value,
+      );
+    },
+    checkAll: (value) => {
+      setRows(
+        () => true,
+        "checked",
+        value,
+      );
+    }
+  }
+}
+
