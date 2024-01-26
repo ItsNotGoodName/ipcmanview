@@ -1,9 +1,10 @@
+import { CheckboxControl, CheckboxRoot } from "~/ui/Checkbox";
 import { createAsync, useNavigate, useSearchParams, } from "@solidjs/router";
 import { ErrorBoundary, For, Show, Suspense, } from "solid-js";
-import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiUserFacesAdminLine, } from "solid-icons/ri";
+import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, RiUserFacesAdminLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { formatDate, parseDate, } from "~/lib/utils";
+import { createRowSelection, formatDate, parseDate, } from "~/lib/utils";
 import { encodeOrder, toggleSortField, parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -13,6 +14,7 @@ import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AdminUsersPageSearchParams, getAdminUsersPage } from "./Users.data";
 import { defaultPerPageOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
+import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
 
 export function AdminUsers() {
   const navigate = useNavigate()
@@ -27,15 +29,18 @@ export function AdminUsers() {
       order: parseOrder(searchParams.order)
     },
   }))
+  const rowSelection = createRowSelection(() => data()?.items.map(v => v.id) || [])
 
-  const previousDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
-  const previous = () => !previousDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminUsersPageSearchParams)
-  const nextDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
-  const next = () => !nextDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminUsersPageSearchParams)
+  // List
+  const previousPageDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
+  const previousPage = () => !previousPageDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminUsersPageSearchParams)
+  const nextPageDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
+  const nextPage = () => !nextPageDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminUsersPageSearchParams)
   const toggleSort = (field: string) => {
     const sort = toggleSortField(data()?.sort, field)
     return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminUsersPageSearchParams)
   }
+  const setPerPage = (value: number) => value && setSearchParams({ page: 1, perPage: value })
 
   return (
     <LayoutNormal>
@@ -48,7 +53,7 @@ export function AdminUsers() {
             <SelectRoot
               class="w-20"
               value={data()?.pageResult?.perPage}
-              onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
+              onChange={setPerPage}
               options={defaultPerPageOptions}
               itemComponent={props => (
                 <SelectItem item={props.item}>
@@ -69,16 +74,16 @@ export function AdminUsers() {
               <Button
                 title="Previous"
                 size="icon"
-                disabled={previousDisabled()}
-                onClick={previous}
+                disabled={previousPageDisabled()}
+                onClick={previousPage}
               >
                 <RiArrowsArrowLeftSLine class="h-6 w-6" />
               </Button>
               <Button
                 title="Next"
                 size="icon"
-                disabled={nextDisabled()}
-                onClick={next}
+                disabled={nextPageDisabled()}
+                onClick={nextPage}
               >
                 <RiArrowsArrowRightSLine class="h-6 w-6" />
               </Button>
@@ -87,6 +92,15 @@ export function AdminUsers() {
           <TableRoot>
             <TableHeader>
               <tr class="border-b">
+                <TableHead>
+                  <CheckboxRoot
+                    checked={rowSelection.multiple()}
+                    indeterminate={rowSelection.indeterminate()}
+                    onChange={(v) => rowSelection.checkAll(v)}
+                  >
+                    <CheckboxControl />
+                  </CheckboxRoot>
+                </TableHead>
                 <TableHead>
                   <TableSortButton
                     name="username"
@@ -114,21 +128,39 @@ export function AdminUsers() {
                     Created At
                   </TableSortButton>
                 </TableHead>
-                <TableHead></TableHead>
+                <TableHead>
+                  <div class="flex items-center justify-end">
+                    <DropdownMenuRoot placement="bottom-end">
+                      <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+                        <RiSystemMore2Line class="h-5 w-5" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuContent>
+                          <DropdownMenuArrow />
+                        </DropdownMenuContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuRoot>
+                  </div>
+                </TableHead>
               </tr>
             </TableHeader>
             <TableBody>
               <For each={data()?.items}>
-                {(item) => {
+                {(item, index) => {
                   const onClick = () => navigate(`./${item.id}`)
 
                   return (
-                    <TableRow class="">
+                    <TableRow>
+                      <TableHead>
+                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.check(item.id, v)}>
+                          <CheckboxControl />
+                        </CheckboxRoot>
+                      </TableHead>
                       <TableCell onClick={onClick} class="cursor-pointer select-none">{item.username}</TableCell>
                       <TableCell onClick={onClick} class="cursor-pointer select-none">{item.email}</TableCell>
                       <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(item.createdAtTime))}</TableCell>
                       <TableCell class="py-0">
-                        <div class="flex gap-2">
+                        <div class="flex justify-end gap-2">
                           <Show when={item.admin}>
                             <TooltipRoot>
                               <TooltipTrigger class="p-1">
@@ -149,6 +181,16 @@ export function AdminUsers() {
                               </TooltipContent>
                             </TooltipRoot>
                           </Show>
+                          <DropdownMenuRoot placement="bottom-end">
+                            <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+                              <RiSystemMore2Line class="h-5 w-5" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuContent>
+                                <DropdownMenuArrow />
+                              </DropdownMenuContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuRoot>
                         </div>
                       </TableCell>
                     </TableRow>

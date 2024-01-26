@@ -52,41 +52,42 @@ export function AdminGroups() {
   const rowSelection = createRowSelection(() => data()?.items.map(v => v.id) || [])
 
   // List
-  const previousDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
-  const previous = () => !previousDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminGroupsPageSearchParams)
-  const nextDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
-  const next = () => !nextDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminGroupsPageSearchParams)
+  const previousPageDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
+  const previousPage = () => !previousPageDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminGroupsPageSearchParams)
+  const nextPageDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
+  const nextPage = () => !nextPageDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminGroupsPageSearchParams)
   const toggleSort = (field: string) => {
     const sort = toggleSortField(data()?.sort, field)
     return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminGroupsPageSearchParams)
   }
+  const setPerPage = (value: number) => value && setSearchParams({ page: 1, perPage: value })
 
   // Create
-  const [createFormOpen, setCreateFormOpen] = createSignal(false);
+  const [createFormDialog, setCreateFormDialog] = createSignal(false);
 
   // Update
-  const [updateGroupFormID, setUpdateGroupFormID] = createSignal<bigint>(BigInt(0))
+  const [updateGroupFormDialog, setUpdateGroupFormDialog] = createSignal<bigint>(BigInt(0))
 
   // Delete
   const deleteGroupSubmission = useSubmission(actionDeleteGroup)
   const deleteGroupAction = useAction(actionDeleteGroup)
-
+  // Single
   const [deleteGroupSelection, setDeleteGroupSelection] = createSignal<{ name: string, id: bigint } | undefined>()
   const deleteGroupBySelection = () => deleteGroupAction([deleteGroupSelection()!.id])
     .then(() => setDeleteGroupSelection(undefined))
-
+  // Multiple
   const [deleteGroupRowSelector, setDeleteGroupRowSelector] = createSignal(false)
   const deleteGroupByRowSelector = () => deleteGroupAction(rowSelection.selections())
     .then(() => setDeleteGroupRowSelector(false))
 
   // Disable/Enable
   const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
-  const setGroupDisableAction = useAction(actionSetGroupDisable)
-  const setGroupDisableActionByRowSelector = (disable: boolean) => setGroupDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+  const setGroupDisable = useAction(actionSetGroupDisable)
+  const setGroupDisableByRowSelector = (disable: boolean) => setGroupDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
     .then(() => rowSelection.checkAll(false))
-  const isToggleDisabledDisabled = (isDisable: boolean) => {
+  const setGroupDisableDisabled = (disable: boolean) => {
     for (let i = 0; i < rowSelection.rows.length; i++) {
-      if (rowSelection.rows[i].checked && (isDisable != data()?.items[i].disabled))
+      if (rowSelection.rows[i].checked && (disable != data()?.items[i].disabled))
         return false;
     }
     return true
@@ -94,7 +95,7 @@ export function AdminGroups() {
 
   return (
     <LayoutNormal>
-      <DialogRoot open={createFormOpen()} onOpenChange={setCreateFormOpen}>
+      <DialogRoot open={createFormDialog()} onOpenChange={setCreateFormDialog}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -102,12 +103,12 @@ export function AdminGroups() {
               <DialogCloseButton />
               <DialogTitle>Create group</DialogTitle>
             </DialogHeader>
-            <CreateGroupForm setOpen={setCreateFormOpen} />
+            <CreateGroupForm setOpen={setCreateFormDialog} />
           </DialogContent>
         </DialogPortal>
       </DialogRoot>
 
-      <DialogRoot open={updateGroupFormID() != BigInt(0)} onOpenChange={() => setUpdateGroupFormID(BigInt(0))}>
+      <DialogRoot open={updateGroupFormDialog() != BigInt(0)} onOpenChange={() => setUpdateGroupFormDialog(BigInt(0))}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -115,7 +116,7 @@ export function AdminGroups() {
               <DialogCloseButton />
               <DialogTitle>Update group</DialogTitle>
             </DialogHeader>
-            <UpdateGroupForm setOpen={() => setUpdateGroupFormID(BigInt(0))} id={updateGroupFormID()} />
+            <UpdateGroupForm setOpen={() => setUpdateGroupFormDialog(BigInt(0))} id={updateGroupFormDialog()} />
           </DialogContent>
         </DialogPortal>
       </DialogRoot>
@@ -157,7 +158,7 @@ export function AdminGroups() {
             <SelectRoot
               class="w-20"
               value={data()?.pageResult?.perPage}
-              onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
+              onChange={setPerPage}
               options={defaultPerPageOptions}
               itemComponent={props => (
                 <SelectItem item={props.item}>
@@ -178,16 +179,16 @@ export function AdminGroups() {
               <Button
                 title="Previous"
                 size="icon"
-                disabled={previousDisabled()}
-                onClick={previous}
+                disabled={previousPageDisabled()}
+                onClick={previousPage}
               >
                 <RiArrowsArrowLeftSLine class="h-6 w-6" />
               </Button>
               <Button
                 title="Next"
                 size="icon"
-                disabled={nextDisabled()}
-                onClick={next}
+                disabled={nextPageDisabled()}
+                onClick={nextPage}
               >
                 <RiArrowsArrowRightSLine class="h-6 w-6" />
               </Button>
@@ -197,11 +198,15 @@ export function AdminGroups() {
             <TableHeader>
               <tr class="border-b">
                 <TableHead>
-                  <CheckboxRoot checked={rowSelection.multiple()} indeterminate={rowSelection.indeterminate()} onChange={(v) => rowSelection.checkAll(v)}>
+                  <CheckboxRoot
+                    checked={rowSelection.multiple()}
+                    indeterminate={rowSelection.indeterminate()}
+                    onChange={(v) => rowSelection.checkAll(v)}
+                  >
                     <CheckboxControl />
                   </CheckboxRoot>
                 </TableHead>
-                <TableHead class="w-full">
+                <TableHead>
                   <TableSortButton
                     name="name"
                     onClick={toggleSort}
@@ -236,18 +241,18 @@ export function AdminGroups() {
                       </DropdownMenuTrigger>
                       <DropdownMenuPortal>
                         <DropdownMenuContent>
-                          <DropdownMenuItem onSelect={() => setCreateFormOpen(true)}>
+                          <DropdownMenuItem onSelect={() => setCreateFormDialog(true)}>
                             Create
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onSelect={() => setGroupDisableActionByRowSelector(true)}
-                            disabled={isToggleDisabledDisabled(true) || rowSelection.selections().length == 0}
+                            onSelect={() => setGroupDisableByRowSelector(true)}
+                            disabled={setGroupDisableDisabled(true) || rowSelection.selections().length == 0}
                           >
                             Disable
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onSelect={() => setGroupDisableActionByRowSelector(false)}
-                            disabled={isToggleDisabledDisabled(false) || rowSelection.selections().length == 0}
+                            onSelect={() => setGroupDisableByRowSelector(false)}
+                            disabled={setGroupDisableDisabled(false) || rowSelection.selections().length == 0}
                           >
                             Enable
                           </DropdownMenuItem>
@@ -267,29 +272,31 @@ export function AdminGroups() {
             </TableHeader>
             <TableBody>
               <For each={data()?.items}>
-                {(group, index) => {
-                  const navigateToGroup = () => navigate(`./${group.id}`)
-                  const toggleGroupDisable = () => setGroupDisableAction({ items: [{ id: group.id, disable: !group.disabled }] })
+                {(item, index) => {
+                  const onClick = () => navigate(`./${item.id}`)
+                  const toggleGroupDisable = () => setGroupDisable({ items: [{ id: item.id, disable: !item.disabled }] })
 
                   return (
-                    <TableRow class="">
+                    <TableRow>
                       <TableHead>
-                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.check(group.id, v)}>
+                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.check(item.id, v)}>
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>
-                      <TableCell onClick={navigateToGroup} class="cursor-pointer select-none">{group.name}</TableCell>
-                      <TableCell onClick={navigateToGroup} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{group.userCount.toString()}</TableCell>
-                      <TableCell onClick={navigateToGroup} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(group.createdAtTime))}</TableCell>
+                      <TableCell onClick={onClick} class="max-w-48 cursor-pointer select-none" title={item.name}>
+                        <div class="truncate">{item.name}</div>
+                      </TableCell>
+                      <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{item.userCount.toString()}</TableCell>
+                      <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(item.createdAtTime))}</TableCell>
                       <TableCell class="py-0">
                         <div class="flex justify-end gap-2">
-                          <Show when={group.disabled}>
+                          <Show when={item.disabled}>
                             <TooltipRoot>
                               <TooltipTrigger class="p-1">
                                 <RiSystemLockLine class="h-5 w-5" />
                               </TooltipTrigger>
                               <TooltipContent>
-                                Disabled since {formatDate(parseDate(group.disabledAtTime))}
+                                Disabled since {formatDate(parseDate(item.disabledAtTime))}
                               </TooltipContent>
                             </TooltipRoot>
                           </Show>
@@ -300,14 +307,14 @@ export function AdminGroups() {
                             <DropdownMenuPortal>
                               <DropdownMenuContent>
                                 <DropdownMenuItem disabled={setGroupDisableSubmission.pending} onSelect={toggleGroupDisable}>
-                                  <Show when={group.disabled} fallback={<>Disable</>}>
+                                  <Show when={item.disabled} fallback={<>Disable</>}>
                                     Enable
                                   </Show>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setUpdateGroupFormID(group.id)}>
+                                <DropdownMenuItem onSelect={() => setUpdateGroupFormDialog(item.id)}>
                                   Update
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setDeleteGroupSelection(group)}>
+                                <DropdownMenuItem onSelect={() => setDeleteGroupSelection(item)}>
                                   Delete
                                 </DropdownMenuItem>
                                 <DropdownMenuArrow />
