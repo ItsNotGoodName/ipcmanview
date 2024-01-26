@@ -125,15 +125,19 @@ export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelecti
   }
 }
 
-export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined): boolean {
-  if (form.submitted || form.dirty) {
-    return false
-  }
-
+export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined) {
   reset(form, { initialValues: data })
-
-  return false
 }
+
+// export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined): boolean {
+//   if (form.submitted || form.dirty) {
+//     return false
+//   }
+//
+//   reset(form, { initialValues: data })
+//
+//   return false
+// }
 
 export function createPagePagination(pageResult: () => PagePaginationResult | undefined) {
   const [_, setSearchParams] = useSearchParams()

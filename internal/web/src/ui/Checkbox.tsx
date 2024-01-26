@@ -21,7 +21,7 @@ export function CheckboxControl(props: Omit<ComponentProps<typeof Checkbox.Contr
   const [_, rest] = splitProps(props, ["class"])
   return <Checkbox.Control
     class={cn(
-      "border-primary peer-focus-visible:ring-ring ui-checked:bg-primary ui-checked:text-primary-foreground peer h-4 w-4 shrink-0 cursor-pointer rounded-sm border shadow disabled:cursor-not-allowed disabled:opacity-50 peer-focus-visible:outline-none peer-focus-visible:ring-1",
+      "border-primary peer-focus-visible:ring-ring ui-checked:bg-primary ui-checked:text-primary-foreground peer h-4 w-4 shrink-0 cursor-pointer rounded-sm border shadow ui-disabled:cursor-not-allowed ui-disabled:opacity-50 peer-focus-visible:outline-none peer-focus-visible:ring-1",
       props.class
     )}
     {...rest}

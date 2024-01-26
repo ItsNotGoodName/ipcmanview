@@ -2,11 +2,11 @@ import { action, createAsync, revalidate, useAction, useNavigate, useSearchParam
 import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
 import { AdminGroupsPageSearchParams, getAdminGroupsPage, getGroup } from "./Groups.data";
-import { ErrorBoundary, For, Show, Suspense, batch, createSignal } from "solid-js";
+import { ErrorBoundary, For, Show, Suspense, batch, createResource, createSignal } from "solid-js";
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm as setupForm, throwAsFormError } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -239,13 +239,13 @@ export function AdminGroups() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onSelect={() => setGroupDisableByRowSelector(true)}
-                            disabled={setGroupDisableDisabled(true) || rowSelection.selections().length == 0}
+                            disabled={setGroupDisableDisabled(true)}
                           >
                             Disable
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onSelect={() => setGroupDisableByRowSelector(false)}
-                            disabled={setGroupDisableDisabled(false) || rowSelection.selections().length == 0}
+                            disabled={setGroupDisableDisabled(false)}
                           >
                             Enable
                           </DropdownMenuItem>
@@ -299,13 +299,13 @@ export function AdminGroups() {
                             </DropdownMenuTrigger>
                             <DropdownMenuPortal>
                               <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={() => setUpdateGroupFormDialog(item.id)}>
+                                  Edit
+                                </DropdownMenuItem>
                                 <DropdownMenuItem disabled={setGroupDisableSubmission.pending} onSelect={toggleGroupDisable}>
                                   <Show when={item.disabled} fallback={<>Disable</>}>
                                     Enable
                                   </Show>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setUpdateGroupFormDialog(item.id)}>
-                                  Update
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => setDeleteGroupSelection(item)}>
                                   Delete
@@ -401,7 +401,7 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
 }
 
 type UpdateGroupForm = {
-  id: BigInt | any
+  id: any
   name: string
   description: string
 }
@@ -412,65 +412,60 @@ const actionUpdateGroupForm = action((form: UpdateGroupForm) => useClient()
   .catch(throwAsFormError)
 )
 
-// TODO: make the initial form data for update more readable
-
 function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
   const [updateGroupForm, { Field, Form }] = createForm<UpdateGroupForm>();
   const updateGroupFormAction = useAction(actionUpdateGroupForm)
-  const submit = (form: UpdateGroupForm) => updateGroupFormAction(form).then(() => props.setOpen(false))
-  const disabled = createAsync(async () => {
-    if (props.id == BigInt(0)) return false
-    return getGroup(props.id).then(res => syncForm(updateGroupForm, { ...res, ...res.model }))
-  })
+  const submit = (form: UpdateGroupForm) => updateGroupFormAction(form)
+    .then(() => props.setOpen(false))
+  const [form] = createResource(() => getGroup(props.id)
+    .then((data) => setupForm(updateGroupForm, { ...data, ...data.model })))
 
   return (
-    <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
-      <Suspense fallback={<Skeleton class="h-32" />}>
-        <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
-          <Field name="id" type="number">
-            {(field, props) => <input {...props} type="hidden" value={field.value} />}
-          </Field>
-          <Field name="name" validate={required("Please enter a name.")}>
-            {(field, props) => (
-              <FieldRoot class="gap-1.5">
-                <FieldLabel field={field}>Name</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    disabled={disabled()}
-                    placeholder="Name"
-                    value={field.value}
-                  />
-                </FieldControl>
-                <FieldMessage field={field} />
-              </FieldRoot>
-            )}
-          </Field>
-          <Field name="description">
-            {(field, props) => (
-              <FieldRoot class="gap-1.5">
-                <FieldLabel field={field}>Description</FieldLabel>
-                <FieldControl field={field}>
-                  <Textarea
-                    {...props}
-                    disabled={disabled()}
-                    placeholder="Description"
-                  >
-                    {field.value}
-                  </Textarea>
-                </FieldControl>
-                <FieldMessage field={field} />
-              </FieldRoot>
-            )}
-          </Field>
-          <Button type="submit" disabled={disabled() || updateGroupForm.submitting}>
-            <Show when={!updateGroupForm.submitting} fallback={<>Updating group</>}>
-              Update group
-            </Show>
-          </Button>
-          <FormMessage form={updateGroupForm} />
-        </Form>
-      </Suspense>
-    </ErrorBoundary>
+    <Show when={!form.error} fallback={<PageError error={form.error} />}>
+      <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
+        <Field name="id" type="number">
+          {(field, props) => <input {...props} type="hidden" value={field.value} />}
+        </Field>
+        <Field name="name" validate={required("Please enter a name.")}>
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>Name</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  placeholder="Name"
+                  value={field.value}
+                  disabled={form.loading}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="description">
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>Description</FieldLabel>
+              <FieldControl field={field}>
+                <Textarea
+                  {...props}
+                  placeholder="Description"
+                  disabled={form.loading}
+                >
+                  {field.value}
+                </Textarea>
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Button type="submit" disabled={form.loading || updateGroupForm.submitting}>
+          <Show when={!updateGroupForm.submitting} fallback={<>Updating group</>}>
+            Update group
+          </Show>
+        </Button>
+        <FormMessage form={updateGroupForm} />
+      </Form>
+    </Show>
   )
 }

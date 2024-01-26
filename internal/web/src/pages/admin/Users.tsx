@@ -13,9 +13,12 @@ import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AdminUsersPageSearchParams, getAdminUsersPage } from "./Users.data";
 import { defaultPerPageOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
-import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
+import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
+import { getSession } from "~/providers/session";
 
 export function AdminUsers() {
+  const session = createAsync(getSession)
+
   const navigate = useNavigate()
   const [searchParams] = useSearchParams<AdminUsersPageSearchParams>()
   const data = createAsync(() => getAdminUsersPage({
@@ -33,6 +36,15 @@ export function AdminUsers() {
   // List
   const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = createToggleSortField(() => data()?.sort)
+
+  // Disable/Enable
+  const setUserDisableDisabled = (disable: boolean) => {
+    for (let i = 0; i < rowSelection.rows.length; i++) {
+      if (rowSelection.rows[i].checked && (disable != data()?.items[i].disabled))
+        return false;
+    }
+    return true
+  }
 
   return (
     <LayoutNormal>
@@ -128,6 +140,24 @@ export function AdminUsers() {
                       </DropdownMenuTrigger>
                       <DropdownMenuPortal>
                         <DropdownMenuContent>
+                          <DropdownMenuItem>
+                            Create
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={setUserDisableDisabled(false)}
+                          >
+                            Enable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={setUserDisableDisabled(true)}
+                          >
+                            Disable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0}
+                          >
+                            Delete
+                          </DropdownMenuItem>
                           <DropdownMenuArrow />
                         </DropdownMenuContent>
                       </DropdownMenuPortal>
@@ -179,6 +209,24 @@ export function AdminUsers() {
                             </DropdownMenuTrigger>
                             <DropdownMenuPortal>
                               <DropdownMenuContent>
+                                <DropdownMenuItem>
+                                  Edit
+                                </DropdownMenuItem>
+                                <Show when={item.id != BigInt(session()?.user_id || 0)}>
+                                  <DropdownMenuItem>
+                                    <Show when={item.disabled} fallback={<>Disable</>}>
+                                      Enable
+                                    </Show>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Show when={!item.admin} fallback={<>Demote</>}>
+                                      Promote
+                                    </Show>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    Delete
+                                  </DropdownMenuItem>
+                                </Show>
                                 <DropdownMenuArrow />
                               </DropdownMenuContent>
                             </DropdownMenuPortal>

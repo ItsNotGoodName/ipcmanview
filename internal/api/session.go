@@ -12,6 +12,7 @@ type SesionResp struct {
 	Valid    bool   `json:"valid"`
 	Username string `json:"username"`
 	Admin    bool   `json:"admin"`
+	UserID   int64  `json:"user_id"`
 }
 
 func (s *Server) Session(c echo.Context) error {
@@ -26,6 +27,7 @@ func (s *Server) Session(c echo.Context) error {
 		Valid:    true,
 		Username: authSession.Username,
 		Admin:    authSession.Admin,
+		UserID:   authSession.UserID,
 	})
 }
 
