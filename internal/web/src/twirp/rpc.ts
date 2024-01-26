@@ -601,14 +601,23 @@ export interface UpdateGroupReq {
  */
 export interface DeleteGroupReq {
     /**
-     * @generated from protobuf field: int64 id = 1;
+     * @generated from protobuf field: repeated int64 ids = 1;
      */
-    id: bigint;
+    ids: bigint[];
 }
 /**
  * @generated from protobuf message SetGroupDisableReq
  */
 export interface SetGroupDisableReq {
+    /**
+     * @generated from protobuf field: repeated SetGroupDisableReq.item items = 1;
+     */
+    items: SetGroupDisableReq_item[];
+}
+/**
+ * @generated from protobuf message SetGroupDisableReq.item
+ */
+export interface SetGroupDisableReq_item {
     /**
      * @generated from protobuf field: int64 id = 1;
      */
@@ -1237,7 +1246,7 @@ export const UpdateGroupReq = new UpdateGroupReq$Type();
 class DeleteGroupReq$Type extends MessageType<DeleteGroupReq> {
     constructor() {
         super("DeleteGroupReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 1, name: "ids", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
 }
@@ -1249,8 +1258,7 @@ export const DeleteGroupReq = new DeleteGroupReq$Type();
 class SetGroupDisableReq$Type extends MessageType<SetGroupDisableReq> {
     constructor() {
         super("SetGroupDisableReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "disable", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => SetGroupDisableReq_item }
         ]);
     }
 }
@@ -1258,6 +1266,19 @@ class SetGroupDisableReq$Type extends MessageType<SetGroupDisableReq> {
  * @generated MessageType for protobuf message SetGroupDisableReq
  */
 export const SetGroupDisableReq = new SetGroupDisableReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SetGroupDisableReq_item$Type extends MessageType<SetGroupDisableReq_item> {
+    constructor() {
+        super("SetGroupDisableReq.item", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "disable", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message SetGroupDisableReq.item
+ */
+export const SetGroupDisableReq_item = new SetGroupDisableReq_item$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class DeviceModel$Type extends MessageType<DeviceModel> {
     constructor() {

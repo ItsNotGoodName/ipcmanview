@@ -288,23 +288,27 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 }
 
 func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*emptypb.Empty, error) {
-	err := auth.DeleteGroup(ctx, a.db, req.Id)
-	if err != nil {
-		return nil, check(err)
+	for _, id := range req.Ids {
+		err := auth.DeleteGroup(ctx, a.db, id)
+		if err != nil {
+			return nil, check(err)
+		}
 	}
 	return &emptypb.Empty{}, nil
 }
 
 func (a *Admin) SetGroupDisable(ctx context.Context, req *rpc.SetGroupDisableReq) (*emptypb.Empty, error) {
-	if req.Disable {
-		err := auth.DisableGroup(ctx, a.db, req.Id)
-		if err != nil {
-			return nil, check(err)
-		}
-	} else {
-		err := auth.EnableGroup(ctx, a.db, req.Id)
-		if err != nil {
-			return nil, check(err)
+	for _, item := range req.Items {
+		if item.Disable {
+			err := auth.DisableGroup(ctx, a.db, item.Id)
+			if err != nil {
+				return nil, check(err)
+			}
+		} else {
+			err := auth.EnableGroup(ctx, a.db, item.Id)
+			if err != nil {
+				return nil, check(err)
+			}
 		}
 	}
 	return &emptypb.Empty{}, nil

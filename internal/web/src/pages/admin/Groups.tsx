@@ -23,9 +23,10 @@ import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { paginateOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { SetGroupDisableReq } from "~/twirp/rpc";
+import { createRowSelector } from "~/lib/row";
 
-const actionDeleteGroup = action((id: bigint) => useClient()
-  .admin.deleteGroup({ id })
+const actionDeleteGroup = action((ids: bigint[]) => useClient()
+  .admin.deleteGroup({ ids })
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(catchAsToast)
 )
@@ -49,8 +50,9 @@ export function AdminGroups() {
       order: parseOrder(searchParams.order)
     },
   }))
+  const rowSelector = createRowSelector(() => data()?.items.map(v => v.id) || [])
 
-  // List group
+  // List
   const previousDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
   const previous = () => !previousDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminGroupsPageSearchParams)
   const nextDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
@@ -60,21 +62,29 @@ export function AdminGroups() {
     return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminGroupsPageSearchParams)
   }
 
-  // Create group
+  // Create
   const [createFormOpen, setCreateFormOpen] = createSignal(false);
 
-  // Update group
+  // Update
   const [updateGroupFormID, setUpdateGroupFormID] = createSignal<bigint>(BigInt(0))
 
-  // Delete group
-  const [deleteGroupSelection, setDeleteGroupSelection] = createSignal<{ name: string, id: bigint } | undefined>()
+  // Delete
   const deleteGroupSubmission = useSubmission(actionDeleteGroup)
   const deleteGroupAction = useAction(actionDeleteGroup)
-  const deleteGroup = () => deleteGroupAction(deleteGroupSelection()!.id).then(() => setDeleteGroupSelection(undefined))
 
-  // Disable/Enable group
+  const [deleteGroupSelection, setDeleteGroupSelection] = createSignal<{ name: string, id: bigint } | undefined>()
+  const deleteGroupBySelection = () => deleteGroupAction([deleteGroupSelection()!.id])
+    .then(() => setDeleteGroupSelection(undefined))
+
+  const [deleteGroupRowSelector, setDeleteGroupRowSelector] = createSignal(false)
+  const deleteGroupByRowSelector = () => deleteGroupAction(rowSelector.selected())
+    .then(() => setDeleteGroupRowSelector(false))
+
+  // Disable/Enable
   const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
   const setGroupDisableAction = useAction(actionSetGroupDisable)
+  const setGroupDisableActionByRowSelector = (disable: boolean) => setGroupDisableAction({ items: rowSelector.selected().map(v => ({ id: v, disable })) })
+    .then(() => rowSelector.checkAll(false))
 
   return (
     <LayoutNormal>
@@ -111,7 +121,21 @@ export function AdminGroups() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroup}>
+            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroupBySelection}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogRoot>
+
+      <AlertDialogRoot open={deleteGroupRowSelector()} onOpenChange={setDeleteGroupRowSelector}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you wish to delete {rowSelector.selected().length} groups?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroupByRowSelector}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -166,6 +190,11 @@ export function AdminGroups() {
           <TableRoot>
             <TableHeader>
               <tr class="border-b">
+                <TableHead>
+                  <CheckboxRoot checked={rowSelector.multiple()} indeterminate={rowSelector.indeterminate()} onChange={(v) => rowSelector.checkAll(v)}>
+                    <CheckboxControl />
+                  </CheckboxRoot>
+                </TableHead>
                 <TableHead class="w-full">
                   <TableSortButton
                     name="name"
@@ -204,6 +233,15 @@ export function AdminGroups() {
                           <DropdownMenuItem onSelect={() => setCreateFormOpen(true)}>
                             Create
                           </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setGroupDisableActionByRowSelector(true)} disabled={rowSelector.selected().length == 0}>
+                            Disable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setGroupDisableActionByRowSelector(false)} disabled={rowSelector.selected().length == 0}>
+                            Enable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => setDeleteGroupRowSelector(true)} disabled={rowSelector.selected().length == 0}>
+                            Delete
+                          </DropdownMenuItem>
                           <DropdownMenuArrow />
                         </DropdownMenuContent>
                       </DropdownMenuPortal>
@@ -214,12 +252,17 @@ export function AdminGroups() {
             </TableHeader>
             <TableBody>
               <For each={data()?.items}>
-                {(group) => {
+                {(group, index) => {
                   const navigateToGroup = () => navigate(`./${group.id}`)
-                  const toggleGroupDisable = () => setGroupDisableAction({ id: group.id, disable: !group.disabled })
+                  const toggleGroupDisable = () => setGroupDisableAction({ items: [{ id: group.id, disable: !group.disabled }] })
 
                   return (
                     <TableRow class="">
+                      <TableHead>
+                        <CheckboxRoot checked={rowSelector.selections()[index()]} onChange={(v) => rowSelector.check(group.id, v)}>
+                          <CheckboxControl />
+                        </CheckboxRoot>
+                      </TableHead>
                       <TableCell onClick={navigateToGroup} class="cursor-pointer select-none">{group.name}</TableCell>
                       <TableCell onClick={navigateToGroup} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{group.userCount.toString()}</TableCell>
                       <TableCell onClick={navigateToGroup} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(group.createdAtTime))}</TableCell>

@@ -274,12 +274,15 @@ message UpdateGroupReq {
 }
 
 message DeleteGroupReq {
-  int64 id = 1;
+  repeated int64 ids = 1;
 }
 
 message SetGroupDisableReq {
-  int64 id = 1;
-  bool disable = 2;
+  message item {
+    int64 id = 1;
+    bool disable = 2;
+  }
+  repeated item items = 1;
 }
 
 // Device
