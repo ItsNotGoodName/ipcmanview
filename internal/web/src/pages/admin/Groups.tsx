@@ -6,7 +6,7 @@ import { ErrorBoundary, For, Show, Suspense, batch, createSignal } from "solid-j
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { catchAsToast, createRowSelection, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
 import { encodeOrder, toggleSortField, parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -38,7 +38,7 @@ const actionSetGroupDisable = action((input: SetGroupDisableReq) => useClient()
 
 export function AdminGroups() {
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams<AdminGroupsPageSearchParams>()
+  const [searchParams] = useSearchParams<AdminGroupsPageSearchParams>()
   const data = createAsync(() => getAdminGroupsPage({
     page: {
       page: Number(searchParams.page) || 1,
@@ -52,15 +52,8 @@ export function AdminGroups() {
   const rowSelection = createRowSelection(() => data()?.items.map(v => v.id) || [])
 
   // List
-  const previousPageDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
-  const previousPage = () => !previousPageDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminGroupsPageSearchParams)
-  const nextPageDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
-  const nextPage = () => !nextPageDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminGroupsPageSearchParams)
-  const toggleSort = (field: string) => {
-    const sort = toggleSortField(data()?.sort, field)
-    return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminGroupsPageSearchParams)
-  }
-  const setPerPage = (value: number) => value && setSearchParams({ page: 1, perPage: value })
+  const pagination = createPagePagination(() => data()?.pageResult)
+  const toggleSort = createToggleSortField(() => data()?.sort)
 
   // Create
   const [createFormDialog, setCreateFormDialog] = createSignal(false);
@@ -84,7 +77,7 @@ export function AdminGroups() {
   const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
   const setGroupDisable = useAction(actionSetGroupDisable)
   const setGroupDisableByRowSelector = (disable: boolean) => setGroupDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
-    .then(() => rowSelection.checkAll(false))
+    .then(() => rowSelection.setAll(false))
   const setGroupDisableDisabled = (disable: boolean) => {
     for (let i = 0; i < rowSelection.rows.length; i++) {
       if (rowSelection.rows[i].checked && (disable != data()?.items[i].disabled))
@@ -158,7 +151,7 @@ export function AdminGroups() {
             <SelectRoot
               class="w-20"
               value={data()?.pageResult?.perPage}
-              onChange={setPerPage}
+              onChange={pagination.setPerPage}
               options={defaultPerPageOptions}
               itemComponent={props => (
                 <SelectItem item={props.item}>
@@ -179,16 +172,16 @@ export function AdminGroups() {
               <Button
                 title="Previous"
                 size="icon"
-                disabled={previousPageDisabled()}
-                onClick={previousPage}
+                disabled={pagination.previousPageDisabled()}
+                onClick={pagination.previousPage}
               >
                 <RiArrowsArrowLeftSLine class="h-6 w-6" />
               </Button>
               <Button
                 title="Next"
                 size="icon"
-                disabled={nextPageDisabled()}
-                onClick={nextPage}
+                disabled={pagination.nextPageDisabled()}
+                onClick={pagination.nextPage}
               >
                 <RiArrowsArrowRightSLine class="h-6 w-6" />
               </Button>
@@ -201,7 +194,7 @@ export function AdminGroups() {
                   <CheckboxRoot
                     checked={rowSelection.multiple()}
                     indeterminate={rowSelection.indeterminate()}
-                    onChange={(v) => rowSelection.checkAll(v)}
+                    onChange={(v) => rowSelection.setAll(v)}
                   >
                     <CheckboxControl />
                   </CheckboxRoot>
@@ -279,7 +272,7 @@ export function AdminGroups() {
                   return (
                     <TableRow>
                       <TableHead>
-                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.check(item.id, v)}>
+                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.set(item.id, v)}>
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>

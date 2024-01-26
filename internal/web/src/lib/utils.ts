@@ -5,8 +5,9 @@ import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
 import { RpcError } from "@protobuf-ts/runtime-rpc";
 import { FieldValues, FormError, FormStore, PartialValues, reset } from "@modular-forms/solid";
-import { Order, Sort } from "~/twirp/rpc";
+import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
 import { createStore } from "solid-js/store";
+import { useSearchParams } from "@solidjs/router";
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
@@ -85,8 +86,8 @@ export type CreateRowSelectionReturn<T> = {
   selections: Accessor<Array<T>>
   multiple: Accessor<boolean>
   indeterminate: Accessor<boolean>
-  check: (id: T, value: boolean) => void
-  checkAll: (value: boolean) => void
+  set: (id: T, value: boolean) => void
+  setAll: (value: boolean) => void
 }
 
 export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelectionReturn<T> {
@@ -107,14 +108,14 @@ export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelecti
       const length = selections().length
       return length != 0 && length != rows.length
     },
-    check: (id, value) => {
+    set: (id, value) => {
       setRows(
         (todo) => todo.id === id,
         "checked",
         value,
       );
     },
-    checkAll: (value) => {
+    setAll: (value) => {
       setRows(
         () => true,
         "checked",
@@ -132,4 +133,23 @@ export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFiel
   reset(form, { initialValues: data })
 
   return false
+}
+
+export function createPagePagination(pageResult: () => PagePaginationResult | undefined) {
+  const [_, setSearchParams] = useSearchParams()
+  return {
+    previousPageDisabled: () => pageResult()?.previousPage == pageResult()?.page,
+    previousPage: () => setSearchParams({ page: pageResult()?.previousPage.toString() }),
+    nextPageDisabled: () => pageResult()?.nextPage == pageResult()?.page,
+    nextPage: () => setSearchParams({ page: pageResult()?.nextPage.toString() }),
+    setPerPage: (value: number) => value && setSearchParams({ page: 1, perPage: value })
+  }
+}
+
+export function createToggleSortField(sort: () => Sort | undefined) {
+  const [_, setSearchParams] = useSearchParams()
+  return (field: string) => {
+    const s = toggleSortField(sort(), field)
+    return setSearchParams({ sort: s.field, order: encodeOrder(s.order) })
+  }
 }

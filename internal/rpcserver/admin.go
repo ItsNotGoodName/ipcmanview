@@ -211,6 +211,20 @@ func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupI
 	if err != nil {
 		return nil, check(err)
 	}
+
+	dbUsers, err := a.db.GetUserByGroup(ctx, req.Id)
+	if err != nil {
+		return nil, check(err)
+	}
+
+	users := make([]*rpc.GetAdminGroupIDPageResp_User, 0, len(dbUsers))
+	for _, v := range dbUsers {
+		users = append(users, &rpc.GetAdminGroupIDPageResp_User{
+			Id:       v.ID,
+			Username: v.Username,
+		})
+	}
+
 	return &rpc.GetAdminGroupIDPageResp{
 		Group: &rpc.GetAdminGroupIDPageResp_Group{
 			Id:             dbGroup.ID,
@@ -221,6 +235,7 @@ func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupI
 			CreatedAtTime:  timestamppb.New(dbGroup.CreatedAt.Time),
 			UpdatedAtTime:  timestamppb.New(dbGroup.UpdatedAt.Time),
 		},
+		Users: users,
 	}, nil
 }
 

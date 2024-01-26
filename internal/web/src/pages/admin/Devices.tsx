@@ -1,12 +1,12 @@
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
-import { AdminDevicesPageSearchParams, getAdminDevicesPage, getGroup } from "./Devices.data";
+import { AdminDevicesPageSearchParams, getAdminDevicesPage, getDevice } from "./Devices.data";
 import { ErrorBoundary, For, Show, Suspense, batch, createSignal } from "solid-js";
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { catchAsToast, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
 import { encodeOrder, toggleSortField, parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -22,9 +22,16 @@ import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { defaultPerPageOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
+import { SetDeviceDisableReq } from "~/twirp/rpc";
 
-const actionDeleteGroup = action((id: bigint) => useClient()
-  .admin.deleteGroup({ id })
+const actionDeleteDevice = action((ids: bigint[]) => useClient()
+  .admin.deleteDevice({ ids })
+  .then(() => revalidate(getAdminDevicesPage.key))
+  .catch(catchAsToast)
+)
+
+const actionSetDeviceDisable = action((input: SetDeviceDisableReq) => useClient()
+  .admin.setDeviceDisable(input)
   .then(() => revalidate(getAdminDevicesPage.key))
   .catch(catchAsToast)
 )
@@ -42,23 +49,49 @@ export function AdminDevices() {
       order: parseOrder(searchParams.order)
     },
   }))
+  const rowSelection = createRowSelection(() => data()?.items.map(v => v.id) || [])
 
-  const previousDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
-  const previous = () => !previousDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminDevicesPageSearchParams)
-  const nextDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
-  const next = () => !nextDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminDevicesPageSearchParams)
+  // List
+  const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = (field: string) => {
     const sort = toggleSortField(data()?.sort, field)
     return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminDevicesPageSearchParams)
   }
 
-  const [createFormOpen, setCreateFormOpen] = createSignal(false);
+  // Create
+  const [createFormDialog, setCreateFormDialog] = createSignal(false);
 
-  const [updateGroupFormID, setUpdateGroupFormID] = createSignal<bigint>(BigInt(0))
+  // Update
+  const [updateDeviceFormDialog, setUpdateDeviceFormDialog] = createSignal<bigint>(BigInt(0))
+
+  // Delete
+  const deleteDeviceSubmission = useSubmission(actionDeleteDevice)
+  const deleteDeviceAction = useAction(actionDeleteDevice)
+  // Single
+  const [deleteDeviceSelection, setDeleteDeviceSelection] = createSignal<{ name: string, id: bigint } | undefined>()
+  const deleteDeviceBySelection = () => deleteDeviceAction([deleteDeviceSelection()!.id])
+    .then(() => setDeleteDeviceSelection(undefined))
+  // Multiple
+  const [deleteDeviceRowSelector, setDeleteDeviceRowSelector] = createSignal(false)
+  const deleteDeviceByRowSelector = () => deleteDeviceAction(rowSelection.selections())
+    .then(() => setDeleteDeviceRowSelector(false))
+
+  // Disable/Enable
+  const setDeviceDisableSubmission = useSubmission(actionSetDeviceDisable)
+  const setDeviceDisable = useAction(actionSetDeviceDisable)
+  const setDeviceDisableByRowSelector = (disable: boolean) => setDeviceDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+    .then(() => rowSelection.setAll(false))
+  const setDeviceDisableDisabled = (disable: boolean) => {
+    for (let i = 0; i < rowSelection.rows.length; i++) {
+      if (rowSelection.rows[i].checked && (disable != data()?.items[i].disabled))
+        return false;
+    }
+    return true
+  }
 
   return (
     <LayoutNormal>
-      <DialogRoot open={createFormOpen()} onOpenChange={setCreateFormOpen}>
+      <DialogRoot open={createFormDialog()} onOpenChange={setCreateFormDialog}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -66,12 +99,12 @@ export function AdminDevices() {
               <DialogCloseButton />
               <DialogTitle>Create group</DialogTitle>
             </DialogHeader>
-            <CreateGroupForm setOpen={setCreateFormOpen} />
+            <CreateDeviceForm setOpen={setCreateFormDialog} />
           </DialogContent>
         </DialogPortal>
       </DialogRoot>
 
-      <DialogRoot open={updateGroupFormID() != BigInt(0)} onOpenChange={() => setUpdateGroupFormID(BigInt(0))}>
+      <DialogRoot open={updateDeviceFormDialog() != BigInt(0)} onOpenChange={() => setUpdateDeviceFormDialog(BigInt(0))}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -79,10 +112,38 @@ export function AdminDevices() {
               <DialogCloseButton />
               <DialogTitle>Update group</DialogTitle>
             </DialogHeader>
-            <UpdateGroupForm setOpen={() => setUpdateGroupFormID(BigInt(0))} id={updateGroupFormID()} />
+            <UpdateDeviceForm setOpen={() => setUpdateDeviceFormDialog(BigInt(0))} id={updateDeviceFormDialog()} />
           </DialogContent>
         </DialogPortal>
       </DialogRoot>
+
+      <AlertDialogRoot open={deleteDeviceSelection() != undefined} onOpenChange={() => setDeleteDeviceSelection(undefined)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you wish to delete {deleteDeviceSelection()?.name}?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={deleteDeviceSubmission.pending} onClick={deleteDeviceBySelection}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogRoot>
+
+      <AlertDialogRoot open={deleteDeviceRowSelector()} onOpenChange={setDeleteDeviceRowSelector}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} groups?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={deleteDeviceSubmission.pending} onClick={deleteDeviceByRowSelector}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogRoot>
 
       <div class="text-xl">Devices</div>
       <Seperator />
@@ -93,7 +154,7 @@ export function AdminDevices() {
             <SelectRoot
               class="w-20"
               value={data()?.pageResult?.perPage}
-              onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
+              onChange={setPerPage}
               options={defaultPerPageOptions}
               itemComponent={props => (
                 <SelectItem item={props.item}>
@@ -114,16 +175,16 @@ export function AdminDevices() {
               <Button
                 title="Previous"
                 size="icon"
-                disabled={previousDisabled()}
-                onClick={previous}
+                disabled={previousPageDisabled()}
+                onClick={previousPage}
               >
                 <RiArrowsArrowLeftSLine class="h-6 w-6" />
               </Button>
               <Button
                 title="Next"
                 size="icon"
-                disabled={nextDisabled()}
-                onClick={next}
+                disabled={nextPageDisabled()}
+                onClick={nextPage}
               >
                 <RiArrowsArrowRightSLine class="h-6 w-6" />
               </Button>
@@ -132,7 +193,16 @@ export function AdminDevices() {
           <TableRoot>
             <TableHeader>
               <tr class="border-b">
-                <TableHead class="w-full">
+                <TableHead>
+                  <CheckboxRoot
+                    checked={rowSelection.multiple()}
+                    indeterminate={rowSelection.indeterminate()}
+                    onChange={(v) => rowSelection.setAll(v)}
+                  >
+                    <CheckboxControl />
+                  </CheckboxRoot>
+                </TableHead>
+                <TableHead>
                   <TableSortButton
                     name="name"
                     onClick={toggleSort}
@@ -167,8 +237,26 @@ export function AdminDevices() {
                       </DropdownMenuTrigger>
                       <DropdownMenuPortal>
                         <DropdownMenuContent>
-                          <DropdownMenuItem onSelect={() => setCreateFormOpen(true)}>
+                          <DropdownMenuItem onSelect={() => setCreateFormDialog(true)}>
                             Create
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => setDeviceDisableByRowSelector(true)}
+                            disabled={setDeviceDisableDisabled(true) || rowSelection.selections().length == 0}
+                          >
+                            Disable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => setDeviceDisableByRowSelector(false)}
+                            disabled={setDeviceDisableDisabled(false) || rowSelection.selections().length == 0}
+                          >
+                            Enable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={() => setDeleteDeviceRowSelector(true)}
+                            disabled={rowSelection.selections().length == 0}
+                          >
+                            Delete
                           </DropdownMenuItem>
                           <DropdownMenuArrow />
                         </DropdownMenuContent>
@@ -180,69 +268,58 @@ export function AdminDevices() {
             </TableHeader>
             <TableBody>
               <For each={data()?.items}>
-                {(group) => {
-                  const onClick = () => navigate(`./${group.id}`)
-
-                  const [deleteGroupAlertOpen, setDeleteGroupAlertOpen] = createSignal(false)
-                  const deleteGroupSubmission = useSubmission(actionDeleteGroup)
-                  const deleteGroupAction = useAction(actionDeleteGroup)
-                  const deleteGroup = () => deleteGroupAction(group.id).then(() => setDeleteGroupAlertOpen(false))
-
+                {(item, index) => {
+                  const onClick = () => navigate(`./${item.id}`)
+                  const toggleDeviceDisable = () => setDeviceDisable({ items: [{ id: item.id, disable: !item.disabled }] })
 
                   return (
-                    <>
-                      <AlertDialogRoot open={deleteGroupAlertOpen()} onOpenChange={setDeleteGroupAlertOpen}>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure you wish to delete {group.name}?</AlertDialogTitle>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroup}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialogRoot>
-
-                      <TableRow class="">
-                        <TableCell onClick={onClick} class="cursor-pointer select-none">{group.name}</TableCell>
-                        <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{group.userCount.toString()}</TableCell>
-                        <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(group.createdAtTime))}</TableCell>
-                        <TableCell class="py-0">
-                          <div class="flex gap-2">
-                            <Show when={group.disabled}>
-                              <TooltipRoot>
-                                <TooltipTrigger class="p-1">
-                                  <RiSystemLockLine class="h-5 w-5" />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  Disabled since {formatDate(parseDate(group.disabledAtTime))}
-                                </TooltipContent>
-                              </TooltipRoot>
-                            </Show>
-                            <div class="flex items-center justify-end">
-                              <DropdownMenuRoot placement="bottom-end">
-                                <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                                  <RiSystemMore2Line class="h-5 w-5" />
-                                </DropdownMenuTrigger>
-                                <DropdownMenuPortal>
-                                  <DropdownMenuContent>
-                                    <DropdownMenuItem onSelect={() => setUpdateGroupFormID(group.id)}>
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setDeleteGroupAlertOpen(true)}>
-                                      Delete
-                                    </DropdownMenuItem>
-                                    <DropdownMenuArrow />
-                                  </DropdownMenuContent>
-                                </DropdownMenuPortal>
-                              </DropdownMenuRoot>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    </>
+                    <TableRow>
+                      <TableHead>
+                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.set(item.id, v)}>
+                          <CheckboxControl />
+                        </CheckboxRoot>
+                      </TableHead>
+                      <TableCell onClick={onClick} class="max-w-48 cursor-pointer select-none" title={item.name}>
+                        <div class="truncate">{item.name}</div>
+                      </TableCell>
+                      <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{item.userCount.toString()}</TableCell>
+                      <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(item.createdAtTime))}</TableCell>
+                      <TableCell class="py-0">
+                        <div class="flex justify-end gap-2">
+                          <Show when={item.disabled}>
+                            <TooltipRoot>
+                              <TooltipTrigger class="p-1">
+                                <RiSystemLockLine class="h-5 w-5" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Disabled since {formatDate(parseDate(item.disabledAtTime))}
+                              </TooltipContent>
+                            </TooltipRoot>
+                          </Show>
+                          <DropdownMenuRoot placement="bottom-end">
+                            <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+                              <RiSystemMore2Line class="h-5 w-5" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuPortal>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem disabled={setDeviceDisableSubmission.pending} onSelect={toggleDeviceDisable}>
+                                  <Show when={item.disabled} fallback={<>Disable</>}>
+                                    Enable
+                                  </Show>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setUpdateDeviceFormDialog(item.id)}>
+                                  Update
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => setDeleteDeviceSelection(item)}>
+                                  Delete
+                                </DropdownMenuItem>
+                                <DropdownMenuArrow />
+                              </DropdownMenuContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuRoot>
+                        </div>
+                      </TableCell>
+                    </TableRow>
                   )
                 }}
               </For>
@@ -256,158 +333,148 @@ export function AdminDevices() {
     </LayoutNormal>)
 }
 
-type CreateGroupForm = {
-  name: string
-  description: string
-}
-
-const actionCreateGroupForm = action((form: CreateGroupForm) => useClient()
-  .admin.createGroup(form)
-  .then(() => revalidate(getAdminDevicesPage.key))
-  .catch(throwAsFormError)
-)
-
-function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
-  const [addMore, setAddMore] = createSignal(false)
-
-  const [createGroupForm, { Field, Form }] = createForm<CreateGroupForm>({ initialValues: { name: "", description: "" } });
-  const createGroupFormAction = useAction(actionCreateGroupForm)
-  const submit = (form: CreateGroupForm) => createGroupFormAction(form)
-    .then(() => {
-      batch(() => {
-        props.setOpen(addMore())
-        reset(createGroupForm)
-      })
-    })
-
-  return (
-    <Form class="flex flex-col gap-4" onSubmit={submit}>
-      <input class="hidden" type="text" name="username" autocomplete="username" />
-      <Field name="name" validate={required("Please enter a name.")}>
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Name</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="Name"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Field name="description">
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Description</FieldLabel>
-            <FieldControl field={field}>
-              <Textarea
-                {...props}
-                value={field.value}
-                placeholder="Description"
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Button type="submit" disabled={createGroupForm.submitting}>
-        <Show when={!createGroupForm.submitting} fallback={<>Creating group</>}>
-          Create group
-        </Show>
-      </Button>
-      <FormMessage form={createGroupForm} />
-      <CheckboxRoot checked={addMore()} onChange={setAddMore}>
-        <CheckboxInput />
-        <CheckboxControl />
-        <CheckboxLabel>Add more</CheckboxLabel>
-      </CheckboxRoot>
-    </Form>
-  )
-}
-
-type UpdateGroupForm = {
-  id: BigInt | any
-  name: string
-  description: string
-}
-
-const actionUpdateGroupForm = action((form: UpdateGroupForm) => useClient()
-  .admin.updateGroup(form)
-  .then(() => revalidate(getAdminDevicesPage.key))
-  .catch(throwAsFormError)
-)
-
-function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
-  const [updateGroupForm, { Field, Form }] = createForm<UpdateGroupForm>();
-  const updateGroupFormAction = useAction(actionUpdateGroupForm)
-  const submit = (form: UpdateGroupForm) => updateGroupFormAction(form).then(() => props.setOpen(false))
-  const disabled = createAsync(async () => {
-    if (props.id == BigInt(0))
-      return false
-
-    return getGroup(props.id).then(res => {
-      if (updateGroupForm.submitted) {
-        return false
-      }
-
-      reset(updateGroupForm, {
-        initialValues: { ...res }
-      })
-      return false
-    })
-  })
-
-  return (
-    <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
-      <Suspense fallback={<Skeleton class="h-32" />}>
-        <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
-          <Field name="id" type="number">
-            {(field, props) => <input {...props} type="hidden" value={field.value} />}
-          </Field>
-          <Field name="name" validate={required("Please enter a name.")}>
-            {(field, props) => (
-              <FieldRoot class="gap-1.5">
-                <FieldLabel field={field}>Name</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    disabled={disabled()}
-                    placeholder="Name"
-                    value={field.value}
-                  />
-                </FieldControl>
-                <FieldMessage field={field} />
-              </FieldRoot>
-            )}
-          </Field>
-          <Field name="description">
-            {(field, props) => (
-              <FieldRoot class="gap-1.5">
-                <FieldLabel field={field}>Description</FieldLabel>
-                <FieldControl field={field}>
-                  <Textarea
-                    {...props}
-                    disabled={disabled()}
-                    placeholder="Description"
-                  >
-                    {field.value}
-                  </Textarea>
-                </FieldControl>
-                <FieldMessage field={field} />
-              </FieldRoot>
-            )}
-          </Field>
-          <Button type="submit" disabled={disabled() || updateGroupForm.submitting}>
-            <Show when={!updateGroupForm.submitting} fallback={<>Updating group</>}>
-              Update group
-            </Show>
-          </Button>
-          <FormMessage form={updateGroupForm} />
-        </Form>
-      </Suspense>
-    </ErrorBoundary>
-  )
-}
+// type CreateDeviceForm = {
+//   name: string
+//   description: string
+// }
+//
+// const actionCreateDeviceForm = action((form: CreateDeviceForm) => useClient()
+//   .admin.createDevice({ model: form })
+//   .then(() => revalidate(getAdminDevicesPage.key))
+//   .catch(throwAsFormError)
+// )
+//
+// function CreateDeviceForm(props: { setOpen: (value: boolean) => void }) {
+//   const [addMore, setAddMore] = createSignal(false)
+//
+//   const [createDeviceForm, { Field, Form }] = createForm<CreateDeviceForm>({ initialValues: { name: "", description: "" } });
+//   const createDeviceFormAction = useAction(actionCreateDeviceForm)
+//   const submit = (form: CreateDeviceForm) => createDeviceFormAction(form)
+//     .then(() => batch(() => {
+//       props.setOpen(addMore())
+//       reset(createDeviceForm)
+//     }))
+//
+//   return (
+//     <Form class="flex flex-col gap-4" onSubmit={submit}>
+//       <input class="hidden" type="text" name="username" autocomplete="username" />
+//       <Field name="name" validate={required("Please enter a name.")}>
+//         {(field, props) => (
+//           <FieldRoot class="gap-1.5">
+//             <FieldLabel field={field}>Name</FieldLabel>
+//             <FieldControl field={field}>
+//               <Input
+//                 {...props}
+//                 placeholder="Name"
+//                 value={field.value}
+//               />
+//             </FieldControl>
+//             <FieldMessage field={field} />
+//           </FieldRoot>
+//         )}
+//       </Field>
+//       <Field name="description">
+//         {(field, props) => (
+//           <FieldRoot class="gap-1.5">
+//             <FieldLabel field={field}>Description</FieldLabel>
+//             <FieldControl field={field}>
+//               <Textarea
+//                 {...props}
+//                 value={field.value}
+//                 placeholder="Description"
+//               />
+//             </FieldControl>
+//             <FieldMessage field={field} />
+//           </FieldRoot>
+//         )}
+//       </Field>
+//       <Button type="submit" disabled={createDeviceForm.submitting}>
+//         <Show when={!createDeviceForm.submitting} fallback={<>Creating group</>}>
+//           Create group
+//         </Show>
+//       </Button>
+//       <FormMessage form={createDeviceForm} />
+//       <CheckboxRoot checked={addMore()} onChange={setAddMore}>
+//         <CheckboxInput />
+//         <CheckboxControl />
+//         <CheckboxLabel>Add more</CheckboxLabel>
+//       </CheckboxRoot>
+//     </Form>
+//   )
+// }
+//
+// type UpdateDeviceForm = {
+//   id: BigInt | any
+//   name: string
+//   description: string
+// }
+//
+// const actionUpdateDeviceForm = action((form: UpdateDeviceForm) => useClient()
+//   .admin.updateDevice({ id: form.id, model: form })
+//   .then(() => revalidate(getAdminDevicesPage.key))
+//   .catch(throwAsFormError)
+// )
+//
+// // TODO: make the initial form data for update more readable
+//
+// function UpdateDeviceForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
+//   const [updateDeviceForm, { Field, Form }] = createForm<UpdateDeviceForm>();
+//   const updateDeviceFormAction = useAction(actionUpdateDeviceForm)
+//   const submit = (form: UpdateDeviceForm) => updateDeviceFormAction(form).then(() => props.setOpen(false))
+//   const disabled = createAsync(async () => {
+//     if (props.id == BigInt(0)) return false
+//     return getDevice(props.id).then(res => syncForm(updateDeviceForm, { ...res, ...res.model }))
+//   })
+//
+//   return (
+//     <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+//       <Suspense fallback={<Skeleton class="h-32" />}>
+//         <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
+//           <Field name="id" type="number">
+//             {(field, props) => <input {...props} type="hidden" value={field.value} />}
+//           </Field>
+//           <Field name="name" validate={required("Please enter a name.")}>
+//             {(field, props) => (
+//               <FieldRoot class="gap-1.5">
+//                 <FieldLabel field={field}>Name</FieldLabel>
+//                 <FieldControl field={field}>
+//                   <Input
+//                     {...props}
+//                     disabled={disabled()}
+//                     placeholder="Name"
+//                     value={field.value}
+//                   />
+//                 </FieldControl>
+//                 <FieldMessage field={field} />
+//               </FieldRoot>
+//             )}
+//           </Field>
+//           <Field name="description">
+//             {(field, props) => (
+//               <FieldRoot class="gap-1.5">
+//                 <FieldLabel field={field}>Description</FieldLabel>
+//                 <FieldControl field={field}>
+//                   <Textarea
+//                     {...props}
+//                     disabled={disabled()}
+//                     placeholder="Description"
+//                   >
+//                     {field.value}
+//                   </Textarea>
+//                 </FieldControl>
+//                 <FieldMessage field={field} />
+//               </FieldRoot>
+//             )}
+//           </Field>
+//           <Button type="submit" disabled={disabled() || updateDeviceForm.submitting}>
+//             <Show when={!updateDeviceForm.submitting} fallback={<>Updating group</>}>
+//               Update group
+//             </Show>
+//           </Button>
+//           <FormMessage form={updateDeviceForm} />
+//         </Form>
+//       </Suspense>
+//     </ErrorBoundary>
+//   )
+// }
+//

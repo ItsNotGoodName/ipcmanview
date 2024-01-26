@@ -194,7 +194,7 @@ message GetAdminGroupIDPageResp {
 
   message User {
     int64 id = 1;
-    string name = 2;
+    string username = 2;
   }
   repeated User users = 2;
 }
@@ -240,8 +240,11 @@ message GetAdminDevicesPageResp {
 }
 
 message SetUserDisableReq {
-  int64 id = 1;
-  bool disable = 2;
+  message Item {
+    int64 id = 1;
+    bool disable = 2;
+  }
+  repeated Item items = 1;
 }
 
 // Group

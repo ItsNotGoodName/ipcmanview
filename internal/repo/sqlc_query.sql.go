@@ -1056,6 +1056,47 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 	return i, err
 }
 
+const getUserByGroup = `-- name: GetUserByGroup :many
+SELECT
+  users.id, users.email, users.username, users.password, users.created_at, users.updated_at, users.disabled_at
+FROM
+  users
+  LEFT JOIN group_users ON group_users.user_id = id
+WHERE
+  group_users.group_id = ?
+`
+
+func (q *Queries) GetUserByGroup(ctx context.Context, groupID int64) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getUserByGroup, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Username,
+			&i.Password,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DisabledAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserBySession = `-- name: GetUserBySession :one
 SELECT
   user_sessions.id as id,

@@ -385,9 +385,9 @@ export interface GetAdminGroupIDPageResp_User {
      */
     id: bigint;
     /**
-     * @generated from protobuf field: string name = 2;
+     * @generated from protobuf field: string username = 2;
      */
-    name: string;
+    username: string;
 }
 /**
  * @generated from protobuf message GetAdminUsersPageReq
@@ -1056,7 +1056,7 @@ class GetAdminGroupIDPageResp_User$Type extends MessageType<GetAdminGroupIDPageR
     constructor() {
         super("GetAdminGroupIDPageResp.User", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

@@ -37,6 +37,15 @@ FROM
 WHERE
   session = ?;
 
+-- name: GetUserByGroup :many
+SELECT
+  users.*
+FROM
+  users
+  LEFT JOIN group_users ON group_users.user_id = id
+WHERE
+  group_users.group_id = ?;
+
 -- name: UpdateUser :one
 UPDATE users
 SET

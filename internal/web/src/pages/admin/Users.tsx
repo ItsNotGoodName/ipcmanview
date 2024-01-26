@@ -4,8 +4,7 @@ import { ErrorBoundary, For, Show, Suspense, } from "solid-js";
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, RiUserFacesAdminLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { createRowSelection, formatDate, parseDate, } from "~/lib/utils";
-import { encodeOrder, toggleSortField, parseOrder } from "~/lib/utils";
+import { createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { Skeleton } from "~/ui/Skeleton";
@@ -18,7 +17,7 @@ import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuPortal, DropdownMen
 
 export function AdminUsers() {
   const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams<AdminUsersPageSearchParams>()
+  const [searchParams] = useSearchParams<AdminUsersPageSearchParams>()
   const data = createAsync(() => getAdminUsersPage({
     page: {
       page: Number(searchParams.page) || 1,
@@ -32,15 +31,8 @@ export function AdminUsers() {
   const rowSelection = createRowSelection(() => data()?.items.map(v => v.id) || [])
 
   // List
-  const previousPageDisabled = () => data()?.pageResult?.previousPage == data()?.pageResult?.page
-  const previousPage = () => !previousPageDisabled() && setSearchParams({ page: data()?.pageResult?.previousPage.toString() } as AdminUsersPageSearchParams)
-  const nextPageDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
-  const nextPage = () => !nextPageDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminUsersPageSearchParams)
-  const toggleSort = (field: string) => {
-    const sort = toggleSortField(data()?.sort, field)
-    return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminUsersPageSearchParams)
-  }
-  const setPerPage = (value: number) => value && setSearchParams({ page: 1, perPage: value })
+  const pagination = createPagePagination(() => data()?.pageResult)
+  const toggleSort = createToggleSortField(() => data()?.sort)
 
   return (
     <LayoutNormal>
@@ -53,7 +45,7 @@ export function AdminUsers() {
             <SelectRoot
               class="w-20"
               value={data()?.pageResult?.perPage}
-              onChange={setPerPage}
+              onChange={pagination.setPerPage}
               options={defaultPerPageOptions}
               itemComponent={props => (
                 <SelectItem item={props.item}>
@@ -74,16 +66,16 @@ export function AdminUsers() {
               <Button
                 title="Previous"
                 size="icon"
-                disabled={previousPageDisabled()}
-                onClick={previousPage}
+                disabled={pagination.previousPageDisabled()}
+                onClick={pagination.previousPage}
               >
                 <RiArrowsArrowLeftSLine class="h-6 w-6" />
               </Button>
               <Button
                 title="Next"
                 size="icon"
-                disabled={nextPageDisabled()}
-                onClick={nextPage}
+                disabled={pagination.nextPageDisabled()}
+                onClick={pagination.nextPage}
               >
                 <RiArrowsArrowRightSLine class="h-6 w-6" />
               </Button>
@@ -96,7 +88,7 @@ export function AdminUsers() {
                   <CheckboxRoot
                     checked={rowSelection.multiple()}
                     indeterminate={rowSelection.indeterminate()}
-                    onChange={(v) => rowSelection.checkAll(v)}
+                    onChange={(v) => rowSelection.setAll(v)}
                   >
                     <CheckboxControl />
                   </CheckboxRoot>
@@ -152,7 +144,7 @@ export function AdminUsers() {
                   return (
                     <TableRow>
                       <TableHead>
-                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.check(item.id, v)}>
+                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.set(item.id, v)}>
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>
