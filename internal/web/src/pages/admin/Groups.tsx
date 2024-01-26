@@ -259,7 +259,7 @@ export function AdminGroups() {
                   return (
                     <TableRow class="">
                       <TableHead>
-                        <CheckboxRoot checked={rowSelector.selections()[index()]} onChange={(v) => rowSelector.check(group.id, v)}>
+                        <CheckboxRoot checked={rowSelector.selections[index()]?.checked} onChange={(v) => rowSelector.check(group.id, v)}>
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>
@@ -290,7 +290,7 @@ export function AdminGroups() {
                                   </Show>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => setUpdateGroupFormID(group.id)}>
-                                  Edit
+                                  Update
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onSelect={() => setDeleteGroupSelection(group)}>
                                   Delete
