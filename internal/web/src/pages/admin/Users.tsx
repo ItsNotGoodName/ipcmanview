@@ -4,14 +4,14 @@ import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiUs
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { formatDate, parseDate, } from "~/lib/utils";
-import { encodeOrder, nextSort, parseOrder } from "~/lib/utils";
+import { encodeOrder, toggleSortField, parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AdminUsersPageSearchParams, getAdminUsersPage } from "./Users.data";
-import { paginateOptions } from "~/lib/utils";
+import { defaultPerPageOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 
 export function AdminUsers() {
@@ -33,7 +33,7 @@ export function AdminUsers() {
   const nextDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
   const next = () => !nextDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminUsersPageSearchParams)
   const toggleSort = (field: string) => {
-    const sort = nextSort(data()?.sort, field)
+    const sort = toggleSortField(data()?.sort, field)
     return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminUsersPageSearchParams)
   }
 
@@ -49,7 +49,7 @@ export function AdminUsers() {
               class="w-20"
               value={data()?.pageResult?.perPage}
               onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
-              options={paginateOptions}
+              options={defaultPerPageOptions}
               itemComponent={props => (
                 <SelectItem item={props.item}>
                   {props.item.rawValue}

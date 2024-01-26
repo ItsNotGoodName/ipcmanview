@@ -6,8 +6,8 @@ import { ErrorBoundary, For, Show, Suspense, batch, createSignal } from "solid-j
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { catchAsToast, createRowSelection, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
-import { encodeOrder, nextSort, parseOrder } from "~/lib/utils";
+import { catchAsToast, createRowSelection, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
+import { encodeOrder, toggleSortField, parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { useClient } from "~/providers/client";
@@ -20,7 +20,7 @@ import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/u
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
-import { paginateOptions } from "~/lib/utils";
+import { defaultPerPageOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { SetGroupDisableReq } from "~/twirp/rpc";
 
@@ -57,7 +57,7 @@ export function AdminGroups() {
   const nextDisabled = () => data()?.pageResult?.nextPage == data()?.pageResult?.page
   const next = () => !nextDisabled() && setSearchParams({ page: data()?.pageResult?.nextPage.toString() } as AdminGroupsPageSearchParams)
   const toggleSort = (field: string) => {
-    const sort = nextSort(data()?.sort, field)
+    const sort = toggleSortField(data()?.sort, field)
     return setSearchParams({ sort: sort.field, order: encodeOrder(sort.order) } as AdminGroupsPageSearchParams)
   }
 
@@ -72,21 +72,25 @@ export function AdminGroups() {
   const deleteGroupAction = useAction(actionDeleteGroup)
 
   const [deleteGroupSelection, setDeleteGroupSelection] = createSignal<{ name: string, id: bigint } | undefined>()
-  const deleteGroupBySelection = () =>
-    deleteGroupAction([deleteGroupSelection()!.id])
-      .then(() => setDeleteGroupSelection(undefined))
+  const deleteGroupBySelection = () => deleteGroupAction([deleteGroupSelection()!.id])
+    .then(() => setDeleteGroupSelection(undefined))
 
   const [deleteGroupRowSelector, setDeleteGroupRowSelector] = createSignal(false)
-  const deleteGroupByRowSelector = () =>
-    deleteGroupAction(rowSelection.selections())
-      .then(() => setDeleteGroupRowSelector(false))
+  const deleteGroupByRowSelector = () => deleteGroupAction(rowSelection.selections())
+    .then(() => setDeleteGroupRowSelector(false))
 
   // Disable/Enable
   const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
   const setGroupDisableAction = useAction(actionSetGroupDisable)
-  const setGroupDisableActionByRowSelector = (disable: boolean) =>
-    setGroupDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
-      .then(() => rowSelection.checkAll(false))
+  const setGroupDisableActionByRowSelector = (disable: boolean) => setGroupDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+    .then(() => rowSelection.checkAll(false))
+  const isToggleDisabledDisabled = (isDisable: boolean) => {
+    for (let i = 0; i < rowSelection.rows.length; i++) {
+      if (rowSelection.rows[i].checked && (isDisable != data()?.items[i].disabled))
+        return false;
+    }
+    return true
+  }
 
   return (
     <LayoutNormal>
@@ -154,7 +158,7 @@ export function AdminGroups() {
               class="w-20"
               value={data()?.pageResult?.perPage}
               onChange={(value) => value && setSearchParams({ page: 1, perPage: value })}
-              options={paginateOptions}
+              options={defaultPerPageOptions}
               itemComponent={props => (
                 <SelectItem item={props.item}>
                   {props.item.rawValue}
@@ -235,13 +239,22 @@ export function AdminGroups() {
                           <DropdownMenuItem onSelect={() => setCreateFormOpen(true)}>
                             Create
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => setGroupDisableActionByRowSelector(true)} disabled={rowSelection.selections().length == 0}>
+                          <DropdownMenuItem
+                            onSelect={() => setGroupDisableActionByRowSelector(true)}
+                            disabled={isToggleDisabledDisabled(true) || rowSelection.selections().length == 0}
+                          >
                             Disable
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => setGroupDisableActionByRowSelector(false)} disabled={rowSelection.selections().length == 0}>
+                          <DropdownMenuItem
+                            onSelect={() => setGroupDisableActionByRowSelector(false)}
+                            disabled={isToggleDisabledDisabled(false) || rowSelection.selections().length == 0}
+                          >
                             Enable
                           </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => setDeleteGroupRowSelector(true)} disabled={rowSelection.selections().length == 0}>
+                          <DropdownMenuItem
+                            onSelect={() => setDeleteGroupRowSelector(true)}
+                            disabled={rowSelection.selections().length == 0}
+                          >
                             Delete
                           </DropdownMenuItem>
                           <DropdownMenuArrow />
@@ -334,12 +347,10 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
   const [createGroupForm, { Field, Form }] = createForm<CreateGroupForm>({ initialValues: { name: "", description: "" } });
   const createGroupFormAction = useAction(actionCreateGroupForm)
   const submit = (form: CreateGroupForm) => createGroupFormAction(form)
-    .then(() => {
-      batch(() => {
-        props.setOpen(addMore())
-        reset(createGroupForm)
-      })
-    })
+    .then(() => batch(() => {
+      props.setOpen(addMore())
+      reset(createGroupForm)
+    }))
 
   return (
     <Form class="flex flex-col gap-4" onSubmit={submit}>
@@ -401,24 +412,15 @@ const actionUpdateGroupForm = action((form: UpdateGroupForm) => useClient()
   .catch(throwAsFormError)
 )
 
+// TODO: make the initial form data for update more readable
+
 function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
   const [updateGroupForm, { Field, Form }] = createForm<UpdateGroupForm>();
   const updateGroupFormAction = useAction(actionUpdateGroupForm)
   const submit = (form: UpdateGroupForm) => updateGroupFormAction(form).then(() => props.setOpen(false))
   const disabled = createAsync(async () => {
-    if (props.id == BigInt(0))
-      return false
-
-    return getGroup(props.id).then(res => {
-      if (updateGroupForm.submitted) {
-        return false
-      }
-
-      reset(updateGroupForm, {
-        initialValues: { ...res, ...res.model }
-      })
-      return false
-    })
+    if (props.id == BigInt(0)) return false
+    return getGroup(props.id).then(res => syncForm(updateGroupForm, { ...res, ...res.model }))
   })
 
   return (

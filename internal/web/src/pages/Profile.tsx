@@ -1,6 +1,6 @@
 import { action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router"
 import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
-import { ErrorBoundary, For, ParentProps, Show, Suspense, } from "solid-js"
+import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, } from "solid-js"
 import { createForm, required, reset } from "@modular-forms/solid"
 
 import { formatDate, parseDate, catchAsToast, throwAsFormError } from "~/lib/utils"
@@ -10,24 +10,22 @@ import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
 import { Badge } from "~/ui/Badge"
-import { RevokeMySessionReq } from "~/twirp/rpc"
 import { Seperator } from "~/ui/Seperator"
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form"
 import { Input } from "~/ui/Input"
 import { Skeleton } from "~/ui/Skeleton"
 import { getSession } from "~/providers/session"
 import { PageError } from "~/ui/Page"
-import { ConfirmButton } from "~/ui/Confirm"
-import { As } from "@kobalte/core"
 import { LayoutNormal } from "~/ui/Layout"
+import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog"
 
 const actionRevokeAllMySessions = action(() => useClient()
   .user.revokeAllMySessions({})
   .then(() => revalidate(getProfilePage.key))
   .catch(catchAsToast))
 
-const actionRevokeMySession = action((input: RevokeMySessionReq) => useClient()
-  .user.revokeMySession(input)
+const actionRevokeMySession = action((sessionId: bigint) => useClient()
+  .user.revokeMySession({ sessionId })
   .then(() => revalidate(getProfilePage.key))
   .catch(catchAsToast))
 
@@ -35,11 +33,48 @@ export function Profile() {
   const data = createAsync(getProfilePage)
 
   const revokeAllMySessionsSubmission = useSubmission(actionRevokeAllMySessions)
-  const revokeAllMySessions = useAction(actionRevokeAllMySessions)
+  const [revokeAllMySessionsDialog, setRevokeAllMySessionsDialog] = createSignal(false)
+  const revokeAllMySessionsAction = useAction(actionRevokeAllMySessions)
+  const revokeAllMySessions = () => revokeAllMySessionsAction()
+    .then(() => setRevokeAllMySessionsDialog(false))
+
+  const [revokeMySessionsDialog, setRevokeMySessionsDialog] = createSignal(BigInt(0))
+  const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
+  const revokeMySessionAction = useAction(actionRevokeMySession)
+  const revokeMySession = () => revokeMySessionAction(revokeMySessionsDialog()).
+    then(() => setRevokeMySessionsDialog(BigInt(0)))
 
   return (
     <LayoutNormal>
       <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+
+        <AlertDialogRoot open={revokeAllMySessionsDialog()} onOpenChange={setRevokeAllMySessionsDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you wish to revoke all sessions?</AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction disabled={revokeAllMySessionsSubmission.pending} onClick={revokeAllMySessions} variant="destructive">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogRoot>
+
+        <AlertDialogRoot open={revokeMySessionsDialog() != BigInt(0)} onOpenChange={() => setRevokeMySessionsDialog(BigInt(0))}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you wish to revoke this session?</AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction disabled={revokeMySessionSubmission.pending} onClick={revokeMySession} variant="destructive">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogRoot>
 
         <CardRoot>
           <CardHeader>
@@ -101,16 +136,9 @@ export function Profile() {
         </div>
         <Suspense fallback={<Skeleton class="h-32" />}>
           <div class="flex">
-            <ConfirmButton
-              message="Are you sure you wish to revoke all sessions?"
-              disabled={revokeAllMySessionsSubmission.pending}
-              onYes={revokeAllMySessions}
-              asChild
-            >
-              <As component={Button} variant="destructive">
-                Revoke all sessions
-              </As>
-            </ConfirmButton>
+            <Button variant="destructive" onClick={() => setRevokeAllMySessionsDialog(true)}>
+              Revoke all sessions
+            </Button>
           </div>
           <TableRoot>
             <TableCaption>{data()?.sessions.length} Session(s)</TableCaption>
@@ -127,43 +155,27 @@ export function Profile() {
             </TableHeader>
             <TableBody>
               <For each={data()?.sessions}>
-                {
-                  (session) => {
-                    const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
-                    const revokeMySession = useAction(actionRevokeMySession)
-
-                    return (
-                      <TableRow>
-                        <TableCell>
-                          <Show when={session.active} fallback={<div class="mx-auto h-4 w-4 rounded-full bg-gray-500" title="Inactive" />}>
-                            <div class="mx-auto h-4 w-4 rounded-full bg-green-500" title="Active" />
-                          </Show>
-                        </TableCell>
-                        <TableCell>{session.userAgent}</TableCell>
-                        <TableCell>{session.ip}</TableCell>
-                        <TableCell>{session.lastIp}</TableCell>
-                        <TableCell>{formatDate(parseDate(session.lastUsedAtTime))}</TableCell>
-                        <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
-                        <TableCell class="py-0">
-                          <Show when={!session.current} fallback={
-                            <Badge>Current</Badge>
-                          }>
-                            <ConfirmButton
-                              message="Are you sure you wish to revoke this session?"
-                              disabled={revokeMySessionSubmission.pending}
-                              onYes={() => revokeMySession({ sessionId: session.id })}
-                              asChild
-                            >
-                              <As component={Button} variant="destructive" size="sm">
-                                Revoke
-                              </As>
-                            </ConfirmButton>
-                          </Show>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  }
-                }
+                {(session) => (
+                  <TableRow>
+                    <TableCell>
+                      <Show when={session.active} fallback={<div class="mx-auto h-4 w-4 rounded-full bg-gray-500" title="Inactive" />}>
+                        <div class="mx-auto h-4 w-4 rounded-full bg-green-500" title="Active" />
+                      </Show>
+                    </TableCell>
+                    <TableCell>{session.userAgent}</TableCell>
+                    <TableCell>{session.ip}</TableCell>
+                    <TableCell>{session.lastIp}</TableCell>
+                    <TableCell>{formatDate(parseDate(session.lastUsedAtTime))}</TableCell>
+                    <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
+                    <TableCell class="py-0">
+                      <Show when={!session.current} fallback={<Badge>Current</Badge>}>
+                        <Button variant="destructive" size="sm" onClick={() => setRevokeMySessionsDialog(session.id)}>
+                          Revoke
+                        </Button>
+                      </Show>
+                    </TableCell>
+                  </TableRow>
+                )}
               </For>
             </TableBody>
           </TableRoot>

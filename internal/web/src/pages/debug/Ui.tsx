@@ -20,7 +20,6 @@ import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
-import { ConfirmButton } from "~/ui/Confirm";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
 import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine } from "solid-icons/ri";
@@ -245,9 +244,6 @@ export function Ui() {
         </TableBody>
       </TableRoot>
       <Button onClick={showToast}>Toast</Button>
-      <ConfirmButton message="Are you sure?">
-        Confirm Button
-      </ConfirmButton>
       <PaginationRoot
         count={10}
         itemComponent={props => (

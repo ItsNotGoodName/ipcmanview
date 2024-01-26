@@ -4,7 +4,7 @@ import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
 import { RpcError } from "@protobuf-ts/runtime-rpc";
-import { FormError } from "@modular-forms/solid";
+import { FieldValues, FormError, FormStore, PartialValues, reset } from "@modular-forms/solid";
 import { Order, Sort } from "~/twirp/rpc";
 import { createStore } from "solid-js/store";
 
@@ -14,9 +14,9 @@ export function cn(...inputs: ClassValue[]) {
 
 export function createLoading(fn: () => Promise<void>): [Accessor<boolean>, () => Promise<void>] {
   const [loading, setLoading] = createSignal(false)
-  return [loading, () => {
+  return [loading, async () => {
     if (loading()) {
-      return Promise.resolve()
+      return
     }
     setLoading(true)
     return fn().finally(() => setLoading(false))
@@ -48,7 +48,7 @@ export type PageProps<T> = {
   params: Partial<T>
 }
 
-export const paginateOptions = [10, 25, 50, 100]
+export const defaultPerPageOptions = [10, 25, 50, 100]
 
 export function parseOrder(s?: string): Order {
   if (s == "desc")
@@ -66,7 +66,7 @@ export function encodeOrder(o: Order): string {
   return ""
 }
 
-export function nextSort(sort?: Sort, field?: string): { field?: string, order: Order } {
+export function toggleSortField(sort?: Sort, field?: string): { field?: string, order: Order } {
   if (field == sort?.field) {
     const order = ((sort?.order ?? Order.ORDER_UNSPECIFIED) + 1) % 3
 
@@ -124,3 +124,12 @@ export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelecti
   }
 }
 
+export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined): boolean {
+  if (form.submitted || form.dirty) {
+    return false
+  }
+
+  reset(form, { initialValues: data })
+
+  return false
+}
