@@ -4,6 +4,7 @@ import { ParentProps } from "solid-js"
 import { Order, PagePaginationResult, Sort } from "~/twirp/rpc"
 import { cn } from "~/lib/utils"
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select"
+import { TableCell } from "~/ui/Table"
 
 function SortButton(props: ParentProps<{ onClick: (name: string) => void, name: string, sort?: Sort }>) {
   return (
@@ -55,8 +56,19 @@ function PerPageSelect(props: { class?: string, perPage?: number, onChange: (val
   )
 }
 
+function LastTableCell(props: ParentProps) {
+  return (
+    <TableCell class="py-0">
+      <div class="flex justify-end gap-2">
+        {props.children}
+      </div>
+    </TableCell>
+  )
+}
+
 export const Crud = {
   SortButton,
   Metadata,
   PerPageSelect,
+  LastTableCell,
 }

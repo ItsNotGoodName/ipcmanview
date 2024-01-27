@@ -185,7 +185,11 @@ export function Root(props: ParentProps) {
   const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
 
   return (
-    <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+    <ErrorBoundary fallback={(e: Error) =>
+      <div class="p-4">
+        <PageError error={e} />
+      </div>
+    }>
       <Suspense fallback={<PageLoading class="pt-10" />}>
         <Portal>
           <ToastRegion class={session()?.valid ? "top-12 sm:top-12" : ""}>

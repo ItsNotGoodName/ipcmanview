@@ -168,6 +168,17 @@ SET
 WHERE
   id = ? RETURNING id;
 
+-- name: UpsertAdmin :one
+INSERT OR IGNORE INTO
+  admins (user_id, created_at)
+VALUES
+  (?, ?) RETURNING user_id;
+
+-- name: DeleteAdmin :exec
+DELETE FROM admins
+WHERE
+  user_id = ?;
+
 -- name: createDahuaDevice :one
 INSERT INTO
   dahua_devices (

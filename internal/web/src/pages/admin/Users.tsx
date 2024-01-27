@@ -1,9 +1,9 @@
 import { CheckboxControl, CheckboxRoot } from "~/ui/Checkbox";
-import { createAsync, useNavigate, useSearchParams, } from "@solidjs/router";
+import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission, } from "@solidjs/router";
 import { ErrorBoundary, For, Show, Suspense, } from "solid-js";
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, RiUserFacesAdminLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
-import { createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { Skeleton } from "~/ui/Skeleton";
@@ -14,6 +14,20 @@ import { LayoutNormal } from "~/ui/Layout";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
 import { getSession } from "~/providers/session";
 import { Crud } from "~/components/Crud";
+import { useClient } from "~/providers/client";
+import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
+
+const actionSetUserDisable = action((input: SetUserDisableReq) => useClient()
+  .admin.setUserDisable(input)
+  .then(() => revalidate(getAdminUsersPage.key))
+  .catch(catchAsToast)
+)
+
+const actionSetUserAdmin = action((input: SetUserAdminReq) => useClient()
+  .admin.setUserAdmin(input)
+  .then(() => revalidate(getAdminUsersPage.key))
+  .catch(catchAsToast)
+)
 
 export function AdminUsers() {
   const session = createAsync(getSession)
@@ -35,6 +49,15 @@ export function AdminUsers() {
   // List
   const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = createToggleSortField(() => data()?.sort)
+
+  // Disable/Enable
+  const setUserDisableSubmission = useSubmission(actionSetUserDisable)
+  const setUserDisable = useAction(actionSetUserDisable)
+  const setUserDisableByRowSelector = (disable: boolean) => setUserDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+    .then(() => rowSelection.setAll(false))
+
+  const setUserAdminSubmission = useSubmission(actionSetUserAdmin)
+  const setUserAdmin = useAction(actionSetUserAdmin)
 
   return (
     <LayoutNormal>
@@ -89,7 +112,7 @@ export function AdminUsers() {
                     Username
                   </Crud.SortButton>
                 </TableHead>
-                <TableHead class="w-full">
+                <TableHead>
                   <Crud.SortButton
                     name="email"
                     onClick={toggleSort}
@@ -120,11 +143,13 @@ export function AdminUsers() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             disabled={rowSelection.selections().length == 0}
+                            onClick={() => setUserDisableByRowSelector(false)}
                           >
                             Enable
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             disabled={rowSelection.selections().length == 0}
+                            onClick={() => setUserDisableByRowSelector(true)}
                           >
                             Disable
                           </DropdownMenuItem>
@@ -145,6 +170,8 @@ export function AdminUsers() {
               <For each={data()?.items}>
                 {(item, index) => {
                   const onClick = () => navigate(`./${item.id}`)
+                  const toggleUserDisable = () => setUserDisable({ items: [{ id: item.id, disable: !item.disabled }] })
+                  const toggleUserAdmin = () => setUserAdmin({ id: item.id, admin: !item.admin })
 
                   return (
                     <TableRow>
@@ -153,61 +180,67 @@ export function AdminUsers() {
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>
-                      <TableCell onClick={onClick} class="cursor-pointer select-none">{item.username}</TableCell>
-                      <TableCell onClick={onClick} class="cursor-pointer select-none">{item.email}</TableCell>
-                      <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(item.createdAtTime))}</TableCell>
-                      <TableCell class="py-0">
-                        <div class="flex justify-end gap-2">
-                          <Show when={item.admin}>
-                            <TooltipRoot>
-                              <TooltipTrigger class="p-1">
-                                <RiUserFacesAdminLine class="h-5 w-5" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                Admin
-                              </TooltipContent>
-                            </TooltipRoot>
-                          </Show>
-                          <Show when={item.disabled}>
-                            <TooltipRoot>
-                              <TooltipTrigger class="p-1">
-                                <RiSystemLockLine class="h-5 w-5" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                Disabled since {formatDate(parseDate(item.disabledAtTime))}
-                              </TooltipContent>
-                            </TooltipRoot>
-                          </Show>
-                          <DropdownMenuRoot placement="bottom-end">
-                            <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                              <RiSystemMore2Line class="h-5 w-5" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuPortal>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem>
-                                  Edit
+                      <TableCell class="cursor-pointer select-none" onClick={onClick} title={item.username}>{item.username}</TableCell>
+                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.email}</TableCell>
+                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
+                      <Crud.LastTableCell>
+                        <Show when={item.admin}>
+                          <TooltipRoot>
+                            <TooltipTrigger class="p-1">
+                              <RiUserFacesAdminLine class="h-5 w-5" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Admin
+                            </TooltipContent>
+                          </TooltipRoot>
+                        </Show>
+                        <Show when={item.disabled}>
+                          <TooltipRoot>
+                            <TooltipTrigger class="p-1">
+                              <RiSystemLockLine class="h-5 w-5" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Disabled since {formatDate(parseDate(item.disabledAtTime))}
+                            </TooltipContent>
+                          </TooltipRoot>
+                        </Show>
+                        <DropdownMenuRoot placement="bottom-end">
+                          <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+                            <RiSystemMore2Line class="h-5 w-5" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem>
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem>
+                                Reset password
+                              </DropdownMenuItem>
+                              <Show when={item.id != BigInt(session()?.user_id || 0)}>
+                                <DropdownMenuItem disabled={setUserDisableSubmission.pending} onSelect={toggleUserDisable}>
+                                  <Show when={item.disabled} fallback={<>Disable</>}>
+                                    Enable
+                                  </Show>
                                 </DropdownMenuItem>
-                                <Show when={item.id != BigInt(session()?.user_id || 0)}>
-                                  <DropdownMenuItem>
-                                    <Show when={item.disabled} fallback={<>Disable</>}>
-                                      Enable
-                                    </Show>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    <Show when={!item.admin} fallback={<>Demote</>}>
-                                      Promote
-                                    </Show>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    Delete
-                                  </DropdownMenuItem>
-                                </Show>
-                                <DropdownMenuArrow />
-                              </DropdownMenuContent>
-                            </DropdownMenuPortal>
-                          </DropdownMenuRoot>
-                        </div>
-                      </TableCell>
+                                <DropdownMenuItem
+                                  disabled={setUserAdminSubmission.pending}
+                                  onClick={toggleUserAdmin}
+                                >
+                                  <Show when={!item.admin} fallback={<>Demote</>}>
+                                    Promote
+                                  </Show>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </Show>
+                              <DropdownMenuArrow />
+                            </DropdownMenuContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuRoot>
+                      </Crud.LastTableCell>
                     </TableRow>
                   )
                 }}

@@ -130,15 +130,11 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 	for _, item := range req.Items {
-		if item.Id == authSession.UserID {
-			return nil, NewError(nil, "Cannot modify current user.").InvalidArgument("item")
-		}
-	}
-
-	for _, item := range req.Items {
-		err := auth.UpdateUserDisable(ctx, a.db, item.Id, item.Disable)
-		if err != nil {
-			return nil, check(err)
+		if item.Id != authSession.UserID {
+			err := auth.UpdateUserDisable(ctx, a.db, item.Id, item.Disable)
+			if err != nil {
+				return nil, check(err)
+			}
 		}
 	}
 
@@ -157,6 +153,11 @@ func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*em
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+// ResetUserPassword implements rpc.Admin.
+func (*Admin) ResetUserPassword(context.Context, *rpc.ResetUserPasswordReq) (*emptypb.Empty, error) {
+	return nil, errNotImplemented
 }
 
 // ---------- Group

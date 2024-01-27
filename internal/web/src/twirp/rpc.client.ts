@@ -15,6 +15,7 @@ import type { GetGroupResp } from "./rpc";
 import type { GetGroupReq } from "./rpc";
 import type { CreateGroupResp } from "./rpc";
 import type { CreateGroupReq } from "./rpc";
+import type { ResetUserPasswordReq } from "./rpc";
 import type { SetUserAdminReq } from "./rpc";
 import type { SetUserDisableReq } from "./rpc";
 import type { GetAdminDevicesPageResp } from "./rpc";
@@ -245,6 +246,10 @@ export interface IAdminClient {
      */
     setUserAdmin(input: SetUserAdminReq, options?: RpcOptions): UnaryCall<SetUserAdminReq, Empty>;
     /**
+     * @generated from protobuf rpc: ResetUserPassword(ResetUserPasswordReq) returns (google.protobuf.Empty);
+     */
+    resetUserPassword(input: ResetUserPasswordReq, options?: RpcOptions): UnaryCall<ResetUserPasswordReq, Empty>;
+    /**
      * Group
      *
      * @generated from protobuf rpc: CreateGroup(CreateGroupReq) returns (CreateGroupResp);
@@ -343,40 +348,47 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<SetUserAdminReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
+     * @generated from protobuf rpc: ResetUserPassword(ResetUserPasswordReq) returns (google.protobuf.Empty);
+     */
+    resetUserPassword(input: ResetUserPasswordReq, options?: RpcOptions): UnaryCall<ResetUserPasswordReq, Empty> {
+        const method = this.methods[6], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ResetUserPasswordReq, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
      * Group
      *
      * @generated from protobuf rpc: CreateGroup(CreateGroupReq) returns (CreateGroupResp);
      */
     createGroup(input: CreateGroupReq, options?: RpcOptions): UnaryCall<CreateGroupReq, CreateGroupResp> {
-        const method = this.methods[6], opt = this._transport.mergeOptions(options);
+        const method = this.methods[7], opt = this._transport.mergeOptions(options);
         return stackIntercept<CreateGroupReq, CreateGroupResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: GetGroup(GetGroupReq) returns (GetGroupResp);
      */
     getGroup(input: GetGroupReq, options?: RpcOptions): UnaryCall<GetGroupReq, GetGroupResp> {
-        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        const method = this.methods[8], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetGroupReq, GetGroupResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
      */
     updateGroup(input: UpdateGroupReq, options?: RpcOptions): UnaryCall<UpdateGroupReq, Empty> {
-        const method = this.methods[8], opt = this._transport.mergeOptions(options);
+        const method = this.methods[9], opt = this._transport.mergeOptions(options);
         return stackIntercept<UpdateGroupReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
      */
     deleteGroup(input: DeleteGroupReq, options?: RpcOptions): UnaryCall<DeleteGroupReq, Empty> {
-        const method = this.methods[9], opt = this._transport.mergeOptions(options);
+        const method = this.methods[10], opt = this._transport.mergeOptions(options);
         return stackIntercept<DeleteGroupReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: SetGroupDisable(SetGroupDisableReq) returns (google.protobuf.Empty);
      */
     setGroupDisable(input: SetGroupDisableReq, options?: RpcOptions): UnaryCall<SetGroupDisableReq, Empty> {
-        const method = this.methods[10], opt = this._transport.mergeOptions(options);
+        const method = this.methods[11], opt = this._transport.mergeOptions(options);
         return stackIntercept<SetGroupDisableReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
@@ -385,28 +397,28 @@ export class AdminClient implements IAdminClient, ServiceInfo {
      * @generated from protobuf rpc: CreateDevice(CreateDeviceReq) returns (CreateDeviceResp);
      */
     createDevice(input: CreateDeviceReq, options?: RpcOptions): UnaryCall<CreateDeviceReq, CreateDeviceResp> {
-        const method = this.methods[11], opt = this._transport.mergeOptions(options);
+        const method = this.methods[12], opt = this._transport.mergeOptions(options);
         return stackIntercept<CreateDeviceReq, CreateDeviceResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: GetDevice(GetDeviceReq) returns (GetDeviceResp);
      */
     getDevice(input: GetDeviceReq, options?: RpcOptions): UnaryCall<GetDeviceReq, GetDeviceResp> {
-        const method = this.methods[12], opt = this._transport.mergeOptions(options);
+        const method = this.methods[13], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetDeviceReq, GetDeviceResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
      */
     updateDevice(input: UpdateDeviceReq, options?: RpcOptions): UnaryCall<UpdateDeviceReq, Empty> {
-        const method = this.methods[13], opt = this._transport.mergeOptions(options);
+        const method = this.methods[14], opt = this._transport.mergeOptions(options);
         return stackIntercept<UpdateDeviceReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: DeleteDevice(DeleteDeviceReq) returns (google.protobuf.Empty);
      */
     deleteDevice(input: DeleteDeviceReq, options?: RpcOptions): UnaryCall<DeleteDeviceReq, Empty> {
-        const method = this.methods[14], opt = this._transport.mergeOptions(options);
+        const method = this.methods[15], opt = this._transport.mergeOptions(options);
         return stackIntercept<DeleteDeviceReq, Empty>("unary", this._transport, method, opt, input);
     }
 }

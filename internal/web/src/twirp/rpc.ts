@@ -550,6 +550,19 @@ export interface SetUserAdminReq {
      */
     admin: boolean;
 }
+/**
+ * @generated from protobuf message ResetUserPasswordReq
+ */
+export interface ResetUserPasswordReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string password = 2;
+     */
+    password: string;
+}
 // Group
 
 /**
@@ -1215,6 +1228,19 @@ class SetUserAdminReq$Type extends MessageType<SetUserAdminReq> {
  */
 export const SetUserAdminReq = new SetUserAdminReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class ResetUserPasswordReq$Type extends MessageType<ResetUserPasswordReq> {
+    constructor() {
+        super("ResetUserPasswordReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ResetUserPasswordReq
+ */
+export const ResetUserPasswordReq = new ResetUserPasswordReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class GroupModel$Type extends MessageType<GroupModel> {
     constructor() {
         super("GroupModel", [
@@ -1451,6 +1477,7 @@ export const Admin = new ServiceType("Admin", [
     { name: "GetAdminDevicesPage", options: {}, I: GetAdminDevicesPageReq, O: GetAdminDevicesPageResp },
     { name: "SetUserDisable", options: {}, I: SetUserDisableReq, O: Empty },
     { name: "SetUserAdmin", options: {}, I: SetUserAdminReq, O: Empty },
+    { name: "ResetUserPassword", options: {}, I: ResetUserPasswordReq, O: Empty },
     { name: "CreateGroup", options: {}, I: CreateGroupReq, O: CreateGroupResp },
     { name: "GetGroup", options: {}, I: GetGroupReq, O: GetGroupResp },
     { name: "UpdateGroup", options: {}, I: UpdateGroupReq, O: Empty },

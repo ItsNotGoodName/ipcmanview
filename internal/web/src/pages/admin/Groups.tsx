@@ -256,46 +256,42 @@ export function AdminGroups() {
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>
-                      <TableCell onClick={onClick} class="max-w-48 cursor-pointer select-none" title={item.name}>
-                        <div class="truncate">{item.name}</div>
-                      </TableCell>
-                      <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{item.userCount.toString()}</TableCell>
-                      <TableCell onClick={onClick} class="text-nowrap cursor-pointer select-none whitespace-nowrap">{formatDate(parseDate(item.createdAtTime))}</TableCell>
-                      <TableCell class="py-0">
-                        <div class="flex justify-end gap-2">
-                          <Show when={item.disabled}>
-                            <TooltipRoot>
-                              <TooltipTrigger class="p-1">
-                                <RiSystemLockLine class="h-5 w-5" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                Disabled since {formatDate(parseDate(item.disabledAtTime))}
-                              </TooltipContent>
-                            </TooltipRoot>
-                          </Show>
-                          <DropdownMenuRoot placement="bottom-end">
-                            <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                              <RiSystemMore2Line class="h-5 w-5" />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuPortal>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={() => setUpdateGroupFormDialog(item.id)}>
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem disabled={setGroupDisableSubmission.pending} onSelect={toggleGroupDisable}>
-                                  <Show when={item.disabled} fallback={<>Disable</>}>
-                                    Enable
-                                  </Show>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => setDeleteGroupSelection(item)}>
-                                  Delete
-                                </DropdownMenuItem>
-                                <DropdownMenuArrow />
-                              </DropdownMenuContent>
-                            </DropdownMenuPortal>
-                          </DropdownMenuRoot>
-                        </div>
-                      </TableCell>
+                      <TableCell class="cursor-pointer select-none" onClick={onClick} title={item.name}>{item.name}</TableCell>
+                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.userCount.toString()}</TableCell>
+                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
+                      <Crud.LastTableCell>
+                        <Show when={item.disabled}>
+                          <TooltipRoot>
+                            <TooltipTrigger class="p-1">
+                              <RiSystemLockLine class="h-5 w-5" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Disabled since {formatDate(parseDate(item.disabledAtTime))}
+                            </TooltipContent>
+                          </TooltipRoot>
+                        </Show>
+                        <DropdownMenuRoot placement="bottom-end">
+                          <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+                            <RiSystemMore2Line class="h-5 w-5" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuPortal>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onSelect={() => setUpdateGroupFormDialog(item.id)}>
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem disabled={setGroupDisableSubmission.pending} onSelect={toggleGroupDisable}>
+                                <Show when={item.disabled} fallback={<>Disable</>}>
+                                  Enable
+                                </Show>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => setDeleteGroupSelection(item)}>
+                                Delete
+                              </DropdownMenuItem>
+                              <DropdownMenuArrow />
+                            </DropdownMenuContent>
+                          </DropdownMenuPortal>
+                        </DropdownMenuRoot>
+                      </Crud.LastTableCell>
                     </TableRow>
                   )
                 }}

@@ -95,5 +95,12 @@ func UpdateUserDisable(ctx context.Context, db repo.DB, userID int64, disable bo
 }
 
 func UpdateUserAdmin(ctx context.Context, db repo.DB, userId int64, admin bool) error {
-	return nil
+	if admin {
+		_, err := db.UpsertAdmin(ctx, repo.UpsertAdminParams{
+			UserID:    userId,
+			CreatedAt: types.NewTime(time.Now()),
+		})
+		return err
+	}
+	return db.DeleteAdmin(ctx, userId)
 }

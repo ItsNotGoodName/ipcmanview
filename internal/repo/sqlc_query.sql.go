@@ -435,6 +435,17 @@ func (q *Queries) CreateUserSession(ctx context.Context, arg CreateUserSessionPa
 	return err
 }
 
+const deleteAdmin = `-- name: DeleteAdmin :exec
+DELETE FROM admins
+WHERE
+  user_id = ?
+`
+
+func (q *Queries) DeleteAdmin(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, deleteAdmin, userID)
+	return err
+}
+
 const deleteDahuaAferoFile = `-- name: DeleteDahuaAferoFile :exec
 DELETE FROM dahua_afero_files
 WHERE
@@ -2414,6 +2425,25 @@ type UpdateUserSessionParams struct {
 func (q *Queries) UpdateUserSession(ctx context.Context, arg UpdateUserSessionParams) error {
 	_, err := q.db.ExecContext(ctx, updateUserSession, arg.LastIp, arg.LastUsedAt, arg.Session)
 	return err
+}
+
+const upsertAdmin = `-- name: UpsertAdmin :one
+INSERT OR IGNORE INTO
+  admins (user_id, created_at)
+VALUES
+  (?, ?) RETURNING user_id
+`
+
+type UpsertAdminParams struct {
+	UserID    int64
+	CreatedAt types.Time
+}
+
+func (q *Queries) UpsertAdmin(ctx context.Context, arg UpsertAdminParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, upsertAdmin, arg.UserID, arg.CreatedAt)
+	var user_id int64
+	err := row.Scan(&user_id)
+	return user_id, err
 }
 
 const allocateDahuaSeed = `-- name: allocateDahuaSeed :exec
