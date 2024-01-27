@@ -8,7 +8,7 @@ import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm as setupForm, throwAsFormError } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
-import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
+import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { useClient } from "~/providers/client";
 import { createForm, required, reset } from "@modular-forms/solid";
@@ -23,6 +23,7 @@ import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { defaultPerPageOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { SetGroupDisableReq } from "~/twirp/rpc";
+import { Crud } from "~/components/Crud";
 
 const actionDeleteGroup = action((ids: bigint[]) => useClient()
   .admin.deleteGroup({ ids })
@@ -78,13 +79,6 @@ export function AdminGroups() {
   const setGroupDisable = useAction(actionSetGroupDisable)
   const setGroupDisableByRowSelector = (disable: boolean) => setGroupDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
     .then(() => rowSelection.setAll(false))
-  const setGroupDisableDisabled = (disable: boolean) => {
-    for (let i = 0; i < rowSelection.rows.length; i++) {
-      if (rowSelection.rows[i].checked && (disable != data()?.items[i].disabled))
-        return false;
-    }
-    return true
-  }
 
   return (
     <LayoutNormal>
@@ -200,31 +194,31 @@ export function AdminGroups() {
                   </CheckboxRoot>
                 </TableHead>
                 <TableHead>
-                  <TableSortButton
+                  <Crud.SortButton
                     name="name"
                     onClick={toggleSort}
                     sort={data()?.sort}
                   >
                     Name
-                  </TableSortButton>
+                  </Crud.SortButton>
                 </TableHead>
                 <TableHead>
-                  <TableSortButton
+                  <Crud.SortButton
                     name="userCount"
                     onClick={toggleSort}
                     sort={data()?.sort}
                   >
                     Users
-                  </TableSortButton>
+                  </Crud.SortButton>
                 </TableHead>
                 <TableHead>
-                  <TableSortButton
+                  <Crud.SortButton
                     name="createdAt"
                     onClick={toggleSort}
                     sort={data()?.sort}
                   >
                     Created At
-                  </TableSortButton>
+                  </Crud.SortButton>
                 </TableHead>
                 <TableHead>
                   <div class="flex items-center justify-end">
@@ -239,13 +233,13 @@ export function AdminGroups() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onSelect={() => setGroupDisableByRowSelector(true)}
-                            disabled={setGroupDisableDisabled(true)}
+                            disabled={rowSelection.selections().length == 0}
                           >
                             Disable
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onSelect={() => setGroupDisableByRowSelector(false)}
-                            disabled={setGroupDisableDisabled(false)}
+                            disabled={rowSelection.selections().length == 0}
                           >
                             Enable
                           </DropdownMenuItem>
@@ -322,7 +316,7 @@ export function AdminGroups() {
               </For>
             </TableBody>
             <TableCaption>
-              <TableMetadata pageResult={data()?.pageResult} />
+              <Crud.Metadata pageResult={data()?.pageResult} />
             </TableCaption>
           </TableRoot>
         </Suspense>

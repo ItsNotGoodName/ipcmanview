@@ -5,7 +5,7 @@ import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSy
 import { Button } from "~/ui/Button";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, } from "~/lib/utils";
-import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableMetadata, TableRoot, TableRow, TableSortButton } from "~/ui/Table";
+import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
@@ -15,6 +15,7 @@ import { defaultPerPageOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
 import { getSession } from "~/providers/session";
+import { Crud } from "~/components/Crud";
 
 export function AdminUsers() {
   const session = createAsync(getSession)
@@ -36,15 +37,6 @@ export function AdminUsers() {
   // List
   const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = createToggleSortField(() => data()?.sort)
-
-  // Disable/Enable
-  const setUserDisableDisabled = (disable: boolean) => {
-    for (let i = 0; i < rowSelection.rows.length; i++) {
-      if (rowSelection.rows[i].checked && (disable != data()?.items[i].disabled))
-        return false;
-    }
-    return true
-  }
 
   return (
     <LayoutNormal>
@@ -106,31 +98,31 @@ export function AdminUsers() {
                   </CheckboxRoot>
                 </TableHead>
                 <TableHead>
-                  <TableSortButton
+                  <Crud.SortButton
                     name="username"
                     onClick={toggleSort}
                     sort={data()?.sort}
                   >
                     Username
-                  </TableSortButton>
+                  </Crud.SortButton>
                 </TableHead>
                 <TableHead class="w-full">
-                  <TableSortButton
+                  <Crud.SortButton
                     name="email"
                     onClick={toggleSort}
                     sort={data()?.sort}
                   >
                     Email
-                  </TableSortButton>
+                  </Crud.SortButton>
                 </TableHead>
                 <TableHead>
-                  <TableSortButton
+                  <Crud.SortButton
                     name="createdAt"
                     onClick={toggleSort}
                     sort={data()?.sort}
                   >
                     Created At
-                  </TableSortButton>
+                  </Crud.SortButton>
                 </TableHead>
                 <TableHead>
                   <div class="flex items-center justify-end">
@@ -144,12 +136,12 @@ export function AdminUsers() {
                             Create
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            disabled={setUserDisableDisabled(false)}
+                            disabled={rowSelection.selections().length == 0}
                           >
                             Enable
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            disabled={setUserDisableDisabled(true)}
+                            disabled={rowSelection.selections().length == 0}
                           >
                             Disable
                           </DropdownMenuItem>
@@ -239,7 +231,7 @@ export function AdminUsers() {
               </For>
             </TableBody>
             <TableCaption>
-              <TableMetadata pageResult={data()?.pageResult} />
+              <Crud.Metadata pageResult={data()?.pageResult} />
             </TableCaption>
           </TableRoot>
         </Suspense>
