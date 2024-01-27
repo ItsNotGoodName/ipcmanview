@@ -15,19 +15,22 @@ import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuP
 import { getSession } from "~/providers/session";
 import { Crud } from "~/components/Crud";
 import { useClient } from "~/providers/client";
-import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
+import { DeleteUserReq, SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
 
 const actionSetUserDisable = action((input: SetUserDisableReq) => useClient()
   .admin.setUserDisable(input)
   .then(() => revalidate(getAdminUsersPage.key))
-  .catch(catchAsToast)
-)
+  .catch(catchAsToast))
 
 const actionSetUserAdmin = action((input: SetUserAdminReq) => useClient()
   .admin.setUserAdmin(input)
   .then(() => revalidate(getAdminUsersPage.key))
-  .catch(catchAsToast)
-)
+  .catch(catchAsToast))
+
+const actionDeleteUser = action((input: DeleteUserReq) => useClient()
+  .admin.deleteUser(input)
+  .then(() => revalidate(getAdminUsersPage.key))
+  .catch(catchAsToast))
 
 export function AdminUsers() {
   const session = createAsync(getSession)
@@ -50,14 +53,21 @@ export function AdminUsers() {
   const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = createToggleSortField(() => data()?.sort)
 
-  // Disable/Enable
+  // Toggle disable
   const setUserDisableSubmission = useSubmission(actionSetUserDisable)
   const setUserDisable = useAction(actionSetUserDisable)
-  const setUserDisableByRowSelector = (disable: boolean) => setUserDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+  const setUserDisableByRowSelection = (disable: boolean) => setUserDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
     .then(() => rowSelection.setAll(false))
 
+  // Toggle admin
   const setUserAdminSubmission = useSubmission(actionSetUserAdmin)
   const setUserAdmin = useAction(actionSetUserAdmin)
+
+  // Delete user
+  const deleteUserSubmission = useSubmission(actionDeleteUser)
+  const deleteUserAction = useAction(actionDeleteUser)
+  const deleteUserByRowSelection = () => deleteUserAction({ ids: rowSelection.selections() })
+    .then(() => rowSelection.setAll(false))
 
   return (
     <LayoutNormal>
@@ -142,19 +152,20 @@ export function AdminUsers() {
                             Create
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0}
-                            onClick={() => setUserDisableByRowSelector(false)}
+                            disabled={rowSelection.selections().length == 0 || setUserDisableSubmission.pending}
+                            onClick={() => setUserDisableByRowSelection(false)}
                           >
                             Enable
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0}
-                            onClick={() => setUserDisableByRowSelector(true)}
+                            disabled={rowSelection.selections().length == 0 || setUserDisableSubmission.pending}
+                            onClick={() => setUserDisableByRowSelection(true)}
                           >
                             Disable
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0}
+                            disabled={rowSelection.selections().length == 0 || deleteUserSubmission.pending}
+                            onClick={deleteUserByRowSelection}
                           >
                             Delete
                           </DropdownMenuItem>
@@ -172,6 +183,7 @@ export function AdminUsers() {
                   const onClick = () => navigate(`./${item.id}`)
                   const toggleUserDisable = () => setUserDisable({ items: [{ id: item.id, disable: !item.disabled }] })
                   const toggleUserAdmin = () => setUserAdmin({ id: item.id, admin: !item.admin })
+                  const deleteUser = () => deleteUserAction({ ids: [item.id] })
 
                   return (
                     <TableRow>
@@ -241,7 +253,8 @@ export function AdminUsers() {
                                   </Show>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-
+                                  disabled={deleteUserSubmission.pending}
+                                  onClick={deleteUser}
                                 >
                                   Delete
                                 </DropdownMenuItem>

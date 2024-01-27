@@ -22,7 +22,7 @@ import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationItems,
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
-import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine } from "solid-icons/ri";
+import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine, RiSystemAlertLine } from "solid-icons/ri";
 import { AvatarFallback, AvatarImage, AvatarRoot } from "~/ui/Avatar";
 import { ProgressFill, ProgressLabel, ProgressRoot, ProgressTrack, ProgressValueLabel } from "~/ui/Progress";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from "~/ui/AlertDialog";
@@ -58,6 +58,11 @@ export function Ui() {
       </Button>
       <AlertRoot>
         <RiMapRocketLine class="h-4 w-4" />
+        <AlertTitle>Alert Title</AlertTitle>
+        <AlertDescription>Alert Description</AlertDescription>
+      </AlertRoot>
+      <AlertRoot variant="destructive">
+        <RiSystemAlertLine class="h-4 w-4" />
         <AlertTitle>Alert Title</AlertTitle>
         <AlertDescription>Alert Description</AlertDescription>
       </AlertRoot>

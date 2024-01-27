@@ -140,6 +140,7 @@ service Admin {
   rpc GetAdminDevicesPage(GetAdminDevicesPageReq) returns (GetAdminDevicesPageResp);
 
   // User
+  rpc DeleteUser(DeleteUserReq) returns (google.protobuf.Empty);
   rpc SetUserDisable(SetUserDisableReq) returns (google.protobuf.Empty);
   rpc SetUserAdmin(SetUserAdminReq) returns (google.protobuf.Empty);
   rpc ResetUserPassword(ResetUserPasswordReq) returns (google.protobuf.Empty);
@@ -149,7 +150,6 @@ service Admin {
   rpc GetGroup(GetGroupReq) returns (GetGroupResp);
   rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
   rpc DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
-
   rpc SetGroupDisable(SetGroupDisableReq) returns (google.protobuf.Empty);
 
   // Device
@@ -157,6 +157,7 @@ service Admin {
   rpc GetDevice(GetDeviceReq) returns (GetDeviceResp);
   rpc UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
   rpc DeleteDevice(DeleteDeviceReq) returns (google.protobuf.Empty);
+  rpc SetDeviceDisable(SetDeviceDisableReq) returns (google.protobuf.Empty);
 }
 
 message GetAdminGroupsPageReq {
@@ -239,6 +240,10 @@ message GetAdminDevicesPageResp {
   repeated Device items = 1;
   PagePaginationResult pageResult = 2;
   Sort sort = 3;
+}
+
+message DeleteUserReq {
+  repeated int64 ids = 1;
 }
 
 message SetUserDisableReq {
@@ -335,4 +340,12 @@ message UpdateDeviceReq {
 
 message DeleteDeviceReq {
   int64 id = 1;
+}
+
+message SetDeviceDisableReq {
+  message Item {
+    int64 id = 1;
+    bool disable = 2;
+  }
+  repeated Item items = 1;
 }

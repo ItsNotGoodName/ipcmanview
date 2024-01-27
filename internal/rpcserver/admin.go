@@ -45,6 +45,10 @@ func (*Admin) DeleteDevice(context.Context, *rpc.DeleteDeviceReq) (*emptypb.Empt
 	return nil, errNotImplemented
 }
 
+func (*Admin) SetDeviceDisable(context.Context, *rpc.SetDeviceDisableReq) (*emptypb.Empty, error) {
+	return nil, errNotImplemented
+}
+
 // ---------- User
 
 func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPageReq) (*rpc.GetAdminUsersPageResp, error) {
@@ -125,6 +129,10 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 		Sort:       req.Sort,
 	}, nil
 
+}
+
+func (*Admin) DeleteUser(context.Context, *rpc.DeleteUserReq) (*emptypb.Empty, error) {
+	return nil, errNotImplemented
 }
 
 func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) (*emptypb.Empty, error) {

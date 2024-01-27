@@ -68,14 +68,14 @@ export function AdminGroups() {
   const deleteGroupBySelection = () => deleteGroupAction([deleteGroupSelection()!.id])
     .then(() => setDeleteGroupSelection(undefined))
   // Multiple
-  const [deleteGroupRowSelector, setDeleteGroupRowSelector] = createSignal(false)
-  const deleteGroupByRowSelector = () => deleteGroupAction(rowSelection.selections())
-    .then(() => setDeleteGroupRowSelector(false))
+  const [deleteGroupRowSelection, setDeleteGroupRowSelection] = createSignal(false)
+  const deleteGroupByRowSelection = () => deleteGroupAction(rowSelection.selections())
+    .then(() => setDeleteGroupRowSelection(false))
 
   // Disable/Enable
   const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
   const setGroupDisable = useAction(actionSetGroupDisable)
-  const setGroupDisableByRowSelector = (disable: boolean) => setGroupDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+  const setGroupDisableByRowSelection = (disable: boolean) => setGroupDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
     .then(() => rowSelection.setAll(false))
 
   return (
@@ -120,14 +120,14 @@ export function AdminGroups() {
         </AlertDialogContent>
       </AlertDialogRoot>
 
-      <AlertDialogRoot open={deleteGroupRowSelector()} onOpenChange={setDeleteGroupRowSelector}>
+      <AlertDialogRoot open={deleteGroupRowSelection()} onOpenChange={setDeleteGroupRowSelection}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} groups?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroupByRowSelector}>
+            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroupByRowSelection}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -215,19 +215,19 @@ export function AdminGroups() {
                             Create
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onSelect={() => setGroupDisableByRowSelector(true)}
+                            onSelect={() => setGroupDisableByRowSelection(true)}
                             disabled={rowSelection.selections().length == 0}
                           >
                             Disable
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onSelect={() => setGroupDisableByRowSelector(false)}
+                            onSelect={() => setGroupDisableByRowSelection(false)}
                             disabled={rowSelection.selections().length == 0}
                           >
                             Enable
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onSelect={() => setDeleteGroupRowSelector(true)}
+                            onSelect={() => setDeleteGroupRowSelection(true)}
                             disabled={rowSelection.selections().length == 0}
                           >
                             Delete

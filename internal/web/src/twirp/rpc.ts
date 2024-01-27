@@ -516,6 +516,15 @@ export interface GetAdminDevicesPageResp_Device {
     createdAtTime?: Timestamp;
 }
 /**
+ * @generated from protobuf message DeleteUserReq
+ */
+export interface DeleteUserReq {
+    /**
+     * @generated from protobuf field: repeated int64 ids = 1;
+     */
+    ids: bigint[];
+}
+/**
  * @generated from protobuf message SetUserDisableReq
  */
 export interface SetUserDisableReq {
@@ -754,6 +763,28 @@ export interface DeleteDeviceReq {
      * @generated from protobuf field: int64 id = 1;
      */
     id: bigint;
+}
+/**
+ * @generated from protobuf message SetDeviceDisableReq
+ */
+export interface SetDeviceDisableReq {
+    /**
+     * @generated from protobuf field: repeated SetDeviceDisableReq.Item items = 1;
+     */
+    items: SetDeviceDisableReq_Item[];
+}
+/**
+ * @generated from protobuf message SetDeviceDisableReq.Item
+ */
+export interface SetDeviceDisableReq_Item {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: bool disable = 2;
+     */
+    disable: boolean;
 }
 /**
  * @generated from protobuf enum Order
@@ -1190,6 +1221,18 @@ class GetAdminDevicesPageResp_Device$Type extends MessageType<GetAdminDevicesPag
  */
 export const GetAdminDevicesPageResp_Device = new GetAdminDevicesPageResp_Device$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class DeleteUserReq$Type extends MessageType<DeleteUserReq> {
+    constructor() {
+        super("DeleteUserReq", [
+            { no: 1, name: "ids", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message DeleteUserReq
+ */
+export const DeleteUserReq = new DeleteUserReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class SetUserDisableReq$Type extends MessageType<SetUserDisableReq> {
     constructor() {
         super("SetUserDisableReq", [
@@ -1443,6 +1486,31 @@ class DeleteDeviceReq$Type extends MessageType<DeleteDeviceReq> {
  * @generated MessageType for protobuf message DeleteDeviceReq
  */
 export const DeleteDeviceReq = new DeleteDeviceReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SetDeviceDisableReq$Type extends MessageType<SetDeviceDisableReq> {
+    constructor() {
+        super("SetDeviceDisableReq", [
+            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => SetDeviceDisableReq_Item }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message SetDeviceDisableReq
+ */
+export const SetDeviceDisableReq = new SetDeviceDisableReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class SetDeviceDisableReq_Item$Type extends MessageType<SetDeviceDisableReq_Item> {
+    constructor() {
+        super("SetDeviceDisableReq.Item", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "disable", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message SetDeviceDisableReq.Item
+ */
+export const SetDeviceDisableReq_Item = new SetDeviceDisableReq_Item$Type();
 /**
  * @generated ServiceType for protobuf service HelloWorld
  */
@@ -1475,6 +1543,7 @@ export const Admin = new ServiceType("Admin", [
     { name: "GetAdminGroupIDPage", options: {}, I: GetAdminGroupIDPageReq, O: GetAdminGroupIDPageResp },
     { name: "GetAdminUsersPage", options: {}, I: GetAdminUsersPageReq, O: GetAdminUsersPageResp },
     { name: "GetAdminDevicesPage", options: {}, I: GetAdminDevicesPageReq, O: GetAdminDevicesPageResp },
+    { name: "DeleteUser", options: {}, I: DeleteUserReq, O: Empty },
     { name: "SetUserDisable", options: {}, I: SetUserDisableReq, O: Empty },
     { name: "SetUserAdmin", options: {}, I: SetUserAdminReq, O: Empty },
     { name: "ResetUserPassword", options: {}, I: ResetUserPasswordReq, O: Empty },
@@ -1486,5 +1555,6 @@ export const Admin = new ServiceType("Admin", [
     { name: "CreateDevice", options: {}, I: CreateDeviceReq, O: CreateDeviceResp },
     { name: "GetDevice", options: {}, I: GetDeviceReq, O: GetDeviceResp },
     { name: "UpdateDevice", options: {}, I: UpdateDeviceReq, O: Empty },
-    { name: "DeleteDevice", options: {}, I: DeleteDeviceReq, O: Empty }
+    { name: "DeleteDevice", options: {}, I: DeleteDeviceReq, O: Empty },
+    { name: "SetDeviceDisable", options: {}, I: SetDeviceDisableReq, O: Empty }
 ]);
