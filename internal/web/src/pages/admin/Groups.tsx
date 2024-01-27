@@ -215,20 +215,20 @@ export function AdminGroups() {
                             Create
                           </DropdownMenuItem>
                           <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
                             onSelect={() => setGroupDisableByRowSelection(true)}
-                            disabled={rowSelection.selections().length == 0}
                           >
                             Disable
                           </DropdownMenuItem>
                           <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
                             onSelect={() => setGroupDisableByRowSelection(false)}
-                            disabled={rowSelection.selections().length == 0}
                           >
                             Enable
                           </DropdownMenuItem>
                           <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0 || deleteGroupSubmission.pending}
                             onSelect={() => setDeleteGroupRowSelection(true)}
-                            disabled={rowSelection.selections().length == 0}
                           >
                             Delete
                           </DropdownMenuItem>
@@ -279,12 +279,18 @@ export function AdminGroups() {
                               <DropdownMenuItem onSelect={() => setUpdateGroupFormDialog(item.id)}>
                                 Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem disabled={setGroupDisableSubmission.pending} onSelect={toggleGroupDisable}>
+                              <DropdownMenuItem
+                                disabled={setGroupDisableSubmission.pending}
+                                onSelect={toggleGroupDisable}
+                              >
                                 <Show when={item.disabled} fallback={<>Disable</>}>
                                   Enable
                                 </Show>
                               </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => setDeleteGroupSelection(item)}>
+                              <DropdownMenuItem
+                                disabled={deleteGroupSubmission.pending}
+                                onSelect={() => setDeleteGroupSelection(item)}
+                              >
                                 Delete
                               </DropdownMenuItem>
                               <DropdownMenuArrow />

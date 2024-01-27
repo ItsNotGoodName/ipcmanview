@@ -1,6 +1,6 @@
 import { CheckboxControl, CheckboxRoot } from "~/ui/Checkbox";
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission, } from "@solidjs/router";
-import { ErrorBoundary, For, Show, Suspense, } from "solid-js";
+import { ErrorBoundary, For, Show, Suspense, createSignal, } from "solid-js";
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiDesignFocus2Line, RiSystemLockLine, RiSystemMore2Line, RiUserFacesAdminLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, } from "~/lib/utils";
@@ -15,7 +15,8 @@ import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuP
 import { getSession } from "~/providers/session";
 import { Crud } from "~/components/Crud";
 import { useClient } from "~/providers/client";
-import { DeleteUserReq, SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
+import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
 
 const actionSetUserDisable = action((input: SetUserDisableReq) => useClient()
   .admin.setUserDisable(input)
@@ -27,8 +28,8 @@ const actionSetUserAdmin = action((input: SetUserAdminReq) => useClient()
   .then(() => revalidate(getAdminUsersPage.key))
   .catch(catchAsToast))
 
-const actionDeleteUser = action((input: DeleteUserReq) => useClient()
-  .admin.deleteUser(input)
+const actionDeleteUser = action((ids: bigint[]) => useClient()
+  .admin.deleteUser({ ids })
   .then(() => revalidate(getAdminUsersPage.key))
   .catch(catchAsToast))
 
@@ -63,14 +64,49 @@ export function AdminUsers() {
   const setUserAdminSubmission = useSubmission(actionSetUserAdmin)
   const setUserAdmin = useAction(actionSetUserAdmin)
 
-  // Delete user
+  // Delete
   const deleteUserSubmission = useSubmission(actionDeleteUser)
   const deleteUserAction = useAction(actionDeleteUser)
-  const deleteUserByRowSelection = () => deleteUserAction({ ids: rowSelection.selections() })
-    .then(() => rowSelection.setAll(false))
+  // Single
+  const [deleteUserSelection, setDeleteUserSelection] = createSignal<{ username: string, id: bigint } | undefined>()
+  const deleteUserBySelection = () => deleteUserAction([deleteUserSelection()?.id || BigInt(0)])
+    .then(() => setDeleteUserSelection(undefined))
+  // Multiple
+  const [deleteUserRowSelection, setDeleteUserRowSelection] = createSignal(false)
+  const deleteUserByRowSelection = () => deleteUserAction(rowSelection.selections())
+    .then(() => setDeleteUserRowSelection(false))
 
   return (
     <LayoutNormal>
+
+      <AlertDialogRoot open={deleteUserSelection() != undefined} onOpenChange={() => setDeleteUserSelection(undefined)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you wish to delete {deleteUserSelection()?.username}?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={deleteUserSubmission.pending} onClick={deleteUserBySelection}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogRoot>
+
+      <AlertDialogRoot open={deleteUserRowSelection()} onOpenChange={setDeleteUserRowSelection}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} users?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={deleteUserSubmission.pending} onClick={deleteUserByRowSelection}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialogRoot>
+
       <div class="text-xl">Users</div>
       <Seperator />
 
@@ -165,7 +201,7 @@ export function AdminUsers() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             disabled={rowSelection.selections().length == 0 || deleteUserSubmission.pending}
-                            onClick={deleteUserByRowSelection}
+                            onClick={() => setDeleteUserRowSelection(true)}
                           >
                             Delete
                           </DropdownMenuItem>
@@ -183,7 +219,6 @@ export function AdminUsers() {
                   const onClick = () => navigate(`./${item.id}`)
                   const toggleUserDisable = () => setUserDisable({ items: [{ id: item.id, disable: !item.disabled }] })
                   const toggleUserAdmin = () => setUserAdmin({ id: item.id, admin: !item.admin })
-                  const deleteUser = () => deleteUserAction({ ids: [item.id] })
 
                   return (
                     <TableRow>
@@ -254,7 +289,7 @@ export function AdminUsers() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   disabled={deleteUserSubmission.pending}
-                                  onClick={deleteUser}
+                                  onClick={() => setDeleteUserSelection(item)}
                                 >
                                   Delete
                                 </DropdownMenuItem>
