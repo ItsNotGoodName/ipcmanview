@@ -1,7 +1,7 @@
 import { CheckboxControl, CheckboxRoot } from "~/ui/Checkbox";
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission, } from "@solidjs/router";
 import { ErrorBoundary, For, Show, Suspense, } from "solid-js";
-import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, RiUserFacesAdminLine, } from "solid-icons/ri";
+import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiDesignFocus2Line, RiSystemLockLine, RiSystemMore2Line, RiUserFacesAdminLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
@@ -180,13 +180,23 @@ export function AdminUsers() {
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick} title={item.username}>{item.username}</TableCell>
+                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.username}</TableCell>
                       <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.email}</TableCell>
                       <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
                       <Crud.LastTableCell>
+                        <Show when={item.id == BigInt(session()?.user_id || 0)}>
+                          <TooltipRoot>
+                            <TooltipTrigger>
+                              <RiDesignFocus2Line class="h-5 w-5" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              You
+                            </TooltipContent>
+                          </TooltipRoot>
+                        </Show>
                         <Show when={item.admin}>
                           <TooltipRoot>
-                            <TooltipTrigger class="p-1">
+                            <TooltipTrigger>
                               <RiUserFacesAdminLine class="h-5 w-5" />
                             </TooltipTrigger>
                             <TooltipContent>
@@ -196,7 +206,7 @@ export function AdminUsers() {
                         </Show>
                         <Show when={item.disabled}>
                           <TooltipRoot>
-                            <TooltipTrigger class="p-1">
+                            <TooltipTrigger>
                               <RiSystemLockLine class="h-5 w-5" />
                             </TooltipTrigger>
                             <TooltipContent>

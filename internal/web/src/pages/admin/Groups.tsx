@@ -256,13 +256,13 @@ export function AdminGroups() {
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick} title={item.name}>{item.name}</TableCell>
+                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.name}</TableCell>
                       <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.userCount.toString()}</TableCell>
                       <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
                       <Crud.LastTableCell>
                         <Show when={item.disabled}>
                           <TooltipRoot>
-                            <TooltipTrigger class="p-1">
+                            <TooltipTrigger>
                               <RiSystemLockLine class="h-5 w-5" />
                             </TooltipTrigger>
                             <TooltipContent>
