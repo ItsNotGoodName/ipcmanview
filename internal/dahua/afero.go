@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/google/uuid"
@@ -91,9 +91,9 @@ type AferoForeignKeys struct {
 // CreateAferoFile creates an afero file in the database and in the file system.
 func CreateAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, key AferoForeignKeys, fileName string) (AferoFile, error) {
 	id, err := db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
-		FileID:            common.Int64ToNullInt64(key.FileID),
-		ThumbnailID:       common.Int64ToNullInt64(key.ThumbnailID),
-		EmailAttachmentID: common.Int64ToNullInt64(key.EmailAttachmentID),
+		FileID:            core.Int64ToNullInt64(key.FileID),
+		ThumbnailID:       core.Int64ToNullInt64(key.ThumbnailID),
+		EmailAttachmentID: core.Int64ToNullInt64(key.EmailAttachmentID),
 		Name:              fileName,
 		CreatedAt:         types.NewTime(time.Now()),
 	})

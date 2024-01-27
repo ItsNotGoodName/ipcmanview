@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -29,7 +29,7 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 
 	dbDevices, err := u.db.ListDahuaDevicesForUser(ctx, repo.ListDahuaDevicesForUserParams{
 		Admin:  authSession.Admin,
-		UserID: common.Int64ToNullInt64(authSession.UserID),
+		UserID: core.Int64ToNullInt64(authSession.UserID),
 	})
 	if err != nil {
 		return nil, check(err)

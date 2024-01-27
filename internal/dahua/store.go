@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
@@ -113,7 +113,7 @@ func (s *Store) ClientDelete(ctx context.Context, id int64) {
 	}
 }
 
-func (s *Store) Register(bus *common.Bus) *Store {
+func (s *Store) Register(bus *core.Bus) *Store {
 	bus.OnEventDahuaDeviceDeleted(func(ctx context.Context, evt models.EventDahuaDeviceDeleted) error {
 		s.ClientDelete(ctx, evt.DeviceID)
 		return nil

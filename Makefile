@@ -59,7 +59,7 @@ gen-pubsub:
 	sh ./scripts/generate-pubsub-events.sh ./internal/models/event.go
 
 gen-bus:
-	go run ./scripts/generate-bus -input ./internal/models/event.go -output ./internal/common/bus.gen.go
+	go run ./scripts/generate-bus -input ./internal/models/event.go -output ./internal/core/bus.gen.go
 
 gen-proto:
 	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -69,7 +69,7 @@ func parseDeviceIPFromURL(urL *url.URL) (string, error) {
 	return ip, nil
 }
 
-func CreateDevice(ctx context.Context, db repo.DB, bus *common.Bus, arg models.DahuaDevice) (models.DahuaDeviceConn, error) {
+func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.DahuaDevice) (models.DahuaDeviceConn, error) {
 	arg = normalizeDevice(arg, true)
 
 	err := validate.Validate.Struct(arg)
@@ -111,7 +111,7 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *common.Bus, arg models.D
 	return device, err
 }
 
-func UpdateDevice(ctx context.Context, db repo.DB, bus *common.Bus, arg models.DahuaDevice) (models.DahuaDeviceConn, error) {
+func UpdateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.DahuaDevice) (models.DahuaDeviceConn, error) {
 	arg = normalizeDevice(arg, false)
 
 	err := validate.Validate.Struct(arg)
@@ -152,7 +152,7 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *common.Bus, arg models.D
 	return device, nil
 }
 
-func DeleteDevice(ctx context.Context, db repo.DB, bus *common.Bus, id int64) error {
+func DeleteDevice(ctx context.Context, db repo.DB, bus *core.Bus, id int64) error {
 	if err := db.DeleteDahuaDevice(ctx, id); err != nil {
 		return err
 	}

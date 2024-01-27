@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -45,7 +45,7 @@ func NewSession(ctx context.Context, db repo.DB, userAgent, ip string, userID in
 }
 
 func Session(db repo.DB) echo.MiddlewareFunc {
-	sessionUpdateLock := common.NewLockStore[string]()
+	sessionUpdateLock := core.NewLockStore[string]()
 	sessionUpdateThrottle := time.Minute
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

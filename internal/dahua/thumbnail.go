@@ -3,7 +3,7 @@ package dahua
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/spf13/afero"
 )
@@ -20,8 +20,8 @@ type Thumbnail struct {
 
 func CreateThumbnail(ctx context.Context, db repo.DB, afs afero.Fs, fk ThumbnailForeignKeys, width, height int64, aferoFileName string) (Thumbnail, error) {
 	thumbnail, err := db.CreateDahuaThumbnail(ctx, repo.CreateDahuaThumbnailParams{
-		EmailAttachmentID: common.Int64ToNullInt64(fk.EmailAttachmentID),
-		FileID:            common.Int64ToNullInt64(fk.FileID),
+		EmailAttachmentID: core.Int64ToNullInt64(fk.EmailAttachmentID),
+		FileID:            core.Int64ToNullInt64(fk.FileID),
 		Width:             int64(width),
 		Height:            int64(height),
 	})

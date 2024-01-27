@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -66,7 +66,7 @@ func SyncStreams(ctx context.Context, db repo.DB, deviceID int64, conn dahuarpc.
 	return nil
 }
 
-func RegisterStreams(bus *common.Bus, db repo.DB, store *Store) {
+func RegisterStreams(bus *core.Bus, db repo.DB, store *Store) {
 	bus.OnEventDahuaDeviceCreated(func(ctx context.Context, event models.EventDahuaDeviceCreated) error {
 		if SupportStreams(event.Device) {
 			return SyncStreams(ctx, db, event.Device.DahuaConn.ID, store.Client(ctx, event.Device.DahuaConn).RPC)

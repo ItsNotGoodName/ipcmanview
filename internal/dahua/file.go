@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -33,7 +33,7 @@ func FileFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (io
 		return nil, err
 	}
 
-	c, err := ftp.Dial(common.Address(dest.ServerAddress, int(dest.Port)), ftp.DialWithContext(ctx))
+	c, err := ftp.Dial(core.Address(dest.ServerAddress, int(dest.Port)), ftp.DialWithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func FileFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (io
 		return nil, err
 	}
 
-	return common.MultiReadCloser{
+	return core.MultiReadCloser{
 		Reader:  rd,
 		Closers: []func() error{rd.Close, c.Quit},
 	}, nil
@@ -72,7 +72,7 @@ func FileSFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (i
 		return nil, err
 	}
 
-	conn, err := ssh.Dial("tcp", common.Address(dest.ServerAddress, int(dest.Port)), &ssh.ClientConfig{
+	conn, err := ssh.Dial("tcp", core.Address(dest.ServerAddress, int(dest.Port)), &ssh.ClientConfig{
 		User: dest.Username,
 		Auth: []ssh.AuthMethod{ssh.Password(dest.Password)},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
@@ -98,7 +98,7 @@ func FileSFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (i
 		return nil, err
 	}
 
-	return common.MultiReadCloser{
+	return core.MultiReadCloser{
 		Reader:  rd,
 		Closers: []func() error{rd.Close, client.Close},
 	}, nil

@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
@@ -45,7 +45,7 @@ func normalizeStorageDestination(arg models.DahuaStorageDestination, create bool
 
 	if create {
 		if arg.Name == "" {
-			arg.Name = common.Address(arg.ServerAddress, int(arg.Port))
+			arg.Name = core.Address(arg.ServerAddress, int(arg.Port))
 		}
 	}
 
@@ -103,7 +103,7 @@ func DeleteStorageDestination(ctx context.Context, db repo.DB, id int64) error {
 func TestStorageDestination(ctx context.Context, arg models.DahuaStorageDestination) error {
 	switch arg.Storage {
 	case models.StorageFTP:
-		c, err := ftp.Dial(common.Address(arg.ServerAddress, int(arg.Port)), ftp.DialWithContext(ctx))
+		c, err := ftp.Dial(core.Address(arg.ServerAddress, int(arg.Port)), ftp.DialWithContext(ctx))
 		if err != nil {
 			return err
 		}
@@ -115,7 +115,7 @@ func TestStorageDestination(ctx context.Context, arg models.DahuaStorageDestinat
 
 		return c.Quit()
 	case models.StorageSFTP:
-		conn, err := ssh.Dial("tcp", common.Address(arg.ServerAddress, int(arg.Port)), &ssh.ClientConfig{
+		conn, err := ssh.Dial("tcp", core.Address(arg.ServerAddress, int(arg.Port)), &ssh.ClientConfig{
 			User: arg.Username,
 			Auth: []ssh.AuthMethod{ssh.Password(arg.Password)},
 			HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {

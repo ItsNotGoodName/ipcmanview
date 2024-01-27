@@ -4,14 +4,14 @@ import (
 	"context"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/common"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/rs/zerolog/log"
 )
 
-func NewDefaultEventHooks(bus *common.Bus, db repo.DB) DefaultEventHooks {
+func NewDefaultEventHooks(bus *core.Bus, db repo.DB) DefaultEventHooks {
 	return DefaultEventHooks{
 		bus: bus,
 		db:  db,
@@ -19,7 +19,7 @@ func NewDefaultEventHooks(bus *common.Bus, db repo.DB) DefaultEventHooks {
 }
 
 type DefaultEventHooks struct {
-	bus *common.Bus
+	bus *core.Bus
 	db  repo.DB
 }
 

@@ -1,4 +1,4 @@
-package common
+package core
 
 var Locations []string = []string{
 	"Local",
