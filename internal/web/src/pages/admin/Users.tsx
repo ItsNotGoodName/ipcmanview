@@ -16,7 +16,7 @@ import { getSession } from "~/providers/session";
 import { Crud } from "~/components/Crud";
 import { useClient } from "~/providers/client";
 import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
 
 const actionSetUserDisable = action((input: SetUserDisableReq) => useClient()
   .admin.setUserDisable(input)
@@ -97,6 +97,17 @@ export function AdminUsers() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} users?</AlertDialogTitle>
+            <AlertDialogDescription class="max-h-32 overflow-y-auto">
+              <For each={data()?.items}>
+                {(e, index) =>
+                  <Show when={rowSelection.rows[index()].checked}>
+                    <div>
+                      {e.username}
+                    </div>
+                  </Show>
+                }
+              </For>
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>

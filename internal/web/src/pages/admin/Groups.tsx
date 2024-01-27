@@ -1,5 +1,5 @@
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
 import { AdminGroupsPageSearchParams, getAdminGroupsPage, getGroup } from "./Groups.data";
 import { ErrorBoundary, For, Show, Suspense, batch, createResource, createSignal } from "solid-js";
@@ -124,6 +124,17 @@ export function AdminGroups() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} groups?</AlertDialogTitle>
+            <AlertDialogDescription class="max-h-32 overflow-y-auto">
+              <For each={data()?.items}>
+                {(e, index) =>
+                  <Show when={rowSelection.rows[index()].checked}>
+                    <div>
+                      {e.name}
+                    </div>
+                  </Show>
+                }
+              </For>
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
