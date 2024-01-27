@@ -3,6 +3,7 @@ import { ParentProps } from "solid-js"
 
 import { Order, PagePaginationResult, Sort } from "~/twirp/rpc"
 import { cn } from "~/lib/utils"
+import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select"
 
 function SortButton(props: ParentProps<{ onClick: (name: string) => void, name: string, sort?: Sort }>) {
   return (
@@ -29,7 +30,33 @@ function Metadata(props: { pageResult?: PagePaginationResult }) {
   )
 }
 
+function PerPageSelect(props: { class?: string, perPage?: number, onChange: (value: number) => void }) {
+  return (
+    <SelectRoot
+      class={props.class}
+      value={props.perPage}
+      onChange={props.onChange}
+      options={[10, 25, 50, 100]}
+      itemComponent={props => (
+        <SelectItem item={props.item}>
+          {props.item.rawValue}
+        </SelectItem>
+      )}
+    >
+      <SelectTrigger aria-label="Per page">
+        <SelectValue<number>>
+          {state => state.selectedOption()}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectListbox />
+      </SelectContent>
+    </SelectRoot>
+  )
+}
+
 export const Crud = {
   SortButton,
   Metadata,
+  PerPageSelect,
 }

@@ -3,7 +3,6 @@ import { createAsync, useNavigate, useSearchParams, } from "@solidjs/router";
 import { ErrorBoundary, For, Show, Suspense, } from "solid-js";
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, RiUserFacesAdminLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
-import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -11,7 +10,6 @@ import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AdminUsersPageSearchParams, getAdminUsersPage } from "./Users.data";
-import { defaultPerPageOptions } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
 import { getSession } from "~/providers/session";
@@ -46,26 +44,11 @@ export function AdminUsers() {
       <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>
           <div class="flex justify-between gap-2">
-            <SelectRoot
+            <Crud.PerPageSelect
               class="w-20"
-              value={data()?.pageResult?.perPage}
+              perPage={data()?.pageResult?.perPage}
               onChange={pagination.setPerPage}
-              options={defaultPerPageOptions}
-              itemComponent={props => (
-                <SelectItem item={props.item}>
-                  {props.item.rawValue}
-                </SelectItem>
-              )}
-            >
-              <SelectTrigger aria-label="Per page">
-                <SelectValue<number>>
-                  {state => state.selectedOption()}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectListbox />
-              </SelectContent>
-            </SelectRoot>
+            />
             <div class="flex gap-2">
               <Button
                 title="Previous"
@@ -87,7 +70,7 @@ export function AdminUsers() {
           </div>
           <TableRoot>
             <TableHeader>
-              <tr class="border-b">
+              <TableRow>
                 <TableHead>
                   <CheckboxRoot
                     checked={rowSelection.multiple()}
@@ -156,7 +139,7 @@ export function AdminUsers() {
                     </DropdownMenuRoot>
                   </div>
                 </TableHead>
-              </tr>
+              </TableRow>
             </TableHeader>
             <TableBody>
               <For each={data()?.items}>
