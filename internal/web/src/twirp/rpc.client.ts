@@ -2,6 +2,8 @@
 // @generated from protobuf file "rpc.proto" (syntax proto3)
 // tslint:disable
 import { Admin } from "./rpc";
+import type { ListDeviceFeaturesResp } from "./rpc";
+import type { ListLocationsResp } from "./rpc";
 import type { SetDeviceDisableReq } from "./rpc";
 import type { DeleteDeviceReq } from "./rpc";
 import type { UpdateDeviceReq } from "./rpc";
@@ -299,6 +301,14 @@ export interface IAdminClient {
      * @generated from protobuf rpc: SetDeviceDisable(SetDeviceDisableReq) returns (google.protobuf.Empty);
      */
     setDeviceDisable(input: SetDeviceDisableReq, options?: RpcOptions): UnaryCall<SetDeviceDisableReq, Empty>;
+    /**
+     * @generated from protobuf rpc: ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
+     */
+    listLocations(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListLocationsResp>;
+    /**
+     * @generated from protobuf rpc: ListDeviceFeatures(google.protobuf.Empty) returns (ListDeviceFeaturesResp);
+     */
+    listDeviceFeatures(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListDeviceFeaturesResp>;
 }
 // ---------- Admin
 
@@ -444,5 +454,19 @@ export class AdminClient implements IAdminClient, ServiceInfo {
     setDeviceDisable(input: SetDeviceDisableReq, options?: RpcOptions): UnaryCall<SetDeviceDisableReq, Empty> {
         const method = this.methods[17], opt = this._transport.mergeOptions(options);
         return stackIntercept<SetDeviceDisableReq, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
+     */
+    listLocations(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListLocationsResp> {
+        const method = this.methods[18], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Empty, ListLocationsResp>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ListDeviceFeatures(google.protobuf.Empty) returns (ListDeviceFeaturesResp);
+     */
+    listDeviceFeatures(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListDeviceFeaturesResp> {
+        const method = this.methods[19], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Empty, ListDeviceFeaturesResp>("unary", this._transport, method, opt, input);
     }
 }

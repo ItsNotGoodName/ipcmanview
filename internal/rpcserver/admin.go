@@ -2,8 +2,12 @@ package rpcserver
 
 import (
 	"context"
+	"net/url"
+	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
@@ -13,31 +17,124 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewAdmin(db repo.DB) *Admin {
+func NewAdmin(db repo.DB, bus *core.Bus) *Admin {
 	return &Admin{
-		db: db,
+		db:  db,
+		bus: bus,
 	}
 }
 
 type Admin struct {
-	db repo.DB
+	db  repo.DB
+	bus *core.Bus
 }
 
 // ---------- Device
 
-func (*Admin) GetAdminDevicesPage(context.Context, *rpc.GetAdminDevicesPageReq) (*rpc.GetAdminDevicesPageResp, error) {
-	return nil, errNotImplemented
+func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevicesPageReq) (*rpc.GetAdminDevicesPageResp, error) {
+	page := parsePagePagination(req.Page)
+
+	items, err := func() ([]*rpc.GetAdminDevicesPageResp_Device, error) {
+		var row struct {
+			repo.DahuaDevice
+		}
+		// SELECT ...
+		sb := sq.
+			Select(
+				"dahua_devices.*",
+			).
+			From("dahua_devices")
+		// ORDER BY
+		switch req.Sort.GetField() {
+		case "name":
+			sb = sb.OrderBy(convertOrderToSQL("name", req.Sort.GetOrder()))
+		case "createdAt":
+			sb = sb.OrderBy(convertOrderToSQL("created_at", req.Sort.GetOrder()))
+		}
+		// OFFSET ...
+		sb = sb.
+			Offset(uint64(page.Offset())).
+			Limit(uint64(page.Limit()))
+
+		rows, scanner, err := ssq.QueryRows(ctx, a.db, sb)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		var items []*rpc.GetAdminDevicesPageResp_Device
+		for rows.Next() {
+			err := scanner.Scan(&row)
+			if err != nil {
+				return nil, err
+			}
+
+			items = append(items, &rpc.GetAdminDevicesPageResp_Device{
+				Id:             row.ID,
+				Name:           row.Name,
+				Url:            row.Url.String(),
+				Username:       row.Username,
+				Disabled:       row.DisabledAt.Valid,
+				DisabledAtTime: timestamppb.New(row.DisabledAt.Time),
+				CreatedAtTime:  timestamppb.New(row.CreatedAt.Time),
+			})
+		}
+
+		return items, nil
+	}()
+	if err != nil {
+		return nil, check(err)
+	}
+
+	count, err := func() (int64, error) {
+		var row struct{ Count int64 }
+		return row.Count, ssq.QueryOne(ctx, a.db, &row, sq.
+			Select("COUNT(*) AS count").
+			From("dahua_devices"))
+	}()
+	if err != nil {
+		return nil, check(err)
+	}
+
+	return &rpc.GetAdminDevicesPageResp{
+		Items:      items,
+		PageResult: convertPagePaginationResult(page.Result(int(count))),
+		Sort:       req.Sort,
+	}, nil
 }
 
 func (*Admin) GetDevice(context.Context, *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
 	return nil, errNotImplemented
 }
 
-func (*Admin) CreateDevice(context.Context, *rpc.CreateDeviceReq) (*rpc.CreateDeviceResp, error) {
-	return nil, errNotImplemented
+func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rpc.CreateDeviceResp, error) {
+	urL, err := url.Parse(req.Model.Url)
+	if err != nil {
+		return nil, NewError(nil, "URL is invalid.").Field("url")
+	}
+	loc, err := time.LoadLocation(req.Model.GetLocation())
+	if err != nil {
+		return nil, NewError(nil, "Location is invalid.").Field("location")
+	}
+
+	res, err := dahua.CreateDevice(ctx, a.db, a.bus, models.DahuaDevice{
+		Name:     req.Model.GetName(),
+		Url:      urL,
+		Username: req.Model.GetUsername(),
+		Password: req.Model.GetPassword(),
+		Location: loc,
+		Feature:  dahua.FeatureFromStrings(req.Model.GetFeatures()),
+	})
+	if err != nil {
+		return nil, check(err)
+	}
+
+	return &rpc.CreateDeviceResp{
+		Id: res.DahuaDevice.ID,
+	}, nil
 }
 
-func (*Admin) UpdateDevice(context.Context, *rpc.UpdateDeviceReq) (*emptypb.Empty, error) {
+func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*emptypb.Empty, error) {
 	return nil, errNotImplemented
 }
 
@@ -152,7 +249,7 @@ func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) 
 func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 	if req.Id == authSession.UserID {
-		return nil, NewError(nil, "Cannot modify current user.").InvalidArgument("item")
+		return nil, NewError(nil, "Cannot modify current user.").Field("item")
 	}
 
 	err := auth.UpdateUserAdmin(ctx, a.db, req.Id, req.Admin)
@@ -361,4 +458,27 @@ func (a *Admin) SetGroupDisable(ctx context.Context, req *rpc.SetGroupDisableReq
 		}
 	}
 	return &emptypb.Empty{}, nil
+}
+
+func (*Admin) ListLocations(context.Context, *emptypb.Empty) (*rpc.ListLocationsResp, error) {
+	return &rpc.ListLocationsResp{
+		Locations: core.Locations,
+	}, nil
+}
+
+var listDeviceFeaturesResp *rpc.ListDeviceFeaturesResp
+
+func init() {
+	res := make([]*rpc.ListDeviceFeaturesResp_Item, 0, len(dahua.FeatureList))
+	for _, v := range dahua.FeatureList {
+		res = append(res, &rpc.ListDeviceFeaturesResp_Item{
+			Name:  v.Name,
+			Value: v.Value,
+		})
+	}
+	listDeviceFeaturesResp = &rpc.ListDeviceFeaturesResp{Features: res}
+}
+
+func (*Admin) ListDeviceFeatures(context.Context, *emptypb.Empty) (*rpc.ListDeviceFeaturesResp, error) {
+	return listDeviceFeaturesResp, nil
 }

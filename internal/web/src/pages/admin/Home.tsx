@@ -7,6 +7,7 @@ export function AdminHome() {
     <LayoutNormal>
       <A class={linkVariants()} href="./users">Users</A>
       <A class={linkVariants()} href="./groups">Groups</A>
+      <A class={linkVariants()} href="./devices">Devices</A>
     </LayoutNormal>
   )
 }

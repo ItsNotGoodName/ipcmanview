@@ -1,12 +1,29 @@
 import { As, Select } from "@kobalte/core"
 import { RiArrowsArrowDownSLine, RiSystemCheckLine } from "solid-icons/ri"
-import { ComponentProps, splitProps } from "solid-js"
+import { ComponentProps, JSX, splitProps } from "solid-js"
 
 import { cn } from "~/lib/utils"
+
+export function SelectHTML(props: JSX.SelectHTMLAttributes<HTMLSelectElement>) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <select
+    class={cn(
+      "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+      props.class
+    )}
+    {...rest}
+  >
+    {props.children}
+  </select>
+}
 
 export const SelectRoot = Select.Root
 
 export const SelectValue = Select.Value
+
+export const SelectHiddenSelect = Select.HiddenSelect
+
+export const SelectDescription = Select.Description
 
 export function SelectTrigger(props: ComponentProps<typeof Select.Trigger>) {
   const [_, rest] = splitProps(props, ["class", "children"])

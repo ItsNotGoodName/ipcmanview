@@ -132,7 +132,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
 		Register(rpc.NewAuthServer(rpcserver.NewAuth(db), rpcLogger)).
 		Register(rpc.NewUserServer(rpcserver.NewUser(db), rpcLogger, rpcserver.AuthSession())).
-		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db), rpcLogger, rpcserver.AdminAuthSession()))
+		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.AdminAuthSession()))
 
 	// HTTP server
 	httpServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPPort)))

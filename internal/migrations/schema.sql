@@ -2,8 +2,7 @@ CREATE TABLE settings (
   setup BOOLEAN NOT NULL,
   site_name TEXT NOT NULL,
   location TEXT NOT NULL,
-  coordinates TEXT NOT NULL,
-  allow_sign_up BOOLEAN NOT NULL
+  coordinates TEXT NOT NULL
 );
 
 CREATE TABLE users (

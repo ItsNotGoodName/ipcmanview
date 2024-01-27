@@ -120,8 +120,8 @@ func NewError(err error, msg string) Error {
 	return Error{msg: msg}
 }
 
-func (e Error) Field(field string, fieldErr error) twirp.Error {
-	return twirp.InvalidArgument.Error(e.msg).WithMeta(field, fieldErr.Error())
+func (e Error) Field(field string) twirp.Error {
+	return twirp.InvalidArgument.Error(e.msg).WithMeta(field, e.msg)
 }
 
 func (e Error) Validation(errs validator.ValidationErrors, lookup [][2]string) twirp.Error {
@@ -154,10 +154,6 @@ func (w Error) Internal() twirp.Error {
 
 func (w Error) NotFound() twirp.Error {
 	return twirp.NotFoundError(w.msg)
-}
-
-func (w Error) InvalidArgument(arg string) twirp.Error {
-	return twirp.InvalidArgumentError(arg, w.msg)
 }
 
 // ---------- Convert/Parse

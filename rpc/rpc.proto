@@ -158,6 +158,9 @@ service Admin {
   rpc UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
   rpc DeleteDevice(DeleteDeviceReq) returns (google.protobuf.Empty);
   rpc SetDeviceDisable(SetDeviceDisableReq) returns (google.protobuf.Empty);
+
+  rpc ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
+  rpc ListDeviceFeatures(google.protobuf.Empty) returns (ListDeviceFeaturesResp);
 }
 
 message GetAdminGroupsPageReq {
@@ -313,7 +316,7 @@ message DeviceModel {
   string username = 3;
   string password = 4;
   string location = 5;
-  int32 features = 6;
+  repeated string features = 6;
 }
 
 message GetDeviceReq {
@@ -348,4 +351,16 @@ message SetDeviceDisableReq {
     bool disable = 2;
   }
   repeated Item items = 1;
+}
+
+message ListLocationsResp {
+  repeated string locations = 1;
+}
+
+message ListDeviceFeaturesResp {
+  message Item {
+    string name = 1;
+    string value = 2;
+  }
+  repeated Item features = 1;
 }

@@ -1,44 +1,49 @@
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
-import { AdminGroupsPageSearchParams, getAdminGroupsPage, getGroup } from "./Groups.data";
-import { ErrorBoundary, For, Show, Suspense, batch, createResource, createSignal } from "solid-js";
+import { AdminDevicesPageSearchParams, getAdminDevicesPage } from "./Devices.data";
+import { ErrorBoundary, For, Show, Suspense, batch, createEffect, createSignal } from "solid-js";
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
-import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, throwAsFormError } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { useClient } from "~/providers/client";
-import { createForm, required, reset } from "@modular-forms/solid";
-import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
-import { Input } from "~/ui/Input";
-import { Textarea } from "~/ui/Textarea";
 import { DialogCloseButton, DialogContent, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, } from "~/ui/Dialog";
 import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { LayoutNormal } from "~/ui/Layout";
-import { SetGroupDisableReq } from "~/twirp/rpc";
+import { SetDeviceDisableReq } from "~/twirp/rpc";
 import { Crud } from "~/components/Crud";
+import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
+import { Textarea } from "~/ui/Textarea";
+import { Input } from "~/ui/Input";
+import { createForm, required, reset } from "@modular-forms/solid";
+import { SheetCloseButton, SheetContent, SheetHeader, SheetOverlay, SheetPortal, SheetRoot, SheetTitle } from "~/ui/Sheet";
+import { getListDeviceFeatures, getListLocations } from "./data";
+import { SelectContent, SelectDescription, SelectHTML, SelectHiddenSelect, SelectItem, SelectLabel, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
+import { Select } from "@kobalte/core";
+import { labelVariants } from "~/ui/Label";
 
-const actionDeleteGroup = action((ids: bigint[]) => useClient()
-  .admin.deleteGroup({ ids })
-  .then(() => revalidate(getAdminGroupsPage.key))
+const actionDeleteDevice = action((ids: bigint[]) => useClient()
+  .admin.deleteDevice({ ids })
+  .then(() => revalidate(getAdminDevicesPage.key))
   .catch(catchAsToast)
 )
 
-const actionSetGroupDisable = action((input: SetGroupDisableReq) => useClient()
-  .admin.setGroupDisable(input)
-  .then(() => revalidate(getAdminGroupsPage.key))
+const actionSetDeviceDisable = action((input: SetDeviceDisableReq) => useClient()
+  .admin.setDeviceDisable(input)
+  .then(() => revalidate(getAdminDevicesPage.key))
   .catch(catchAsToast)
 )
 
-export function AdminGroups() {
+export function AdminDevices() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams<AdminGroupsPageSearchParams>()
-  const data = createAsync(() => getAdminGroupsPage({
+  const [searchParams] = useSearchParams<AdminDevicesPageSearchParams>()
+  const data = createAsync(() => getAdminDevicesPage({
     page: {
       page: Number(searchParams.page) || 1,
       perPage: Number(searchParams.perPage) || 10
@@ -55,45 +60,45 @@ export function AdminGroups() {
   const toggleSort = createToggleSortField(() => data()?.sort)
 
   // Create
-  const [createFormDialog, setCreateFormDialog] = createSignal(false);
+  const [createFormSheet, setCreateFormSheet] = createSignal(true);
 
   // Update
-  const [updateGroupFormDialog, setUpdateGroupFormDialog] = createSignal<bigint>(BigInt(0))
+  const [updateDeviceFormDialog, setUpdateDeviceFormDialog] = createSignal<bigint>(BigInt(0))
 
   // Delete
-  const deleteGroupSubmission = useSubmission(actionDeleteGroup)
-  const deleteGroupAction = useAction(actionDeleteGroup)
+  const deleteDeviceSubmission = useSubmission(actionDeleteDevice)
+  const deleteDeviceAction = useAction(actionDeleteDevice)
   // Single
-  const [deleteGroupSelection, setDeleteGroupSelection] = createSignal<{ name: string, id: bigint } | undefined>()
-  const deleteGroupBySelection = () => deleteGroupAction([deleteGroupSelection()!.id])
-    .then(() => setDeleteGroupSelection(undefined))
+  const [deleteDeviceSelection, setDeleteDeviceSelection] = createSignal<{ name: string, id: bigint } | undefined>()
+  const deleteDeviceBySelection = () => deleteDeviceAction([deleteDeviceSelection()!.id])
+    .then(() => setDeleteDeviceSelection(undefined))
   // Multiple
-  const [deleteGroupRowSelection, setDeleteGroupRowSelection] = createSignal(false)
-  const deleteGroupByRowSelection = () => deleteGroupAction(rowSelection.selections())
-    .then(() => setDeleteGroupRowSelection(false))
+  const [deleteDeviceRowSelection, setDeleteDeviceRowSelection] = createSignal(false)
+  const deleteDeviceByRowSelection = () => deleteDeviceAction(rowSelection.selections())
+    .then(() => setDeleteDeviceRowSelection(false))
 
   // Disable/Enable
-  const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
-  const setGroupDisable = useAction(actionSetGroupDisable)
-  const setGroupDisableByRowSelection = (disable: boolean) => setGroupDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+  const setDeviceDisableSubmission = useSubmission(actionSetDeviceDisable)
+  const setDeviceDisable = useAction(actionSetDeviceDisable)
+  const setDeviceDisableByRowSelection = (disable: boolean) => setDeviceDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
     .then(() => rowSelection.setAll(false))
 
   return (
     <LayoutNormal>
-      <DialogRoot open={createFormDialog()} onOpenChange={setCreateFormDialog}>
-        <DialogPortal>
-          <DialogOverlay />
-          <DialogContent>
-            <DialogHeader>
-              <DialogCloseButton />
-              <DialogTitle>Create group</DialogTitle>
-            </DialogHeader>
-            <CreateGroupForm setOpen={setCreateFormDialog} />
-          </DialogContent>
-        </DialogPortal>
-      </DialogRoot>
+      <SheetRoot open={createFormSheet()} onOpenChange={setCreateFormSheet}>
+        <SheetPortal>
+          <SheetOverlay />
+          <SheetContent>
+            <SheetHeader>
+              <SheetCloseButton />
+              <SheetTitle>Create group</SheetTitle>
+            </SheetHeader>
+            <CreateDeviceForm setOpen={setCreateFormSheet} />
+          </SheetContent>
+        </SheetPortal>
+      </SheetRoot>
 
-      <DialogRoot open={updateGroupFormDialog() != BigInt(0)} onOpenChange={() => setUpdateGroupFormDialog(BigInt(0))}>
+      <DialogRoot open={updateDeviceFormDialog() != BigInt(0)} onOpenChange={() => setUpdateDeviceFormDialog(BigInt(0))}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -101,26 +106,26 @@ export function AdminGroups() {
               <DialogCloseButton />
               <DialogTitle>Update group</DialogTitle>
             </DialogHeader>
-            <UpdateGroupForm setOpen={() => setUpdateGroupFormDialog(BigInt(0))} id={updateGroupFormDialog()} />
+            <UpdateDeviceForm setOpen={() => setUpdateDeviceFormDialog(BigInt(0))} id={updateDeviceFormDialog()} />
           </DialogContent>
         </DialogPortal>
       </DialogRoot>
 
-      <AlertDialogRoot open={deleteGroupSelection() != undefined} onOpenChange={() => setDeleteGroupSelection(undefined)}>
+      <AlertDialogRoot open={deleteDeviceSelection() != undefined} onOpenChange={() => setDeleteDeviceSelection(undefined)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you wish to delete {deleteGroupSelection()?.name}?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you wish to delete {deleteDeviceSelection()?.name}?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroupBySelection}>
+            <AlertDialogAction variant="destructive" disabled={deleteDeviceSubmission.pending} onClick={deleteDeviceBySelection}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialogRoot>
 
-      <AlertDialogRoot open={deleteGroupRowSelection()} onOpenChange={setDeleteGroupRowSelection}>
+      <AlertDialogRoot open={deleteDeviceRowSelection()} onOpenChange={setDeleteDeviceRowSelection}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} groups?</AlertDialogTitle>
@@ -138,14 +143,14 @@ export function AdminGroups() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroupByRowSelection}>
+            <AlertDialogAction variant="destructive" disabled={deleteDeviceSubmission.pending} onClick={deleteDeviceByRowSelection}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialogRoot>
 
-      <div class="text-xl">Groups</div>
+      <div class="text-xl">Devices</div>
       <Seperator />
 
       <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
@@ -198,11 +203,11 @@ export function AdminGroups() {
                 </TableHead>
                 <TableHead>
                   <Crud.SortButton
-                    name="userCount"
+                    name="url"
                     onClick={toggleSort}
                     sort={data()?.sort}
                   >
-                    Users
+                    URL
                   </Crud.SortButton>
                 </TableHead>
                 <TableHead>
@@ -222,24 +227,24 @@ export function AdminGroups() {
                       </DropdownMenuTrigger>
                       <DropdownMenuPortal>
                         <DropdownMenuContent>
-                          <DropdownMenuItem onSelect={() => setCreateFormDialog(true)}>
+                          <DropdownMenuItem onSelect={() => setCreateFormSheet(true)}>
                             Create
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
-                            onSelect={() => setGroupDisableByRowSelection(true)}
+                            disabled={rowSelection.selections().length == 0 || setDeviceDisableSubmission.pending}
+                            onSelect={() => setDeviceDisableByRowSelection(true)}
                           >
                             Disable
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
-                            onSelect={() => setGroupDisableByRowSelection(false)}
+                            disabled={rowSelection.selections().length == 0 || setDeviceDisableSubmission.pending}
+                            onSelect={() => setDeviceDisableByRowSelection(false)}
                           >
                             Enable
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || deleteGroupSubmission.pending}
-                            onSelect={() => setDeleteGroupRowSelection(true)}
+                            disabled={rowSelection.selections().length == 0 || deleteDeviceSubmission.pending}
+                            onSelect={() => setDeleteDeviceRowSelection(true)}
                           >
                             Delete
                           </DropdownMenuItem>
@@ -255,7 +260,7 @@ export function AdminGroups() {
               <For each={data()?.items}>
                 {(item, index) => {
                   const onClick = () => navigate(`./${item.id}`)
-                  const toggleGroupDisable = () => setGroupDisable({ items: [{ id: item.id, disable: !item.disabled }] })
+                  const toggleDeviceDisable = () => setDeviceDisable({ items: [{ id: item.id, disable: !item.disabled }] })
 
                   return (
                     <TableRow>
@@ -268,7 +273,7 @@ export function AdminGroups() {
                         </CheckboxRoot>
                       </TableHead>
                       <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.name}</TableCell>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.userCount.toString()}</TableCell>
+                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.url}</TableCell>
                       <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
                       <Crud.LastTableCell>
                         <Show when={item.disabled}>
@@ -287,20 +292,20 @@ export function AdminGroups() {
                           </DropdownMenuTrigger>
                           <DropdownMenuPortal>
                             <DropdownMenuContent>
-                              <DropdownMenuItem onSelect={() => setUpdateGroupFormDialog(item.id)}>
+                              <DropdownMenuItem onSelect={() => setUpdateDeviceFormDialog(item.id)}>
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                disabled={setGroupDisableSubmission.pending}
-                                onSelect={toggleGroupDisable}
+                                disabled={setDeviceDisableSubmission.pending}
+                                onSelect={toggleDeviceDisable}
                               >
                                 <Show when={item.disabled} fallback={<>Disable</>}>
                                   Enable
                                 </Show>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                disabled={deleteGroupSubmission.pending}
-                                onSelect={() => setDeleteGroupSelection(item)}
+                                disabled={deleteDeviceSubmission.pending}
+                                onSelect={() => setDeleteDeviceSelection(item)}
                               >
                                 Delete
                               </DropdownMenuItem>
@@ -323,95 +328,180 @@ export function AdminGroups() {
     </LayoutNormal>)
 }
 
-type CreateGroupForm = {
+type CreateDeviceForm = {
   name: string
-  description: string
+  url: string
+  username: string
+  password: string
+  location: string
+  features: string[]
 }
 
-const actionCreateGroupForm = action((form: CreateGroupForm) => useClient()
-  .admin.createGroup({ model: form })
-  .then(() => revalidate(getAdminGroupsPage.key))
+const actionCreateDeviceForm = action((form: CreateDeviceForm) => useClient()
+  .admin.createDevice({ model: form })
+  .then(() => revalidate(getAdminDevicesPage.key))
   .catch(throwAsFormError)
 )
 
-function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
+function CreateDeviceForm(props: { setOpen: (value: boolean) => void }) {
   const [addMore, setAddMore] = createSignal(false)
 
-  const [createGroupForm, { Field, Form }] = createForm<CreateGroupForm>({ initialValues: { name: "", description: "" } });
-  const createGroupFormAction = useAction(actionCreateGroupForm)
-  const submit = (form: CreateGroupForm) => createGroupFormAction(form)
+  const locations = createAsync(getListLocations)
+  const deviceFeatures = createAsync(getListDeviceFeatures)
+  const [createDeviceForm, { Field, Form }] = createForm<CreateDeviceForm>({ initialValues: { name: "", description: "" } });
+  const createDeviceFormAction = useAction(actionCreateDeviceForm)
+  const submit = (form: CreateDeviceForm) => createDeviceFormAction(form)
     .then(() => batch(() => {
       props.setOpen(addMore())
-      reset(createGroupForm)
+      reset(createDeviceForm)
     }))
 
+  createEffect(() => {
+    console.log(locations()?.locations)
+  })
+
   return (
-    <Form class="flex flex-col gap-4" onSubmit={submit}>
-      <input class="hidden" type="text" name="username" autocomplete="username" />
-      <Field name="name" validate={required("Please enter a name.")}>
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Name</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="Name"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Field name="description">
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Description</FieldLabel>
-            <FieldControl field={field}>
-              <Textarea
-                {...props}
-                value={field.value}
-                placeholder="Description"
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Button type="submit" disabled={createGroupForm.submitting}>
-        <Show when={!createGroupForm.submitting} fallback={<>Creating group</>}>
-          Create group
-        </Show>
-      </Button>
-      <FormMessage form={createGroupForm} />
-      <CheckboxRoot checked={addMore()} onChange={setAddMore}>
-        <CheckboxInput />
-        <CheckboxControl />
-        <CheckboxLabel>Add more</CheckboxLabel>
-      </CheckboxRoot>
-    </Form>
+    <Suspense fallback={<Skeleton class="h-32" />}>
+      <Form class="flex flex-col gap-4" onSubmit={submit}>
+        <input class="hidden" type="text" name="username" autocomplete="username" />
+        <Field name="name">
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>Name</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  placeholder="Name"
+                  value={field.value}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="url">
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>URL</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  placeholder="URL"
+                  value={field.value}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="username">
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>Username</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  placeholder="Username"
+                  value={field.value}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="password">
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>Password</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  placeholder="Password"
+                  type="password"
+                  value={field.value}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="location">
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>Location</FieldLabel>
+              <FieldControl field={field}>
+                <SelectHTML
+                  {...props}
+                  value={field.value}
+                >
+                  <For each={locations()}>
+                    {v =>
+                      <option value={v}>{v}</option>
+                    }
+                  </For>
+                </SelectHTML>
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="features" type="string[]">
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>Features</FieldLabel>
+              <FieldControl field={field}>
+                <SelectHTML
+                  {...props}
+                  class="h-32"
+                  value={field.value}
+                  multiple
+                >
+                  <For each={deviceFeatures()}>
+                    {v =>
+                      <option value={v.value}>{v.name}</option>
+                    }
+                  </For>
+                </SelectHTML>
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Button type="submit" disabled={createDeviceForm.submitting}>
+          <Show when={!createDeviceForm.submitting} fallback={<>Creating device</>}>
+            Create device
+          </Show>
+        </Button>
+        <FormMessage form={createDeviceForm} />
+        <CheckboxRoot checked={addMore()} onChange={setAddMore}>
+          <CheckboxInput />
+          <CheckboxControl />
+          <CheckboxLabel>Add more</CheckboxLabel>
+        </CheckboxRoot>
+      </Form>
+    </Suspense>
   )
 }
 
-type UpdateGroupForm = {
+type UpdateDeviceForm = {
   id: any
   name: string
   description: string
 }
 
-const actionUpdateGroupForm = action((form: UpdateGroupForm) => useClient()
-  .admin.updateGroup({ id: form.id, model: form })
-  .then(() => revalidate(getAdminGroupsPage.key))
+const actionUpdateDeviceForm = action((form: UpdateDeviceForm) => useClient()
+  .admin.updateDevice({ id: form.id, model: form })
+  .then(() => revalidate(getAdminDevicesPage.key))
   .catch(throwAsFormError)
 )
 
-function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
-  const [updateGroupForm, { Field, Form }] = createForm<UpdateGroupForm>();
-  const updateGroupFormAction = useAction(actionUpdateGroupForm)
-  const submit = (form: UpdateGroupForm) => updateGroupFormAction(form)
+function UpdateDeviceForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
+  const [updateDeviceForm, { Field, Form }] = createForm<UpdateDeviceForm>();
+  const updateDeviceFormAction = useAction(actionUpdateDeviceForm)
+  const submit = (form: UpdateDeviceForm) => updateDeviceFormAction(form)
     .then(() => props.setOpen(false))
-  const [form] = createResource(() => getGroup(props.id)
-    .then((data) => syncForm(updateGroupForm, { ...data, ...data.model })))
+  const [form] = createResource(() => getDevice(props.id)
+    .then((data) => setupForm(updateDeviceForm, { ...data, ...data.model })))
 
   return (
     <Show when={!form.error} fallback={<PageError error={form.error} />}>
@@ -452,12 +542,12 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
             </FieldRoot>
           )}
         </Field>
-        <Button type="submit" disabled={form.loading || updateGroupForm.submitting}>
-          <Show when={!updateGroupForm.submitting} fallback={<>Updating group</>}>
+        <Button type="submit" disabled={form.loading || updateDeviceForm.submitting}>
+          <Show when={!updateDeviceForm.submitting} fallback={<>Updating group</>}>
             Update group
           </Show>
         </Button>
-        <FormMessage form={updateGroupForm} />
+        <FormMessage form={updateDeviceForm} />
       </Form>
     </Show>
   )

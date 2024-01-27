@@ -111,7 +111,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 	user := dbUser.Convert()
 
 	if err := auth.CheckUserPassword(dbUser.Password, req.OldPassword); err != nil {
-		return nil, NewError(err, "Failed to update password.").Field("oldPassword", fmt.Errorf("Old password is invalid."))
+		return nil, NewError(err, "Old password is invalid.").Field("oldPassword")
 	}
 
 	if _, err := auth.UpdateUser(ctx, u.db, user, req.NewPassword); err != nil {

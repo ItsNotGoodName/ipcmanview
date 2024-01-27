@@ -192,7 +192,6 @@ type Setting struct {
 	SiteName    string
 	Location    string
 	Coordinates string
-	AllowSignUp bool
 }
 
 type User struct {

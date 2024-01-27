@@ -698,9 +698,9 @@ export interface DeviceModel {
      */
     location: string;
     /**
-     * @generated from protobuf field: int32 features = 6;
+     * @generated from protobuf field: repeated string features = 6;
      */
-    features: number;
+    features: string[];
 }
 /**
  * @generated from protobuf message GetDeviceReq
@@ -785,6 +785,37 @@ export interface SetDeviceDisableReq_Item {
      * @generated from protobuf field: bool disable = 2;
      */
     disable: boolean;
+}
+/**
+ * @generated from protobuf message ListLocationsResp
+ */
+export interface ListLocationsResp {
+    /**
+     * @generated from protobuf field: repeated string locations = 1;
+     */
+    locations: string[];
+}
+/**
+ * @generated from protobuf message ListDeviceFeaturesResp
+ */
+export interface ListDeviceFeaturesResp {
+    /**
+     * @generated from protobuf field: repeated ListDeviceFeaturesResp.Item features = 1;
+     */
+    features: ListDeviceFeaturesResp_Item[];
+}
+/**
+ * @generated from protobuf message ListDeviceFeaturesResp.Item
+ */
+export interface ListDeviceFeaturesResp_Item {
+    /**
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string value = 2;
+     */
+    value: string;
 }
 /**
  * @generated from protobuf enum Order
@@ -1404,7 +1435,7 @@ class DeviceModel$Type extends MessageType<DeviceModel> {
             { no: 3, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "features", kind: "scalar", T: 5 /*ScalarType.INT32*/ }
+            { no: 6, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1511,6 +1542,43 @@ class SetDeviceDisableReq_Item$Type extends MessageType<SetDeviceDisableReq_Item
  * @generated MessageType for protobuf message SetDeviceDisableReq.Item
  */
 export const SetDeviceDisableReq_Item = new SetDeviceDisableReq_Item$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListLocationsResp$Type extends MessageType<ListLocationsResp> {
+    constructor() {
+        super("ListLocationsResp", [
+            { no: 1, name: "locations", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListLocationsResp
+ */
+export const ListLocationsResp = new ListLocationsResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceFeaturesResp$Type extends MessageType<ListDeviceFeaturesResp> {
+    constructor() {
+        super("ListDeviceFeaturesResp", [
+            { no: 1, name: "features", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ListDeviceFeaturesResp_Item }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceFeaturesResp
+ */
+export const ListDeviceFeaturesResp = new ListDeviceFeaturesResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceFeaturesResp_Item$Type extends MessageType<ListDeviceFeaturesResp_Item> {
+    constructor() {
+        super("ListDeviceFeaturesResp.Item", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "value", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceFeaturesResp.Item
+ */
+export const ListDeviceFeaturesResp_Item = new ListDeviceFeaturesResp_Item$Type();
 /**
  * @generated ServiceType for protobuf service HelloWorld
  */
@@ -1556,5 +1624,7 @@ export const Admin = new ServiceType("Admin", [
     { name: "GetDevice", options: {}, I: GetDeviceReq, O: GetDeviceResp },
     { name: "UpdateDevice", options: {}, I: UpdateDeviceReq, O: Empty },
     { name: "DeleteDevice", options: {}, I: DeleteDeviceReq, O: Empty },
-    { name: "SetDeviceDisable", options: {}, I: SetDeviceDisableReq, O: Empty }
+    { name: "SetDeviceDisable", options: {}, I: SetDeviceDisableReq, O: Empty },
+    { name: "ListLocations", options: {}, I: Empty, O: ListLocationsResp },
+    { name: "ListDeviceFeatures", options: {}, I: Empty, O: ListDeviceFeaturesResp }
 ]);

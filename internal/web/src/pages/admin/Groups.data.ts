@@ -11,7 +11,6 @@ export type AdminGroupsPageSearchParams = {
   perPage: string
   sort: string
   order: string
-  filter: string
 }
 
 export default function({ params }: PageProps<AdminGroupsPageSearchParams>) {

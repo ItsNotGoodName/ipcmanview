@@ -1024,7 +1024,7 @@ func (q *Queries) GetOldestDahuaFileStartTime(ctx context.Context, deviceID int6
 
 const getSettings = `-- name: GetSettings :one
 SELECT
-  setup, site_name, location, coordinates, allow_sign_up
+  setup, site_name, location, coordinates
 FROM
   settings
 LIMIT
@@ -1039,7 +1039,6 @@ func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 		&i.SiteName,
 		&i.Location,
 		&i.Coordinates,
-		&i.AllowSignUp,
 	)
 	return i, err
 }
@@ -2339,7 +2338,7 @@ SET
   location = coalesce(?1, location),
   site_name = coalesce(?2, site_name)
 WHERE
-  1 = 1 RETURNING setup, site_name, location, coordinates, allow_sign_up
+  1 = 1 RETURNING setup, site_name, location, coordinates
 `
 
 type UpdateSettingsParams struct {
@@ -2355,7 +2354,6 @@ func (q *Queries) UpdateSettings(ctx context.Context, arg UpdateSettingsParams) 
 		&i.SiteName,
 		&i.Location,
 		&i.Coordinates,
-		&i.AllowSignUp,
 	)
 	return i, err
 }
