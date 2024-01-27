@@ -1,5 +1,5 @@
 import { createForm, required, reset } from "@modular-forms/solid";
-import { A, action, redirect, revalidate, useAction } from "@solidjs/router";
+import { A, action, createAsync, redirect, revalidate, useAction } from "@solidjs/router";
 import { ParentProps, Show } from "solid-js";
 
 import { useClient } from "~/providers/client";
@@ -14,6 +14,7 @@ import { CheckboxControl, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, Ch
 import { throwAsFormError } from "~/lib/utils";
 import { toast } from "~/ui/Toast";
 import { getSession } from "~/providers/session";
+import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert";
 
 function Layout(props: ParentProps) {
   return (
@@ -79,6 +80,7 @@ const actionSignIn = action((form: SignInForm) =>
 export function SignIn() {
   const [signInForm, { Field, Form }] = createForm<SignInForm>();
   const signIn = useAction(actionSignIn)
+  const session = createAsync(getSession)
 
   return (
     <Layout>
@@ -143,6 +145,14 @@ export function SignIn() {
           </Button>
           <FormMessage form={signInForm} />
         </Form>
+        <Show when={session()?.valid && session()?.disabled}>
+          <AlertRoot variant="destructive">
+            <AlertTitle>Account disabled</AlertTitle>
+            <AlertDescription>
+              Your account "{session()?.username}" is disabled.
+            </AlertDescription>
+          </AlertRoot>
+        </Show>
       </CardRoot>
       <Footer>
         <A href="/signup" class={linkVariants()}>Sign up</A>

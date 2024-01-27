@@ -8,7 +8,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/common"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
@@ -19,7 +19,7 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-func DefaultWorkerFactory(bus *core.Bus, pub pubsub.Pub, db repo.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
+func DefaultWorkerFactory(bus *common.Bus, pub pubsub.Pub, db repo.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
 	return func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
@@ -113,7 +113,7 @@ func (w EventWorker) serve(ctx context.Context) error {
 	}
 }
 
-func NewCoaxialWorker(bus *core.Bus, db repo.DB, store *Store, deviceID int64) CoaxialWorker {
+func NewCoaxialWorker(bus *common.Bus, db repo.DB, store *Store, deviceID int64) CoaxialWorker {
 	return CoaxialWorker{
 		bus:      bus,
 		db:       db,
@@ -124,7 +124,7 @@ func NewCoaxialWorker(bus *core.Bus, db repo.DB, store *Store, deviceID int64) C
 
 // CoaxialWorker publishes coaxial status to the bus.
 type CoaxialWorker struct {
-	bus      *core.Bus
+	bus      *common.Bus
 	db       repo.DB
 	store    *Store
 	deviceID int64

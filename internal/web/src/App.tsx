@@ -35,14 +35,12 @@ function App() {
             <Debug />
           </Route>
         </Show>
-        <Show when={sessionCache.valid} fallback={
-          <>
-            <Route path="/signin" component={SignIn} />
-            <Route path="/signup" component={Signup} />
-            <Route path="/forgot" component={Forgot} />
-            <Route path="*404" component={() => <Navigate href="/signin" />} />
-          </>
-        }>
+        <Show when={sessionCache.valid && !sessionCache.disabled} fallback={<>
+          <Route path="/signin" component={SignIn} />
+          <Route path="/signup" component={Signup} />
+          <Route path="/forgot" component={Forgot} />
+          <Route path="*404" component={() => <Navigate href="/signin" />} />
+        </>}>
           <Route path="/" component={Home} load={loadHome} />
           <Route path="/profile" component={Profile} load={loadProfile} />
           <Route path="/view" component={View} />
@@ -56,7 +54,7 @@ function App() {
           <Route path="*404" component={NotFound} />
         </Show>
       </Router>
-    </ClientProvider >
+    </ClientProvider>
   )
 }
 

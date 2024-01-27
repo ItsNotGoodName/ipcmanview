@@ -1,5 +1,3 @@
 package auth
 
-type contextKey struct {
-	user string
-}
+type contextKey string

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/common"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -158,7 +158,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 						WorkDir:     f.WorkDir,
 						WorkDirSn:   f.WorkDirSN,
 						UpdatedAt:   updated_at,
-						Storage:     core.StorageFromFilePath(f.FilePath),
+						Storage:     common.StorageFromFilePath(f.FilePath),
 					})
 					if err != nil {
 						return err

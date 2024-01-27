@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/common"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuasmtp"
@@ -60,7 +60,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super.Add(pub)
 
 	// Bus
-	bus := core.NewBus().Register(pub)
+	bus := common.NewBus().Register(pub)
 	super.Add(bus)
 
 	// MediaMTX
@@ -111,7 +111,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	// SMTP
 	dahuaSMTPApp := dahuasmtp.NewApp(db, dahuaAFS)
 	dahuaSMTPBackend := dahuasmtp.NewBackend(dahuaSMTPApp)
-	dahuaSMTPServer := dahuasmtp.NewServer(dahuaSMTPBackend, core.Address(c.SMTPHost, int(c.SMTPPort)))
+	dahuaSMTPServer := dahuasmtp.NewServer(dahuaSMTPBackend, common.Address(c.SMTPHost, int(c.SMTPPort)))
 	super.Add(dahuaSMTPServer)
 
 	// HTTP router
@@ -135,7 +135,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db), rpcLogger, rpcserver.AdminAuthSession()))
 
 	// HTTP server
-	httpServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPPort)))
+	httpServer := http.NewServer(httpRouter, common.Address(c.HTTPHost, int(c.HTTPPort)))
 	super.Add(httpServer)
 
 	return super.Serve(ctx)

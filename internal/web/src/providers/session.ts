@@ -7,10 +7,11 @@ export type Session = {
   username: string
   admin: boolean
   user_id: number
+  disabled: boolean
 }
 
 // HACK: this is to allow switching routes based on session
-export const [sessionCache, setSessionCache] = makePersisted(createStore<Session>({ valid: false, username: "", admin: false, user_id: 0 }), { name: "session" })
+export const [sessionCache, setSessionCache] = makePersisted(createStore<Session>({ valid: false, username: "", admin: false, user_id: 0, disabled: false }), { name: "session" })
 
 export const getSession = cache(() =>
   fetch("/v1/session", {

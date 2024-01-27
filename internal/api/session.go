@@ -9,10 +9,11 @@ import (
 )
 
 type SesionResp struct {
-	Valid    bool   `json:"valid"`
-	Username string `json:"username"`
 	Admin    bool   `json:"admin"`
+	Disabled bool   `json:"disabled"`
 	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+	Valid    bool   `json:"valid"`
 }
 
 func (s *Server) Session(c echo.Context) error {
@@ -24,10 +25,11 @@ func (s *Server) Session(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, SesionResp{
-		Valid:    true,
-		Username: authSession.Username,
 		Admin:    authSession.Admin,
+		Disabled: authSession.Disabled,
 		UserID:   authSession.UserID,
+		Username: authSession.Username,
+		Valid:    true,
 	})
 }
 
@@ -92,11 +94,12 @@ func (s *Server) SessionPOST(c echo.Context) error {
 func (s *Server) SessionDELETE(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	// Delete session
 	cookie, err := c.Cookie("session")
 	if err != nil {
 		return c.JSON(http.StatusOK, nil)
 	}
+
+	// Delete session
 	if err := s.db.DeleteUserSessionBySession(ctx, cookie.Value); err != nil {
 		return err
 	}

@@ -7,7 +7,7 @@ import (
 	"slices"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/common"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -29,10 +29,10 @@ import (
 )
 
 func NewScanLockStore() ScanLockStore {
-	return ScanLockStore{core.NewLockStore[int64]()}
+	return ScanLockStore{common.NewLockStore[int64]()}
 }
 
-type ScanLockStore struct{ *core.LockStore[int64] }
+type ScanLockStore struct{ *common.LockStore[int64] }
 
 func NewClient(conn models.DahuaConn) Client {
 	rpcHTTPClient := &http.Client{
@@ -321,7 +321,7 @@ func NewDahuaFile(deviceID int64, file mediafilefind.FindNextFileInfo, affixSeed
 		Repeat:      file.Repeat,
 		WorkDir:     file.WorkDir,
 		WorkDirSN:   file.WorkDirSN == 1,
-		Storage:     core.StorageFromFilePath(file.FilePath),
+		Storage:     common.StorageFromFilePath(file.FilePath),
 	}, nil
 }
 

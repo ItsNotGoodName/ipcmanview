@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/common"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var sessionCtxKey contextKey = contextKey{"session"}
+var sessionCtxKey contextKey = contextKey("session")
 
 const CookieKey = "session"
 
@@ -45,7 +45,7 @@ func NewSession(ctx context.Context, db repo.DB, userAgent, ip string, userID in
 }
 
 func Session(db repo.DB) echo.MiddlewareFunc {
-	sessionUpdateLock := core.NewLockStore[string]()
+	sessionUpdateLock := common.NewLockStore[string]()
 	sessionUpdateThrottle := time.Minute
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -87,11 +87,12 @@ func Session(db repo.DB) echo.MiddlewareFunc {
 			}
 
 			c.SetRequest(c.Request().WithContext(context.WithValue(ctx, sessionCtxKey, models.AuthSession{
+				Admin:     userSession.Admin,
+				Disabled:  userSession.UsersDisabledAt.Valid,
+				Session:   cookie.Value,
 				SessionID: userSession.ID,
 				UserID:    userSession.UserID,
 				Username:  userSession.Username.String,
-				Session:   cookie.Value,
-				Admin:     userSession.Admin,
 			})))
 			return next(c)
 		}

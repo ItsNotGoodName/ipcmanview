@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/common"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/gorilla/schema"
@@ -81,7 +81,7 @@ func UseTimeRange(start, end string) (models.TimeRange, error) {
 		endTime = time.Now()
 	}
 
-	r, err := core.NewTimeRange(startTime, endTime)
+	r, err := common.NewTimeRange(startTime, endTime)
 	if err != nil {
 		return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
 	}

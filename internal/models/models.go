@@ -41,9 +41,10 @@ type Group struct {
 }
 
 type AuthSession struct {
+	Admin     bool
+	Disabled  bool
+	Session   string
 	SessionID int64
 	UserID    int64
 	Username  string
-	Session   string
-	Admin     bool
 }

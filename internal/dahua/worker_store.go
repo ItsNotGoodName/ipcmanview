@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/common"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/thejerf/suture/v4"
@@ -97,7 +97,7 @@ func (s *WorkerStore) Delete(id int64) error {
 	return nil
 }
 
-func (s *WorkerStore) Register(bus *core.Bus) *WorkerStore {
+func (s *WorkerStore) Register(bus *common.Bus) *WorkerStore {
 	bus.OnEventDahuaDeviceCreated(func(ctx context.Context, evt models.EventDahuaDeviceCreated) error {
 		return s.Create(ctx, evt.Device.DahuaConn)
 	})

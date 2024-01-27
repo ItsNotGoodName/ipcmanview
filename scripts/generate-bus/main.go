@@ -74,7 +74,7 @@ type Data struct {
 }
 
 func main() {
-	outputFilePath := "./internal/core/bus.gen.go"
+	outputFilePath := "./internal/common/bus.gen.go"
 	inputFilePath := "./internal/models/event.go"
 
 	flag.StringVar(&outputFilePath, "output", "", "")
@@ -93,7 +93,7 @@ func main() {
 	}
 	data := Data{
 		By:      "generate-bus.go",
-		Package: "core",
+		Package: "common",
 		Imports: []string{
 			"context",
 			"errors",

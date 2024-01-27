@@ -196,7 +196,7 @@ export function Root(props: ParentProps) {
             <ToastList class={session()?.valid ? "top-12 sm:top-12" : ""} />
           </ToastRegion>
         </Portal>
-        <Show when={session()?.valid} fallback={<>{props.children}</>}>
+        <Show when={session()?.valid && !session()?.disabled} fallback={<>{props.children}</>}>
           <Header onMenuClick={() => setMenuOpen((prev) => !prev)}>
             <DropdownMenuLinks />
           </Header>

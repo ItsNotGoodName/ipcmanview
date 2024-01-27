@@ -29,7 +29,8 @@ SELECT
   admins.user_id IS NOT NULL as 'admin',
   user_sessions.last_ip,
   user_sessions.last_used_at,
-  user_sessions.expired_at
+  user_sessions.expired_at,
+  users.disabled_at AS 'users_disabled_at'
 FROM
   user_sessions
   LEFT JOIN users ON users.id = user_sessions.user_id

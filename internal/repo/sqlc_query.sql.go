@@ -1024,7 +1024,7 @@ func (q *Queries) GetOldestDahuaFileStartTime(ctx context.Context, deviceID int6
 
 const getSettings = `-- name: GetSettings :one
 SELECT
-  setup, site_name, location, coordinates
+  setup, site_name, location, coordinates, allow_sign_up
 FROM
   settings
 LIMIT
@@ -1039,6 +1039,7 @@ func (q *Queries) GetSettings(ctx context.Context) (Setting, error) {
 		&i.SiteName,
 		&i.Location,
 		&i.Coordinates,
+		&i.AllowSignUp,
 	)
 	return i, err
 }
@@ -1116,7 +1117,8 @@ SELECT
   admins.user_id IS NOT NULL as 'admin',
   user_sessions.last_ip,
   user_sessions.last_used_at,
-  user_sessions.expired_at
+  user_sessions.expired_at,
+  users.disabled_at AS 'users_disabled_at'
 FROM
   user_sessions
   LEFT JOIN users ON users.id = user_sessions.user_id
@@ -1126,13 +1128,14 @@ WHERE
 `
 
 type GetUserBySessionRow struct {
-	ID         int64
-	UserID     int64
-	Username   sql.NullString
-	Admin      bool
-	LastIp     string
-	LastUsedAt types.Time
-	ExpiredAt  types.Time
+	ID              int64
+	UserID          int64
+	Username        sql.NullString
+	Admin           bool
+	LastIp          string
+	LastUsedAt      types.Time
+	ExpiredAt       types.Time
+	UsersDisabledAt types.NullTime
 }
 
 func (q *Queries) GetUserBySession(ctx context.Context, session string) (GetUserBySessionRow, error) {
@@ -1146,6 +1149,7 @@ func (q *Queries) GetUserBySession(ctx context.Context, session string) (GetUser
 		&i.LastIp,
 		&i.LastUsedAt,
 		&i.ExpiredAt,
+		&i.UsersDisabledAt,
 	)
 	return i, err
 }
@@ -2335,7 +2339,7 @@ SET
   location = coalesce(?1, location),
   site_name = coalesce(?2, site_name)
 WHERE
-  1 = 1 RETURNING setup, site_name, location, coordinates
+  1 = 1 RETURNING setup, site_name, location, coordinates, allow_sign_up
 `
 
 type UpdateSettingsParams struct {
@@ -2351,6 +2355,7 @@ func (q *Queries) UpdateSettings(ctx context.Context, arg UpdateSettingsParams) 
 		&i.SiteName,
 		&i.Location,
 		&i.Coordinates,
+		&i.AllowSignUp,
 	)
 	return i, err
 }

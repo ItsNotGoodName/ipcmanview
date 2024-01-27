@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/common"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
@@ -191,7 +191,7 @@ type dahuaEvent struct {
 	EventType string `json:"event_type"`
 }
 
-func (c Conn) Register(bus *core.Bus) error {
+func (c Conn) Register(bus *common.Bus) error {
 	if c.haEnable {
 		bus.OnEventDahuaDeviceCreated(func(ctx context.Context, event models.EventDahuaDeviceCreated) error {
 			c.conn.Ready()

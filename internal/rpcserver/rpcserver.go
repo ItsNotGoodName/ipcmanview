@@ -53,9 +53,12 @@ func Logger() twirp.ServerOption {
 func AuthSession() twirp.ServerOption {
 	return twirp.WithServerHooks(&twirp.ServerHooks{
 		RequestReceived: func(ctx context.Context) (context.Context, error) {
-			_, ok := auth.UseSession(ctx)
+			authSession, ok := auth.UseSession(ctx)
 			if !ok {
 				return ctx, twirp.Unauthenticated.Error("Invalid session or not signed in.")
+			}
+			if authSession.Disabled {
+				return ctx, twirp.Unauthenticated.Error("Account disabled.")
 			}
 			return ctx, nil
 		},
@@ -72,7 +75,9 @@ func AdminAuthSession() twirp.ServerOption {
 			if !authSession.Admin {
 				return ctx, twirp.PermissionDenied.Error("You are not an admin.")
 			}
-
+			if authSession.Disabled {
+				return ctx, twirp.Unauthenticated.Error("Account disabled.")
+			}
 			return ctx, nil
 		},
 	})
