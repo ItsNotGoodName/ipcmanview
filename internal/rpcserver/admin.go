@@ -139,6 +139,29 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 	}, nil
 }
 
+func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevicesIDPageReq) (*rpc.GetAdminDevicesIDPageResp, error) {
+	dbDevice, err := a.db.GetDahuaDevice(ctx, req.Id)
+	if err != nil {
+		return nil, check(err)
+	}
+
+	return &rpc.GetAdminDevicesIDPageResp{
+		Device: &rpc.GetAdminDevicesIDPageResp_Device{
+			Id:             dbDevice.ID,
+			Name:           dbDevice.Name,
+			Url:            dbDevice.Url.String(),
+			Username:       dbDevice.Username,
+			Disabled:       false,
+			Location:       dbDevice.Location.String(),
+			CreatedAtTime:  timestamppb.New(dbDevice.CreatedAt.Time),
+			UpdatedAtTime:  timestamppb.New(dbDevice.UpdatedAt.Time),
+			DisabledAtTime: timestamppb.New(dbDevice.DisabledAt.Time),
+			Features:       []string{},
+		},
+	}, nil
+
+}
+
 func (*Admin) GetDevice(context.Context, *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
 	return nil, errNotImplemented
 }
@@ -386,7 +409,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 	}, nil
 }
 
-func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupIDPageReq) (*rpc.GetAdminGroupIDPageResp, error) {
+func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroupsIDPageReq) (*rpc.GetAdminGroupsIDPageResp, error) {
 	dbGroup, err := a.db.GetGroup(ctx, req.Id)
 	if err != nil {
 		return nil, check(err)
@@ -397,16 +420,16 @@ func (a *Admin) GetAdminGroupIDPage(ctx context.Context, req *rpc.GetAdminGroupI
 		return nil, check(err)
 	}
 
-	users := make([]*rpc.GetAdminGroupIDPageResp_User, 0, len(dbUsers))
+	users := make([]*rpc.GetAdminGroupsIDPageResp_User, 0, len(dbUsers))
 	for _, v := range dbUsers {
-		users = append(users, &rpc.GetAdminGroupIDPageResp_User{
+		users = append(users, &rpc.GetAdminGroupsIDPageResp_User{
 			Id:       v.ID,
 			Username: v.Username,
 		})
 	}
 
-	return &rpc.GetAdminGroupIDPageResp{
-		Group: &rpc.GetAdminGroupIDPageResp_Group{
+	return &rpc.GetAdminGroupsIDPageResp{
+		Group: &rpc.GetAdminGroupsIDPageResp_Group{
 			Id:             dbGroup.ID,
 			Name:           dbGroup.Name,
 			Description:    dbGroup.Description,

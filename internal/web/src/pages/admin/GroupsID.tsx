@@ -1,12 +1,11 @@
 import { createAsync } from "@solidjs/router";
-import { AdminGroupsIDPageSearchParams, getAdminGroupsIDPage } from "./GroupsID.data";
+import { getAdminGroupsIDPage } from "./GroupsID.data";
 import { ErrorBoundary } from "solid-js";
 import { PageError } from "~/ui/Page";
-import { PageProps } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 
-export function AdminGroupsID(props: PageProps<AdminGroupsIDPageSearchParams>) {
-  const data = createAsync(() => getAdminGroupsIDPage({ id: BigInt(props.params.id || 0) }))
+export function AdminGroupsID(props: any) {
+  const data = createAsync(() => getAdminGroupsIDPage(BigInt(props.params.id || 0)))
 
   return (
     <LayoutNormal>

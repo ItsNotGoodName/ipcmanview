@@ -25,6 +25,8 @@ import { AdminDevices } from "./pages/admin/Devices";
 import loadAdminDevices from "./pages/admin/Devices.data";
 import { AdminDevicesCreate, AdminDevicesIDUpdate } from "./pages/admin/DeviceForms";
 import { loadAdminDevicesCreate, loadAdminDevicesIDUpdate } from "./pages/admin/DeviceForms.data";
+import { AdminDevicesID } from "./pages/admin/DevicesID";
+import loadAdminDevicesID from "./pages/admin/DevicesID.data";
 
 const Debug = lazy(() => import("./pages/debug"));
 
@@ -56,6 +58,7 @@ function App() {
             <Route path="/admin/devices" component={AdminDevices} load={loadAdminDevices} />
             <Route path="/admin/devices/create" component={AdminDevicesCreate} load={loadAdminDevicesCreate} />
             <Route path="/admin/devices/:id/update" component={AdminDevicesIDUpdate} load={loadAdminDevicesIDUpdate} />
+            <Route path="/admin/devices/:id" component={AdminDevicesID} load={loadAdminDevicesID} />
           </Show>
           <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />
           <Route path="*404" component={NotFound} />

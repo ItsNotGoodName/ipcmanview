@@ -217,10 +217,10 @@ message GetAdminDevicesIDPageResp {
     int64 id = 1;
     string name = 2;
     string url = 3;
-    username = 4;
+    string username = 4;
     bool disabled = 5;
     string location = 6;
-    repeated features = 7;
+    repeated string features = 7;
     google.protobuf.Timestamp disabled_at_time = 8;
     google.protobuf.Timestamp created_at_time = 9;
     google.protobuf.Timestamp updated_at_time = 10;

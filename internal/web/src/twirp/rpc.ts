@@ -324,31 +324,31 @@ export interface GetAdminGroupsPageResp_Group {
     createdAtTime?: Timestamp;
 }
 /**
- * @generated from protobuf message GetAdminGroupIDPageReq
+ * @generated from protobuf message GetAdminGroupsIDPageReq
  */
-export interface GetAdminGroupIDPageReq {
+export interface GetAdminGroupsIDPageReq {
     /**
      * @generated from protobuf field: int64 id = 1;
      */
     id: bigint;
 }
 /**
- * @generated from protobuf message GetAdminGroupIDPageResp
+ * @generated from protobuf message GetAdminGroupsIDPageResp
  */
-export interface GetAdminGroupIDPageResp {
+export interface GetAdminGroupsIDPageResp {
     /**
-     * @generated from protobuf field: GetAdminGroupIDPageResp.Group group = 1;
+     * @generated from protobuf field: GetAdminGroupsIDPageResp.Group group = 1;
      */
-    group?: GetAdminGroupIDPageResp_Group;
+    group?: GetAdminGroupsIDPageResp_Group;
     /**
-     * @generated from protobuf field: repeated GetAdminGroupIDPageResp.User users = 2;
+     * @generated from protobuf field: repeated GetAdminGroupsIDPageResp.User users = 2;
      */
-    users: GetAdminGroupIDPageResp_User[];
+    users: GetAdminGroupsIDPageResp_User[];
 }
 /**
- * @generated from protobuf message GetAdminGroupIDPageResp.Group
+ * @generated from protobuf message GetAdminGroupsIDPageResp.Group
  */
-export interface GetAdminGroupIDPageResp_Group {
+export interface GetAdminGroupsIDPageResp_Group {
     /**
      * @generated from protobuf field: int64 id = 1;
      */
@@ -379,9 +379,9 @@ export interface GetAdminGroupIDPageResp_Group {
     updatedAtTime?: Timestamp;
 }
 /**
- * @generated from protobuf message GetAdminGroupIDPageResp.User
+ * @generated from protobuf message GetAdminGroupsIDPageResp.User
  */
-export interface GetAdminGroupIDPageResp_User {
+export interface GetAdminGroupsIDPageResp_User {
     /**
      * @generated from protobuf field: int64 id = 1;
      */
@@ -390,6 +390,69 @@ export interface GetAdminGroupIDPageResp_User {
      * @generated from protobuf field: string username = 2;
      */
     username: string;
+}
+/**
+ * @generated from protobuf message GetAdminDevicesIDPageReq
+ */
+export interface GetAdminDevicesIDPageReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message GetAdminDevicesIDPageResp
+ */
+export interface GetAdminDevicesIDPageResp {
+    /**
+     * @generated from protobuf field: GetAdminDevicesIDPageResp.Device device = 1;
+     */
+    device?: GetAdminDevicesIDPageResp_Device;
+}
+/**
+ * @generated from protobuf message GetAdminDevicesIDPageResp.Device
+ */
+export interface GetAdminDevicesIDPageResp_Device {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string url = 3;
+     */
+    url: string;
+    /**
+     * @generated from protobuf field: string username = 4;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: bool disabled = 5;
+     */
+    disabled: boolean;
+    /**
+     * @generated from protobuf field: string location = 6;
+     */
+    location: string;
+    /**
+     * @generated from protobuf field: repeated string features = 7;
+     */
+    features: string[];
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp disabled_at_time = 8;
+     */
+    disabledAtTime?: Timestamp;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 9;
+     */
+    createdAtTime?: Timestamp;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp updated_at_time = 10;
+     */
+    updatedAtTime?: Timestamp;
 }
 /**
  * @generated from protobuf message GetAdminUsersPageReq
@@ -1148,34 +1211,34 @@ class GetAdminGroupsPageResp_Group$Type extends MessageType<GetAdminGroupsPageRe
  */
 export const GetAdminGroupsPageResp_Group = new GetAdminGroupsPageResp_Group$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetAdminGroupIDPageReq$Type extends MessageType<GetAdminGroupIDPageReq> {
+class GetAdminGroupsIDPageReq$Type extends MessageType<GetAdminGroupsIDPageReq> {
     constructor() {
-        super("GetAdminGroupIDPageReq", [
+        super("GetAdminGroupsIDPageReq", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message GetAdminGroupIDPageReq
+ * @generated MessageType for protobuf message GetAdminGroupsIDPageReq
  */
-export const GetAdminGroupIDPageReq = new GetAdminGroupIDPageReq$Type();
+export const GetAdminGroupsIDPageReq = new GetAdminGroupsIDPageReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetAdminGroupIDPageResp$Type extends MessageType<GetAdminGroupIDPageResp> {
+class GetAdminGroupsIDPageResp$Type extends MessageType<GetAdminGroupsIDPageResp> {
     constructor() {
-        super("GetAdminGroupIDPageResp", [
-            { no: 1, name: "group", kind: "message", T: () => GetAdminGroupIDPageResp_Group },
-            { no: 2, name: "users", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetAdminGroupIDPageResp_User }
+        super("GetAdminGroupsIDPageResp", [
+            { no: 1, name: "group", kind: "message", T: () => GetAdminGroupsIDPageResp_Group },
+            { no: 2, name: "users", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetAdminGroupsIDPageResp_User }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message GetAdminGroupIDPageResp
+ * @generated MessageType for protobuf message GetAdminGroupsIDPageResp
  */
-export const GetAdminGroupIDPageResp = new GetAdminGroupIDPageResp$Type();
+export const GetAdminGroupsIDPageResp = new GetAdminGroupsIDPageResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetAdminGroupIDPageResp_Group$Type extends MessageType<GetAdminGroupIDPageResp_Group> {
+class GetAdminGroupsIDPageResp_Group$Type extends MessageType<GetAdminGroupsIDPageResp_Group> {
     constructor() {
-        super("GetAdminGroupIDPageResp.Group", [
+        super("GetAdminGroupsIDPageResp.Group", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
@@ -1187,22 +1250,67 @@ class GetAdminGroupIDPageResp_Group$Type extends MessageType<GetAdminGroupIDPage
     }
 }
 /**
- * @generated MessageType for protobuf message GetAdminGroupIDPageResp.Group
+ * @generated MessageType for protobuf message GetAdminGroupsIDPageResp.Group
  */
-export const GetAdminGroupIDPageResp_Group = new GetAdminGroupIDPageResp_Group$Type();
+export const GetAdminGroupsIDPageResp_Group = new GetAdminGroupsIDPageResp_Group$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetAdminGroupIDPageResp_User$Type extends MessageType<GetAdminGroupIDPageResp_User> {
+class GetAdminGroupsIDPageResp_User$Type extends MessageType<GetAdminGroupsIDPageResp_User> {
     constructor() {
-        super("GetAdminGroupIDPageResp.User", [
+        super("GetAdminGroupsIDPageResp.User", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message GetAdminGroupIDPageResp.User
+ * @generated MessageType for protobuf message GetAdminGroupsIDPageResp.User
  */
-export const GetAdminGroupIDPageResp_User = new GetAdminGroupIDPageResp_User$Type();
+export const GetAdminGroupsIDPageResp_User = new GetAdminGroupsIDPageResp_User$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetAdminDevicesIDPageReq$Type extends MessageType<GetAdminDevicesIDPageReq> {
+    constructor() {
+        super("GetAdminDevicesIDPageReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetAdminDevicesIDPageReq
+ */
+export const GetAdminDevicesIDPageReq = new GetAdminDevicesIDPageReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetAdminDevicesIDPageResp$Type extends MessageType<GetAdminDevicesIDPageResp> {
+    constructor() {
+        super("GetAdminDevicesIDPageResp", [
+            { no: 1, name: "device", kind: "message", T: () => GetAdminDevicesIDPageResp_Device }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetAdminDevicesIDPageResp
+ */
+export const GetAdminDevicesIDPageResp = new GetAdminDevicesIDPageResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetAdminDevicesIDPageResp_Device$Type extends MessageType<GetAdminDevicesIDPageResp_Device> {
+    constructor() {
+        super("GetAdminDevicesIDPageResp.Device", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "disabled", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 6, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "disabled_at_time", kind: "message", T: () => Timestamp },
+            { no: 9, name: "created_at_time", kind: "message", T: () => Timestamp },
+            { no: 10, name: "updated_at_time", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetAdminDevicesIDPageResp.Device
+ */
+export const GetAdminDevicesIDPageResp_Device = new GetAdminDevicesIDPageResp_Device$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetAdminUsersPageReq$Type extends MessageType<GetAdminUsersPageReq> {
     constructor() {
@@ -1654,10 +1762,11 @@ export const User = new ServiceType("User", [
  * @generated ServiceType for protobuf service Admin
  */
 export const Admin = new ServiceType("Admin", [
-    { name: "GetAdminGroupsPage", options: {}, I: GetAdminGroupsPageReq, O: GetAdminGroupsPageResp },
-    { name: "GetAdminGroupIDPage", options: {}, I: GetAdminGroupIDPageReq, O: GetAdminGroupIDPageResp },
-    { name: "GetAdminUsersPage", options: {}, I: GetAdminUsersPageReq, O: GetAdminUsersPageResp },
+    { name: "GetAdminDevicesIDPage", options: {}, I: GetAdminDevicesIDPageReq, O: GetAdminDevicesIDPageResp },
     { name: "GetAdminDevicesPage", options: {}, I: GetAdminDevicesPageReq, O: GetAdminDevicesPageResp },
+    { name: "GetAdminGroupsIDPage", options: {}, I: GetAdminGroupsIDPageReq, O: GetAdminGroupsIDPageResp },
+    { name: "GetAdminGroupsPage", options: {}, I: GetAdminGroupsPageReq, O: GetAdminGroupsPageResp },
+    { name: "GetAdminUsersPage", options: {}, I: GetAdminUsersPageReq, O: GetAdminUsersPageResp },
     { name: "DeleteUser", options: {}, I: DeleteUserReq, O: Empty },
     { name: "ResetUserPassword", options: {}, I: ResetUserPasswordReq, O: Empty },
     { name: "SetUserAdmin", options: {}, I: SetUserAdminReq, O: Empty },
