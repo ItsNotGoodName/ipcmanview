@@ -16,14 +16,15 @@ func init() {
 }
 
 var FeatureList []Feature = []Feature{
-	{"camera", "Camera", "", models.DahuaFeatureCamera},
+	{models.DahuaFeatureCamera, "camera", "Camera", ""},
+	{0, "unknown", "Unknown", ""},
 }
 
 type Feature struct {
-	Name        string
-	Value       string
-	Description string
 	models.DahuaFeature
+	Value       string
+	Name        string
+	Description string
 }
 
 var FeatureMap map[string]models.DahuaFeature

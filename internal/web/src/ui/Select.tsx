@@ -92,7 +92,7 @@ export function SelectContent(props: Omit<Select.SelectContentProps, "style">) {
 }
 
 export function SelectListbox() {
-  return <Select.Listbox class="p-1 max-h-96 overflow-y-auto" />
+  return <Select.Listbox class="max-h-96 overflow-y-auto p-1" />
 }
 
 export function SelectLabel(props: ComponentProps<typeof Select.Label>) {

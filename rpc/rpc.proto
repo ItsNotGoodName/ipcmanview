@@ -141,27 +141,29 @@ service Admin {
 
   // User
   rpc DeleteUser(DeleteUserReq) returns (google.protobuf.Empty);
-  rpc SetUserDisable(SetUserDisableReq) returns (google.protobuf.Empty);
-  rpc SetUserAdmin(SetUserAdminReq) returns (google.protobuf.Empty);
   rpc ResetUserPassword(ResetUserPasswordReq) returns (google.protobuf.Empty);
+  rpc SetUserAdmin(SetUserAdminReq) returns (google.protobuf.Empty);
+  rpc SetUserDisable(SetUserDisableReq) returns (google.protobuf.Empty);
 
   // Group
   rpc CreateGroup(CreateGroupReq) returns (CreateGroupResp);
-  rpc GetGroup(GetGroupReq) returns (GetGroupResp);
-  rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
   rpc DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
+  rpc GetGroup(GetGroupReq) returns (GetGroupResp);
   rpc SetGroupDisable(SetGroupDisableReq) returns (google.protobuf.Empty);
+  rpc UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
 
   // Device
   rpc CreateDevice(CreateDeviceReq) returns (CreateDeviceResp);
-  rpc GetDevice(GetDeviceReq) returns (GetDeviceResp);
-  rpc UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
   rpc DeleteDevice(DeleteDeviceReq) returns (google.protobuf.Empty);
+  rpc GetDevice(GetDeviceReq) returns (GetDeviceResp);
   rpc SetDeviceDisable(SetDeviceDisableReq) returns (google.protobuf.Empty);
+  rpc UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
 
   rpc ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
   rpc ListDeviceFeatures(google.protobuf.Empty) returns (ListDeviceFeaturesResp);
 }
+
+// ---------- Pages
 
 message GetAdminGroupsPageReq {
   PagePagination page = 1;
@@ -245,6 +247,8 @@ message GetAdminDevicesPageResp {
   Sort sort = 3;
 }
 
+// ---------- User
+
 message DeleteUserReq {
   repeated int64 ids = 1;
 }
@@ -264,38 +268,39 @@ message SetUserAdminReq {
 
 message ResetUserPasswordReq {
   int64 id = 1;
-  string password = 2;
+  string new_password = 2;
 }
 
-// Group
+// ---------- Group
 
+// Create
 message GroupModel {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+}
+message CreateGroupReq {
   string name = 1;
   string description = 2;
 }
-
-message GetGroupReq {
-  int64 id = 1;
-}
-
-message GetGroupResp {
-  int64 id = 1;
-  GroupModel model = 2;
-}
-
-message CreateGroupReq {
-  GroupModel model = 2;
-}
-
 message CreateGroupResp {
   int64 id = 1;
 }
 
-message UpdateGroupReq {
+// Get
+message GetGroupReq {
   int64 id = 1;
-  GroupModel model = 2;
+}
+message GetGroupResp {
+  GroupModel model = 1;
 }
 
+// Update
+message UpdateGroupReq {
+  GroupModel model = 1;
+}
+
+// Delete
 message DeleteGroupReq {
   repeated int64 ids = 1;
 }
@@ -308,9 +313,19 @@ message SetGroupDisableReq {
   repeated item items = 1;
 }
 
-// Device
+// ---------- Device
 
+// Create
 message DeviceModel {
+  int64 id = 1;
+  string name = 2;
+  string url = 3;
+  string username = 4;
+  string password = 5;
+  string location = 6;
+  repeated string features = 7;
+}
+message CreateDeviceReq {
   string name = 1;
   string url = 2;
   string username = 3;
@@ -318,31 +333,26 @@ message DeviceModel {
   string location = 5;
   repeated string features = 6;
 }
-
-message GetDeviceReq {
-  int64 id = 1;
-}
-
-message GetDeviceResp {
-  int64 id = 1;
-  DeviceModel model = 2;
-}
-
-message CreateDeviceReq {
-  DeviceModel model = 1;
-}
-
 message CreateDeviceResp {
   int64 id = 1;
 }
 
-message UpdateDeviceReq {
+// Get
+message GetDeviceReq {
   int64 id = 1;
-  DeviceModel model = 2;
+}
+message GetDeviceResp {
+  DeviceModel model = 1;
 }
 
+// Update
+message UpdateDeviceReq {
+  DeviceModel model = 1;
+}
+
+// Delete
 message DeleteDeviceReq {
-  int64 id = 1;
+  repeated int64 ids = 1;
 }
 
 message SetDeviceDisableReq {
@@ -353,6 +363,8 @@ message SetDeviceDisableReq {
   repeated Item items = 1;
 }
 
+// ---------- Misc
+
 message ListLocationsResp {
   repeated string locations = 1;
 }
@@ -361,6 +373,7 @@ message ListDeviceFeaturesResp {
   message Item {
     string name = 1;
     string value = 2;
+    string description = 3;
   }
   repeated Item features = 1;
 }

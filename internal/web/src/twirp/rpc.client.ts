@@ -4,23 +4,23 @@
 import { Admin } from "./rpc";
 import type { ListDeviceFeaturesResp } from "./rpc";
 import type { ListLocationsResp } from "./rpc";
-import type { SetDeviceDisableReq } from "./rpc";
-import type { DeleteDeviceReq } from "./rpc";
 import type { UpdateDeviceReq } from "./rpc";
+import type { SetDeviceDisableReq } from "./rpc";
 import type { GetDeviceResp } from "./rpc";
 import type { GetDeviceReq } from "./rpc";
+import type { DeleteDeviceReq } from "./rpc";
 import type { CreateDeviceResp } from "./rpc";
 import type { CreateDeviceReq } from "./rpc";
-import type { SetGroupDisableReq } from "./rpc";
-import type { DeleteGroupReq } from "./rpc";
 import type { UpdateGroupReq } from "./rpc";
+import type { SetGroupDisableReq } from "./rpc";
 import type { GetGroupResp } from "./rpc";
 import type { GetGroupReq } from "./rpc";
+import type { DeleteGroupReq } from "./rpc";
 import type { CreateGroupResp } from "./rpc";
 import type { CreateGroupReq } from "./rpc";
-import type { ResetUserPasswordReq } from "./rpc";
-import type { SetUserAdminReq } from "./rpc";
 import type { SetUserDisableReq } from "./rpc";
+import type { SetUserAdminReq } from "./rpc";
+import type { ResetUserPasswordReq } from "./rpc";
 import type { DeleteUserReq } from "./rpc";
 import type { GetAdminDevicesPageResp } from "./rpc";
 import type { GetAdminDevicesPageReq } from "./rpc";
@@ -246,17 +246,17 @@ export interface IAdminClient {
      */
     deleteUser(input: DeleteUserReq, options?: RpcOptions): UnaryCall<DeleteUserReq, Empty>;
     /**
-     * @generated from protobuf rpc: SetUserDisable(SetUserDisableReq) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: ResetUserPassword(ResetUserPasswordReq) returns (google.protobuf.Empty);
      */
-    setUserDisable(input: SetUserDisableReq, options?: RpcOptions): UnaryCall<SetUserDisableReq, Empty>;
+    resetUserPassword(input: ResetUserPasswordReq, options?: RpcOptions): UnaryCall<ResetUserPasswordReq, Empty>;
     /**
      * @generated from protobuf rpc: SetUserAdmin(SetUserAdminReq) returns (google.protobuf.Empty);
      */
     setUserAdmin(input: SetUserAdminReq, options?: RpcOptions): UnaryCall<SetUserAdminReq, Empty>;
     /**
-     * @generated from protobuf rpc: ResetUserPassword(ResetUserPasswordReq) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: SetUserDisable(SetUserDisableReq) returns (google.protobuf.Empty);
      */
-    resetUserPassword(input: ResetUserPasswordReq, options?: RpcOptions): UnaryCall<ResetUserPasswordReq, Empty>;
+    setUserDisable(input: SetUserDisableReq, options?: RpcOptions): UnaryCall<SetUserDisableReq, Empty>;
     /**
      * Group
      *
@@ -264,21 +264,21 @@ export interface IAdminClient {
      */
     createGroup(input: CreateGroupReq, options?: RpcOptions): UnaryCall<CreateGroupReq, CreateGroupResp>;
     /**
-     * @generated from protobuf rpc: GetGroup(GetGroupReq) returns (GetGroupResp);
-     */
-    getGroup(input: GetGroupReq, options?: RpcOptions): UnaryCall<GetGroupReq, GetGroupResp>;
-    /**
-     * @generated from protobuf rpc: UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
-     */
-    updateGroup(input: UpdateGroupReq, options?: RpcOptions): UnaryCall<UpdateGroupReq, Empty>;
-    /**
      * @generated from protobuf rpc: DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
      */
     deleteGroup(input: DeleteGroupReq, options?: RpcOptions): UnaryCall<DeleteGroupReq, Empty>;
     /**
+     * @generated from protobuf rpc: GetGroup(GetGroupReq) returns (GetGroupResp);
+     */
+    getGroup(input: GetGroupReq, options?: RpcOptions): UnaryCall<GetGroupReq, GetGroupResp>;
+    /**
      * @generated from protobuf rpc: SetGroupDisable(SetGroupDisableReq) returns (google.protobuf.Empty);
      */
     setGroupDisable(input: SetGroupDisableReq, options?: RpcOptions): UnaryCall<SetGroupDisableReq, Empty>;
+    /**
+     * @generated from protobuf rpc: UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
+     */
+    updateGroup(input: UpdateGroupReq, options?: RpcOptions): UnaryCall<UpdateGroupReq, Empty>;
     /**
      * Device
      *
@@ -286,21 +286,21 @@ export interface IAdminClient {
      */
     createDevice(input: CreateDeviceReq, options?: RpcOptions): UnaryCall<CreateDeviceReq, CreateDeviceResp>;
     /**
-     * @generated from protobuf rpc: GetDevice(GetDeviceReq) returns (GetDeviceResp);
-     */
-    getDevice(input: GetDeviceReq, options?: RpcOptions): UnaryCall<GetDeviceReq, GetDeviceResp>;
-    /**
-     * @generated from protobuf rpc: UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
-     */
-    updateDevice(input: UpdateDeviceReq, options?: RpcOptions): UnaryCall<UpdateDeviceReq, Empty>;
-    /**
      * @generated from protobuf rpc: DeleteDevice(DeleteDeviceReq) returns (google.protobuf.Empty);
      */
     deleteDevice(input: DeleteDeviceReq, options?: RpcOptions): UnaryCall<DeleteDeviceReq, Empty>;
     /**
+     * @generated from protobuf rpc: GetDevice(GetDeviceReq) returns (GetDeviceResp);
+     */
+    getDevice(input: GetDeviceReq, options?: RpcOptions): UnaryCall<GetDeviceReq, GetDeviceResp>;
+    /**
      * @generated from protobuf rpc: SetDeviceDisable(SetDeviceDisableReq) returns (google.protobuf.Empty);
      */
     setDeviceDisable(input: SetDeviceDisableReq, options?: RpcOptions): UnaryCall<SetDeviceDisableReq, Empty>;
+    /**
+     * @generated from protobuf rpc: UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
+     */
+    updateDevice(input: UpdateDeviceReq, options?: RpcOptions): UnaryCall<UpdateDeviceReq, Empty>;
     /**
      * @generated from protobuf rpc: ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
      */
@@ -361,11 +361,11 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<DeleteUserReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: SetUserDisable(SetUserDisableReq) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: ResetUserPassword(ResetUserPasswordReq) returns (google.protobuf.Empty);
      */
-    setUserDisable(input: SetUserDisableReq, options?: RpcOptions): UnaryCall<SetUserDisableReq, Empty> {
+    resetUserPassword(input: ResetUserPasswordReq, options?: RpcOptions): UnaryCall<ResetUserPasswordReq, Empty> {
         const method = this.methods[5], opt = this._transport.mergeOptions(options);
-        return stackIntercept<SetUserDisableReq, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<ResetUserPasswordReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: SetUserAdmin(SetUserAdminReq) returns (google.protobuf.Empty);
@@ -375,11 +375,11 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<SetUserAdminReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: ResetUserPassword(ResetUserPasswordReq) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: SetUserDisable(SetUserDisableReq) returns (google.protobuf.Empty);
      */
-    resetUserPassword(input: ResetUserPasswordReq, options?: RpcOptions): UnaryCall<ResetUserPasswordReq, Empty> {
+    setUserDisable(input: SetUserDisableReq, options?: RpcOptions): UnaryCall<SetUserDisableReq, Empty> {
         const method = this.methods[7], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ResetUserPasswordReq, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<SetUserDisableReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * Group
@@ -391,32 +391,32 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<CreateGroupReq, CreateGroupResp>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: GetGroup(GetGroupReq) returns (GetGroupResp);
-     */
-    getGroup(input: GetGroupReq, options?: RpcOptions): UnaryCall<GetGroupReq, GetGroupResp> {
-        const method = this.methods[9], opt = this._transport.mergeOptions(options);
-        return stackIntercept<GetGroupReq, GetGroupResp>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * @generated from protobuf rpc: UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
-     */
-    updateGroup(input: UpdateGroupReq, options?: RpcOptions): UnaryCall<UpdateGroupReq, Empty> {
-        const method = this.methods[10], opt = this._transport.mergeOptions(options);
-        return stackIntercept<UpdateGroupReq, Empty>("unary", this._transport, method, opt, input);
-    }
-    /**
      * @generated from protobuf rpc: DeleteGroup(DeleteGroupReq) returns (google.protobuf.Empty);
      */
     deleteGroup(input: DeleteGroupReq, options?: RpcOptions): UnaryCall<DeleteGroupReq, Empty> {
-        const method = this.methods[11], opt = this._transport.mergeOptions(options);
+        const method = this.methods[9], opt = this._transport.mergeOptions(options);
         return stackIntercept<DeleteGroupReq, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetGroup(GetGroupReq) returns (GetGroupResp);
+     */
+    getGroup(input: GetGroupReq, options?: RpcOptions): UnaryCall<GetGroupReq, GetGroupResp> {
+        const method = this.methods[10], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetGroupReq, GetGroupResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: SetGroupDisable(SetGroupDisableReq) returns (google.protobuf.Empty);
      */
     setGroupDisable(input: SetGroupDisableReq, options?: RpcOptions): UnaryCall<SetGroupDisableReq, Empty> {
-        const method = this.methods[12], opt = this._transport.mergeOptions(options);
+        const method = this.methods[11], opt = this._transport.mergeOptions(options);
         return stackIntercept<SetGroupDisableReq, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: UpdateGroup(UpdateGroupReq) returns (google.protobuf.Empty);
+     */
+    updateGroup(input: UpdateGroupReq, options?: RpcOptions): UnaryCall<UpdateGroupReq, Empty> {
+        const method = this.methods[12], opt = this._transport.mergeOptions(options);
+        return stackIntercept<UpdateGroupReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * Device
@@ -428,32 +428,32 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<CreateDeviceReq, CreateDeviceResp>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: GetDevice(GetDeviceReq) returns (GetDeviceResp);
-     */
-    getDevice(input: GetDeviceReq, options?: RpcOptions): UnaryCall<GetDeviceReq, GetDeviceResp> {
-        const method = this.methods[14], opt = this._transport.mergeOptions(options);
-        return stackIntercept<GetDeviceReq, GetDeviceResp>("unary", this._transport, method, opt, input);
-    }
-    /**
-     * @generated from protobuf rpc: UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
-     */
-    updateDevice(input: UpdateDeviceReq, options?: RpcOptions): UnaryCall<UpdateDeviceReq, Empty> {
-        const method = this.methods[15], opt = this._transport.mergeOptions(options);
-        return stackIntercept<UpdateDeviceReq, Empty>("unary", this._transport, method, opt, input);
-    }
-    /**
      * @generated from protobuf rpc: DeleteDevice(DeleteDeviceReq) returns (google.protobuf.Empty);
      */
     deleteDevice(input: DeleteDeviceReq, options?: RpcOptions): UnaryCall<DeleteDeviceReq, Empty> {
-        const method = this.methods[16], opt = this._transport.mergeOptions(options);
+        const method = this.methods[14], opt = this._transport.mergeOptions(options);
         return stackIntercept<DeleteDeviceReq, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetDevice(GetDeviceReq) returns (GetDeviceResp);
+     */
+    getDevice(input: GetDeviceReq, options?: RpcOptions): UnaryCall<GetDeviceReq, GetDeviceResp> {
+        const method = this.methods[15], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetDeviceReq, GetDeviceResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: SetDeviceDisable(SetDeviceDisableReq) returns (google.protobuf.Empty);
      */
     setDeviceDisable(input: SetDeviceDisableReq, options?: RpcOptions): UnaryCall<SetDeviceDisableReq, Empty> {
-        const method = this.methods[17], opt = this._transport.mergeOptions(options);
+        const method = this.methods[16], opt = this._transport.mergeOptions(options);
         return stackIntercept<SetDeviceDisableReq, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
+     */
+    updateDevice(input: UpdateDeviceReq, options?: RpcOptions): UnaryCall<UpdateDeviceReq, Empty> {
+        const method = this.methods[17], opt = this._transport.mergeOptions(options);
+        return stackIntercept<UpdateDeviceReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ListLocations(google.protobuf.Empty) returns (ListLocationsResp);

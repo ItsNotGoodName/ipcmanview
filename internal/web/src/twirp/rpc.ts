@@ -262,6 +262,8 @@ export interface RevokeMySessionReq {
  */
 export interface RevokeAllMySessionsReq {
 }
+// ---------- Pages
+
 /**
  * @generated from protobuf message GetAdminGroupsPageReq
  */
@@ -515,6 +517,8 @@ export interface GetAdminDevicesPageResp_Device {
      */
     createdAtTime?: Timestamp;
 }
+// ---------- User
+
 /**
  * @generated from protobuf message DeleteUserReq
  */
@@ -568,16 +572,35 @@ export interface ResetUserPasswordReq {
      */
     id: bigint;
     /**
-     * @generated from protobuf field: string password = 2;
+     * @generated from protobuf field: string new_password = 2;
      */
-    password: string;
+    newPassword: string;
 }
-// Group
+// ---------- Group
 
 /**
+ * Create
+ *
  * @generated from protobuf message GroupModel
  */
 export interface GroupModel {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string description = 3;
+     */
+    description: string;
+}
+/**
+ * @generated from protobuf message CreateGroupReq
+ */
+export interface CreateGroupReq {
     /**
      * @generated from protobuf field: string name = 1;
      */
@@ -588,6 +611,17 @@ export interface GroupModel {
     description: string;
 }
 /**
+ * @generated from protobuf message CreateGroupResp
+ */
+export interface CreateGroupResp {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * Get
+ *
  * @generated from protobuf message GetGroupReq
  */
 export interface GetGroupReq {
@@ -601,46 +635,24 @@ export interface GetGroupReq {
  */
 export interface GetGroupResp {
     /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-    /**
-     * @generated from protobuf field: GroupModel model = 2;
+     * @generated from protobuf field: GroupModel model = 1;
      */
     model?: GroupModel;
 }
 /**
- * @generated from protobuf message CreateGroupReq
- */
-export interface CreateGroupReq {
-    /**
-     * @generated from protobuf field: GroupModel model = 2;
-     */
-    model?: GroupModel;
-}
-/**
- * @generated from protobuf message CreateGroupResp
- */
-export interface CreateGroupResp {
-    /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-}
-/**
+ * Update
+ *
  * @generated from protobuf message UpdateGroupReq
  */
 export interface UpdateGroupReq {
     /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-    /**
-     * @generated from protobuf field: GroupModel model = 2;
+     * @generated from protobuf field: GroupModel model = 1;
      */
     model?: GroupModel;
 }
 /**
+ * Delete
+ *
  * @generated from protobuf message DeleteGroupReq
  */
 export interface DeleteGroupReq {
@@ -671,12 +683,47 @@ export interface SetGroupDisableReq_item {
      */
     disable: boolean;
 }
-// Device
+// ---------- Device
 
 /**
+ * Create
+ *
  * @generated from protobuf message DeviceModel
  */
 export interface DeviceModel {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string url = 3;
+     */
+    url: string;
+    /**
+     * @generated from protobuf field: string username = 4;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: string password = 5;
+     */
+    password: string;
+    /**
+     * @generated from protobuf field: string location = 6;
+     */
+    location: string;
+    /**
+     * @generated from protobuf field: repeated string features = 7;
+     */
+    features: string[];
+}
+/**
+ * @generated from protobuf message CreateDeviceReq
+ */
+export interface CreateDeviceReq {
     /**
      * @generated from protobuf field: string name = 1;
      */
@@ -703,6 +750,17 @@ export interface DeviceModel {
     features: string[];
 }
 /**
+ * @generated from protobuf message CreateDeviceResp
+ */
+export interface CreateDeviceResp {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * Get
+ *
  * @generated from protobuf message GetDeviceReq
  */
 export interface GetDeviceReq {
@@ -716,53 +774,31 @@ export interface GetDeviceReq {
  */
 export interface GetDeviceResp {
     /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-    /**
-     * @generated from protobuf field: DeviceModel model = 2;
+     * @generated from protobuf field: DeviceModel model = 1;
      */
     model?: DeviceModel;
 }
 /**
- * @generated from protobuf message CreateDeviceReq
+ * Update
+ *
+ * @generated from protobuf message UpdateDeviceReq
  */
-export interface CreateDeviceReq {
+export interface UpdateDeviceReq {
     /**
      * @generated from protobuf field: DeviceModel model = 1;
      */
     model?: DeviceModel;
 }
 /**
- * @generated from protobuf message CreateDeviceResp
- */
-export interface CreateDeviceResp {
-    /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-}
-/**
- * @generated from protobuf message UpdateDeviceReq
- */
-export interface UpdateDeviceReq {
-    /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-    /**
-     * @generated from protobuf field: DeviceModel model = 2;
-     */
-    model?: DeviceModel;
-}
-/**
+ * Delete
+ *
  * @generated from protobuf message DeleteDeviceReq
  */
 export interface DeleteDeviceReq {
     /**
-     * @generated from protobuf field: int64 id = 1;
+     * @generated from protobuf field: repeated int64 ids = 1;
      */
-    id: bigint;
+    ids: bigint[];
 }
 /**
  * @generated from protobuf message SetDeviceDisableReq
@@ -786,6 +822,8 @@ export interface SetDeviceDisableReq_Item {
      */
     disable: boolean;
 }
+// ---------- Misc
+
 /**
  * @generated from protobuf message ListLocationsResp
  */
@@ -816,6 +854,10 @@ export interface ListDeviceFeaturesResp_Item {
      * @generated from protobuf field: string value = 2;
      */
     value: string;
+    /**
+     * @generated from protobuf field: string description = 3;
+     */
+    description: string;
 }
 /**
  * @generated from protobuf enum Order
@@ -1306,7 +1348,7 @@ class ResetUserPasswordReq$Type extends MessageType<ResetUserPasswordReq> {
     constructor() {
         super("ResetUserPasswordReq", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "new_password", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1318,8 +1360,9 @@ export const ResetUserPasswordReq = new ResetUserPasswordReq$Type();
 class GroupModel$Type extends MessageType<GroupModel> {
     constructor() {
         super("GroupModel", [
-            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1328,35 +1371,11 @@ class GroupModel$Type extends MessageType<GroupModel> {
  */
 export const GroupModel = new GroupModel$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetGroupReq$Type extends MessageType<GetGroupReq> {
-    constructor() {
-        super("GetGroupReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GetGroupReq
- */
-export const GetGroupReq = new GetGroupReq$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class GetGroupResp$Type extends MessageType<GetGroupResp> {
-    constructor() {
-        super("GetGroupResp", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "model", kind: "message", T: () => GroupModel }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GetGroupResp
- */
-export const GetGroupResp = new GetGroupResp$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class CreateGroupReq$Type extends MessageType<CreateGroupReq> {
     constructor() {
         super("CreateGroupReq", [
-            { no: 2, name: "model", kind: "message", T: () => GroupModel }
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1377,11 +1396,34 @@ class CreateGroupResp$Type extends MessageType<CreateGroupResp> {
  */
 export const CreateGroupResp = new CreateGroupResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetGroupReq$Type extends MessageType<GetGroupReq> {
+    constructor() {
+        super("GetGroupReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetGroupReq
+ */
+export const GetGroupReq = new GetGroupReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetGroupResp$Type extends MessageType<GetGroupResp> {
+    constructor() {
+        super("GetGroupResp", [
+            { no: 1, name: "model", kind: "message", T: () => GroupModel }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetGroupResp
+ */
+export const GetGroupResp = new GetGroupResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class UpdateGroupReq$Type extends MessageType<UpdateGroupReq> {
     constructor() {
         super("UpdateGroupReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "model", kind: "message", T: () => GroupModel }
+            { no: 1, name: "model", kind: "message", T: () => GroupModel }
         ]);
     }
 }
@@ -1430,12 +1472,13 @@ export const SetGroupDisableReq_item = new SetGroupDisableReq_item$Type();
 class DeviceModel$Type extends MessageType<DeviceModel> {
     constructor() {
         super("DeviceModel", [
-            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1444,35 +1487,15 @@ class DeviceModel$Type extends MessageType<DeviceModel> {
  */
 export const DeviceModel = new DeviceModel$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetDeviceReq$Type extends MessageType<GetDeviceReq> {
-    constructor() {
-        super("GetDeviceReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GetDeviceReq
- */
-export const GetDeviceReq = new GetDeviceReq$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class GetDeviceResp$Type extends MessageType<GetDeviceResp> {
-    constructor() {
-        super("GetDeviceResp", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "model", kind: "message", T: () => DeviceModel }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GetDeviceResp
- */
-export const GetDeviceResp = new GetDeviceResp$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class CreateDeviceReq$Type extends MessageType<CreateDeviceReq> {
     constructor() {
         super("CreateDeviceReq", [
-            { no: 1, name: "model", kind: "message", T: () => DeviceModel }
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1493,11 +1516,34 @@ class CreateDeviceResp$Type extends MessageType<CreateDeviceResp> {
  */
 export const CreateDeviceResp = new CreateDeviceResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceReq$Type extends MessageType<GetDeviceReq> {
+    constructor() {
+        super("GetDeviceReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceReq
+ */
+export const GetDeviceReq = new GetDeviceReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceResp$Type extends MessageType<GetDeviceResp> {
+    constructor() {
+        super("GetDeviceResp", [
+            { no: 1, name: "model", kind: "message", T: () => DeviceModel }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceResp
+ */
+export const GetDeviceResp = new GetDeviceResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class UpdateDeviceReq$Type extends MessageType<UpdateDeviceReq> {
     constructor() {
         super("UpdateDeviceReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "model", kind: "message", T: () => DeviceModel }
+            { no: 1, name: "model", kind: "message", T: () => DeviceModel }
         ]);
     }
 }
@@ -1509,7 +1555,7 @@ export const UpdateDeviceReq = new UpdateDeviceReq$Type();
 class DeleteDeviceReq$Type extends MessageType<DeleteDeviceReq> {
     constructor() {
         super("DeleteDeviceReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 1, name: "ids", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
 }
@@ -1571,7 +1617,8 @@ class ListDeviceFeaturesResp_Item$Type extends MessageType<ListDeviceFeaturesRes
     constructor() {
         super("ListDeviceFeaturesResp.Item", [
             { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "value", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "value", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1612,19 +1659,19 @@ export const Admin = new ServiceType("Admin", [
     { name: "GetAdminUsersPage", options: {}, I: GetAdminUsersPageReq, O: GetAdminUsersPageResp },
     { name: "GetAdminDevicesPage", options: {}, I: GetAdminDevicesPageReq, O: GetAdminDevicesPageResp },
     { name: "DeleteUser", options: {}, I: DeleteUserReq, O: Empty },
-    { name: "SetUserDisable", options: {}, I: SetUserDisableReq, O: Empty },
-    { name: "SetUserAdmin", options: {}, I: SetUserAdminReq, O: Empty },
     { name: "ResetUserPassword", options: {}, I: ResetUserPasswordReq, O: Empty },
+    { name: "SetUserAdmin", options: {}, I: SetUserAdminReq, O: Empty },
+    { name: "SetUserDisable", options: {}, I: SetUserDisableReq, O: Empty },
     { name: "CreateGroup", options: {}, I: CreateGroupReq, O: CreateGroupResp },
-    { name: "GetGroup", options: {}, I: GetGroupReq, O: GetGroupResp },
-    { name: "UpdateGroup", options: {}, I: UpdateGroupReq, O: Empty },
     { name: "DeleteGroup", options: {}, I: DeleteGroupReq, O: Empty },
+    { name: "GetGroup", options: {}, I: GetGroupReq, O: GetGroupResp },
     { name: "SetGroupDisable", options: {}, I: SetGroupDisableReq, O: Empty },
+    { name: "UpdateGroup", options: {}, I: UpdateGroupReq, O: Empty },
     { name: "CreateDevice", options: {}, I: CreateDeviceReq, O: CreateDeviceResp },
-    { name: "GetDevice", options: {}, I: GetDeviceReq, O: GetDeviceResp },
-    { name: "UpdateDevice", options: {}, I: UpdateDeviceReq, O: Empty },
     { name: "DeleteDevice", options: {}, I: DeleteDeviceReq, O: Empty },
+    { name: "GetDevice", options: {}, I: GetDeviceReq, O: GetDeviceResp },
     { name: "SetDeviceDisable", options: {}, I: SetDeviceDisableReq, O: Empty },
+    { name: "UpdateDevice", options: {}, I: UpdateDeviceReq, O: Empty },
     { name: "ListLocations", options: {}, I: Empty, O: ListLocationsResp },
     { name: "ListDeviceFeatures", options: {}, I: Empty, O: ListDeviceFeaturesResp }
 ]);

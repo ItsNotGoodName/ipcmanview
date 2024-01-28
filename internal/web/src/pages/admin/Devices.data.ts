@@ -26,4 +26,3 @@ export default function({ params }: PageProps<AdminDevicesPageSearchParams>) {
   })
 }
 
-export const getDevice = cache((id: bigint) => useClient().admin.getDevice({ id: id }).then((req) => req.response), "getDevice")

@@ -108,22 +108,22 @@ func (*Admin) GetDevice(context.Context, *rpc.GetDeviceReq) (*rpc.GetDeviceResp,
 }
 
 func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rpc.CreateDeviceResp, error) {
-	urL, err := url.Parse(req.Model.Url)
+	urL, err := url.Parse(req.Url)
 	if err != nil {
 		return nil, NewError(nil, "URL is invalid.").Field("url")
 	}
-	loc, err := time.LoadLocation(req.Model.GetLocation())
+	loc, err := time.LoadLocation(req.Location)
 	if err != nil {
 		return nil, NewError(nil, "Location is invalid.").Field("location")
 	}
 
 	res, err := dahua.CreateDevice(ctx, a.db, a.bus, models.DahuaDevice{
-		Name:     req.Model.GetName(),
+		Name:     req.Name,
 		Url:      urL,
-		Username: req.Model.GetUsername(),
-		Password: req.Model.GetPassword(),
+		Username: req.Username,
+		Password: req.Password,
 		Location: loc,
-		Feature:  dahua.FeatureFromStrings(req.Model.GetFeatures()),
+		Feature:  dahua.FeatureFromStrings(req.Features),
 	})
 	if err != nil {
 		return nil, check(err)
@@ -138,8 +138,14 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 	return nil, errNotImplemented
 }
 
-func (*Admin) DeleteDevice(context.Context, *rpc.DeleteDeviceReq) (*emptypb.Empty, error) {
-	return nil, errNotImplemented
+func (a *Admin) DeleteDevice(ctx context.Context, req *rpc.DeleteDeviceReq) (*emptypb.Empty, error) {
+	for _, id := range req.Ids {
+		err := dahua.DeleteDevice(ctx, a.db, a.bus, id)
+		if err != nil {
+			return nil, check(err)
+		}
+	}
+	return &emptypb.Empty{}, nil
 }
 
 func (*Admin) SetDeviceDisable(context.Context, *rpc.SetDeviceDisableReq) (*emptypb.Empty, error) {
@@ -383,8 +389,8 @@ func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGro
 		return nil, check(err)
 	}
 	return &rpc.GetGroupResp{
-		Id: req.Id,
 		Model: &rpc.GroupModel{
+			Id:          req.Id,
 			Name:        dbGroup.Name,
 			Description: dbGroup.Description,
 		},
@@ -410,8 +416,8 @@ func convertCreateUpdateGroupError(msg string, err error) error {
 
 func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.CreateGroupResp, error) {
 	id, err := auth.CreateGroup(ctx, a.db, models.Group{
-		Name:        req.Model.GetName(),
-		Description: req.Model.GetDescription(),
+		Name:        req.Name,
+		Description: req.Description,
 	})
 	if err != nil {
 		return nil, convertCreateUpdateGroupError("Failed to create group.", err)
@@ -423,7 +429,7 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 }
 
 func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
-	dbGroup, err := a.db.GetGroup(ctx, req.Id)
+	dbGroup, err := a.db.GetGroup(ctx, req.Model.GetId())
 	if err != nil {
 		return nil, check(err)
 	}
@@ -472,8 +478,9 @@ func init() {
 	res := make([]*rpc.ListDeviceFeaturesResp_Item, 0, len(dahua.FeatureList))
 	for _, v := range dahua.FeatureList {
 		res = append(res, &rpc.ListDeviceFeaturesResp_Item{
-			Name:  v.Name,
-			Value: v.Value,
+			Name:        v.Name,
+			Value:       v.Value,
+			Description: v.Description,
 		})
 	}
 	listDeviceFeaturesResp = &rpc.ListDeviceFeaturesResp{Features: res}

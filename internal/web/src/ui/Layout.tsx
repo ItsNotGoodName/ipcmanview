@@ -1,9 +1,10 @@
 import { ParentProps } from "solid-js";
+import { cn } from "~/lib/utils";
 
-export function LayoutNormal(props: ParentProps) {
+export function LayoutNormal(props: ParentProps<{ class?: string }>) {
   return (
     <div class="flex justify-center p-4">
-      <div class="flex w-full max-w-4xl flex-col gap-2">
+      <div class={cn("flex w-full flex-col gap-2", props.class)}>
         {props.children}
       </div>
     </div>

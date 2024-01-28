@@ -23,6 +23,8 @@ import { AdminUsers } from "./pages/admin/Users";
 import loadAdminUsers from "./pages/admin/Users.data";
 import { AdminDevices } from "./pages/admin/Devices";
 import loadAdminDevices from "./pages/admin/Devices.data";
+import { AdminDevicesCreate, AdminDevicesIDUpdate } from "./pages/admin/DeviceForms";
+import { loadAdminDevicesCreate, loadAdminDevicesIDUpdate } from "./pages/admin/DeviceForms.data";
 
 const Debug = lazy(() => import("./pages/debug"));
 
@@ -52,6 +54,8 @@ function App() {
             <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />
             <Route path="/admin/groups/:id" component={AdminGroupsID} load={loadAdminGroupsID} />
             <Route path="/admin/devices" component={AdminDevices} load={loadAdminDevices} />
+            <Route path="/admin/devices/create" component={AdminDevicesCreate} load={loadAdminDevicesCreate} />
+            <Route path="/admin/devices/:id/update" component={AdminDevicesIDUpdate} load={loadAdminDevicesIDUpdate} />
           </Show>
           <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />
           <Route path="*404" component={NotFound} />

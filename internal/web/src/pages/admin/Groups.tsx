@@ -5,7 +5,7 @@ import { AdminGroupsPageSearchParams, getAdminGroupsPage, getGroup } from "./Gro
 import { ErrorBoundary, For, Show, Suspense, batch, createResource, createSignal } from "solid-js";
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
-import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, setupForm, throwAsFormError } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -79,7 +79,7 @@ export function AdminGroups() {
     .then(() => rowSelection.setAll(false))
 
   return (
-    <LayoutNormal>
+    <LayoutNormal class="max-w-4xl">
       <DialogRoot open={createFormDialog()} onOpenChange={setCreateFormDialog}>
         <DialogPortal>
           <DialogOverlay />
@@ -329,7 +329,7 @@ type CreateGroupForm = {
 }
 
 const actionCreateGroupForm = action((form: CreateGroupForm) => useClient()
-  .admin.createGroup({ model: form })
+  .admin.createGroup(form)
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError)
 )
@@ -399,8 +399,8 @@ type UpdateGroupForm = {
   description: string
 }
 
-const actionUpdateGroupForm = action((form: UpdateGroupForm) => useClient()
-  .admin.updateGroup({ id: form.id, model: form })
+const actionUpdateGroupForm = action((model: UpdateGroupForm) => useClient()
+  .admin.updateGroup({ model })
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError)
 )
@@ -411,7 +411,7 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
   const submit = (form: UpdateGroupForm) => updateGroupFormAction(form)
     .then(() => props.setOpen(false))
   const [form] = createResource(() => getGroup(props.id)
-    .then((data) => syncForm(updateGroupForm, { ...data, ...data.model })))
+    .then((data) => setupForm(updateGroupForm, { ...data, ...data.model })))
 
   return (
     <Show when={!form.error} fallback={<PageError error={form.error} />}>

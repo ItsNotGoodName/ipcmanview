@@ -125,7 +125,7 @@ export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelecti
   }
 }
 
-export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined) {
+export function setupForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined) {
   reset(form, { initialValues: data })
 }
 
