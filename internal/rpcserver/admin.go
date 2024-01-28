@@ -17,6 +17,42 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+func convertCreateUpdateGroupError(msg string, err error) error {
+	if errs, ok := asValidationErrors(err); ok {
+		return NewError(err, msg).Validation(errs, [][2]string{
+			{"name", "Name"},
+			{"description", "Description"},
+		})
+	}
+
+	if constraintErr, ok := asConstraintError(err); ok {
+		return NewError(err, msg).Constraint(constraintErr, [][3]string{
+			{"name", "groups.name", "Name already taken."},
+		})
+	}
+
+	return check(err)
+}
+
+func convertCreateUpdateDeviceError(msg string, err error) error {
+	if errs, ok := asValidationErrors(err); ok {
+		return NewError(err, msg).Validation(errs, [][2]string{
+			{"name", "Name"},
+			{"description", "Description"},
+			{"location", "Location"},
+		})
+	}
+
+	if constraintErr, ok := asConstraintError(err); ok {
+		return NewError(err, msg).Constraint(constraintErr, [][3]string{
+			{"name", "dahua_devices.name", "Name already taken."},
+			{"url", "dahua_devices.ip", "URL already taken."},
+		})
+	}
+
+	return check(err)
+}
+
 func NewAdmin(db repo.DB, bus *core.Bus) *Admin {
 	return &Admin{
 		db:  db,
@@ -126,7 +162,7 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 		Feature:  dahua.FeatureFromStrings(req.Features),
 	})
 	if err != nil {
-		return nil, check(err)
+		return nil, convertCreateUpdateDeviceError("Failed to create device.", err)
 	}
 
 	return &rpc.CreateDeviceResp{
@@ -395,23 +431,6 @@ func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGro
 			Description: dbGroup.Description,
 		},
 	}, nil
-}
-
-func convertCreateUpdateGroupError(msg string, err error) error {
-	if errs, ok := asValidationErrors(err); ok {
-		return NewError(err, msg).Validation(errs, [][2]string{
-			{"name", "Name"},
-			{"description", "Description"},
-		})
-	}
-
-	if constraintErr, ok := asConstraintError(err); ok {
-		return NewError(err, msg).Constraint(constraintErr, [][3]string{
-			{"name", "groups.name", "Name already taken."},
-		})
-	}
-
-	return check(err)
 }
 
 func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.CreateGroupResp, error) {

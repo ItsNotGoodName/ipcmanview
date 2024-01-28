@@ -1,6 +1,6 @@
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
 import { Input } from "~/ui/Input";
-import { createForm, reset } from "@modular-forms/solid";
+import { createForm, required, reset } from "@modular-forms/solid";
 import { getListDeviceFeatures, getListLocations } from "./data";
 import { SelectHTML } from "~/ui/Select";
 import { action, createAsync, useAction, useNavigate } from "@solidjs/router";
@@ -79,7 +79,7 @@ export function AdminDevicesCreate() {
                 </FieldRoot>
               )}
             </Field>
-            <Field name="url">
+            <Field name="url" validate={required("Please enter a URL.")}>
               {(field, props) => (
                 <FieldRoot class="gap-1.5">
                   <FieldLabel field={field}>URL</FieldLabel>
@@ -236,7 +236,7 @@ export function AdminDevicesIDUpdate(props: any) {
                 </FieldRoot>
               )}
             </Field>
-            <Field name="url">
+            <Field name="url" validate={required("Please enter a URL.")}>
               {(field, props) => (
                 <FieldRoot class="gap-1.5">
                   <FieldLabel field={field}>URL</FieldLabel>

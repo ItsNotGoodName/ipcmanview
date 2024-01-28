@@ -134,10 +134,11 @@ message RevokeAllMySessionsReq {}
 
 service Admin {
   // Pages
-  rpc GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
-  rpc GetAdminGroupIDPage(GetAdminGroupIDPageReq) returns (GetAdminGroupIDPageResp);
-  rpc GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
+  rpc GetAdminDevicesIDPage(GetAdminDevicesIDPageReq) returns (GetAdminDevicesIDPageResp);
   rpc GetAdminDevicesPage(GetAdminDevicesPageReq) returns (GetAdminDevicesPageResp);
+  rpc GetAdminGroupsIDPage(GetAdminGroupsIDPageReq) returns (GetAdminGroupsIDPageResp);
+  rpc GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
+  rpc GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
 
   // User
   rpc DeleteUser(DeleteUserReq) returns (google.protobuf.Empty);
@@ -184,11 +185,11 @@ message GetAdminGroupsPageResp {
   Sort sort = 3;
 }
 
-message GetAdminGroupIDPageReq {
+message GetAdminGroupsIDPageReq {
   int64 id = 1;
 }
 
-message GetAdminGroupIDPageResp {
+message GetAdminGroupsIDPageResp {
   message Group {
     int64 id = 1;
     string name = 2;
@@ -205,6 +206,26 @@ message GetAdminGroupIDPageResp {
     string username = 2;
   }
   repeated User users = 2;
+}
+
+message GetAdminDevicesIDPageReq {
+  int64 id = 1;
+}
+
+message GetAdminDevicesIDPageResp {
+  message Device {
+    int64 id = 1;
+    string name = 2;
+    string url = 3;
+    username = 4;
+    bool disabled = 5;
+    string location = 6;
+    repeated features = 7;
+    google.protobuf.Timestamp disabled_at_time = 8;
+    google.protobuf.Timestamp created_at_time = 9;
+    google.protobuf.Timestamp updated_at_time = 10;
+  }
+  Device device = 1;
 }
 
 message GetAdminUsersPageReq {

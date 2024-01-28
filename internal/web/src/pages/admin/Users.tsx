@@ -77,7 +77,7 @@ export function AdminUsers() {
     .then(() => setDeleteUserRowSelection(false))
 
   return (
-    <LayoutNormal>
+    <LayoutNormal class="max-w-4xl">
 
       <AlertDialogRoot open={deleteUserSelection() != undefined} onOpenChange={() => setDeleteUserSelection(undefined)}>
         <AlertDialogContent>

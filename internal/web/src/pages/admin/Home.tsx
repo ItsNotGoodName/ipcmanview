@@ -4,7 +4,7 @@ import { linkVariants } from "~/ui/Link";
 
 export function AdminHome() {
   return (
-    <LayoutNormal>
+    <LayoutNormal class="max-w-4xl">
       <A class={linkVariants()} href="./users">Users</A>
       <A class={linkVariants()} href="./groups">Groups</A>
       <A class={linkVariants()} href="./devices">Devices</A>
