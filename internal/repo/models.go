@@ -1,6 +1,6 @@
 package repo
 
-type DahuaEmail struct {
-	Message     DahuaEmailMessage
-	Attachments []DahuaEmailAttachment
+type DahuaFatDevice struct {
+	DahuaDevice
+	Seed int64
 }

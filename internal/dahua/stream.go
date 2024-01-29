@@ -4,15 +4,50 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/encode"
 )
 
-func UpdateStream(ctx context.Context, db repo.DB, stream repo.DahuaStream, arg repo.UpdateDahuaStreamParams) (repo.DahuaStream, error) {
-	return db.UpdateDahuaStream(ctx, arg)
+type createInternalStreamsParams struct {
+	Channel int64
+	Subtype int64
+	Name    string
+}
+
+func createInternalStreams(ctx context.Context, db repo.DB, deviceID int64, args []createInternalStreamsParams) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = tx.DahuaUpdateStreamForInternal(ctx, deviceID)
+	if err != nil {
+		return err
+	}
+
+	ids := make([]int64, 0, len(args))
+	for _, arg := range args {
+		id, err := tx.DahuaCreateStreamForInternal(ctx, repo.DahuaCreateStreamForInternalParams{
+			DeviceID: deviceID,
+			Channel:  arg.Channel,
+			Subtype:  arg.Subtype,
+			Name:     arg.Name,
+		})
+		if err != nil {
+			return err
+		}
+		ids = append(ids, id)
+	}
+
+	return tx.Commit()
+}
+
+func UpdateStream(ctx context.Context, db repo.DB, stream repo.DahuaStream, arg repo.DahuaUpdateStreamParams) (repo.DahuaStream, error) {
+	return db.DahuaUpdateStream(ctx, arg)
 }
 
 func DeleteStream(ctx context.Context, db repo.DB, stream repo.DahuaStream) error {
@@ -20,11 +55,11 @@ func DeleteStream(ctx context.Context, db repo.DB, stream repo.DahuaStream) erro
 		return fmt.Errorf("cannot delete internal stream")
 	}
 
-	return db.DeleteDahuaStream(ctx, stream.ID)
+	return db.DahuaDeleteStream(ctx, stream.ID)
 }
 
-func SupportStreams(device models.DahuaDeviceConn) bool {
-	return device.DahuaConn.Feature.EQ(models.DahuaFeatureCamera)
+func SupportStreams(feature models.DahuaFeature) bool {
+	return feature.EQ(models.DahuaFeatureCamera)
 }
 
 // SyncStreams fetches streams from device and inserts them into the database.
@@ -48,16 +83,16 @@ func SyncStreams(ctx context.Context, db repo.DB, deviceID int64, conn dahuarpc.
 			}
 		}
 
-		args := []repo.CreateDahuaStreamDefaultParams{}
+		args := []createInternalStreamsParams{}
 		for i := 0; i < subtypes; i++ {
-			arg := repo.CreateDahuaStreamDefaultParams{
+			arg := createInternalStreamsParams{
 				Channel: int64(channelIndex + 1),
 				Subtype: int64(i),
 				Name:    names[i],
 			}
 			args = append(args, arg)
 		}
-		err := db.CreateDahuaStreamDefault(ctx, deviceID, args)
+		err := createInternalStreams(ctx, db, deviceID, args)
 		if err != nil {
 			return err
 		}
@@ -66,19 +101,19 @@ func SyncStreams(ctx context.Context, db repo.DB, deviceID int64, conn dahuarpc.
 	return nil
 }
 
-func RegisterStreams(bus *core.Bus, db repo.DB, store *Store) {
-	bus.OnEventDahuaDeviceCreated(func(ctx context.Context, event models.EventDahuaDeviceCreated) error {
-		if SupportStreams(event.Device) {
-			return SyncStreams(ctx, db, event.Device.DahuaConn.ID, store.Client(ctx, event.Device.DahuaConn).RPC)
+func RegisterStreams(bus *event.Bus, db repo.DB, store *Store) {
+	bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
+		if SupportStreams(evt.Device.Feature) {
+			// TODO: this should run on a different goroutine
+			return SyncStreams(ctx, db, evt.Device.ID, store.Client(ctx, NewConn(evt.Device, evt.Seed)).RPC)
 		}
-
 		return nil
 	})
-	bus.OnEventDahuaDeviceUpdated(func(ctx context.Context, event models.EventDahuaDeviceUpdated) error {
-		if SupportStreams(event.Device) {
-			return SyncStreams(ctx, db, event.Device.DahuaConn.ID, store.Client(ctx, event.Device.DahuaConn).RPC)
+	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
+		if SupportStreams(evt.Device.Feature) {
+			// TODO: this should run on a different goroutine
+			return SyncStreams(ctx, db, evt.Device.ID, store.Client(ctx, NewConn(evt.Device, evt.Seed)).RPC)
 		}
-
 		return nil
 	})
 }

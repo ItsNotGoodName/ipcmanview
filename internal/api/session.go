@@ -48,7 +48,7 @@ func (s *Server) SessionPOST(c echo.Context) error {
 	req.UsernameOrEmail = strings.ToLower(strings.TrimSpace(req.UsernameOrEmail))
 
 	// Get user
-	user, err := s.db.GetUserByUsernameOrEmail(ctx, req.UsernameOrEmail)
+	user, err := s.db.AuthGetUserByUsernameOrEmail(ctx, req.UsernameOrEmail)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Incorrect credentials.").WithInternal(err)
 	}
@@ -70,11 +70,11 @@ func (s *Server) SessionPOST(c echo.Context) error {
 
 	// Save session and delete previous session if it exists
 	if cookie, err := c.Cookie(auth.CookieKey); err == nil {
-		if err := s.db.CreateUserSessionAndDeletePrevious(ctx, session, cookie.Value); err != nil {
+		if err := auth.CreateUserSessionAndDeletePrevious(ctx, s.db, session, cookie.Value); err != nil {
 			return err
 		}
 	} else {
-		if err := s.db.CreateUserSession(ctx, session); err != nil {
+		if err := auth.CreateUserSession(ctx, s.db, session); err != nil {
 			return err
 		}
 	}
@@ -100,7 +100,7 @@ func (s *Server) SessionDELETE(c echo.Context) error {
 	}
 
 	// Delete session
-	if err := s.db.DeleteUserSessionBySession(ctx, cookie.Value); err != nil {
+	if err := s.db.AuthDeleteUserSessionBySession(ctx, cookie.Value); err != nil {
 		return err
 	}
 

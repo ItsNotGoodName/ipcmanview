@@ -24,7 +24,7 @@ func CreateGroup(ctx context.Context, db repo.DB, arg models.Group) (int64, erro
 	}
 
 	now := types.NewTime(time.Now())
-	return db.CreateGroup(ctx, repo.CreateGroupParams{
+	return db.AuthCreateGroup(ctx, repo.AuthCreateGroupParams{
 		Name:        arg.Name,
 		Description: arg.Description,
 		CreatedAt:   now,
@@ -39,7 +39,7 @@ func UpdateGroup(ctx context.Context, db repo.DB, arg models.Group) (int64, erro
 		return 0, err
 	}
 
-	return db.UpdateGroup(ctx, repo.UpdateGroupParams{
+	return db.AuthUpdateGroup(ctx, repo.AuthUpdateGroupParams{
 		Name:        arg.Name,
 		Description: arg.Description,
 		UpdatedAt:   types.NewTime(time.Now()),
@@ -48,18 +48,18 @@ func UpdateGroup(ctx context.Context, db repo.DB, arg models.Group) (int64, erro
 }
 
 func DeleteGroup(ctx context.Context, db repo.DB, id int64) error {
-	return db.DeleteGroup(ctx, id)
+	return db.AuthDeleteGroup(ctx, id)
 }
 
 func UpdateGroupDisable(ctx context.Context, db repo.DB, userID int64, disable bool) error {
 	if disable {
-		_, err := db.UpdateGroupDisabledAt(ctx, repo.UpdateGroupDisabledAtParams{
+		_, err := db.AuthUpdateGroupDisabledAt(ctx, repo.AuthUpdateGroupDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
 			ID:         userID,
 		})
 		return err
 	}
-	_, err := db.UpdateGroupDisabledAt(ctx, repo.UpdateGroupDisabledAtParams{
+	_, err := db.AuthUpdateGroupDisabledAt(ctx, repo.AuthUpdateGroupDisabledAtParams{
 		DisabledAt: types.NullTime{},
 		ID:         userID,
 	})

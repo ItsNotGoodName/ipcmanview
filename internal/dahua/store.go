@@ -4,13 +4,12 @@ import (
 	"context"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 )
 
-func newStoreClient(conn models.DahuaConn) storeClient {
+func newStoreClient(conn Conn) storeClient {
 	return storeClient{
 		Client: NewClient(conn),
 	}
@@ -55,7 +54,7 @@ func (s *Store) Close() {
 	wg.Wait()
 }
 
-func (s *Store) getOrCreateClient(ctx context.Context, conn models.DahuaConn) Client {
+func (s *Store) getOrCreateClient(ctx context.Context, conn Conn) Client {
 	client, ok := s.clients[conn.ID]
 	if !ok {
 		// Not found
@@ -79,7 +78,7 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn models.DahuaConn) Cl
 	return client.Client
 }
 
-func (s *Store) ClientList(ctx context.Context, conns []models.DahuaConn) []Client {
+func (s *Store) ClientList(ctx context.Context, conns []Conn) []Client {
 	clients := make([]Client, 0, len(conns))
 
 	s.clientsMu.Lock()
@@ -91,7 +90,7 @@ func (s *Store) ClientList(ctx context.Context, conns []models.DahuaConn) []Clie
 	return clients
 }
 
-func (s *Store) Client(ctx context.Context, conn models.DahuaConn) Client {
+func (s *Store) Client(ctx context.Context, conn Conn) Client {
 	s.clientsMu.Lock()
 	client := s.getOrCreateClient(ctx, conn)
 	s.clientsMu.Unlock()
@@ -113,8 +112,8 @@ func (s *Store) ClientDelete(ctx context.Context, id int64) {
 	}
 }
 
-func (s *Store) Register(bus *core.Bus) *Store {
-	bus.OnEventDahuaDeviceDeleted(func(ctx context.Context, evt models.EventDahuaDeviceDeleted) error {
+func (s *Store) Register(bus *event.Bus) *Store {
+	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
 		s.ClientDelete(ctx, evt.DeviceID)
 		return nil
 	})

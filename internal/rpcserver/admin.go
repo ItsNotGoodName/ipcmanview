@@ -8,6 +8,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
@@ -53,7 +54,7 @@ func convertCreateUpdateDeviceError(msg string, err error) error {
 	return check(err)
 }
 
-func NewAdmin(db repo.DB, bus *core.Bus) *Admin {
+func NewAdmin(db repo.DB, bus *event.Bus) *Admin {
 	return &Admin{
 		db:  db,
 		bus: bus,
@@ -62,7 +63,7 @@ func NewAdmin(db repo.DB, bus *core.Bus) *Admin {
 
 type Admin struct {
 	db  repo.DB
-	bus *core.Bus
+	bus *event.Bus
 }
 
 // ---------- Device
@@ -140,22 +141,22 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 }
 
 func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevicesIDPageReq) (*rpc.GetAdminDevicesIDPageResp, error) {
-	dbDevice, err := a.db.GetDahuaDevice(ctx, req.Id)
+	dbDevice, err := a.db.DahuaGetDevice(ctx, req.Id)
 	if err != nil {
 		return nil, check(err)
 	}
 
 	return &rpc.GetAdminDevicesIDPageResp{
 		Device: &rpc.GetAdminDevicesIDPageResp_Device{
-			Id:             dbDevice.ID,
-			Name:           dbDevice.Name,
-			Url:            dbDevice.Url.String(),
-			Username:       dbDevice.Username,
+			Id:             dbDevice.DahuaDevice.ID,
+			Name:           dbDevice.DahuaDevice.Name,
+			Url:            dbDevice.DahuaDevice.Url.String(),
+			Username:       dbDevice.DahuaDevice.Username,
 			Disabled:       false,
-			Location:       dbDevice.Location.String(),
-			CreatedAtTime:  timestamppb.New(dbDevice.CreatedAt.Time),
-			UpdatedAtTime:  timestamppb.New(dbDevice.UpdatedAt.Time),
-			DisabledAtTime: timestamppb.New(dbDevice.DisabledAt.Time),
+			Location:       dbDevice.DahuaDevice.Location.String(),
+			CreatedAtTime:  timestamppb.New(dbDevice.DahuaDevice.CreatedAt.Time),
+			UpdatedAtTime:  timestamppb.New(dbDevice.DahuaDevice.UpdatedAt.Time),
+			DisabledAtTime: timestamppb.New(dbDevice.DahuaDevice.DisabledAt.Time),
 			Features:       []string{},
 		},
 	}, nil
@@ -176,9 +177,9 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 		return nil, NewError(nil, "Location is invalid.").Field("location")
 	}
 
-	res, err := dahua.CreateDevice(ctx, a.db, a.bus, models.DahuaDevice{
+	res, err := dahua.CreateDevice(ctx, a.db, a.bus, dahua.Device{
 		Name:     req.Name,
-		Url:      urL,
+		URL:      urL,
 		Username: req.Username,
 		Password: req.Password,
 		Location: loc,
@@ -410,12 +411,12 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 }
 
 func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroupsIDPageReq) (*rpc.GetAdminGroupsIDPageResp, error) {
-	dbGroup, err := a.db.GetGroup(ctx, req.Id)
+	dbGroup, err := a.db.AuthGetGroup(ctx, req.Id)
 	if err != nil {
 		return nil, check(err)
 	}
 
-	dbUsers, err := a.db.GetUserByGroup(ctx, req.Id)
+	dbUsers, err := a.db.AuthListUsersByGroup(ctx, req.Id)
 	if err != nil {
 		return nil, check(err)
 	}
@@ -443,7 +444,7 @@ func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroup
 }
 
 func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGroupResp, error) {
-	dbGroup, err := a.db.GetGroup(ctx, req.Id)
+	dbGroup, err := a.db.AuthGetGroup(ctx, req.Id)
 	if err != nil {
 		return nil, check(err)
 	}
@@ -471,7 +472,7 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 }
 
 func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
-	dbGroup, err := a.db.GetGroup(ctx, req.Model.GetId())
+	dbGroup, err := a.db.AuthGetGroup(ctx, req.Model.GetId())
 	if err != nil {
 		return nil, check(err)
 	}

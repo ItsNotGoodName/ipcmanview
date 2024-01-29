@@ -4,14 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/rs/zerolog/log"
 )
 
-func NewDefaultEventHooks(bus *core.Bus, db repo.DB) DefaultEventHooks {
+func NewDefaultEventHooks(bus *event.Bus, db repo.DB) DefaultEventHooks {
 	return DefaultEventHooks{
 		bus: bus,
 		db:  db,
@@ -19,7 +20,7 @@ func NewDefaultEventHooks(bus *core.Bus, db repo.DB) DefaultEventHooks {
 }
 
 type DefaultEventHooks struct {
-	bus *core.Bus
+	bus *event.Bus
 	db  repo.DB
 }
 
@@ -30,72 +31,81 @@ func (e DefaultEventHooks) logError(err error) {
 }
 
 func (e DefaultEventHooks) Connecting(ctx context.Context, deviceID int64) {
-	e.logError(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
+	e.logError(e.db.DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnecting,
 		CreatedAt: types.NewTime(time.Now()),
 	}))
-	e.bus.EventDahuaEventWorkerConnecting(models.EventDahuaEventWorkerConnecting{
+	e.bus.DahuaEventWorkerConnecting(event.DahuaEventWorkerConnecting{
 		DeviceID: deviceID,
 	})
 }
 
 func (e DefaultEventHooks) Connect(ctx context.Context, deviceID int64) {
-	e.logError(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
+	e.logError(e.db.DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnected,
 		CreatedAt: types.NewTime(time.Now()),
 	}))
-	e.bus.EventDahuaEventWorkerConnect(models.EventDahuaEventWorkerConnect{
+	e.bus.DahuaEventWorkerConnect(event.DahuaEventWorkerConnect{
 		DeviceID: deviceID,
 	})
 }
 
 func (e DefaultEventHooks) Disconnect(ctx context.Context, deviceID int64, err error) {
-	e.logError(e.db.CreateDahuaEventWorkerState(ctx, repo.CreateDahuaEventWorkerStateParams{
+	e.logError(e.db.DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateDisconnected,
 		Error:     repo.ErrorToNullString(err),
 		CreatedAt: types.NewTime(time.Now()),
 	}))
-	e.bus.EventDahuaEventWorkerDisconnect(models.EventDahuaEventWorkerDisconnect{
+	e.bus.DahuaEventWorkerDisconnect(event.DahuaEventWorkerDisconnect{
 		DeviceID: deviceID,
 		Error:    err,
 	})
 }
 
-func (e DefaultEventHooks) Event(ctx context.Context, event models.DahuaEvent) {
-	eventRule, err := e.db.GetDahuaEventRuleByEvent(ctx, event)
+func (e DefaultEventHooks) Event(ctx context.Context, deviceID int64, evt dahuacgi.Event) {
+	eventRule, err := GetEventRuleByEvent(ctx, e.db, deviceID, evt.Code)
 	if err != nil {
 		e.logError(err)
 		return
 	}
 
-	deviceName, err := e.db.GetDahuaDeviceName(ctx, event.DeviceID)
+	deviceName, err := e.db.DahuaGetDeviceName(ctx, deviceID)
 	if err != nil && !repo.IsNotFound(err) {
 		e.logError(err)
 		return
 	}
 
-	if !eventRule.IgnoreDB {
-		id, err := e.db.CreateDahuaEvent(ctx, repo.CreateDahuaEventParams{
-			DeviceID:  event.DeviceID,
-			Code:      event.Code,
-			Action:    event.Action,
-			Index:     int64(event.Index),
-			Data:      event.Data,
-			CreatedAt: types.NewTime(event.CreatedAt),
+	v := repo.DahuaEvent{
+		ID:        0,
+		DeviceID:  deviceID,
+		Code:      evt.Code,
+		Action:    evt.Action,
+		Index:     int64(evt.Index),
+		Data:      evt.Data,
+		CreatedAt: types.NewTime(time.Now()),
+	}
+	if !eventRule.IgnoreDb {
+		id, err := e.db.DahuaCreateEvent(ctx, repo.DahuaCreateEventParams{
+			DeviceID:  v.DeviceID,
+			Code:      v.Code,
+			Action:    v.Action,
+			Index:     v.Index,
+			Data:      v.Data,
+			CreatedAt: v.CreatedAt,
 		})
 		if err != nil {
 			e.logError(err)
 			return
 		}
-		event.ID = id
+		v.ID = id
 	}
 
-	e.bus.EventDahuaEvent(models.EventDahuaEvent{
+	e.bus.DahuaEvent(event.DahuaEvent{
 		DeviceName: deviceName,
-		Event:      event,
+		Event:      v,
 		EventRule:  eventRule,
 	})
 }

@@ -56,10 +56,10 @@ gen-sqlc:
 	sqlc generate
 
 gen-pubsub:
-	sh ./scripts/generate-pubsub-events.sh ./internal/models/event.go
+	sh ./scripts/generate-pubsub-events.sh ./internal/event/event.go
 
 gen-bus:
-	go run ./scripts/generate-bus -input ./internal/models/event.go -output ./internal/core/bus.gen.go
+	go run ./scripts/generate-bus -input ./internal/event/event.go -output ./internal/event/bus.gen.go
 
 gen-proto:
 	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto

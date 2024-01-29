@@ -21,18 +21,18 @@ const CookieKey = "session"
 const DefaultSessionDuration = 24 * time.Hour          // 1 Day
 const RememberMeSessionDuration = 365 * 24 * time.Hour // 1 Year
 
-func NewSession(ctx context.Context, db repo.DB, userAgent, ip string, userID int64, duration time.Duration) (repo.CreateUserSessionParams, error) {
+func NewSession(ctx context.Context, db repo.DB, userAgent, ip string, userID int64, duration time.Duration) (repo.AuthCreateUserSessionParams, error) {
 	b := make([]byte, 64)
 	_, err := rand.Read(b)
 	if err != nil {
-		return repo.CreateUserSessionParams{}, err
+		return repo.AuthCreateUserSessionParams{}, err
 	}
 
 	session := base64.URLEncoding.EncodeToString(b)
 
 	now := time.Now()
 
-	return repo.CreateUserSessionParams{
+	return repo.AuthCreateUserSessionParams{
 		UserID:     userID,
 		Session:    session,
 		UserAgent:  userAgent,
@@ -44,7 +44,29 @@ func NewSession(ctx context.Context, db repo.DB, userAgent, ip string, userID in
 	}, nil
 }
 
-func Session(db repo.DB) echo.MiddlewareFunc {
+func CreateUserSession(ctx context.Context, db repo.DB, arg repo.AuthCreateUserSessionParams) error {
+	return db.AuthCreateUserSession(ctx, arg)
+}
+
+func CreateUserSessionAndDeletePrevious(ctx context.Context, db repo.DB, arg repo.AuthCreateUserSessionParams, previousSession string) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := tx.AuthCreateUserSession(ctx, arg); err != nil {
+		return err
+	}
+
+	if err := tx.AuthDeleteUserSessionBySession(ctx, previousSession); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 	sessionUpdateLock := core.NewLockStore[string]()
 	sessionUpdateThrottle := time.Minute
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -57,7 +79,7 @@ func Session(db repo.DB) echo.MiddlewareFunc {
 			}
 
 			// Get valid user
-			userSession, err := db.GetUserBySession(ctx, cookie.Value)
+			userSession, err := db.AuthGetUserBySession(ctx, cookie.Value)
 			if err != nil {
 				if repo.IsNotFound(err) {
 					return next(c)
@@ -74,7 +96,7 @@ func Session(db repo.DB) echo.MiddlewareFunc {
 			if userSession.LastIp != realIP || userSession.LastUsedAt.Before(now.Add(-sessionUpdateThrottle)) {
 				unlock, err := sessionUpdateLock.TryLock(cookie.Value)
 				if err == nil {
-					err := db.UpdateUserSession(ctx, repo.UpdateUserSessionParams{
+					err := db.AuthUpdateUserSession(ctx, repo.AuthUpdateUserSessionParams{
 						LastIp:     realIP,
 						LastUsedAt: types.NewTime(now),
 						Session:    cookie.Value,

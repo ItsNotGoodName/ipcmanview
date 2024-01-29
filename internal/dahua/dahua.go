@@ -3,7 +3,6 @@ package dahua
 import (
 	"context"
 	"errors"
-	"net/http"
 	"slices"
 	"time"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
@@ -33,40 +31,6 @@ func NewScanLockStore() ScanLockStore {
 }
 
 type ScanLockStore struct{ *core.LockStore[int64] }
-
-func NewClient(conn models.DahuaConn) Client {
-	rpcHTTPClient := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-	cgiHTTPClient := http.Client{}
-	fileHTTPClient := http.Client{}
-
-	clientRPC := dahuarpc.NewClient(rpcHTTPClient, conn.Url, conn.Username, conn.Password)
-	clientPTZ := ptz.NewClient(clientRPC)
-	clientCGI := dahuacgi.NewClient(cgiHTTPClient, conn.Url, conn.Username, conn.Password)
-	clientFile := dahuarpc.NewFileClient(&fileHTTPClient, 10)
-
-	return Client{
-		Conn: conn,
-		RPC:  clientRPC,
-		PTZ:  clientPTZ,
-		CGI:  clientCGI,
-		File: clientFile,
-	}
-}
-
-type Client struct {
-	Conn models.DahuaConn
-	RPC  dahuarpc.Client
-	PTZ  ptz.Client
-	CGI  dahuacgi.Client
-	File dahuarpc.FileClient
-}
-
-func (c Client) Close(ctx context.Context) error {
-	c.File.Close()
-	return c.RPC.Close(ctx)
-}
 
 func ignorableError(err error) bool {
 	res := &dahuarpc.ResponseError{}
@@ -285,17 +249,6 @@ func GetUsers(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn, loca
 	return res, nil
 }
 
-func NewDahuaEvent(deviceID int64, event dahuacgi.Event) models.DahuaEvent {
-	return models.DahuaEvent{
-		DeviceID:  deviceID,
-		Code:      event.Code,
-		Action:    event.Action,
-		Index:     event.Index,
-		Data:      event.Data,
-		CreatedAt: time.Now(),
-	}
-}
-
 func NewDahuaFile(deviceID int64, file mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) (models.DahuaFile, error) {
 	startTime, endTime, err := file.UniqueTime(affixSeed, location)
 	if err != nil {
@@ -339,7 +292,7 @@ func NewDahuaFiles(deviceID int64, files []mediafilefind.FindNextFileInfo, affix
 	return res, nil
 }
 
-func GetSeed(c models.DahuaConn) int {
+func GetSeed(c Conn) int {
 	if c.Seed != 0 {
 		return c.Seed
 	}
@@ -347,7 +300,7 @@ func GetSeed(c models.DahuaConn) int {
 	return int(c.ID)
 }
 
-func GetDahuaStatus(ctx context.Context, device models.DahuaConn, rpcClient dahuarpc.Client) models.DahuaStatus {
+func GetDahuaStatus(ctx context.Context, device Conn, rpcClient dahuarpc.Client) models.DahuaStatus {
 	rpcState := rpcClient.State(ctx)
 	var rpcError string
 	if rpcState.Error != nil {
@@ -355,7 +308,7 @@ func GetDahuaStatus(ctx context.Context, device models.DahuaConn, rpcClient dahu
 	}
 	return models.DahuaStatus{
 		DeviceID:     device.ID,
-		Url:          device.Url.String(),
+		Url:          device.URL.String(),
 		Username:     device.Username,
 		Location:     device.Location.String(),
 		Seed:         device.Seed,
@@ -422,9 +375,9 @@ func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location,
 	}, nil
 }
 
-func NewFileCursor() repo.CreateDahuaFileCursorParams {
+func NewFileCursor() repo.DahuaCreateFileCursorParams {
 	now := time.Now()
-	return repo.CreateDahuaFileCursorParams{
+	return repo.DahuaCreateFileCursorParams{
 		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
 		FullCursor:  types.NewTime(now),
 		FullEpoch:   types.NewTime(ScannerEpoch),

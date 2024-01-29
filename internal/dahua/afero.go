@@ -35,7 +35,7 @@ func SyncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFileID in
 		return err
 	}
 
-	err = db.DeleteDahuaAferoFile(ctx, aferoFileID)
+	err = db.DahuaDeleteAferoFile(ctx, aferoFileID)
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, afs afero.Fs) (int,
 
 	var first repo.DahuaAferoFile
 	for {
-		files, err := db.OrphanListDahuaAferoFiles(ctx, 20)
+		files, err := db.DahuaOrphanListAferoFiles(ctx, 20)
 		if err != nil {
 			return deleted, err
 		}
@@ -67,7 +67,7 @@ func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, afs afero.Fs) (int,
 				return deleted, err
 			}
 
-			err = db.DeleteDahuaAferoFile(ctx, f.ID)
+			err = db.DahuaDeleteAferoFile(ctx, f.ID)
 			if err != nil {
 				return deleted, err
 			}
@@ -90,7 +90,7 @@ type AferoForeignKeys struct {
 
 // CreateAferoFile creates an afero file in the database and in the file system.
 func CreateAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, key AferoForeignKeys, fileName string) (AferoFile, error) {
-	id, err := db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
+	id, err := db.DahuaCreateAferoFile(ctx, repo.DahuaCreateAferoFileParams{
 		FileID:            core.Int64ToNullInt64(key.FileID),
 		ThumbnailID:       core.Int64ToNullInt64(key.ThumbnailID),
 		EmailAttachmentID: core.Int64ToNullInt64(key.EmailAttachmentID),
@@ -120,7 +120,7 @@ func ReadyAferoFile(ctx context.Context, db repo.DB, id int64, file afero.File) 
 		return err
 	}
 
-	_, err = db.ReadyDahuaAferoFile(ctx, repo.ReadyDahuaAferoFileParams{
+	_, err = db.DahuaReadyAferoFile(ctx, repo.DahuaReadyAferoFileParams{
 		Size:      stat.Size(),
 		CreatedAt: types.NewTime(stat.ModTime()),
 		ID:        id,

@@ -1,7 +1,6 @@
 package models
 
 import (
-	"encoding/json"
 	"net/url"
 	"time"
 
@@ -47,32 +46,6 @@ type DahuaDevice struct {
 	Feature   DahuaFeature
 	CreatedAt time.Time
 	UpdatedAt time.Time
-}
-
-// DahuaConn is the bare minumum information required to create a connection to a Dahua device.
-type DahuaConn struct {
-	ID       int64
-	Url      *url.URL
-	Username string
-	Password string
-	Location *time.Location
-	Feature  DahuaFeature
-	Seed     int
-}
-
-func (lhs DahuaConn) EQ(rhs DahuaConn) bool {
-	return lhs.Url.String() == rhs.Url.String() &&
-		lhs.Username == rhs.Username &&
-		lhs.Password == rhs.Password &&
-		lhs.Location.String() == rhs.Location.String() &&
-		lhs.Feature == rhs.Feature &&
-		lhs.Seed == rhs.Seed
-}
-
-type DahuaDeviceConn struct {
-	DahuaDevice
-	DahuaConn
-	Level DahuaPermissionLevel
 }
 
 type DahuaFeature int
@@ -155,22 +128,6 @@ type DahuaFile struct {
 	WorkDir     string    `json:"work_dir"`
 	WorkDirSN   bool      `json:"work_dir_sn"`
 	Storage     Storage   `json:"storage"`
-}
-
-type DahuaEvent struct {
-	ID        int64           `json:"id"`
-	DeviceID  int64           `json:"device_id"`
-	Code      string          `json:"code"`
-	Action    string          `json:"action"`
-	Index     int             `json:"index"`
-	Data      json.RawMessage `json:"data"`
-	CreatedAt time.Time       `json:"created_at"`
-}
-
-type DahuaEventRule struct {
-	IgnoreDB   bool
-	IgnoreLive bool
-	IgnoreMQTT bool
 }
 
 type DahuaStorage struct {

@@ -2,57 +2,62 @@ package dahua
 
 import (
 	"context"
+	"database/sql"
 	"net"
 	"net/url"
 	"slices"
 	"strings"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 )
 
-func normalizeDeviceHTTPURL(u *url.URL) *url.URL {
-	if slices.Contains([]string{"http", "https"}, u.Scheme) {
-		return u
-	}
-
-	switch u.Port() {
-	case "443":
-		u.Scheme = "https"
-	default:
-		u.Scheme = "http"
-	}
-
-	u, err := url.Parse(u.String())
-	if err != nil {
-		panic(err)
-	}
-
-	return u
+type Device struct {
+	ID       int64
+	Name     string `validate:"required,lte=64"`
+	URL      *url.URL
+	Username string
+	Password string
+	Location *time.Location
+	Feature  models.DahuaFeature
 }
 
-func normalizeDevice(arg models.DahuaDevice, create bool) models.DahuaDevice {
-	arg.Name = strings.TrimSpace(arg.Name)
-	arg.Url = normalizeDeviceHTTPURL(arg.Url)
+func (d *Device) normalize(create bool) {
+	// Name
+	d.Name = strings.TrimSpace(d.Name)
+	// URL
+	if !slices.Contains([]string{"http", "https"}, d.URL.Scheme) {
+		switch d.URL.Port() {
+		case "443":
+			d.URL.Scheme = "https"
+		default:
+			d.URL.Scheme = "http"
+		}
 
+		u, err := url.Parse(d.URL.String())
+		if err != nil {
+			panic(err)
+		}
+		d.URL = u
+	}
+
+	// Name/Username
 	if create {
-		if arg.Name == "" {
-			arg.Name = arg.Url.String()
+		if d.Name == "" {
+			d.Name = d.URL.String()
 		}
-		if arg.Username == "" {
-			arg.Username = "admin"
+		if d.Username == "" {
+			d.Username = "admin"
 		}
 	}
-
-	return arg
 }
 
-func parseDeviceIPFromURL(urL *url.URL) (string, error) {
-	ip := urL.Hostname()
+func (d *Device) getIP() (string, error) {
+	ip := d.URL.Hostname()
 
 	ips, err := net.LookupIP(ip)
 	if err != nil {
@@ -69,23 +74,59 @@ func parseDeviceIPFromURL(urL *url.URL) (string, error) {
 	return ip, nil
 }
 
-func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.DahuaDevice) (models.DahuaDeviceConn, error) {
-	arg = normalizeDevice(arg, true)
+func createDahuaDevice(ctx context.Context, db repo.DB, arg repo.DahuaCreateDeviceParams) (int64, error) {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
+
+	id, err := tx.DahuaCreateDevice(ctx, arg)
+	if err != nil {
+		return 0, err
+	}
+
+	// TODO: sql.NullInt64 should just be int64
+	err = tx.DahuaAllocateSeed(ctx, sql.NullInt64{
+		Valid: true,
+		Int64: id,
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	arg2 := NewFileCursor()
+	arg2.DeviceID = id
+	err = tx.DahuaCreateFileCursor(ctx, arg2)
+	if err != nil {
+		return 0, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (repo.DahuaFatDevice, error) {
+	arg.normalize(true)
 
 	err := validate.Validate.Struct(arg)
 	if err != nil {
-		return models.DahuaDeviceConn{}, err
+		return repo.DahuaFatDevice{}, err
 	}
 
-	ip, err := parseDeviceIPFromURL(arg.Url)
+	ip, err := arg.getIP()
 	if err != nil {
-		return models.DahuaDeviceConn{}, err
+		return repo.DahuaFatDevice{}, err
 	}
 
 	now := types.NewTime(time.Now())
-	id, err := db.CreateDahuaDevice(ctx, repo.CreateDahuaDeviceParams{
+	id, err := createDahuaDevice(ctx, db, repo.DahuaCreateDeviceParams{
 		Name:      arg.Name,
-		Url:       types.NewURL(arg.Url),
+		Url:       types.NewURL(arg.URL),
 		Ip:        ip,
 		Username:  arg.Username,
 		Password:  arg.Password,
@@ -93,40 +134,43 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.Dah
 		Feature:   arg.Feature,
 		CreatedAt: now,
 		UpdatedAt: now,
-	}, NewFileCursor())
+	})
 	if err != nil {
-		return models.DahuaDeviceConn{}, err
+		return repo.DahuaFatDevice{}, err
 	}
 
-	dbDevice, err := db.GetDahuaDevice(ctx, id)
+	res, err := db.DahuaGetDevice(ctx, id)
 	if err != nil {
-		return models.DahuaDeviceConn{}, err
+		return repo.DahuaFatDevice{}, err
 	}
-	device := dbDevice.Convert()
 
-	bus.EventDahuaDeviceCreated(models.EventDahuaDeviceCreated{
-		Device: device,
+	bus.DahuaDeviceCreated(event.DahuaDeviceCreated{
+		Device: res.DahuaDevice,
+		Seed:   res.Seed,
 	})
 
-	return device, err
+	return repo.DahuaFatDevice{
+		DahuaDevice: res.DahuaDevice,
+		Seed:        res.Seed,
+	}, err
 }
 
-func UpdateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.DahuaDevice) (models.DahuaDeviceConn, error) {
-	arg = normalizeDevice(arg, false)
+func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (repo.DahuaFatDevice, error) {
+	arg.normalize(true)
 
 	err := validate.Validate.Struct(arg)
 	if err != nil {
-		return models.DahuaDeviceConn{}, err
+		return repo.DahuaFatDevice{}, err
 	}
 
-	ip, err := parseDeviceIPFromURL(arg.Url)
+	ip, err := arg.getIP()
 	if err != nil {
-		return models.DahuaDeviceConn{}, err
+		return repo.DahuaFatDevice{}, err
 	}
 
-	_, err = db.UpdateDahuaDevice(ctx, repo.UpdateDahuaDeviceParams{
+	_, err = db.DahuaUpdateDevice(ctx, repo.DahuaUpdateDeviceParams{
 		Name:      arg.Name,
-		Url:       types.NewURL(arg.Url),
+		Url:       types.NewURL(arg.URL),
 		Ip:        ip,
 		Username:  arg.Username,
 		Password:  arg.Password,
@@ -136,27 +180,30 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *core.Bus, arg models.Dah
 		ID:        arg.ID,
 	})
 	if err != nil {
-		return models.DahuaDeviceConn{}, err
+		return repo.DahuaFatDevice{}, err
 	}
 
-	dbDevice, err := db.GetDahuaDevice(ctx, arg.ID)
+	res, err := db.DahuaGetDevice(ctx, arg.ID)
 	if err != nil {
-		return models.DahuaDeviceConn{}, err
+		return repo.DahuaFatDevice{}, err
 	}
-	device := dbDevice.Convert()
 
-	bus.EventDahuaDeviceUpdated(models.EventDahuaDeviceUpdated{
-		Device: device,
+	bus.DahuaDeviceUpdated(event.DahuaDeviceUpdated{
+		Device: res.DahuaDevice,
+		Seed:   res.Seed,
 	})
 
-	return device, nil
+	return repo.DahuaFatDevice{
+		DahuaDevice: res.DahuaDevice,
+		Seed:        res.Seed,
+	}, nil
 }
 
-func DeleteDevice(ctx context.Context, db repo.DB, bus *core.Bus, id int64) error {
-	if err := db.DeleteDahuaDevice(ctx, id); err != nil {
+func DeleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) error {
+	if err := db.DahuaDeleteDevice(ctx, id); err != nil {
 		return err
 	}
-	bus.EventDahuaDeviceDeleted(models.EventDahuaDeviceDeleted{
+	bus.DahuaDeviceDeleted(event.DahuaDeviceDeleted{
 		DeviceID: id,
 	})
 	return nil

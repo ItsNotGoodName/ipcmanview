@@ -60,7 +60,7 @@ func CreateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaS
 		return 0, err
 	}
 
-	return db.CreateDahuaStorageDestination(ctx, repo.CreateDahuaStorageDestinationParams{
+	return db.DahuaCreateStorageDestination(ctx, repo.DahuaCreateStorageDestinationParams{
 		Name:            arg.Name,
 		Storage:         arg.Storage,
 		ServerAddress:   arg.ServerAddress,
@@ -79,7 +79,7 @@ func UpdateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaS
 		return models.DahuaStorageDestination{}, err
 	}
 
-	res, err := db.UpdateDahuaStorageDestination(ctx, repo.UpdateDahuaStorageDestinationParams{
+	res, err := db.DahuaUpdateStorageDestination(ctx, repo.DahuaUpdateStorageDestinationParams{
 		Name:            arg.Name,
 		Storage:         arg.Storage,
 		ServerAddress:   arg.ServerAddress,
@@ -97,7 +97,7 @@ func UpdateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaS
 }
 
 func DeleteStorageDestination(ctx context.Context, db repo.DB, id int64) error {
-	return db.DeleteDahuaStorageDestination(ctx, id)
+	return db.DahuaDeleteStorageDestination(ctx, id)
 }
 
 func TestStorageDestination(ctx context.Context, arg models.DahuaStorageDestination) error {

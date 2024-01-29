@@ -19,7 +19,7 @@ type Thumbnail struct {
 }
 
 func CreateThumbnail(ctx context.Context, db repo.DB, afs afero.Fs, fk ThumbnailForeignKeys, width, height int64, aferoFileName string) (Thumbnail, error) {
-	thumbnail, err := db.CreateDahuaThumbnail(ctx, repo.CreateDahuaThumbnailParams{
+	thumbnail, err := db.DahuaCreateThumbnail(ctx, repo.DahuaCreateThumbnailParams{
 		EmailAttachmentID: core.Int64ToNullInt64(fk.EmailAttachmentID),
 		FileID:            core.Int64ToNullInt64(fk.FileID),
 		Width:             int64(width),

@@ -50,7 +50,7 @@ func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCurs
 			End:   time.Now(),
 		}, nil
 	case models.DahuaScanTypeReverse:
-		startTime, err := db.GetOldestDahuaFileStartTime(ctx, fileCursor.DeviceID)
+		startTime, err := db.DahuaGetOldestFileStartTime(ctx, fileCursor.DeviceID)
 		if err != nil {
 			if repo.IsNotFound(err) {
 				return models.TimeRange{}, nil
@@ -73,7 +73,7 @@ func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCurs
 // ScanReset cannot be called concurrently for the same device.
 func ScanReset(ctx context.Context, db repo.DB, deviceID int64) error {
 	fileCursor := NewFileCursor()
-	_, err := db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
+	_, err := db.DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
@@ -86,8 +86,8 @@ func ScanReset(ctx context.Context, db repo.DB, deviceID int64) error {
 }
 
 // Scan cannot be called concurrently for the same device.
-func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device models.DahuaConn, scanType models.DahuaScanType) error {
-	fileCursor, err := db.UpdateDahuaFileCursorScanPercent(ctx, repo.UpdateDahuaFileCursorScanPercentParams{
+func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn, scanType models.DahuaScanType) error {
+	fileCursor, err := db.DahuaUpdateFileCursorScanPercent(ctx, repo.DahuaUpdateFileCursorScanPercentParams{
 		DeviceID:    device.ID,
 		ScanPercent: 0,
 	})
@@ -104,7 +104,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 	updated_at := types.NewTime(time.Now())
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
 
-	fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
+	fileCursor, err = db.DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
@@ -138,7 +138,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 				}
 
 				for _, f := range files {
-					_, err := db.UpsertDahuaFiles(ctx, repo.CreateDahuaFileParams{
+					_, err := UpsertDahuaFiles(ctx, db, repo.DahuaCreateFileParams{
 						DeviceID:    device.ID,
 						Channel:     int64(f.Channel),
 						StartTime:   types.NewTime(f.StartTime),
@@ -167,7 +167,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 			}
 		}
 
-		err := db.DeleteDahuaFile(ctx, repo.DeleteDahuaFileParams{
+		err := db.DahuaDeleteFile(ctx, repo.DahuaDeleteFileParams{
 			UpdatedAt: updated_at,
 			DeviceID:  device.ID,
 			Start:     types.NewTime(scannerPeriod.Start.UTC()),
@@ -179,7 +179,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 
 		fileCursor = updateScanFileCursor(fileCursor, scannerPeriod, scanType)
 
-		fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
+		fileCursor, err = db.DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 			QuickCursor: fileCursor.QuickCursor,
 			FullCursor:  fileCursor.FullCursor,
 			FullEpoch:   fileCursor.FullEpoch,
@@ -192,7 +192,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 			return err
 		}
 	}
-	fileCursor, err = db.UpdateDahuaFileCursor(ctx, repo.UpdateDahuaFileCursorParams{
+	fileCursor, err = db.DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
@@ -206,4 +206,37 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device model
 	}
 
 	return nil
+}
+
+func UpsertDahuaFiles(ctx context.Context, db repo.DB, arg repo.DahuaCreateFileParams) (int64, error) {
+	id, err := db.DahuaUpdateFile(ctx, repo.DahuaUpdateFileParams{
+		DeviceID:    arg.DeviceID,
+		Channel:     arg.Channel,
+		StartTime:   arg.StartTime,
+		EndTime:     arg.EndTime,
+		Length:      arg.Length,
+		Type:        arg.Type,
+		FilePath:    arg.FilePath,
+		Duration:    arg.Duration,
+		Disk:        arg.Disk,
+		VideoStream: arg.VideoStream,
+		Flags:       arg.Flags,
+		Events:      arg.Events,
+		Cluster:     arg.Cluster,
+		Partition:   arg.Partition,
+		PicIndex:    arg.PicIndex,
+		Repeat:      arg.Repeat,
+		WorkDir:     arg.WorkDir,
+		WorkDirSn:   arg.WorkDirSn,
+		UpdatedAt:   arg.UpdatedAt,
+		Storage:     arg.Storage,
+	})
+	if err == nil {
+		return id, nil
+	}
+	if !repo.IsNotFound(err) {
+		return 0, err
+	}
+
+	return db.DahuaCreateFile(ctx, arg)
 }

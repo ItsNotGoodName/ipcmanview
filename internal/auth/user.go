@@ -40,7 +40,7 @@ func CreateUser(ctx context.Context, db repo.DB, arg models.User) (int64, error)
 	}
 
 	now := types.NewTime(time.Now())
-	return db.CreateUser(ctx, repo.CreateUserParams{
+	return db.AuthCreateUser(ctx, repo.AuthCreateUserParams{
 		Email:     arg.Email,
 		Username:  arg.Username,
 		Password:  arg.Password,
@@ -66,7 +66,7 @@ func UpdateUser(ctx context.Context, db repo.DB, arg models.User, newPassword st
 		}
 	}
 
-	return db.UpdateUser(ctx, repo.UpdateUserParams{
+	return db.AuthUpdateUser(ctx, repo.AuthUpdateUserParams{
 		Email:     arg.Email,
 		Username:  arg.Username,
 		Password:  arg.Password,
@@ -81,13 +81,13 @@ func CheckUserPassword(hash, password string) error {
 
 func UpdateUserDisable(ctx context.Context, db repo.DB, userID int64, disable bool) error {
 	if disable {
-		_, err := db.UpdateUserDisabledAt(ctx, repo.UpdateUserDisabledAtParams{
+		_, err := db.AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
 			ID:         userID,
 		})
 		return err
 	}
-	_, err := db.UpdateUserDisabledAt(ctx, repo.UpdateUserDisabledAtParams{
+	_, err := db.AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 		DisabledAt: types.NullTime{},
 		ID:         userID,
 	})
@@ -96,11 +96,11 @@ func UpdateUserDisable(ctx context.Context, db repo.DB, userID int64, disable bo
 
 func UpdateUserAdmin(ctx context.Context, db repo.DB, userId int64, admin bool) error {
 	if admin {
-		_, err := db.UpsertAdmin(ctx, repo.UpsertAdminParams{
+		_, err := db.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
 			UserID:    userId,
 			CreatedAt: types.NewTime(time.Now()),
 		})
 		return err
 	}
-	return db.DeleteAdmin(ctx, userId)
+	return db.AuthDeleteAdmin(ctx, userId)
 }

@@ -137,7 +137,7 @@ func (s *session) Data(r io.Reader) error {
 		log.Warn().Err(err).Str("date", e.GetHeader("Date")).Msg("Failed to parse date")
 	}
 
-	dbDevice, err := s.db.GetDahuaDeviceByIP(ctx, core.SplitAddress(s.address)[0])
+	dbDevice, err := s.db.DahuaGetDeviceByIP(ctx, core.SplitAddress(s.address)[0])
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return err
@@ -145,11 +145,11 @@ func (s *session) Data(r io.Reader) error {
 		log.Err(err).Msg("Failed to get device")
 		return err
 	}
-	log = log.With().Str("device", dbDevice.Name).Logger()
+	log = log.With().Str("device", dbDevice.DahuaDevice.Name).Logger()
 
 	body := dahua.ParseEmailContent(e.Text)
-	arg := repo.CreateDahuaEmailMessageParams{
-		DeviceID:          dbDevice.ID,
+	arg := repo.DahuaCreateEmailMessageParams{
+		DeviceID:          dbDevice.DahuaDevice.ID,
 		Date:              types.NewTime(date),
 		From:              s.from,
 		To:                types.NewStringSlice(to),
@@ -161,14 +161,14 @@ func (s *session) Data(r io.Reader) error {
 		CreatedAt:         types.NewTime(time.Now()),
 	}
 
-	args := make([]repo.CreateDahuaEmailAttachmentParams, 0, len(e.Attachments))
+	args := make([]repo.DahuaCreateEmailAttachmentParams, 0, len(e.Attachments))
 	for _, a := range e.Attachments {
-		args = append(args, repo.CreateDahuaEmailAttachmentParams{
+		args = append(args, repo.DahuaCreateEmailAttachmentParams{
 			FileName: a.FileName,
 		})
 	}
 
-	email, err := s.db.CreateDahuaEmail(ctx, arg, args...)
+	email, err := CreateDahuaEmail(ctx, s.db, arg, args...)
 	if err != nil {
 		log.Err(err).Msg("Failed to create email")
 		return err

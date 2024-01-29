@@ -7,6 +7,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuasmtp"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
@@ -60,7 +61,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super.Add(pub)
 
 	// Bus
-	bus := core.NewBus().Register(pub)
+	bus := event.NewBus().Register(pub)
 	super.Add(bus)
 
 	// MediaMTX
@@ -119,7 +120,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// HTTP middleware
 	httpRouter.Use(web.FS(api.Route, rpcserver.Route))
-	httpRouter.Use(auth.Session(db))
+	httpRouter.Use(auth.SessionMiddleware(db))
 
 	// API
 	api.

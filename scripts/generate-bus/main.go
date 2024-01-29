@@ -39,8 +39,8 @@ type Bus struct {
 
 func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 {{- range .Events }}
-	b.On{{ . }}(func(ctx context.Context, event {{ $.EventPackage }}{{ . }}) error {
-		err := pub.Publish(ctx, event)
+	b.On{{ . }}(func(ctx context.Context, evt {{ $.EventPackage }}{{ . }}) error {
+		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
 		}
@@ -51,15 +51,15 @@ func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 }
 
 {{ range .Events }}
-func (b *Bus) On{{ . }}(h func(ctx context.Context, event {{ $.EventPackage }}{{ . }}) error) {
+func (b *Bus) On{{ . }}(h func(ctx context.Context, evt {{ $.EventPackage }}{{ . }}) error) {
 	b.on{{ . }} = append(b.on{{ . }}, h)
 }
 {{ end }}
 
 {{ range .Events }}
-func (b *Bus) {{ . }}(event {{ $.EventPackage }}{{ . }}) {
+func (b *Bus) {{ . }}(evt {{ $.EventPackage }}{{ . }}) {
 	for _, v := range b.on{{ . }} {
-		busLogError(v(b.Context(), event))
+		busLogError(v(b.Context(), evt))
 	}
 }
 {{ end }}
@@ -74,8 +74,8 @@ type Data struct {
 }
 
 func main() {
-	outputFilePath := "./internal/core/bus.gen.go"
-	inputFilePath := "./internal/models/event.go"
+	outputFilePath := "./internal/event/bus.gen.go"
+	inputFilePath := "./internal/event/event.go"
 
 	flag.StringVar(&outputFilePath, "output", "", "")
 	flag.StringVar(&inputFilePath, "input", "", "")
@@ -85,7 +85,7 @@ func main() {
 	outputFilePath = path.Clean(outputFilePath)
 	inputFilePath = path.Clean(inputFilePath)
 
-	must(os.Remove(outputFilePath))
+	_ = os.Remove(outputFilePath)
 
 	var events []string
 	for _, v := range must2(regexp.Compile(`type (.*?) struct {`)).FindAllStringSubmatch(string(must2(os.ReadFile(inputFilePath))), -1) {
@@ -93,16 +93,15 @@ func main() {
 	}
 	data := Data{
 		By:      "generate-bus.go",
-		Package: "core",
+		Package: "event",
 		Imports: []string{
 			"context",
 			"errors",
-			"github.com/ItsNotGoodName/ipcmanview/internal/models",
 			"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub",
 			"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext",
 			"github.com/rs/zerolog/log",
 		},
-		EventPackage: "models.",
+		EventPackage: "",
 		Events:       events,
 	}
 

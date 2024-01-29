@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -27,16 +26,13 @@ type User struct {
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
 	authSession := useAuthSession(ctx)
 
-	dbDevices, err := u.db.ListDahuaDevicesForUser(ctx, repo.ListDahuaDevicesForUserParams{
-		Admin:  authSession.Admin,
-		UserID: core.Int64ToNullInt64(authSession.UserID),
-	})
+	dbDevices, err := u.db.DahuaListDevicesForUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, check(err)
 	}
 
-	for _, lddfur := range dbDevices {
-		fmt.Println(lddfur.ID, lddfur.Level)
+	for _, v := range dbDevices {
+		fmt.Println(v.DahuaDevice.ID, v.Level)
 	}
 
 	return &rpc.GetHomePageResp{
@@ -47,12 +43,12 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetProfilePageResp, error) {
 	authSession := useAuthSession(ctx)
 
-	user, err := u.db.GetUser(ctx, authSession.UserID)
+	user, err := u.db.AuthGetUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, check(err)
 	}
 
-	dbSessions, err := u.db.ListUserSessionsForUserAndNotExpired(ctx, repo.ListUserSessionsForUserAndNotExpiredParams{
+	dbSessions, err := u.db.AuthListUserSessionsForUserAndNotExpired(ctx, repo.AuthListUserSessionsForUserAndNotExpiredParams{
 		UserID: authSession.UserID,
 		Now:    types.NewTime(time.Now()),
 	})
@@ -75,7 +71,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 		})
 	}
 
-	dbGroups, err := u.db.ListGroupsForUser(ctx, authSession.UserID)
+	dbGroups, err := u.db.AuthListGroupsForUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, check(err)
 	}
@@ -104,7 +100,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
-	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
+	dbUser, err := u.db.AuthGetUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, check(err)
 	}
@@ -126,7 +122,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 		return nil, check(err)
 	}
 
-	if err := u.db.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
+	if err := u.db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
 		UserID:  authSession.UserID,
 		Session: authSession.Session,
 	}); err != nil {
@@ -139,7 +135,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
-	dbUser, err := u.db.GetUser(ctx, authSession.UserID)
+	dbUser, err := u.db.AuthGetUser(ctx, authSession.UserID)
 	if err != nil {
 		return nil, check(err)
 	}
@@ -171,7 +167,7 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 func (u *User) RevokeAllMySessions(ctx context.Context, req *rpc.RevokeAllMySessionsReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
-	if err := u.db.DeleteUserSessionForUserAndNotSession(ctx, repo.DeleteUserSessionForUserAndNotSessionParams{
+	if err := u.db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
 		UserID:  authSession.UserID,
 		Session: authSession.Session,
 	}); err != nil {
@@ -184,7 +180,7 @@ func (u *User) RevokeAllMySessions(ctx context.Context, req *rpc.RevokeAllMySess
 func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
-	if err := u.db.DeleteUserSessionForUser(ctx, repo.DeleteUserSessionForUserParams{
+	if err := u.db.AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
 		ID:     req.SessionId,
 		UserID: authSession.UserID,
 	}); err != nil {

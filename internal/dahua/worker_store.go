@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/thejerf/suture/v4"
 )
 
-type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device models.DahuaConn) ([]suture.ServiceToken, error)
+type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device Conn) ([]suture.ServiceToken, error)
 
 // WorkerStore manages the lifecycle of workers to devices.
 type WorkerStore struct {
@@ -23,7 +22,7 @@ type WorkerStore struct {
 }
 
 type workerData struct {
-	conn   models.DahuaConn
+	conn   Conn
 	tokens []suture.ServiceToken
 }
 
@@ -36,7 +35,7 @@ func NewWorkerStore(super *suture.Supervisor, factory WorkerFactory) *WorkerStor
 	}
 }
 
-func (s *WorkerStore) create(ctx context.Context, conn models.DahuaConn) error {
+func (s *WorkerStore) create(ctx context.Context, conn Conn) error {
 	tokens, err := s.factory(ctx, s.super, conn)
 	if err != nil {
 		return err
@@ -50,7 +49,7 @@ func (s *WorkerStore) create(ctx context.Context, conn models.DahuaConn) error {
 	return nil
 }
 
-func (s *WorkerStore) Create(ctx context.Context, device models.DahuaConn) error {
+func (s *WorkerStore) Create(ctx context.Context, device Conn) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 
@@ -62,7 +61,7 @@ func (s *WorkerStore) Create(ctx context.Context, device models.DahuaConn) error
 	return s.create(ctx, device)
 }
 
-func (s *WorkerStore) Update(ctx context.Context, device models.DahuaConn) error {
+func (s *WorkerStore) Update(ctx context.Context, device Conn) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 
@@ -97,27 +96,23 @@ func (s *WorkerStore) Delete(id int64) error {
 	return nil
 }
 
-func (s *WorkerStore) Register(bus *core.Bus) *WorkerStore {
-	bus.OnEventDahuaDeviceCreated(func(ctx context.Context, evt models.EventDahuaDeviceCreated) error {
-		return s.Create(ctx, evt.Device.DahuaConn)
+func (s *WorkerStore) Register(bus *event.Bus) *WorkerStore {
+	bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
+		return s.Create(ctx, NewConn(evt.Device, evt.Seed))
 	})
-	bus.OnEventDahuaDeviceUpdated(func(ctx context.Context, evt models.EventDahuaDeviceUpdated) error {
-		return s.Update(ctx, evt.Device.DahuaConn)
+	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
+		return s.Update(ctx, NewConn(evt.Device, evt.Seed))
 	})
-	bus.OnEventDahuaDeviceDeleted(func(ctx context.Context, evt models.EventDahuaDeviceDeleted) error {
+	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
 		return s.Delete(evt.DeviceID)
 	})
 	return s
 }
 
 func (s *WorkerStore) Bootstrap(ctx context.Context, db repo.DB, store *Store) error {
-	dbDevices, err := db.ListDahuaDevices(ctx)
+	conns, err := ListConns(ctx, db)
 	if err != nil {
 		return err
-	}
-	var conns []models.DahuaConn
-	for _, v := range dbDevices {
-		conns = append(conns, v.Convert().DahuaConn)
 	}
 
 	clients := store.ClientList(ctx, conns)

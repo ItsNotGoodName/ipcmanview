@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/rs/zerolog/log"
@@ -70,13 +70,13 @@ func (c Conn) Sync(ctx context.Context) error {
 func (c Conn) haSync(ctx context.Context) error {
 	c.conn.Ready()
 
-	devices, err := c.db.ListDahuaDevices(ctx)
+	devices, err := c.db.DahuaListDevices(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, dbDevice := range devices {
-		if err := c.haSyncDevice(ctx, dbDevice.Convert()); err != nil {
+	for _, device := range devices {
+		if err := c.haSyncDevice(ctx, device.DahuaDevice, dahua.NewConn(device.DahuaDevice, device.Seed)); err != nil {
 			return err
 		}
 	}
@@ -84,8 +84,8 @@ func (c Conn) haSync(ctx context.Context) error {
 	return nil
 }
 
-func (c Conn) haSyncDevice(ctx context.Context, device models.DahuaDeviceConn) error {
-	client := c.store.Client(ctx, device.DahuaConn)
+func (c Conn) haSyncDevice(ctx context.Context, device repo.DahuaDevice, conn dahua.Conn) error {
+	client := c.store.Client(ctx, conn)
 
 	detail, err := dahua.GetDahuaDetail(ctx, client.Conn.ID, client.RPC)
 	if err != nil {
@@ -105,7 +105,7 @@ func (c Conn) haSyncDevice(ctx context.Context, device models.DahuaDeviceConn) e
 		return nil
 	}
 
-	deviceID := mqtt.Int(device.DahuaDevice.ID)
+	deviceID := mqtt.Int(device.ID)
 	deviceUID := newDeviceUID(deviceID)
 
 	haEntity := mqtt.NewHaEntity(c.conn)
@@ -186,39 +186,58 @@ func (c Conn) haSyncDevice(ctx context.Context, device models.DahuaDeviceConn) e
 	return nil
 }
 
-type dahuaEvent struct {
-	models.DahuaEvent
-	EventType string `json:"event_type"`
+type Event struct {
+	ID        int64           `json:"id"`
+	DeviceID  int64           `json:"device_id"`
+	Code      string          `json:"code"`
+	Action    string          `json:"action"`
+	Index     int             `json:"index"`
+	Data      json.RawMessage `json:"data"`
+	CreatedAt time.Time       `json:"created_at"`
+	EventType string          `json:"event_type"`
 }
 
-func (c Conn) Register(bus *core.Bus) error {
+func NewEvent(v repo.DahuaEvent) Event {
+	return Event{
+		ID:        v.ID,
+		DeviceID:  v.DeviceID,
+		Code:      v.Code,
+		Action:    v.Action,
+		Index:     int(v.Index),
+		Data:      v.Data,
+		CreatedAt: v.CreatedAt.Time,
+		EventType: dahuaEventType,
+	}
+}
+
+func (c Conn) Register(bus *event.Bus) error {
 	if c.haEnable {
-		bus.OnEventDahuaDeviceCreated(func(ctx context.Context, event models.EventDahuaDeviceCreated) error {
+		bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
 			c.conn.Ready()
 
-			return c.haSyncDevice(ctx, event.Device)
+			return c.haSyncDevice(ctx, evt.Device, dahua.NewConn(evt.Device, evt.Seed))
 		})
-		bus.OnEventDahuaDeviceUpdated(func(ctx context.Context, event models.EventDahuaDeviceUpdated) error {
+		bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
 			c.conn.Ready()
 
-			return c.haSyncDevice(ctx, event.Device)
+			return c.haSyncDevice(ctx, evt.Device, dahua.NewConn(evt.Device, evt.Seed))
 		})
 	}
-	bus.OnEventDahuaEvent(func(ctx context.Context, evt models.EventDahuaEvent) error {
+	bus.OnDahuaEvent(func(ctx context.Context, evt event.DahuaEvent) error {
 		c.conn.Ready()
 
-		if evt.EventRule.IgnoreMQTT {
+		if evt.EventRule.IgnoreMqtt {
 			return nil
 		}
 
-		b, err := json.Marshal(dahuaEvent{DahuaEvent: evt.Event, EventType: dahuaEventType})
+		b, err := json.Marshal(NewEvent(evt.Event))
 		if err != nil {
 			return err
 		}
 
 		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(evt.Event.DeviceID), "event"), 0, false, b))
 	})
-	bus.OnEventDahuaEventWorkerConnect(func(ctx context.Context, evt models.EventDahuaEventWorkerConnect) error {
+	bus.OnDahuaEventWorkerConnect(func(ctx context.Context, evt event.DahuaEventWorkerConnect) error {
 		c.conn.Ready()
 
 		if err := publishEventError(ctx, c.conn, evt.DeviceID, nil); err != nil {
@@ -227,7 +246,7 @@ func (c Conn) Register(bus *core.Bus) error {
 
 		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", strconv.FormatInt(evt.DeviceID, 10), "event", "state"), 0, true, "online"))
 	})
-	bus.OnEventDahuaEventWorkerDisconnect(func(ctx context.Context, evt models.EventDahuaEventWorkerDisconnect) error {
+	bus.OnDahuaEventWorkerDisconnect(func(ctx context.Context, evt event.DahuaEventWorkerDisconnect) error {
 		c.conn.Ready()
 
 		if err := publishEventError(ctx, c.conn, evt.DeviceID, evt.Error); err != nil {
@@ -236,7 +255,7 @@ func (c Conn) Register(bus *core.Bus) error {
 
 		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(evt.DeviceID), "event", "state"), 0, true, "offline"))
 	})
-	bus.OnEventDahuaCoaxialStatus(func(ctx context.Context, event models.EventDahuaCoaxialStatus) error {
+	bus.OnDahuaCoaxialStatus(func(ctx context.Context, event event.DahuaCoaxialStatus) error {
 		c.conn.Ready()
 
 		{

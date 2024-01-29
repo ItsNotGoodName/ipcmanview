@@ -1,186 +1,4 @@
--- name: CreateUser :one
-INSERT INTO
-  users (email, username, password, created_at, updated_at)
-VALUES
-  (?, ?, ?, ?, ?) RETURNING id;
-
--- name: GetUser :one
-SELECT
-  *
-FROM
-  users
-where
-  id = ?;
-
--- name: GetUserByUsernameOrEmail :one
-SELECT
-  *
-FROM
-  users
-where
-  username = sqlc.arg ('usernameOrEmail')
-  OR email = sqlc.arg ('usernameOrEmail');
-
--- name: GetUserBySession :one
-SELECT
-  user_sessions.id as id,
-  user_sessions.user_id as user_id,
-  users.username,
-  admins.user_id IS NOT NULL as 'admin',
-  user_sessions.last_ip,
-  user_sessions.last_used_at,
-  user_sessions.expired_at,
-  users.disabled_at AS 'users_disabled_at'
-FROM
-  user_sessions
-  LEFT JOIN users ON users.id = user_sessions.user_id
-  LEFT JOIN admins ON admins.user_id = user_sessions.user_id
-WHERE
-  session = ?;
-
--- name: GetUserByGroup :many
-SELECT
-  users.*
-FROM
-  users
-  LEFT JOIN group_users ON group_users.user_id = id
-WHERE
-  group_users.group_id = ?;
-
--- name: UpdateUser :one
-UPDATE users
-SET
-  email = ?,
-  username = ?,
-  password = ?,
-  updated_at = ?
-WHERE
-  id = ? RETURNING id;
-
--- name: UpdateUserDisabledAt :one
-UPDATE users
-SET
-  disabled_at = ?
-WHERE
-  id = ? RETURNING id;
-
--- name: CreateUserSession :exec
-INSERT INTO
-  user_sessions (
-    user_id,
-    session,
-    user_agent,
-    ip,
-    last_ip,
-    last_used_at,
-    created_at,
-    expired_at
-  )
-VALUES
-  (?, ?, ?, ?, ?, ?, ?, ?);
-
--- name: DeleteUserSessionForUser :exec
-DELETE FROM user_sessions
-WHERE
-  id = ?
-  AND user_id = ?;
-
--- name: DeleteUserSessionByExpired :exec
-DELETE FROM user_sessions
-WHERE
-  expired_at < ?;
-
--- name: ListUserSessionsForUserAndNotExpired :many
-SELECT
-  *
-FROM
-  user_sessions
-WHERE
-  user_id = ?
-  AND expired_at > sqlc.arg ('now');
-
--- name: UpdateUserSession :exec
-UPDATE user_sessions
-SET
-  last_ip = ?,
-  last_used_at = ?
-WHERE
-  session = ?;
-
--- name: DeleteUserSessionForUserAndNotSession :exec
-DELETE FROM user_sessions
-WHERE
-  user_id = ?
-  AND session != ?;
-
--- name: DeleteUserSessionBySession :exec
-DELETE FROM user_sessions
-WHERE
-  session = ?;
-
--- name: ListGroupsForUser :many
-SELECT
-  g.*,
-  gu.created_at AS joined_at
-FROM
-  groups AS g
-  LEFT JOIN group_users AS gu ON gu.group_id = g.id
-WHERE
-  gu.user_id = ?;
-
--- name: CountGroup :one
-SELECT
-  count(*)
-FROM
-  groups;
-
--- name: GetGroup :one
-SELECT
-  *
-FROM
-  groups
-where
-  id = ?;
-
--- name: CreateGroup :one
-INSERT INTO
-  groups (name, description, created_at, updated_at)
-VALUES
-  (?, ?, ?, ?) RETURNING id;
-
--- name: UpdateGroup :one
-UPDATE groups
-SET
-  name = ?,
-  description = ?,
-  updated_at = ?
-WHERE
-  id = ? RETURNING id;
-
--- name: DeleteGroup :exec
-DELETE FROM groups
-WHERE
-  id = ?;
-
--- name: UpdateGroupDisabledAt :one
-UPDATE groups
-SET
-  disabled_at = ?
-WHERE
-  id = ? RETURNING id;
-
--- name: UpsertAdmin :one
-INSERT OR IGNORE INTO
-  admins (user_id, created_at)
-VALUES
-  (?, ?) RETURNING user_id;
-
--- name: DeleteAdmin :exec
-DELETE FROM admins
-WHERE
-  user_id = ?;
-
--- name: createDahuaDevice :one
+-- name: DahuaCreateDevice :one
 INSERT INTO
   dahua_devices (
     name,
@@ -196,7 +14,7 @@ INSERT INTO
 VALUES
   (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
 
--- name: CheckDahuaDevice :one
+-- name: DahuaCheckDevice :one
 SELECT
   COUNT(*) = 1
 FROM
@@ -204,7 +22,7 @@ FROM
 WHERE
   id = ?;
 
--- name: UpdateDahuaDevice :one
+-- name: DahuaUpdateDevice :one
 UPDATE dahua_devices
 SET
   name = ?,
@@ -218,7 +36,7 @@ SET
 WHERE
   id = ? RETURNING id;
 
--- name: GetDahuaDeviceName :one
+-- name: DahuaGetDeviceName :one
 SELECT
   name
 FROM
@@ -226,9 +44,9 @@ FROM
 WHERE
   id = ?;
 
--- name: GetDahuaDevice :one
+-- name: DahuaGetDevice :one
 SELECT
-  dahua_devices.*,
+  sqlc.embed(dahua_devices),
   coalesce(seed, id)
 FROM
   dahua_devices
@@ -238,9 +56,9 @@ WHERE
 LIMIT
   1;
 
--- name: GetDahuaDeviceByIP :one
+-- name: DahuaGetDeviceByIP :one
 SELECT
-  dahua_devices.*,
+  sqlc.embed(dahua_devices),
   coalesce(seed, id)
 FROM
   dahua_devices
@@ -250,17 +68,17 @@ WHERE
 LIMIT
   1;
 
--- name: ListDahuaDevices :many
+-- name: DahuaListDevices :many
 SELECT
-  dahua_devices.*,
+  sqlc.embed(dahua_devices),
   coalesce(seed, id)
 FROM
   dahua_devices
   LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id;
 
--- name: ListDahuaDevicesByIDs :many
+-- name: DahuaListDevicesByIDs :many
 SELECT
-  dahua_devices.*,
+  sqlc.embed(dahua_devices),
   coalesce(seed, id)
 FROM
   dahua_devices
@@ -268,34 +86,9 @@ FROM
 WHERE
   id IN (sqlc.slice ('ids'));
 
--- name: ListDahuaDevicesForUser :many
+-- name: DahuaListDevicesByFeature :many
 SELECT
-  d.*,
-  coalesce(s.seed, d.id) AS seed,
-  coalesce(p.level, 2)
-FROM
-  dahua_devices as d
-  LEFT JOIN dahua_seeds AS s ON s.device_id = d.id
-  LEFT JOIN dahua_permissions AS p ON p.device_id = d.id
-WHERE
-  true = sqlc.arg ('admin')
-  OR p.user_id = sqlc.arg ('user_id')
-  OR p.group_id IN (
-    SELECT
-      group_id
-    FROM
-      group_users
-    WHERE
-      user_id = sqlc.arg ('user_id')
-  )
-GROUP BY
-  d.id
-ORDER BY
-  p.level DESC;
-
--- name: listDahuaDeviceByFeature :many
-SELECT
-  dahua_devices.*,
+  sqlc.embed(dahua_devices),
   coalesce(seed, id)
 FROM
   dahua_devices
@@ -303,31 +96,45 @@ FROM
 WHERE
   feature & sqlc.arg ('feature') = sqlc.arg ('feature');
 
--- name: DeleteDahuaDevice :exec
+-- name: DahuaListDevicesForUser :many
+SELECT
+  sqlc.embed(dahua_devices),
+  coalesce(s.seed, dahua_devices.id) AS seed,
+  coalesce(p.level, 2)
+FROM
+  dahua_devices
+  LEFT JOIN dahua_seeds AS s ON s.device_id = dahua_devices.id
+  LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
+WHERE
+  -- Allow if user is admin
+  EXISTS (SELECT user_id FROM admins WHERE admins.user_id = sqlc.arg ('user_id'))
+  -- Allow if user is a part of the group the owns the permission
+  OR p.group_id IN (
+    SELECT
+      group_id
+    FROM
+      group_users
+    WHERE
+      group_users.user_id = sqlc.arg ('user_id')
+  )
+  -- Allow if user owns the permission
+  OR p.user_id = sqlc.arg ('user_id')
+GROUP BY
+  -- Remove duplicate devices with different permissions
+  dahua_devices.id
+ORDER BY
+  -- Get the highest permission level
+  p.level DESC;
+
+-- name: DahuaDeleteDevice :exec
 DELETE FROM dahua_devices
 WHERE
   id = ?;
 
--- name: GetSettings :one
-SELECT
-  *
-FROM
-  settings
-LIMIT
-  1;
-
--- name: UpdateSettings :one
-UPDATE settings
-SET
-  location = coalesce(sqlc.narg ('location'), location),
-  site_name = coalesce(sqlc.narg ('site_name'), site_name)
-WHERE
-  1 = 1 RETURNING *;
-
--- name: allocateDahuaSeed :exec
+-- name: DahuaAllocateSeed :exec
 UPDATE dahua_seeds
 SET
-  device_id = ?1
+  device_id = sqlc.arg('device_id')
 WHERE
   seed = (
     SELECT
@@ -335,7 +142,7 @@ WHERE
     FROM
       dahua_seeds
     WHERE
-      device_id = ?1
+      device_id = sqlc.arg('device_id')
       OR device_id IS NULL
     ORDER BY
       device_id ASC
@@ -343,7 +150,7 @@ WHERE
       1
   );
 
--- name: NormalizeDahuaFileCursor :exec
+-- name: DahuaNormalizeFileCursors :exec
 INSERT OR IGNORE INTO
   dahua_file_cursors (
     device_id,
@@ -354,25 +161,17 @@ INSERT OR IGNORE INTO
     scan_percent,
     scan_type
   )
-SELECT
-  id,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?,
-  ?
-FROM
-  dahua_devices;
+SELECT id, ?, ?, ?, ?, ?, ?
+FROM dahua_devices;
 
--- name: UpdateDahuaFileCursorScanPercent :one
+-- name: DahuaUpdateFileCursorScanPercent :one
 UPDATE dahua_file_cursors
 SET
   scan_percent = ?
 WHERE
   device_id = ? RETURNING *;
 
--- name: ListDahuaFileCursors :many
+-- name: DahuaListFileCursors :many
 SELECT
   c.*,
   count(f.device_id) AS files
@@ -382,7 +181,7 @@ FROM
 GROUP BY
   c.device_id;
 
--- name: UpdateDahuaFileCursor :one
+-- name: DahuaUpdateFileCursor :one
 UPDATE dahua_file_cursors
 SET
   quick_cursor = ?,
@@ -394,7 +193,7 @@ SET
 WHERE
   device_id = ? RETURNING *;
 
--- name: createDahuaFileCursor :exec
+-- name: DahuaCreateFileCursor :exec
 INSERT INTO
   dahua_file_cursors (
     device_id,
@@ -408,13 +207,13 @@ INSERT INTO
 VALUES
   (?, ?, ?, ?, ?, ?, ?);
 
--- name: ListDahuaFileTypes :many
+-- name: DahuaListFileTypes :many
 SELECT DISTINCT
   type
 FROM
   dahua_files;
 
--- name: CreateDahuaFile :one
+-- name: DahuaCreateFile :one
 INSERT INTO
   dahua_files (
     device_id,
@@ -438,35 +237,14 @@ INSERT INTO
     updated_at,
     storage
   )
-VALUES
-  (
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?,
-    ?
-  )
+VALUES 
+  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT (start_time) DO
 UPDATE
 SET
   id = id RETURNING id;
 
--- name: GetDahuaFile :one
+-- name: DahuaGetFile :one
 SELECT
   *
 FROM
@@ -474,7 +252,7 @@ FROM
 WHERE
   id = ?;
 
--- name: GetDahuaFileForThumbnail :one
+-- name: DahuaGetFileForThumbnail :one
 SELECT
   dahua_files.id,
   device_id,
@@ -489,7 +267,7 @@ FROM
 WHERE
   dahua_files.id = ?;
 
--- name: GetDahuaFileByFilePath :one
+-- name: DahuaGetFileByFilePath :one
 SELECT
   *
 FROM
@@ -498,7 +276,7 @@ WHERE
   device_id = ?
   and file_path = ?;
 
--- name: GetOldestDahuaFileStartTime :one
+-- name: DahuaGetOldestFileStartTime :one
 SELECT
   start_time
 FROM
@@ -510,7 +288,7 @@ ORDER BY
 LIMIT
   1;
 
--- name: UpdateDahuaFile :one
+-- name: DahuaUpdateFile :one
 UPDATE dahua_files
 SET
   channel = ?,
@@ -535,7 +313,7 @@ WHERE
   device_id = ?
   AND file_path = ? RETURNING id;
 
--- name: DeleteDahuaFile :exec
+-- name: DahuaDeleteFile :exec
 DELETE FROM dahua_files
 WHERE
   updated_at < sqlc.arg ('updated_at')
@@ -543,13 +321,13 @@ WHERE
   AND start_time <= sqlc.arg ('end')
   AND sqlc.arg ('start') < start_time;
 
--- name: CreateDahuaThumbnail :one
+-- name: DahuaCreateThumbnail :one
 INSERT INTO
   dahua_thumbnails (file_id, email_attachment_id, width, height)
 VALUES
   (?, ?, ?, ?) RETURNING *;
 
--- name: OrphanDeleteDahuaThumbnail :exec
+-- name: DahuaOrphanDeleteThumbnail :exec
 DELETE FROM dahua_thumbnails
 WHERE
   id IN (
@@ -562,7 +340,7 @@ WHERE
       AND created_at < ?
   );
 
--- name: CreateDahuaEvent :one
+-- name: DahuaCreateEvent :one
 INSERT INTO
   dahua_events (
     device_id,
@@ -575,19 +353,19 @@ INSERT INTO
 VALUES
   (?, ?, ?, ?, ?, ?) RETURNING id;
 
--- name: ListDahuaEventCodes :many
+-- name: DahuaListEventCodes :many
 SELECT DISTINCT
   code
 FROM
   dahua_events;
 
--- name: ListDahuaEventActions :many
+-- name: DahuaListEventActions :many
 SELECT DISTINCT
   action
 FROM
   dahua_events;
 
--- name: GetDahuaEventData :one
+-- name: DahuaGetEventData :one
 SELECT
   data
 FROM
@@ -595,10 +373,10 @@ FROM
 WHERE
   id = ?;
 
--- name: DeleteDahuaEvent :exec
+-- name: DahuaDeleteEvent :exec
 DELETE FROM dahua_events;
 
--- name: getDahuaEventRuleByEvent :many
+-- name: DahuaGetEventRuleByEvent :many
 SELECT
   ignore_db,
   ignore_live,
@@ -626,7 +404,7 @@ WHERE
 ORDER BY
   code DESC;
 
--- name: GetDahuaEventRule :one
+-- name: DahuaGetEventRule :one
 SELECT
   *
 FROM
@@ -634,13 +412,13 @@ FROM
 WHERE
   id = ?;
 
--- name: ListDahuaEventRules :many
+-- name: DahuaListEventRules :many
 SELECT
   *
 FROM
   dahua_event_rules;
 
--- name: UpdateDahuaEventRule :exec
+-- name: DahuaUpdateEventRule :exec
 UPDATE dahua_event_rules
 SET
   code = ?,
@@ -650,24 +428,24 @@ SET
 WHERE
   id = ?;
 
--- name: CreateDahuaEventRule :exec
+-- name: DahuaCreateEventRule :exec
 INSERT INTO
   dahua_event_rules (code, ignore_db, ignore_live, ignore_mqtt)
 VALUES
   (?, ?, ?, ?);
 
--- name: DeleteDahuaEventRule :exec
+-- name: DahuaDeleteEventRule :exec
 DELETE FROM dahua_event_rules
 WHERE
   id = ?;
 
--- name: CreateDahuaEventWorkerState :exec
+-- name: DahuaCreateEventWorkerState :exec
 INSERT INTO
   dahua_event_worker_states (device_id, state, error, created_at)
 VALUES
   (?, ?, ?, ?);
 
--- name: ListDahuaEventWorkerState :many
+-- name: DahuaListEventWorkerStates :many
 SELECT
   *,
   max(created_at)
@@ -676,7 +454,7 @@ FROM
 GROUP BY
   device_id;
 
--- name: GetDahuaStorageDestination :one
+-- name: DahuaGetStorageDestination :one
 SELECT
   *
 FROM
@@ -684,7 +462,7 @@ FROM
 WHERE
   id = ?;
 
--- name: GetDahuaStorageDestinationByServerAddressAndStorage :one
+-- name: DahuaGetStorageDestinationByServerAddressAndStorage :one
 SELECT
   *
 FROM
@@ -693,13 +471,13 @@ WHERE
   server_address = ?
   AND storage = ?;
 
--- name: ListDahuaStorageDestinations :many
+-- name: DahuaListStorageDestinations :many
 SELECT
   *
 FROM
   dahua_storage_destinations;
 
--- name: CreateDahuaStorageDestination :one
+-- name: DahuaCreateStorageDestination :one
 INSERT INTO
   dahua_storage_destinations (
     name,
@@ -713,7 +491,7 @@ INSERT INTO
 VALUES
   (?, ?, ?, ?, ?, ?, ?) RETURNING id;
 
--- name: UpdateDahuaStorageDestination :one
+-- name: DahuaUpdateStorageDestination :one
 UPDATE dahua_storage_destinations
 SET
   name = ?,
@@ -726,12 +504,12 @@ SET
 WHERE
   id = ? RETURNING *;
 
--- name: DeleteDahuaStorageDestination :exec
+-- name: DahuaDeleteStorageDestination :exec
 DELETE FROM dahua_storage_destinations
 WHERE
   id = ?;
 
--- name: createDahuaStreamDefault :one
+-- name: DahuaCreateStreamForInternal :one
 INSERT INTO
   dahua_streams (
     device_id,
@@ -748,19 +526,19 @@ UPDATE
 SET
   internal = true RETURNING ID;
 
--- name: updateDahuaStreamDefault :exec
+-- name: DahuaUpdateStreamForInternal :exec
 UPDATE dahua_streams
 SET
   internal = false
 WHERE
   device_id = ?;
 
--- name: DeleteDahuaStream :exec
+-- name: DahuaDeleteStream :exec
 DELETE FROM dahua_streams
 WHERE
   id = ?;
 
--- name: ListDahuaStreamsByDevice :many
+-- name: DahuaListStreamsByDevice :many
 SELECT
   *
 FROM
@@ -768,7 +546,7 @@ FROM
 WHERE
   device_id = ?;
 
--- name: ListDahuaStreams :many
+-- name: DahuaListStreams :many
 SELECT
   *
 FROM
@@ -776,7 +554,7 @@ FROM
 ORDER BY
   device_id;
 
--- name: GetDahuaStream :one
+-- name: DahuaGetStream :one
 SELECT
   *
 FROM
@@ -784,7 +562,7 @@ FROM
 WHERE
   id = ?;
 
--- name: UpdateDahuaStream :one
+-- name: DahuaUpdateStream :one
 UPDATE dahua_streams
 SET
   name = ?,
@@ -792,7 +570,7 @@ SET
 WHERE
   id = ? RETURNING *;
 
--- name: createDahuaEmailMessage :one
+-- name: DahuaCreateEmailMessage :one
 INSERT INTO
   dahua_email_messages (
     device_id,
@@ -809,13 +587,13 @@ INSERT INTO
 VALUES
   (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
 
--- name: createDahuaEmailAttachment :one
+-- name: DahuaCreateEmailAttachment :one
 INSERT INTO
   dahua_email_attachments (message_id, file_name)
 VALUES
   (?, ?) RETURNING *;
 
--- name: CreateDahuaAferoFile :one
+-- name: DahuaCreateAferoFile :one
 INSERT INTO
   dahua_afero_files (
     file_id,
@@ -827,7 +605,7 @@ INSERT INTO
 VALUES
   (?, ?, ?, ?, ?) RETURNING id;
 
--- name: GetDahuaAferoFileByFileID :one
+-- name: DahuaGetAferoFileByFileID :one
 SELECT
   *
 FROM
@@ -835,7 +613,7 @@ FROM
 WHERE
   file_id = ?;
 
--- name: ReadyDahuaAferoFile :one
+-- name: DahuaReadyAferoFile :one
 UPDATE dahua_afero_files
 SET
   ready = true,
@@ -844,12 +622,12 @@ SET
 WHERE
   id = ? RETURNING id;
 
--- name: DeleteDahuaAferoFile :exec
+-- name: DahuaDeleteAferoFile :exec
 DELETE FROM dahua_afero_files
 WHERE
   id = ?;
 
--- name: OrphanListDahuaAferoFiles :many
+-- name: DahuaOrphanListAferoFiles :many
 SELECT
   *
 FROM

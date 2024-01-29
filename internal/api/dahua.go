@@ -11,6 +11,7 @@ import (
 	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
@@ -27,15 +28,10 @@ func (s *Server) DahuaAfero(route string) echo.HandlerFunc {
 func (s *Server) DahuaDevices(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	dbDevices, err := s.db.ListDahuaDevices(ctx)
+	conns, err := dahua.ListConns(ctx, s.db)
 	if err != nil {
 		return err
 	}
-	var conns []models.DahuaConn
-	for _, v := range dbDevices {
-		conns = append(conns, v.Convert().DahuaConn)
-	}
-
 	clients := s.dahuaStore.ClientList(ctx, conns)
 
 	res := make([]models.DahuaStatus, 0, len(clients))
@@ -199,16 +195,15 @@ func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 				return writeStreamError(c, stream, err)
 			}
 
-			data := dahua.NewDahuaEvent(client.Conn.ID, event)
-
-			if err := writeStream(c, stream, data); err != nil {
+			// TODO: fix event json
+			if err := writeStream(c, stream, event); err != nil {
 				return err
 			}
 		}
 	} else {
 		// Get events from PubSub
 
-		sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaEvent{})
+		sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, event.DahuaEvent{})
 		if err != nil {
 			return err
 		}
@@ -216,8 +211,8 @@ func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 
 		stream := newStream(c)
 
-		for event := range eventsC {
-			evt, ok := event.(models.EventDahuaEvent)
+		for e := range eventsC {
+			evt, ok := e.(event.DahuaEvent)
 			if !ok {
 				continue
 			}
@@ -244,7 +239,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
-	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, models.EventDahuaEvent{})
+	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, event.DahuaEvent{})
 	if err != nil {
 		return err
 	}
@@ -252,8 +247,8 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 
 	stream := newStream(c)
 
-	for event := range eventsC {
-		evt, ok := event.(models.EventDahuaEvent)
+	for e := range eventsC {
+		evt, ok := e.(event.DahuaEvent)
 		if !ok {
 			continue
 		}
@@ -339,7 +334,7 @@ func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 	}
 
 	filePath := c.Param("*")
-	dbFile, err := s.db.GetDahuaFileByFilePath(ctx, repo.GetDahuaFileByFilePathParams{
+	dbFile, err := s.db.DahuaGetFileByFilePath(ctx, repo.DahuaGetFileByFilePathParams{
 		DeviceID: client.Conn.ID,
 		FilePath: filePath,
 	})
@@ -354,7 +349,7 @@ func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 
 	rd, err := func() (io.ReadCloser, error) {
 		aferoFileFound := true
-		aferoFile, err := s.db.GetDahuaAferoFileByFileID(ctx, sql.NullInt64{Int64: dbFile.ID, Valid: true})
+		aferoFile, err := s.db.DahuaGetAferoFileByFileID(ctx, sql.NullInt64{Int64: dbFile.ID, Valid: true})
 		if repo.IsNotFound(err) {
 			aferoFileFound = false
 		} else if err != nil {
