@@ -117,12 +117,12 @@ func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevi
 			Name:           dbDevice.DahuaDevice.Name,
 			Url:            dbDevice.DahuaDevice.Url.String(),
 			Username:       dbDevice.DahuaDevice.Username,
-			Disabled:       false,
+			Disabled:       dbDevice.DisabledAt.Valid,
 			Location:       dbDevice.DahuaDevice.Location.String(),
 			CreatedAtTime:  timestamppb.New(dbDevice.DahuaDevice.CreatedAt.Time),
 			UpdatedAtTime:  timestamppb.New(dbDevice.DahuaDevice.UpdatedAt.Time),
 			DisabledAtTime: timestamppb.New(dbDevice.DahuaDevice.DisabledAt.Time),
-			Features:       []string{},
+			Features:       dahua.FeatureToStrings(dbDevice.Feature),
 		},
 	}, nil
 

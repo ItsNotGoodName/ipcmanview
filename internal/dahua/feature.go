@@ -8,9 +8,9 @@ import (
 )
 
 func init() {
-	FeatureMap = make(map[string]models.DahuaFeature)
+	featureMap = make(map[string]models.DahuaFeature)
 	for _, feature := range FeatureList {
-		FeatureMap[feature.Value] = feature.DahuaFeature
+		featureMap[feature.Value] = feature.DahuaFeature
 	}
 	slices.SortFunc(FeatureList, func(a Feature, b Feature) int { return cmp.Compare(a.Value, b.Value) })
 }
@@ -27,16 +27,26 @@ type Feature struct {
 	Description string
 }
 
-var FeatureMap map[string]models.DahuaFeature
+var featureMap map[string]models.DahuaFeature
 
 func FeatureFromStrings(featureStrings []string) models.DahuaFeature {
 	var f models.DahuaFeature
 	for _, featureString := range featureStrings {
-		feature, ok := FeatureMap[featureString]
+		feature, ok := featureMap[featureString]
 		if !ok {
 			continue
 		}
 		f = f | feature
 	}
 	return f
+}
+
+func FeatureToStrings(feature models.DahuaFeature) []string {
+	var strings []string
+	for _, v := range FeatureList {
+		if v.DahuaFeature.EQ(feature) {
+			strings = append(strings, v.Value)
+		}
+	}
+	return strings
 }
