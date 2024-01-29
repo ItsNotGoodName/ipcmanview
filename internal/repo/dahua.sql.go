@@ -991,7 +991,7 @@ func (q *Queries) DahuaGetStream(ctx context.Context, id int64) (DahuaStream, er
 	return i, err
 }
 
-const dahuaListDevicePermissions = `-- name: DahuaListDevicePermissions :many
+const dahuaListDevicePermissionLevels = `-- name: DahuaListDevicePermissionLevels :many
 SELECT
   dahua_devices.id,
   coalesce(p.level, 2)
@@ -1001,6 +1001,8 @@ FROM
 WHERE
   -- Allow if user is admin
   EXISTS (SELECT user_id FROM admins WHERE admins.user_id = ?1)
+  -- Allow if user owns the permission
+  OR p.user_id = ?1
   -- Allow if user is a part of the group the owns the permission
   OR p.group_id IN (
     SELECT
@@ -1010,8 +1012,6 @@ WHERE
     WHERE
       group_users.user_id = ?1
   )
-  -- Allow if user owns the permission
-  OR p.user_id = ?1
 GROUP BY
   -- Remove duplicate devices with different permissions
   dahua_devices.id
@@ -1020,20 +1020,20 @@ ORDER BY
   p.level DESC
 `
 
-type DahuaListDevicePermissionsRow struct {
+type DahuaListDevicePermissionLevelsRow struct {
 	ID    int64
 	Level models.DahuaPermissionLevel
 }
 
-func (q *Queries) DahuaListDevicePermissions(ctx context.Context, userID int64) ([]DahuaListDevicePermissionsRow, error) {
-	rows, err := q.db.QueryContext(ctx, dahuaListDevicePermissions, userID)
+func (q *Queries) DahuaListDevicePermissionLevels(ctx context.Context, userID int64) ([]DahuaListDevicePermissionLevelsRow, error) {
+	rows, err := q.db.QueryContext(ctx, dahuaListDevicePermissionLevels, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []DahuaListDevicePermissionsRow
+	var items []DahuaListDevicePermissionLevelsRow
 	for rows.Next() {
-		var i DahuaListDevicePermissionsRow
+		var i DahuaListDevicePermissionLevelsRow
 		if err := rows.Scan(&i.ID, &i.Level); err != nil {
 			return nil, err
 		}

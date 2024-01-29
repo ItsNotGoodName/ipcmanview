@@ -44,7 +44,7 @@ FROM
 WHERE
   id = ?;
 
--- name: DahuaListDevicePermissions :many
+-- name: DahuaListDevicePermissionLevels :many
 SELECT
   dahua_devices.id,
   coalesce(p.level, 2)
@@ -54,6 +54,8 @@ FROM
 WHERE
   -- Allow if user is admin
   EXISTS (SELECT user_id FROM admins WHERE admins.user_id = sqlc.arg ('user_id'))
+  -- Allow if user owns the permission
+  OR p.user_id = sqlc.arg ('user_id')
   -- Allow if user is a part of the group the owns the permission
   OR p.group_id IN (
     SELECT
@@ -63,8 +65,6 @@ WHERE
     WHERE
       group_users.user_id = sqlc.arg ('user_id')
   )
-  -- Allow if user owns the permission
-  OR p.user_id = sqlc.arg ('user_id')
 GROUP BY
   -- Remove duplicate devices with different permissions
   dahua_devices.id

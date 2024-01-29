@@ -5,7 +5,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-func ListIDsByLevel(rows []repo.DahuaListDevicePermissionsRow, level models.DahuaPermissionLevel) []int64 {
+func ListIDsByLevel(rows []repo.DahuaListDevicePermissionLevelsRow, level models.DahuaPermissionLevel) []int64 {
 	ids := make([]int64, 0, len(rows))
 	for _, row := range rows {
 		if row.Level >= level {

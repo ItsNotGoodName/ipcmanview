@@ -45,7 +45,7 @@ export function Profile() {
     then(() => setRevokeMySessionsDialog(BigInt(0)))
 
   return (
-    <LayoutNormal>
+    <LayoutNormal class="max-w-4xl">
       <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
 
         <AlertDialogRoot open={revokeAllMySessionsDialog()} onOpenChange={setRevokeAllMySessionsDialog}>

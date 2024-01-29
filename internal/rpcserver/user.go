@@ -27,7 +27,7 @@ type User struct {
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
 	authSession := useAuthSession(ctx)
 
-	rows, err := u.db.DahuaListDevicePermissions(ctx, authSession.UserID)
+	rows, err := u.db.DahuaListDevicePermissionLevels(ctx, authSession.UserID)
 	if err != nil {
 		return nil, check(err)
 	}
