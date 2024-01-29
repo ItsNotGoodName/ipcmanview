@@ -5,37 +5,52 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func normalizeUser(arg *models.User) {
-	arg.Email = strings.ToLower(arg.Email)
-	arg.Username = strings.ToLower(arg.Username)
+func NewUser(v repo.User) User {
+	return User{
+		ID:       v.ID,
+		Email:    v.Email,
+		Username: v.Username,
+		Password: v.Password,
+	}
 }
 
-func hashUserPassword(arg *models.User) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(arg.Password), bcrypt.DefaultCost)
+type User struct {
+	ID       int64
+	Email    string `validate:"required,lte=128,email,excludes= "`
+	Username string `validate:"gte=3,lte=64,excludes=@,excludes= "`
+	Password string `validate:"gte=8"`
+}
+
+func (u *User) normalize() {
+	u.Email = strings.ToLower(u.Email)
+	u.Username = strings.ToLower(u.Username)
+}
+
+func (u *User) hashPassword() error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
-	arg.Password = string(hash)
+	u.Password = string(hash)
 
 	return nil
 }
 
-func CreateUser(ctx context.Context, db repo.DB, arg models.User) (int64, error) {
-	normalizeUser(&arg)
+func CreateUser(ctx context.Context, db repo.DB, arg User) (int64, error) {
+	arg.normalize()
 
 	if err := validate.Validate.Struct(arg); err != nil {
 		return 0, err
 	}
 
-	if err := hashUserPassword(&arg); err != nil {
+	if err := arg.hashPassword(); err != nil {
 		return 0, err
 	}
 
@@ -49,19 +64,19 @@ func CreateUser(ctx context.Context, db repo.DB, arg models.User) (int64, error)
 	})
 }
 
-func UpdateUser(ctx context.Context, db repo.DB, arg models.User, newPassword string) (int64, error) {
+func UpdateUser(ctx context.Context, db repo.DB, arg User, newPassword string) (int64, error) {
 	if newPassword != "" {
 		arg.Password = newPassword
 	}
 
-	normalizeUser(&arg)
+	arg.normalize()
 
 	if err := validate.Validate.Struct(arg); err != nil {
 		return 0, err
 	}
 
 	if newPassword != "" {
-		if err := hashUserPassword(&arg); err != nil {
+		if err := arg.hashPassword(); err != nil {
 			return 0, err
 		}
 	}
@@ -94,13 +109,13 @@ func UpdateUserDisable(ctx context.Context, db repo.DB, userID int64, disable bo
 	return err
 }
 
-func UpdateUserAdmin(ctx context.Context, db repo.DB, userId int64, admin bool) error {
+func UpdateUserAdmin(ctx context.Context, db repo.DB, userID int64, admin bool) error {
 	if admin {
 		_, err := db.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
-			UserID:    userId,
+			UserID:    userID,
 			CreatedAt: types.NewTime(time.Now()),
 		})
 		return err
 	}
-	return db.AuthDeleteAdmin(ctx, userId)
+	return db.AuthDeleteAdmin(ctx, userID)
 }

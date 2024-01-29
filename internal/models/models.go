@@ -26,25 +26,3 @@ const (
 	// StorageNFS   Storage = "nfs"
 	// StorageSMB   Storage = "smb"
 )
-
-type User struct {
-	ID       int64
-	Email    string `validate:"required,lte=128,email,excludes= "`
-	Username string `validate:"gte=3,lte=64,excludes=@,excludes= "`
-	Password string `validate:"gte=8"`
-}
-
-type Group struct {
-	ID          int64
-	Name        string `validate:"gte=3,lte=64"`
-	Description string `validate:"lte=1024"`
-}
-
-type AuthSession struct {
-	Admin     bool
-	Disabled  bool
-	Session   string
-	SessionID int64
-	UserID    int64
-	Username  string
-}

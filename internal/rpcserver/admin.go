@@ -9,7 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -424,7 +423,7 @@ func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGro
 }
 
 func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.CreateGroupResp, error) {
-	id, err := auth.CreateGroup(ctx, a.db, models.Group{
+	id, err := auth.CreateGroup(ctx, a.db, auth.Group{
 		Name:        req.Name,
 		Description: req.Description,
 	})
@@ -442,7 +441,7 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 	if err != nil {
 		return nil, check(err)
 	}
-	group := dbGroup.Convert()
+	group := auth.NewGroup(dbGroup)
 
 	group.Name = req.Model.GetName()
 	group.Description = req.Model.GetDescription()

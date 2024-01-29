@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -80,7 +79,7 @@ func AdminAuthSession() twirp.ServerOption {
 	})
 }
 
-func useAuthSession(ctx context.Context) models.AuthSession {
+func useAuthSession(ctx context.Context) auth.Session {
 	u, ok := auth.UseSession(ctx)
 	if !ok {
 		panic("rpcserver.useAuthSession must be called after rpcserver.AuthSessionMiddleware")

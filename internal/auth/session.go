@@ -7,12 +7,20 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 )
+
+type Session struct {
+	Admin     bool
+	Disabled  bool
+	Session   string
+	SessionID int64
+	UserID    int64
+	Username  string
+}
 
 var sessionCtxKey contextKey = contextKey("session")
 
@@ -108,7 +116,7 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 				}
 			}
 
-			c.SetRequest(c.Request().WithContext(context.WithValue(ctx, sessionCtxKey, models.AuthSession{
+			c.SetRequest(c.Request().WithContext(context.WithValue(ctx, sessionCtxKey, Session{
 				Admin:     userSession.Admin,
 				Disabled:  userSession.UsersDisabledAt.Valid,
 				Session:   cookie.Value,
@@ -123,7 +131,7 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 
 // UseSession gets user from context.
 // It fails when session does not exist or is invalid.
-func UseSession(ctx context.Context) (models.AuthSession, bool) {
-	user, ok := ctx.Value(sessionCtxKey).(models.AuthSession)
+func UseSession(ctx context.Context) (Session, bool) {
+	user, ok := ctx.Value(sessionCtxKey).(Session)
 	return user, ok
 }

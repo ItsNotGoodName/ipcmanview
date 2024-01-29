@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"github.com/go-playground/validator/v10"
@@ -21,7 +20,7 @@ type Auth struct {
 }
 
 func (a *Auth) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpResp, error) {
-	_, err := auth.CreateUser(ctx, a.db, models.User{
+	_, err := auth.CreateUser(ctx, a.db, auth.User{
 		Email:    req.Email,
 		Username: req.Username,
 		Password: req.Password,
