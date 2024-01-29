@@ -128,8 +128,23 @@ func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevi
 
 }
 
-func (*Admin) GetDevice(context.Context, *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
-	return nil, errNotImplemented
+func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
+	v, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Id}})
+	if err != nil {
+		return nil, check(err)
+	}
+
+	return &rpc.GetDeviceResp{
+		Model: &rpc.DeviceModel{
+			Id:       v.ID,
+			Name:     v.Name,
+			Url:      v.Url.String(),
+			Username: v.Username,
+			Password: v.Password,
+			Location: v.Location.String(),
+			Features: dahua.FeatureToStrings(v.Feature),
+		},
+	}, nil
 }
 
 func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rpc.CreateDeviceResp, error) {
@@ -160,7 +175,34 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 }
 
 func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*emptypb.Empty, error) {
-	return nil, errNotImplemented
+	urL, err := url.Parse(req.Model.Url)
+	if err != nil {
+		return nil, NewError(nil, "URL is invalid.").Field("url")
+	}
+	loc, err := time.LoadLocation(req.Model.GetLocation())
+	if err != nil {
+		return nil, NewError(nil, "Location is invalid.").Field("location")
+	}
+
+	dbDevice, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Model.Id}})
+	if err != nil {
+		return nil, check(err)
+	}
+	device := dahua.NewDevice(dbDevice.DahuaDevice)
+
+	device.Name = req.Model.GetName()
+	device.URL = urL
+	device.Username = req.Model.GetUsername()
+	device.Password = req.Model.GetPassword()
+	device.Location = loc
+	device.Feature = dahua.FeatureFromStrings(req.Model.GetFeatures())
+
+	err = dahua.UpdateDevice(ctx, a.db, a.bus, device)
+	if err != nil {
+		return nil, checkCreateUpdateDevice(err, "Failed to update device.")
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 func (a *Admin) DeleteDevice(ctx context.Context, req *rpc.DeleteDeviceReq) (*emptypb.Empty, error) {

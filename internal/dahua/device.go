@@ -16,6 +16,18 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 )
 
+func NewDevice(v repo.DahuaDevice) Device {
+	return Device{
+		ID:       v.ID,
+		Name:     v.Name,
+		URL:      v.Url.URL,
+		Username: v.Username,
+		Password: v.Password,
+		Location: v.Location.Location,
+		Feature:  v.Feature,
+	}
+}
+
 type Device struct {
 	ID       int64
 	Name     string `validate:"required,lte=64"`

@@ -203,6 +203,7 @@ export function AdminDevicesIDUpdate(props: any) {
   const [updateDeviceForm, { Field, Form }] = createForm<UpdateDeviceForm>();
   const updateDeviceAction = useAction(actionUpdateDevice)
   const submit = (form: UpdateDeviceForm) => updateDeviceAction(form)
+
   const [form] = createResource(() => getDevice(props.params.id)
     .then((data) => setupForm(updateDeviceForm, { ...data.model, features: { array: data.model?.features || [] } })))
 
