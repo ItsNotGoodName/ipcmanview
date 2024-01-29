@@ -15,7 +15,18 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-var Storage = []models.Storage{
+type StorageDestination struct {
+	ID              int64
+	Name            string `validate:"required,lte=64"`
+	Storage         models.Storage
+	ServerAddress   string `validate:"host"`
+	Port            int64
+	Username        string
+	Password        string
+	RemoteDirectory string
+}
+
+var ValidStorage = []models.Storage{
 	models.StorageFTP,
 	models.StorageSFTP,
 }
@@ -30,7 +41,7 @@ func ParseStorage(storage string) (models.Storage, error) {
 	return "", fmt.Errorf("storage not supported: %s", storage)
 }
 
-func normalizeStorageDestination(arg models.DahuaStorageDestination, create bool) models.DahuaStorageDestination {
+func (arg *StorageDestination) normalize(create bool) {
 	arg.Name = strings.TrimSpace(arg.Name)
 	arg.ServerAddress = strings.TrimSpace(arg.ServerAddress)
 
@@ -48,12 +59,10 @@ func normalizeStorageDestination(arg models.DahuaStorageDestination, create bool
 			arg.Name = core.Address(arg.ServerAddress, int(arg.Port))
 		}
 	}
-
-	return arg
 }
 
-func CreateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaStorageDestination) (int64, error) {
-	arg = normalizeStorageDestination(arg, true)
+func CreateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestination) (int64, error) {
+	arg.normalize(true)
 
 	err := validate.Validate.Struct(arg)
 	if err != nil {
@@ -71,8 +80,8 @@ func CreateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaS
 	})
 }
 
-func UpdateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaStorageDestination) error {
-	arg = normalizeStorageDestination(arg, false)
+func UpdateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestination) error {
+	arg.normalize(false)
 
 	err := validate.Validate.Struct(arg)
 	if err != nil {
@@ -100,7 +109,7 @@ func DeleteStorageDestination(ctx context.Context, db repo.DB, id int64) error {
 	return db.DahuaDeleteStorageDestination(ctx, id)
 }
 
-func TestStorageDestination(ctx context.Context, arg models.DahuaStorageDestination) error {
+func TestStorageDestination(ctx context.Context, arg StorageDestination) error {
 	switch arg.Storage {
 	case models.StorageFTP:
 		c, err := ftp.Dial(core.Address(arg.ServerAddress, int(arg.Port)), ftp.DialWithContext(ctx))

@@ -11,41 +11,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/encode"
 )
 
-type createInternalStreamsParams struct {
-	Channel int64
-	Subtype int64
-	Name    string
-}
-
-func createInternalStreams(ctx context.Context, db repo.DB, deviceID int64, args []createInternalStreamsParams) error {
-	tx, err := db.BeginTx(ctx, true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	err = tx.DahuaUpdateStreamForInternal(ctx, deviceID)
-	if err != nil {
-		return err
-	}
-
-	ids := make([]int64, 0, len(args))
-	for _, arg := range args {
-		id, err := tx.DahuaCreateStreamForInternal(ctx, repo.DahuaCreateStreamForInternalParams{
-			DeviceID: deviceID,
-			Channel:  arg.Channel,
-			Subtype:  arg.Subtype,
-			Name:     arg.Name,
-		})
-		if err != nil {
-			return err
-		}
-		ids = append(ids, id)
-	}
-
-	return tx.Commit()
-}
-
 func UpdateStream(ctx context.Context, db repo.DB, stream repo.DahuaStream, arg repo.DahuaUpdateStreamParams) (repo.DahuaStream, error) {
 	return db.DahuaUpdateStream(ctx, arg)
 }
@@ -83,22 +48,57 @@ func SyncStreams(ctx context.Context, db repo.DB, deviceID int64, conn dahuarpc.
 			}
 		}
 
-		args := []createInternalStreamsParams{}
+		args := []syncStreamsParams{}
 		for i := 0; i < subtypes; i++ {
-			arg := createInternalStreamsParams{
+			arg := syncStreamsParams{
 				Channel: int64(channelIndex + 1),
 				Subtype: int64(i),
 				Name:    names[i],
 			}
 			args = append(args, arg)
 		}
-		err := createInternalStreams(ctx, db, deviceID, args)
+		err := syncStreams(ctx, db, deviceID, args)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+type syncStreamsParams struct {
+	Channel int64
+	Subtype int64
+	Name    string
+}
+
+func syncStreams(ctx context.Context, db repo.DB, deviceID int64, args []syncStreamsParams) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = tx.DahuaUpdateStreamForInternal(ctx, deviceID)
+	if err != nil {
+		return err
+	}
+
+	ids := make([]int64, 0, len(args))
+	for _, arg := range args {
+		id, err := tx.DahuaCreateStreamForInternal(ctx, repo.DahuaCreateStreamForInternalParams{
+			DeviceID: deviceID,
+			Channel:  arg.Channel,
+			Subtype:  arg.Subtype,
+			Name:     arg.Name,
+		})
+		if err != nil {
+			return err
+		}
+		ids = append(ids, id)
+	}
+
+	return tx.Commit()
 }
 
 func RegisterStreams(bus *event.Bus, db repo.DB, store *Store) {
