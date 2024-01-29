@@ -203,7 +203,9 @@ func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 	} else {
 		// Get events from PubSub
 
-		sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, event.DahuaEvent{})
+		sub, eventsC, err := s.pub.
+			Subscribe(event.DahuaEvent{}).
+			Channel(ctx, 10)
 		if err != nil {
 			return err
 		}
@@ -239,7 +241,9 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
-	sub, eventsC, err := s.pub.SubscribeChan(ctx, 10, event.DahuaEvent{})
+	sub, eventsC, err := s.pub.
+		Subscribe(event.DahuaEvent{}).
+		Channel(ctx, 10)
 	if err != nil {
 		return err
 	}

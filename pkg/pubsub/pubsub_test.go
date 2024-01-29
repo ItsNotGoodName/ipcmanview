@@ -25,7 +25,9 @@ func TestPub(t *testing.T) {
 		return eventTopics
 	}()
 
-	sub, err := pub.Subscribe(ctx, noopEventHandler, eventTopics...)
+	sub, err := pub.
+		Subscribe(eventTopics...).
+		Function(ctx, noopEventHandler)
 	if !assert.NoError(t, err) {
 		return
 	}

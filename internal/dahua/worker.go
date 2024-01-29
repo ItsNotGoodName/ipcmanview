@@ -222,27 +222,29 @@ func (w QuickScanWorker) Serve(ctx context.Context) error {
 func (w QuickScanWorker) serve(ctx context.Context) error {
 	quickScanC := make(chan struct{}, 1)
 
-	sub, err := w.pub.Subscribe(ctx, func(ctx context.Context, evt pubsub.Event) error {
-		switch e := evt.(type) {
-		// case event.DahuaQuickScanQueue:
-		// 	if !(e.DeviceID == 0 || e.DeviceID == w.deviceID) {
-		// 		return nil
-		// 	}
-		case event.DahuaEvent:
-			if e.Event.DeviceID != w.deviceID || e.Event.Code != dahuaevents.CodeNewFile {
+	sub, err := w.pub.
+		Subscribe(event.DahuaEvent{}).
+		Function(ctx, func(ctx context.Context, evt pubsub.Event) error {
+			switch e := evt.(type) {
+			// case event.DahuaQuickScanQueue:
+			// 	if !(e.DeviceID == 0 || e.DeviceID == w.deviceID) {
+			// 		return nil
+			// 	}
+			case event.DahuaEvent:
+				if e.Event.DeviceID != w.deviceID || e.Event.Code != dahuaevents.CodeNewFile {
+					return nil
+				}
+			default:
 				return nil
 			}
-		default:
+
+			select {
+			case quickScanC <- struct{}{}:
+			default:
+			}
+
 			return nil
-		}
-
-		select {
-		case quickScanC <- struct{}{}:
-		default:
-		}
-
-		return nil
-	}, event.DahuaEvent{}) // event.DahuaQuickScanQueue{},
+		})
 	if err != nil {
 		return err
 	}

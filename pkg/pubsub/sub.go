@@ -60,22 +60,33 @@ func (s Sub) close(ctx context.Context) error {
 	}
 }
 
-func (p Pub) Subscribe(ctx context.Context, handle HandleFunc, events ...Event) (Sub, error) {
+type SubscriberBuilder struct {
+	pub    Pub
+	topics []string
+}
+
+func (p Pub) Subscribe(events ...Event) SubscriberBuilder {
 	var topics []string
 	for _, e := range events {
 		topics = append(topics, e.EventTopic())
 	}
+	return SubscriberBuilder{
+		pub:    p,
+		topics: topics,
+	}
+}
 
+func (b SubscriberBuilder) Function(ctx context.Context, handle HandleFunc) (Sub, error) {
 	resC := make(chan int, 1)
 	doneC := make(chan struct{})
 	errC := make(chan error, 1)
 	select {
 	case <-ctx.Done():
 		return Sub{}, ctx.Err()
-	case <-p.doneC:
+	case <-b.pub.doneC:
 		return Sub{}, ErrPubSubClosed
-	case p.subscribeC <- subscribe{
-		topics: topics,
+	case b.pub.subscribeC <- subscribe{
+		topics: b.topics,
 		handle: handle,
 		resC:   resC,
 		doneC:  doneC,
@@ -86,32 +97,32 @@ func (p Pub) Subscribe(ctx context.Context, handle HandleFunc, events ...Event) 
 	select {
 	case <-ctx.Done():
 		return Sub{}, ctx.Err()
-	case <-p.doneC:
+	case <-b.pub.doneC:
 		return Sub{}, ErrPubSubClosed
 	case id := <-resC:
 		return Sub{
 			doneC: doneC,
-			pub:   p,
+			pub:   b.pub,
 			id:    id,
 			errC:  errC,
 		}, nil
 	}
 }
 
-// SubscribeChan creates a subscription with a channel.
+// Channel creates a subscription with a channel.
 // The subscription is closed when the context is closed.
 // The channel is closed when the subscription is closed.
-func (p Pub) SubscribeChan(ctx context.Context, size int, events ...Event) (Sub, <-chan Event, error) {
+func (b SubscriberBuilder) Channel(ctx context.Context, size int) (Sub, <-chan Event, error) {
 	eventsC := make(chan Event, size)
 
-	sub, err := p.Subscribe(ctx, func(ctx context.Context, event Event) error {
+	sub, err := b.Function(ctx, func(ctx context.Context, event Event) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		case eventsC <- event:
 			return nil
 		}
-	}, events...)
+	})
 	if err != nil {
 		return Sub{}, nil, err
 	}
@@ -122,7 +133,7 @@ func (p Pub) SubscribeChan(ctx context.Context, size int, events ...Event) (Sub,
 			sub.Close()
 			<-sub.doneC
 		case <-sub.doneC:
-		case <-p.doneC:
+		case <-b.pub.doneC:
 		}
 		// This assumes the publisher will not call the handle function after the subscription is fully closed
 		close(eventsC)
