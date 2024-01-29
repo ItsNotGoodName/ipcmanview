@@ -37,10 +37,10 @@ func (db DB) DahuaListDevices(ctx context.Context, args ...FatDahuaDeviceParams)
 	and := sq.And{}
 
 	eq := sq.Eq{}
-	if len(arg.IPs) != 0 {
+	if arg.IPs != nil {
 		eq["ip"] = arg.IPs
 	}
-	if len(arg.IDs) != 0 {
+	if arg.IDs != nil {
 		eq["id"] = arg.IDs
 	}
 	and = append(and, eq)

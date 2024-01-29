@@ -40,7 +40,7 @@ import type { UpdateMyUsernameReq } from "./rpc";
 import type { GetProfilePageResp } from "./rpc";
 import type { GetHomePageResp } from "./rpc";
 import type { Empty } from "./google/protobuf/empty";
-import { Auth } from "./rpc";
+import { Public } from "./rpc";
 import type { ForgotPasswordResp } from "./rpc";
 import type { ForgotPasswordReq } from "./rpc";
 import type { SignUpResp } from "./rpc";
@@ -83,12 +83,12 @@ export class HelloWorldClient implements IHelloWorldClient, ServiceInfo {
         return stackIntercept<HelloReq, HelloResp>("unary", this._transport, method, opt, input);
     }
 }
-// ---------- Auth
+// ---------- Public
 
 /**
- * @generated from protobuf service Auth
+ * @generated from protobuf service Public
  */
-export interface IAuthClient {
+export interface IPublicClient {
     /**
      * @generated from protobuf rpc: SignUp(SignUpReq) returns (SignUpResp);
      */
@@ -98,15 +98,15 @@ export interface IAuthClient {
      */
     forgotPassword(input: ForgotPasswordReq, options?: RpcOptions): UnaryCall<ForgotPasswordReq, ForgotPasswordResp>;
 }
-// ---------- Auth
+// ---------- Public
 
 /**
- * @generated from protobuf service Auth
+ * @generated from protobuf service Public
  */
-export class AuthClient implements IAuthClient, ServiceInfo {
-    typeName = Auth.typeName;
-    methods = Auth.methods;
-    options = Auth.options;
+export class PublicClient implements IPublicClient, ServiceInfo {
+    typeName = Public.typeName;
+    methods = Public.methods;
+    options = Public.options;
     constructor(private readonly _transport: RpcTransport) {
     }
     /**

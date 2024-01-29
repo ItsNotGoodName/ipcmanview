@@ -135,15 +135,13 @@ func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetD
 	}
 
 	return &rpc.GetDeviceResp{
-		Model: &rpc.DeviceModel{
-			Id:       v.ID,
-			Name:     v.Name,
-			Url:      v.Url.String(),
-			Username: v.Username,
-			Password: v.Password,
-			Location: v.Location.String(),
-			Features: dahua.FeatureToStrings(v.Feature),
-		},
+		Id:       v.ID,
+		Name:     v.Name,
+		Url:      v.Url.String(),
+		Username: v.Username,
+		Password: v.Password,
+		Location: v.Location.String(),
+		Features: dahua.FeatureToStrings(v.Feature),
 	}, nil
 }
 
@@ -175,27 +173,27 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 }
 
 func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*emptypb.Empty, error) {
-	urL, err := url.Parse(req.Model.Url)
+	urL, err := url.Parse(req.Url)
 	if err != nil {
 		return nil, NewError(nil, "URL is invalid.").Field("url")
 	}
-	loc, err := time.LoadLocation(req.Model.GetLocation())
+	loc, err := time.LoadLocation(req.Location)
 	if err != nil {
 		return nil, NewError(nil, "Location is invalid.").Field("location")
 	}
 
-	dbDevice, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Model.Id}})
+	dbDevice, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
 		return nil, check(err)
 	}
 	device := dahua.NewDevice(dbDevice.DahuaDevice)
 
-	device.Name = req.Model.GetName()
+	device.Name = req.Name
 	device.URL = urL
-	device.Username = req.Model.GetUsername()
-	device.Password = req.Model.GetPassword()
+	device.Username = req.Username
+	device.Password = req.Password
 	device.Location = loc
-	device.Feature = dahua.FeatureFromStrings(req.Model.GetFeatures())
+	device.Feature = dahua.FeatureFromStrings(req.Features)
 
 	err = dahua.UpdateDevice(ctx, a.db, a.bus, device)
 	if err != nil {
@@ -456,11 +454,9 @@ func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGro
 		return nil, check(err)
 	}
 	return &rpc.GetGroupResp{
-		Model: &rpc.GroupModel{
-			Id:          req.Id,
-			Name:        dbGroup.Name,
-			Description: dbGroup.Description,
-		},
+		Id:          req.Id,
+		Name:        dbGroup.Name,
+		Description: dbGroup.Description,
 	}, nil
 }
 
@@ -479,14 +475,14 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 }
 
 func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
-	dbGroup, err := a.db.AuthGetGroup(ctx, req.Model.GetId())
+	dbGroup, err := a.db.AuthGetGroup(ctx, req.Id)
 	if err != nil {
 		return nil, check(err)
 	}
 	group := auth.NewGroup(dbGroup)
 
-	group.Name = req.Model.GetName()
-	group.Description = req.Model.GetDescription()
+	group.Name = req.Name
+	group.Description = req.Description
 
 	_, err = auth.UpdateGroup(ctx, a.db, group)
 	if err != nil {

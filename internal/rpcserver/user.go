@@ -2,10 +2,11 @@ package rpcserver
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -26,13 +27,13 @@ type User struct {
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
 	authSession := useAuthSession(ctx)
 
-	dbDevices, err := u.db.DahuaListDevicesForUser(ctx, authSession.UserID)
+	rows, err := u.db.DahuaListDevicePermissions(ctx, authSession.UserID)
 	if err != nil {
 		return nil, check(err)
 	}
-
-	for _, v := range dbDevices {
-		fmt.Println(v.DahuaDevice.ID, v.Level)
+	dbDevices, err := u.db.DahuaListDevices(ctx, repo.FatDahuaDeviceParams{IDs: dahua.ListIDsByLevel(rows, models.DahuaPermissionLevelUser)})
+	if err != nil {
+		return nil, check(err)
 	}
 
 	return &rpc.GetHomePageResp{

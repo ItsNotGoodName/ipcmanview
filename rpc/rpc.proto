@@ -48,9 +48,9 @@ message HelloResp {
   google.protobuf.Timestamp current_time = 2;
 }
 
-// ---------- Auth
+// ---------- Public
 
-service Auth {
+service Public {
   rpc SignUp(SignUpReq) returns (SignUpResp);
   rpc ForgotPassword(ForgotPasswordReq) returns (ForgotPasswordResp);
 }
@@ -295,11 +295,6 @@ message ResetUserPasswordReq {
 // ---------- Group
 
 // Create
-message GroupModel {
-  int64 id = 1;
-  string name = 2;
-  string description = 3;
-}
 message CreateGroupReq {
   string name = 1;
   string description = 2;
@@ -313,12 +308,16 @@ message GetGroupReq {
   int64 id = 1;
 }
 message GetGroupResp {
-  GroupModel model = 1;
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
 }
 
 // Update
 message UpdateGroupReq {
-  GroupModel model = 1;
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
 }
 
 // Delete
@@ -337,15 +336,6 @@ message SetGroupDisableReq {
 // ---------- Device
 
 // Create
-message DeviceModel {
-  int64 id = 1;
-  string name = 2;
-  string url = 3;
-  string username = 4;
-  string password = 5;
-  string location = 6;
-  repeated string features = 7;
-}
 message CreateDeviceReq {
   string name = 1;
   string url = 2;
@@ -363,12 +353,24 @@ message GetDeviceReq {
   int64 id = 1;
 }
 message GetDeviceResp {
-  DeviceModel model = 1;
+  int64 id = 1;
+  string name = 2;
+  string url = 3;
+  string username = 4;
+  string password = 5;
+  string location = 6;
+  repeated string features = 7;
 }
 
 // Update
 message UpdateDeviceReq {
-  DeviceModel model = 1;
+  int64 id = 1;
+  string name = 2;
+  string url = 3;
+  string username = 4;
+  string password = 5;
+  string location = 6;
+  repeated string features = 7;
 }
 
 // Delete

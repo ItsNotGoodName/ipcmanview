@@ -131,7 +131,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	rpcLogger := rpcserver.Logger()
 	rpcserver.NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
-		Register(rpc.NewAuthServer(rpcserver.NewAuth(db), rpcLogger)).
+		Register(rpc.NewPublicServer(rpcserver.NewPublic(db), rpcLogger)).
 		Register(rpc.NewUserServer(rpcserver.NewUser(db), rpcLogger, rpcserver.AuthSession())).
 		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.AdminAuthSession()))
 

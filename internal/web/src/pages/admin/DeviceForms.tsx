@@ -195,7 +195,7 @@ type UpdateDeviceForm = {
 } & CreateDeviceForm
 
 const actionUpdateDevice = action((form: UpdateDeviceForm) => useClient()
-  .admin.updateDevice({ model: { ...form, features: form.features.array } })
+  .admin.updateDevice({ ...form, features: form.features.array })
   .then()
   .catch(throwAsFormError))
 
@@ -205,7 +205,7 @@ export function AdminDevicesIDUpdate(props: any) {
   const submit = (form: UpdateDeviceForm) => updateDeviceAction(form)
 
   const [form] = createResource(() => getDevice(props.params.id)
-    .then((data) => setupForm(updateDeviceForm, { ...data.model, features: { array: data.model?.features || [] } })))
+    .then((data) => setupForm(updateDeviceForm, { ...data, features: { array: data?.features || [] } })))
 
   const locations = createAsync(getListLocations)
   const deviceFeatures = createAsync(getListDeviceFeatures)

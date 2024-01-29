@@ -274,7 +274,7 @@ func NewDahuaFile(deviceID int64, file mediafilefind.FindNextFileInfo, affixSeed
 		Repeat:      file.Repeat,
 		WorkDir:     file.WorkDir,
 		WorkDirSN:   file.WorkDirSN == 1,
-		Storage:     core.StorageFromFilePath(file.FilePath),
+		Storage:     StorageFromFilePath(file.FilePath),
 	}, nil
 }
 

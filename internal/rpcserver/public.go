@@ -9,18 +9,18 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func NewAuth(db repo.DB) *Auth {
-	return &Auth{
+func NewPublic(db repo.DB) *Public {
+	return &Public{
 		db: db,
 	}
 }
 
-type Auth struct {
+type Public struct {
 	db repo.DB
 }
 
-func (a *Auth) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpResp, error) {
-	_, err := auth.CreateUser(ctx, a.db, auth.User{
+func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpResp, error) {
+	_, err := auth.CreateUser(ctx, p.db, auth.User{
 		Email:    req.Email,
 		Username: req.Username,
 		Password: req.Password,
@@ -47,6 +47,6 @@ func (a *Auth) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpResp,
 	return &rpc.SignUpResp{}, nil
 }
 
-func (*Auth) ForgotPassword(context.Context, *rpc.ForgotPasswordReq) (*rpc.ForgotPasswordResp, error) {
+func (*Public) ForgotPassword(context.Context, *rpc.ForgotPasswordReq) (*rpc.ForgotPasswordResp, error) {
 	return nil, errNotImplemented
 }

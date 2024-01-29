@@ -31,6 +31,22 @@ var ValidStorage = []models.Storage{
 	models.StorageSFTP,
 }
 
+func StorageFromFilePath(filePath string) models.Storage {
+	if strings.HasPrefix(filePath, "sftp://") {
+		return models.StorageSFTP
+	}
+	if strings.HasPrefix(filePath, "ftp://") {
+		return models.StorageFTP
+	}
+	// if strings.HasPrefix(filePath, "nfs://") {
+	// 	return models.StorageNFS
+	// }
+	// if strings.HasPrefix(filePath, "smb://") {
+	// 	return models.StorageSMB
+	// }
+	return models.StorageLocal
+}
+
 func ParseStorage(storage string) (models.Storage, error) {
 	switch storage {
 	case string(models.StorageFTP):

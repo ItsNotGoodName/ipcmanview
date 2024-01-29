@@ -169,7 +169,7 @@ type SignUpForm = {
 }
 
 const actionSignUp = action((form: SignUpForm) => useClient()
-  .auth.signUp(form)
+  .public.signUp(form)
   .then()
   .catch(throwAsFormError)
   .then(async () => { throw redirect("/signin") }))
@@ -287,7 +287,7 @@ type ForgotForm = {
 }
 
 const actionForgot = action((form: ForgotForm) => useClient()
-  .auth.forgotPassword(form)
+  .public.forgotPassword(form)
   .then(() => { toast.success("Sent password reset email.") })
   .catch(throwAsFormError))
 

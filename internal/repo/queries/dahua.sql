@@ -44,14 +44,12 @@ FROM
 WHERE
   id = ?;
 
--- name: DahuaListDevicesForUser :many
+-- name: DahuaListDevicePermissions :many
 SELECT
-  sqlc.embed(dahua_devices),
-  coalesce(s.seed, dahua_devices.id) AS seed,
+  dahua_devices.id,
   coalesce(p.level, 2)
 FROM
   dahua_devices
-  LEFT JOIN dahua_seeds AS s ON s.device_id = dahua_devices.id
   LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
 WHERE
   -- Allow if user is admin

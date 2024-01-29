@@ -991,14 +991,12 @@ func (q *Queries) DahuaGetStream(ctx context.Context, id int64) (DahuaStream, er
 	return i, err
 }
 
-const dahuaListDevicesForUser = `-- name: DahuaListDevicesForUser :many
+const dahuaListDevicePermissions = `-- name: DahuaListDevicePermissions :many
 SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
-  coalesce(s.seed, dahua_devices.id) AS seed,
+  dahua_devices.id,
   coalesce(p.level, 2)
 FROM
   dahua_devices
-  LEFT JOIN dahua_seeds AS s ON s.device_id = dahua_devices.id
   LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
 WHERE
   -- Allow if user is admin
@@ -1022,36 +1020,21 @@ ORDER BY
   p.level DESC
 `
 
-type DahuaListDevicesForUserRow struct {
-	DahuaDevice DahuaDevice
-	Seed        int64
-	Level       models.DahuaPermissionLevel
+type DahuaListDevicePermissionsRow struct {
+	ID    int64
+	Level models.DahuaPermissionLevel
 }
 
-func (q *Queries) DahuaListDevicesForUser(ctx context.Context, userID int64) ([]DahuaListDevicesForUserRow, error) {
-	rows, err := q.db.QueryContext(ctx, dahuaListDevicesForUser, userID)
+func (q *Queries) DahuaListDevicePermissions(ctx context.Context, userID int64) ([]DahuaListDevicePermissionsRow, error) {
+	rows, err := q.db.QueryContext(ctx, dahuaListDevicePermissions, userID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []DahuaListDevicesForUserRow
+	var items []DahuaListDevicePermissionsRow
 	for rows.Next() {
-		var i DahuaListDevicesForUserRow
-		if err := rows.Scan(
-			&i.DahuaDevice.ID,
-			&i.DahuaDevice.Name,
-			&i.DahuaDevice.Ip,
-			&i.DahuaDevice.Url,
-			&i.DahuaDevice.Username,
-			&i.DahuaDevice.Password,
-			&i.DahuaDevice.Location,
-			&i.DahuaDevice.Feature,
-			&i.DahuaDevice.CreatedAt,
-			&i.DahuaDevice.UpdatedAt,
-			&i.DahuaDevice.DisabledAt,
-			&i.Seed,
-			&i.Level,
-		); err != nil {
+		var i DahuaListDevicePermissionsRow
+		if err := rows.Scan(&i.ID, &i.Level); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

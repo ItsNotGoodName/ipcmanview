@@ -644,23 +644,6 @@ export interface ResetUserPasswordReq {
 /**
  * Create
  *
- * @generated from protobuf message GroupModel
- */
-export interface GroupModel {
-    /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-    /**
-     * @generated from protobuf field: string name = 2;
-     */
-    name: string;
-    /**
-     * @generated from protobuf field: string description = 3;
-     */
-    description: string;
-}
-/**
  * @generated from protobuf message CreateGroupReq
  */
 export interface CreateGroupReq {
@@ -698,9 +681,17 @@ export interface GetGroupReq {
  */
 export interface GetGroupResp {
     /**
-     * @generated from protobuf field: GroupModel model = 1;
+     * @generated from protobuf field: int64 id = 1;
      */
-    model?: GroupModel;
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string description = 3;
+     */
+    description: string;
 }
 /**
  * Update
@@ -709,9 +700,17 @@ export interface GetGroupResp {
  */
 export interface UpdateGroupReq {
     /**
-     * @generated from protobuf field: GroupModel model = 1;
+     * @generated from protobuf field: int64 id = 1;
      */
-    model?: GroupModel;
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string description = 3;
+     */
+    description: string;
 }
 /**
  * Delete
@@ -751,39 +750,6 @@ export interface SetGroupDisableReq_item {
 /**
  * Create
  *
- * @generated from protobuf message DeviceModel
- */
-export interface DeviceModel {
-    /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-    /**
-     * @generated from protobuf field: string name = 2;
-     */
-    name: string;
-    /**
-     * @generated from protobuf field: string url = 3;
-     */
-    url: string;
-    /**
-     * @generated from protobuf field: string username = 4;
-     */
-    username: string;
-    /**
-     * @generated from protobuf field: string password = 5;
-     */
-    password: string;
-    /**
-     * @generated from protobuf field: string location = 6;
-     */
-    location: string;
-    /**
-     * @generated from protobuf field: repeated string features = 7;
-     */
-    features: string[];
-}
-/**
  * @generated from protobuf message CreateDeviceReq
  */
 export interface CreateDeviceReq {
@@ -837,9 +803,33 @@ export interface GetDeviceReq {
  */
 export interface GetDeviceResp {
     /**
-     * @generated from protobuf field: DeviceModel model = 1;
+     * @generated from protobuf field: int64 id = 1;
      */
-    model?: DeviceModel;
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string url = 3;
+     */
+    url: string;
+    /**
+     * @generated from protobuf field: string username = 4;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: string password = 5;
+     */
+    password: string;
+    /**
+     * @generated from protobuf field: string location = 6;
+     */
+    location: string;
+    /**
+     * @generated from protobuf field: repeated string features = 7;
+     */
+    features: string[];
 }
 /**
  * Update
@@ -848,9 +838,33 @@ export interface GetDeviceResp {
  */
 export interface UpdateDeviceReq {
     /**
-     * @generated from protobuf field: DeviceModel model = 1;
+     * @generated from protobuf field: int64 id = 1;
      */
-    model?: DeviceModel;
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string url = 3;
+     */
+    url: string;
+    /**
+     * @generated from protobuf field: string username = 4;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: string password = 5;
+     */
+    password: string;
+    /**
+     * @generated from protobuf field: string location = 6;
+     */
+    location: string;
+    /**
+     * @generated from protobuf field: repeated string features = 7;
+     */
+    features: string[];
 }
 /**
  * Delete
@@ -1465,20 +1479,6 @@ class ResetUserPasswordReq$Type extends MessageType<ResetUserPasswordReq> {
  */
 export const ResetUserPasswordReq = new ResetUserPasswordReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GroupModel$Type extends MessageType<GroupModel> {
-    constructor() {
-        super("GroupModel", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GroupModel
- */
-export const GroupModel = new GroupModel$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class CreateGroupReq$Type extends MessageType<CreateGroupReq> {
     constructor() {
         super("CreateGroupReq", [
@@ -1519,7 +1519,9 @@ export const GetGroupReq = new GetGroupReq$Type();
 class GetGroupResp$Type extends MessageType<GetGroupResp> {
     constructor() {
         super("GetGroupResp", [
-            { no: 1, name: "model", kind: "message", T: () => GroupModel }
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1531,7 +1533,9 @@ export const GetGroupResp = new GetGroupResp$Type();
 class UpdateGroupReq$Type extends MessageType<UpdateGroupReq> {
     constructor() {
         super("UpdateGroupReq", [
-            { no: 1, name: "model", kind: "message", T: () => GroupModel }
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "description", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1577,24 +1581,6 @@ class SetGroupDisableReq_item$Type extends MessageType<SetGroupDisableReq_item> 
  */
 export const SetGroupDisableReq_item = new SetGroupDisableReq_item$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class DeviceModel$Type extends MessageType<DeviceModel> {
-    constructor() {
-        super("DeviceModel", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message DeviceModel
- */
-export const DeviceModel = new DeviceModel$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class CreateDeviceReq$Type extends MessageType<CreateDeviceReq> {
     constructor() {
         super("CreateDeviceReq", [
@@ -1639,7 +1625,13 @@ export const GetDeviceReq = new GetDeviceReq$Type();
 class GetDeviceResp$Type extends MessageType<GetDeviceResp> {
     constructor() {
         super("GetDeviceResp", [
-            { no: 1, name: "model", kind: "message", T: () => DeviceModel }
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1651,7 +1643,13 @@ export const GetDeviceResp = new GetDeviceResp$Type();
 class UpdateDeviceReq$Type extends MessageType<UpdateDeviceReq> {
     constructor() {
         super("UpdateDeviceReq", [
-            { no: 1, name: "model", kind: "message", T: () => DeviceModel }
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1741,9 +1739,9 @@ export const HelloWorld = new ServiceType("HelloWorld", [
     { name: "Hello", options: {}, I: HelloReq, O: HelloResp }
 ]);
 /**
- * @generated ServiceType for protobuf service Auth
+ * @generated ServiceType for protobuf service Public
  */
-export const Auth = new ServiceType("Auth", [
+export const Public = new ServiceType("Public", [
     { name: "SignUp", options: {}, I: SignUpReq, O: SignUpResp },
     { name: "ForgotPassword", options: {}, I: ForgotPasswordReq, O: ForgotPasswordResp }
 ]);

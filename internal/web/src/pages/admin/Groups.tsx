@@ -400,7 +400,7 @@ type UpdateGroupForm = {
 }
 
 const actionUpdateGroupForm = action((model: UpdateGroupForm) => useClient()
-  .admin.updateGroup({ model })
+  .admin.updateGroup(model)
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError)
 )
@@ -411,7 +411,7 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
   const submit = (form: UpdateGroupForm) => updateGroupFormAction(form)
     .then(() => props.setOpen(false))
   const [form] = createResource(() => getGroup(props.id)
-    .then((data) => setupForm(updateGroupForm, { ...data, ...data.model })))
+    .then((data) => setupForm(updateGroupForm, data)))
 
   return (
     <Show when={!form.error} fallback={<PageError error={form.error} />}>
