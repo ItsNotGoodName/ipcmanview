@@ -1,7 +1,6 @@
 package dahua
 
 import (
-	"context"
 	"net/url"
 	"time"
 
@@ -9,16 +8,24 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-func NewConn(v repo.DahuaDevice, seed int64) Conn {
+func NewConn(v repo.FatDahuaDevice) Conn {
 	return Conn{
-		ID:       v.ID,
-		URL:      v.Url.URL,
-		Username: v.Username,
-		Password: v.Password,
-		Location: v.Location.Location,
-		Feature:  v.Feature,
-		Seed:     int(seed),
+		ID:       v.DahuaDevice.ID,
+		URL:      v.DahuaDevice.Url.URL,
+		Username: v.DahuaDevice.Username,
+		Password: v.DahuaDevice.Password,
+		Location: v.DahuaDevice.Location.Location,
+		Feature:  v.DahuaDevice.Feature,
+		Seed:     int(v.Seed),
 	}
+}
+
+func NewConns(devices []repo.FatDahuaDevice) []Conn {
+	conns := make([]Conn, 0, len(devices))
+	for _, v := range devices {
+		conns = append(conns, NewConn(v))
+	}
+	return conns
 }
 
 // Conn is the bare minumum information required to create a connection to a Dahua device.
@@ -39,24 +46,4 @@ func (lhs Conn) EQ(rhs Conn) bool {
 		lhs.Location.String() == rhs.Location.String() &&
 		lhs.Feature == rhs.Feature &&
 		lhs.Seed == rhs.Seed
-}
-
-func ListConns(ctx context.Context, db repo.DB) ([]Conn, error) {
-	rows, err := db.DahuaListDevices(ctx)
-	if err != nil {
-		return nil, err
-	}
-	res := make([]Conn, 0, len(rows))
-	for i := range rows {
-		res = append(res, NewConn(rows[i].DahuaDevice, rows[i].Seed))
-	}
-	return res, nil
-}
-
-func GetConn(ctx context.Context, db repo.DB, id int64) (Conn, error) {
-	row, err := db.DahuaGetDevice(ctx, id)
-	if err != nil {
-		return Conn{}, err
-	}
-	return NewConn(row.DahuaDevice, row.Seed), nil
 }

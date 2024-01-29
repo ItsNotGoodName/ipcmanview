@@ -165,11 +165,11 @@ func (s FileService) download(ctx context.Context, id int64) error {
 		return err
 	}
 
-	conn, err := GetConn(ctx, s.db, file.DeviceID)
+	device, err := s.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{file.DeviceID}})
 	if err != nil {
 		return err
 	}
-	client := s.store.Client(ctx, conn)
+	client := s.store.Client(ctx, NewConn(device))
 
 	return FileLocalDownload(ctx, s.db, s.afs, client, file.ID, file.FilePath, file.Type)
 }

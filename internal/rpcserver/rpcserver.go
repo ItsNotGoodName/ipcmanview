@@ -6,10 +6,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
-	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
-	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
@@ -72,11 +69,11 @@ func AdminAuthSession() twirp.ServerOption {
 			if !ok {
 				return ctx, twirp.Unauthenticated.Error("Invalid session or not signed in.")
 			}
-			if !authSession.Admin {
-				return ctx, twirp.PermissionDenied.Error("You are not an admin.")
-			}
 			if authSession.Disabled {
 				return ctx, twirp.Unauthenticated.Error("Account disabled.")
+			}
+			if !authSession.Admin {
+				return ctx, twirp.PermissionDenied.Error("You are not an admin.")
 			}
 			return ctx, nil
 		},
@@ -100,13 +97,6 @@ func asValidationErrors(err error) (validator.ValidationErrors, bool) {
 
 func asConstraintError(err error) (sqlite.ConstraintError, bool) {
 	return sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE)
-}
-
-func check(err error) twirp.Error {
-	if repo.IsNotFound(err) {
-		return NewError(err, "Not found.").NotFound()
-	}
-	return NewError(err, "Something went wrong.").Internal()
 }
 
 type Error struct {
@@ -154,52 +144,4 @@ func (w Error) Internal() twirp.Error {
 
 func (w Error) NotFound() twirp.Error {
 	return twirp.NotFoundError(w.msg)
-}
-
-// ---------- Convert/Parse
-
-func parsePagePagination(v *rpc.PagePagination) pagination.Page {
-	var (
-		page    int
-		perPage int
-	)
-	if v != nil {
-		page = int(v.Page)
-		perPage = int(v.PerPage)
-	}
-
-	if page < 1 {
-		page = 1
-	}
-	if v.PerPage < 1 || v.PerPage > 100 {
-		perPage = 10
-	}
-
-	return pagination.Page{
-		Page:    page,
-		PerPage: perPage,
-	}
-}
-
-func convertPagePaginationResult(v pagination.PageResult) *rpc.PagePaginationResult {
-	return &rpc.PagePaginationResult{
-		Page:         int32(v.Page),
-		PerPage:      int32(v.PerPage),
-		TotalPages:   int32(v.TotalPages),
-		TotalItems:   int64(v.TotalItems),
-		SeenItems:    int64(v.Seen()),
-		PreviousPage: int32(v.Previous()),
-		NextPage:     int32(v.Next()),
-	}
-}
-
-func convertOrderToSQL(sql string, o rpc.Order) string {
-	switch o {
-	case rpc.Order_DESC:
-		return sql + " DESC"
-	case rpc.Order_ASC:
-		return sql + " ASC"
-	default:
-		return sql
-	}
 }

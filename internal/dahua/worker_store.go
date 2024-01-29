@@ -98,10 +98,10 @@ func (s *WorkerStore) Delete(id int64) error {
 
 func (s *WorkerStore) Register(bus *event.Bus) *WorkerStore {
 	bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
-		return s.Create(ctx, NewConn(evt.Device, evt.Seed))
+		return s.Create(ctx, NewConn(evt.Device))
 	})
 	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
-		return s.Update(ctx, NewConn(evt.Device, evt.Seed))
+		return s.Update(ctx, NewConn(evt.Device))
 	})
 	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
 		return s.Delete(evt.DeviceID)
@@ -110,12 +110,12 @@ func (s *WorkerStore) Register(bus *event.Bus) *WorkerStore {
 }
 
 func (s *WorkerStore) Bootstrap(ctx context.Context, db repo.DB, store *Store) error {
-	conns, err := ListConns(ctx, db)
+	devices, err := db.DahuaListDevices(ctx)
 	if err != nil {
 		return err
 	}
 
-	clients := store.ClientList(ctx, conns)
+	clients := store.ClientList(ctx, NewConns(devices))
 	for _, conn := range clients {
 		if err := s.Create(ctx, conn.Conn); err != nil {
 			return err

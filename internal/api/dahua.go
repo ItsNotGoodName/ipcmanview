@@ -28,11 +28,11 @@ func (s *Server) DahuaAfero(route string) echo.HandlerFunc {
 func (s *Server) DahuaDevices(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	conns, err := dahua.ListConns(ctx, s.db)
+	devices, err := s.db.DahuaListDevices(ctx)
 	if err != nil {
 		return err
 	}
-	clients := s.dahuaStore.ClientList(ctx, conns)
+	clients := s.dahuaStore.ClientList(ctx, dahua.NewConns(devices))
 
 	res := make([]models.DahuaStatus, 0, len(clients))
 	for _, client := range clients {

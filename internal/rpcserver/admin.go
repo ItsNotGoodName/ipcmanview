@@ -18,42 +18,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func convertCreateUpdateGroupError(msg string, err error) error {
-	if errs, ok := asValidationErrors(err); ok {
-		return NewError(err, msg).Validation(errs, [][2]string{
-			{"name", "Name"},
-			{"description", "Description"},
-		})
-	}
-
-	if constraintErr, ok := asConstraintError(err); ok {
-		return NewError(err, msg).Constraint(constraintErr, [][3]string{
-			{"name", "groups.name", "Name already taken."},
-		})
-	}
-
-	return check(err)
-}
-
-func convertCreateUpdateDeviceError(msg string, err error) error {
-	if errs, ok := asValidationErrors(err); ok {
-		return NewError(err, msg).Validation(errs, [][2]string{
-			{"name", "Name"},
-			{"description", "Description"},
-			{"location", "Location"},
-		})
-	}
-
-	if constraintErr, ok := asConstraintError(err); ok {
-		return NewError(err, msg).Constraint(constraintErr, [][3]string{
-			{"name", "dahua_devices.name", "Name already taken."},
-			{"url", "dahua_devices.ip", "URL already taken."},
-		})
-	}
-
-	return check(err)
-}
-
 func NewAdmin(db repo.DB, bus *event.Bus) *Admin {
 	return &Admin{
 		db:  db,
@@ -84,9 +48,11 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 		// ORDER BY
 		switch req.Sort.GetField() {
 		case "name":
-			sb = sb.OrderBy(convertOrderToSQL("name", req.Sort.GetOrder()))
+			sb = sb.OrderBy(parseOrderSQL("name", req.Sort.GetOrder()))
+		case "url":
+			sb = sb.OrderBy(parseOrderSQL("url", req.Sort.GetOrder()))
 		case "createdAt":
-			sb = sb.OrderBy(convertOrderToSQL("created_at", req.Sort.GetOrder()))
+			sb = sb.OrderBy(parseOrderSQL("created_at", req.Sort.GetOrder()))
 		}
 		// OFFSET ...
 		sb = sb.
@@ -135,13 +101,13 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 
 	return &rpc.GetAdminDevicesPageResp{
 		Items:      items,
-		PageResult: convertPagePaginationResult(page.Result(int(count))),
+		PageResult: parsePagePaginationResult(page.Result(int(count))),
 		Sort:       req.Sort,
 	}, nil
 }
 
 func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevicesIDPageReq) (*rpc.GetAdminDevicesIDPageResp, error) {
-	dbDevice, err := a.db.DahuaGetDevice(ctx, req.Id)
+	dbDevice, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
 		return nil, check(err)
 	}
@@ -177,7 +143,7 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 		return nil, NewError(nil, "Location is invalid.").Field("location")
 	}
 
-	res, err := dahua.CreateDevice(ctx, a.db, a.bus, dahua.Device{
+	id, err := dahua.CreateDevice(ctx, a.db, a.bus, dahua.Device{
 		Name:     req.Name,
 		URL:      urL,
 		Username: req.Username,
@@ -186,11 +152,11 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 		Feature:  dahua.FeatureFromStrings(req.Features),
 	})
 	if err != nil {
-		return nil, convertCreateUpdateDeviceError("Failed to create device.", err)
+		return nil, checkCreateUpdateDevice(err, "Failed to create device.")
 	}
 
 	return &rpc.CreateDeviceResp{
-		Id: res.DahuaDevice.ID,
+		Id: id,
 	}, nil
 }
 
@@ -233,11 +199,11 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 		// ORDER BY
 		switch req.Sort.GetField() {
 		case "username":
-			sb = sb.OrderBy(convertOrderToSQL("username", req.Sort.GetOrder()))
+			sb = sb.OrderBy(parseOrderSQL("username", req.Sort.GetOrder()))
 		case "email":
-			sb = sb.OrderBy(convertOrderToSQL("email", req.Sort.GetOrder()))
+			sb = sb.OrderBy(parseOrderSQL("email", req.Sort.GetOrder()))
 		case "createdAt":
-			sb = sb.OrderBy(convertOrderToSQL("users.created_at", req.Sort.GetOrder()))
+			sb = sb.OrderBy(parseOrderSQL("users.created_at", req.Sort.GetOrder()))
 		default:
 			sb = sb.OrderBy("admin DESC")
 		}
@@ -288,7 +254,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 
 	return &rpc.GetAdminUsersPageResp{
 		Items:      items,
-		PageResult: convertPagePaginationResult(page.Result(int(count))),
+		PageResult: parsePagePaginationResult(page.Result(int(count))),
 		Sort:       req.Sort,
 	}, nil
 
@@ -353,11 +319,11 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 		// ORDER BY
 		switch req.Sort.GetField() {
 		case "name":
-			sb = sb.OrderBy(convertOrderToSQL("name", req.Sort.GetOrder()))
+			sb = sb.OrderBy(parseOrderSQL("name", req.Sort.GetOrder()))
 		case "userCount":
-			sb = sb.OrderBy(convertOrderToSQL("user_count", req.Sort.GetOrder()))
+			sb = sb.OrderBy(parseOrderSQL("user_count", req.Sort.GetOrder()))
 		case "createdAt":
-			sb = sb.OrderBy(convertOrderToSQL("groups.created_at", req.Sort.GetOrder()))
+			sb = sb.OrderBy(parseOrderSQL("groups.created_at", req.Sort.GetOrder()))
 		}
 		// OFFSET ...
 		sb = sb.
@@ -405,7 +371,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 
 	return &rpc.GetAdminGroupsPageResp{
 		Items:      items,
-		PageResult: convertPagePaginationResult(page.Result(int(count))),
+		PageResult: parsePagePaginationResult(page.Result(int(count))),
 		Sort:       req.Sort,
 	}, nil
 }
@@ -463,7 +429,7 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 		Description: req.Description,
 	})
 	if err != nil {
-		return nil, convertCreateUpdateGroupError("Failed to create group.", err)
+		return nil, checkCreateUpdateGroup(err, "Failed to create group.")
 	}
 
 	return &rpc.CreateGroupResp{
@@ -483,7 +449,7 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 
 	_, err = auth.UpdateGroup(ctx, a.db, group)
 	if err != nil {
-		return nil, convertCreateUpdateGroupError("Failed to update group.", err)
+		return nil, checkCreateUpdateGroup(err, "Failed to update group.")
 	}
 
 	return &emptypb.Empty{}, nil

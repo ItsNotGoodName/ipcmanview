@@ -110,17 +110,17 @@ func createDahuaDevice(ctx context.Context, db repo.DB, arg repo.DahuaCreateDevi
 	return id, nil
 }
 
-func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (repo.DahuaFatDevice, error) {
+func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (int64, error) {
 	arg.normalize(true)
 
 	err := validate.Validate.Struct(arg)
 	if err != nil {
-		return repo.DahuaFatDevice{}, err
+		return 0, err
 	}
 
 	ip, err := arg.getIP()
 	if err != nil {
-		return repo.DahuaFatDevice{}, err
+		return 0, err
 	}
 
 	now := types.NewTime(time.Now())
@@ -136,36 +136,32 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (
 		UpdatedAt: now,
 	})
 	if err != nil {
-		return repo.DahuaFatDevice{}, err
+		return 0, err
 	}
 
-	res, err := db.DahuaGetDevice(ctx, id)
+	device, err := db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{id}})
 	if err != nil {
-		return repo.DahuaFatDevice{}, err
+		return 0, err
 	}
 
 	bus.DahuaDeviceCreated(event.DahuaDeviceCreated{
-		Device: res.DahuaDevice,
-		Seed:   res.Seed,
+		Device: device,
 	})
 
-	return repo.DahuaFatDevice{
-		DahuaDevice: res.DahuaDevice,
-		Seed:        res.Seed,
-	}, err
+	return id, err
 }
 
-func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (repo.DahuaFatDevice, error) {
+func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) error {
 	arg.normalize(true)
 
 	err := validate.Validate.Struct(arg)
 	if err != nil {
-		return repo.DahuaFatDevice{}, err
+		return err
 	}
 
 	ip, err := arg.getIP()
 	if err != nil {
-		return repo.DahuaFatDevice{}, err
+		return err
 	}
 
 	_, err = db.DahuaUpdateDevice(ctx, repo.DahuaUpdateDeviceParams{
@@ -180,23 +176,19 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (
 		ID:        arg.ID,
 	})
 	if err != nil {
-		return repo.DahuaFatDevice{}, err
+		return err
 	}
 
-	res, err := db.DahuaGetDevice(ctx, arg.ID)
+	device, err := db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{arg.ID}})
 	if err != nil {
-		return repo.DahuaFatDevice{}, err
+		return err
 	}
 
 	bus.DahuaDeviceUpdated(event.DahuaDeviceUpdated{
-		Device: res.DahuaDevice,
-		Seed:   res.Seed,
+		Device: device,
 	})
 
-	return repo.DahuaFatDevice{
-		DahuaDevice: res.DahuaDevice,
-		Seed:        res.Seed,
-	}, nil
+	return nil
 }
 
 func DeleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) error {

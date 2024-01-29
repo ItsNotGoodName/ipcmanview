@@ -9,7 +9,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -648,82 +647,6 @@ func (q *Queries) DahuaGetAferoFileByFileID(ctx context.Context, fileID sql.Null
 	return i, err
 }
 
-const dahuaGetDevice = `-- name: DahuaGetDevice :one
-SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE
-  id = ?
-LIMIT
-  1
-`
-
-type DahuaGetDeviceRow struct {
-	DahuaDevice DahuaDevice
-	Seed        int64
-}
-
-func (q *Queries) DahuaGetDevice(ctx context.Context, id int64) (DahuaGetDeviceRow, error) {
-	row := q.db.QueryRowContext(ctx, dahuaGetDevice, id)
-	var i DahuaGetDeviceRow
-	err := row.Scan(
-		&i.DahuaDevice.ID,
-		&i.DahuaDevice.Name,
-		&i.DahuaDevice.Ip,
-		&i.DahuaDevice.Url,
-		&i.DahuaDevice.Username,
-		&i.DahuaDevice.Password,
-		&i.DahuaDevice.Location,
-		&i.DahuaDevice.Feature,
-		&i.DahuaDevice.CreatedAt,
-		&i.DahuaDevice.UpdatedAt,
-		&i.DahuaDevice.DisabledAt,
-		&i.Seed,
-	)
-	return i, err
-}
-
-const dahuaGetDeviceByIP = `-- name: DahuaGetDeviceByIP :one
-SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE
-  ip = ?
-LIMIT
-  1
-`
-
-type DahuaGetDeviceByIPRow struct {
-	DahuaDevice DahuaDevice
-	Seed        int64
-}
-
-func (q *Queries) DahuaGetDeviceByIP(ctx context.Context, ip string) (DahuaGetDeviceByIPRow, error) {
-	row := q.db.QueryRowContext(ctx, dahuaGetDeviceByIP, ip)
-	var i DahuaGetDeviceByIPRow
-	err := row.Scan(
-		&i.DahuaDevice.ID,
-		&i.DahuaDevice.Name,
-		&i.DahuaDevice.Ip,
-		&i.DahuaDevice.Url,
-		&i.DahuaDevice.Username,
-		&i.DahuaDevice.Password,
-		&i.DahuaDevice.Location,
-		&i.DahuaDevice.Feature,
-		&i.DahuaDevice.CreatedAt,
-		&i.DahuaDevice.UpdatedAt,
-		&i.DahuaDevice.DisabledAt,
-		&i.Seed,
-	)
-	return i, err
-}
-
 const dahuaGetDeviceName = `-- name: DahuaGetDeviceName :one
 SELECT
   name
@@ -1066,170 +989,6 @@ func (q *Queries) DahuaGetStream(ctx context.Context, id int64) (DahuaStream, er
 		&i.MediamtxPath,
 	)
 	return i, err
-}
-
-const dahuaListDevices = `-- name: DahuaListDevices :many
-SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-`
-
-type DahuaListDevicesRow struct {
-	DahuaDevice DahuaDevice
-	Seed        int64
-}
-
-func (q *Queries) DahuaListDevices(ctx context.Context) ([]DahuaListDevicesRow, error) {
-	rows, err := q.db.QueryContext(ctx, dahuaListDevices)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []DahuaListDevicesRow
-	for rows.Next() {
-		var i DahuaListDevicesRow
-		if err := rows.Scan(
-			&i.DahuaDevice.ID,
-			&i.DahuaDevice.Name,
-			&i.DahuaDevice.Ip,
-			&i.DahuaDevice.Url,
-			&i.DahuaDevice.Username,
-			&i.DahuaDevice.Password,
-			&i.DahuaDevice.Location,
-			&i.DahuaDevice.Feature,
-			&i.DahuaDevice.CreatedAt,
-			&i.DahuaDevice.UpdatedAt,
-			&i.DahuaDevice.DisabledAt,
-			&i.Seed,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const dahuaListDevicesByFeature = `-- name: DahuaListDevicesByFeature :many
-SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE
-  feature & ?1 = ?1
-`
-
-type DahuaListDevicesByFeatureRow struct {
-	DahuaDevice DahuaDevice
-	Seed        int64
-}
-
-func (q *Queries) DahuaListDevicesByFeature(ctx context.Context, feature models.DahuaFeature) ([]DahuaListDevicesByFeatureRow, error) {
-	rows, err := q.db.QueryContext(ctx, dahuaListDevicesByFeature, feature)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []DahuaListDevicesByFeatureRow
-	for rows.Next() {
-		var i DahuaListDevicesByFeatureRow
-		if err := rows.Scan(
-			&i.DahuaDevice.ID,
-			&i.DahuaDevice.Name,
-			&i.DahuaDevice.Ip,
-			&i.DahuaDevice.Url,
-			&i.DahuaDevice.Username,
-			&i.DahuaDevice.Password,
-			&i.DahuaDevice.Location,
-			&i.DahuaDevice.Feature,
-			&i.DahuaDevice.CreatedAt,
-			&i.DahuaDevice.UpdatedAt,
-			&i.DahuaDevice.DisabledAt,
-			&i.Seed,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const dahuaListDevicesByIDs = `-- name: DahuaListDevicesByIDs :many
-SELECT
-  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE
-  id IN (/*SLICE:ids*/?)
-`
-
-type DahuaListDevicesByIDsRow struct {
-	DahuaDevice DahuaDevice
-	Seed        int64
-}
-
-func (q *Queries) DahuaListDevicesByIDs(ctx context.Context, ids []int64) ([]DahuaListDevicesByIDsRow, error) {
-	query := dahuaListDevicesByIDs
-	var queryParams []interface{}
-	if len(ids) > 0 {
-		for _, v := range ids {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
-	}
-	rows, err := q.db.QueryContext(ctx, query, queryParams...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []DahuaListDevicesByIDsRow
-	for rows.Next() {
-		var i DahuaListDevicesByIDsRow
-		if err := rows.Scan(
-			&i.DahuaDevice.ID,
-			&i.DahuaDevice.Name,
-			&i.DahuaDevice.Ip,
-			&i.DahuaDevice.Url,
-			&i.DahuaDevice.Username,
-			&i.DahuaDevice.Password,
-			&i.DahuaDevice.Location,
-			&i.DahuaDevice.Feature,
-			&i.DahuaDevice.CreatedAt,
-			&i.DahuaDevice.UpdatedAt,
-			&i.DahuaDevice.DisabledAt,
-			&i.Seed,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const dahuaListDevicesForUser = `-- name: DahuaListDevicesForUser :many
@@ -2018,7 +1777,7 @@ SET
   password = ?,
   remote_directory = ?
 WHERE
-  id = ? RETURNING id, name, storage, server_address, port, username, password, remote_directory
+  id = ? RETURNING id
 `
 
 type DahuaUpdateStorageDestinationParams struct {
@@ -2032,7 +1791,7 @@ type DahuaUpdateStorageDestinationParams struct {
 	ID              int64
 }
 
-func (q *Queries) DahuaUpdateStorageDestination(ctx context.Context, arg DahuaUpdateStorageDestinationParams) (DahuaStorageDestination, error) {
+func (q *Queries) DahuaUpdateStorageDestination(ctx context.Context, arg DahuaUpdateStorageDestinationParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, dahuaUpdateStorageDestination,
 		arg.Name,
 		arg.Storage,
@@ -2043,18 +1802,9 @@ func (q *Queries) DahuaUpdateStorageDestination(ctx context.Context, arg DahuaUp
 		arg.RemoteDirectory,
 		arg.ID,
 	)
-	var i DahuaStorageDestination
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Storage,
-		&i.ServerAddress,
-		&i.Port,
-		&i.Username,
-		&i.Password,
-		&i.RemoteDirectory,
-	)
-	return i, err
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const dahuaUpdateStream = `-- name: DahuaUpdateStream :one

@@ -76,7 +76,7 @@ func (c Conn) haSync(ctx context.Context) error {
 	}
 
 	for _, device := range devices {
-		if err := c.haSyncDevice(ctx, device.DahuaDevice, dahua.NewConn(device.DahuaDevice, device.Seed)); err != nil {
+		if err := c.haSyncDevice(ctx, device.DahuaDevice, dahua.NewConn(device)); err != nil {
 			return err
 		}
 	}
@@ -215,12 +215,12 @@ func (c Conn) Register(bus *event.Bus) error {
 		bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
 			c.conn.Ready()
 
-			return c.haSyncDevice(ctx, evt.Device, dahua.NewConn(evt.Device, evt.Seed))
+			return c.haSyncDevice(ctx, evt.Device.DahuaDevice, dahua.NewConn(evt.Device))
 		})
 		bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
 			c.conn.Ready()
 
-			return c.haSyncDevice(ctx, evt.Device, dahua.NewConn(evt.Device, evt.Seed))
+			return c.haSyncDevice(ctx, evt.Device.DahuaDevice, dahua.NewConn(evt.Device))
 		})
 	}
 	bus.OnDahuaEvent(func(ctx context.Context, evt event.DahuaEvent) error {

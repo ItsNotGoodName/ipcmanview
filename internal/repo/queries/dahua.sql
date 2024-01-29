@@ -44,58 +44,6 @@ FROM
 WHERE
   id = ?;
 
--- name: DahuaGetDevice :one
-SELECT
-  sqlc.embed(dahua_devices),
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE
-  id = ?
-LIMIT
-  1;
-
--- name: DahuaGetDeviceByIP :one
-SELECT
-  sqlc.embed(dahua_devices),
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE
-  ip = ?
-LIMIT
-  1;
-
--- name: DahuaListDevices :many
-SELECT
-  sqlc.embed(dahua_devices),
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id;
-
--- name: DahuaListDevicesByIDs :many
-SELECT
-  sqlc.embed(dahua_devices),
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE
-  id IN (sqlc.slice ('ids'));
-
--- name: DahuaListDevicesByFeature :many
-SELECT
-  sqlc.embed(dahua_devices),
-  coalesce(seed, id)
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-WHERE
-  feature & sqlc.arg ('feature') = sqlc.arg ('feature');
-
 -- name: DahuaListDevicesForUser :many
 SELECT
   sqlc.embed(dahua_devices),
@@ -502,7 +450,7 @@ SET
   password = ?,
   remote_directory = ?
 WHERE
-  id = ? RETURNING *;
+  id = ? RETURNING id;
 
 -- name: DahuaDeleteStorageDestination :exec
 DELETE FROM dahua_storage_destinations
