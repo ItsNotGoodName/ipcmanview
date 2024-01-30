@@ -13,18 +13,19 @@ import (
 
 func NewUser(v repo.User) User {
 	return User{
-		ID:       v.ID,
-		Email:    v.Email,
-		Username: v.Username,
-		Password: v.Password,
+		ID:           v.ID,
+		Email:        v.Email,
+		Username:     v.Username,
+		PasswordHash: v.Password,
 	}
 }
 
 type User struct {
-	ID       int64
-	Email    string `validate:"required,lte=128,email,excludes= "`
-	Username string `validate:"gte=3,lte=64,excludes=@,excludes= "`
-	Password string `validate:"gte=8"`
+	ID           int64
+	Email        string `validate:"required,lte=128,email,excludes= "`
+	Username     string `validate:"gte=3,lte=64,excludes=@,excludes= "`
+	Password     string `validate:"gte=8"`
+	PasswordHash string
 }
 
 func (u *User) normalize() {
@@ -38,7 +39,7 @@ func (u *User) hashPassword() error {
 		return err
 	}
 
-	u.Password = string(hash)
+	u.PasswordHash = string(hash)
 
 	return nil
 }
@@ -58,24 +59,24 @@ func CreateUser(ctx context.Context, db repo.DB, arg User) (int64, error) {
 	return db.AuthCreateUser(ctx, repo.AuthCreateUserParams{
 		Email:     arg.Email,
 		Username:  arg.Username,
-		Password:  arg.Password,
+		Password:  arg.PasswordHash,
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
 }
 
-func UpdateUser(ctx context.Context, db repo.DB, arg User, newPassword string) (int64, error) {
-	if newPassword != "" {
-		arg.Password = newPassword
-	}
-
+func UpdateUser(ctx context.Context, db repo.DB, arg User) (int64, error) {
 	arg.normalize()
 
-	if err := validate.Validate.Struct(arg); err != nil {
-		return 0, err
-	}
+	if arg.Password == "" {
+		if err := validate.Validate.StructExcept(arg, "Password"); err != nil {
+			return 0, err
+		}
+	} else {
+		if err := validate.Validate.Struct(arg); err != nil {
+			return 0, err
+		}
 
-	if newPassword != "" {
 		if err := arg.hashPassword(); err != nil {
 			return 0, err
 		}
@@ -84,14 +85,10 @@ func UpdateUser(ctx context.Context, db repo.DB, arg User, newPassword string) (
 	return db.AuthUpdateUser(ctx, repo.AuthUpdateUserParams{
 		Email:     arg.Email,
 		Username:  arg.Username,
-		Password:  arg.Password,
+		Password:  arg.PasswordHash,
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        arg.ID,
 	})
-}
-
-func CheckUserPassword(hash, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
 func UpdateUserDisable(ctx context.Context, db repo.DB, userID int64, disable bool) error {
@@ -118,4 +115,8 @@ func UpdateUserAdmin(ctx context.Context, db repo.DB, userID int64, admin bool) 
 		return err
 	}
 	return db.AuthDeleteAdmin(ctx, userID)
+}
+
+func CheckUserPassword(hash, password string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }

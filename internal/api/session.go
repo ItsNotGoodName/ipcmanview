@@ -100,7 +100,7 @@ func (s *Server) SessionDELETE(c echo.Context) error {
 	}
 
 	// Delete session
-	if err := s.db.AuthDeleteUserSessionBySession(ctx, cookie.Value); err != nil {
+	if err := auth.DeleteUserSession(ctx, s.db, cookie.Value); err != nil {
 		return err
 	}
 

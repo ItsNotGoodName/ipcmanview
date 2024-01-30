@@ -74,6 +74,10 @@ func CreateUserSessionAndDeletePrevious(ctx context.Context, db repo.DB, arg rep
 	return tx.Commit()
 }
 
+func DeleteUserSession(ctx context.Context, db repo.DB, session string) error {
+	return db.AuthDeleteUserSessionBySession(ctx, session)
+}
+
 func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 	sessionUpdateLock := core.NewLockStore[string]()
 	sessionUpdateThrottle := time.Minute

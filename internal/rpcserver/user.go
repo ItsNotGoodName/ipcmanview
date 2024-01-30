@@ -105,13 +105,15 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 	if err != nil {
 		return nil, check(err)
 	}
-	user := auth.NewUser(dbUser)
 
 	if err := auth.CheckUserPassword(dbUser.Password, req.OldPassword); err != nil {
 		return nil, NewError(err, "Old password is invalid.").Field("oldPassword")
 	}
 
-	if _, err := auth.UpdateUser(ctx, u.db, user, req.NewPassword); err != nil {
+	user := auth.NewUser(dbUser)
+	user.Password = req.NewPassword
+
+	if _, err := auth.UpdateUser(ctx, u.db, user); err != nil {
 		msg := "Failed to update password."
 
 		if errs, ok := asValidationErrors(err); ok {
@@ -140,11 +142,11 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 	if err != nil {
 		return nil, check(err)
 	}
-	user := auth.NewUser(dbUser)
 
+	user := auth.NewUser(dbUser)
 	user.Username = req.NewUsername
 
-	if _, err := auth.UpdateUser(ctx, u.db, user, ""); err != nil {
+	if _, err := auth.UpdateUser(ctx, u.db, user); err != nil {
 		msg := "Failed to update username."
 
 		if errs, ok := asValidationErrors(err); ok {
