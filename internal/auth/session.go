@@ -24,39 +24,53 @@ type Session struct {
 
 var sessionCtxKey contextKey = contextKey("session")
 
-const CookieKey = "session"
-
 const DefaultSessionDuration = 24 * time.Hour          // 1 Day
 const RememberMeSessionDuration = 365 * 24 * time.Hour // 1 Year
 
-func NewSession(ctx context.Context, db repo.DB, userAgent, ip string, userID int64, duration time.Duration) (repo.AuthCreateUserSessionParams, error) {
+type CreateUserSessionParams struct {
+	UserAgent       string
+	IP              string
+	UserID          int64
+	Duration        time.Duration
+	PreviousSession string
+}
+
+func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionParams) (string, error) {
 	b := make([]byte, 64)
 	_, err := rand.Read(b)
 	if err != nil {
-		return repo.AuthCreateUserSessionParams{}, err
+		return "", err
 	}
-
 	session := base64.URLEncoding.EncodeToString(b)
 
 	now := time.Now()
-
-	return repo.AuthCreateUserSessionParams{
-		UserID:     userID,
+	args := repo.AuthCreateUserSessionParams{
+		UserID:     arg.UserID,
 		Session:    session,
-		UserAgent:  userAgent,
-		Ip:         ip,
-		LastIp:     ip,
+		UserAgent:  arg.UserAgent,
+		Ip:         arg.IP,
+		LastIp:     arg.IP,
 		LastUsedAt: types.NewTime(now),
 		CreatedAt:  types.NewTime(now),
-		ExpiredAt:  types.NewTime(now.Add(duration)),
-	}, nil
+		ExpiredAt:  types.NewTime(now.Add(arg.Duration)),
+	}
+
+	if arg.PreviousSession != "" {
+		err := createUserSessionAndDeletePrevious(ctx, db, args, arg.PreviousSession)
+		if err != nil {
+			return "", nil
+		}
+	} else {
+		err := db.AuthCreateUserSession(ctx, args)
+		if err != nil {
+			return "", nil
+		}
+	}
+
+	return session, nil
 }
 
-func CreateUserSession(ctx context.Context, db repo.DB, arg repo.AuthCreateUserSessionParams) error {
-	return db.AuthCreateUserSession(ctx, arg)
-}
-
-func CreateUserSessionAndDeletePrevious(ctx context.Context, db repo.DB, arg repo.AuthCreateUserSessionParams, previousSession string) error {
+func createUserSessionAndDeletePrevious(ctx context.Context, db repo.DB, arg repo.AuthCreateUserSessionParams, previousSession string) error {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return err
@@ -77,6 +91,8 @@ func CreateUserSessionAndDeletePrevious(ctx context.Context, db repo.DB, arg rep
 func DeleteUserSession(ctx context.Context, db repo.DB, session string) error {
 	return db.AuthDeleteUserSessionBySession(ctx, session)
 }
+
+const CookieKey = "session"
 
 func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 	sessionUpdateLock := core.NewLockStore[string]()

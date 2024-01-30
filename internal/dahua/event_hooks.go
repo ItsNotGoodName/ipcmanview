@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -56,7 +57,7 @@ func (e DefaultEventHooks) Disconnect(ctx context.Context, deviceID int64, err e
 	e.logError(e.db.DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateDisconnected,
-		Error:     repo.ErrorToNullString(err),
+		Error:     core.ErrorToNullString(err),
 		CreatedAt: types.NewTime(time.Now()),
 	}))
 	e.bus.DahuaEventWorkerDisconnect(event.DahuaEventWorkerDisconnect{

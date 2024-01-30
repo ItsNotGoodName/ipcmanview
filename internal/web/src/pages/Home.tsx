@@ -12,7 +12,7 @@ export function Home() {
   return (
     <LayoutNormal>
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-        <Suspense fallback={<PageLoading class="flex-1" />}>
+        <Suspense fallback={<PageLoading />}>
           <div class="flex">
             <CardRoot class="flex gap-2 p-4">
               <div class="flex items-center">

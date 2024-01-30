@@ -22,7 +22,7 @@ type Public struct {
 }
 
 func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpResp, error) {
-	id, err := auth.CreateUser(ctx, p.db, auth.User{
+	id, err := auth.CreateUser(ctx, p.db, auth.CreateUserParams{
 		Email:    req.Email,
 		Username: req.Username,
 		Password: req.Password,

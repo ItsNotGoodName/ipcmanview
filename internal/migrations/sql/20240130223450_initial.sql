@@ -1,12 +1,36 @@
 -- +goose Up
 -- create "settings" table
-CREATE TABLE `settings` (`site_name` text NOT NULL, `default_location` text NOT NULL);
+CREATE TABLE `settings` (`setup` boolean NOT NULL, `site_name` text NOT NULL, `location` text NOT NULL, `coordinates` text NOT NULL);
+-- create "users" table
+CREATE TABLE `users` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `email` text NOT NULL, `username` text NOT NULL, `password` text NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL, `disabled_at` datetime NULL);
+-- create index "users_email" to table: "users"
+CREATE UNIQUE INDEX `users_email` ON `users` (`email`);
+-- create index "users_username" to table: "users"
+CREATE UNIQUE INDEX `users_username` ON `users` (`username`);
+-- create "user_sessions" table
+CREATE TABLE `user_sessions` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `user_id` integer NOT NULL, `session` text NOT NULL, `user_agent` text NOT NULL, `ip` text NOT NULL, `last_ip` text NOT NULL, `last_used_at` datetime NOT NULL, `created_at` datetime NOT NULL, `expired_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+-- create "admins" table
+CREATE TABLE `admins` (`user_id` integer NOT NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+-- create "groups" table
+CREATE TABLE `groups` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `name` text NOT NULL, `description` text NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL, `disabled_at` datetime NULL);
+-- create index "groups_name" to table: "groups"
+CREATE UNIQUE INDEX `groups_name` ON `groups` (`name`);
+-- create "group_users" table
+CREATE TABLE `group_users` (`user_id` integer NOT NULL, `group_id` integer NOT NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON UPDATE CASCADE ON DELETE CASCADE, CONSTRAINT `1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+-- create index "group_users_user_id_group_id" to table: "group_users"
+CREATE UNIQUE INDEX `group_users_user_id_group_id` ON `group_users` (`user_id`, `group_id`);
 -- create "dahua_devices" table
-CREATE TABLE `dahua_devices` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `name` text NOT NULL, `ip` text NOT NULL, `url` text NOT NULL, `username` text NOT NULL, `password` text NOT NULL, `location` text NOT NULL, `feature` integer NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL);
+CREATE TABLE `dahua_devices` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `name` text NOT NULL, `ip` text NOT NULL, `url` text NOT NULL, `username` text NOT NULL, `password` text NOT NULL, `location` text NOT NULL, `feature` integer NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL, `disabled_at` datetime NULL);
 -- create index "dahua_devices_name" to table: "dahua_devices"
 CREATE UNIQUE INDEX `dahua_devices_name` ON `dahua_devices` (`name`);
 -- create index "dahua_devices_ip" to table: "dahua_devices"
 CREATE UNIQUE INDEX `dahua_devices_ip` ON `dahua_devices` (`ip`);
+-- create "dahua_permissions" table
+CREATE TABLE `dahua_permissions` (`user_id` integer NULL, `group_id` integer NULL, `device_id` integer NOT NULL, `level` integer NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE, CONSTRAINT `1` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON UPDATE CASCADE ON DELETE CASCADE, CONSTRAINT `2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+-- create index "dahua_permissions_user_id_device_id" to table: "dahua_permissions"
+CREATE UNIQUE INDEX `dahua_permissions_user_id_device_id` ON `dahua_permissions` (`user_id`, `device_id`);
+-- create index "dahua_permissions_group_id_device_id" to table: "dahua_permissions"
+CREATE UNIQUE INDEX `dahua_permissions_group_id_device_id` ON `dahua_permissions` (`group_id`, `device_id`);
 -- create "dahua_seeds" table
 CREATE TABLE `dahua_seeds` (`seed` integer NOT NULL, `device_id` integer NULL, PRIMARY KEY (`seed`), CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE SET NULL);
 -- create index "dahua_seeds_device_id" to table: "dahua_seeds"
@@ -24,7 +48,7 @@ CREATE UNIQUE INDEX `dahua_event_device_rules_device_id_code` ON `dahua_event_de
 -- create "dahua_event_worker_states" table
 CREATE TABLE `dahua_event_worker_states` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `device_id` integer NOT NULL, `state` text NOT NULL, `error` text NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create "dahua_afero_files" table
-CREATE TABLE `dahua_afero_files` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `file_id` integer NULL, `thumbnail_id` integer NULL, `email_attachment_id` integer NULL, `name` text NOT NULL, `ready` boolean NOT NULL DEFAULT false, `size` integer NOT NULL DEFAULT 0, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`email_attachment_id`) REFERENCES `dahua_email_attachments` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `1` FOREIGN KEY (`thumbnail_id`) REFERENCES `dahua_thumbnails` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `2` FOREIGN KEY (`file_id`) REFERENCES `dahua_files` (`id`) ON UPDATE CASCADE ON DELETE SET NULL);
+CREATE TABLE `dahua_afero_files` (`id` integer NOT NULL, `file_id` integer NULL, `thumbnail_id` integer NULL, `email_attachment_id` integer NULL, `name` text NOT NULL, `ready` boolean NOT NULL DEFAULT false, `size` integer NOT NULL DEFAULT 0, `created_at` datetime NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `0` FOREIGN KEY (`email_attachment_id`) REFERENCES `dahua_email_attachments` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `1` FOREIGN KEY (`thumbnail_id`) REFERENCES `dahua_thumbnails` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `2` FOREIGN KEY (`file_id`) REFERENCES `dahua_files` (`id`) ON UPDATE CASCADE ON DELETE SET NULL);
 -- create index "dahua_afero_files_file_id" to table: "dahua_afero_files"
 CREATE UNIQUE INDEX `dahua_afero_files_file_id` ON `dahua_afero_files` (`file_id`);
 -- create index "dahua_afero_files_thumbnail_id" to table: "dahua_afero_files"
@@ -117,11 +141,35 @@ DROP TABLE `dahua_events`;
 DROP INDEX `dahua_seeds_device_id`;
 -- reverse: create "dahua_seeds" table
 DROP TABLE `dahua_seeds`;
+-- reverse: create index "dahua_permissions_group_id_device_id" to table: "dahua_permissions"
+DROP INDEX `dahua_permissions_group_id_device_id`;
+-- reverse: create index "dahua_permissions_user_id_device_id" to table: "dahua_permissions"
+DROP INDEX `dahua_permissions_user_id_device_id`;
+-- reverse: create "dahua_permissions" table
+DROP TABLE `dahua_permissions`;
 -- reverse: create index "dahua_devices_ip" to table: "dahua_devices"
 DROP INDEX `dahua_devices_ip`;
 -- reverse: create index "dahua_devices_name" to table: "dahua_devices"
 DROP INDEX `dahua_devices_name`;
 -- reverse: create "dahua_devices" table
 DROP TABLE `dahua_devices`;
+-- reverse: create index "group_users_user_id_group_id" to table: "group_users"
+DROP INDEX `group_users_user_id_group_id`;
+-- reverse: create "group_users" table
+DROP TABLE `group_users`;
+-- reverse: create index "groups_name" to table: "groups"
+DROP INDEX `groups_name`;
+-- reverse: create "groups" table
+DROP TABLE `groups`;
+-- reverse: create "admins" table
+DROP TABLE `admins`;
+-- reverse: create "user_sessions" table
+DROP TABLE `user_sessions`;
+-- reverse: create index "users_username" to table: "users"
+DROP INDEX `users_username`;
+-- reverse: create index "users_email" to table: "users"
+DROP INDEX `users_email`;
+-- reverse: create "users" table
+DROP TABLE `users`;
 -- reverse: create "settings" table
 DROP TABLE `settings`;

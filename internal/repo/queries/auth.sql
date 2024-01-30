@@ -50,12 +50,12 @@ WHERE
 -- name: AuthUpdateUser :one
 UPDATE users
 SET
-  email = ?,
-  username = ?,
-  password = ?,
-  updated_at = ?
+  username = coalesce(sqlc.narg ('username'), username),
+  email = coalesce(sqlc.narg ('email'), email),
+  password = coalesce(sqlc.narg ('password'), password),
+  updated_at = sqlc.arg ('updated_at')
 WHERE
-  id = ? RETURNING id;
+  id = sqlc.arg ('id') RETURNING id;
 
 -- name: AuthUpdateUserDisabledAt :one
 UPDATE users

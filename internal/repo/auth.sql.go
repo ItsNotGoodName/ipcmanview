@@ -509,26 +509,26 @@ func (q *Queries) AuthUpdateGroupDisabledAt(ctx context.Context, arg AuthUpdateG
 const authUpdateUser = `-- name: AuthUpdateUser :one
 UPDATE users
 SET
-  email = ?,
-  username = ?,
-  password = ?,
-  updated_at = ?
+  username = coalesce(?1, username),
+  email = coalesce(?2, email),
+  password = coalesce(?3, password),
+  updated_at = ?4
 WHERE
-  id = ? RETURNING id
+  id = ?5 RETURNING id
 `
 
 type AuthUpdateUserParams struct {
-	Email     string
-	Username  string
-	Password  string
+	Username  sql.NullString
+	Email     sql.NullString
+	Password  sql.NullString
 	UpdatedAt types.Time
 	ID        int64
 }
 
 func (q *Queries) AuthUpdateUser(ctx context.Context, arg AuthUpdateUserParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, authUpdateUser,
-		arg.Email,
 		arg.Username,
+		arg.Email,
 		arg.Password,
 		arg.UpdatedAt,
 		arg.ID,

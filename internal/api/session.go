@@ -58,31 +58,33 @@ func (s *Server) SessionPOST(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Incorrect credentials.").WithInternal(err)
 	}
 
-	// New session
 	sessionDuration := auth.DefaultSessionDuration
 	if req.RememberMe {
 		sessionDuration = auth.RememberMeSessionDuration
 	}
-	session, err := auth.NewSession(ctx, s.db, c.Request().UserAgent(), c.RealIP(), user.ID, sessionDuration)
-	if err != nil {
-		return err
+
+	previousSession := ""
+	if cookie, err := c.Cookie(auth.CookieKey); err == nil {
+		previousSession = cookie.Value
+	} else {
 	}
 
 	// Save session and delete previous session if it exists
-	if cookie, err := c.Cookie(auth.CookieKey); err == nil {
-		if err := auth.CreateUserSessionAndDeletePrevious(ctx, s.db, session, cookie.Value); err != nil {
-			return err
-		}
-	} else {
-		if err := auth.CreateUserSession(ctx, s.db, session); err != nil {
-			return err
-		}
+	session, err := auth.CreateUserSession(ctx, s.db, auth.CreateUserSessionParams{
+		UserAgent:       c.Request().UserAgent(),
+		IP:              c.RealIP(),
+		UserID:          user.ID,
+		Duration:        sessionDuration,
+		PreviousSession: previousSession,
+	})
+	if err != nil {
+		return err
 	}
 
 	// Set cookie
 	c.SetCookie(&http.Cookie{
 		Name:     "session",
-		Value:    session.Session,
+		Value:    session,
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteStrictMode,

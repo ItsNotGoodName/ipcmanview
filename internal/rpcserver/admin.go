@@ -336,10 +336,7 @@ func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswor
 		return nil, check(err)
 	}
 
-	user := auth.NewUser(dbUser)
-	user.Password = req.NewPassword
-
-	if err := auth.UpdateUser(ctx, a.db, user); err != nil {
+	if err := auth.UpdateUserPassword(ctx, a.db, dbUser, req.NewPassword); err != nil {
 		msg := "Failed to update password."
 
 		if errs, ok := asValidationErrors(err); ok {

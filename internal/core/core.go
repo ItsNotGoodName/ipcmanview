@@ -59,3 +59,32 @@ func Int64ToNullInt64(a int64) sql.NullInt64 {
 		Valid: true,
 	}
 }
+
+func NewNullString(s string) sql.NullString {
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
+}
+
+func ErrorToNullString(err error) sql.NullString {
+	if err == nil {
+		return sql.NullString{}
+	}
+	return sql.NullString{
+		String: err.Error(),
+		Valid:  true,
+	}
+}
+
+func NilStringToNullString(s *string) sql.NullString {
+	if s == nil {
+		return sql.NullString{
+			Valid: true,
+		}
+	}
+	return sql.NullString{
+		String: *s,
+		Valid:  true,
+	}
+}
