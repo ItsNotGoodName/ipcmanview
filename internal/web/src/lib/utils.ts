@@ -1,5 +1,5 @@
 import { PartialMessage } from "@protobuf-ts/runtime";
-import { Accessor, createEffect, createSignal } from "solid-js";
+import { Accessor, Resource, createEffect, createSignal } from "solid-js";
 import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
@@ -125,8 +125,20 @@ export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelecti
   }
 }
 
-export function setupForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined) {
-  reset(form, { initialValues: data })
+export function setupForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: Resource<PartialValues<TFieldValues> | undefined>) {
+  createEffect(() => {
+    if (!data.loading && !data.error) {
+      reset(form, { initialValues: data() })
+    }
+  })
+}
+
+export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: Resource<PartialValues<TFieldValues> | undefined>) {
+  createEffect(() => {
+    if (!data.loading && !data.error) {
+      reset(form, { initialValues: data() })
+    }
+  })
 }
 
 // export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined): boolean {
@@ -147,7 +159,7 @@ export type CreatePagePaginationReturn = {
   setPerPage: (value: number) => void
 }
 
-export function createPagePagination(pageResult: () => PagePaginationResult | undefined) {
+export function createPagePagination(pageResult: () => PagePaginationResult | undefined): CreatePagePaginationReturn {
   const [_, setSearchParams] = useSearchParams()
   return {
     previousPageDisabled: () => pageResult()?.previousPage == pageResult()?.page,

@@ -1,11 +1,11 @@
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, } from "~/ui/DropdownMenu";
-import { AdminGroupsPageSearchParams, getAdminGroupsPage, getGroup } from "./Groups.data";
+import { AdminGroupsPageSearchParams, getAdminGroupsPage } from "./Groups.data";
 import { ErrorBoundary, For, Show, Suspense, batch, createResource, createSignal } from "solid-js";
 import { RiSystemLockLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
-import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, setupForm, throwAsFormError } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -26,14 +26,12 @@ import { Crud } from "~/components/Crud";
 const actionDeleteGroup = action((ids: bigint[]) => useClient()
   .admin.deleteGroup({ ids })
   .then(() => revalidate(getAdminGroupsPage.key))
-  .catch(catchAsToast)
-)
+  .catch(catchAsToast))
 
 const actionSetGroupDisable = action((input: SetGroupDisableReq) => useClient()
   .admin.setGroupDisable(input)
   .then(() => revalidate(getAdminGroupsPage.key))
-  .catch(catchAsToast)
-)
+  .catch(catchAsToast))
 
 export function AdminGroups() {
   const navigate = useNavigate()
@@ -65,17 +63,17 @@ export function AdminGroups() {
   const deleteGroupAction = useAction(actionDeleteGroup)
   // Single
   const [openDeleteConfirm, setOpenDeleteConfirm] = createSignal<{ name: string, id: bigint } | undefined>()
-  const deleteGroupBySelection = () => deleteGroupAction([openDeleteConfirm()!.id])
+  const deleteSubmit = () => deleteGroupAction([openDeleteConfirm()!.id])
     .then(() => setOpenDeleteConfirm(undefined))
   // Multiple
   const [openDeleteMultipleConfirm, setDeleteMultipleConfirm] = createSignal(false)
-  const deleteGroupByRowSelection = () => deleteGroupAction(rowSelection.selections())
+  const deleteMultipleSubmit = () => deleteGroupAction(rowSelection.selections())
     .then(() => setDeleteMultipleConfirm(false))
 
   // Disable/Enable
-  const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
-  const setGroupDisable = useAction(actionSetGroupDisable)
-  const setGroupDisableByRowSelection = (disable: boolean) => setGroupDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+  const setDisableSubmission = useSubmission(actionSetGroupDisable)
+  const setDisableAction = useAction(actionSetGroupDisable)
+  const setDisableMultipleSubmit = (disable: boolean) => setDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
     .then(() => rowSelection.setAll(false))
 
   return (
@@ -115,7 +113,7 @@ export function AdminGroups() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroupBySelection}>
+            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteSubmit}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -140,7 +138,7 @@ export function AdminGroups() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteGroupByRowSelection}>
+            <AlertDialogAction variant="destructive" disabled={deleteGroupSubmission.pending} onClick={deleteMultipleSubmit}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -213,14 +211,14 @@ export function AdminGroups() {
                           Create
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
-                          onSelect={() => setGroupDisableByRowSelection(true)}
+                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                          onSelect={() => setDisableMultipleSubmit(true)}
                         >
                           Disable
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
-                          onSelect={() => setGroupDisableByRowSelection(false)}
+                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                          onSelect={() => setDisableMultipleSubmit(false)}
                         >
                           Enable
                         </DropdownMenuItem>
@@ -241,7 +239,7 @@ export function AdminGroups() {
               <For each={data()?.items}>
                 {(item, index) => {
                   const onClick = () => navigate(`./${item.id}`)
-                  const toggleGroupDisable = () => setGroupDisable({ items: [{ id: item.id, disable: !item.disabled }] })
+                  const toggleGroupDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
 
                   return (
                     <TableRow>
@@ -275,7 +273,7 @@ export function AdminGroups() {
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                disabled={setGroupDisableSubmission.pending}
+                                disabled={setDisableSubmission.pending}
                                 onSelect={toggleGroupDisable}
                               >
                                 <Show when={item.disabled} fallback={<>Disable</>}>
@@ -315,8 +313,7 @@ type CreateGroupForm = {
 const actionCreateGroupForm = action((form: CreateGroupForm) => useClient()
   .admin.createGroup(form)
   .then(() => revalidate(getAdminGroupsPage.key))
-  .catch(throwAsFormError)
-)
+  .catch(throwAsFormError))
 
 function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
   const [addMore, setAddMore] = createSignal(false)
@@ -386,22 +383,19 @@ type UpdateGroupForm = {
 const actionUpdateGroupForm = action((model: UpdateGroupForm) => useClient()
   .admin.updateGroup(model)
   .then(() => revalidate(getAdminGroupsPage.key))
-  .catch(throwAsFormError)
-)
+  .catch(throwAsFormError))
 
 function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
-
-  // FIXME: this looks wrong
-
   const [updateGroupForm, { Field, Form }] = createForm<UpdateGroupForm>();
   const updateGroupFormAction = useAction(actionUpdateGroupForm)
   const submit = (form: UpdateGroupForm) => updateGroupFormAction(form)
     .then(() => props.setOpen(false))
-  const [form] = createResource(() => getGroup(props.id)
-    .then((data) => setupForm(updateGroupForm, data)))
+
+  const [data] = createResource(() => props.id != BigInt(0), () => useClient().admin.getGroup({ id: props.id }).then((data) => data.response))
+  syncForm(updateGroupForm, data)
 
   return (
-    <Show when={!form.error} fallback={<PageError error={form.error} />}>
+    <ErrorBoundary fallback={(e) => <PageError error={e} />}>
       <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
         <Field name="id" type="number">
           {(field, props) => <input {...props} type="hidden" value={field.value} />}
@@ -415,7 +409,7 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
                   {...props}
                   placeholder="Name"
                   value={field.value}
-                  disabled={form.loading}
+                  disabled={data.loading}
                 />
               </FieldControl>
               <FieldMessage field={field} />
@@ -430,7 +424,7 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
                 <Textarea
                   {...props}
                   placeholder="Description"
-                  disabled={form.loading}
+                  disabled={data.loading}
                 >
                   {field.value}
                 </Textarea>
@@ -439,13 +433,13 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
             </FieldRoot>
           )}
         </Field>
-        <Button type="submit" disabled={form.loading || updateGroupForm.submitting}>
-          <Show when={!updateGroupForm.submitting} fallback={<>Updating group</>}>
+        <Button type="submit" disabled={updateGroupForm.submitting}>
+          <Show when={data.loading || !updateGroupForm.submitting} fallback={<>Updating group</>}>
             Update group
           </Show>
         </Button>
         <FormMessage form={updateGroupForm} />
       </Form>
-    </Show>
+    </ErrorBoundary>
   )
 }

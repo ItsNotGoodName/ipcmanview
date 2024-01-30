@@ -1,10 +1,8 @@
 import { A, action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
-import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
+import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot } from "~/ui/DropdownMenu";
 import { AdminDevicesPageSearchParams, getAdminDevicesPage } from "./Devices.data";
 import { ErrorBoundary, For, Show, Suspense, createSignal } from "solid-js";
-import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
-import { Button } from "~/ui/Button";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
@@ -18,6 +16,7 @@ import { LayoutNormal } from "~/ui/Layout";
 import { SetDeviceDisableReq } from "~/twirp/rpc";
 import { Crud } from "~/components/Crud";
 import { As } from "@kobalte/core";
+import { RiSystemLockLine } from "solid-icons/ri";
 
 const actionDeleteDevice = action((ids: bigint[]) => useClient()
   .admin.deleteDevice({ ids })
@@ -54,55 +53,55 @@ export function AdminDevices() {
   const deleteDeviceSubmission = useSubmission(actionDeleteDevice)
   const deleteDeviceAction = useAction(actionDeleteDevice)
   // Single
-  const [deleteDeviceSelection, setDeleteDeviceSelection] = createSignal<{ name: string, id: bigint } | undefined>()
-  const deleteDeviceBySelection = () => deleteDeviceAction([deleteDeviceSelection()!.id])
-    .then(() => setDeleteDeviceSelection(undefined))
+  const [openDeleteConfirm, setOpenDeleteConfirm] = createSignal<{ name: string, id: bigint } | undefined>()
+  const deleteSubmit = () => deleteDeviceAction([openDeleteConfirm()!.id])
+    .then(() => setOpenDeleteConfirm(undefined))
   // Multiple
-  const [deleteDeviceRowSelection, setDeleteDeviceRowSelection] = createSignal(false)
-  const deleteDeviceByRowSelection = () => deleteDeviceAction(rowSelection.selections())
+  const [openDeleteMultipleConfirm, setDeleteDeviceRowSelection] = createSignal(false)
+  const deleteMultipleSubmit = () => deleteDeviceAction(rowSelection.selections())
     .then(() => setDeleteDeviceRowSelection(false))
 
   // Disable/Enable
-  const setDeviceDisableSubmission = useSubmission(actionSetDeviceDisable)
-  const setDeviceDisable = useAction(actionSetDeviceDisable)
-  const setDeviceDisableByRowSelection = (disable: boolean) => setDeviceDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+  const setDisableSubmission = useSubmission(actionSetDeviceDisable)
+  const setDisableAction = useAction(actionSetDeviceDisable)
+  const setDisableMultipleSubmit = (disable: boolean) => setDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
     .then(() => rowSelection.setAll(false))
 
   return (
     <LayoutNormal class="max-w-4xl">
-      <AlertDialogRoot open={deleteDeviceSelection() != undefined} onOpenChange={() => setDeleteDeviceSelection(undefined)}>
+      <AlertDialogRoot open={openDeleteConfirm() != undefined} onOpenChange={() => setOpenDeleteConfirm(undefined)}>
         <AlertDialogModal>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you wish to delete {deleteDeviceSelection()?.name}?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you wish to delete {openDeleteConfirm()?.name}?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteDeviceSubmission.pending} onClick={deleteDeviceBySelection}>
+            <AlertDialogAction variant="destructive" disabled={deleteDeviceSubmission.pending} onClick={deleteSubmit}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogModal>
       </AlertDialogRoot>
 
-      <AlertDialogRoot open={deleteDeviceRowSelection()} onOpenChange={setDeleteDeviceRowSelection}>
+      <AlertDialogRoot open={openDeleteMultipleConfirm()} onOpenChange={setDeleteDeviceRowSelection}>
         <AlertDialogModal>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} groups?</AlertDialogTitle>
-            <AlertDialogDescription class="max-h-32 overflow-y-auto">
-              <For each={data()?.items}>
-                {(e, index) =>
-                  <Show when={rowSelection.rows[index()].checked}>
-                    <div>
-                      {e.name}
-                    </div>
-                  </Show>
-                }
-              </For>
+            <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} devices?</AlertDialogTitle>
+            <AlertDialogDescription>
+              <ul>
+                <For each={data()?.items}>
+                  {(e, index) =>
+                    <Show when={rowSelection.rows[index()].checked}>
+                      <li>{e.name}</li>
+                    </Show>
+                  }
+                </For>
+              </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteDeviceSubmission.pending} onClick={deleteDeviceByRowSelection}>
+            <AlertDialogAction variant="destructive" disabled={deleteDeviceSubmission.pending} onClick={deleteMultipleSubmit}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -120,24 +119,12 @@ export function AdminDevices() {
               perPage={data()?.pageResult?.perPage}
               onChange={pagination.setPerPage}
             />
-            <div class="flex gap-2">
-              <Button
-                title="Previous"
-                size="icon"
-                disabled={pagination.previousPageDisabled()}
-                onClick={pagination.previousPage}
-              >
-                <RiArrowsArrowLeftSLine class="h-6 w-6" />
-              </Button>
-              <Button
-                title="Next"
-                size="icon"
-                disabled={pagination.nextPageDisabled()}
-                onClick={pagination.nextPage}
-              >
-                <RiArrowsArrowRightSLine class="h-6 w-6" />
-              </Button>
-            </div>
+            <Crud.PageButtons
+              previousPageDisabled={pagination.previousPageDisabled()}
+              previousPage={pagination.previousPage}
+              nextPageDisabled={pagination.nextPageDisabled()}
+              nextPage={pagination.nextPage}
+            />
           </div>
           <TableRoot>
             <TableHeader>
@@ -178,48 +165,44 @@ export function AdminDevices() {
                     Created At
                   </Crud.SortButton>
                 </TableHead>
-                <TableHead>
-                  <div class="flex items-center justify-end">
-                    <DropdownMenuRoot placement="bottom-end">
-                      <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                        <RiSystemMore2Line class="h-5 w-5" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem asChild>
-                            <As component={A} href="./create">Create</As>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || setDeviceDisableSubmission.pending}
-                            onSelect={() => setDeviceDisableByRowSelection(true)}
-                          >
-                            Disable
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || setDeviceDisableSubmission.pending}
-                            onSelect={() => setDeviceDisableByRowSelection(false)}
-                          >
-                            Enable
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || deleteDeviceSubmission.pending}
-                            onSelect={() => setDeleteDeviceRowSelection(true)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                          <DropdownMenuArrow />
-                        </DropdownMenuContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuRoot>
-                  </div>
-                </TableHead>
+                <Crud.LastTableHead>
+                  <DropdownMenuRoot placement="bottom-end">
+                    <Crud.MoreDropdownMenuTrigger />
+                    <DropdownMenuPortal>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem asChild>
+                          <As component={A} href="./create">Create</As>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                          onSelect={() => setDisableMultipleSubmit(true)}
+                        >
+                          Disable
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                          onSelect={() => setDisableMultipleSubmit(false)}
+                        >
+                          Enable
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={rowSelection.selections().length == 0 || deleteDeviceSubmission.pending}
+                          onSelect={() => setDeleteDeviceRowSelection(true)}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                        <DropdownMenuArrow />
+                      </DropdownMenuContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuRoot>
+                </Crud.LastTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <For each={data()?.items}>
                 {(item, index) => {
                   const onClick = () => navigate(`./${item.id}`)
-                  const toggleDeviceDisable = () => setDeviceDisable({ items: [{ id: item.id, disable: !item.disabled }] })
+                  const toggleDeviceDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
 
                   return (
                     <TableRow>
@@ -246,16 +229,14 @@ export function AdminDevices() {
                           </TooltipRoot>
                         </Show>
                         <DropdownMenuRoot placement="bottom-end">
-                          <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                            <RiSystemMore2Line class="h-5 w-5" />
-                          </DropdownMenuTrigger>
+                          <Crud.MoreDropdownMenuTrigger />
                           <DropdownMenuPortal>
                             <DropdownMenuContent>
                               <DropdownMenuItem asChild>
                                 <As component={A} href={`./${item.id}/update`}>Edit</As>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                disabled={setDeviceDisableSubmission.pending}
+                                disabled={setDisableSubmission.pending}
                                 onSelect={toggleDeviceDisable}
                               >
                                 <Show when={item.disabled} fallback={<>Disable</>}>
@@ -264,7 +245,7 @@ export function AdminDevices() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={deleteDeviceSubmission.pending}
-                                onSelect={() => setDeleteDeviceSelection(item)}
+                                onSelect={() => setOpenDeleteConfirm(item)}
                               >
                                 Delete
                               </DropdownMenuItem>
