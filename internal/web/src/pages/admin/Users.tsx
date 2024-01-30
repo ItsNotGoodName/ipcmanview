@@ -1,8 +1,7 @@
 import { CheckboxControl, CheckboxRoot } from "~/ui/Checkbox";
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission, } from "@solidjs/router";
 import { ErrorBoundary, For, Show, Suspense, createSignal, } from "solid-js";
-import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiDesignFocus2Line, RiSystemLockLine, RiSystemMore2Line, RiUserFacesAdminLine, } from "solid-icons/ri";
-import { Button } from "~/ui/Button";
+import { RiDesignFocus2Line, RiSystemLockLine, RiUserFacesAdminLine, } from "solid-icons/ri";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
@@ -11,31 +10,29 @@ import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AdminUsersPageSearchParams, getAdminUsersPage } from "./Users.data";
 import { LayoutNormal } from "~/ui/Layout";
-import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
+import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, } from "~/ui/DropdownMenu";
 import { getSession } from "~/providers/session";
 import { Crud } from "~/components/Crud";
 import { useClient } from "~/providers/client";
 import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
 
-const actionSetUserDisable = action((input: SetUserDisableReq) => useClient()
-  .admin.setUserDisable(input)
-  .then(() => revalidate(getAdminUsersPage.key))
-  .catch(catchAsToast))
-
-const actionSetUserAdmin = action((input: SetUserAdminReq) => useClient()
-  .admin.setUserAdmin(input)
-  .then(() => revalidate(getAdminUsersPage.key))
-  .catch(catchAsToast))
-
-const actionDeleteUser = action((ids: bigint[]) => useClient()
+const actionDelete = action((ids: bigint[]) => useClient()
   .admin.deleteUser({ ids })
   .then(() => revalidate(getAdminUsersPage.key))
   .catch(catchAsToast))
 
-export function AdminUsers() {
-  const session = createAsync(getSession)
+const actionSetDisable = action((input: SetUserDisableReq) => useClient()
+  .admin.setUserDisable(input)
+  .then(() => revalidate(getAdminUsersPage.key))
+  .catch(catchAsToast))
 
+const actionSetAdmin = action((input: SetUserAdminReq) => useClient()
+  .admin.setUserAdmin(input)
+  .then(() => revalidate(getAdminUsersPage.key))
+  .catch(catchAsToast))
+
+export function AdminUsers() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams<AdminUsersPageSearchParams>()
   const data = createAsync(() => getAdminUsersPage({
@@ -54,46 +51,48 @@ export function AdminUsers() {
   const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = createToggleSortField(() => data()?.sort)
 
-  // Toggle disable
-  const setUserDisableSubmission = useSubmission(actionSetUserDisable)
-  const setUserDisable = useAction(actionSetUserDisable)
-  const setUserDisableByRowSelection = (disable: boolean) => setUserDisable({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+  // Delete
+  const deleteSubmission = useSubmission(actionDelete)
+  const deleteAction = useAction(actionDelete)
+  // Single
+  const [openDeleteConfirm, setOpenDeleteConfirm] = createSignal<{ username: string, id: bigint } | undefined>()
+  const deleteSubmit = () => deleteAction([openDeleteConfirm()?.id || BigInt(0)])
+    .then(() => setOpenDeleteConfirm(undefined))
+  // Multiple
+  const [openDeleteMultipleConfirm, setOpenDeleteMultipleConfirm] = createSignal(false)
+  const deleteMultipleSubmit = () => deleteAction(rowSelection.selections())
+    .then(() => setOpenDeleteMultipleConfirm(false))
+
+  // Disable
+  const setDisableSubmission = useSubmission(actionSetDisable)
+  const setDisableAction = useAction(actionSetDisable)
+  const setDisableMultipleSubmit = (disable: boolean) => setDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
     .then(() => rowSelection.setAll(false))
 
-  // Toggle admin
-  const setUserAdminSubmission = useSubmission(actionSetUserAdmin)
-  const setUserAdmin = useAction(actionSetUserAdmin)
+  // Admin
+  const setAdminSubmission = useSubmission(actionSetAdmin)
+  const setAdminAction = useAction(actionSetAdmin)
 
-  // Delete
-  const deleteUserSubmission = useSubmission(actionDeleteUser)
-  const deleteUserAction = useAction(actionDeleteUser)
-  // Single
-  const [deleteUserSelection, setDeleteUserSelection] = createSignal<{ username: string, id: bigint } | undefined>()
-  const deleteUserBySelection = () => deleteUserAction([deleteUserSelection()?.id || BigInt(0)])
-    .then(() => setDeleteUserSelection(undefined))
-  // Multiple
-  const [deleteUserRowSelection, setDeleteUserRowSelection] = createSignal(false)
-  const deleteUserByRowSelection = () => deleteUserAction(rowSelection.selections())
-    .then(() => setDeleteUserRowSelection(false))
+  const session = createAsync(getSession)
 
   return (
     <LayoutNormal class="max-w-4xl">
 
-      <AlertDialogRoot open={deleteUserSelection() != undefined} onOpenChange={() => setDeleteUserSelection(undefined)}>
+      <AlertDialogRoot open={openDeleteConfirm() != undefined} onOpenChange={() => setOpenDeleteConfirm(undefined)}>
         <AlertDialogModal>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you wish to delete {deleteUserSelection()?.username}?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you wish to delete {openDeleteConfirm()?.username}?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteUserSubmission.pending} onClick={deleteUserBySelection}>
+            <AlertDialogAction variant="destructive" disabled={deleteSubmission.pending} onClick={deleteSubmit}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogModal>
       </AlertDialogRoot>
 
-      <AlertDialogRoot open={deleteUserRowSelection()} onOpenChange={setDeleteUserRowSelection}>
+      <AlertDialogRoot open={openDeleteMultipleConfirm()} onOpenChange={setOpenDeleteMultipleConfirm}>
         <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} users?</AlertDialogTitle>
@@ -111,7 +110,7 @@ export function AdminUsers() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteUserSubmission.pending} onClick={deleteUserByRowSelection}>
+            <AlertDialogAction variant="destructive" disabled={deleteSubmission.pending} onClick={deleteMultipleSubmit}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -121,7 +120,7 @@ export function AdminUsers() {
       <div class="text-xl">Users</div>
       <Seperator />
 
-      <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>
           <div class="flex justify-between gap-2">
             <Crud.PerPageSelect
@@ -129,24 +128,12 @@ export function AdminUsers() {
               perPage={data()?.pageResult?.perPage}
               onChange={pagination.setPerPage}
             />
-            <div class="flex gap-2">
-              <Button
-                title="Previous"
-                size="icon"
-                disabled={pagination.previousPageDisabled()}
-                onClick={pagination.previousPage}
-              >
-                <RiArrowsArrowLeftSLine class="h-6 w-6" />
-              </Button>
-              <Button
-                title="Next"
-                size="icon"
-                disabled={pagination.nextPageDisabled()}
-                onClick={pagination.nextPage}
-              >
-                <RiArrowsArrowRightSLine class="h-6 w-6" />
-              </Button>
-            </div>
+            <Crud.PageButtons
+              previousPageDisabled={pagination.previousPageDisabled()}
+              previousPage={pagination.previousPage}
+              nextPageDisabled={pagination.nextPageDisabled()}
+              nextPage={pagination.nextPage}
+            />
           </div>
           <TableRoot>
             <TableHeader>
@@ -187,49 +174,45 @@ export function AdminUsers() {
                     Created At
                   </Crud.SortButton>
                 </TableHead>
-                <TableHead>
-                  <div class="flex items-center justify-end">
-                    <DropdownMenuRoot placement="bottom-end">
-                      <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                        <RiSystemMore2Line class="h-5 w-5" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>
-                            Create
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || setUserDisableSubmission.pending}
-                            onClick={() => setUserDisableByRowSelection(false)}
-                          >
-                            Enable
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || setUserDisableSubmission.pending}
-                            onClick={() => setUserDisableByRowSelection(true)}
-                          >
-                            Disable
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || deleteUserSubmission.pending}
-                            onClick={() => setDeleteUserRowSelection(true)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                          <DropdownMenuArrow />
-                        </DropdownMenuContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuRoot>
-                  </div>
-                </TableHead>
+                <Crud.LastTableHead>
+                  <DropdownMenuRoot placement="bottom-end">
+                    <Crud.MoreDropdownMenuTrigger />
+                    <DropdownMenuPortal>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem>
+                          Create
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                          onClick={() => setDisableMultipleSubmit(false)}
+                        >
+                          Enable
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                          onClick={() => setDisableMultipleSubmit(true)}
+                        >
+                          Disable
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={rowSelection.selections().length == 0 || deleteSubmission.pending}
+                          onClick={() => setOpenDeleteMultipleConfirm(true)}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                        <DropdownMenuArrow />
+                      </DropdownMenuContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuRoot>
+                </Crud.LastTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               <For each={data()?.items}>
                 {(item, index) => {
                   const onClick = () => navigate(`./${item.id}`)
-                  const toggleUserDisable = () => setUserDisable({ items: [{ id: item.id, disable: !item.disabled }] })
-                  const toggleUserAdmin = () => setUserAdmin({ id: item.id, admin: !item.admin })
+                  const toggleDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
+                  const toggleAdmin = () => setAdminAction({ id: item.id, admin: !item.admin })
 
                   return (
                     <TableRow>
@@ -273,9 +256,7 @@ export function AdminUsers() {
                           </TooltipRoot>
                         </Show>
                         <DropdownMenuRoot placement="bottom-end">
-                          <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                            <RiSystemMore2Line class="h-5 w-5" />
-                          </DropdownMenuTrigger>
+                          <Crud.MoreDropdownMenuTrigger />
                           <DropdownMenuPortal>
                             <DropdownMenuContent>
                               <DropdownMenuItem>
@@ -285,22 +266,22 @@ export function AdminUsers() {
                                 Reset password
                               </DropdownMenuItem>
                               <Show when={item.id != BigInt(session()?.user_id || 0)}>
-                                <DropdownMenuItem disabled={setUserDisableSubmission.pending} onSelect={toggleUserDisable}>
+                                <DropdownMenuItem disabled={setDisableSubmission.pending} onSelect={toggleDisable}>
                                   <Show when={item.disabled} fallback={<>Disable</>}>
                                     Enable
                                   </Show>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  disabled={setUserAdminSubmission.pending}
-                                  onClick={toggleUserAdmin}
+                                  disabled={setAdminSubmission.pending}
+                                  onClick={toggleAdmin}
                                 >
                                   <Show when={!item.admin} fallback={<>Demote</>}>
                                     Promote
                                   </Show>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  disabled={deleteUserSubmission.pending}
-                                  onClick={() => setDeleteUserSelection(item)}
+                                  disabled={deleteSubmission.pending}
+                                  onClick={() => setOpenDeleteConfirm(item)}
                                 >
                                   Delete
                                 </DropdownMenuItem>

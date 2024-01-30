@@ -2,7 +2,7 @@ import { action, createAsync, revalidate, useAction, useNavigate, useSearchParam
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, } from "~/ui/DropdownMenu";
 import { AdminGroupsPageSearchParams, getAdminGroupsPage } from "./Groups.data";
-import { ErrorBoundary, For, Show, Suspense, batch, createResource, createSignal } from "solid-js";
+import { ErrorBoundary, For, Show, Suspense, createResource, createSignal } from "solid-js";
 import { RiSystemLockLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
@@ -23,12 +23,12 @@ import { LayoutNormal } from "~/ui/Layout";
 import { SetGroupDisableReq } from "~/twirp/rpc";
 import { Crud } from "~/components/Crud";
 
-const actionDeleteGroup = action((ids: bigint[]) => useClient()
+const actionDelete = action((ids: bigint[]) => useClient()
   .admin.deleteGroup({ ids })
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(catchAsToast))
 
-const actionSetGroupDisable = action((input: SetGroupDisableReq) => useClient()
+const actionSetDisable = action((input: SetGroupDisableReq) => useClient()
   .admin.setGroupDisable(input)
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(catchAsToast))
@@ -59,8 +59,8 @@ export function AdminGroups() {
   const [openUpdateForm, setOpenUpdateForm] = createSignal<bigint>(BigInt(0))
 
   // Delete
-  const deleteGroupSubmission = useSubmission(actionDeleteGroup)
-  const deleteGroupAction = useAction(actionDeleteGroup)
+  const deleteGroupSubmission = useSubmission(actionDelete)
+  const deleteGroupAction = useAction(actionDelete)
   // Single
   const [openDeleteConfirm, setOpenDeleteConfirm] = createSignal<{ name: string, id: bigint } | undefined>()
   const deleteSubmit = () => deleteGroupAction([openDeleteConfirm()!.id])
@@ -70,9 +70,9 @@ export function AdminGroups() {
   const deleteMultipleSubmit = () => deleteGroupAction(rowSelection.selections())
     .then(() => setDeleteMultipleConfirm(false))
 
-  // Disable/Enable
-  const setDisableSubmission = useSubmission(actionSetGroupDisable)
-  const setDisableAction = useAction(actionSetGroupDisable)
+  // Disable
+  const setDisableSubmission = useSubmission(actionSetDisable)
+  const setDisableAction = useAction(actionSetDisable)
   const setDisableMultipleSubmit = (disable: boolean) => setDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
     .then(() => rowSelection.setAll(false))
 
@@ -86,7 +86,7 @@ export function AdminGroups() {
               <DialogTitle>Create group</DialogTitle>
             </DialogHeader>
             <DialogContent>
-              <CreateGroupForm setOpen={setOpenCreateForm} />
+              <CreateForm setOpen={setOpenCreateForm} />
             </DialogContent>
           </DialogModal>
         </DialogPortal>
@@ -100,7 +100,7 @@ export function AdminGroups() {
               <DialogTitle>Update group</DialogTitle>
             </DialogHeader>
             <DialogContent>
-              <UpdateGroupForm setOpen={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
+              <UpdateForm setOpen={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
             </DialogContent>
           </DialogModal>
         </DialogPortal>
@@ -148,7 +148,7 @@ export function AdminGroups() {
       <div class="text-xl">Groups</div>
       <Seperator />
 
-      <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>
           <div class="flex justify-between gap-2">
             <Crud.PerPageSelect
@@ -305,26 +305,29 @@ export function AdminGroups() {
     </LayoutNormal>)
 }
 
-type CreateGroupForm = {
+type CreateForm = {
   name: string
   description: string
 }
 
-const actionCreateGroupForm = action((form: CreateGroupForm) => useClient()
-  .admin.createGroup(form)
+const actionCreateForm = action((data: CreateForm) => useClient()
+  .admin.createGroup(data)
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError))
 
-function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
+function CreateForm(props: { setOpen: (value: boolean) => void }) {
   const [addMore, setAddMore] = createSignal(false)
 
-  const [createGroupForm, { Field, Form }] = createForm<CreateGroupForm>({ initialValues: { name: "", description: "" } });
-  const createGroupFormAction = useAction(actionCreateGroupForm)
-  const submit = (form: CreateGroupForm) => createGroupFormAction(form)
-    .then(() => batch(() => {
-      props.setOpen(addMore())
-      reset(createGroupForm)
-    }))
+  const [form, { Field, Form }] = createForm<CreateForm>({ initialValues: { name: "", description: "" } });
+  const action = useAction(actionCreateForm)
+  const submit = async (data: CreateForm) => {
+    await action(data)
+    if (addMore()) {
+      reset(form)
+    } else {
+      props.setOpen(false)
+    }
+  }
 
   return (
     <Form class="flex flex-col gap-4" onSubmit={submit}>
@@ -359,12 +362,12 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
           </FieldRoot>
         )}
       </Field>
-      <Button type="submit" disabled={createGroupForm.submitting}>
-        <Show when={!createGroupForm.submitting} fallback={<>Creating group</>}>
+      <Button type="submit" disabled={form.submitting}>
+        <Show when={!form.submitting} fallback={<>Creating group</>}>
           Create group
         </Show>
       </Button>
-      <FormMessage form={createGroupForm} />
+      <FormMessage form={form} />
       <CheckboxRoot checked={addMore()} onChange={setAddMore}>
         <CheckboxInput />
         <CheckboxControl />
@@ -374,25 +377,27 @@ function CreateGroupForm(props: { setOpen: (value: boolean) => void }) {
   )
 }
 
-type UpdateGroupForm = {
+type UpdateForm = {
   id: any
   name: string
   description: string
 }
 
-const actionUpdateGroupForm = action((model: UpdateGroupForm) => useClient()
-  .admin.updateGroup(model)
+const actionUpdateForm = action((data: UpdateForm) => useClient()
+  .admin.updateGroup(data)
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError))
 
-function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
-  const [updateGroupForm, { Field, Form }] = createForm<UpdateGroupForm>();
-  const updateGroupFormAction = useAction(actionUpdateGroupForm)
-  const submit = (form: UpdateGroupForm) => updateGroupFormAction(form)
+function UpdateForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
+  const [form, { Field, Form }] = createForm<UpdateForm>();
+  const action = useAction(actionUpdateForm)
+  const submit = (data: UpdateForm) => action(data)
     .then(() => props.setOpen(false))
 
-  const [data] = createResource(() => props.id != BigInt(0), () => useClient().admin.getGroup({ id: props.id }).then((data) => data.response))
-  syncForm(updateGroupForm, data)
+  const [data] = createResource(() => props.id != BigInt(0),
+    () => useClient().admin.getGroup({ id: props.id })
+      .then((data) => data.response satisfies UpdateForm))
+  syncForm(form, data)
 
   return (
     <ErrorBoundary fallback={(e) => <PageError error={e} />}>
@@ -433,12 +438,12 @@ function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint 
             </FieldRoot>
           )}
         </Field>
-        <Button type="submit" disabled={updateGroupForm.submitting}>
-          <Show when={data.loading || !updateGroupForm.submitting} fallback={<>Updating group</>}>
+        <Button type="submit" disabled={form.submitting}>
+          <Show when={data.loading || !form.submitting} fallback={<>Updating group</>}>
             Update group
           </Show>
         </Button>
-        <FormMessage form={updateGroupForm} />
+        <FormMessage form={form} />
       </Form>
     </ErrorBoundary>
   )

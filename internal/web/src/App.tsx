@@ -23,8 +23,6 @@ import { AdminUsers } from "./pages/admin/Users";
 import loadAdminUsers from "./pages/admin/Users.data";
 import { AdminDevices } from "./pages/admin/Devices";
 import loadAdminDevices from "./pages/admin/Devices.data";
-import { AdminDevicesCreate, AdminDevicesIDUpdate } from "./pages/admin/DeviceForms";
-import { loadAdminDevicesCreate, loadAdminDevicesIDUpdate } from "./pages/admin/DeviceForms.data";
 import { AdminDevicesID } from "./pages/admin/DevicesID";
 import loadAdminDevicesID from "./pages/admin/DevicesID.data";
 
@@ -56,8 +54,6 @@ function App() {
             <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />
             <Route path="/admin/groups/:id" component={AdminGroupsID} load={loadAdminGroupsID} />
             <Route path="/admin/devices" component={AdminDevices} load={loadAdminDevices} />
-            <Route path="/admin/devices/create" component={AdminDevicesCreate} load={loadAdminDevicesCreate} />
-            <Route path="/admin/devices/:id/update" component={AdminDevicesIDUpdate} load={loadAdminDevicesIDUpdate} />
             <Route path="/admin/devices/:id" component={AdminDevicesID} load={loadAdminDevicesID} />
           </Show>
           <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />
