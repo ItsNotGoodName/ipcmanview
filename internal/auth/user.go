@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func userFromDB(v repo.User) user {
+func userFrom(v repo.User) user {
 	return user{
 		Email:    v.Email,
 		Username: v.Username,
@@ -71,7 +71,7 @@ func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, e
 }
 
 func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, newPassword string) error {
-	model := userFromDB(dbModel)
+	model := userFrom(dbModel)
 
 	// Mutate
 	model.Password = newPassword
@@ -94,7 +94,7 @@ func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, newP
 }
 
 func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newUsername string) error {
-	model := userFromDB(dbModel)
+	model := userFrom(dbModel)
 
 	// Mutate
 	model.Username = newUsername

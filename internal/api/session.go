@@ -5,8 +5,11 @@ import (
 	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	echo "github.com/labstack/echo/v4"
 )
+
+const cookieKey = "session"
 
 type SesionResp struct {
 	Admin    bool   `json:"admin"`
@@ -64,9 +67,8 @@ func (s *Server) SessionPOST(c echo.Context) error {
 	}
 
 	previousSession := ""
-	if cookie, err := c.Cookie(auth.CookieKey); err == nil {
+	if cookie, err := c.Cookie(cookieKey); err == nil {
 		previousSession = cookie.Value
-	} else {
 	}
 
 	// Save session and delete previous session if it exists
@@ -108,7 +110,7 @@ func (s *Server) SessionDELETE(c echo.Context) error {
 
 	// Delete cookie
 	c.SetCookie(&http.Cookie{
-		Name:     auth.CookieKey,
+		Name:     cookieKey,
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
@@ -116,4 +118,47 @@ func (s *Server) SessionDELETE(c echo.Context) error {
 	})
 
 	return c.JSON(http.StatusOK, nil)
+}
+
+func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			ctx := c.Request().Context()
+
+			cookie, err := c.Cookie(cookieKey)
+			if err != nil {
+				return next(c)
+			}
+
+			session, err := db.AuthGetUserBySession(ctx, cookie.Value)
+			if err != nil {
+				if repo.IsNotFound(err) {
+					return next(c)
+				}
+				return err
+			}
+			if auth.SessionExpired(session.ExpiredAt.Time) {
+				return next(c)
+			}
+
+			if err := auth.TouchSession(ctx, db, auth.TouchSessionParams{
+				Session:    session.Session,
+				LastUsedAt: session.LastUsedAt.Time,
+				LastIP:     session.LastIp,
+				IP:         c.RealIP(),
+			}); err != nil {
+				return err
+			}
+
+			c.SetRequest(c.Request().WithContext(auth.WithSession(c.Request().Context(), auth.Session{
+				Admin:     session.Admin,
+				Disabled:  session.UsersDisabledAt.Valid,
+				Session:   session.Session,
+				SessionID: session.ID,
+				UserID:    session.UserID,
+				Username:  session.Username.String,
+			})))
+			return next(c)
+		}
+	}
 }

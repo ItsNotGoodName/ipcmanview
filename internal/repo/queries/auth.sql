@@ -30,7 +30,8 @@ SELECT
   user_sessions.last_ip,
   user_sessions.last_used_at,
   user_sessions.expired_at,
-  users.disabled_at AS 'users_disabled_at'
+  users.disabled_at AS 'users_disabled_at',
+  user_sessions.session
 FROM
   user_sessions
   LEFT JOIN users ON users.id = user_sessions.user_id

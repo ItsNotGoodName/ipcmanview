@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
-	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
@@ -120,7 +119,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// HTTP middleware
 	httpRouter.Use(web.FS(api.Route, rpcserver.Route))
-	httpRouter.Use(auth.SessionMiddleware(db))
+	httpRouter.Use(api.SessionMiddleware(db))
 
 	// API
 	api.

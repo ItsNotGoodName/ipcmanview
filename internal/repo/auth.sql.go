@@ -255,7 +255,8 @@ SELECT
   user_sessions.last_ip,
   user_sessions.last_used_at,
   user_sessions.expired_at,
-  users.disabled_at AS 'users_disabled_at'
+  users.disabled_at AS 'users_disabled_at',
+  user_sessions.session
 FROM
   user_sessions
   LEFT JOIN users ON users.id = user_sessions.user_id
@@ -273,6 +274,7 @@ type AuthGetUserBySessionRow struct {
 	LastUsedAt      types.Time
 	ExpiredAt       types.Time
 	UsersDisabledAt types.NullTime
+	Session         string
 }
 
 func (q *Queries) AuthGetUserBySession(ctx context.Context, session string) (AuthGetUserBySessionRow, error) {
@@ -287,6 +289,7 @@ func (q *Queries) AuthGetUserBySession(ctx context.Context, session string) (Aut
 		&i.LastUsedAt,
 		&i.ExpiredAt,
 		&i.UsersDisabledAt,
+		&i.Session,
 	)
 	return i, err
 }

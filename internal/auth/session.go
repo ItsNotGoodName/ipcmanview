@@ -9,8 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 )
 
 type Session struct {
@@ -92,65 +90,48 @@ func DeleteUserSession(ctx context.Context, db repo.DB, session string) error {
 	return db.AuthDeleteUserSessionBySession(ctx, session)
 }
 
-const CookieKey = "session"
+var touchSessionLock = core.NewLockStore[string]()
+var touchSessionThrottle = time.Minute
 
-func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
-	sessionUpdateLock := core.NewLockStore[string]()
-	sessionUpdateThrottle := time.Minute
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			ctx := c.Request().Context()
-
-			cookie, err := c.Cookie(CookieKey)
-			if err != nil {
-				return next(c)
-			}
-
-			// Get valid user
-			userSession, err := db.AuthGetUserBySession(ctx, cookie.Value)
-			if err != nil {
-				if repo.IsNotFound(err) {
-					return next(c)
-				}
-				return err
-			}
-			if userSession.ExpiredAt.Time.Before(time.Now()) {
-				return next(c)
-			}
-
-			// Update last used at and last ip
-			realIP := c.RealIP()
-			now := time.Now()
-			if userSession.LastIp != realIP || userSession.LastUsedAt.Before(now.Add(-sessionUpdateThrottle)) {
-				unlock, err := sessionUpdateLock.TryLock(cookie.Value)
-				if err == nil {
-					err := db.AuthUpdateUserSession(ctx, repo.AuthUpdateUserSessionParams{
-						LastIp:     realIP,
-						LastUsedAt: types.NewTime(now),
-						Session:    cookie.Value,
-					})
-					if err != nil {
-						log.Err(err).Send()
-					}
-					unlock()
-				}
-			}
-
-			c.SetRequest(c.Request().WithContext(context.WithValue(ctx, sessionCtxKey, Session{
-				Admin:     userSession.Admin,
-				Disabled:  userSession.UsersDisabledAt.Valid,
-				Session:   cookie.Value,
-				SessionID: userSession.ID,
-				UserID:    userSession.UserID,
-				Username:  userSession.Username.String,
-			})))
-			return next(c)
-		}
-	}
+type TouchSessionParams struct {
+	Session    string
+	LastUsedAt time.Time
+	LastIP     string
+	IP         string
 }
 
-// UseSession gets user from context.
-// It fails when session does not exist or is invalid.
+func TouchSession(ctx context.Context, db repo.DB, arg TouchSessionParams) error {
+	now := time.Now()
+	if arg.LastIP == arg.IP || arg.LastUsedAt.After(now.Add(-touchSessionThrottle)) {
+		return nil
+	}
+
+	unlock, err := touchSessionLock.TryLock(arg.Session)
+	if err != nil {
+		return nil
+	}
+	defer unlock()
+
+	err = db.AuthUpdateUserSession(ctx, repo.AuthUpdateUserSessionParams{
+		LastIp:     arg.IP,
+		LastUsedAt: types.NewTime(now),
+		Session:    arg.Session,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SessionExpired(expiredAt time.Time) bool {
+	return expiredAt.Before(time.Now())
+}
+
+func WithSession(ctx context.Context, session Session) context.Context {
+	return context.WithValue(ctx, sessionCtxKey, session)
+}
+
 func UseSession(ctx context.Context) (Session, bool) {
 	user, ok := ctx.Value(sessionCtxKey).(Session)
 	return user, ok
