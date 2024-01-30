@@ -357,9 +357,8 @@ message GetDeviceResp {
   string name = 2;
   string url = 3;
   string username = 4;
-  string password = 5;
-  string location = 6;
-  repeated string features = 7;
+  string location = 5;
+  repeated string features = 6;
 }
 
 // Update
@@ -368,7 +367,7 @@ message UpdateDeviceReq {
   string name = 2;
   string url = 3;
   string username = 4;
-  string password = 5;
+  string new_password = 5;
   string location = 6;
   repeated string features = 7;
 }

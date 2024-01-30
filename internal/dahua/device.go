@@ -29,13 +29,14 @@ func NewDevice(v repo.DahuaDevice) Device {
 }
 
 type Device struct {
-	ID       int64
-	Name     string `validate:"required,lte=64"`
-	URL      *url.URL
-	Username string
-	Password string
-	Location *time.Location
-	Feature  models.DahuaFeature
+	ID          int64
+	Name        string `validate:"required,lte=64"`
+	URL         *url.URL
+	Username    string
+	Password    string
+	NewPassword string
+	Location    *time.Location
+	Feature     models.DahuaFeature
 }
 
 func (d *Device) normalize(create bool) {
@@ -176,12 +177,17 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) e
 		return err
 	}
 
+	password := arg.Password
+	if arg.NewPassword != "" {
+		password = arg.NewPassword
+	}
+
 	_, err = db.DahuaUpdateDevice(ctx, repo.DahuaUpdateDeviceParams{
 		Name:      arg.Name,
 		Url:       types.NewURL(arg.URL),
 		Ip:        ip,
 		Username:  arg.Username,
-		Password:  arg.Password,
+		Password:  password,
 		Location:  types.NewLocation(arg.Location),
 		Feature:   arg.Feature,
 		UpdatedAt: types.NewTime(time.Now()),

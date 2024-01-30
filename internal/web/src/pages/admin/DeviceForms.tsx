@@ -189,7 +189,15 @@ export function AdminDevicesCreate() {
 
 type UpdateDeviceForm = {
   id: any
-} & CreateDeviceForm
+  name: string
+  url: string
+  username: string
+  newPassword: string
+  location: string
+  features: {
+    array: string[]
+  }
+}
 
 const actionUpdateDevice = action((form: UpdateDeviceForm) => useClient()
   .admin.updateDevice({ ...form, features: form.features.array })
@@ -203,7 +211,7 @@ export function AdminDevicesIDUpdate(props: any) {
   const submit = (form: UpdateDeviceForm) => updateDeviceAction(form)
 
   const [data] = createResource(() => useClient().admin.getDevice({ id: props.params.id })
-    .then(({ response }) => ({ ...response, features: { array: response.features || [] } })))
+    .then(({ response }) => ({ ...response, features: { array: response.features || [] }, newPassword: "" } as UpdateDeviceForm)))
   syncForm(updateDeviceForm, data)
 
   const locations = createAsync(getListLocations)
@@ -267,15 +275,15 @@ export function AdminDevicesIDUpdate(props: any) {
               </FieldRoot>
             )}
           </Field>
-          <Field name="password">
+          <Field name="newPassword">
             {(field, props) => (
               <FieldRoot class="gap-1.5">
-                <FieldLabel field={field}>Password</FieldLabel>
+                <FieldLabel field={field}>New password</FieldLabel>
                 <FieldControl field={field}>
                   <Input
                     {...props}
                     autocomplete="off"
-                    placeholder="Password"
+                    placeholder="New password"
                     type="password"
                     value={field.value}
                     disabled={data.loading}

@@ -139,7 +139,6 @@ func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetD
 		Name:     v.Name,
 		Url:      v.Url.String(),
 		Username: v.Username,
-		Password: v.Password,
 		Location: v.Location.String(),
 		Features: dahua.FeatureToStrings(v.Feature),
 	}, nil
@@ -186,12 +185,12 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 	if err != nil {
 		return nil, check(err)
 	}
-	device := dahua.NewDevice(dbDevice.DahuaDevice)
 
+	device := dahua.NewDevice(dbDevice.DahuaDevice)
 	device.Name = req.Name
 	device.URL = urL
 	device.Username = req.Username
-	device.Password = req.Password
+	device.NewPassword = req.NewPassword
 	device.Location = loc
 	device.Feature = dahua.FeatureFromStrings(req.Features)
 
@@ -331,7 +330,6 @@ func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*em
 	return &emptypb.Empty{}, nil
 }
 
-// ResetUserPassword implements rpc.Admin.
 func (*Admin) ResetUserPassword(context.Context, *rpc.ResetUserPasswordReq) (*emptypb.Empty, error) {
 	return nil, errNotImplemented
 }

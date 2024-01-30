@@ -819,15 +819,11 @@ export interface GetDeviceResp {
      */
     username: string;
     /**
-     * @generated from protobuf field: string password = 5;
-     */
-    password: string;
-    /**
-     * @generated from protobuf field: string location = 6;
+     * @generated from protobuf field: string location = 5;
      */
     location: string;
     /**
-     * @generated from protobuf field: repeated string features = 7;
+     * @generated from protobuf field: repeated string features = 6;
      */
     features: string[];
 }
@@ -854,9 +850,9 @@ export interface UpdateDeviceReq {
      */
     username: string;
     /**
-     * @generated from protobuf field: string password = 5;
+     * @generated from protobuf field: string new_password = 5;
      */
-    password: string;
+    newPassword: string;
     /**
      * @generated from protobuf field: string location = 6;
      */
@@ -1629,9 +1625,8 @@ class GetDeviceResp$Type extends MessageType<GetDeviceResp> {
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+            { no: 5, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1647,7 +1642,7 @@ class UpdateDeviceReq$Type extends MessageType<UpdateDeviceReq> {
             { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "new_password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 7, name: "features", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
