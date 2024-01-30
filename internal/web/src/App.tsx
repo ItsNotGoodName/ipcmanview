@@ -8,7 +8,7 @@ import { NotFound } from './pages/404'
 import { Home } from "./pages/Home";
 import loadHome from "./pages/Home.data";
 import { View } from "./pages/View";
-import { SignIn, Signup, Forgot } from "./pages/Landing";
+import { SignIn, Signup, Forgot } from "./pages/Public";
 import { Profile } from "./pages/Profile";
 import loadProfile from "./pages/Profile.data";
 import { Root } from "./Root";
@@ -23,8 +23,8 @@ import { AdminUsers } from "./pages/admin/Users";
 import loadAdminUsers from "./pages/admin/Users.data";
 import { AdminDevices } from "./pages/admin/Devices";
 import loadAdminDevices from "./pages/admin/Devices.data";
-import { AdminDevicesID } from "./pages/admin/DevicesID";
 import loadAdminDevicesID from "./pages/admin/DevicesID.data";
+import { AdminDevicesID } from "./pages/admin/DevicesID";
 
 const Debug = lazy(() => import("./pages/debug"));
 

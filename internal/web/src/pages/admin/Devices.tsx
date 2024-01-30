@@ -151,7 +151,7 @@ export function AdminDevices() {
       <div class="text-xl">Devices</div>
       <Seperator />
 
-      <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>
           <div class="flex justify-between gap-2">
             <Crud.PerPageSelect
@@ -349,7 +349,7 @@ function CreateForm(props: { close: () => void }) {
   const deviceFeatures = createAsync(getListDeviceFeatures)
 
   return (
-    <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+    <ErrorBoundary fallback={(e) => <PageError error={e} />}>
       <Suspense fallback={<Skeleton class="h-32" />}>
         <Form class="flex flex-col gap-4" onSubmit={submit}>
           <Field name="name">
@@ -513,7 +513,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
   const deviceFeatures = createAsync(getListDeviceFeatures)
 
   return (
-    <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+    <ErrorBoundary fallback={(e) => <PageError error={e} />}>
       <Suspense fallback={<Skeleton class="h-32" />}>
         <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
           <Field name="id" type="number">

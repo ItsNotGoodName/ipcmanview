@@ -20,3 +20,5 @@ export const getListDeviceFeatures = cache(async () => {
   features = await useClient().admin.listDeviceFeatures({}).then(res => res.response.features)
   return features
 }, "listDeviceFeatures")
+
+export const getGroup = cache((id: bigint) => useClient().admin.getGroup({ id: id }).then((req) => req.response), "getGroup")

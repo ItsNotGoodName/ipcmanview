@@ -285,11 +285,11 @@ func (s *Server) DahuaDevicesIDFiles(c echo.Context) error {
 		Start string
 		End   string
 	}
-	if err := DecodeQuery(c, &form); err != nil {
+	if err := c.Bind(&form); err != nil {
 		return err
 	}
 
-	timeRange, err := UseTimeRange(form.Start, form.End)
+	timeRange, err := QueryTimeRange(form.Start, form.End)
 	if err != nil {
 		return err
 	}

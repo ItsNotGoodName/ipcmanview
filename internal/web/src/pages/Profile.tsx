@@ -32,23 +32,23 @@ const actionRevokeMySession = action((sessionId: bigint) => useClient()
 export function Profile() {
   const data = createAsync(getProfilePage)
 
+  const [revokeAllMySessionsConfirm, setRevokeAllMySessionsConfirm] = createSignal(false)
   const revokeAllMySessionsSubmission = useSubmission(actionRevokeAllMySessions)
-  const [revokeAllMySessionsDialog, setRevokeAllMySessionsDialog] = createSignal(false)
   const revokeAllMySessionsAction = useAction(actionRevokeAllMySessions)
   const revokeAllMySessions = () => revokeAllMySessionsAction()
-    .then(() => setRevokeAllMySessionsDialog(false))
+    .then(() => setRevokeAllMySessionsConfirm(false))
 
-  const [revokeMySessionsDialog, setRevokeMySessionsDialog] = createSignal(BigInt(0))
+  const [revokeMySessionsConfirm, setRevokeMySessionsConfirm] = createSignal(BigInt(0))
   const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
   const revokeMySessionAction = useAction(actionRevokeMySession)
-  const revokeMySession = () => revokeMySessionAction(revokeMySessionsDialog()).
-    then(() => setRevokeMySessionsDialog(BigInt(0)))
+  const revokeMySession = () => revokeMySessionAction(revokeMySessionsConfirm()).
+    then(() => setRevokeMySessionsConfirm(BigInt(0)))
 
   return (
     <LayoutNormal class="max-w-4xl">
-      <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
 
-        <AlertDialogRoot open={revokeAllMySessionsDialog()} onOpenChange={setRevokeAllMySessionsDialog}>
+        <AlertDialogRoot open={revokeAllMySessionsConfirm()} onOpenChange={setRevokeAllMySessionsConfirm}>
           <AlertDialogModal>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure you wish to revoke all sessions?</AlertDialogTitle>
@@ -62,7 +62,7 @@ export function Profile() {
           </AlertDialogModal>
         </AlertDialogRoot>
 
-        <AlertDialogRoot open={revokeMySessionsDialog() != BigInt(0)} onOpenChange={() => setRevokeMySessionsDialog(BigInt(0))}>
+        <AlertDialogRoot open={revokeMySessionsConfirm() != BigInt(0)} onOpenChange={() => setRevokeMySessionsConfirm(BigInt(0))}>
           <AlertDialogModal>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure you wish to revoke this session?</AlertDialogTitle>
@@ -136,7 +136,7 @@ export function Profile() {
         </div>
         <Suspense fallback={<Skeleton class="h-32" />}>
           <div class="flex">
-            <Button variant="destructive" onClick={() => setRevokeAllMySessionsDialog(true)}>
+            <Button variant="destructive" onClick={() => setRevokeAllMySessionsConfirm(true)}>
               Revoke all sessions
             </Button>
           </div>
@@ -169,7 +169,7 @@ export function Profile() {
                     <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
                     <TableCell class="py-0">
                       <Show when={!session.current} fallback={<Badge>Current</Badge>}>
-                        <Button variant="destructive" size="sm" onClick={() => setRevokeMySessionsDialog(session.id)}>
+                        <Button variant="destructive" size="sm" onClick={() => setRevokeMySessionsConfirm(session.id)}>
                           Revoke
                         </Button>
                       </Show>

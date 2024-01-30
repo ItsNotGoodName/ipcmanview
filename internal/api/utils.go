@@ -3,9 +3,11 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/labstack/echo/v4"
@@ -18,6 +20,24 @@ func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Clien
 	if err != nil {
 		return dahua.Client{}, err
 	}
+
+	session, ok := auth.UseSession(ctx)
+	if !ok {
+		return dahua.Client{}, echo.ErrUnauthorized
+	}
+
+	level, err := db.DahuaGetDevicePermissionLevel(ctx, repo.DahuaGetDevicePermissionLevelParams{
+		DeviceID: id,
+		UserID:   session.UserID,
+	})
+	if err != nil {
+		if repo.IsNotFound(err) {
+			return dahua.Client{}, echo.ErrNotFound.WithInternal(err)
+		}
+		return dahua.Client{}, err
+	}
+
+	fmt.Println(level)
 
 	conn, err := db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{id}})
 	if err != nil {

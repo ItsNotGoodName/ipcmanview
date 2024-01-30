@@ -26,4 +26,3 @@ export default function({ params }: PageProps<AdminGroupsPageSearchParams>) {
   })
 }
 
-export const getGroup = cache((id: bigint) => useClient().admin.getGroup({ id: id }).then((req) => req.response), "getGroup")

@@ -9,7 +9,7 @@ export function AdminGroupsID(props: any) {
 
   return (
     <LayoutNormal>
-      <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <pre>
           {JSON.stringify(data(), null, 2)}
         </pre>

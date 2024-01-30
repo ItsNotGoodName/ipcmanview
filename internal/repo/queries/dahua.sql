@@ -72,6 +72,34 @@ ORDER BY
   -- Get the highest permission level
   p.level DESC;
 
+-- name: DahuaGetDevicePermissionLevel :one
+SELECT
+  coalesce(p.level, 2)
+FROM
+  dahua_devices
+  LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
+WHERE
+  dahua_devices.id = sqlc.arg('device_id') AND
+  -- Allow if user is admin
+  EXISTS (SELECT user_id FROM admins WHERE admins.user_id = sqlc.arg ('user_id'))
+  -- Allow if user owns the permission
+  OR p.user_id = sqlc.arg ('user_id')
+  -- Allow if user is a part of the group the owns the permission
+  OR p.group_id IN (
+    SELECT
+      group_id
+    FROM
+      group_users
+    WHERE
+      group_users.user_id = sqlc.arg ('user_id')
+  )
+GROUP BY
+  -- Remove duplicate devices with different permissions
+  dahua_devices.id
+ORDER BY
+  -- Get the highest permission level
+  p.level DESC;
+
 -- name: DahuaDeleteDevice :exec
 DELETE FROM dahua_devices
 WHERE

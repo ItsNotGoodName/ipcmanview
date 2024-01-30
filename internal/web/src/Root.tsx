@@ -185,7 +185,7 @@ export function Root(props: ParentProps) {
   const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
 
   return (
-    <ErrorBoundary fallback={(e: Error) =>
+    <ErrorBoundary fallback={(e) =>
       <div class="p-4">
         <PageError error={e} />
       </div>

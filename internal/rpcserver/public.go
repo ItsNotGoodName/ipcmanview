@@ -2,9 +2,11 @@ package rpcserver
 
 import (
 	"context"
+	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"github.com/go-playground/validator/v10"
 )
@@ -20,7 +22,7 @@ type Public struct {
 }
 
 func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpResp, error) {
-	_, err := auth.CreateUser(ctx, p.db, auth.User{
+	id, err := auth.CreateUser(ctx, p.db, auth.User{
 		Email:    req.Email,
 		Username: req.Username,
 		Password: req.Password,
@@ -43,6 +45,9 @@ func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpRes
 
 		return nil, check(err)
 	}
+
+	// TODO: remove this
+	p.db.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{UserID: id, CreatedAt: types.NewTime(time.Now())})
 
 	return &rpc.SignUpResp{}, nil
 }

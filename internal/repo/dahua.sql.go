@@ -663,6 +663,47 @@ func (q *Queries) DahuaGetDeviceName(ctx context.Context, id int64) (string, err
 	return name, err
 }
 
+const dahuaGetDevicePermissionLevel = `-- name: DahuaGetDevicePermissionLevel :one
+SELECT
+  coalesce(p.level, 2)
+FROM
+  dahua_devices
+  LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
+WHERE
+  dahua_devices.id = ?1 AND
+  -- Allow if user is admin
+  EXISTS (SELECT user_id FROM admins WHERE admins.user_id = ?2)
+  -- Allow if user owns the permission
+  OR p.user_id = ?2
+  -- Allow if user is a part of the group the owns the permission
+  OR p.group_id IN (
+    SELECT
+      group_id
+    FROM
+      group_users
+    WHERE
+      group_users.user_id = ?2
+  )
+GROUP BY
+  -- Remove duplicate devices with different permissions
+  dahua_devices.id
+ORDER BY
+  -- Get the highest permission level
+  p.level DESC
+`
+
+type DahuaGetDevicePermissionLevelParams struct {
+	DeviceID int64
+	UserID   int64
+}
+
+func (q *Queries) DahuaGetDevicePermissionLevel(ctx context.Context, arg DahuaGetDevicePermissionLevelParams) (models.DahuaPermissionLevel, error) {
+	row := q.db.QueryRowContext(ctx, dahuaGetDevicePermissionLevel, arg.DeviceID, arg.UserID)
+	var level models.DahuaPermissionLevel
+	err := row.Scan(&level)
+	return level, err
+}
+
 const dahuaGetEventData = `-- name: DahuaGetEventData :one
 SELECT
   data

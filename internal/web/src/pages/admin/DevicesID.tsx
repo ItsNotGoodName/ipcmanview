@@ -1,15 +1,15 @@
 import { createAsync } from "@solidjs/router";
-import { getAdminGroupsIDPage } from "./GroupsID.data";
 import { ErrorBoundary } from "solid-js";
 import { PageError } from "~/ui/Page";
 import { LayoutNormal } from "~/ui/Layout";
+import { getAdminDevicesIDPage } from "./DevicesID.data";
 
 export function AdminDevicesID(props: any) {
-  const data = createAsync(() => getAdminGroupsIDPage(BigInt(props.params.id || 0)))
+  const data = createAsync(() => getAdminDevicesIDPage(BigInt(props.params.id || 0)))
 
   return (
     <LayoutNormal>
-      <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
+      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <pre>
           {JSON.stringify(data(), null, 2)}
         </pre>
