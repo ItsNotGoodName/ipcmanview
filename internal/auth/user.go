@@ -65,30 +65,31 @@ func CreateUser(ctx context.Context, db repo.DB, arg User) (int64, error) {
 	})
 }
 
-func UpdateUser(ctx context.Context, db repo.DB, arg User) (int64, error) {
+func UpdateUser(ctx context.Context, db repo.DB, arg User) error {
 	arg.normalize()
 
 	if arg.Password == "" {
 		if err := validate.Validate.StructExcept(arg, "Password"); err != nil {
-			return 0, err
+			return err
 		}
 	} else {
 		if err := validate.Validate.Struct(arg); err != nil {
-			return 0, err
+			return err
 		}
 
 		if err := arg.hashPassword(); err != nil {
-			return 0, err
+			return err
 		}
 	}
 
-	return db.AuthUpdateUser(ctx, repo.AuthUpdateUserParams{
+	_, err := db.AuthUpdateUser(ctx, repo.AuthUpdateUserParams{
 		Email:     arg.Email,
 		Username:  arg.Username,
 		Password:  arg.PasswordHash,
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        arg.ID,
 	})
+	return err
 }
 
 func UpdateUserDisable(ctx context.Context, db repo.DB, userID int64, disable bool) error {

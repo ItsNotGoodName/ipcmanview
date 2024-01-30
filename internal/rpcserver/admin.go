@@ -330,8 +330,28 @@ func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*em
 	return &emptypb.Empty{}, nil
 }
 
-func (*Admin) ResetUserPassword(context.Context, *rpc.ResetUserPasswordReq) (*emptypb.Empty, error) {
-	return nil, errNotImplemented
+func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswordReq) (*emptypb.Empty, error) {
+	dbUser, err := a.db.AuthGetUser(ctx, req.Id)
+	if err != nil {
+		return nil, check(err)
+	}
+
+	user := auth.NewUser(dbUser)
+	user.Password = req.NewPassword
+
+	if err := auth.UpdateUser(ctx, a.db, user); err != nil {
+		msg := "Failed to update password."
+
+		if errs, ok := asValidationErrors(err); ok {
+			return nil, NewError(err, msg).Validation(errs, [][2]string{
+				{"newPassword", "Password"},
+			})
+		}
+
+		return nil, check(err)
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 // ---------- Group

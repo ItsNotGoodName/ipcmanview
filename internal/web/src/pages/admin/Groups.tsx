@@ -86,7 +86,7 @@ export function AdminGroups() {
               <DialogTitle>Create group</DialogTitle>
             </DialogHeader>
             <DialogContent>
-              <CreateForm setOpen={setOpenCreateForm} />
+              <CreateForm close={() => setOpenCreateForm(false)} />
             </DialogContent>
           </DialogModal>
         </DialogPortal>
@@ -100,7 +100,7 @@ export function AdminGroups() {
               <DialogTitle>Update group</DialogTitle>
             </DialogHeader>
             <DialogContent>
-              <UpdateForm setOpen={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
+              <UpdateForm close={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
             </DialogContent>
           </DialogModal>
         </DialogPortal>
@@ -315,7 +315,7 @@ const actionCreateForm = action((data: CreateForm) => useClient()
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError))
 
-function CreateForm(props: { setOpen: (value: boolean) => void }) {
+function CreateForm(props: { close: () => void }) {
   const [addMore, setAddMore] = createSignal(false)
 
   const [form, { Field, Form }] = createForm<CreateForm>({ initialValues: { name: "", description: "" } });
@@ -325,7 +325,7 @@ function CreateForm(props: { setOpen: (value: boolean) => void }) {
     if (addMore()) {
       reset(form)
     } else {
-      props.setOpen(false)
+      props.close()
     }
   }
 
@@ -388,11 +388,11 @@ const actionUpdateForm = action((data: UpdateForm) => useClient()
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError))
 
-function UpdateForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
+function UpdateForm(props: { close: () => void, id: bigint }) {
   const [form, { Field, Form }] = createForm<UpdateForm>();
   const action = useAction(actionUpdateForm)
   const submit = (data: UpdateForm) => action(data)
-    .then(() => props.setOpen(false))
+    .then(() => props.close())
 
   const [data] = createResource(() => props.id != BigInt(0),
     () => useClient().admin.getGroup({ id: props.id })

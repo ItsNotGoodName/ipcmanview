@@ -1,8 +1,8 @@
 import { CheckboxControl, CheckboxRoot } from "~/ui/Checkbox";
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission, } from "@solidjs/router";
-import { ErrorBoundary, For, Show, Suspense, createSignal, } from "solid-js";
+import { ErrorBoundary, For, Show, Suspense, createEffect, createSignal, } from "solid-js";
 import { RiDesignFocus2Line, RiSystemLockLine, RiUserFacesAdminLine, } from "solid-icons/ri";
-import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, throwAsFormError, } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { Skeleton } from "~/ui/Skeleton";
@@ -16,6 +16,11 @@ import { Crud } from "~/components/Crud";
 import { useClient } from "~/providers/client";
 import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
+import { DialogContent, DialogHeader, DialogModal, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
+import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
+import { Button } from "~/ui/Button";
+import { createForm, required, reset } from "@modular-forms/solid";
+import { Input } from "~/ui/Input";
 
 const actionDelete = action((ids: bigint[]) => useClient()
   .admin.deleteUser({ ids })
@@ -73,6 +78,9 @@ export function AdminUsers() {
   const setAdminSubmission = useSubmission(actionSetAdmin)
   const setAdminAction = useAction(actionSetAdmin)
 
+  // Reset password
+  const [openResetPasswordForm, setOpenResetPasswordForm] = createSignal<bigint>(BigInt(0))
+
   const session = createAsync(getSession)
 
   return (
@@ -116,6 +124,20 @@ export function AdminUsers() {
           </AlertDialogFooter>
         </AlertDialogModal>
       </AlertDialogRoot>
+
+      <DialogRoot open={openResetPasswordForm() != BigInt(0)} onOpenChange={() => setOpenResetPasswordForm(BigInt(0))}>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogModal>
+            <DialogHeader>
+              <DialogTitle>Reset password</DialogTitle>
+            </DialogHeader>
+            <DialogContent>
+              <ResetPasswordForm close={() => setOpenResetPasswordForm(BigInt(0))} id={openResetPasswordForm()} />
+            </DialogContent>
+          </DialogModal>
+        </DialogPortal>
+      </DialogRoot>
 
       <div class="text-xl">Users</div>
       <Seperator />
@@ -262,7 +284,7 @@ export function AdminUsers() {
                               <DropdownMenuItem>
                                 Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => setOpenResetPasswordForm(item.id)}>
                                 Reset password
                               </DropdownMenuItem>
                               <Show when={item.id != BigInt(session()?.user_id || 0)}>
@@ -306,3 +328,82 @@ export function AdminUsers() {
   )
 }
 
+
+type ResetPasswordForm = {
+  id: any
+  newPassword: string
+  confirmPassword: string
+}
+
+const actionUpdateForm = action((data: ResetPasswordForm) => useClient()
+  .admin.resetUserPassword(data).then()
+  .catch(throwAsFormError))
+
+function ResetPasswordForm(props: { close: () => void, id: bigint }) {
+  const [form, { Field, Form }] = createForm<ResetPasswordForm>({
+    validate: (form) => {
+      if (form.newPassword != form.confirmPassword) {
+        return {
+          confirmPassword: "Password does not match."
+        }
+      }
+      return {}
+    }
+  });
+  createEffect(() => {
+    const data = { id: props.id, newPassword: "", confirmPassword: "" } satisfies ResetPasswordForm
+    reset(form, { initialValues: data })
+  })
+  const action = useAction(actionUpdateForm)
+  const submit = (data: ResetPasswordForm) => action(data)
+    .then(() => props.close())
+
+  return (
+    <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
+      <Field name="id" type="number">
+        {(field, props) => <input {...props} type="hidden" value={field.value} />}
+      </Field>
+      <input class="hidden" type="text" name="username" autocomplete="username" />
+      <Field name="newPassword" validate={required("Please enter a new password.")}>
+        {(field, props) => (
+          <FieldRoot class="gap-1.5">
+            <FieldLabel field={field}>New password</FieldLabel>
+            <FieldControl field={field}>
+              <Input
+                {...props}
+                autocomplete="new-password"
+                placeholder="New password"
+                type="password"
+                value={field.value}
+              />
+            </FieldControl>
+            <FieldMessage field={field} />
+          </FieldRoot>
+        )}
+      </Field>
+      <Field name="confirmPassword">
+        {(field, props) => (
+          <FieldRoot class="gap-1.5">
+            <FieldLabel field={field}>Confirm new password</FieldLabel>
+            <FieldControl field={field}>
+              <Input
+                {...props}
+                autocomplete="new-password"
+                placeholder="Confirm new password"
+                type="password"
+                value={field.value}
+              />
+            </FieldControl>
+            <FieldMessage field={field} />
+          </FieldRoot>
+        )}
+      </Field>
+      <Button type="submit" disabled={form.submitting}>
+        <Show when={!form.submitting} fallback={<>Updating password</>}>
+          Update password
+        </Show>
+      </Button>
+      <FormMessage form={form} />
+    </Form>
+  )
+}

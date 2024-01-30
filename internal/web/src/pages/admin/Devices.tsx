@@ -89,7 +89,7 @@ export function AdminDevices() {
               <DialogTitle>Create device</DialogTitle>
             </DialogHeader>
             <DialogContent>
-              <CreateForm setOpen={setOpenCreateForm} />
+              <CreateForm close={() => setOpenCreateForm(false)} />
             </DialogContent>
           </DialogModal>
         </DialogPortal>
@@ -103,7 +103,7 @@ export function AdminDevices() {
               <DialogTitle>Update device</DialogTitle>
             </DialogHeader>
             <DialogContent>
-              <UpdateForm setOpen={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
+              <UpdateForm close={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
             </DialogContent>
           </DialogModal>
         </DialogPortal>
@@ -325,7 +325,7 @@ const actionCreateForm = action((data: CreateForm) => useClient()
   .then(() => revalidate(getAdminDevicesPage.key))
   .catch(throwAsFormError))
 
-function CreateForm(props: { setOpen: (value: boolean) => void }) {
+function CreateForm(props: { close: () => void }) {
   const [addMore, setAddMore] = createSignal(false)
 
   const [form, { Field, Form }] = createForm<CreateForm>({});
@@ -341,7 +341,7 @@ function CreateForm(props: { setOpen: (value: boolean) => void }) {
         },
       })
     } else {
-      props.setOpen(false)
+      props.close()
     }
   }
 
@@ -494,11 +494,11 @@ const actionUpdate = action((data: UpdateForm) => useClient()
   .catch(throwAsFormError))
 
 
-function UpdateForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
+function UpdateForm(props: { close: () => void, id: bigint }) {
   const [form, { Field, Form }] = createForm<UpdateForm>();
   const action = useAction(actionUpdate)
   const submit = (data: UpdateForm) => action(data)
-    .then(() => props.setOpen(false))
+    .then(() => props.close())
 
   const [data] = createResource(() => props.id != BigInt(0),
     () => useClient().admin.getDevice({ id: props.id })

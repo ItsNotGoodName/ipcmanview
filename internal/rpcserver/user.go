@@ -113,7 +113,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 	user := auth.NewUser(dbUser)
 	user.Password = req.NewPassword
 
-	if _, err := auth.UpdateUser(ctx, u.db, user); err != nil {
+	if err := auth.UpdateUser(ctx, u.db, user); err != nil {
 		msg := "Failed to update password."
 
 		if errs, ok := asValidationErrors(err); ok {
@@ -146,7 +146,7 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 	user := auth.NewUser(dbUser)
 	user.Username = req.NewUsername
 
-	if _, err := auth.UpdateUser(ctx, u.db, user); err != nil {
+	if err := auth.UpdateUser(ctx, u.db, user); err != nil {
 		msg := "Failed to update username."
 
 		if errs, ok := asValidationErrors(err); ok {
@@ -192,12 +192,3 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 
 	return &emptypb.Empty{}, nil
 }
-
-// func (u *User) ListMyGroups(ctx context.Context, req *rpc.ListMyGroupsReq) (*rpc.ListMyGroupsResp, error) {
-// 	authSession := useAuthSession(ctx)
-//
-//
-// 	return &rpc.ListMyGroupsResp{
-// 		Groups: groups,
-// 	}, nil
-// }
