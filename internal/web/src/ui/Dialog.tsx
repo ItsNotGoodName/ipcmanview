@@ -20,11 +20,11 @@ export function DialogOverlay(props: ComponentProps<typeof Dialog.Overlay>) {
   />
 }
 
-export function DialogContent(props: ComponentProps<typeof Dialog.Content>) {
+export function DialogModal(props: ComponentProps<typeof Dialog.Content>) {
   const [_, rest] = splitProps(props, ["class", "children"])
   return <Dialog.Content
     class={cn(
-      "bg-background ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 ui-not-expanded:slide-out-to-left-1/2 ui-not-expanded:slide-out-to-top-[48%] ui-expanded:slide-in-from-left-1/2 ui-expanded:slide-in-from-top-[48%] fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg duration-200 sm:rounded-lg",
+      "bg-background ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 ui-not-expanded:slide-out-to-left-1/2 ui-not-expanded:slide-out-to-top-[48%] ui-expanded:slide-in-from-left-1/2 ui-expanded:slide-in-from-top-[48%] fixed left-[50%] top-[50%] z-50 flex max-h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] flex-col gap-4 border p-4 shadow-lg duration-200 sm:rounded-lg",
       props.class
     )}
     {...rest}
@@ -42,7 +42,7 @@ export function DialogHeader(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
+      "flex flex-col space-y-1.5 px-2 pt-2 text-center sm:text-left",
       props.class
     )}
     {...rest}
@@ -68,11 +68,19 @@ export function DialogDescription(props: ComponentProps<typeof Dialog.Descriptio
   />
 }
 
+export function DialogContent(props: JSX.HTMLAttributes<HTMLDivElement>) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <div
+    class={cn("flex-grow overflow-y-auto px-2", props.class)}
+    {...rest}
+  />
+}
+
 export function DialogFooter(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse px-2 sm:flex-row sm:justify-end sm:space-x-2",
       props.class
     )}
     {...rest}

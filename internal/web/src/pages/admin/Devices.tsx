@@ -1,5 +1,5 @@
 import { A, action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
 import { AdminDevicesPageSearchParams, getAdminDevicesPage } from "./Devices.data";
 import { ErrorBoundary, For, Show, Suspense, createSignal } from "solid-js";
@@ -71,7 +71,7 @@ export function AdminDevices() {
   return (
     <LayoutNormal class="max-w-4xl">
       <AlertDialogRoot open={deleteDeviceSelection() != undefined} onOpenChange={() => setDeleteDeviceSelection(undefined)}>
-        <AlertDialogContent>
+        <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {deleteDeviceSelection()?.name}?</AlertDialogTitle>
           </AlertDialogHeader>
@@ -81,11 +81,11 @@ export function AdminDevices() {
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogModal>
       </AlertDialogRoot>
 
       <AlertDialogRoot open={deleteDeviceRowSelection()} onOpenChange={setDeleteDeviceRowSelection}>
-        <AlertDialogContent>
+        <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} groups?</AlertDialogTitle>
             <AlertDialogDescription class="max-h-32 overflow-y-auto">
@@ -106,7 +106,7 @@ export function AdminDevices() {
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogModal>
       </AlertDialogRoot>
 
       <div class="text-xl">Devices</div>

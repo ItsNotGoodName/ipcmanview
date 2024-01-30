@@ -1,9 +1,9 @@
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
-import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuTrigger } from "~/ui/DropdownMenu";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
+import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, } from "~/ui/DropdownMenu";
 import { AdminGroupsPageSearchParams, getAdminGroupsPage, getGroup } from "./Groups.data";
 import { ErrorBoundary, For, Show, Suspense, batch, createResource, createSignal } from "solid-js";
-import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemLockLine, RiSystemMore2Line, } from "solid-icons/ri";
+import { RiSystemLockLine, } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, setupForm, throwAsFormError } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
@@ -14,7 +14,7 @@ import { createForm, required, reset } from "@modular-forms/solid";
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
 import { Input } from "~/ui/Input";
 import { Textarea } from "~/ui/Textarea";
-import { DialogCloseButton, DialogContent, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, } from "~/ui/Dialog";
+import { DialogModal, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, } from "~/ui/Dialog";
 import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
@@ -55,22 +55,22 @@ export function AdminGroups() {
   const toggleSort = createToggleSortField(() => data()?.sort)
 
   // Create
-  const [createFormDialog, setCreateFormDialog] = createSignal(false);
+  const [openCreateForm, setOpenCreateForm] = createSignal(false);
 
   // Update
-  const [updateGroupFormDialog, setUpdateGroupFormDialog] = createSignal<bigint>(BigInt(0))
+  const [openUpdateForm, setOpenUpdateForm] = createSignal<bigint>(BigInt(0))
 
   // Delete
   const deleteGroupSubmission = useSubmission(actionDeleteGroup)
   const deleteGroupAction = useAction(actionDeleteGroup)
   // Single
-  const [deleteGroupSelection, setDeleteGroupSelection] = createSignal<{ name: string, id: bigint } | undefined>()
-  const deleteGroupBySelection = () => deleteGroupAction([deleteGroupSelection()!.id])
-    .then(() => setDeleteGroupSelection(undefined))
+  const [openDeleteConfirm, setOpenDeleteConfirm] = createSignal<{ name: string, id: bigint } | undefined>()
+  const deleteGroupBySelection = () => deleteGroupAction([openDeleteConfirm()!.id])
+    .then(() => setOpenDeleteConfirm(undefined))
   // Multiple
-  const [deleteGroupRowSelection, setDeleteGroupRowSelection] = createSignal(false)
+  const [openDeleteMultipleConfirm, setDeleteMultipleConfirm] = createSignal(false)
   const deleteGroupByRowSelection = () => deleteGroupAction(rowSelection.selections())
-    .then(() => setDeleteGroupRowSelection(false))
+    .then(() => setDeleteMultipleConfirm(false))
 
   // Disable/Enable
   const setGroupDisableSubmission = useSubmission(actionSetGroupDisable)
@@ -80,36 +80,38 @@ export function AdminGroups() {
 
   return (
     <LayoutNormal class="max-w-4xl">
-      <DialogRoot open={createFormDialog()} onOpenChange={setCreateFormDialog}>
+      <DialogRoot open={openCreateForm()} onOpenChange={setOpenCreateForm}>
         <DialogPortal>
           <DialogOverlay />
-          <DialogContent>
+          <DialogModal>
             <DialogHeader>
-              <DialogCloseButton />
               <DialogTitle>Create group</DialogTitle>
             </DialogHeader>
-            <CreateGroupForm setOpen={setCreateFormDialog} />
-          </DialogContent>
+            <DialogContent>
+              <CreateGroupForm setOpen={setOpenCreateForm} />
+            </DialogContent>
+          </DialogModal>
         </DialogPortal>
       </DialogRoot>
 
-      <DialogRoot open={updateGroupFormDialog() != BigInt(0)} onOpenChange={() => setUpdateGroupFormDialog(BigInt(0))}>
+      <DialogRoot open={openUpdateForm() != BigInt(0)} onOpenChange={() => setOpenUpdateForm(BigInt(0))}>
         <DialogPortal>
           <DialogOverlay />
-          <DialogContent>
+          <DialogModal>
             <DialogHeader>
-              <DialogCloseButton />
               <DialogTitle>Update group</DialogTitle>
             </DialogHeader>
-            <UpdateGroupForm setOpen={() => setUpdateGroupFormDialog(BigInt(0))} id={updateGroupFormDialog()} />
-          </DialogContent>
+            <DialogContent>
+              <UpdateGroupForm setOpen={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
+            </DialogContent>
+          </DialogModal>
         </DialogPortal>
       </DialogRoot>
 
-      <AlertDialogRoot open={deleteGroupSelection() != undefined} onOpenChange={() => setDeleteGroupSelection(undefined)}>
-        <AlertDialogContent>
+      <AlertDialogRoot open={openDeleteConfirm() != undefined} onOpenChange={() => setOpenDeleteConfirm(undefined)}>
+        <AlertDialogModal>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you wish to delete {deleteGroupSelection()?.name}?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you wish to delete {openDeleteConfirm()?.name}?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
@@ -117,23 +119,23 @@ export function AdminGroups() {
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogModal>
       </AlertDialogRoot>
 
-      <AlertDialogRoot open={deleteGroupRowSelection()} onOpenChange={setDeleteGroupRowSelection}>
-        <AlertDialogContent>
+      <AlertDialogRoot open={openDeleteMultipleConfirm()} onOpenChange={setDeleteMultipleConfirm}>
+        <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} groups?</AlertDialogTitle>
-            <AlertDialogDescription class="max-h-32 overflow-y-auto">
-              <For each={data()?.items}>
-                {(e, index) =>
-                  <Show when={rowSelection.rows[index()].checked}>
-                    <div>
-                      {e.name}
-                    </div>
-                  </Show>
-                }
-              </For>
+            <AlertDialogDescription>
+              <ul>
+                <For each={data()?.items}>
+                  {(e, index) =>
+                    <Show when={rowSelection.rows[index()].checked}>
+                      <li>{e.name}</li>
+                    </Show>
+                  }
+                </For>
+              </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -142,7 +144,7 @@ export function AdminGroups() {
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogModal>
       </AlertDialogRoot>
 
       <div class="text-xl">Groups</div>
@@ -156,24 +158,12 @@ export function AdminGroups() {
               perPage={data()?.pageResult?.perPage}
               onChange={pagination.setPerPage}
             />
-            <div class="flex gap-2">
-              <Button
-                title="Previous"
-                size="icon"
-                disabled={pagination.previousPageDisabled()}
-                onClick={pagination.previousPage}
-              >
-                <RiArrowsArrowLeftSLine class="h-6 w-6" />
-              </Button>
-              <Button
-                title="Next"
-                size="icon"
-                disabled={pagination.nextPageDisabled()}
-                onClick={pagination.nextPage}
-              >
-                <RiArrowsArrowRightSLine class="h-6 w-6" />
-              </Button>
-            </div>
+            <Crud.PageButtons
+              previousPageDisabled={pagination.previousPageDisabled()}
+              previousPage={pagination.previousPage}
+              nextPageDisabled={pagination.nextPageDisabled()}
+              nextPage={pagination.nextPage}
+            />
           </div>
           <TableRoot>
             <TableHeader>
@@ -214,41 +204,37 @@ export function AdminGroups() {
                     Created At
                   </Crud.SortButton>
                 </TableHead>
-                <TableHead>
-                  <div class="flex items-center justify-end">
-                    <DropdownMenuRoot placement="bottom-end">
-                      <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                        <RiSystemMore2Line class="h-5 w-5" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem onSelect={() => setCreateFormDialog(true)}>
-                            Create
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
-                            onSelect={() => setGroupDisableByRowSelection(true)}
-                          >
-                            Disable
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
-                            onSelect={() => setGroupDisableByRowSelection(false)}
-                          >
-                            Enable
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={rowSelection.selections().length == 0 || deleteGroupSubmission.pending}
-                            onSelect={() => setDeleteGroupRowSelection(true)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                          <DropdownMenuArrow />
-                        </DropdownMenuContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuRoot>
-                  </div>
-                </TableHead>
+                <Crud.LastTableHead>
+                  <DropdownMenuRoot placement="bottom-end">
+                    <Crud.MoreDropdownMenuTrigger />
+                    <DropdownMenuPortal>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onSelect={() => setOpenCreateForm(true)}>
+                          Create
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
+                          onSelect={() => setGroupDisableByRowSelection(true)}
+                        >
+                          Disable
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={rowSelection.selections().length == 0 || setGroupDisableSubmission.pending}
+                          onSelect={() => setGroupDisableByRowSelection(false)}
+                        >
+                          Enable
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={rowSelection.selections().length == 0 || deleteGroupSubmission.pending}
+                          onSelect={() => setDeleteMultipleConfirm(true)}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                        <DropdownMenuArrow />
+                      </DropdownMenuContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuRoot>
+                </Crud.LastTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -282,12 +268,10 @@ export function AdminGroups() {
                           </TooltipRoot>
                         </Show>
                         <DropdownMenuRoot placement="bottom-end">
-                          <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-                            <RiSystemMore2Line class="h-5 w-5" />
-                          </DropdownMenuTrigger>
+                          <Crud.MoreDropdownMenuTrigger />
                           <DropdownMenuPortal>
                             <DropdownMenuContent>
-                              <DropdownMenuItem onSelect={() => setUpdateGroupFormDialog(item.id)}>
+                              <DropdownMenuItem onSelect={() => setOpenUpdateForm(item.id)}>
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
@@ -300,7 +284,7 @@ export function AdminGroups() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={deleteGroupSubmission.pending}
-                                onSelect={() => setDeleteGroupSelection(item)}
+                                onSelect={() => setOpenDeleteConfirm(item)}
                               >
                                 Delete
                               </DropdownMenuItem>
@@ -406,6 +390,9 @@ const actionUpdateGroupForm = action((model: UpdateGroupForm) => useClient()
 )
 
 function UpdateGroupForm(props: { setOpen: (value: boolean) => void, id: bigint }) {
+
+  // FIXME: this looks wrong
+
   const [updateGroupForm, { Field, Form }] = createForm<UpdateGroupForm>();
   const updateGroupFormAction = useAction(actionUpdateGroupForm)
   const submit = (form: UpdateGroupForm) => updateGroupFormAction(form)

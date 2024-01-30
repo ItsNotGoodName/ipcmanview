@@ -17,7 +17,7 @@ import { Skeleton } from "~/ui/Skeleton"
 import { getSession } from "~/providers/session"
 import { PageError } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog"
+import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog"
 
 const actionRevokeAllMySessions = action(() => useClient()
   .user.revokeAllMySessions({})
@@ -49,7 +49,7 @@ export function Profile() {
       <ErrorBoundary fallback={(e: Error) => <PageError error={e} />}>
 
         <AlertDialogRoot open={revokeAllMySessionsDialog()} onOpenChange={setRevokeAllMySessionsDialog}>
-          <AlertDialogContent>
+          <AlertDialogModal>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure you wish to revoke all sessions?</AlertDialogTitle>
             </AlertDialogHeader>
@@ -59,11 +59,11 @@ export function Profile() {
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
-          </AlertDialogContent>
+          </AlertDialogModal>
         </AlertDialogRoot>
 
         <AlertDialogRoot open={revokeMySessionsDialog() != BigInt(0)} onOpenChange={() => setRevokeMySessionsDialog(BigInt(0))}>
-          <AlertDialogContent>
+          <AlertDialogModal>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure you wish to revoke this session?</AlertDialogTitle>
             </AlertDialogHeader>
@@ -73,7 +73,7 @@ export function Profile() {
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
-          </AlertDialogContent>
+          </AlertDialogModal>
         </AlertDialogRoot>
 
         <CardRoot>

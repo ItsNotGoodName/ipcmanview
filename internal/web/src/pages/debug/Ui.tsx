@@ -13,7 +13,7 @@ import { For, Show, createSignal, onCleanup, } from "solid-js";
 import { Badge } from "~/ui/Badge";
 import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { PopoverArrow, PopoverCloseButton, PopoverCloseIcon, PopoverContent, PopoverDescription, PopoverPortal, PopoverRoot, PopoverTitle, PopoverTrigger } from "~/ui/Popover";
-import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
+import { DialogModal, DialogDescription, DialogFooter, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
 import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, ToastProgressTrack, ToastTitle, toast } from "~/ui/Toast";
 import { Skeleton } from "~/ui/Skeleton";
@@ -25,7 +25,7 @@ import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
 import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine, RiSystemAlertLine } from "solid-icons/ri";
 import { AvatarFallback, AvatarImage, AvatarRoot } from "~/ui/Avatar";
 import { ProgressFill, ProgressLabel, ProgressRoot, ProgressTrack, ProgressValueLabel } from "~/ui/Progress";
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from "~/ui/AlertDialog";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from "~/ui/AlertDialog";
 import { Toggle } from "~/ui/Toggle";
 import { SheetCloseButton, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetRoot, SheetTitle, SheetTrigger } from "~/ui/Sheet";
 import { HoverCardArrow, HoverCardContent, HoverCardRoot, HoverCardTrigger } from "~/ui/HoverCard";
@@ -204,17 +204,20 @@ export function Ui() {
         </DialogTrigger>
         <DialogPortal>
           <DialogOverlay />
-          <DialogContent>
+          <DialogModal>
             <DialogHeader>
               <DialogTitle>Header Title</DialogTitle>
               <DialogDescription>
                 Header Description
               </DialogDescription>
             </DialogHeader>
+            <DialogContent>
+              I will overflow.
+            </DialogContent>
             <DialogFooter>
               Footer
             </DialogFooter>
-          </DialogContent>
+          </DialogModal>
         </DialogPortal>
       </DialogRoot>
       <TableRoot>
@@ -457,7 +460,7 @@ export function Ui() {
         <AlertDialogTrigger asChild>
           <As component={Button} variant="outline">Show Alert Dialog</As>
         </AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -469,7 +472,7 @@ export function Ui() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction>Continue</AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogModal>
       </AlertDialogRoot>
       <div>
         <Toggle>

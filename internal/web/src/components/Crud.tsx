@@ -1,10 +1,12 @@
-import { RiArrowsArrowDownSLine } from "solid-icons/ri"
+import { RiArrowsArrowDownSLine, RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemMore2Line } from "solid-icons/ri"
 import { ParentProps } from "solid-js"
 
 import { Order, PagePaginationResult, Sort } from "~/twirp/rpc"
 import { cn } from "~/lib/utils"
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select"
-import { TableCell } from "~/ui/Table"
+import { TableCell, TableHead } from "~/ui/Table"
+import { Button } from "~/ui/Button"
+import { DropdownMenuTrigger } from "~/ui/DropdownMenu"
 
 function SortButton(props: ParentProps<{ onClick: (name: string) => void, name: string, sort?: Sort }>) {
   return (
@@ -56,6 +58,29 @@ function PerPageSelect(props: { class?: string, perPage?: number, onChange: (val
   )
 }
 
+function PageButtons(props: { previousPageDisabled: boolean, previousPage: () => void, nextPageDisabled: boolean, nextPage: () => void }) {
+  return (
+    <div class="flex gap-2">
+      <Button
+        title="Previous"
+        size="icon"
+        disabled={props.previousPageDisabled}
+        onClick={props.previousPage}
+      >
+        <RiArrowsArrowLeftSLine class="h-6 w-6" />
+      </Button>
+      <Button
+        title="Next"
+        size="icon"
+        disabled={props.nextPageDisabled}
+        onClick={props.nextPage}
+      >
+        <RiArrowsArrowRightSLine class="h-6 w-6" />
+      </Button>
+    </div>
+  )
+}
+
 function LastTableCell(props: ParentProps) {
   return (
     <TableCell class="py-0">
@@ -66,9 +91,30 @@ function LastTableCell(props: ParentProps) {
   )
 }
 
+function LastTableHead(props: ParentProps) {
+  return (
+    <TableHead>
+      <div class="flex items-center justify-end">
+        {props.children}
+      </div>
+    </TableHead>
+  )
+}
+
+function MoreDropdownMenuTrigger() {
+  return (
+    <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
+      <RiSystemMore2Line class="h-5 w-5" />
+    </DropdownMenuTrigger>
+  )
+}
+
 export const Crud = {
   SortButton,
   Metadata,
   PerPageSelect,
+  PageButtons,
   LastTableCell,
+  LastTableHead,
+  MoreDropdownMenuTrigger
 }

@@ -139,6 +139,14 @@ export function setupForm<TFieldValues extends FieldValues>(form: FormStore<TFie
 //   return false
 // }
 
+export type CreatePagePaginationReturn = {
+  previousPageDisabled: Accessor<boolean>
+  previousPage: () => void
+  nextPageDisabled: Accessor<boolean>
+  nextPage: () => void
+  setPerPage: (value: number) => void
+}
+
 export function createPagePagination(pageResult: () => PagePaginationResult | undefined) {
   const [_, setSearchParams] = useSearchParams()
   return {

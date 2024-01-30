@@ -16,7 +16,7 @@ import { getSession } from "~/providers/session";
 import { Crud } from "~/components/Crud";
 import { useClient } from "~/providers/client";
 import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
-import { AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
 
 const actionSetUserDisable = action((input: SetUserDisableReq) => useClient()
   .admin.setUserDisable(input)
@@ -80,7 +80,7 @@ export function AdminUsers() {
     <LayoutNormal class="max-w-4xl">
 
       <AlertDialogRoot open={deleteUserSelection() != undefined} onOpenChange={() => setDeleteUserSelection(undefined)}>
-        <AlertDialogContent>
+        <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {deleteUserSelection()?.username}?</AlertDialogTitle>
           </AlertDialogHeader>
@@ -90,11 +90,11 @@ export function AdminUsers() {
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogModal>
       </AlertDialogRoot>
 
       <AlertDialogRoot open={deleteUserRowSelection()} onOpenChange={setDeleteUserRowSelection}>
-        <AlertDialogContent>
+        <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} users?</AlertDialogTitle>
             <AlertDialogDescription class="max-h-32 overflow-y-auto">
@@ -115,7 +115,7 @@ export function AdminUsers() {
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
-        </AlertDialogContent>
+        </AlertDialogModal>
       </AlertDialogRoot>
 
       <div class="text-xl">Users</div>
