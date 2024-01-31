@@ -22,16 +22,16 @@ type SesionResp struct {
 func (s *Server) Session(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	authSession, ok := auth.UseSession(ctx)
+	session, ok := auth.UseSession(ctx)
 	if !ok {
 		return c.JSON(http.StatusUnauthorized, SesionResp{})
 	}
 
 	return c.JSON(http.StatusOK, SesionResp{
-		Admin:    authSession.Admin,
-		Disabled: authSession.Disabled,
-		UserID:   authSession.UserID,
-		Username: authSession.Username,
+		Admin:    session.Admin,
+		Disabled: session.Disabled,
+		UserID:   session.UserID,
+		Username: session.Username,
 		Valid:    true,
 	})
 }

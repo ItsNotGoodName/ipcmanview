@@ -324,8 +324,29 @@ INSERT INTO
     updated_at,
     storage
   )
-VALUES 
-  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES
+  (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
+  )
 ON CONFLICT (start_time) DO
 UPDATE
 SET
@@ -665,14 +686,12 @@ func (q *Queries) DahuaGetDeviceName(ctx context.Context, id int64) (string, err
 
 const dahuaGetDevicePermissionLevel = `-- name: DahuaGetDevicePermissionLevel :one
 SELECT
-  coalesce(p.level, 2)
+  p.level
 FROM
-  dahua_devices
-  LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
+  dahua_permissions AS p
+  JOIN dahua_devices AS d ON d.id = p.device_id
 WHERE
-  dahua_devices.id = ?1 AND
-  -- Allow if user is admin
-  EXISTS (SELECT user_id FROM admins WHERE admins.user_id = ?2)
+  d.id = ?1
   -- Allow if user owns the permission
   OR p.user_id = ?2
   -- Allow if user is a part of the group the owns the permission
@@ -684,17 +703,16 @@ WHERE
     WHERE
       group_users.user_id = ?2
   )
-GROUP BY
-  -- Remove duplicate devices with different permissions
-  dahua_devices.id
 ORDER BY
   -- Get the highest permission level
   p.level DESC
+LIMIT
+  1
 `
 
 type DahuaGetDevicePermissionLevelParams struct {
 	DeviceID int64
-	UserID   int64
+	UserID   sql.NullInt64
 }
 
 func (q *Queries) DahuaGetDevicePermissionLevel(ctx context.Context, arg DahuaGetDevicePermissionLevelParams) (models.DahuaPermissionLevel, error) {
@@ -1041,7 +1059,14 @@ FROM
   LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
 WHERE
   -- Allow if user is admin
-  EXISTS (SELECT user_id FROM admins WHERE admins.user_id = ?1)
+  EXISTS (
+    SELECT
+      user_id
+    FROM
+      admins
+    WHERE
+      admins.user_id = ?1
+  )
   -- Allow if user owns the permission
   OR p.user_id = ?1
   -- Allow if user is a part of the group the owns the permission
@@ -1450,8 +1475,16 @@ INSERT OR IGNORE INTO
     scan_percent,
     scan_type
   )
-SELECT id, ?, ?, ?, ?, ?, ?
-FROM dahua_devices
+SELECT
+  id,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+FROM
+  dahua_devices
 `
 
 type DahuaNormalizeFileCursorsParams struct {

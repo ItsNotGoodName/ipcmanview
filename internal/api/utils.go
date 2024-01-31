@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -25,41 +24,45 @@ func paramID(c echo.Context) (int64, error) {
 	return number, nil
 }
 
-func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, error) {
+func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, models.DahuaPermissionLevel, error) {
 	ctx := c.Request().Context()
 
 	id, err := paramID(c)
 	if err != nil {
-		return dahua.Client{}, err
+		return dahua.Client{}, 0, err
 	}
 
 	session, ok := auth.UseSession(ctx)
 	if !ok {
-		return dahua.Client{}, echo.ErrUnauthorized
+		return dahua.Client{}, 0, echo.ErrUnauthorized
 	}
 
-	level, err := db.DahuaGetDevicePermissionLevel(ctx, repo.DahuaGetDevicePermissionLevelParams{
-		DeviceID: id,
-		UserID:   session.UserID,
-	})
-	if err != nil {
-		if repo.IsNotFound(err) {
-			return dahua.Client{}, echo.ErrNotFound.WithInternal(err)
+	var level models.DahuaPermissionLevel
+
+	if session.Admin {
+		level = models.DahuaPermissionLevelAdmin
+	} else {
+		level, err = db.DahuaGetDevicePermissionLevel(ctx, repo.DahuaGetDevicePermissionLevelParams{
+			DeviceID: id,
+			UserID:   core.NewNullInt64(session.UserID),
+		})
+		if err != nil {
+			if repo.IsNotFound(err) {
+				return dahua.Client{}, 0, echo.ErrNotFound.WithInternal(err)
+			}
+			return dahua.Client{}, 0, err
 		}
-		return dahua.Client{}, err
 	}
-
-	fmt.Println(level)
 
 	conn, err := db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{id}})
 	if err != nil {
 		if repo.IsNotFound(err) {
-			return dahua.Client{}, echo.ErrNotFound.WithInternal(err)
+			return dahua.Client{}, 0, echo.ErrNotFound.WithInternal(err)
 		}
-		return dahua.Client{}, err
+		return dahua.Client{}, 0, err
 	}
 
-	return store.Client(ctx, dahua.NewConn(conn)), nil
+	return store.Client(ctx, dahua.NewConn(conn)), level, nil
 }
 
 // ---------- Stream

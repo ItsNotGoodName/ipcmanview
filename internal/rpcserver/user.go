@@ -25,9 +25,9 @@ type User struct {
 }
 
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
-	authSession := useAuthSession(ctx)
+	session := useAuthSession(ctx)
 
-	rows, err := u.db.DahuaListDevicePermissionLevels(ctx, authSession.UserID)
+	rows, err := u.db.DahuaListDevicePermissionLevels(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -42,15 +42,15 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 }
 
 func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetProfilePageResp, error) {
-	authSession := useAuthSession(ctx)
+	session := useAuthSession(ctx)
 
-	user, err := u.db.AuthGetUser(ctx, authSession.UserID)
+	user, err := u.db.AuthGetUser(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}
 
 	dbSessions, err := u.db.AuthListUserSessionsForUserAndNotExpired(ctx, repo.AuthListUserSessionsForUserAndNotExpiredParams{
-		UserID: authSession.UserID,
+		UserID: session.UserID,
 		Now:    types.NewTime(time.Now()),
 	})
 	if err != nil {
@@ -68,11 +68,11 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 			LastUsedAtTime: timestamppb.New(v.LastUsedAt.Time),
 			CreatedAtTime:  timestamppb.New(v.CreatedAt.Time),
 			Active:         v.LastUsedAt.After(activeCutoff),
-			Current:        v.Session == authSession.Session,
+			Current:        v.Session == session.Session,
 		})
 	}
 
-	dbGroups, err := u.db.AuthListGroupsForUser(ctx, authSession.UserID)
+	dbGroups, err := u.db.AuthListGroupsForUser(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 	return &rpc.GetProfilePageResp{
 		Username:      user.Username,
 		Email:         user.Email,
-		Admin:         authSession.Admin,
+		Admin:         session.Admin,
 		CreatedAtTime: timestamppb.New(user.CreatedAt.Time),
 		UpdatedAtTime: timestamppb.New(user.UpdatedAt.Time),
 		Sessions:      sessions,
@@ -99,9 +99,9 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 }
 
 func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
-	authSession := useAuthSession(ctx)
+	session := useAuthSession(ctx)
 
-	dbUser, err := u.db.AuthGetUser(ctx, authSession.UserID)
+	dbUser, err := u.db.AuthGetUser(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 
 	if err := auth.UpdateUserPassword(ctx, u.db, dbUser, auth.UpdateUserPasswordParams{
 		NewPassword:    req.NewPassword,
-		CurrentSession: authSession.Session,
+		CurrentSession: session.Session,
 	}); err != nil {
 		return nil, err
 	}
@@ -121,9 +121,9 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 }
 
 func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameReq) (*emptypb.Empty, error) {
-	authSession := useAuthSession(ctx)
+	session := useAuthSession(ctx)
 
-	dbUser, err := u.db.AuthGetUser(ctx, authSession.UserID)
+	dbUser, err := u.db.AuthGetUser(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -136,9 +136,9 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 }
 
 func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *emptypb.Empty) (*emptypb.Empty, error) {
-	authSession := useAuthSession(ctx)
+	session := useAuthSession(ctx)
 
-	err := auth.DeleteOtherUserSessions(ctx, u.db, authSession.UserID, authSession.Session)
+	err := auth.DeleteOtherUserSessions(ctx, u.db, session.UserID, session.Session)
 	if err != nil {
 		return nil, err
 	}
@@ -147,9 +147,9 @@ func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *em
 }
 
 func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq) (*emptypb.Empty, error) {
-	authSession := useAuthSession(ctx)
+	session := useAuthSession(ctx)
 
-	if err := auth.DeleteUserSession(ctx, u.db, authSession.UserID, req.SessionId); err != nil {
+	if err := auth.DeleteUserSession(ctx, u.db, session.UserID, req.SessionId); err != nil {
 		return nil, err
 	}
 

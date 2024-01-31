@@ -344,9 +344,9 @@ func (a *Admin) UpdateUser(ctx context.Context, req *rpc.UpdateUserReq) (*emptyp
 }
 
 func (a *Admin) DeleteUser(ctx context.Context, req *rpc.DeleteUserReq) (*emptypb.Empty, error) {
-	authSession := useAuthSession(ctx)
+	session := useAuthSession(ctx)
 	for _, id := range req.Ids {
-		if id != authSession.UserID {
+		if id != session.UserID {
 			err := auth.DeleteUser(ctx, a.db, id)
 			if err != nil {
 				return nil, err
@@ -358,9 +358,9 @@ func (a *Admin) DeleteUser(ctx context.Context, req *rpc.DeleteUserReq) (*emptyp
 }
 
 func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) (*emptypb.Empty, error) {
-	authSession := useAuthSession(ctx)
+	session := useAuthSession(ctx)
 	for _, item := range req.Items {
-		if item.Id != authSession.UserID {
+		if item.Id != session.UserID {
 			err := auth.UpdateUserDisabled(ctx, a.db, item.Id, item.Disable)
 			if err != nil {
 				return nil, err
@@ -372,8 +372,8 @@ func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) 
 }
 
 func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*emptypb.Empty, error) {
-	authSession := useAuthSession(ctx)
-	if req.Id == authSession.UserID {
+	session := useAuthSession(ctx)
+	if req.Id == session.UserID {
 		return nil, fmt.Errorf("Cannot modify current user.")
 	}
 
@@ -386,7 +386,7 @@ func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*em
 }
 
 func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswordReq) (*emptypb.Empty, error) {
-	authSession := useAuthSession(ctx)
+	session := useAuthSession(ctx)
 
 	dbUser, err := a.db.AuthGetUser(ctx, req.Id)
 	if err != nil {
@@ -395,7 +395,7 @@ func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswor
 
 	if err := auth.UpdateUserPassword(ctx, a.db, dbUser, auth.UpdateUserPasswordParams{
 		NewPassword:    req.NewPassword,
-		CurrentSession: authSession.Session,
+		CurrentSession: session.Session,
 	}); err != nil {
 		return nil, err
 	}

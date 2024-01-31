@@ -53,7 +53,14 @@ FROM
   LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
 WHERE
   -- Allow if user is admin
-  EXISTS (SELECT user_id FROM admins WHERE admins.user_id = sqlc.arg ('user_id'))
+  EXISTS (
+    SELECT
+      user_id
+    FROM
+      admins
+    WHERE
+      admins.user_id = sqlc.arg ('user_id')
+  )
   -- Allow if user owns the permission
   OR p.user_id = sqlc.arg ('user_id')
   -- Allow if user is a part of the group the owns the permission
@@ -74,14 +81,12 @@ ORDER BY
 
 -- name: DahuaGetDevicePermissionLevel :one
 SELECT
-  coalesce(p.level, 2)
+  p.level
 FROM
-  dahua_devices
-  LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
+  dahua_permissions AS p
+  JOIN dahua_devices AS d ON d.id = p.device_id
 WHERE
-  dahua_devices.id = sqlc.arg('device_id') AND
-  -- Allow if user is admin
-  EXISTS (SELECT user_id FROM admins WHERE admins.user_id = sqlc.arg ('user_id'))
+  d.id = sqlc.arg ('device_id')
   -- Allow if user owns the permission
   OR p.user_id = sqlc.arg ('user_id')
   -- Allow if user is a part of the group the owns the permission
@@ -93,12 +98,11 @@ WHERE
     WHERE
       group_users.user_id = sqlc.arg ('user_id')
   )
-GROUP BY
-  -- Remove duplicate devices with different permissions
-  dahua_devices.id
 ORDER BY
   -- Get the highest permission level
-  p.level DESC;
+  p.level DESC
+LIMIT
+  1;
 
 -- name: DahuaDeleteDevice :exec
 DELETE FROM dahua_devices
@@ -108,7 +112,7 @@ WHERE
 -- name: DahuaAllocateSeed :exec
 UPDATE dahua_seeds
 SET
-  device_id = sqlc.arg('device_id')
+  device_id = sqlc.arg ('device_id')
 WHERE
   seed = (
     SELECT
@@ -116,7 +120,7 @@ WHERE
     FROM
       dahua_seeds
     WHERE
-      device_id = sqlc.arg('device_id')
+      device_id = sqlc.arg ('device_id')
       OR device_id IS NULL
     ORDER BY
       device_id ASC
@@ -135,8 +139,16 @@ INSERT OR IGNORE INTO
     scan_percent,
     scan_type
   )
-SELECT id, ?, ?, ?, ?, ?, ?
-FROM dahua_devices;
+SELECT
+  id,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?,
+  ?
+FROM
+  dahua_devices;
 
 -- name: DahuaUpdateFileCursorScanPercent :one
 UPDATE dahua_file_cursors
@@ -211,8 +223,29 @@ INSERT INTO
     updated_at,
     storage
   )
-VALUES 
-  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+VALUES
+  (
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?,
+    ?
+  )
 ON CONFLICT (start_time) DO
 UPDATE
 SET
