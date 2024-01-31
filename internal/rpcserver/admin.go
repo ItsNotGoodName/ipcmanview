@@ -2,6 +2,7 @@ package rpcserver
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"time"
 
@@ -85,7 +86,7 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 		return items, nil
 	}()
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	count, err := func() (int64, error) {
@@ -95,7 +96,7 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 			From("dahua_devices"))
 	}()
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &rpc.GetAdminDevicesPageResp{
@@ -108,7 +109,7 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevicesIDPageReq) (*rpc.GetAdminDevicesIDPageResp, error) {
 	v, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &rpc.GetAdminDevicesIDPageResp{
@@ -131,7 +132,7 @@ func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevi
 func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
 	v, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &rpc.GetDeviceResp{
@@ -147,11 +148,11 @@ func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetD
 func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rpc.CreateDeviceResp, error) {
 	urL, err := url.Parse(req.Url)
 	if err != nil {
-		return nil, NewError(nil, "URL is invalid.").Field("url")
+		return nil, err
 	}
 	loc, err := time.LoadLocation(req.Location)
 	if err != nil {
-		return nil, NewError(nil, "Location is invalid.").Field("location")
+		return nil, err
 	}
 
 	id, err := dahua.CreateDevice(ctx, a.db, a.bus, dahua.Device{
@@ -163,7 +164,7 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 		Feature:  dahua.FeatureFromStrings(req.Features),
 	})
 	if err != nil {
-		return nil, checkCreateUpdateDevice(err, "Failed to create device.")
+		return nil, err
 	}
 
 	return &rpc.CreateDeviceResp{
@@ -174,16 +175,16 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*emptypb.Empty, error) {
 	urL, err := url.Parse(req.Url)
 	if err != nil {
-		return nil, NewError(nil, "URL is invalid.").Field("url")
+		return nil, err
 	}
 	loc, err := time.LoadLocation(req.Location)
 	if err != nil {
-		return nil, NewError(nil, "Location is invalid.").Field("location")
+		return nil, err
 	}
 
 	dbDevice, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	device := dahua.NewDevice(dbDevice.DahuaDevice)
@@ -196,7 +197,7 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 
 	err = dahua.UpdateDevice(ctx, a.db, a.bus, device)
 	if err != nil {
-		return nil, checkCreateUpdateDevice(err, "Failed to update device.")
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
@@ -206,7 +207,7 @@ func (a *Admin) DeleteDevice(ctx context.Context, req *rpc.DeleteDeviceReq) (*em
 	for _, id := range req.Ids {
 		err := dahua.DeleteDevice(ctx, a.db, a.bus, id)
 		if err != nil {
-			return nil, check(err)
+			return nil, err
 		}
 	}
 	return &emptypb.Empty{}, nil
@@ -277,7 +278,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 		return items, nil
 	}()
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	count, err := func() (int64, error) {
@@ -287,7 +288,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 			From("users"))
 	}()
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &rpc.GetAdminUsersPageResp{
@@ -307,7 +308,7 @@ func (a *Admin) CreateUser(ctx context.Context, req *rpc.CreateUserReq) (*emptyp
 		Disabled: req.Disabled,
 	})
 	if err != nil {
-		return nil, checkCreateUpdateUser(err, "Failed to create user.")
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
@@ -316,7 +317,7 @@ func (a *Admin) CreateUser(ctx context.Context, req *rpc.CreateUserReq) (*emptyp
 func (a *Admin) GetUser(ctx context.Context, req *rpc.GetUserReq) (*rpc.GetUserResp, error) {
 	v, err := a.db.AuthGetUser(ctx, req.Id)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &rpc.GetUserResp{
@@ -329,7 +330,7 @@ func (a *Admin) GetUser(ctx context.Context, req *rpc.GetUserReq) (*rpc.GetUserR
 func (a *Admin) UpdateUser(ctx context.Context, req *rpc.UpdateUserReq) (*emptypb.Empty, error) {
 	dbUser, err := a.db.AuthGetUser(ctx, req.Id)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	err = auth.UpdateUser(ctx, a.db, dbUser, auth.UpdateUserParams{
@@ -337,7 +338,7 @@ func (a *Admin) UpdateUser(ctx context.Context, req *rpc.UpdateUserReq) (*emptyp
 		Username: req.Username,
 	})
 	if err != nil {
-		return nil, checkCreateUpdateUser(err, "Failed to update user.")
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
@@ -349,7 +350,7 @@ func (a *Admin) DeleteUser(ctx context.Context, req *rpc.DeleteUserReq) (*emptyp
 		if id != authSession.UserID {
 			err := auth.DeleteUser(ctx, a.db, id)
 			if err != nil {
-				return nil, check(err)
+				return nil, err
 			}
 		}
 	}
@@ -363,7 +364,7 @@ func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) 
 		if item.Id != authSession.UserID {
 			err := auth.UpdateUserDisabled(ctx, a.db, item.Id, item.Disable)
 			if err != nil {
-				return nil, check(err)
+				return nil, err
 			}
 		}
 	}
@@ -374,7 +375,7 @@ func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) 
 func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 	if req.Id == authSession.UserID {
-		return nil, NewError(nil, "Cannot modify current user.").Field("item")
+		return nil, fmt.Errorf("Cannot modify current user.")
 	}
 
 	err := auth.UpdateUserAdmin(ctx, a.db, req.Id, req.Admin)
@@ -390,22 +391,14 @@ func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswor
 
 	dbUser, err := a.db.AuthGetUser(ctx, req.Id)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	if err := auth.UpdateUserPassword(ctx, a.db, dbUser, auth.UpdateUserPasswordParams{
 		NewPassword:    req.NewPassword,
 		CurrentSession: authSession.Session,
 	}); err != nil {
-		msg := "Failed to update password."
-
-		if errs, ok := asValidationErrors(err); ok {
-			return nil, NewError(err, msg).Validation(errs, [][2]string{
-				{"newPassword", "Password"},
-			})
-		}
-
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
@@ -470,7 +463,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 		return items, nil
 	}()
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	count, err := func() (int64, error) {
@@ -480,7 +473,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 			From("groups"))
 	}()
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &rpc.GetAdminGroupsPageResp{
@@ -493,7 +486,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroupsIDPageReq) (*rpc.GetAdminGroupsIDPageResp, error) {
 	dbUsers, err := a.db.AuthListUsersByGroup(ctx, req.Id)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	users := make([]*rpc.GetAdminGroupsIDPageResp_User, 0, len(dbUsers))
@@ -506,7 +499,7 @@ func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroup
 
 	v, err := a.db.AuthGetGroup(ctx, req.Id)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &rpc.GetAdminGroupsIDPageResp{
@@ -526,7 +519,7 @@ func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroup
 func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGroupResp, error) {
 	v, err := a.db.AuthGetGroup(ctx, req.Id)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 	return &rpc.GetGroupResp{
 		Id:          v.ID,
@@ -541,7 +534,7 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 		Description: req.Description,
 	})
 	if err != nil {
-		return nil, checkCreateUpdateGroup(err, "Failed to create group.")
+		return nil, err
 	}
 
 	return &rpc.CreateGroupResp{
@@ -552,7 +545,7 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
 	dbGroup, err := a.db.AuthGetGroup(ctx, req.Id)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	_, err = auth.UpdateGroup(ctx, a.db, dbGroup, auth.UpdateGroupParams{
@@ -560,7 +553,7 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 		Description: req.Description,
 	})
 	if err != nil {
-		return nil, checkCreateUpdateGroup(err, "Failed to update group.")
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
@@ -570,7 +563,7 @@ func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*empt
 	for _, id := range req.Ids {
 		err := auth.DeleteGroup(ctx, a.db, id)
 		if err != nil {
-			return nil, check(err)
+			return nil, err
 		}
 	}
 	return &emptypb.Empty{}, nil
@@ -580,7 +573,7 @@ func (a *Admin) SetGroupDisable(ctx context.Context, req *rpc.SetGroupDisableReq
 	for _, item := range req.Items {
 		err := auth.UpdateGroupDisable(ctx, a.db, item.Id, item.Disable)
 		if err != nil {
-			return nil, check(err)
+			return nil, err
 		}
 	}
 	return &emptypb.Empty{}, nil

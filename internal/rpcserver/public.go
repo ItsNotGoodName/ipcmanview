@@ -28,7 +28,7 @@ func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*emptypb.Empty
 		Password: req.Password,
 	})
 	if err != nil {
-		return nil, checkCreateUpdateUser(err, "Failed to sign up.")
+		return nil, err
 	}
 
 	// TODO: remove this

@@ -29,11 +29,11 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 
 	rows, err := u.db.DahuaListDevicePermissionLevels(ctx, authSession.UserID)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 	dbDevices, err := u.db.DahuaListDevices(ctx, repo.FatDahuaDeviceParams{IDs: dahua.ListIDsByLevel(rows, models.DahuaPermissionLevelUser)})
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &rpc.GetHomePageResp{
@@ -46,7 +46,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 
 	user, err := u.db.AuthGetUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	dbSessions, err := u.db.AuthListUserSessionsForUserAndNotExpired(ctx, repo.AuthListUserSessionsForUserAndNotExpiredParams{
@@ -54,7 +54,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 		Now:    types.NewTime(time.Now()),
 	})
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	activeCutoff := time.Now().Add(-24 * time.Hour)
@@ -74,7 +74,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 
 	dbGroups, err := u.db.AuthListGroupsForUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	groups := make([]*rpc.GetProfilePageResp_Group, 0, len(dbGroups))
@@ -103,26 +103,18 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 
 	dbUser, err := u.db.AuthGetUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	if err := auth.CheckUserPassword(dbUser.Password, req.OldPassword); err != nil {
-		return nil, NewError(err, "Old password is invalid.").Field("oldPassword")
+		return nil, err
 	}
 
 	if err := auth.UpdateUserPassword(ctx, u.db, dbUser, auth.UpdateUserPasswordParams{
 		NewPassword:    req.NewPassword,
 		CurrentSession: authSession.Session,
 	}); err != nil {
-		msg := "Failed to update password."
-
-		if errs, ok := asValidationErrors(err); ok {
-			return nil, NewError(err, msg).Validation(errs, [][2]string{
-				{"newPassword", "Password"},
-			})
-		}
-
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
@@ -133,25 +125,11 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 
 	dbUser, err := u.db.AuthGetUser(ctx, authSession.UserID)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	if err := auth.UpdateUserUsername(ctx, u.db, dbUser, req.NewUsername); err != nil {
-		msg := "Failed to update username."
-
-		if errs, ok := asValidationErrors(err); ok {
-			return nil, NewError(err, msg).Validation(errs, [][2]string{
-				{"newUsername", "Username"},
-			})
-		}
-
-		if constraintErr, ok := asConstraintError(err); ok {
-			return nil, NewError(err, msg).Constraint(constraintErr, [][3]string{
-				{"newUsername", "users.username", "Name already taken."},
-			})
-		}
-
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
@@ -162,7 +140,7 @@ func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *em
 
 	err := auth.DeleteOtherUserSessions(ctx, u.db, authSession.UserID, authSession.Session)
 	if err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil
@@ -172,7 +150,7 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 	authSession := useAuthSession(ctx)
 
 	if err := auth.DeleteUserSession(ctx, u.db, authSession.UserID, req.SessionId); err != nil {
-		return nil, check(err)
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil

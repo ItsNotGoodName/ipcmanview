@@ -5,11 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 	"github.com/twitchtv/twirp"
 )
 
@@ -90,58 +86,58 @@ func useAuthSession(ctx context.Context) auth.Session {
 
 // ---------- Error
 
-func asValidationErrors(err error) (validator.ValidationErrors, bool) {
-	errs, ok := err.(validator.ValidationErrors)
-	return errs, ok
-}
-
-func asConstraintError(err error) (sqlite.ConstraintError, bool) {
-	return sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE)
-}
-
-type Error struct {
-	msg string
-}
-
-func NewError(err error, msg string) Error {
-	if err != nil {
-		log.Err(err).Str("package", "rpcserver").Send()
-	}
-	return Error{msg: msg}
-}
-
-func (e Error) Field(field string) twirp.Error {
-	return twirp.InvalidArgument.Error(e.msg).WithMeta(field, e.msg)
-}
-
-func (e Error) Validation(errs validator.ValidationErrors, lookup [][2]string) twirp.Error {
-	twirpErr := twirp.InvalidArgument.Error(e.msg)
-	for _, f := range errs {
-		field := f.Field()
-		for _, kv := range lookup {
-			if kv[1] == field {
-				twirpErr = twirpErr.WithMeta(kv[0], f.Translate(core.Translator))
-			}
-		}
-	}
-	return twirpErr
-}
-
-func (e Error) Constraint(constraintErr sqlite.ConstraintError, lookup [][3]string) twirp.Error {
-	twirpErr := twirp.InvalidArgument.Error(e.msg)
-	for _, kv := range lookup {
-		if constraintErr.IsField(kv[1]) {
-			twirpErr = twirpErr.WithMeta(kv[0], kv[2])
-			break
-		}
-	}
-	return twirpErr
-}
-
-func (w Error) Internal() twirp.Error {
-	return twirp.InternalError(w.msg)
-}
-
-func (w Error) NotFound() twirp.Error {
-	return twirp.NotFoundError(w.msg)
-}
+// func asValidationErrors(err error) (validator.ValidationErrors, bool) {
+// 	errs, ok := err.(validator.ValidationErrors)
+// 	return errs, ok
+// }
+//
+// func asConstraintError(err error) (sqlite.ConstraintError, bool) {
+// 	return sqlite.AsConstraintError(err, sqlite.CONSTRAINT_UNIQUE)
+// }
+//
+// type Error struct {
+// 	msg string
+// }
+//
+// func NewError(err error, msg string) Error {
+// 	if err != nil {
+// 		log.Err(err).Str("package", "rpcserver").Send()
+// 	}
+// 	return Error{msg: msg}
+// }
+//
+// func (e Error) Field(field string) twirp.Error {
+// 	return twirp.InvalidArgument.Error(e.msg).WithMeta(field, e.msg)
+// }
+//
+// func (e Error) Validation(errs validator.ValidationErrors, lookup [][2]string) twirp.Error {
+// 	twirpErr := twirp.InvalidArgument.Error(e.msg)
+// 	for _, f := range errs {
+// 		field := f.Field()
+// 		for _, kv := range lookup {
+// 			if kv[1] == field {
+// 				twirpErr = twirpErr.WithMeta(kv[0], f.Translate(core.Translator))
+// 			}
+// 		}
+// 	}
+// 	return twirpErr
+// }
+//
+// func (e Error) Constraint(constraintErr sqlite.ConstraintError, lookup [][3]string) twirp.Error {
+// 	twirpErr := twirp.InvalidArgument.Error(e.msg)
+// 	for _, kv := range lookup {
+// 		if constraintErr.IsField(kv[1]) {
+// 			twirpErr = twirpErr.WithMeta(kv[0], kv[2])
+// 			break
+// 		}
+// 	}
+// 	return twirpErr
+// }
+//
+// func (w Error) Internal() twirp.Error {
+// 	return twirp.InternalError(w.msg)
+// }
+//
+// func (w Error) NotFound() twirp.Error {
+// 	return twirp.NotFoundError(w.msg)
+// }
