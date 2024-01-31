@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -119,7 +120,7 @@ func (e Error) Validation(errs validator.ValidationErrors, lookup [][2]string) t
 		field := f.Field()
 		for _, kv := range lookup {
 			if kv[1] == field {
-				twirpErr = twirpErr.WithMeta(kv[0], f.Error())
+				twirpErr = twirpErr.WithMeta(kv[0], f.Translate(core.Translator))
 			}
 		}
 	}
