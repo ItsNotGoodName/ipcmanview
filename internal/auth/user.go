@@ -41,6 +41,8 @@ type CreateUserParams struct {
 	Email    string
 	Username string
 	Password string
+	Admin    bool
+	Disabled bool
 }
 
 func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, error) {
@@ -60,14 +62,44 @@ func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, e
 		return 0, err
 	}
 
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return 0, nil
+	}
+	defer tx.Rollback()
+
 	now := types.NewTime(time.Now())
-	return db.AuthCreateUser(ctx, repo.AuthCreateUserParams{
+	id, err := tx.AuthCreateUser(ctx, repo.AuthCreateUserParams{
 		Email:     arg.Email,
 		Username:  arg.Username,
 		Password:  password,
 		CreatedAt: now,
 		UpdatedAt: now,
+		DisabledAt: types.NullTime{
+			Time:  now.Time,
+			Valid: arg.Disabled,
+		},
 	})
+	if err != nil {
+		return 0, err
+	}
+
+	if arg.Admin {
+		tx.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
+			UserID:    id,
+			CreatedAt: now,
+		})
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func DeleteUser(ctx context.Context, db repo.DB, id int64) error {
+	return db.DeleteUser(ctx, id)
 }
 
 func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, newPassword string) error {
@@ -112,7 +144,7 @@ func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newU
 	return err
 }
 
-func UpdateUserDisable(ctx context.Context, db repo.DB, id int64, disable bool) error {
+func UpdateUserDisabled(ctx context.Context, db repo.DB, id int64, disable bool) error {
 	if disable {
 		_, err := db.AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),

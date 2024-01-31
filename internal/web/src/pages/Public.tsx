@@ -130,7 +130,7 @@ export function SignIn() {
           </Field>
           <Field name="rememberMe" type="boolean">
             {(field, props) => (
-              <CheckboxRoot validationState={field.error ? "invalid" : "valid"}>
+              <CheckboxRoot validationState={field.error ? "invalid" : "valid"} checked={field.value}>
                 <CheckboxInput {...props} />
                 <CheckboxControl />
                 <CheckboxLabel>Remember me</CheckboxLabel>

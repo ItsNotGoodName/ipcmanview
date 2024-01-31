@@ -161,7 +161,7 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 	return &emptypb.Empty{}, nil
 }
 
-func (u *User) RevokeAllMySessions(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
+func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *emptypb.Empty) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
 	if err := u.db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{

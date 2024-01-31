@@ -298,15 +298,40 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 
 }
 
-func (*Admin) DeleteUser(context.Context, *rpc.DeleteUserReq) (*emptypb.Empty, error) {
-	return nil, errNotImplemented
+func (a *Admin) CreateUser(ctx context.Context, req *rpc.CreateUserReq) (*emptypb.Empty, error) {
+	_, err := auth.CreateUser(ctx, a.db, auth.CreateUserParams{
+		Email:    req.Email,
+		Username: req.Username,
+		Password: req.Password,
+		Admin:    req.Admin,
+		Disabled: req.Disabled,
+	})
+	if err != nil {
+		return nil, checkCreateUpdateUser(err, "Failed to create user.")
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (a *Admin) DeleteUser(ctx context.Context, req *rpc.DeleteUserReq) (*emptypb.Empty, error) {
+	authSession := useAuthSession(ctx)
+	for _, id := range req.Ids {
+		if id != authSession.UserID {
+			err := auth.DeleteUser(ctx, a.db, id)
+			if err != nil {
+				return nil, check(err)
+			}
+		}
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 	for _, item := range req.Items {
 		if item.Id != authSession.UserID {
-			err := auth.UpdateUserDisable(ctx, a.db, item.Id, item.Disable)
+			err := auth.UpdateUserDisabled(ctx, a.db, item.Id, item.Disable)
 			if err != nil {
 				return nil, check(err)
 			}

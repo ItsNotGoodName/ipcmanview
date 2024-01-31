@@ -1,4 +1,4 @@
-import { CheckboxControl, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission, } from "@solidjs/router";
 import { ErrorBoundary, For, Show, Suspense, createEffect, createSignal, } from "solid-js";
 import { RiDesignFocus2Line, RiSystemLockLine, RiUserFacesAdminLine, } from "solid-icons/ri";
@@ -56,6 +56,9 @@ export function AdminUsers() {
   const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = createToggleSortField(() => data()?.sort)
 
+  // Create
+  const [openCreateForm, setOpenCreateForm] = createSignal(false);
+
   // Delete
   const deleteSubmission = useSubmission(actionDelete)
   const deleteAction = useAction(actionDelete)
@@ -85,6 +88,20 @@ export function AdminUsers() {
 
   return (
     <LayoutNormal class="max-w-4xl">
+
+      <DialogRoot open={openCreateForm()} onOpenChange={setOpenCreateForm}>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogModal>
+            <DialogHeader>
+              <DialogTitle>Create user</DialogTitle>
+            </DialogHeader>
+            <DialogContent>
+              <CreateForm close={() => setOpenCreateForm(false)} />
+            </DialogContent>
+          </DialogModal>
+        </DialogPortal>
+      </DialogRoot>
 
       <AlertDialogRoot open={openDeleteConfirm() != undefined} onOpenChange={() => setOpenDeleteConfirm(undefined)}>
         <AlertDialogModal>
@@ -201,7 +218,7 @@ export function AdminUsers() {
                     <Crud.MoreDropdownMenuTrigger />
                     <DropdownMenuPortal>
                       <DropdownMenuContent>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setOpenCreateForm(true)}>
                           Create
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -328,14 +345,13 @@ export function AdminUsers() {
   )
 }
 
-
 type ResetPasswordForm = {
   id: any
   newPassword: string
   confirmPassword: string
 }
 
-const actionUpdateForm = action((data: ResetPasswordForm) => useClient()
+const actionResetPasswordForm = action((data: ResetPasswordForm) => useClient()
   .admin.resetUserPassword(data).then()
   .catch(throwAsFormError))
 
@@ -354,7 +370,7 @@ function ResetPasswordForm(props: { close: () => void, id: bigint }) {
     const data = { id: props.id, newPassword: "", confirmPassword: "" } satisfies ResetPasswordForm
     reset(form, { initialValues: data })
   })
-  const action = useAction(actionUpdateForm)
+  const action = useAction(actionResetPasswordForm)
   const submit = (data: ResetPasswordForm) => action(data)
     .then(() => props.close())
 
@@ -407,3 +423,161 @@ function ResetPasswordForm(props: { close: () => void, id: bigint }) {
     </Form>
   )
 }
+
+type CreateForm = {
+  username: string
+  email: string
+  password: string
+  confirmPassword: string
+  admin: boolean
+  disabled: boolean
+}
+
+const actionCreateForm = action((data: CreateForm) => useClient()
+  .admin.createUser(data).then()
+  .catch(throwAsFormError))
+
+function CreateForm(props: { close: () => void }) {
+  const [addMore, setAddMore] = createSignal(false)
+
+  const [form, { Field, Form }] = createForm<CreateForm>({
+    initialValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      admin: false,
+      disabled: false,
+    },
+    validate: (data) => {
+      if (data.password != data.confirmPassword) {
+        return {
+          confirmPassword: "Password does not match."
+        }
+      }
+      return {}
+    }
+  });
+  const action = useAction(actionCreateForm)
+  const submit = async (data: CreateForm) => {
+    await action(data)
+    if (addMore()) {
+      reset(form)
+    } else {
+      props.close()
+    }
+  }
+
+  return (
+    <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
+      <Field name="email" validate={required('Please enter an email.')}>
+        {(field, props) => (
+          <FieldRoot class="gap-1.5">
+            <FieldLabel field={field}>Email</FieldLabel>
+            <FieldControl field={field}>
+              <Input
+                {...props}
+                placeholder="Email"
+                type="email"
+                value={field.value}
+              />
+            </FieldControl>
+            <FieldMessage field={field} />
+          </FieldRoot>
+        )}
+      </Field>
+      <Field name="username" validate={required('Please enter a username.')}>
+        {(field, props) => (
+          <FieldRoot class="gap-1.5">
+            <FieldLabel field={field}>Username</FieldLabel>
+            <FieldControl field={field}>
+              <Input
+                {...props}
+                autocomplete="username"
+                placeholder="Username"
+                value={field.value}
+              />
+            </FieldControl>
+            <FieldMessage field={field} />
+          </FieldRoot>
+        )}
+      </Field>
+      <Field name="password" validate={required('Please enter a password.')}>
+        {(field, props) => (
+          <FieldRoot class="gap-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <FieldLabel field={field}>
+                Password
+              </FieldLabel>
+            </div>
+            <FieldControl field={field}>
+              <Input
+                {...props}
+                autocomplete="new-password"
+                placeholder="Password"
+                type="password"
+                value={field.value}
+              />
+            </FieldControl>
+            <FieldMessage field={field} />
+          </FieldRoot>
+        )}
+      </Field>
+      <Field name="confirmPassword" validate={required('Please confirm password.')}>
+        {(field, props) => (
+          <FieldRoot class="gap-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <FieldLabel field={field}>
+                Confirm password
+              </FieldLabel>
+            </div>
+            <FieldControl field={field}>
+              <Input
+                {...props}
+                autocomplete="new-password"
+                placeholder="Confirm password"
+                type="password"
+                value={field.value}
+              />
+            </FieldControl>
+            <FieldMessage field={field} />
+          </FieldRoot>
+        )}
+      </Field>
+      <div class="flex gap-4 flex-wrap">
+        <Field name="admin" type="boolean">
+          {(field, props) => (
+            <CheckboxRoot validationState={field.error ? "invalid" : "valid"} checked={field.value}>
+              <CheckboxInput {...props} />
+              <CheckboxControl />
+              <CheckboxLabel>Admin</CheckboxLabel>
+              <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
+            </CheckboxRoot>
+          )}
+        </Field>
+        <Field name="disabled" type="boolean">
+          {(field, props) => (
+            <CheckboxRoot validationState={field.error ? "invalid" : "valid"} checked={field.value}>
+              <CheckboxInput {...props} />
+              <CheckboxControl />
+              <CheckboxLabel>Disabled</CheckboxLabel>
+              <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
+            </CheckboxRoot>
+          )}
+        </Field>
+      </div>
+      <Button type="submit" disabled={form.submitting}>
+        <Show when={!form.submitting} fallback={<>Creating user</>}>
+          Create user
+        </Show>
+      </Button>
+      <FormMessage form={form} />
+      <CheckboxRoot checked={addMore()} onChange={setAddMore}>
+        <CheckboxInput />
+        <CheckboxControl />
+        <CheckboxLabel>Add more</CheckboxLabel>
+      </CheckboxRoot>
+    </Form>
+  )
+}
+

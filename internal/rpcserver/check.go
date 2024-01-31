@@ -12,6 +12,25 @@ func check(err error) twirp.Error {
 	return NewError(err, "Something went wrong.").Internal()
 }
 
+func checkCreateUpdateUser(err error, msg string) error {
+	if errs, ok := asValidationErrors(err); ok {
+		return NewError(err, msg).Validation(errs, [][2]string{
+			{"email", "Email"},
+			{"username", "Username"},
+			{"password", "Password"},
+		})
+	}
+
+	if constraintErr, ok := asConstraintError(err); ok {
+		return NewError(err, "Failed to sign up.").Constraint(constraintErr, [][3]string{
+			{"username", "users.username", "Name already taken."},
+			{"email", "users.email", "Email already taken."},
+		})
+	}
+
+	return check(err)
+}
+
 func checkCreateUpdateGroup(err error, msg string) error {
 	if errs, ok := asValidationErrors(err); ok {
 		return NewError(err, msg).Validation(errs, [][2]string{

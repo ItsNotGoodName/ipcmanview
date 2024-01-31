@@ -130,7 +130,7 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			session, err := db.AuthGetUserBySession(ctx, cookie.Value)
+			session, err := db.AuthGetUserSession(ctx, cookie.Value)
 			if err != nil {
 				if repo.IsNotFound(err) {
 					return next(c)

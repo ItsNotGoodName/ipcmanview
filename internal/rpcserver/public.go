@@ -28,22 +28,7 @@ func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*emptypb.Empty
 		Password: req.Password,
 	})
 	if err != nil {
-		if errs, ok := asValidationErrors(err); ok {
-			return nil, NewError(err, "Failed to sign up.").Validation(errs, [][2]string{
-				{"email", "Email"},
-				{"username", "Username"},
-				{"password", "Password"},
-			})
-		}
-
-		if constraintErr, ok := asConstraintError(err); ok {
-			return nil, NewError(err, "Failed to sign up.").Constraint(constraintErr, [][3]string{
-				{"username", "users.username", "Name already taken."},
-				{"email", "users.email", "Email already taken."},
-			})
-		}
-
-		return nil, check(err)
+		return nil, checkCreateUpdateUser(err, "Failed to sign up.")
 	}
 
 	// TODO: remove this

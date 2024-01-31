@@ -1,8 +1,15 @@
 -- name: AuthCreateUser :one
 INSERT INTO
-  users (email, username, password, created_at, updated_at)
+  users (
+    email,
+    username,
+    password,
+    created_at,
+    updated_at,
+    disabled_at
+  )
 VALUES
-  (?, ?, ?, ?, ?) RETURNING id;
+  (?, ?, ?, ?, ?, ?) RETURNING id;
 
 -- name: AuthGetUser :one
 SELECT
@@ -20,24 +27,6 @@ FROM
 WHERE
   username = sqlc.arg ('username_or_email')
   OR email = sqlc.arg ('username_or_email');
-
--- name: AuthGetUserBySession :one
-SELECT
-  user_sessions.id as id,
-  user_sessions.user_id as user_id,
-  users.username,
-  admins.user_id IS NOT NULL as 'admin',
-  user_sessions.last_ip,
-  user_sessions.last_used_at,
-  user_sessions.expired_at,
-  users.disabled_at AS 'users_disabled_at',
-  user_sessions.session
-FROM
-  user_sessions
-  LEFT JOIN users ON users.id = user_sessions.user_id
-  LEFT JOIN admins ON admins.user_id = user_sessions.user_id
-WHERE
-  session = ?;
 
 -- name: AuthListUsersByGroup :many
 SELECT
@@ -65,6 +54,11 @@ SET
 WHERE
   id = ? RETURNING id;
 
+-- name: DeleteUser :exec
+DELETE FROM users
+WHERE
+  id = ?;
+
 -- name: AuthCreateUserSession :exec
 INSERT INTO
   user_sessions (
@@ -79,6 +73,24 @@ INSERT INTO
   )
 VALUES
   (?, ?, ?, ?, ?, ?, ?, ?);
+
+-- name: AuthGetUserSession :one
+SELECT
+  user_sessions.id as id,
+  user_sessions.user_id as user_id,
+  users.username,
+  admins.user_id IS NOT NULL as 'admin',
+  user_sessions.last_ip,
+  user_sessions.last_used_at,
+  user_sessions.expired_at,
+  users.disabled_at AS 'users_disabled_at',
+  user_sessions.session
+FROM
+  user_sessions
+  LEFT JOIN users ON users.id = user_sessions.user_id
+  LEFT JOIN admins ON admins.user_id = user_sessions.user_id
+WHERE
+  session = ?;
 
 -- name: AuthDeleteUserSessionForUser :exec
 DELETE FROM user_sessions

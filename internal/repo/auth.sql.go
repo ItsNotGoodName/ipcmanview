@@ -54,17 +54,25 @@ func (q *Queries) AuthCreateGroup(ctx context.Context, arg AuthCreateGroupParams
 
 const authCreateUser = `-- name: AuthCreateUser :one
 INSERT INTO
-  users (email, username, password, created_at, updated_at)
+  users (
+    email,
+    username,
+    password,
+    created_at,
+    updated_at,
+    disabled_at
+  )
 VALUES
-  (?, ?, ?, ?, ?) RETURNING id
+  (?, ?, ?, ?, ?, ?) RETURNING id
 `
 
 type AuthCreateUserParams struct {
-	Email     string
-	Username  string
-	Password  string
-	CreatedAt types.Time
-	UpdatedAt types.Time
+	Email      string
+	Username   string
+	Password   string
+	CreatedAt  types.Time
+	UpdatedAt  types.Time
+	DisabledAt types.NullTime
 }
 
 func (q *Queries) AuthCreateUser(ctx context.Context, arg AuthCreateUserParams) (int64, error) {
@@ -74,6 +82,7 @@ func (q *Queries) AuthCreateUser(ctx context.Context, arg AuthCreateUserParams) 
 		arg.Password,
 		arg.CreatedAt,
 		arg.UpdatedAt,
+		arg.DisabledAt,
 	)
 	var id int64
 	err := row.Scan(&id)
@@ -246,54 +255,6 @@ func (q *Queries) AuthGetUser(ctx context.Context, id int64) (User, error) {
 	return i, err
 }
 
-const authGetUserBySession = `-- name: AuthGetUserBySession :one
-SELECT
-  user_sessions.id as id,
-  user_sessions.user_id as user_id,
-  users.username,
-  admins.user_id IS NOT NULL as 'admin',
-  user_sessions.last_ip,
-  user_sessions.last_used_at,
-  user_sessions.expired_at,
-  users.disabled_at AS 'users_disabled_at',
-  user_sessions.session
-FROM
-  user_sessions
-  LEFT JOIN users ON users.id = user_sessions.user_id
-  LEFT JOIN admins ON admins.user_id = user_sessions.user_id
-WHERE
-  session = ?
-`
-
-type AuthGetUserBySessionRow struct {
-	ID              int64
-	UserID          int64
-	Username        sql.NullString
-	Admin           bool
-	LastIp          string
-	LastUsedAt      types.Time
-	ExpiredAt       types.Time
-	UsersDisabledAt types.NullTime
-	Session         string
-}
-
-func (q *Queries) AuthGetUserBySession(ctx context.Context, session string) (AuthGetUserBySessionRow, error) {
-	row := q.db.QueryRowContext(ctx, authGetUserBySession, session)
-	var i AuthGetUserBySessionRow
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.Username,
-		&i.Admin,
-		&i.LastIp,
-		&i.LastUsedAt,
-		&i.ExpiredAt,
-		&i.UsersDisabledAt,
-		&i.Session,
-	)
-	return i, err
-}
-
 const authGetUserByUsernameOrEmail = `-- name: AuthGetUserByUsernameOrEmail :one
 SELECT
   id, email, username, password, created_at, updated_at, disabled_at
@@ -315,6 +276,54 @@ func (q *Queries) AuthGetUserByUsernameOrEmail(ctx context.Context, usernameOrEm
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DisabledAt,
+	)
+	return i, err
+}
+
+const authGetUserSession = `-- name: AuthGetUserSession :one
+SELECT
+  user_sessions.id as id,
+  user_sessions.user_id as user_id,
+  users.username,
+  admins.user_id IS NOT NULL as 'admin',
+  user_sessions.last_ip,
+  user_sessions.last_used_at,
+  user_sessions.expired_at,
+  users.disabled_at AS 'users_disabled_at',
+  user_sessions.session
+FROM
+  user_sessions
+  LEFT JOIN users ON users.id = user_sessions.user_id
+  LEFT JOIN admins ON admins.user_id = user_sessions.user_id
+WHERE
+  session = ?
+`
+
+type AuthGetUserSessionRow struct {
+	ID              int64
+	UserID          int64
+	Username        sql.NullString
+	Admin           bool
+	LastIp          string
+	LastUsedAt      types.Time
+	ExpiredAt       types.Time
+	UsersDisabledAt types.NullTime
+	Session         string
+}
+
+func (q *Queries) AuthGetUserSession(ctx context.Context, session string) (AuthGetUserSessionRow, error) {
+	row := q.db.QueryRowContext(ctx, authGetUserSession, session)
+	var i AuthGetUserSessionRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Username,
+		&i.Admin,
+		&i.LastIp,
+		&i.LastUsedAt,
+		&i.ExpiredAt,
+		&i.UsersDisabledAt,
+		&i.Session,
 	)
 	return i, err
 }
@@ -598,4 +607,15 @@ func (q *Queries) AuthUpsertAdmin(ctx context.Context, arg AuthUpsertAdminParams
 	var user_id int64
 	err := row.Scan(&user_id)
 	return user_id, err
+}
+
+const deleteUser = `-- name: DeleteUser :exec
+DELETE FROM users
+WHERE
+  id = ?
+`
+
+func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, deleteUser, id)
+	return err
 }

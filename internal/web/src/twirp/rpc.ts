@@ -568,6 +568,31 @@ export interface GetAdminDevicesPageResp_Device {
 // ---------- User
 
 /**
+ * @generated from protobuf message CreateUserReq
+ */
+export interface CreateUserReq {
+    /**
+     * @generated from protobuf field: string email = 1;
+     */
+    email: string;
+    /**
+     * @generated from protobuf field: string username = 2;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: string password = 3;
+     */
+    password: string;
+    /**
+     * @generated from protobuf field: bool admin = 4;
+     */
+    admin: boolean;
+    /**
+     * @generated from protobuf field: bool disabled = 5;
+     */
+    disabled: boolean;
+}
+/**
  * @generated from protobuf message DeleteUserReq
  */
 export interface DeleteUserReq {
@@ -1367,6 +1392,22 @@ class GetAdminDevicesPageResp_Device$Type extends MessageType<GetAdminDevicesPag
  */
 export const GetAdminDevicesPageResp_Device = new GetAdminDevicesPageResp_Device$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class CreateUserReq$Type extends MessageType<CreateUserReq> {
+    constructor() {
+        super("CreateUserReq", [
+            { no: 1, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "password", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "admin", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "disabled", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message CreateUserReq
+ */
+export const CreateUserReq = new CreateUserReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class DeleteUserReq$Type extends MessageType<DeleteUserReq> {
     constructor() {
         super("DeleteUserReq", [
@@ -1715,6 +1756,7 @@ export const Admin = new ServiceType("Admin", [
     { name: "GetAdminGroupsIDPage", options: {}, I: GetAdminGroupsIDPageReq, O: GetAdminGroupsIDPageResp },
     { name: "GetAdminGroupsPage", options: {}, I: GetAdminGroupsPageReq, O: GetAdminGroupsPageResp },
     { name: "GetAdminUsersPage", options: {}, I: GetAdminUsersPageReq, O: GetAdminUsersPageResp },
+    { name: "CreateUser", options: {}, I: CreateUserReq, O: Empty },
     { name: "DeleteUser", options: {}, I: DeleteUserReq, O: Empty },
     { name: "ResetUserPassword", options: {}, I: ResetUserPasswordReq, O: Empty },
     { name: "SetUserAdmin", options: {}, I: SetUserAdminReq, O: Empty },
