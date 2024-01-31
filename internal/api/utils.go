@@ -42,9 +42,9 @@ func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Clien
 	if session.Admin {
 		level = models.DahuaPermissionLevelAdmin
 	} else {
-		level, err = db.DahuaGetDevicePermissionLevel(ctx, repo.DahuaGetDevicePermissionLevelParams{
-			DeviceID: id,
-			UserID:   core.NewNullInt64(session.UserID),
+		permission, err := db.DahuaGetDahuaDevicePermission(ctx, repo.DahuaDevicePermissionParams{
+			UserID: id,
+			Level:  level,
 		})
 		if err != nil {
 			if repo.IsNotFound(err) {
@@ -52,9 +52,10 @@ func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Clien
 			}
 			return dahua.Client{}, 0, err
 		}
+		level = permission.Level
 	}
 
-	conn, err := db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{id}})
+	conn, err := db.DahuaGetDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{id}})
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return dahua.Client{}, 0, echo.ErrNotFound.WithInternal(err)

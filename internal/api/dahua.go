@@ -28,7 +28,7 @@ func (s *Server) DahuaAfero(route string) echo.HandlerFunc {
 func (s *Server) DahuaDevices(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	devices, err := s.db.DahuaListDevices(ctx)
+	devices, err := s.db.DahuaListFatDevices(ctx)
 	if err != nil {
 		return err
 	}

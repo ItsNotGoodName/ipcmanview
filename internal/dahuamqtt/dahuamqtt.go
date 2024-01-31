@@ -70,7 +70,7 @@ func (c Conn) Sync(ctx context.Context) error {
 func (c Conn) haSync(ctx context.Context) error {
 	c.conn.Ready()
 
-	devices, err := c.db.DahuaListDevices(ctx)
+	devices, err := c.db.DahuaListFatDevices(ctx)
 	if err != nil {
 		return err
 	}

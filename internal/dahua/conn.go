@@ -8,7 +8,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-func NewConn(v repo.FatDahuaDevice) Conn {
+func NewConn(v repo.DahuaFatDevice) Conn {
 	return Conn{
 		ID:       v.DahuaDevice.ID,
 		URL:      v.DahuaDevice.Url.URL,
@@ -20,7 +20,7 @@ func NewConn(v repo.FatDahuaDevice) Conn {
 	}
 }
 
-func NewConns(devices []repo.FatDahuaDevice) []Conn {
+func NewConns(devices []repo.DahuaFatDevice) []Conn {
 	conns := make([]Conn, 0, len(devices))
 	for _, v := range devices {
 		conns = append(conns, NewConn(v))

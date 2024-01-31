@@ -165,7 +165,7 @@ func (s FileService) download(ctx context.Context, id int64) error {
 		return err
 	}
 
-	device, err := s.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{file.DeviceID}})
+	device, err := s.db.DahuaGetDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{file.DeviceID}})
 	if err != nil {
 		return err
 	}

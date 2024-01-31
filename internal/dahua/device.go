@@ -120,7 +120,7 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDev
 		return 0, err
 	}
 
-	device, err := db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{id}})
+	device, err := db.DahuaGetDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{id}})
 	if err != nil {
 		return 0, err
 	}
@@ -211,7 +211,7 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.
 		return err
 	}
 
-	device, err := db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{dbModel.ID}})
+	device, err := db.DahuaGetDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{dbModel.ID}})
 	if err != nil {
 		return err
 	}

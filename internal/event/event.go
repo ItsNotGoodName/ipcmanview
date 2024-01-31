@@ -6,11 +6,11 @@ import (
 )
 
 type DahuaDeviceCreated struct {
-	Device repo.FatDahuaDevice
+	Device repo.DahuaFatDevice
 }
 
 type DahuaDeviceUpdated struct {
-	Device repo.FatDahuaDevice
+	Device repo.DahuaFatDevice
 }
 
 type DahuaDeviceDeleted struct {

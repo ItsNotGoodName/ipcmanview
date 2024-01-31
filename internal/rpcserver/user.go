@@ -5,8 +5,6 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -27,11 +25,18 @@ type User struct {
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
 	session := useAuthSession(ctx)
 
-	rows, err := u.db.DahuaListDevicePermissionLevels(ctx, session.UserID)
-	if err != nil {
-		return nil, err
+	var ids []int64
+	if !session.Admin {
+		permissions, err := u.db.DahuaListDahuaDevicePermissions(ctx, repo.DahuaDevicePermissionParams{
+			UserID: session.UserID,
+		})
+		if err != nil {
+			return nil, err
+		}
+		ids = permissions.DeviceIDs()
 	}
-	dbDevices, err := u.db.DahuaListDevices(ctx, repo.FatDahuaDeviceParams{IDs: dahua.ListIDsByLevel(rows, models.DahuaPermissionLevelUser)})
+
+	dbDevices, err := u.db.DahuaListFatDevices(ctx, repo.DahuaFatDeviceParams{IDs: ids})
 	if err != nil {
 		return nil, err
 	}

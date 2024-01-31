@@ -110,7 +110,7 @@ func (s *WorkerStore) Register(bus *event.Bus) *WorkerStore {
 }
 
 func (s *WorkerStore) Bootstrap(ctx context.Context, db repo.DB, store *Store) error {
-	devices, err := db.DahuaListDevices(ctx)
+	devices, err := db.DahuaListFatDevices(ctx)
 	if err != nil {
 		return err
 	}
