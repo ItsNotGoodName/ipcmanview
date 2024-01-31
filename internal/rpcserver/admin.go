@@ -107,7 +107,7 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 }
 
 func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevicesIDPageReq) (*rpc.GetAdminDevicesIDPageResp, error) {
-	v, err := a.db.DahuaGetDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	v, err := a.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevi
 }
 
 func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
-	v, err := a.db.DahuaGetDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	v, err := a.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 		return nil, err
 	}
 
-	dbDevice, err := a.db.DahuaGetDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	dbDevice, err := a.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
 		return nil, err
 	}

@@ -137,7 +137,7 @@ func (s *session) Data(r io.Reader) error {
 		log.Warn().Err(err).Str("date", e.GetHeader("Date")).Msg("Failed to parse date")
 	}
 
-	dbDevice, err := s.db.DahuaGetDevice(ctx, repo.DahuaFatDeviceParams{
+	dbDevice, err := s.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{
 		IPs: []string{core.SplitAddress(s.address)[0]},
 	})
 	if err != nil {

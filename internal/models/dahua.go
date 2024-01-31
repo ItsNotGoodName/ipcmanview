@@ -59,6 +59,30 @@ func (l DahuaPermissionLevel) String() string {
 	}
 }
 
+type DahuaDevicePermission struct {
+	DeviceID int64
+	Level    DahuaPermissionLevel
+}
+
+type DahuaDevicePermissions []DahuaDevicePermission
+
+func (p DahuaDevicePermissions) DeviceIDs() []int64 {
+	ids := make([]int64, 0, len(p))
+	for i := range p {
+		ids = append(ids, p[i].DeviceID)
+	}
+	return ids
+}
+
+func (p DahuaDevicePermissions) Get(deviceID int64) (DahuaDevicePermission, bool) {
+	for i := range p {
+		if p[i].DeviceID == deviceID {
+			return p[i], true
+		}
+	}
+	return DahuaDevicePermission{}, false
+}
+
 type DahuaError struct {
 	Error string `json:"error"`
 }

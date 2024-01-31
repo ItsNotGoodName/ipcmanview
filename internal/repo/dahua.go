@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
@@ -21,6 +22,7 @@ type DahuaFatDeviceParams struct {
 	IDs      []int64
 	Features []models.DahuaFeature
 	Limit    int
+	Filter   []int64
 }
 
 func (db DB) DahuaListFatDevices(ctx context.Context, args ...DahuaFatDeviceParams) ([]DahuaFatDevice, error) {
@@ -57,7 +59,11 @@ func (db DB) DahuaListFatDevices(ctx context.Context, args ...DahuaFatDevicePara
 		and = append(and, sq.Expr("feature & ? = ?", feature, feature))
 	}
 
-	sb = sb.Where(eq)
+	if arg.Filter != nil {
+		and = append(and, sq.Eq{"id": arg.Filter})
+	}
+
+	sb = sb.Where(and)
 	// LIMIT
 	if arg.Limit != 0 {
 		sb = sb.Limit(uint64(arg.Limit))
@@ -67,7 +73,7 @@ func (db DB) DahuaListFatDevices(ctx context.Context, args ...DahuaFatDevicePara
 	return res, ssq.Query(ctx, db, &res, sb)
 }
 
-func (db DB) DahuaGetDevice(ctx context.Context, arg DahuaFatDeviceParams) (DahuaFatDevice, error) {
+func (db DB) DahuaGetFatDevice(ctx context.Context, arg DahuaFatDeviceParams) (DahuaFatDevice, error) {
 	arg.Limit = 1
 	devices, err := db.DahuaListFatDevices(ctx, arg)
 	if err != nil {
@@ -81,40 +87,25 @@ func (db DB) DahuaGetDevice(ctx context.Context, arg DahuaFatDeviceParams) (Dahu
 
 // DahuaDevicePermission
 
-type DahuaDevicePermission struct {
-	DeviceID int64
-	Level    models.DahuaPermissionLevel
-}
-
-type DahuaDevicePermissions []DahuaDevicePermission
-
-func (p DahuaDevicePermissions) DeviceIDs() []int64 {
-	ids := make([]int64, 0, len(p))
-	for _, v := range p {
-		ids = append(ids, v.DeviceID)
-	}
-	return ids
-}
-
 type DahuaDevicePermissionParams struct {
 	UserID int64
 	Level  models.DahuaPermissionLevel
-	Limit  int
 }
 
-func (db DB) DahuaListDahuaDevicePermissions(ctx context.Context, arg DahuaDevicePermissionParams) (DahuaDevicePermissions, error) {
-	if arg.Limit == 0 {
-		arg.Limit = -1
-	}
-	q := `
+var dahuaListDahuaDevicePermissions = fmt.Sprintf(`
 SELECT
   d.id as device_id,
-  max(p.level) AS level
+  CASE
+    WHEN a.user_id IS NOT NULL THEN %d
+    ELSE max(p.level)
+  END AS level
 FROM
   dahua_devices AS d
-  JOIN dahua_permissions AS p ON p.device_id = d.id
+  LEFT JOIN dahua_permissions AS p ON p.device_id = d.id
+  LEFT JOIN admins AS a ON a.user_id = ?1
 WHERE
-  p.level > ?2
+  a.user_id IS NOT NULL
+  OR p.level > ?2
   AND (
     -- Allow if user owns the permission
     p.user_id = ?1
@@ -130,30 +121,19 @@ WHERE
   )
 GROUP BY
   d.id
-LIMIT ?3
-	`
-	rows, err := db.QueryContext(ctx, q, arg.UserID, arg.Level, arg.Limit)
+	`, models.DahuaPermissionLevelAdmin)
+
+func (db DB) DahuaListDahuaDevicePermissions(ctx context.Context, arg DahuaDevicePermissionParams) (models.DahuaDevicePermissions, error) {
+	rows, err := db.QueryContext(ctx, dahuaListDahuaDevicePermissions, arg.UserID, arg.Level)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var res []DahuaDevicePermission
+	var res []models.DahuaDevicePermission
 	if err := sqlscan.ScanAll(&res, rows); err != nil {
 		return nil, err
 	}
 
 	return res, nil
-}
-
-func (db DB) DahuaGetDahuaDevicePermission(ctx context.Context, arg DahuaDevicePermissionParams) (DahuaDevicePermission, error) {
-	arg.Limit = 1
-	devices, err := db.DahuaListDahuaDevicePermissions(ctx, arg)
-	if err != nil {
-		return DahuaDevicePermission{}, err
-	}
-	if len(devices) == 0 {
-		return DahuaDevicePermission{}, ErrNotFound
-	}
-	return devices[0], nil
 }

@@ -24,6 +24,25 @@ func paramID(c echo.Context) (int64, error) {
 	return number, nil
 }
 
+func useDahuaPermissions(c echo.Context, db repo.DB) (models.DahuaDevicePermissions, error) {
+	ctx := c.Request().Context()
+
+	session, ok := auth.UseSession(ctx)
+	if !ok {
+		return nil, echo.ErrUnauthorized
+	}
+
+	permissions, err := db.DahuaListDahuaDevicePermissions(ctx, repo.DahuaDevicePermissionParams{
+		UserID: session.UserID,
+		Level:  models.DahuaPermissionLevelUser,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return permissions, nil
+}
+
 func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, models.DahuaPermissionLevel, error) {
 	ctx := c.Request().Context()
 
@@ -32,30 +51,14 @@ func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Clien
 		return dahua.Client{}, 0, err
 	}
 
-	session, ok := auth.UseSession(ctx)
+	permissions, err := useDahuaPermissions(c, db)
+
+	permission, ok := permissions.Get(id)
 	if !ok {
-		return dahua.Client{}, 0, echo.ErrUnauthorized
+		return dahua.Client{}, 0, echo.ErrNotFound
 	}
 
-	var level models.DahuaPermissionLevel
-
-	if session.Admin {
-		level = models.DahuaPermissionLevelAdmin
-	} else {
-		permission, err := db.DahuaGetDahuaDevicePermission(ctx, repo.DahuaDevicePermissionParams{
-			UserID: id,
-			Level:  level,
-		})
-		if err != nil {
-			if repo.IsNotFound(err) {
-				return dahua.Client{}, 0, echo.ErrNotFound.WithInternal(err)
-			}
-			return dahua.Client{}, 0, err
-		}
-		level = permission.Level
-	}
-
-	conn, err := db.DahuaGetDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{id}})
+	conn, err := dahua.GetFatDevice(ctx, db, permissions, repo.DahuaFatDeviceParams{IDs: []int64{id}})
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return dahua.Client{}, 0, echo.ErrNotFound.WithInternal(err)
@@ -63,7 +66,7 @@ func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Clien
 		return dahua.Client{}, 0, err
 	}
 
-	return store.Client(ctx, dahua.NewConn(conn)), level, nil
+	return store.Client(ctx, dahua.NewConn(conn)), permission.Level, nil
 }
 
 // ---------- Stream
