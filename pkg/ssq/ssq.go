@@ -1,4 +1,4 @@
-// ssq is glue code for squirrel and sqlscan.
+// Package ssq is glue code for squirrel and sqlscan.
 package ssq
 
 import (

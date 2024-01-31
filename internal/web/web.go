@@ -1,4 +1,4 @@
-// webnext contains the SPA.
+// Package web contains the SPA.
 package web
 
 import (

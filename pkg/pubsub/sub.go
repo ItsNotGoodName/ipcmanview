@@ -60,23 +60,23 @@ func (s Sub) close(ctx context.Context) error {
 	}
 }
 
-type SubscriberBuilder struct {
+type SubscribeBuilder struct {
 	pub    Pub
 	topics []string
 }
 
-func (p Pub) Subscribe(events ...Event) SubscriberBuilder {
+func (p Pub) Subscribe(events ...Event) SubscribeBuilder {
 	var topics []string
 	for _, e := range events {
 		topics = append(topics, e.EventTopic())
 	}
-	return SubscriberBuilder{
+	return SubscribeBuilder{
 		pub:    p,
 		topics: topics,
 	}
 }
 
-func (b SubscriberBuilder) Function(ctx context.Context, handle HandleFunc) (Sub, error) {
+func (b SubscribeBuilder) Function(ctx context.Context, handle HandleFunc) (Sub, error) {
 	resC := make(chan int, 1)
 	doneC := make(chan struct{})
 	errC := make(chan error, 1)
@@ -112,7 +112,7 @@ func (b SubscriberBuilder) Function(ctx context.Context, handle HandleFunc) (Sub
 // Channel creates a subscription with a channel.
 // The subscription is closed when the context is closed.
 // The channel is closed when the subscription is closed.
-func (b SubscriberBuilder) Channel(ctx context.Context, size int) (Sub, <-chan Event, error) {
+func (b SubscribeBuilder) Channel(ctx context.Context, size int) (Sub, <-chan Event, error) {
 	eventsC := make(chan Event, size)
 
 	sub, err := b.Function(ctx, func(ctx context.Context, event Event) error {

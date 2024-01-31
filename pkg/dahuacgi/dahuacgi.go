@@ -1,4 +1,4 @@
-// dahuacgi is a client library for Dahua's CGI API.
+// Package dahuacgi is a client library for Dahua's CGI API.
 package dahuacgi
 
 import (

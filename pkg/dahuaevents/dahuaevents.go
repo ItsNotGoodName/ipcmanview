@@ -1,4 +1,4 @@
-// dahuaevents contains structs for Dahua events.
+// Package dahuaevents contains structs for Dahua events.
 package dahuaevents
 
 import "github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"

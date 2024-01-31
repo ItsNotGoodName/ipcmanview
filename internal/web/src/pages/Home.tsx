@@ -19,7 +19,7 @@ export function Home() {
                 <BiRegularCctv class="h-8 w-8" />
               </div>
               <div>
-                <div>Total Devices</div>
+                <div>Devices</div>
                 <div class="text-xl font-bold">{data()?.deviceCount.toString()}</div>
               </div>
             </CardRoot>
