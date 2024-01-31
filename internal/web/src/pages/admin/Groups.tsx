@@ -397,7 +397,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
   const [data] = createResource(() => props.id != BigInt(0),
     () => useClient().admin.getGroup({ id: props.id })
       .then((data) => data.response satisfies UpdateForm))
-  syncForm(form, data)
+  const disabled = syncForm(form, data)
 
   return (
     <ErrorBoundary fallback={(e) => <PageError error={e} />}>
@@ -414,7 +414,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                   {...props}
                   placeholder="Name"
                   value={field.value}
-                  disabled={data.loading}
+                  disabled={disabled()}
                 />
               </FieldControl>
               <FieldMessage field={field} />
@@ -429,7 +429,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                 <Textarea
                   {...props}
                   placeholder="Description"
-                  disabled={data.loading}
+                  disabled={disabled()}
                 >
                   {field.value}
                 </Textarea>
@@ -438,8 +438,8 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
             </FieldRoot>
           )}
         </Field>
-        <Button type="submit" disabled={form.submitting}>
-          <Show when={data.loading || !form.submitting} fallback={<>Updating group</>}>
+        <Button type="submit" disabled={disabled() || form.submitting}>
+          <Show when={!form.submitting} fallback={<>Updating group</>}>
             Update group
           </Show>
         </Button>

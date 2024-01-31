@@ -1,8 +1,8 @@
 import { CheckboxControl, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission, } from "@solidjs/router";
-import { ErrorBoundary, For, Show, Suspense, createEffect, createSignal, } from "solid-js";
+import { ErrorBoundary, For, Show, Suspense, createEffect, createResource, createSignal, } from "solid-js";
 import { RiDesignFocus2Line, RiSystemLockLine, RiUserFacesAdminLine, } from "solid-icons/ri";
-import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, throwAsFormError, } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, syncForm, throwAsFormError, } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Seperator } from "~/ui/Seperator";
 import { Skeleton } from "~/ui/Skeleton";
@@ -59,6 +59,9 @@ export function AdminUsers() {
   // Create
   const [openCreateForm, setOpenCreateForm] = createSignal(false);
 
+  // Update
+  const [openUpdateForm, setOpenUpdateForm] = createSignal<bigint>(BigInt(0))
+
   // Delete
   const deleteSubmission = useSubmission(actionDelete)
   const deleteAction = useAction(actionDelete)
@@ -98,6 +101,20 @@ export function AdminUsers() {
             </DialogHeader>
             <DialogContent>
               <CreateForm close={() => setOpenCreateForm(false)} />
+            </DialogContent>
+          </DialogModal>
+        </DialogPortal>
+      </DialogRoot>
+
+      <DialogRoot open={openUpdateForm() != BigInt(0)} onOpenChange={() => setOpenUpdateForm(BigInt(0))}>
+        <DialogPortal>
+          <DialogOverlay />
+          <DialogModal>
+            <DialogHeader>
+              <DialogTitle>Update user</DialogTitle>
+            </DialogHeader>
+            <DialogContent>
+              <UpdateForm close={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
             </DialogContent>
           </DialogModal>
         </DialogPortal>
@@ -298,7 +315,7 @@ export function AdminUsers() {
                           <Crud.MoreDropdownMenuTrigger />
                           <DropdownMenuPortal>
                             <DropdownMenuContent>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => setOpenUpdateForm(item.id)}>
                                 Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem onSelect={() => setOpenResetPasswordForm(item.id)}>
@@ -581,3 +598,76 @@ function CreateForm(props: { close: () => void }) {
   )
 }
 
+
+type UpdateForm = {
+  id: any
+  username: string
+  email: string
+}
+
+const actionUpdateForm = action((data: UpdateForm) => useClient()
+  .admin.updateUser(data)
+  .then(() => revalidate(getAdminUsersPage.key))
+  .catch(throwAsFormError))
+
+function UpdateForm(props: { close: () => void, id: bigint }) {
+  const [form, { Field, Form }] = createForm<UpdateForm>();
+  const action = useAction(actionUpdateForm)
+  const submit = (data: UpdateForm) => action(data)
+    .then(() => props.close())
+
+  const [data] = createResource(() => props.id != BigInt(0),
+    () => useClient().admin.getUser({ id: props.id })
+      .then((data) => data.response satisfies UpdateForm))
+  const disabled = syncForm(form, data)
+
+  return (
+    <ErrorBoundary fallback={(e) => <PageError error={e} />}>
+      <Form class="flex flex-col gap-4" onSubmit={(form) => submit(form)}>
+        <Field name="id" type="number">
+          {(field, props) => <input {...props} type="hidden" value={field.value} />}
+        </Field>
+        <Field name="email" validate={required('Please enter a new email.')}>
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>Email</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  placeholder="Email"
+                  type="email"
+                  value={field.value}
+                  disabled={disabled()}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="username" validate={required('Please enter a new username.')}>
+          {(field, props) => (
+            <FieldRoot class="gap-1.5">
+              <FieldLabel field={field}>Username</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  autocomplete="username"
+                  placeholder="Username"
+                  value={field.value}
+                  disabled={disabled()}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Button type="submit" disabled={disabled() || form.submitting}>
+          <Show when={!form.submitting} fallback={<>Updating user</>}>
+            Update user
+          </Show>
+        </Button>
+        <FormMessage form={form} />
+      </Form>
+    </ErrorBoundary>
+  )
+}

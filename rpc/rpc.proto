@@ -136,6 +136,8 @@ service Admin {
 
   // User
   rpc CreateUser(CreateUserReq) returns (google.protobuf.Empty);
+  rpc GetUser(GetUserReq) returns (GetUserResp);
+  rpc UpdateUser(UpdateUserReq) returns (google.protobuf.Empty);
   rpc DeleteUser(DeleteUserReq) returns (google.protobuf.Empty);
   rpc ResetUserPassword(ResetUserPasswordReq) returns (google.protobuf.Empty);
   rpc SetUserAdmin(SetUserAdminReq) returns (google.protobuf.Empty);
@@ -262,6 +264,7 @@ message GetAdminDevicesPageResp {
 
 // ---------- User
 
+// Create
 message CreateUserReq {
   string email = 1;
   string username = 2;
@@ -270,6 +273,24 @@ message CreateUserReq {
   bool disabled = 5;
 }
 
+// Get
+message GetUserReq {
+  int64 id = 1;
+}
+message GetUserResp {
+  int64 id = 1;
+  string username = 2;
+  string email = 3;
+}
+
+// Update
+message UpdateUserReq {
+  int64 id = 1;
+  string email = 2;
+  string username = 3;
+}
+
+// Delete
 message DeleteUserReq {
   repeated int64 ids = 1;
 }

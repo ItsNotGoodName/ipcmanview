@@ -98,6 +98,32 @@ func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, e
 	return id, nil
 }
 
+type UpdateUserParams struct {
+	Email    string
+	Username string
+}
+
+func UpdateUser(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUserParams) error {
+	model := userFrom(dbModel)
+
+	// Mutate
+	model.Email = arg.Email
+	model.Username = arg.Username
+	model.normalizeEmailAndUsername()
+
+	if err := core.Validate.StructPartial(model, "Email", "Username"); err != nil {
+		return err
+	}
+
+	_, err := db.AuthPatchUser(ctx, repo.AuthPatchUserParams{
+		Username:  core.NewNullString(model.Username),
+		Email:     core.NewNullString(model.Email),
+		UpdatedAt: types.NewTime(time.Now()),
+		ID:        dbModel.ID,
+	})
+	return err
+}
+
 func DeleteUser(ctx context.Context, db repo.DB, id int64) error {
 	return db.DeleteUser(ctx, id)
 }

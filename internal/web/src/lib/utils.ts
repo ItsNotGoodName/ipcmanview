@@ -32,7 +32,7 @@ export function formatDate(value: Date): string {
   return value.toLocaleString()
 }
 
-export function catchAsToast(e) {
+export function catchAsToast(e: Error) {
   toast.error("Error", e.message)
 }
 
@@ -133,12 +133,13 @@ export function setupForm<TFieldValues extends FieldValues>(form: FormStore<TFie
   })
 }
 
-export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: Resource<PartialValues<TFieldValues> | undefined>) {
+export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: Resource<PartialValues<TFieldValues> | undefined>): Accessor<boolean> {
   createEffect(() => {
     if (!data.loading && !data.error) {
       reset(form, { initialValues: data() })
     }
   })
+  return () => data.loading || !!data.error
 }
 
 // export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined): boolean {

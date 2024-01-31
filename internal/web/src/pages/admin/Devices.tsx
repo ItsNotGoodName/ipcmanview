@@ -507,7 +507,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
         features: { array: response.features || [] },
         newPassword: ""
       } satisfies UpdateForm)))
-  syncForm(form, data)
+  const disabled = syncForm(form, data)
 
   const locations = createAsync(getListLocations)
   const deviceFeatures = createAsync(getListDeviceFeatures)
@@ -528,7 +528,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                     {...props}
                     placeholder="Name"
                     value={field.value}
-                    disabled={data.loading}
+                    disabled={disabled()}
                   />
                 </FieldControl>
                 <FieldMessage field={field} />
@@ -544,7 +544,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                     {...props}
                     placeholder="URL"
                     value={field.value}
-                    disabled={data.loading}
+                    disabled={disabled()}
                   />
                 </FieldControl>
                 <FieldMessage field={field} />
@@ -578,7 +578,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                     placeholder="New password"
                     type="password"
                     value={field.value}
-                    disabled={data.loading}
+                    disabled={disabled()}
                   />
                 </FieldControl>
                 <FieldMessage field={field} />
@@ -593,7 +593,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                   <SelectHTML
                     {...props}
                     value={field.value}
-                    disabled={data.loading}
+                    disabled={disabled()}
                   >
                     <For each={locations()}>
                       {v =>
@@ -615,7 +615,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                     {...props}
                     class="h-32"
                     multiple
-                    disabled={data.loading}
+                    disabled={disabled()}
                   >
                     <option value="">None</option>
                     <For each={deviceFeatures()}>
@@ -631,7 +631,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
               </FieldRoot>
             )}
           </Field>
-          <Button type="submit" disabled={data.loading || form.submitting}>
+          <Button type="submit" disabled={disabled() || form.submitting}>
             <Show when={!form.submitting} fallback={<>Updating device</>}>
               Update device
             </Show>

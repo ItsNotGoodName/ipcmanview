@@ -568,6 +568,8 @@ export interface GetAdminDevicesPageResp_Device {
 // ---------- User
 
 /**
+ * Create
+ *
  * @generated from protobuf message CreateUserReq
  */
 export interface CreateUserReq {
@@ -593,6 +595,55 @@ export interface CreateUserReq {
     disabled: boolean;
 }
 /**
+ * Get
+ *
+ * @generated from protobuf message GetUserReq
+ */
+export interface GetUserReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message GetUserResp
+ */
+export interface GetUserResp {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string username = 2;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: string email = 3;
+     */
+    email: string;
+}
+/**
+ * Update
+ *
+ * @generated from protobuf message UpdateUserReq
+ */
+export interface UpdateUserReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string email = 2;
+     */
+    email: string;
+    /**
+     * @generated from protobuf field: string username = 3;
+     */
+    username: string;
+}
+/**
+ * Delete
+ *
  * @generated from protobuf message DeleteUserReq
  */
 export interface DeleteUserReq {
@@ -1408,6 +1459,46 @@ class CreateUserReq$Type extends MessageType<CreateUserReq> {
  */
 export const CreateUserReq = new CreateUserReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetUserReq$Type extends MessageType<GetUserReq> {
+    constructor() {
+        super("GetUserReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetUserReq
+ */
+export const GetUserReq = new GetUserReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetUserResp$Type extends MessageType<GetUserResp> {
+    constructor() {
+        super("GetUserResp", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetUserResp
+ */
+export const GetUserResp = new GetUserResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UpdateUserReq$Type extends MessageType<UpdateUserReq> {
+    constructor() {
+        super("UpdateUserReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "email", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UpdateUserReq
+ */
+export const UpdateUserReq = new UpdateUserReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class DeleteUserReq$Type extends MessageType<DeleteUserReq> {
     constructor() {
         super("DeleteUserReq", [
@@ -1757,6 +1848,8 @@ export const Admin = new ServiceType("Admin", [
     { name: "GetAdminGroupsPage", options: {}, I: GetAdminGroupsPageReq, O: GetAdminGroupsPageResp },
     { name: "GetAdminUsersPage", options: {}, I: GetAdminUsersPageReq, O: GetAdminUsersPageResp },
     { name: "CreateUser", options: {}, I: CreateUserReq, O: Empty },
+    { name: "GetUser", options: {}, I: GetUserReq, O: GetUserResp },
+    { name: "UpdateUser", options: {}, I: UpdateUserReq, O: Empty },
     { name: "DeleteUser", options: {}, I: DeleteUserReq, O: Empty },
     { name: "ResetUserPassword", options: {}, I: ResetUserPasswordReq, O: Empty },
     { name: "SetUserAdmin", options: {}, I: SetUserAdminReq, O: Empty },

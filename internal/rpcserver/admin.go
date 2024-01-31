@@ -313,6 +313,36 @@ func (a *Admin) CreateUser(ctx context.Context, req *rpc.CreateUserReq) (*emptyp
 	return &emptypb.Empty{}, nil
 }
 
+func (a *Admin) GetUser(ctx context.Context, req *rpc.GetUserReq) (*rpc.GetUserResp, error) {
+	v, err := a.db.AuthGetUser(ctx, req.Id)
+	if err != nil {
+		return nil, check(err)
+	}
+
+	return &rpc.GetUserResp{
+		Id:       v.ID,
+		Username: v.Username,
+		Email:    v.Email,
+	}, nil
+}
+
+func (a *Admin) UpdateUser(ctx context.Context, req *rpc.UpdateUserReq) (*emptypb.Empty, error) {
+	dbUser, err := a.db.AuthGetUser(ctx, req.Id)
+	if err != nil {
+		return nil, check(err)
+	}
+
+	err = auth.UpdateUser(ctx, a.db, dbUser, auth.UpdateUserParams{
+		Email:    req.Email,
+		Username: req.Username,
+	})
+	if err != nil {
+		return nil, checkCreateUpdateUser(err, "Failed to update user.")
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (a *Admin) DeleteUser(ctx context.Context, req *rpc.DeleteUserReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 	for _, id := range req.Ids {
