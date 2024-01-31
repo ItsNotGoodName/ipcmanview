@@ -47,7 +47,7 @@ func ignorableError(err error) bool {
 	return false
 }
 
-func GetDahuaDetail(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn) (models.DahuaDetail, error) {
+func GetDahuaDetail(ctx context.Context, rpcClient dahuarpc.Conn) (models.DahuaDetail, error) {
 	sn, err := magicbox.GetSerialNo(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return models.DahuaDetail{}, err
@@ -100,7 +100,6 @@ func GetDahuaDetail(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn
 	}
 
 	return models.DahuaDetail{
-		DeviceID:         deviceID,
 		SN:               sn,
 		DeviceClass:      deviceClass,
 		DeviceType:       deviceType,
@@ -113,14 +112,13 @@ func GetDahuaDetail(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn
 	}, nil
 }
 
-func GetSoftwareVersion(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn) (models.DahuaSoftwareVersion, error) {
+func GetSoftwareVersion(ctx context.Context, rpcClient dahuarpc.Conn) (models.DahuaSoftwareVersion, error) {
 	res, err := magicbox.GetSoftwareVersion(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return models.DahuaSoftwareVersion{}, err
 	}
 
 	return models.DahuaSoftwareVersion{
-		DeviceID:                deviceID,
 		Build:                   res.Build,
 		BuildDate:               res.BuildDate,
 		SecurityBaseLineVersion: res.SecurityBaseLineVersion,
@@ -129,7 +127,7 @@ func GetSoftwareVersion(ctx context.Context, deviceID int64, rpcClient dahuarpc.
 	}, nil
 }
 
-func GetLicenseList(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn) ([]models.DahuaLicense, error) {
+func GetLicenseList(ctx context.Context, rpcClient dahuarpc.Conn) ([]models.DahuaLicense, error) {
 	licenses, err := license.GetLicenseInfo(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return nil, err
@@ -140,7 +138,6 @@ func GetLicenseList(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn
 		effectiveTime := time.Unix(int64(l.EffectiveTime), 0)
 
 		res = append(res, models.DahuaLicense{
-			DeviceID:      deviceID,
 			AbroadInfo:    l.AbroadInfo,
 			AllType:       l.AllType,
 			DigitChannel:  l.DigitChannel,
@@ -156,7 +153,7 @@ func GetLicenseList(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn
 	return res, nil
 }
 
-func GetStorage(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn) ([]models.DahuaStorage, error) {
+func GetStorage(ctx context.Context, rpcClient dahuarpc.Conn) ([]models.DahuaStorage, error) {
 	devices, err := storage.GetDeviceAllInfo(ctx, rpcClient)
 	if err != nil {
 		if ignorableError(err) {
@@ -169,7 +166,6 @@ func GetStorage(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn) ([
 	for _, device := range devices {
 		for _, detail := range device.Detail {
 			res = append(res, models.DahuaStorage{
-				DeviceID:   deviceID,
 				Name:       device.Name,
 				State:      device.State,
 				Path:       detail.Path,
@@ -195,34 +191,32 @@ func GetError(ctx context.Context, conn dahuarpc.Client) models.DahuaError {
 	}
 }
 
-func GetCoaxialStatus(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialStatus, error) {
+func GetCoaxialStatus(ctx context.Context, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialStatus, error) {
 	status, err := coaxialcontrolio.GetStatus(ctx, rpcClient, channel)
 	if err != nil && !ignorableError(err) {
 		return models.DahuaCoaxialStatus{}, err
 	}
 
 	return models.DahuaCoaxialStatus{
-		DeviceID:   deviceID,
 		Speaker:    status.Speaker == "On",
 		WhiteLight: status.WhiteLight == "On",
 	}, nil
 }
 
-func GetCoaxialCaps(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialCaps, error) {
+func GetCoaxialCaps(ctx context.Context, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialCaps, error) {
 	caps, err := coaxialcontrolio.GetCaps(ctx, rpcClient, channel)
 	if err != nil && !ignorableError(err) {
 		return models.DahuaCoaxialCaps{}, err
 	}
 
 	return models.DahuaCoaxialCaps{
-		DeviceID:                     deviceID,
 		SupportControlFullcolorLight: caps.SupportControlFullcolorLight == 1,
 		SupportControlLight:          caps.SupportControlLight == 1,
 		SupportControlSpeaker:        caps.SupportControlSpeaker == 1,
 	}, nil
 }
 
-func GetUsers(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn, location *time.Location) ([]models.DahuaUser, error) {
+func GetUsers(ctx context.Context, rpcClient dahuarpc.Conn, location *time.Location) ([]models.DahuaUser, error) {
 	users, err := usermanager.GetActiveUserInfoAll(ctx, rpcClient)
 	if err != nil {
 		return nil, err
@@ -236,7 +230,6 @@ func GetUsers(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn, loca
 		}
 
 		res = append(res, models.DahuaUser{
-			DeviceID:      deviceID,
 			ClientAddress: u.ClientAddress,
 			ClientType:    u.ClientType,
 			Group:         u.Group,
@@ -249,14 +242,13 @@ func GetUsers(ctx context.Context, deviceID int64, rpcClient dahuarpc.Conn, loca
 	return res, nil
 }
 
-func NewDahuaFile(deviceID int64, file mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) (models.DahuaFile, error) {
+func NewDahuaFile(file mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) (models.DahuaFile, error) {
 	startTime, endTime, err := file.UniqueTime(affixSeed, location)
 	if err != nil {
 		return models.DahuaFile{}, err
 	}
 
 	return models.DahuaFile{
-		DeviceID:    deviceID,
 		Channel:     file.Channel,
 		StartTime:   startTime,
 		EndTime:     endTime,
@@ -278,10 +270,10 @@ func NewDahuaFile(deviceID int64, file mediafilefind.FindNextFileInfo, affixSeed
 	}, nil
 }
 
-func NewDahuaFiles(deviceID int64, files []mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) ([]models.DahuaFile, error) {
+func NewDahuaFiles(files []mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) ([]models.DahuaFile, error) {
 	res := make([]models.DahuaFile, 0, len(files))
 	for _, file := range files {
-		r, err := NewDahuaFile(deviceID, file, affixSeed, location)
+		r, err := NewDahuaFile(file, affixSeed, location)
 		if err != nil {
 			return []models.DahuaFile{}, err
 		}
@@ -307,7 +299,6 @@ func GetDahuaStatus(ctx context.Context, device Conn, rpcClient dahuarpc.Client)
 		rpcError = rpcState.Error.Error()
 	}
 	return models.DahuaStatus{
-		DeviceID:     device.ID,
 		Url:          device.URL.String(),
 		Username:     device.Username,
 		Location:     device.Location.String(),

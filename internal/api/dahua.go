@@ -77,7 +77,7 @@ func (s *Server) DahuaDevicesIDDetail(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahua.GetDahuaDetail(ctx, client.Conn.ID, client.RPC)
+	res, err := dahua.GetDahuaDetail(ctx, client.RPC)
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (s *Server) DahuaDevicesIDSoftware(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahua.GetSoftwareVersion(ctx, client.Conn.ID, client.RPC)
+	res, err := dahua.GetSoftwareVersion(ctx, client.RPC)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (s *Server) DahuaDevicesIDLicenses(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahua.GetLicenseList(ctx, client.Conn.ID, client.RPC)
+	res, err := dahua.GetLicenseList(ctx, client.RPC)
 	if err != nil {
 		return err
 	}
@@ -306,7 +306,7 @@ func (s *Server) DahuaDevicesIDFiles(c echo.Context) error {
 				}
 				break inner
 			case files := <-filesC:
-				res, err := dahua.NewDahuaFiles(client.Conn.ID, files, dahua.GetSeed(client.Conn), client.Conn.Location)
+				res, err := dahua.NewDahuaFiles(files, dahua.GetSeed(client.Conn), client.Conn.Location)
 				if err != nil {
 					return writeStreamError(c, stream, err)
 				}
@@ -435,7 +435,7 @@ func (s *Server) DahuaDevicesIDCoaxialStatus(c echo.Context) error {
 		return err
 	}
 
-	status, err := dahua.GetCoaxialStatus(ctx, client.Conn.ID, client.RPC, channel)
+	status, err := dahua.GetCoaxialStatus(ctx, client.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -456,7 +456,7 @@ func (s *Server) DahuaDevicesIDCoaxialCaps(c echo.Context) error {
 		return err
 	}
 
-	status, err := dahua.GetCoaxialCaps(ctx, client.Conn.ID, client.RPC, channel)
+	status, err := dahua.GetCoaxialCaps(ctx, client.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -498,7 +498,7 @@ func (s *Server) DahuaDevicesIDStorage(c echo.Context) error {
 		return err
 	}
 
-	storage, err := dahua.GetStorage(ctx, client.Conn.ID, client.RPC)
+	storage, err := dahua.GetStorage(ctx, client.RPC)
 	if err != nil {
 		return err
 	}
@@ -514,7 +514,7 @@ func (s *Server) DahuaDevicesIDUsers(c echo.Context) error {
 		return err
 	}
 
-	res, err := dahua.GetUsers(ctx, client.Conn.ID, client.RPC, client.Conn.Location)
+	res, err := dahua.GetUsers(ctx, client.RPC, client.Conn.Location)
 	if err != nil {
 		return err
 	}

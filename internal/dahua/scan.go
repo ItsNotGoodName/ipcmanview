@@ -131,7 +131,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn,
 				}
 				break inner
 			case mediaFiles := <-mediaFilesC:
-				files, err := NewDahuaFiles(device.ID, mediaFiles, int(device.Seed), device.Location)
+				files, err := NewDahuaFiles(mediaFiles, int(device.Seed), device.Location)
 				if err != nil {
 					return err
 				}

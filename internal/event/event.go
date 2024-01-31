@@ -37,6 +37,7 @@ type DahuaEventWorkerDisconnect struct {
 }
 
 type DahuaCoaxialStatus struct {
+	DeviceID      int64
 	Channel       int
 	CoaxialStatus models.DahuaCoaxialStatus
 }

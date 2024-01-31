@@ -87,19 +87,19 @@ func (c Conn) haSync(ctx context.Context) error {
 func (c Conn) haSyncDevice(ctx context.Context, device repo.DahuaDevice, conn dahua.Conn) error {
 	client := c.store.Client(ctx, conn)
 
-	detail, err := dahua.GetDahuaDetail(ctx, client.Conn.ID, client.RPC)
+	detail, err := dahua.GetDahuaDetail(ctx, client.RPC)
 	if err != nil {
 		log.Err(err).Msg("Failed to get detail")
 		return nil
 	}
 
-	sw, err := dahua.GetSoftwareVersion(ctx, client.Conn.ID, client.RPC)
+	sw, err := dahua.GetSoftwareVersion(ctx, client.RPC)
 	if err != nil {
 		log.Err(err).Msg("Failed to get software version")
 		return nil
 	}
 
-	coaxialCaps, err := dahua.GetCoaxialCaps(ctx, client.Conn.ID, client.RPC, 1)
+	coaxialCaps, err := dahua.GetCoaxialCaps(ctx, client.RPC, 1)
 	if err != nil {
 		log.Err(err).Msg("Failed to get coaxial caps")
 		return nil
@@ -264,7 +264,7 @@ func (c Conn) Register(bus *event.Bus) error {
 				payload = "ON"
 			}
 
-			if err := mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(event.CoaxialStatus.DeviceID), "white_light"), 0, true, payload)); err != nil {
+			if err := mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(event.DeviceID), "white_light"), 0, true, payload)); err != nil {
 				return err
 			}
 		}
@@ -275,7 +275,7 @@ func (c Conn) Register(bus *event.Bus) error {
 				payload = "ON"
 			}
 
-			if err := mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(event.CoaxialStatus.DeviceID), "speaker"), 0, true, payload)); err != nil {
+			if err := mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(event.DeviceID), "speaker"), 0, true, payload)); err != nil {
 				return err
 			}
 		}

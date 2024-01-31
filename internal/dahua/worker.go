@@ -149,7 +149,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 	channel := 1
 
 	// Does this device support coaxial?
-	caps, err := GetCoaxialCaps(ctx, w.deviceID, client.RPC, channel)
+	caps, err := GetCoaxialCaps(ctx, client.RPC, channel)
 	if err != nil {
 		return err
 	}
@@ -158,11 +158,12 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 	}
 
 	// Get and send initial coaxial status
-	coaxialStatus, err := GetCoaxialStatus(ctx, w.deviceID, client.RPC, channel)
+	coaxialStatus, err := GetCoaxialStatus(ctx, client.RPC, channel)
 	if err != nil {
 		return err
 	}
 	w.bus.DahuaCoaxialStatus(event.DahuaCoaxialStatus{
+		DeviceID:      w.deviceID,
 		Channel:       channel,
 		CoaxialStatus: coaxialStatus,
 	})
@@ -177,7 +178,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 		case <-t.C:
 		}
 
-		s, err := GetCoaxialStatus(ctx, w.deviceID, client.RPC, channel)
+		s, err := GetCoaxialStatus(ctx, client.RPC, channel)
 		if err != nil {
 			return err
 		}
@@ -187,6 +188,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 		coaxialStatus = s
 
 		w.bus.DahuaCoaxialStatus(event.DahuaCoaxialStatus{
+			DeviceID:      w.deviceID,
 			Channel:       channel,
 			CoaxialStatus: coaxialStatus,
 		})
