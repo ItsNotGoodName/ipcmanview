@@ -155,7 +155,7 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 		return nil, err
 	}
 
-	id, err := dahua.CreateDevice(ctx, a.db, a.bus, dahua.Device{
+	id, err := dahua.CreateDevice(ctx, a.db, a.bus, dahua.CreateDeviceParams{
 		Name:     req.Name,
 		URL:      urL,
 		Username: req.Username,
@@ -187,15 +187,14 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 		return nil, err
 	}
 
-	device := dahua.NewDevice(dbDevice.DahuaDevice)
-	device.Name = req.Name
-	device.URL = urL
-	device.Username = req.Username
-	device.NewPassword = req.NewPassword
-	device.Location = loc
-	device.Feature = dahua.FeatureFromStrings(req.Features)
-
-	err = dahua.UpdateDevice(ctx, a.db, a.bus, device)
+	err = dahua.UpdateDevice(ctx, a.db, a.bus, dbDevice.DahuaDevice, dahua.UpdateDeviceParams{
+		Name:        req.Name,
+		URL:         urL,
+		Username:    req.Username,
+		NewPassword: req.NewPassword,
+		Location:    loc,
+		Feature:     dahua.FeatureFromStrings(req.Features),
+	})
 	if err != nil {
 		return nil, err
 	}

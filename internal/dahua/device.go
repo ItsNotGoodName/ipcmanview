@@ -2,7 +2,6 @@ package dahua
 
 import (
 	"context"
-	"database/sql"
 	"net"
 	"net/url"
 	"slices"
@@ -18,25 +17,16 @@ import (
 
 func NewDevice(v repo.DahuaDevice) Device {
 	return Device{
-		ID:       v.ID,
 		Name:     v.Name,
 		URL:      v.Url.URL,
 		Username: v.Username,
-		Password: v.Password,
-		Location: v.Location.Location,
-		Feature:  v.Feature,
 	}
 }
 
 type Device struct {
-	ID          int64
-	Name        string `validate:"required,lte=64"`
-	URL         *url.URL
-	Username    string
-	Password    string
-	NewPassword string
-	Location    *time.Location
-	Feature     models.DahuaFeature
+	Name     string `validate:"required,lte=64"`
+	URL      *url.URL
+	Username string
 }
 
 func (d *Device) normalize(create bool) {
@@ -77,9 +67,9 @@ func (d *Device) getIP() (string, error) {
 		return "", err
 	}
 
-	for _, i2 := range ips {
-		if i2.To4() != nil {
-			ip = i2.String()
+	for _, v := range ips {
+		if v.To4() != nil {
+			ip = v.String()
 			break
 		}
 	}
@@ -87,61 +77,39 @@ func (d *Device) getIP() (string, error) {
 	return ip, nil
 }
 
-func createDahuaDevice(ctx context.Context, db repo.DB, arg repo.DahuaCreateDeviceParams) (int64, error) {
-	tx, err := db.BeginTx(ctx, true)
-	if err != nil {
-		return 0, err
-	}
-	defer tx.Rollback()
-
-	id, err := tx.DahuaCreateDevice(ctx, arg)
-	if err != nil {
-		return 0, err
-	}
-
-	// TODO: sql.NullInt64 should just be int64
-	err = tx.DahuaAllocateSeed(ctx, sql.NullInt64{
-		Valid: true,
-		Int64: id,
-	})
-	if err != nil {
-		return 0, err
-	}
-
-	arg2 := NewFileCursor()
-	arg2.DeviceID = id
-	err = tx.DahuaCreateFileCursor(ctx, arg2)
-	if err != nil {
-		return 0, err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return 0, err
-	}
-
-	return id, nil
+type CreateDeviceParams struct {
+	Name     string
+	URL      *url.URL
+	Username string
+	Password string
+	Location *time.Location
+	Feature  models.DahuaFeature
 }
 
-func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (int64, error) {
-	arg.normalize(true)
+func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDeviceParams) (int64, error) {
+	model := Device{
+		Name:     arg.Name,
+		URL:      arg.URL,
+		Username: arg.Username,
+	}
+	model.normalize(true)
 
-	err := core.Validate.Struct(arg)
+	err := core.Validate.Struct(model)
 	if err != nil {
 		return 0, err
 	}
 
-	ip, err := arg.getIP()
+	ip, err := model.getIP()
 	if err != nil {
 		return 0, err
 	}
 
 	now := types.NewTime(time.Now())
 	id, err := createDahuaDevice(ctx, db, repo.DahuaCreateDeviceParams{
-		Name:      arg.Name,
-		Url:       types.NewURL(arg.URL),
+		Name:      model.Name,
+		Url:       types.NewURL(model.URL),
 		Ip:        ip,
-		Username:  arg.Username,
+		Username:  model.Username,
 		Password:  arg.Password,
 		Location:  types.NewLocation(arg.Location),
 		Feature:   arg.Feature,
@@ -164,40 +132,86 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (
 	return id, err
 }
 
-func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) error {
-	arg.normalize(true)
+func createDahuaDevice(ctx context.Context, db repo.DB, arg repo.DahuaCreateDeviceParams) (int64, error) {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback()
 
-	err := core.Validate.Struct(arg)
+	id, err := tx.DahuaCreateDevice(ctx, arg)
+	if err != nil {
+		return 0, err
+	}
+
+	err = tx.DahuaAllocateSeed(ctx, core.NewNullInt64(id))
+	if err != nil {
+		return 0, err
+	}
+
+	arg2 := NewFileCursor()
+	arg2.DeviceID = id
+	err = tx.DahuaCreateFileCursor(ctx, arg2)
+	if err != nil {
+		return 0, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+type UpdateDeviceParams struct {
+	Name        string
+	URL         *url.URL
+	Username    string
+	NewPassword string
+	Location    *time.Location
+	Feature     models.DahuaFeature
+}
+
+func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.DahuaDevice, arg UpdateDeviceParams) error {
+	model := NewDevice(dbModel)
+
+	model.Name = arg.Name
+	model.URL = arg.URL
+	model.Username = arg.Username
+	model.normalize(false)
+
+	err := core.Validate.Struct(model)
 	if err != nil {
 		return err
 	}
 
-	ip, err := arg.getIP()
+	ip, err := model.getIP()
 	if err != nil {
 		return err
 	}
 
-	password := arg.Password
+	password := dbModel.Password
 	if arg.NewPassword != "" {
 		password = arg.NewPassword
 	}
 
 	_, err = db.DahuaUpdateDevice(ctx, repo.DahuaUpdateDeviceParams{
-		Name:      arg.Name,
-		Url:       types.NewURL(arg.URL),
+		Name:      model.Name,
+		Url:       types.NewURL(model.URL),
 		Ip:        ip,
-		Username:  arg.Username,
+		Username:  model.Username,
 		Password:  password,
 		Location:  types.NewLocation(arg.Location),
 		Feature:   arg.Feature,
 		UpdatedAt: types.NewTime(time.Now()),
-		ID:        arg.ID,
+		ID:        dbModel.ID,
 	})
 	if err != nil {
 		return err
 	}
 
-	device, err := db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{arg.ID}})
+	device, err := db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{dbModel.ID}})
 	if err != nil {
 		return err
 	}
