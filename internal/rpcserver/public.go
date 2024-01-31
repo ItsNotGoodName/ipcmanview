@@ -8,7 +8,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
-	"github.com/go-playground/validator/v10"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func NewPublic(db repo.DB) *Public {
@@ -21,14 +21,14 @@ type Public struct {
 	db repo.DB
 }
 
-func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpResp, error) {
+func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*emptypb.Empty, error) {
 	id, err := auth.CreateUser(ctx, p.db, auth.CreateUserParams{
 		Email:    req.Email,
 		Username: req.Username,
 		Password: req.Password,
 	})
 	if err != nil {
-		if errs, ok := err.(validator.ValidationErrors); ok {
+		if errs, ok := asValidationErrors(err); ok {
 			return nil, NewError(err, "Failed to sign up.").Validation(errs, [][2]string{
 				{"email", "Email"},
 				{"username", "Username"},
@@ -49,9 +49,9 @@ func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*rpc.SignUpRes
 	// TODO: remove this
 	p.db.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{UserID: id, CreatedAt: types.NewTime(time.Now())})
 
-	return &rpc.SignUpResp{}, nil
+	return &emptypb.Empty{}, nil
 }
 
-func (*Public) ForgotPassword(context.Context, *rpc.ForgotPasswordReq) (*rpc.ForgotPasswordResp, error) {
+func (*Public) ForgotPassword(context.Context, *rpc.ForgotPasswordReq) (*emptypb.Empty, error) {
 	return nil, errNotImplemented
 }

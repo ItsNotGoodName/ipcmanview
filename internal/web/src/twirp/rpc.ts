@@ -108,11 +108,6 @@ export interface SignUpReq {
     password: string;
 }
 /**
- * @generated from protobuf message SignUpResp
- */
-export interface SignUpResp {
-}
-/**
  * @generated from protobuf message ForgotPasswordReq
  */
 export interface ForgotPasswordReq {
@@ -120,11 +115,6 @@ export interface ForgotPasswordReq {
      * @generated from protobuf field: string email = 1;
      */
     email: string;
-}
-/**
- * @generated from protobuf message ForgotPasswordResp
- */
-export interface ForgotPasswordResp {
 }
 /**
  * @generated from protobuf message GetHomePageResp
@@ -256,11 +246,6 @@ export interface RevokeMySessionReq {
      * @generated from protobuf field: int64 session_id = 1;
      */
     sessionId: bigint;
-}
-/**
- * @generated from protobuf message RevokeAllMySessionsReq
- */
-export interface RevokeAllMySessionsReq {
 }
 // ---------- Pages
 
@@ -1034,16 +1019,6 @@ class SignUpReq$Type extends MessageType<SignUpReq> {
  */
 export const SignUpReq = new SignUpReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class SignUpResp$Type extends MessageType<SignUpResp> {
-    constructor() {
-        super("SignUpResp", []);
-    }
-}
-/**
- * @generated MessageType for protobuf message SignUpResp
- */
-export const SignUpResp = new SignUpResp$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class ForgotPasswordReq$Type extends MessageType<ForgotPasswordReq> {
     constructor() {
         super("ForgotPasswordReq", [
@@ -1055,16 +1030,6 @@ class ForgotPasswordReq$Type extends MessageType<ForgotPasswordReq> {
  * @generated MessageType for protobuf message ForgotPasswordReq
  */
 export const ForgotPasswordReq = new ForgotPasswordReq$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class ForgotPasswordResp$Type extends MessageType<ForgotPasswordResp> {
-    constructor() {
-        super("ForgotPasswordResp", []);
-    }
-}
-/**
- * @generated MessageType for protobuf message ForgotPasswordResp
- */
-export const ForgotPasswordResp = new ForgotPasswordResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetHomePageResp$Type extends MessageType<GetHomePageResp> {
     constructor() {
@@ -1166,16 +1131,6 @@ class RevokeMySessionReq$Type extends MessageType<RevokeMySessionReq> {
  * @generated MessageType for protobuf message RevokeMySessionReq
  */
 export const RevokeMySessionReq = new RevokeMySessionReq$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class RevokeAllMySessionsReq$Type extends MessageType<RevokeAllMySessionsReq> {
-    constructor() {
-        super("RevokeAllMySessionsReq", []);
-    }
-}
-/**
- * @generated MessageType for protobuf message RevokeAllMySessionsReq
- */
-export const RevokeAllMySessionsReq = new RevokeAllMySessionsReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetAdminGroupsPageReq$Type extends MessageType<GetAdminGroupsPageReq> {
     constructor() {
@@ -1737,8 +1692,8 @@ export const HelloWorld = new ServiceType("HelloWorld", [
  * @generated ServiceType for protobuf service Public
  */
 export const Public = new ServiceType("Public", [
-    { name: "SignUp", options: {}, I: SignUpReq, O: SignUpResp },
-    { name: "ForgotPassword", options: {}, I: ForgotPasswordReq, O: ForgotPasswordResp }
+    { name: "SignUp", options: {}, I: SignUpReq, O: Empty },
+    { name: "ForgotPassword", options: {}, I: ForgotPasswordReq, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service User
@@ -1749,7 +1704,7 @@ export const User = new ServiceType("User", [
     { name: "UpdateMyUsername", options: {}, I: UpdateMyUsernameReq, O: Empty },
     { name: "UpdateMyPassword", options: {}, I: UpdateMyPasswordReq, O: Empty },
     { name: "RevokeMySession", options: {}, I: RevokeMySessionReq, O: Empty },
-    { name: "RevokeAllMySessions", options: {}, I: RevokeAllMySessionsReq, O: Empty }
+    { name: "RevokeAllMySessions", options: {}, I: Empty, O: Empty }
 ]);
 /**
  * @generated ServiceType for protobuf service Admin

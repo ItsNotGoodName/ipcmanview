@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 )
 
 func groupFrom(v repo.Group) group {
@@ -39,7 +39,7 @@ func CreateGroup(ctx context.Context, db repo.DB, arg CreateGroupParams) (int64,
 	}
 	model.normalize()
 
-	if err := validate.Validate.Struct(arg); err != nil {
+	if err := core.Validate.Struct(model); err != nil {
 		return 0, err
 	}
 
@@ -64,7 +64,7 @@ func UpdateGroup(ctx context.Context, db repo.DB, dbModel repo.Group, arg Update
 	model.Description = arg.Description
 	model.normalize()
 
-	if err := validate.Validate.Struct(arg); err != nil {
+	if err := core.Validate.Struct(model); err != nil {
 		return 0, err
 	}
 

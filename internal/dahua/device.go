@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 )
 
 func NewDevice(v repo.DahuaDevice) Device {
@@ -126,7 +126,7 @@ func createDahuaDevice(ctx context.Context, db repo.DB, arg repo.DahuaCreateDevi
 func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (int64, error) {
 	arg.normalize(true)
 
-	err := validate.Validate.Struct(arg)
+	err := core.Validate.Struct(arg)
 	if err != nil {
 		return 0, err
 	}
@@ -167,7 +167,7 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) (
 func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg Device) error {
 	arg.normalize(true)
 
-	err := validate.Validate.Struct(arg)
+	err := core.Validate.Struct(arg)
 	if err != nil {
 		return err
 	}

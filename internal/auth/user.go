@@ -8,7 +8,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -52,7 +51,7 @@ func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, e
 	}
 	model.normalizeEmailAndUsername()
 
-	if err := validate.Validate.Struct(model); err != nil {
+	if err := core.Validate.Struct(model); err != nil {
 		return 0, err
 	}
 
@@ -77,7 +76,7 @@ func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, newP
 	// Mutate
 	model.Password = newPassword
 
-	if err := validate.Validate.StructPartial(model, "Password"); err != nil {
+	if err := core.Validate.StructPartial(model, "Password"); err != nil {
 		return err
 	}
 
@@ -101,7 +100,7 @@ func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newU
 	model.Username = newUsername
 	model.normalizeEmailAndUsername()
 
-	if err := validate.Validate.StructPartial(model, "Username"); err != nil {
+	if err := core.Validate.StructPartial(model, "Username"); err != nil {
 		return err
 	}
 

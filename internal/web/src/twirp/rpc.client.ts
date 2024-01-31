@@ -33,17 +33,14 @@ import type { GetAdminDevicesPageReq } from "./rpc";
 import type { GetAdminDevicesIDPageResp } from "./rpc";
 import type { GetAdminDevicesIDPageReq } from "./rpc";
 import { User } from "./rpc";
-import type { RevokeAllMySessionsReq } from "./rpc";
 import type { RevokeMySessionReq } from "./rpc";
 import type { UpdateMyPasswordReq } from "./rpc";
 import type { UpdateMyUsernameReq } from "./rpc";
 import type { GetProfilePageResp } from "./rpc";
 import type { GetHomePageResp } from "./rpc";
-import type { Empty } from "./google/protobuf/empty";
 import { Public } from "./rpc";
-import type { ForgotPasswordResp } from "./rpc";
 import type { ForgotPasswordReq } from "./rpc";
-import type { SignUpResp } from "./rpc";
+import type { Empty } from "./google/protobuf/empty";
 import type { SignUpReq } from "./rpc";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
@@ -90,13 +87,13 @@ export class HelloWorldClient implements IHelloWorldClient, ServiceInfo {
  */
 export interface IPublicClient {
     /**
-     * @generated from protobuf rpc: SignUp(SignUpReq) returns (SignUpResp);
+     * @generated from protobuf rpc: SignUp(SignUpReq) returns (google.protobuf.Empty);
      */
-    signUp(input: SignUpReq, options?: RpcOptions): UnaryCall<SignUpReq, SignUpResp>;
+    signUp(input: SignUpReq, options?: RpcOptions): UnaryCall<SignUpReq, Empty>;
     /**
-     * @generated from protobuf rpc: ForgotPassword(ForgotPasswordReq) returns (ForgotPasswordResp);
+     * @generated from protobuf rpc: ForgotPassword(ForgotPasswordReq) returns (google.protobuf.Empty);
      */
-    forgotPassword(input: ForgotPasswordReq, options?: RpcOptions): UnaryCall<ForgotPasswordReq, ForgotPasswordResp>;
+    forgotPassword(input: ForgotPasswordReq, options?: RpcOptions): UnaryCall<ForgotPasswordReq, Empty>;
 }
 // ---------- Public
 
@@ -110,18 +107,18 @@ export class PublicClient implements IPublicClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
-     * @generated from protobuf rpc: SignUp(SignUpReq) returns (SignUpResp);
+     * @generated from protobuf rpc: SignUp(SignUpReq) returns (google.protobuf.Empty);
      */
-    signUp(input: SignUpReq, options?: RpcOptions): UnaryCall<SignUpReq, SignUpResp> {
+    signUp(input: SignUpReq, options?: RpcOptions): UnaryCall<SignUpReq, Empty> {
         const method = this.methods[0], opt = this._transport.mergeOptions(options);
-        return stackIntercept<SignUpReq, SignUpResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<SignUpReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: ForgotPassword(ForgotPasswordReq) returns (ForgotPasswordResp);
+     * @generated from protobuf rpc: ForgotPassword(ForgotPasswordReq) returns (google.protobuf.Empty);
      */
-    forgotPassword(input: ForgotPasswordReq, options?: RpcOptions): UnaryCall<ForgotPasswordReq, ForgotPasswordResp> {
+    forgotPassword(input: ForgotPasswordReq, options?: RpcOptions): UnaryCall<ForgotPasswordReq, Empty> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<ForgotPasswordReq, ForgotPasswordResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<ForgotPasswordReq, Empty>("unary", this._transport, method, opt, input);
     }
 }
 // ---------- User
@@ -155,9 +152,9 @@ export interface IUserClient {
      */
     revokeMySession(input: RevokeMySessionReq, options?: RpcOptions): UnaryCall<RevokeMySessionReq, Empty>;
     /**
-     * @generated from protobuf rpc: RevokeAllMySessions(RevokeAllMySessionsReq) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
      */
-    revokeAllMySessions(input: RevokeAllMySessionsReq, options?: RpcOptions): UnaryCall<RevokeAllMySessionsReq, Empty>;
+    revokeAllMySessions(input: Empty, options?: RpcOptions): UnaryCall<Empty, Empty>;
 }
 // ---------- User
 
@@ -210,11 +207,11 @@ export class UserClient implements IUserClient, ServiceInfo {
         return stackIntercept<RevokeMySessionReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: RevokeAllMySessions(RevokeAllMySessionsReq) returns (google.protobuf.Empty);
+     * @generated from protobuf rpc: RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
      */
-    revokeAllMySessions(input: RevokeAllMySessionsReq, options?: RpcOptions): UnaryCall<RevokeAllMySessionsReq, Empty> {
+    revokeAllMySessions(input: Empty, options?: RpcOptions): UnaryCall<Empty, Empty> {
         const method = this.methods[5], opt = this._transport.mergeOptions(options);
-        return stackIntercept<RevokeAllMySessionsReq, Empty>("unary", this._transport, method, opt, input);
+        return stackIntercept<Empty, Empty>("unary", this._transport, method, opt, input);
     }
 }
 // ---------- Admin

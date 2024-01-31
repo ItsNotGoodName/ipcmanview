@@ -9,7 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -80,7 +79,7 @@ func (arg *StorageDestination) normalize(create bool) {
 func CreateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestination) (int64, error) {
 	arg.normalize(true)
 
-	err := validate.Validate.Struct(arg)
+	err := core.Validate.Struct(arg)
 	if err != nil {
 		return 0, err
 	}
@@ -99,7 +98,7 @@ func CreateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestin
 func UpdateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestination) error {
 	arg.normalize(false)
 
-	err := validate.Validate.Struct(arg)
+	err := core.Validate.Struct(arg)
 	if err != nil {
 		return err
 	}

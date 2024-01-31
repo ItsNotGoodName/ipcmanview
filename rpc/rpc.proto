@@ -51,8 +51,8 @@ message HelloResp {
 // ---------- Public
 
 service Public {
-  rpc SignUp(SignUpReq) returns (SignUpResp);
-  rpc ForgotPassword(ForgotPasswordReq) returns (ForgotPasswordResp);
+  rpc SignUp(SignUpReq) returns (google.protobuf.Empty);
+  rpc ForgotPassword(ForgotPasswordReq) returns (google.protobuf.Empty);
 }
 
 message SignUpReq {
@@ -61,13 +61,9 @@ message SignUpReq {
   string password = 3;
 }
 
-message SignUpResp {}
-
 message ForgotPasswordReq {
   string email = 1;
 }
-
-message ForgotPasswordResp {}
 
 // ---------- User
 
@@ -80,7 +76,7 @@ service User {
   rpc UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
   rpc UpdateMyPassword(UpdateMyPasswordReq) returns (google.protobuf.Empty);
   rpc RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
-  rpc RevokeAllMySessions(RevokeAllMySessionsReq) returns (google.protobuf.Empty);
+  rpc RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
 }
 
 message GetHomePageResp {
@@ -127,8 +123,6 @@ message UpdateMyPasswordReq {
 message RevokeMySessionReq {
   int64 session_id = 1;
 }
-
-message RevokeAllMySessionsReq {}
 
 // ---------- Admin
 
@@ -211,7 +205,6 @@ message GetAdminGroupsIDPageResp {
 message GetAdminDevicesIDPageReq {
   int64 id = 1;
 }
-
 message GetAdminDevicesIDPageResp {
   message Device {
     int64 id = 1;
@@ -232,7 +225,6 @@ message GetAdminUsersPageReq {
   PagePagination page = 1;
   Sort sort = 2;
 }
-
 message GetAdminUsersPageResp {
   message User {
     int64 id = 1;
@@ -252,7 +244,6 @@ message GetAdminDevicesPageReq {
   PagePagination page = 1;
   Sort sort = 2;
 }
-
 message GetAdminDevicesPageResp {
   message Device {
     int64 id = 1;
