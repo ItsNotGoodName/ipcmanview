@@ -476,7 +476,7 @@ func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGro
 }
 
 func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.CreateGroupResp, error) {
-	id, err := auth.CreateGroup(ctx, a.db, auth.Group{
+	id, err := auth.CreateGroup(ctx, a.db, auth.CreateGroupParams{
 		Name:        req.Name,
 		Description: req.Description,
 	})
@@ -494,12 +494,11 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 	if err != nil {
 		return nil, check(err)
 	}
-	group := auth.NewGroup(dbGroup)
 
-	group.Name = req.Name
-	group.Description = req.Description
-
-	_, err = auth.UpdateGroup(ctx, a.db, group)
+	_, err = auth.UpdateGroup(ctx, a.db, dbGroup, auth.UpdateGroupParams{
+		Name:        req.Name,
+		Description: req.Description,
+	})
 	if err != nil {
 		return nil, checkCreateUpdateGroup(err, "Failed to update group.")
 	}

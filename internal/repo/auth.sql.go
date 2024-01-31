@@ -460,6 +460,38 @@ func (q *Queries) AuthListUsersByGroup(ctx context.Context, groupID int64) ([]Us
 	return items, nil
 }
 
+const authPatchUser = `-- name: AuthPatchUser :one
+UPDATE users
+SET
+  username = coalesce(?1, username),
+  email = coalesce(?2, email),
+  password = coalesce(?3, password),
+  updated_at = ?4
+WHERE
+  id = ?5 RETURNING id
+`
+
+type AuthPatchUserParams struct {
+	Username  sql.NullString
+	Email     sql.NullString
+	Password  sql.NullString
+	UpdatedAt types.Time
+	ID        int64
+}
+
+func (q *Queries) AuthPatchUser(ctx context.Context, arg AuthPatchUserParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, authPatchUser,
+		arg.Username,
+		arg.Email,
+		arg.Password,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const authUpdateGroup = `-- name: AuthUpdateGroup :one
 UPDATE groups
 SET
@@ -504,38 +536,6 @@ type AuthUpdateGroupDisabledAtParams struct {
 
 func (q *Queries) AuthUpdateGroupDisabledAt(ctx context.Context, arg AuthUpdateGroupDisabledAtParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, authUpdateGroupDisabledAt, arg.DisabledAt, arg.ID)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
-const authUpdateUser = `-- name: AuthUpdateUser :one
-UPDATE users
-SET
-  username = coalesce(?1, username),
-  email = coalesce(?2, email),
-  password = coalesce(?3, password),
-  updated_at = ?4
-WHERE
-  id = ?5 RETURNING id
-`
-
-type AuthUpdateUserParams struct {
-	Username  sql.NullString
-	Email     sql.NullString
-	Password  sql.NullString
-	UpdatedAt types.Time
-	ID        int64
-}
-
-func (q *Queries) AuthUpdateUser(ctx context.Context, arg AuthUpdateUserParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, authUpdateUser,
-		arg.Username,
-		arg.Email,
-		arg.Password,
-		arg.UpdatedAt,
-		arg.ID,
-	)
 	var id int64
 	err := row.Scan(&id)
 	return id, err

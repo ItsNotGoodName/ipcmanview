@@ -48,7 +48,7 @@ FROM
 WHERE
   group_users.group_id = ?;
 
--- name: AuthUpdateUser :one
+-- name: AuthPatchUser :one
 UPDATE users
 SET
   username = coalesce(sqlc.narg ('username'), username),

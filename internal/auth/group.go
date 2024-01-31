@@ -10,27 +10,34 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
 )
 
-func NewGroup(v repo.Group) Group {
-	return Group{
-		ID:          v.ID,
+func groupFrom(v repo.Group) group {
+	return group{
 		Name:        v.Name,
 		Description: v.Description,
 	}
 }
 
-type Group struct {
-	ID          int64
+type group struct {
 	Name        string `validate:"gte=3,lte=64"`
 	Description string `validate:"lte=1024"`
 }
 
-func (g *Group) normalize() {
+func (g *group) normalize() {
 	g.Name = strings.TrimSpace(g.Name)
 	g.Description = strings.TrimSpace(g.Description)
 }
 
-func CreateGroup(ctx context.Context, db repo.DB, arg Group) (int64, error) {
-	arg.normalize()
+type CreateGroupParams struct {
+	Name        string
+	Description string
+}
+
+func CreateGroup(ctx context.Context, db repo.DB, arg CreateGroupParams) (int64, error) {
+	model := group{
+		Name:        arg.Name,
+		Description: arg.Description,
+	}
+	model.normalize()
 
 	if err := validate.Validate.Struct(arg); err != nil {
 		return 0, err
@@ -45,8 +52,17 @@ func CreateGroup(ctx context.Context, db repo.DB, arg Group) (int64, error) {
 	})
 }
 
-func UpdateGroup(ctx context.Context, db repo.DB, arg Group) (int64, error) {
-	arg.normalize()
+type UpdateGroupParams struct {
+	Name        string
+	Description string
+}
+
+func UpdateGroup(ctx context.Context, db repo.DB, dbModel repo.Group, arg UpdateGroupParams) (int64, error) {
+	model := groupFrom(dbModel)
+
+	model.Name = arg.Name
+	model.Description = arg.Description
+	model.normalize()
 
 	if err := validate.Validate.Struct(arg); err != nil {
 		return 0, err
@@ -56,7 +72,7 @@ func UpdateGroup(ctx context.Context, db repo.DB, arg Group) (int64, error) {
 		Name:        arg.Name,
 		Description: arg.Description,
 		UpdatedAt:   types.NewTime(time.Now()),
-		ID:          arg.ID,
+		ID:          dbModel.ID,
 	})
 }
 

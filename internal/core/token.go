@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 )
 
-// RuntimeToken is a token generated at runtime to authenticate the application with it self.
+// RuntimeToken is a token generated at runtime to authenticate the application with itself.
 var RuntimeToken string
 
 func init() {

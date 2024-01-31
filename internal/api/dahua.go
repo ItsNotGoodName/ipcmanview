@@ -281,15 +281,7 @@ func (s *Server) DahuaDevicesIDFiles(c echo.Context) error {
 		return err
 	}
 
-	var form struct {
-		Start string
-		End   string
-	}
-	if err := c.Bind(&form); err != nil {
-		return err
-	}
-
-	timeRange, err := QueryTimeRange(form.Start, form.End)
+	timeRange, err := queryTimeRange(c)
 	if err != nil {
 		return err
 	}

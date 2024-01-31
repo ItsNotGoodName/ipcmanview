@@ -6,17 +6,29 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/labstack/echo/v4"
 )
 
+func paramID(c echo.Context) (int64, error) {
+	number, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return 0, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return number, nil
+}
+
 func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, error) {
 	ctx := c.Request().Context()
 
-	id, err := ParamID(c)
+	id, err := paramID(c)
 	if err != nil {
 		return dahua.Client{}, err
 	}
@@ -93,6 +105,43 @@ func writeStream(c echo.Context, enc *json.Encoder, data any) error {
 }
 
 // ---------- Queries
+
+func queryTimeRange(c echo.Context) (models.TimeRange, error) {
+	var query struct {
+		Start string
+		End   string
+	}
+	if err := c.Bind(&query); err != nil {
+		return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+	}
+	start, end := query.Start, query.End
+
+	var startTime, endTime time.Time
+	if start != "" {
+		var err error
+		startTime, err = time.ParseInLocation("2006-01-02T15:04", start, time.Local)
+		if err != nil {
+			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+		}
+	}
+
+	if end != "" {
+		var err error
+		endTime, err = time.ParseInLocation("2006-01-02T15:04", end, time.Local)
+		if err != nil {
+			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+		}
+	} else if start != "" {
+		endTime = time.Now()
+	}
+
+	r, err := core.NewTimeRange(startTime, endTime)
+	if err != nil {
+		return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return r, nil
+}
 
 func queryInts(c echo.Context, key string) ([]int64, error) {
 	ids := make([]int64, 0)

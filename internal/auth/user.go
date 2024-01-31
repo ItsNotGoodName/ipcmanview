@@ -50,6 +50,7 @@ func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, e
 		Username: arg.Username,
 		Password: arg.Password,
 	}
+	model.normalizeEmailAndUsername()
 
 	if err := validate.Validate.Struct(model); err != nil {
 		return 0, err
@@ -85,7 +86,7 @@ func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, newP
 		return err
 	}
 
-	_, err = db.AuthUpdateUser(ctx, repo.AuthUpdateUserParams{
+	_, err = db.AuthPatchUser(ctx, repo.AuthPatchUserParams{
 		Password:  core.NewNullString(password),
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        dbModel.ID,
@@ -104,7 +105,7 @@ func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newU
 		return err
 	}
 
-	_, err := db.AuthUpdateUser(ctx, repo.AuthUpdateUserParams{
+	_, err := db.AuthPatchUser(ctx, repo.AuthPatchUserParams{
 		Username:  core.NewNullString(model.Username),
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        dbModel.ID,
@@ -112,30 +113,30 @@ func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newU
 	return err
 }
 
-func UpdateUserDisable(ctx context.Context, db repo.DB, userID int64, disable bool) error {
+func UpdateUserDisable(ctx context.Context, db repo.DB, id int64, disable bool) error {
 	if disable {
 		_, err := db.AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
-			ID:         userID,
+			ID:         id,
 		})
 		return err
 	}
 	_, err := db.AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 		DisabledAt: types.NullTime{},
-		ID:         userID,
+		ID:         id,
 	})
 	return err
 }
 
-func UpdateUserAdmin(ctx context.Context, db repo.DB, userID int64, admin bool) error {
+func UpdateUserAdmin(ctx context.Context, db repo.DB, id int64, admin bool) error {
 	if admin {
 		_, err := db.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
-			UserID:    userID,
+			UserID:    id,
 			CreatedAt: types.NewTime(time.Now()),
 		})
 		return err
 	}
-	return db.AuthDeleteAdmin(ctx, userID)
+	return db.AuthDeleteAdmin(ctx, id)
 }
 
 func CheckUserPassword(hash, password string) error {
