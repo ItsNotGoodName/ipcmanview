@@ -110,7 +110,10 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 		return nil, NewError(err, "Old password is invalid.").Field("oldPassword")
 	}
 
-	if err := auth.UpdateUserPassword(ctx, u.db, dbUser, req.NewPassword); err != nil {
+	if err := auth.UpdateUserPassword(ctx, u.db, dbUser, auth.UpdateUserPasswordParams{
+		NewPassword:    req.NewPassword,
+		CurrentSession: authSession.Session,
+	}); err != nil {
 		msg := "Failed to update password."
 
 		if errs, ok := asValidationErrors(err); ok {
@@ -119,13 +122,6 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 			})
 		}
 
-		return nil, check(err)
-	}
-
-	if err := u.db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
-		UserID:  authSession.UserID,
-		Session: authSession.Session,
-	}); err != nil {
 		return nil, check(err)
 	}
 
@@ -164,10 +160,8 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *emptypb.Empty) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
-	if err := u.db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
-		UserID:  authSession.UserID,
-		Session: authSession.Session,
-	}); err != nil {
+	err := auth.DeleteOtherUserSessions(ctx, u.db, authSession.UserID, authSession.Session)
+	if err != nil {
 		return nil, check(err)
 	}
 
@@ -177,10 +171,7 @@ func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *em
 func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq) (*emptypb.Empty, error) {
 	authSession := useAuthSession(ctx)
 
-	if err := u.db.AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
-		ID:     req.SessionId,
-		UserID: authSession.UserID,
-	}); err != nil {
+	if err := auth.DeleteUserSession(ctx, u.db, authSession.UserID, req.SessionId); err != nil {
 		return nil, check(err)
 	}
 

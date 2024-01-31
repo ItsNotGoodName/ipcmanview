@@ -86,21 +86,35 @@ func createUserSessionAndDeletePrevious(ctx context.Context, db repo.DB, arg rep
 	return tx.Commit()
 }
 
-func DeleteUserSession(ctx context.Context, db repo.DB, session string) error {
+func DeleteUserSessionBySession(ctx context.Context, db repo.DB, session string) error {
 	return db.AuthDeleteUserSessionBySession(ctx, session)
+}
+
+func DeleteUserSession(ctx context.Context, db repo.DB, userID int64, sessionID int64) error {
+	return db.AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
+		UserID: userID,
+		ID:     sessionID,
+	})
+}
+
+func DeleteOtherUserSessions(ctx context.Context, db repo.DB, userID int64, currentSession string) error {
+	return db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
+		UserID:  userID,
+		Session: currentSession,
+	})
 }
 
 var touchSessionLock = core.NewLockStore[string]()
 var touchSessionThrottle = time.Minute
 
-type TouchSessionParams struct {
+type TouchUserSessionParams struct {
 	Session    string
 	LastUsedAt time.Time
 	LastIP     string
 	IP         string
 }
 
-func TouchSession(ctx context.Context, db repo.DB, arg TouchSessionParams) error {
+func TouchUserSession(ctx context.Context, db repo.DB, arg TouchUserSessionParams) error {
 	now := time.Now()
 	if arg.LastIP == arg.IP || arg.LastUsedAt.After(now.Add(-touchSessionThrottle)) {
 		return nil
@@ -124,7 +138,7 @@ func TouchSession(ctx context.Context, db repo.DB, arg TouchSessionParams) error
 	return nil
 }
 
-func SessionExpired(expiredAt time.Time) bool {
+func UserSessionExpired(expiredAt time.Time) bool {
 	return expiredAt.Before(time.Now())
 }
 

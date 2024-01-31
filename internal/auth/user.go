@@ -128,11 +128,16 @@ func DeleteUser(ctx context.Context, db repo.DB, id int64) error {
 	return db.DeleteUser(ctx, id)
 }
 
-func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, newPassword string) error {
+type UpdateUserPasswordParams struct {
+	NewPassword    string
+	CurrentSession string
+}
+
+func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUserPasswordParams) error {
 	model := userFrom(dbModel)
 
 	// Mutate
-	model.Password = newPassword
+	model.Password = arg.NewPassword
 
 	if err := core.Validate.StructPartial(model, "Password"); err != nil {
 		return err
@@ -148,7 +153,19 @@ func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, newP
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        dbModel.ID,
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	err = db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
+		UserID:  dbModel.ID,
+		Session: arg.CurrentSession,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newUsername string) error {

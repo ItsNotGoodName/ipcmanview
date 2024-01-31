@@ -106,23 +106,23 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 }
 
 func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevicesIDPageReq) (*rpc.GetAdminDevicesIDPageResp, error) {
-	dbDevice, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Id}})
+	v, err := a.db.DahuaGetDevice(ctx, repo.FatDahuaDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
 		return nil, check(err)
 	}
 
 	return &rpc.GetAdminDevicesIDPageResp{
 		Device: &rpc.GetAdminDevicesIDPageResp_Device{
-			Id:             dbDevice.DahuaDevice.ID,
-			Name:           dbDevice.DahuaDevice.Name,
-			Url:            dbDevice.DahuaDevice.Url.String(),
-			Username:       dbDevice.DahuaDevice.Username,
-			Disabled:       dbDevice.DisabledAt.Valid,
-			Location:       dbDevice.DahuaDevice.Location.String(),
-			CreatedAtTime:  timestamppb.New(dbDevice.DahuaDevice.CreatedAt.Time),
-			UpdatedAtTime:  timestamppb.New(dbDevice.DahuaDevice.UpdatedAt.Time),
-			DisabledAtTime: timestamppb.New(dbDevice.DahuaDevice.DisabledAt.Time),
-			Features:       dahua.FeatureToStrings(dbDevice.Feature),
+			Id:             v.DahuaDevice.ID,
+			Name:           v.DahuaDevice.Name,
+			Url:            v.DahuaDevice.Url.String(),
+			Username:       v.DahuaDevice.Username,
+			Disabled:       v.DisabledAt.Valid,
+			Location:       v.DahuaDevice.Location.String(),
+			CreatedAtTime:  timestamppb.New(v.DahuaDevice.CreatedAt.Time),
+			UpdatedAtTime:  timestamppb.New(v.DahuaDevice.UpdatedAt.Time),
+			DisabledAtTime: timestamppb.New(v.DahuaDevice.DisabledAt.Time),
+			Features:       dahua.FeatureToStrings(v.Feature),
 		},
 	}, nil
 
@@ -386,12 +386,17 @@ func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*em
 }
 
 func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswordReq) (*emptypb.Empty, error) {
+	authSession := useAuthSession(ctx)
+
 	dbUser, err := a.db.AuthGetUser(ctx, req.Id)
 	if err != nil {
 		return nil, check(err)
 	}
 
-	if err := auth.UpdateUserPassword(ctx, a.db, dbUser, req.NewPassword); err != nil {
+	if err := auth.UpdateUserPassword(ctx, a.db, dbUser, auth.UpdateUserPasswordParams{
+		NewPassword:    req.NewPassword,
+		CurrentSession: authSession.Session,
+	}); err != nil {
 		msg := "Failed to update password."
 
 		if errs, ok := asValidationErrors(err); ok {
@@ -486,11 +491,6 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 }
 
 func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroupsIDPageReq) (*rpc.GetAdminGroupsIDPageResp, error) {
-	dbGroup, err := a.db.AuthGetGroup(ctx, req.Id)
-	if err != nil {
-		return nil, check(err)
-	}
-
 	dbUsers, err := a.db.AuthListUsersByGroup(ctx, req.Id)
 	if err != nil {
 		return nil, check(err)
@@ -504,29 +504,34 @@ func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroup
 		})
 	}
 
+	v, err := a.db.AuthGetGroup(ctx, req.Id)
+	if err != nil {
+		return nil, check(err)
+	}
+
 	return &rpc.GetAdminGroupsIDPageResp{
 		Group: &rpc.GetAdminGroupsIDPageResp_Group{
-			Id:             dbGroup.ID,
-			Name:           dbGroup.Name,
-			Description:    dbGroup.Description,
-			Disabled:       dbGroup.DisabledAt.Valid,
-			DisabledAtTime: timestamppb.New(dbGroup.DisabledAt.Time),
-			CreatedAtTime:  timestamppb.New(dbGroup.CreatedAt.Time),
-			UpdatedAtTime:  timestamppb.New(dbGroup.UpdatedAt.Time),
+			Id:             v.ID,
+			Name:           v.Name,
+			Description:    v.Description,
+			Disabled:       v.DisabledAt.Valid,
+			DisabledAtTime: timestamppb.New(v.DisabledAt.Time),
+			CreatedAtTime:  timestamppb.New(v.CreatedAt.Time),
+			UpdatedAtTime:  timestamppb.New(v.UpdatedAt.Time),
 		},
 		Users: users,
 	}, nil
 }
 
 func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGroupResp, error) {
-	dbGroup, err := a.db.AuthGetGroup(ctx, req.Id)
+	v, err := a.db.AuthGetGroup(ctx, req.Id)
 	if err != nil {
 		return nil, check(err)
 	}
 	return &rpc.GetGroupResp{
-		Id:          req.Id,
-		Name:        dbGroup.Name,
-		Description: dbGroup.Description,
+		Id:          v.ID,
+		Name:        v.Name,
+		Description: v.Description,
 	}, nil
 }
 
@@ -590,15 +595,15 @@ func (*Admin) ListLocations(context.Context, *emptypb.Empty) (*rpc.ListLocations
 var listDeviceFeaturesResp *rpc.ListDeviceFeaturesResp
 
 func init() {
-	res := make([]*rpc.ListDeviceFeaturesResp_Item, 0, len(dahua.FeatureList))
+	features := make([]*rpc.ListDeviceFeaturesResp_Item, 0, len(dahua.FeatureList))
 	for _, v := range dahua.FeatureList {
-		res = append(res, &rpc.ListDeviceFeaturesResp_Item{
+		features = append(features, &rpc.ListDeviceFeaturesResp_Item{
 			Name:        v.Name,
 			Value:       v.Value,
 			Description: v.Description,
 		})
 	}
-	listDeviceFeaturesResp = &rpc.ListDeviceFeaturesResp{Features: res}
+	listDeviceFeaturesResp = &rpc.ListDeviceFeaturesResp{Features: features}
 }
 
 func (*Admin) ListDeviceFeatures(context.Context, *emptypb.Empty) (*rpc.ListDeviceFeaturesResp, error) {

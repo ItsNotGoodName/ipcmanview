@@ -104,7 +104,7 @@ func (s *Server) SessionDELETE(c echo.Context) error {
 	}
 
 	// Delete session
-	if err := auth.DeleteUserSession(ctx, s.db, cookie.Value); err != nil {
+	if err := auth.DeleteUserSessionBySession(ctx, s.db, cookie.Value); err != nil {
 		return err
 	}
 
@@ -137,11 +137,11 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 				}
 				return err
 			}
-			if auth.SessionExpired(session.ExpiredAt.Time) {
+			if auth.UserSessionExpired(session.ExpiredAt.Time) {
 				return next(c)
 			}
 
-			if err := auth.TouchSession(ctx, db, auth.TouchSessionParams{
+			if err := auth.TouchUserSession(ctx, db, auth.TouchUserSessionParams{
 				Session:    session.Session,
 				LastUsedAt: session.LastUsedAt.Time,
 				LastIP:     session.LastIp,
