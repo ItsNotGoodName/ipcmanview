@@ -260,6 +260,56 @@ export interface RevokeMySessionReq {
      */
     sessionId: bigint;
 }
+/**
+ * @generated from protobuf message GetDeviceDetailReq
+ */
+export interface GetDeviceDetailReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message GetDeviceDetailResp
+ */
+export interface GetDeviceDetailResp {
+    /**
+     * @generated from protobuf field: string sn = 1;
+     */
+    sn: string;
+    /**
+     * @generated from protobuf field: string device_class = 2;
+     */
+    deviceClass: string;
+    /**
+     * @generated from protobuf field: string device_type = 3;
+     */
+    deviceType: string;
+    /**
+     * @generated from protobuf field: string hardware_version = 4;
+     */
+    hardwareVersion: string;
+    /**
+     * @generated from protobuf field: string market_area = 5;
+     */
+    marketArea: string;
+    /**
+     * @generated from protobuf field: string process_info = 6;
+     */
+    processInfo: string;
+    /**
+     * @generated from protobuf field: string vendor = 7;
+     */
+    vendor: string;
+    /**
+     * @generated from protobuf field: string onvif_version = 8;
+     */
+    onvifVersion: string;
+    /**
+     * @generated from protobuf field: string algorithm_version = 9;
+     */
+    algorithmVersion: string;
+}
 // ---------- Pages
 
 /**
@@ -1234,6 +1284,38 @@ class RevokeMySessionReq$Type extends MessageType<RevokeMySessionReq> {
  */
 export const RevokeMySessionReq = new RevokeMySessionReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceDetailReq$Type extends MessageType<GetDeviceDetailReq> {
+    constructor() {
+        super("GetDeviceDetailReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceDetailReq
+ */
+export const GetDeviceDetailReq = new GetDeviceDetailReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceDetailResp$Type extends MessageType<GetDeviceDetailResp> {
+    constructor() {
+        super("GetDeviceDetailResp", [
+            { no: 1, name: "sn", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "device_class", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "device_type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "hardware_version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "market_area", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "process_info", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "vendor", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "onvif_version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 9, name: "algorithm_version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceDetailResp
+ */
+export const GetDeviceDetailResp = new GetDeviceDetailResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class GetAdminGroupsPageReq$Type extends MessageType<GetAdminGroupsPageReq> {
     constructor() {
         super("GetAdminGroupsPageReq", [
@@ -1862,7 +1944,8 @@ export const User = new ServiceType("User", [
     { name: "UpdateMyUsername", options: {}, I: UpdateMyUsernameReq, O: Empty },
     { name: "UpdateMyPassword", options: {}, I: UpdateMyPasswordReq, O: Empty },
     { name: "RevokeMySession", options: {}, I: RevokeMySessionReq, O: Empty },
-    { name: "RevokeAllMySessions", options: {}, I: Empty, O: Empty }
+    { name: "RevokeAllMySessions", options: {}, I: Empty, O: Empty },
+    { name: "GetDeviceDetail", options: {}, I: GetDeviceDetailReq, O: GetDeviceDetailResp }
 ]);
 /**
  * @generated ServiceType for protobuf service Admin

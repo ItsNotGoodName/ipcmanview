@@ -13,14 +13,16 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewUser(db repo.DB) *User {
+func NewUser(db repo.DB, dahuaStore *dahua.Store) *User {
 	return &User{
-		db: db,
+		db:         db,
+		dahuaStore: dahuaStore,
 	}
 }
 
 type User struct {
-	db repo.DB
+	db         repo.DB
+	dahuaStore *dahua.Store
 }
 
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
@@ -160,4 +162,35 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 	}
 
 	return &emptypb.Empty{}, nil
+}
+
+func (u *User) GetDeviceDetail(ctx context.Context, req *rpc.GetDeviceDetailReq) (*rpc.GetDeviceDetailResp, error) {
+	permissions, err := useDahuaPermissions(ctx, u.db)
+	if err != nil {
+		return nil, err
+	}
+
+	device, err := dahua.GetFatDevice(ctx, u.db, permissions, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	if err != nil {
+		return nil, err
+	}
+
+	conn := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+
+	v, err := dahua.GetDahuaDetail(ctx, conn.RPC)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.GetDeviceDetailResp{
+		Sn:               v.SN,
+		DeviceClass:      v.DeviceClass,
+		DeviceType:       v.DeviceType,
+		HardwareVersion:  v.HardwareVersion,
+		MarketArea:       v.MarketArea,
+		ProcessInfo:      v.ProcessInfo,
+		Vendor:           v.Vendor,
+		OnvifVersion:     v.OnvifVersion,
+		AlgorithmVersion: v.AlgorithmVersion,
+	}, nil
 }

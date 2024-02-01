@@ -8,6 +8,8 @@ import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
 import { TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { GetHomePageResp_Device } from "~/twirp/rpc"
+import { getDeviceDetail } from "./data"
+import { Skeleton } from "~/ui/Skeleton"
 
 export function Home() {
   const data = createAsync(getHomePage)
@@ -45,7 +47,7 @@ export function Home() {
               <StatusTable />
             </TabsContent>
             <TabsContent value="detail">
-              <DetailTable />
+              <DetailTable devices={data()?.devices} />
             </TabsContent>
             <TabsContent value="software-version">
               <SoftwareVersionTable />
@@ -107,7 +109,7 @@ function StatusTable() {
   )
 }
 
-function DetailTable() {
+function DetailTable(props: { devices?: GetHomePageResp_Device[] }) {
   return (
     <TableRoot>
       <TableHeader>
@@ -125,6 +127,54 @@ function DetailTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
+        <For each={props.devices}>
+          {item => {
+            const data = createAsync(() => getDeviceDetail(item.id))
+
+            return (
+              <TableRow>
+                <TableCell>
+                  {item.name}
+                </TableCell>
+                <ErrorBoundary fallback={(e: Error) => <TableCell class="bg-destructive text-destructive" colspan={9}>{e.message}</TableCell>}>
+                  <Suspense fallback={
+                    <TableCell colspan={9}>
+                      <Skeleton class="h-4" />
+                    </TableCell>
+                  }>
+                    <TableCell>
+                      {data()?.sn}
+                    </TableCell>
+                    <TableCell>
+                      {data()?.deviceClass}
+                    </TableCell>
+                    <TableCell>
+                      {data()?.deviceType}
+                    </TableCell>
+                    <TableCell>
+                      {data()?.hardwareVersion}
+                    </TableCell>
+                    <TableCell>
+                      {data()?.marketArea}
+                    </TableCell>
+                    <TableCell>
+                      {data()?.processInfo}
+                    </TableCell>
+                    <TableCell>
+                      {data()?.vendor}
+                    </TableCell>
+                    <TableCell>
+                      {data()?.onvifVersion}
+                    </TableCell>
+                    <TableCell>
+                      {data()?.algorithmVersion}
+                    </TableCell>
+                  </Suspense>
+                </ErrorBoundary>
+              </TableRow>
+            )
+          }}
+        </For>
       </TableBody>
     </TableRoot>
   )

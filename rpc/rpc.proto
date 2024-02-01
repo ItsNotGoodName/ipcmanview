@@ -77,6 +77,8 @@ service User {
   rpc UpdateMyPassword(UpdateMyPasswordReq) returns (google.protobuf.Empty);
   rpc RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
   rpc RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
+
+  rpc GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
 }
 
 message GetHomePageResp {
@@ -126,6 +128,21 @@ message UpdateMyPasswordReq {
 
 message RevokeMySessionReq {
   int64 session_id = 1;
+}
+
+message GetDeviceDetailReq {
+  int64 id = 1;
+}
+message GetDeviceDetailResp {
+  string sn = 1;
+  string device_class = 2;
+  string device_type = 3;
+  string hardware_version = 4;
+  string market_area = 5;
+  string process_info = 6;
+  string vendor = 7;
+  string onvif_version = 8;
+  string algorithm_version = 9;
 }
 
 // ---------- Admin

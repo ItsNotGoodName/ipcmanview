@@ -37,6 +37,8 @@ import type { GetAdminDevicesPageReq } from "./rpc";
 import type { GetAdminDevicesIDPageResp } from "./rpc";
 import type { GetAdminDevicesIDPageReq } from "./rpc";
 import { User } from "./rpc";
+import type { GetDeviceDetailResp } from "./rpc";
+import type { GetDeviceDetailReq } from "./rpc";
 import type { RevokeMySessionReq } from "./rpc";
 import type { UpdateMyPasswordReq } from "./rpc";
 import type { UpdateMyUsernameReq } from "./rpc";
@@ -159,6 +161,10 @@ export interface IUserClient {
      * @generated from protobuf rpc: RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
      */
     revokeAllMySessions(input: Empty, options?: RpcOptions): UnaryCall<Empty, Empty>;
+    /**
+     * @generated from protobuf rpc: GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
+     */
+    getDeviceDetail(input: GetDeviceDetailReq, options?: RpcOptions): UnaryCall<GetDeviceDetailReq, GetDeviceDetailResp>;
 }
 // ---------- User
 
@@ -216,6 +222,13 @@ export class UserClient implements IUserClient, ServiceInfo {
     revokeAllMySessions(input: Empty, options?: RpcOptions): UnaryCall<Empty, Empty> {
         const method = this.methods[5], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
+     */
+    getDeviceDetail(input: GetDeviceDetailReq, options?: RpcOptions): UnaryCall<GetDeviceDetailReq, GetDeviceDetailResp> {
+        const method = this.methods[6], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetDeviceDetailReq, GetDeviceDetailResp>("unary", this._transport, method, opt, input);
     }
 }
 // ---------- Admin
