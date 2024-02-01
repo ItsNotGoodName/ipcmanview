@@ -1,7 +1,7 @@
 import { createAsync, useSearchParams } from "@solidjs/router"
 import { CardRoot, } from "~/ui/Card"
 import { getHomePage } from "./Home.data"
-import { ErrorBoundary, For, Suspense } from "solid-js"
+import { ErrorBoundary, For, Show, Suspense } from "solid-js"
 import { BiRegularCctv } from "solid-icons/bi"
 import { PageError, PageLoading } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
@@ -10,6 +10,7 @@ import { TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } fro
 import { GetHomePageResp_Device } from "~/twirp/rpc"
 import { getDeviceDetail } from "./data"
 import { Skeleton } from "~/ui/Skeleton"
+import { ToggleButton } from "@kobalte/core"
 
 export function Home() {
   const data = createAsync(getHomePage)
@@ -152,7 +153,13 @@ function DetailTable(props: { devices?: GetHomePageResp_Device[] }) {
                     </TableCell>
                   }>
                     <TableCell>
-                      {data()?.sn}
+                      <ToggleButton.Root>
+                        {state => (
+                          <Show when={state.pressed()} fallback={<>***************</>}>
+                            {data()?.sn}
+                          </Show>
+                        )}
+                      </ToggleButton.Root>
                     </TableCell>
                     <TableCell>
                       {data()?.deviceClass}
