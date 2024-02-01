@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"context"
@@ -11,19 +11,19 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-type Server struct {
+type HTTP struct {
 	e               *echo.Echo
 	address         string
 	cert            *models.Certificate
 	shutdownTimeout time.Duration
 }
 
-func NewServer(
+func NewHTTP(
 	e *echo.Echo,
 	address string,
 	cert *models.Certificate,
-) Server {
-	return Server{
+) HTTP {
+	return HTTP{
 		e:               e,
 		address:         address,
 		cert:            cert,
@@ -31,7 +31,7 @@ func NewServer(
 	}
 }
 
-func (s Server) Serve(ctx context.Context) error {
+func (s HTTP) Serve(ctx context.Context) error {
 	s.e.HideBanner = true
 	s.e.HidePort = true
 	log.Info().Str("address", s.address).Msg("Starting HTTP server")

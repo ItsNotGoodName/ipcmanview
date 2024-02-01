@@ -1,15 +1,17 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuasmtp"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
-	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
+	"github.com/ItsNotGoodName/ipcmanview/internal/server"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
@@ -125,7 +127,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super.Add(dahuaSMTPServer)
 
 	// HTTP router
-	httpRouter := http.NewRouter()
+	httpRouter := server.NewRouter()
 
 	// HTTP middleware
 	httpRouter.Use(web.FS(api.Route, rpcserver.Route))
@@ -144,8 +146,20 @@ func (c *CmdServe) Run(ctx *Context) error {
 		Register(rpc.NewUserServer(rpcserver.NewUser(db, dahuaStore), rpcLogger, rpcserver.AuthSession())).
 		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.AdminAuthSession()))
 
+	// HTTP server
+	httpServer := server.NewHTTP(
+		server.NewRedirect(strconv.Itoa(int(c.HTTPSPort))),
+		core.Address(c.HTTPHost, int(c.HTTPPort)),
+		nil,
+	)
+	super.Add(httpServer)
+
 	// HTTPS server
-	httpsServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPSPort)), &cert)
+	httpsServer := server.NewHTTP(
+		httpRouter,
+		core.Address(c.HTTPHost, int(c.HTTPSPort)),
+		&cert,
+	)
 	super.Add(httpsServer)
 
 	return super.Serve(ctx)

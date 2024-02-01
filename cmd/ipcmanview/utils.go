@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/server"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/spf13/afero"
 )
@@ -102,7 +102,7 @@ func (c Shared) useCert() (models.Certificate, error) {
 		return cert, err
 	}
 	if !certFileExists || !keyFileExists {
-		err := http.GenerateCertificate(cert)
+		err := server.GenerateCertificate(cert)
 		if err != nil {
 			return cert, err
 		}

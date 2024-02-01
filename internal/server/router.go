@@ -1,4 +1,4 @@
-package http
+package server
 
 import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/echoext"

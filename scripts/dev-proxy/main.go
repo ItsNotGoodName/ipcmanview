@@ -12,9 +12,9 @@ import (
 	"os/signal"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
-	http_server "github.com/ItsNotGoodName/ipcmanview/internal/http"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
+	"github.com/ItsNotGoodName/ipcmanview/internal/server"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/echoext"
 	"github.com/labstack/echo/v4"
@@ -83,7 +83,7 @@ func start(ctx context.Context, cfg Config) {
 		}(urL)
 	}
 
-	err := http_server.NewServer(e, cfg.Address, cfg.Certificate).Serve(ctx)
+	err := server.NewHTTP(e, cfg.Address, cfg.Certificate).Serve(ctx)
 	if err != nil && !errors.Is(err, context.Canceled) {
 		log.Fatal().Err(err).Send()
 	}
