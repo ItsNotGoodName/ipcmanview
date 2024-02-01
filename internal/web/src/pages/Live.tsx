@@ -13,7 +13,7 @@ type Rectangles = {
   h: number
 }
 
-export function View() {
+export function Live() {
   const [rectangles, setRectangles] = createStore<Rectangles[]>([
     { x: 0, y: 0, w: 4096, h: 4096 },
     { x: 4096, y: 4096, w: 4096, h: 4096 },

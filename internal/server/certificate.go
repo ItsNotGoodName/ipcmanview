@@ -10,11 +10,14 @@ import (
 	"math/big"
 	"os"
 	"time"
-
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
 
-func GenerateCertificate(c models.Certificate) error {
+type Certificate struct {
+	CertFile string
+	KeyFile  string
+}
+
+func GenerateCertificate(c Certificate) error {
 	now := time.Now()
 	cert := &x509.Certificate{
 		SerialNumber: big.NewInt(2024),

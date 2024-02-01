@@ -139,6 +139,44 @@ export interface GetHomePageResp_Device {
     name: string;
 }
 /**
+ * @generated from protobuf message GetDevicesPageResp
+ */
+export interface GetDevicesPageResp {
+    /**
+     * @generated from protobuf field: repeated GetDevicesPageResp.Device devices = 1;
+     */
+    devices: GetDevicesPageResp_Device[];
+}
+/**
+ * @generated from protobuf message GetDevicesPageResp.Device
+ */
+export interface GetDevicesPageResp_Device {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string url = 3;
+     */
+    url: string;
+    /**
+     * @generated from protobuf field: string username = 4;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 5;
+     */
+    createdAtTime?: Timestamp;
+    /**
+     * @generated from protobuf field: bool disabled = 6;
+     */
+    disabled: boolean;
+}
+/**
  * @generated from protobuf message GetProfilePageResp
  */
 export interface GetProfilePageResp {
@@ -310,8 +348,6 @@ export interface GetDeviceDetailResp {
      */
     algorithmVersion: string;
 }
-// ---------- Pages
-
 /**
  * @generated from protobuf message GetAdminGroupsPageReq
  */
@@ -628,11 +664,7 @@ export interface GetAdminDevicesPageResp_Device {
      */
     createdAtTime?: Timestamp;
 }
-// ---------- User
-
 /**
- * Create
- *
  * @generated from protobuf message CreateUserReq
  */
 export interface CreateUserReq {
@@ -658,8 +690,6 @@ export interface CreateUserReq {
     disabled: boolean;
 }
 /**
- * Get
- *
  * @generated from protobuf message GetUserReq
  */
 export interface GetUserReq {
@@ -686,8 +716,6 @@ export interface GetUserResp {
     email: string;
 }
 /**
- * Update
- *
  * @generated from protobuf message UpdateUserReq
  */
 export interface UpdateUserReq {
@@ -705,8 +733,6 @@ export interface UpdateUserReq {
     username: string;
 }
 /**
- * Delete
- *
  * @generated from protobuf message DeleteUserReq
  */
 export interface DeleteUserReq {
@@ -763,11 +789,7 @@ export interface ResetUserPasswordReq {
      */
     newPassword: string;
 }
-// ---------- Group
-
 /**
- * Create
- *
  * @generated from protobuf message CreateGroupReq
  */
 export interface CreateGroupReq {
@@ -790,8 +812,6 @@ export interface CreateGroupResp {
     id: bigint;
 }
 /**
- * Get
- *
  * @generated from protobuf message GetGroupReq
  */
 export interface GetGroupReq {
@@ -818,8 +838,6 @@ export interface GetGroupResp {
     description: string;
 }
 /**
- * Update
- *
  * @generated from protobuf message UpdateGroupReq
  */
 export interface UpdateGroupReq {
@@ -837,8 +855,6 @@ export interface UpdateGroupReq {
     description: string;
 }
 /**
- * Delete
- *
  * @generated from protobuf message DeleteGroupReq
  */
 export interface DeleteGroupReq {
@@ -869,11 +885,7 @@ export interface SetGroupDisableReq_item {
      */
     disable: boolean;
 }
-// ---------- Device
-
 /**
- * Create
- *
  * @generated from protobuf message CreateDeviceReq
  */
 export interface CreateDeviceReq {
@@ -912,8 +924,6 @@ export interface CreateDeviceResp {
     id: bigint;
 }
 /**
- * Get
- *
  * @generated from protobuf message GetDeviceReq
  */
 export interface GetDeviceReq {
@@ -952,8 +962,6 @@ export interface GetDeviceResp {
     features: string[];
 }
 /**
- * Update
- *
  * @generated from protobuf message UpdateDeviceReq
  */
 export interface UpdateDeviceReq {
@@ -987,8 +995,6 @@ export interface UpdateDeviceReq {
     features: string[];
 }
 /**
- * Delete
- *
  * @generated from protobuf message DeleteDeviceReq
  */
 export interface DeleteDeviceReq {
@@ -1019,8 +1025,6 @@ export interface SetDeviceDisableReq_Item {
      */
     disable: boolean;
 }
-// ---------- Misc
-
 /**
  * @generated from protobuf message ListLocationsResp
  */
@@ -1194,6 +1198,35 @@ class GetHomePageResp_Device$Type extends MessageType<GetHomePageResp_Device> {
  * @generated MessageType for protobuf message GetHomePageResp.Device
  */
 export const GetHomePageResp_Device = new GetHomePageResp_Device$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDevicesPageResp$Type extends MessageType<GetDevicesPageResp> {
+    constructor() {
+        super("GetDevicesPageResp", [
+            { no: 1, name: "devices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetDevicesPageResp_Device }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDevicesPageResp
+ */
+export const GetDevicesPageResp = new GetDevicesPageResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDevicesPageResp_Device$Type extends MessageType<GetDevicesPageResp_Device> {
+    constructor() {
+        super("GetDevicesPageResp.Device", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "created_at_time", kind: "message", T: () => Timestamp },
+            { no: 6, name: "disabled", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDevicesPageResp.Device
+ */
+export const GetDevicesPageResp_Device = new GetDevicesPageResp_Device$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetProfilePageResp$Type extends MessageType<GetProfilePageResp> {
     constructor() {
@@ -1940,6 +1973,7 @@ export const Public = new ServiceType("Public", [
  */
 export const User = new ServiceType("User", [
     { name: "GetHomePage", options: {}, I: Empty, O: GetHomePageResp },
+    { name: "GetDevicesPage", options: {}, I: Empty, O: GetDevicesPageResp },
     { name: "GetProfilePage", options: {}, I: Empty, O: GetProfilePageResp },
     { name: "UpdateMyUsername", options: {}, I: UpdateMyUsernameReq, O: Empty },
     { name: "UpdateMyPassword", options: {}, I: UpdateMyPasswordReq, O: Empty },

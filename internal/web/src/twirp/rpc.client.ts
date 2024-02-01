@@ -43,6 +43,7 @@ import type { RevokeMySessionReq } from "./rpc";
 import type { UpdateMyPasswordReq } from "./rpc";
 import type { UpdateMyUsernameReq } from "./rpc";
 import type { GetProfilePageResp } from "./rpc";
+import type { GetDevicesPageResp } from "./rpc";
 import type { GetHomePageResp } from "./rpc";
 import { Public } from "./rpc";
 import type { ForgotPasswordReq } from "./rpc";
@@ -140,6 +141,10 @@ export interface IUserClient {
      */
     getHomePage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetHomePageResp>;
     /**
+     * @generated from protobuf rpc: GetDevicesPage(google.protobuf.Empty) returns (GetDevicesPageResp);
+     */
+    getDevicesPage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetDevicesPageResp>;
+    /**
      * @generated from protobuf rpc: GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
      */
     getProfilePage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetProfilePageResp>;
@@ -162,6 +167,8 @@ export interface IUserClient {
      */
     revokeAllMySessions(input: Empty, options?: RpcOptions): UnaryCall<Empty, Empty>;
     /**
+     * Device
+     *
      * @generated from protobuf rpc: GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
      */
     getDeviceDetail(input: GetDeviceDetailReq, options?: RpcOptions): UnaryCall<GetDeviceDetailReq, GetDeviceDetailResp>;
@@ -187,10 +194,17 @@ export class UserClient implements IUserClient, ServiceInfo {
         return stackIntercept<Empty, GetHomePageResp>("unary", this._transport, method, opt, input);
     }
     /**
+     * @generated from protobuf rpc: GetDevicesPage(google.protobuf.Empty) returns (GetDevicesPageResp);
+     */
+    getDevicesPage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetDevicesPageResp> {
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Empty, GetDevicesPageResp>("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
      */
     getProfilePage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetProfilePageResp> {
-        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, GetProfilePageResp>("unary", this._transport, method, opt, input);
     }
     /**
@@ -199,35 +213,37 @@ export class UserClient implements IUserClient, ServiceInfo {
      * @generated from protobuf rpc: UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
      */
     updateMyUsername(input: UpdateMyUsernameReq, options?: RpcOptions): UnaryCall<UpdateMyUsernameReq, Empty> {
-        const method = this.methods[2], opt = this._transport.mergeOptions(options);
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
         return stackIntercept<UpdateMyUsernameReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: UpdateMyPassword(UpdateMyPasswordReq) returns (google.protobuf.Empty);
      */
     updateMyPassword(input: UpdateMyPasswordReq, options?: RpcOptions): UnaryCall<UpdateMyPasswordReq, Empty> {
-        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        const method = this.methods[4], opt = this._transport.mergeOptions(options);
         return stackIntercept<UpdateMyPasswordReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
      */
     revokeMySession(input: RevokeMySessionReq, options?: RpcOptions): UnaryCall<RevokeMySessionReq, Empty> {
-        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        const method = this.methods[5], opt = this._transport.mergeOptions(options);
         return stackIntercept<RevokeMySessionReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
      */
     revokeAllMySessions(input: Empty, options?: RpcOptions): UnaryCall<Empty, Empty> {
-        const method = this.methods[5], opt = this._transport.mergeOptions(options);
+        const method = this.methods[6], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, Empty>("unary", this._transport, method, opt, input);
     }
     /**
+     * Device
+     *
      * @generated from protobuf rpc: GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
      */
     getDeviceDetail(input: GetDeviceDetailReq, options?: RpcOptions): UnaryCall<GetDeviceDetailReq, GetDeviceDetailResp> {
-        const method = this.methods[6], opt = this._transport.mergeOptions(options);
+        const method = this.methods[7], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetDeviceDetailReq, GetDeviceDetailResp>("unary", this._transport, method, opt, input);
     }
 }
@@ -334,6 +350,8 @@ export interface IAdminClient {
      */
     updateDevice(input: UpdateDeviceReq, options?: RpcOptions): UnaryCall<UpdateDeviceReq, Empty>;
     /**
+     * Misc
+     *
      * @generated from protobuf rpc: ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
      */
     listLocations(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListLocationsResp>;
@@ -516,6 +534,8 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<UpdateDeviceReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
+     * Misc
+     *
      * @generated from protobuf rpc: ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
      */
     listLocations(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListLocationsResp> {

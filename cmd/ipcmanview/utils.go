@@ -7,7 +7,6 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/server"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
@@ -86,9 +85,9 @@ func (c Shared) useDB(ctx *Context) (repo.DB, error) {
 	return db, nil
 }
 
-func (c Shared) useCert() (models.Certificate, error) {
+func (c Shared) useCert() (server.Certificate, error) {
 	certFile, keyFile := filepath.Join(c.Dir, "cert.pem"), filepath.Join(c.Dir, "key.pem")
-	cert := models.Certificate{
+	cert := server.Certificate{
 		CertFile: certFile,
 		KeyFile:  keyFile,
 	}

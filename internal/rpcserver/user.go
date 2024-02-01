@@ -49,6 +49,34 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 	}, nil
 }
 
+func (u *User) GetDevicesPage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetDevicesPageResp, error) {
+	permissions, err := useDahuaPermissions(ctx, u.db)
+	if err != nil {
+		return nil, err
+	}
+
+	dbDevices, err := dahua.ListFatDevices(ctx, u.db, permissions)
+	if err != nil {
+		return nil, err
+	}
+
+	devices := make([]*rpc.GetDevicesPageResp_Device, 0, len(dbDevices))
+	for _, v := range dbDevices {
+		devices = append(devices, &rpc.GetDevicesPageResp_Device{
+			Id:            v.ID,
+			Name:          v.Name,
+			Url:           v.Url.String(),
+			Username:      v.Username,
+			CreatedAtTime: timestamppb.New(v.CreatedAt.Time),
+			Disabled:      v.DisabledAt.Valid,
+		})
+	}
+
+	return &rpc.GetDevicesPageResp{
+		Devices: devices,
+	}, nil
+}
+
 func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetProfilePageResp, error) {
 	session := useAuthSession(ctx)
 

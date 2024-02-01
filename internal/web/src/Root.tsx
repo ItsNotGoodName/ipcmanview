@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority"
 import { As, DropdownMenu } from "@kobalte/core";
 import { ErrorBoundary, JSX, ParentProps, Show, Suspense, createEffect, createSignal, splitProps } from "solid-js";
 import { A, action, createAsync, revalidate, useAction, useLocation, useNavigate, useSubmission } from "@solidjs/router";
-import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemEyeLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine } from "solid-icons/ri";
+import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine, RiMediaLiveLine } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
 import { makePersisted } from "@solid-primitives/storage";
 
@@ -13,6 +13,7 @@ import { ToastList, ToastRegion } from "~/ui/Toast";
 import { cn, catchAsToast } from "~/lib/utils";
 import { getSession } from "~/providers/session";
 import { PageError, PageLoading } from "./ui/Page";
+import { BiRegularCctv } from "solid-icons/bi";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
@@ -41,19 +42,25 @@ function DropdownMenuLinks() {
           <RiBuildingsHomeLine class="h-5 w-5" />Home
         </As>
       </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/view")}>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/devices")}>
         <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/view">
-          <RiSystemEyeLine class="h-5 w-5" />View
+          href="/devices">
+          <BiRegularCctv class="h-5 w-5" />Devices
         </As>
       </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/view")}>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/live")}>
+        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+          href="/live">
+          <RiMediaLiveLine class="h-5 w-5" />Live
+        </As>
+      </DropdownMenu.Item>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/events")}>
         <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
           href="/events">
           <RiWeatherFlashlightLine class="h-5 w-5" />Events
         </As>
       </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/view")}>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/files")}>
         <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
           href="/files">
           <RiDocumentFileLine class="h-5 w-5" />Files
@@ -71,8 +78,12 @@ function MenuLinks() {
         <RiBuildingsHomeLine class="h-5 w-5" />Home
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-        href="/view" noScroll>
-        <RiSystemEyeLine class="h-5 w-5" />View
+        href="/devices" noScroll>
+        <BiRegularCctv class="h-5 w-5" />Devices
+      </A>
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+        href="/live" noScroll>
+        <RiMediaLiveLine class="h-5 w-5" />Live
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
         href="/events" noScroll>

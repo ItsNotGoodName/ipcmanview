@@ -7,7 +7,6 @@ import { provideTheme } from "./ui/theme";
 import { NotFound } from './pages/404'
 import { Home } from "./pages/Home";
 import loadHome from "./pages/Home.data";
-import { View } from "./pages/View";
 import { SignIn, Signup, Forgot } from "./pages/Public";
 import { Profile } from "./pages/Profile";
 import loadProfile from "./pages/Profile.data";
@@ -25,6 +24,9 @@ import { AdminDevices } from "./pages/admin/Devices";
 import loadAdminDevices from "./pages/admin/Devices.data";
 import loadAdminDevicesID from "./pages/admin/DevicesID.data";
 import { AdminDevicesID } from "./pages/admin/DevicesID";
+import { Live } from "./pages/Live";
+import { Devices } from "./pages/Devices";
+import loadDevices from "./pages/Devices.data";
 
 const Debug = lazy(() => import("./pages/debug"));
 
@@ -33,7 +35,7 @@ function App() {
 
   return (
     <ClientProvider>
-      <Router root={Root}>
+      <Router root={Root} explicitLinks>
         <Show when={import.meta.env.DEV}>
           <Route path="/debug">
             <Debug />
@@ -47,7 +49,8 @@ function App() {
         </>}>
           <Route path="/" component={Home} load={loadHome} />
           <Route path="/profile" component={Profile} load={loadProfile} />
-          <Route path="/view" component={View} />
+          <Route path="/live" component={Live} />
+          <Route path="/devices" component={Devices} load={loadDevices} />
           <Show when={sessionCache.admin} fallback={<Route path="/admin/*" component={() => <>You are not an admin.</>}></Route>}>
             <Route path="/admin" component={AdminHome} />
             <Route path="/admin/users" component={AdminUsers} load={loadAdminUsers} />

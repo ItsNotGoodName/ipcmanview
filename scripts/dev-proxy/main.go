@@ -12,7 +12,6 @@ import (
 	"os/signal"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	"github.com/ItsNotGoodName/ipcmanview/internal/server"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
@@ -24,14 +23,13 @@ import (
 
 type Config struct {
 	Address     string
-	Certificate *models.Certificate
+	Certificate *server.Certificate
 	Servers     []ConfigServer
 }
 
 type ConfigServer struct {
-	Certificate *models.Certificate
-	URL         string
-	Routes      []string
+	URL    string
+	Routes []string
 }
 
 func main() {
@@ -40,7 +38,7 @@ func main() {
 
 	cfg := Config{
 		Address: ":3443",
-		Certificate: &models.Certificate{
+		Certificate: &server.Certificate{
 			CertFile: "./ipcmanview_data/cert.pem",
 			KeyFile:  "./ipcmanview_data/key.pem",
 		},

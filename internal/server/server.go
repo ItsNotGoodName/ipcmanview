@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/thejerf/suture/v4"
@@ -14,14 +13,14 @@ import (
 type HTTP struct {
 	e               *echo.Echo
 	address         string
-	cert            *models.Certificate
+	cert            *Certificate
 	shutdownTimeout time.Duration
 }
 
 func NewHTTP(
 	e *echo.Echo,
 	address string,
-	cert *models.Certificate,
+	cert *Certificate,
 ) HTTP {
 	return HTTP{
 		e:               e,

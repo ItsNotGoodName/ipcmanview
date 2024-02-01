@@ -70,6 +70,7 @@ message ForgotPasswordReq {
 service User {
   // Pages
   rpc GetHomePage(google.protobuf.Empty) returns (GetHomePageResp);
+  rpc GetDevicesPage(google.protobuf.Empty) returns (GetDevicesPageResp);
   rpc GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
 
   // User
@@ -78,6 +79,7 @@ service User {
   rpc RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
   rpc RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
 
+  // Device
   rpc GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
 }
 
@@ -85,6 +87,18 @@ message GetHomePageResp {
   message Device {
     int64 id = 1;
     string name = 2;
+  }
+  repeated Device devices = 1;
+}
+
+message GetDevicesPageResp {
+  message Device {
+    int64 id = 1;
+    string name = 2;
+    string url = 3;
+    string username = 4;
+    google.protobuf.Timestamp created_at_time = 5;
+    bool disabled = 6;
   }
   repeated Device devices = 1;
 }
@@ -178,11 +192,10 @@ service Admin {
   rpc SetDeviceDisable(SetDeviceDisableReq) returns (google.protobuf.Empty);
   rpc UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
 
+  // Misc
   rpc ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
   rpc ListDeviceFeatures(google.protobuf.Empty) returns (ListDeviceFeaturesResp);
 }
-
-// ---------- Pages
 
 message GetAdminGroupsPageReq {
   PagePagination page = 1;
@@ -283,9 +296,6 @@ message GetAdminDevicesPageResp {
   Sort sort = 3;
 }
 
-// ---------- User
-
-// Create
 message CreateUserReq {
   string email = 1;
   string username = 2;
@@ -294,7 +304,6 @@ message CreateUserReq {
   bool disabled = 5;
 }
 
-// Get
 message GetUserReq {
   int64 id = 1;
 }
@@ -304,14 +313,12 @@ message GetUserResp {
   string email = 3;
 }
 
-// Update
 message UpdateUserReq {
   int64 id = 1;
   string email = 2;
   string username = 3;
 }
 
-// Delete
 message DeleteUserReq {
   repeated int64 ids = 1;
 }
@@ -334,9 +341,6 @@ message ResetUserPasswordReq {
   string new_password = 2;
 }
 
-// ---------- Group
-
-// Create
 message CreateGroupReq {
   string name = 1;
   string description = 2;
@@ -345,7 +349,6 @@ message CreateGroupResp {
   int64 id = 1;
 }
 
-// Get
 message GetGroupReq {
   int64 id = 1;
 }
@@ -355,14 +358,12 @@ message GetGroupResp {
   string description = 3;
 }
 
-// Update
 message UpdateGroupReq {
   int64 id = 1;
   string name = 2;
   string description = 3;
 }
 
-// Delete
 message DeleteGroupReq {
   repeated int64 ids = 1;
 }
@@ -375,9 +376,6 @@ message SetGroupDisableReq {
   repeated item items = 1;
 }
 
-// ---------- Device
-
-// Create
 message CreateDeviceReq {
   string name = 1;
   string url = 2;
@@ -390,7 +388,6 @@ message CreateDeviceResp {
   int64 id = 1;
 }
 
-// Get
 message GetDeviceReq {
   int64 id = 1;
 }
@@ -403,7 +400,6 @@ message GetDeviceResp {
   repeated string features = 6;
 }
 
-// Update
 message UpdateDeviceReq {
   int64 id = 1;
   string name = 2;
@@ -414,7 +410,6 @@ message UpdateDeviceReq {
   repeated string features = 7;
 }
 
-// Delete
 message DeleteDeviceReq {
   repeated int64 ids = 1;
 }
@@ -426,8 +421,6 @@ message SetDeviceDisableReq {
   }
   repeated Item items = 1;
 }
-
-// ---------- Misc
 
 message ListLocationsResp {
   repeated string locations = 1;
