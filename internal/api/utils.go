@@ -32,10 +32,7 @@ func useDahuaPermissions(c echo.Context, db repo.DB) (models.DahuaDevicePermissi
 		return nil, echo.ErrUnauthorized
 	}
 
-	permissions, err := db.DahuaListDahuaDevicePermissions(ctx, repo.DahuaDevicePermissionParams{
-		UserID: session.UserID,
-		Level:  models.DahuaPermissionLevelUser,
-	})
+	permissions, err := db.DahuaListDahuaDevicePermissions(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}

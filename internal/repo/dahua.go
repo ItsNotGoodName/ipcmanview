@@ -87,11 +87,6 @@ func (db DB) DahuaGetFatDevice(ctx context.Context, arg DahuaFatDeviceParams) (D
 
 // DahuaDevicePermission
 
-type DahuaDevicePermissionParams struct {
-	UserID int64
-	Level  models.DahuaPermissionLevel
-}
-
 var dahuaListDahuaDevicePermissions = fmt.Sprintf(`
 SELECT
   d.id as device_id,
@@ -104,9 +99,10 @@ FROM
   LEFT JOIN dahua_permissions AS p ON p.device_id = d.id
   LEFT JOIN admins AS a ON a.user_id = ?1
 WHERE
+  -- Allow if user is admin
   a.user_id IS NOT NULL
-  OR p.level > ?2
-  AND (
+  -- Filter by level
+  OR (
     -- Allow if user owns the permission
     p.user_id = ?1
     -- Allow if user is a part of the group that owns the permission
@@ -123,8 +119,8 @@ GROUP BY
   d.id
 	`, models.DahuaPermissionLevelAdmin)
 
-func (db DB) DahuaListDahuaDevicePermissions(ctx context.Context, arg DahuaDevicePermissionParams) (models.DahuaDevicePermissions, error) {
-	rows, err := db.QueryContext(ctx, dahuaListDahuaDevicePermissions, arg.UserID, arg.Level)
+func (db DB) DahuaListDahuaDevicePermissions(ctx context.Context, userID int64) (models.DahuaDevicePermissions, error) {
+	rows, err := db.QueryContext(ctx, dahuaListDahuaDevicePermissions, userID)
 	if err != nil {
 		return nil, err
 	}
