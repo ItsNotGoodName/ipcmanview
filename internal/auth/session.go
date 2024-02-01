@@ -12,12 +12,11 @@ import (
 )
 
 type Session struct {
-	Admin     bool
-	Disabled  bool
-	Session   string
 	SessionID int64
 	UserID    int64
 	Username  string
+	Admin     bool
+	Disabled  bool
 }
 
 var sessionCtxKey contextKey = contextKey("session")
@@ -42,7 +41,7 @@ func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionPar
 	session := base64.URLEncoding.EncodeToString(b)
 
 	now := time.Now()
-	args := repo.AuthCreateUserSessionParams{
+	dbArg := repo.AuthCreateUserSessionParams{
 		UserID:     arg.UserID,
 		Session:    session,
 		UserAgent:  arg.UserAgent,
@@ -54,12 +53,12 @@ func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionPar
 	}
 
 	if arg.PreviousSession != "" {
-		err := createUserSessionAndDeletePrevious(ctx, db, args, arg.PreviousSession)
+		err := createUserSessionAndDeletePrevious(ctx, db, dbArg, arg.PreviousSession)
 		if err != nil {
 			return "", nil
 		}
 	} else {
-		err := db.AuthCreateUserSession(ctx, args)
+		err := db.AuthCreateUserSession(ctx, dbArg)
 		if err != nil {
 			return "", nil
 		}
@@ -97,21 +96,21 @@ func DeleteUserSession(ctx context.Context, db repo.DB, userID int64, sessionID 
 	})
 }
 
-func DeleteOtherUserSessions(ctx context.Context, db repo.DB, userID int64, currentSession string) error {
+func DeleteOtherUserSessions(ctx context.Context, db repo.DB, userID int64, currentSessionID int64) error {
 	return db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
-		UserID:  userID,
-		Session: currentSession,
+		UserID: userID,
+		ID:     currentSessionID,
 	})
 }
 
-var touchSessionLock = core.NewLockStore[string]()
+var touchSessionLock = core.NewLockStore[int64]()
 var touchSessionThrottle = time.Minute
 
 type TouchUserSessionParams struct {
-	Session    string
-	LastUsedAt time.Time
-	LastIP     string
-	IP         string
+	CurrentSessionID int64
+	LastUsedAt       time.Time
+	LastIP           string
+	IP               string
 }
 
 func TouchUserSession(ctx context.Context, db repo.DB, arg TouchUserSessionParams) error {
@@ -120,7 +119,7 @@ func TouchUserSession(ctx context.Context, db repo.DB, arg TouchUserSessionParam
 		return nil
 	}
 
-	unlock, err := touchSessionLock.TryLock(arg.Session)
+	unlock, err := touchSessionLock.TryLock(arg.CurrentSessionID)
 	if err != nil {
 		return nil
 	}
@@ -129,7 +128,7 @@ func TouchUserSession(ctx context.Context, db repo.DB, arg TouchUserSessionParam
 	err = db.AuthUpdateUserSession(ctx, repo.AuthUpdateUserSessionParams{
 		LastIp:     arg.IP,
 		LastUsedAt: types.NewTime(now),
-		Session:    arg.Session,
+		ID:         arg.CurrentSessionID,
 	})
 	if err != nil {
 		return err

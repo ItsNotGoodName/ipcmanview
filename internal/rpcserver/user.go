@@ -104,7 +104,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 			LastUsedAtTime: timestamppb.New(v.LastUsedAt.Time),
 			CreatedAtTime:  timestamppb.New(v.CreatedAt.Time),
 			Active:         v.LastUsedAt.After(activeCutoff),
-			Current:        v.Session == session.Session,
+			Current:        v.ID == session.SessionID,
 		})
 	}
 
@@ -147,8 +147,8 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 	}
 
 	if err := auth.UpdateUserPassword(ctx, u.db, dbUser, auth.UpdateUserPasswordParams{
-		NewPassword:    req.NewPassword,
-		CurrentSession: session.Session,
+		NewPassword:      req.NewPassword,
+		CurrentSessionID: session.SessionID,
 	}); err != nil {
 		return nil, err
 	}
@@ -174,7 +174,7 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *emptypb.Empty) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	err := auth.DeleteOtherUserSessions(ctx, u.db, session.UserID, session.Session)
+	err := auth.DeleteOtherUserSessions(ctx, u.db, session.UserID, session.SessionID)
 	if err != nil {
 		return nil, err
 	}

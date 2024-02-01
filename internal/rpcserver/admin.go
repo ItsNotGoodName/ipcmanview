@@ -394,8 +394,8 @@ func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswor
 	}
 
 	if err := auth.UpdateUserPassword(ctx, a.db, dbUser, auth.UpdateUserPasswordParams{
-		NewPassword:    req.NewPassword,
-		CurrentSession: session.Session,
+		NewPassword:      req.NewPassword,
+		CurrentSessionID: session.SessionID,
 	}); err != nil {
 		return nil, err
 	}

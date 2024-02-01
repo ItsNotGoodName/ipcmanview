@@ -142,21 +142,20 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 			}
 
 			if err := auth.TouchUserSession(ctx, db, auth.TouchUserSessionParams{
-				Session:    session.Session,
-				LastUsedAt: session.LastUsedAt.Time,
-				LastIP:     session.LastIp,
-				IP:         c.RealIP(),
+				CurrentSessionID: session.ID,
+				LastUsedAt:       session.LastUsedAt.Time,
+				LastIP:           session.LastIp,
+				IP:               c.RealIP(),
 			}); err != nil {
 				return err
 			}
 
 			c.SetRequest(c.Request().WithContext(auth.WithSession(c.Request().Context(), auth.Session{
-				Admin:     session.Admin,
-				Disabled:  session.UsersDisabledAt.Valid,
-				Session:   session.Session,
 				SessionID: session.ID,
 				UserID:    session.UserID,
 				Username:  session.Username.String,
+				Admin:     session.Admin,
+				Disabled:  session.UsersDisabledAt.Valid,
 			})))
 			return next(c)
 		}

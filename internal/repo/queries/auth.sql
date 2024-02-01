@@ -118,13 +118,13 @@ SET
   last_ip = ?,
   last_used_at = ?
 WHERE
-  session = ?;
+  id = ?;
 
 -- name: AuthDeleteUserSessionForUserAndNotSession :exec
 DELETE FROM user_sessions
 WHERE
   user_id = ?
-  AND session != ?;
+  AND id != ?;
 
 -- name: AuthDeleteUserSessionBySession :exec
 DELETE FROM user_sessions

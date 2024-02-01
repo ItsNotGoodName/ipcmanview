@@ -195,16 +195,16 @@ const authDeleteUserSessionForUserAndNotSession = `-- name: AuthDeleteUserSessio
 DELETE FROM user_sessions
 WHERE
   user_id = ?
-  AND session != ?
+  AND id != ?
 `
 
 type AuthDeleteUserSessionForUserAndNotSessionParams struct {
-	UserID  int64
-	Session string
+	UserID int64
+	ID     int64
 }
 
 func (q *Queries) AuthDeleteUserSessionForUserAndNotSession(ctx context.Context, arg AuthDeleteUserSessionForUserAndNotSessionParams) error {
-	_, err := q.db.ExecContext(ctx, authDeleteUserSessionForUserAndNotSession, arg.UserID, arg.Session)
+	_, err := q.db.ExecContext(ctx, authDeleteUserSessionForUserAndNotSession, arg.UserID, arg.ID)
 	return err
 }
 
@@ -576,17 +576,17 @@ SET
   last_ip = ?,
   last_used_at = ?
 WHERE
-  session = ?
+  id = ?
 `
 
 type AuthUpdateUserSessionParams struct {
 	LastIp     string
 	LastUsedAt types.Time
-	Session    string
+	ID         int64
 }
 
 func (q *Queries) AuthUpdateUserSession(ctx context.Context, arg AuthUpdateUserSessionParams) error {
-	_, err := q.db.ExecContext(ctx, authUpdateUserSession, arg.LastIp, arg.LastUsedAt, arg.Session)
+	_, err := q.db.ExecContext(ctx, authUpdateUserSession, arg.LastIp, arg.LastUsedAt, arg.ID)
 	return err
 }
 

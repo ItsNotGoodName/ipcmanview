@@ -129,8 +129,8 @@ func DeleteUser(ctx context.Context, db repo.DB, id int64) error {
 }
 
 type UpdateUserPasswordParams struct {
-	NewPassword    string
-	CurrentSession string
+	NewPassword      string
+	CurrentSessionID int64
 }
 
 func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUserPasswordParams) error {
@@ -158,8 +158,8 @@ func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, arg 
 	}
 
 	err = db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
-		UserID:  dbModel.ID,
-		Session: arg.CurrentSession,
+		UserID: dbModel.ID,
+		ID:     arg.CurrentSessionID,
 	})
 	if err != nil {
 		return err
