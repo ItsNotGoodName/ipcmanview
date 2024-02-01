@@ -144,15 +144,9 @@ func (c *CmdServe) Run(ctx *Context) error {
 		Register(rpc.NewUserServer(rpcserver.NewUser(db, dahuaStore), rpcLogger, rpcserver.AuthSession())).
 		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.AdminAuthSession()))
 
-	// HTTP server
-	httpServer := http.NewHTTPServer(
-		httpRouter,
-		core.Address(c.HTTPHost, int(c.HTTPPort)),
-		core.Address(c.HTTPHost, int(c.HTTPSPort)),
-		true,
-		cert,
-	)
-	super.Add(httpServer)
+	// HTTPS server
+	httpsServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPSPort)), &cert)
+	super.Add(httpsServer)
 
 	return super.Serve(ctx)
 }

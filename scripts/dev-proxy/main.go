@@ -3,14 +3,17 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
+	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/signal"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
-	"github.com/ItsNotGoodName/ipcmanview/internal/http"
+	http_server "github.com/ItsNotGoodName/ipcmanview/internal/http"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/echoext"
@@ -19,32 +22,51 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type Config struct {
+	Address     string
+	Certificate *models.Certificate
+	Servers     []ConfigServer
+}
+
+type ConfigServer struct {
+	Certificate *models.Certificate
+	URL         string
+	Routes      []string
+}
+
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	servers := []struct {
-		URL    string
-		Routes []string
-	}{
-		{
-			URL: "http://127.0.0.1:8080",
-			Routes: []string{
-				api.Route, api.Route + "/*",
-				rpcserver.Route, rpcserver.Route + "/*",
+	cfg := Config{
+		Address: ":3443",
+		Certificate: &models.Certificate{
+			CertFile: "./ipcmanview_data/cert.pem",
+			KeyFile:  "./ipcmanview_data/key.pem",
+		},
+		Servers: []ConfigServer{
+			{
+				URL: "https://127.0.0.1:8443",
+				Routes: []string{
+					api.Route, api.Route + "/*",
+					rpcserver.Route, rpcserver.Route + "/*",
+				},
+			},
+			{
+				URL:    "http://127.0.0.1:5173",
+				Routes: []string{web.Route, web.Route + "*"},
 			},
 		},
-		{
-			URL:    "http://127.0.0.1:5173",
-			Routes: []string{web.Route, web.Route + "*"},
-		},
 	}
-	address := ":3000"
 
+	start(ctx, cfg)
+}
+
+func start(ctx context.Context, cfg Config) {
 	e := echo.New()
 	e.Use(echoext.Logger())
 
-	for _, server := range servers {
+	for _, server := range cfg.Servers {
 		urL := must(url.Parse(server.URL))
 		func(urL *url.URL) {
 			for _, route := range server.Routes {
@@ -53,12 +75,15 @@ func main() {
 						r.SetURL(urL)
 						r.SetXForwarded()
 					},
+					Transport: &http.Transport{
+						TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+					},
 				}))
 			}
 		}(urL)
 	}
 
-	err := http.NewServer(e, address).Serve(ctx)
+	err := http_server.NewServer(e, cfg.Address, cfg.Certificate).Serve(ctx)
 	if err != nil && !errors.Is(err, context.Canceled) {
 		log.Fatal().Err(err).Send()
 	}

@@ -13,36 +13,19 @@ import (
 
 type Server struct {
 	e               *echo.Echo
-	httpAddress     string
-	httpsAddress    string
-	https           bool
-	cert            models.Certificate
+	address         string
+	cert            *models.Certificate
 	shutdownTimeout time.Duration
 }
 
 func NewServer(
 	e *echo.Echo,
 	address string,
+	cert *models.Certificate,
 ) Server {
 	return Server{
 		e:               e,
-		httpAddress:     address,
-		shutdownTimeout: 3 * time.Second,
-	}
-}
-
-func NewHTTPServer(
-	e *echo.Echo,
-	httpAddress string,
-	httpsAddress string,
-	https bool,
-	cert models.Certificate,
-) Server {
-	return Server{
-		e:               e,
-		httpAddress:     httpAddress,
-		httpsAddress:    httpsAddress,
-		https:           https,
+		address:         address,
 		cert:            cert,
 		shutdownTimeout: 3 * time.Second,
 	}
@@ -51,14 +34,14 @@ func NewHTTPServer(
 func (s Server) Serve(ctx context.Context) error {
 	s.e.HideBanner = true
 	s.e.HidePort = true
-	log.Info().Str("address", s.httpAddress).Msg("Starting HTTP server")
+	log.Info().Str("address", s.address).Msg("Starting HTTP server")
 
 	errC := make(chan error, 1)
 	go func() {
-		if s.https {
-			errC <- s.e.StartTLS(s.httpsAddress, s.cert.CertFile, s.cert.KeyFile)
+		if s.cert == nil {
+			errC <- s.e.Start(s.address)
 		} else {
-			errC <- s.e.Start(s.httpAddress)
+			errC <- s.e.StartTLS(s.address, s.cert.CertFile, s.cert.KeyFile)
 		}
 	}()
 
