@@ -1,4 +1,4 @@
-import { createAsync } from "@solidjs/router"
+import { createAsync, useSearchParams } from "@solidjs/router"
 import { CardRoot, } from "~/ui/Card"
 import { getHomePage } from "./Home.data"
 import { ErrorBoundary, For, Suspense } from "solid-js"
@@ -13,6 +13,7 @@ import { Skeleton } from "~/ui/Skeleton"
 
 export function Home() {
   const data = createAsync(getHomePage)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   return (
     <LayoutNormal>
@@ -31,7 +32,7 @@ export function Home() {
               </CardRoot>
             </div>
           </div>
-          <TabsRoot>
+          <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>
             <TabsList class="w-full overflow-x-auto overflow-y-hidden">
               <TabsTrigger value="device" >Device</TabsTrigger>
               <TabsTrigger value="status" >Status</TabsTrigger>
@@ -110,6 +111,8 @@ function StatusTable() {
 }
 
 function DetailTable(props: { devices?: GetHomePageResp_Device[] }) {
+  const colspan = 9
+
   return (
     <TableRoot>
       <TableHeader>
@@ -136,10 +139,16 @@ function DetailTable(props: { devices?: GetHomePageResp_Device[] }) {
                 <TableCell>
                   {item.name}
                 </TableCell>
-                <ErrorBoundary fallback={(e: Error) => <TableCell class="bg-destructive text-destructive" colspan={9}>{e.message}</TableCell>}>
+                <ErrorBoundary fallback={(e: Error) => (
+                  <TableCell colspan={colspan} class="py-0">
+                    <div class="bg-destructive text-destructive-foreground rounded p-2">
+                      {e.message}
+                    </div>
+                  </TableCell>
+                )}>
                   <Suspense fallback={
-                    <TableCell colspan={9}>
-                      <Skeleton class="h-4" />
+                    <TableCell colspan={colspan} class="py-0">
+                      <Skeleton class="h-8" />
                     </TableCell>
                   }>
                     <TableCell>
