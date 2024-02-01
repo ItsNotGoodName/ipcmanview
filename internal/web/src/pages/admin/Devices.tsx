@@ -244,7 +244,7 @@ export function AdminDevices() {
                   const toggleDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
 
                   return (
-                    <TableRow>
+                    <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
                       <TableHead>
                         <CheckboxRoot
                           checked={rowSelection.rows[index()]?.checked}

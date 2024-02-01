@@ -86,21 +86,20 @@ func (c Shared) useDB(ctx *Context) (repo.DB, error) {
 }
 
 func (c Shared) useCert() (server.Certificate, error) {
-	certFile, keyFile := filepath.Join(c.Dir, "cert.pem"), filepath.Join(c.Dir, "key.pem")
 	cert := server.Certificate{
-		CertFile: certFile,
-		KeyFile:  keyFile,
+		CertFile: filepath.Join(c.Dir, "cert.pem"),
+		KeyFile:  filepath.Join(c.Dir, "key.pem"),
 	}
 
-	certFileExists, err := core.FileExists(certFile)
+	certFileExists, err := core.FileExists(cert.CertFile)
 	if err != nil {
 		return cert, err
 	}
-	keyFileExists, err := core.FileExists(keyFile)
+	keyFileExists, err := core.FileExists(cert.KeyFile)
 	if err != nil {
 		return cert, err
 	}
-	if !certFileExists || !keyFileExists {
+	if !(certFileExists && keyFileExists) {
 		err := server.GenerateCertificate(cert)
 		if err != nil {
 			return cert, err

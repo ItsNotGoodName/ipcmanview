@@ -270,7 +270,7 @@ export function AdminUsers() {
                   const toggleAdmin = () => setAdminAction({ id: item.id, admin: !item.admin })
 
                   return (
-                    <TableRow>
+                    <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
                       <TableHead>
                         <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.set(item.id, v)}>
                           <CheckboxControl />
