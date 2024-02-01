@@ -10,7 +10,6 @@ import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
 import { Badge } from "~/ui/Badge"
-import { Seperator } from "~/ui/Seperator"
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form"
 import { Input } from "~/ui/Input"
 import { Skeleton } from "~/ui/Skeleton"
@@ -18,6 +17,7 @@ import { getSession } from "~/providers/session"
 import { PageError } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog"
+import { Shared } from "~/components/Shared"
 
 const actionRevokeAllMySessions = action(() => useClient()
   .user.revokeAllMySessions({})
@@ -114,26 +114,17 @@ export function Profile() {
           </CardContent>
         </CardRoot>
 
-        <div class="flex flex-col gap-2">
-          <div class="text-xl">Change username</div>
-          <Seperator />
-        </div>
+        <Shared.Title>Change username</Shared.Title>
         <Center>
           <ChangeUsernameForm />
         </Center>
 
-        <div class="flex flex-col gap-2">
-          <div class="text-xl">Change password</div>
-          <Seperator />
-        </div>
+        <Shared.Title>Change password</Shared.Title>
         <Center>
           <ChangePasswordForm />
         </Center>
 
-        <div class="flex flex-col gap-2">
-          <div class="text-xl">Sessions</div>
-          <Seperator />
-        </div>
+        <Shared.Title>Sessions</Shared.Title>
         <Suspense fallback={<Skeleton class="h-32" />}>
           <div class="flex">
             <Button variant="destructive" onClick={() => setRevokeAllMySessionsConfirm(true)}>
@@ -181,10 +172,7 @@ export function Profile() {
           </TableRoot>
         </Suspense>
 
-        <div class="flex flex-col gap-2">
-          <div class="text-xl">Groups</div>
-          <Seperator />
-        </div>
+        <Shared.Title>Groups</Shared.Title>
         <TableRoot>
           <TableCaption>{data()?.groups.length} Groups(s)</TableCaption>
           <TableHeader>

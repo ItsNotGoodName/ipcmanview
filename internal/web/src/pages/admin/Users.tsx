@@ -4,7 +4,6 @@ import { ErrorBoundary, For, Show, Suspense, createEffect, createResource, creat
 import { RiDesignFocus2Line, RiSystemLockLine, RiUserFacesAdminLine, } from "solid-icons/ri";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, parseOrder, syncForm, throwAsFormError, } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
-import { Seperator } from "~/ui/Seperator";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
@@ -21,6 +20,7 @@ import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "
 import { Button } from "~/ui/Button";
 import { createForm, required, reset } from "@modular-forms/solid";
 import { Input } from "~/ui/Input";
+import { Shared } from "~/components/Shared";
 
 const actionDelete = action((ids: bigint[]) => useClient()
   .admin.deleteUser({ ids })
@@ -173,8 +173,7 @@ export function AdminUsers() {
         </DialogPortal>
       </DialogRoot>
 
-      <div class="text-xl">Users</div>
-      <Seperator />
+      <Shared.Title>Users</Shared.Title>
 
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>

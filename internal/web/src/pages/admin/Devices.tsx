@@ -6,7 +6,6 @@ import { ErrorBoundary, For, Show, Suspense, createResource, createSignal } from
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm, throwAsFormError, } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
-import { Seperator } from "~/ui/Seperator";
 import { useClient } from "~/providers/client";
 import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
@@ -23,6 +22,7 @@ import { createForm, required, reset } from "@modular-forms/solid";
 import { Input } from "~/ui/Input";
 import { SelectHTML } from "~/ui/Select";
 import { getListDeviceFeatures, getListLocations } from "./data";
+import { Shared } from "~/components/Shared";
 
 const actionDeleteDevice = action((ids: bigint[]) => useClient()
   .admin.deleteDevice({ ids })
@@ -148,8 +148,7 @@ export function AdminDevices() {
         </AlertDialogModal>
       </AlertDialogRoot>
 
-      <div class="text-xl">Devices</div>
-      <Seperator />
+      <Shared.Title>Devices</Shared.Title>
 
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>

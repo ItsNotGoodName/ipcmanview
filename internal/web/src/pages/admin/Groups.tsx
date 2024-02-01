@@ -8,7 +8,6 @@ import { Button } from "~/ui/Button";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, formatDate, parseDate, syncForm, throwAsFormError } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
-import { Seperator } from "~/ui/Seperator";
 import { useClient } from "~/providers/client";
 import { createForm, required, reset } from "@modular-forms/solid";
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
@@ -22,6 +21,7 @@ import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { LayoutNormal } from "~/ui/Layout";
 import { SetGroupDisableReq } from "~/twirp/rpc";
 import { Crud } from "~/components/Crud";
+import { Shared } from "~/components/Shared";
 
 const actionDelete = action((ids: bigint[]) => useClient()
   .admin.deleteGroup({ ids })
@@ -145,8 +145,7 @@ export function AdminGroups() {
         </AlertDialogModal>
       </AlertDialogRoot>
 
-      <div class="text-xl">Groups</div>
-      <Seperator />
+      <Shared.Title>Groups</Shared.Title>
 
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>
