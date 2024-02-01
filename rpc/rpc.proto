@@ -80,7 +80,11 @@ service User {
 }
 
 message GetHomePageResp {
-  int64 device_count = 1;
+  message Device {
+    int64 id = 1;
+    string name = 2;
+  }
+  repeated Device devices = 1;
 }
 
 message GetProfilePageResp {

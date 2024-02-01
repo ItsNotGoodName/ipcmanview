@@ -29,13 +29,21 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		return nil, err
 	}
 
-	devices, err := dahua.ListFatDevices(ctx, u.db, permissions)
+	dbDevices, err := dahua.ListFatDevices(ctx, u.db, permissions)
 	if err != nil {
 		return nil, err
 	}
 
+	devices := make([]*rpc.GetHomePageResp_Device, 0, len(dbDevices))
+	for _, v := range dbDevices {
+		devices = append(devices, &rpc.GetHomePageResp_Device{
+			Id:   v.ID,
+			Name: v.Name,
+		})
+	}
+
 	return &rpc.GetHomePageResp{
-		DeviceCount: int64(len(devices)),
+		Devices: devices,
 	}, nil
 }
 

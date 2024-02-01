@@ -121,9 +121,22 @@ export interface ForgotPasswordReq {
  */
 export interface GetHomePageResp {
     /**
-     * @generated from protobuf field: int64 device_count = 1;
+     * @generated from protobuf field: repeated GetHomePageResp.Device devices = 1;
      */
-    deviceCount: bigint;
+    devices: GetHomePageResp_Device[];
+}
+/**
+ * @generated from protobuf message GetHomePageResp.Device
+ */
+export interface GetHomePageResp_Device {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
 }
 /**
  * @generated from protobuf message GetProfilePageResp
@@ -1110,7 +1123,7 @@ export const ForgotPasswordReq = new ForgotPasswordReq$Type();
 class GetHomePageResp$Type extends MessageType<GetHomePageResp> {
     constructor() {
         super("GetHomePageResp", [
-            { no: 1, name: "device_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 1, name: "devices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetHomePageResp_Device }
         ]);
     }
 }
@@ -1118,6 +1131,19 @@ class GetHomePageResp$Type extends MessageType<GetHomePageResp> {
  * @generated MessageType for protobuf message GetHomePageResp
  */
 export const GetHomePageResp = new GetHomePageResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetHomePageResp_Device$Type extends MessageType<GetHomePageResp_Device> {
+    constructor() {
+        super("GetHomePageResp.Device", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetHomePageResp.Device
+ */
+export const GetHomePageResp_Device = new GetHomePageResp_Device$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetProfilePageResp$Type extends MessageType<GetProfilePageResp> {
     constructor() {

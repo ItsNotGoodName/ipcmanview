@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority"
 import { As, DropdownMenu } from "@kobalte/core";
 import { ErrorBoundary, JSX, ParentProps, Show, Suspense, createEffect, createSignal, splitProps } from "solid-js";
 import { A, action, createAsync, revalidate, useAction, useLocation, useNavigate, useSubmission } from "@solidjs/router";
-import { RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemEyeLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine } from "solid-icons/ri";
+import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemEyeLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
 import { makePersisted } from "@solid-primitives/storage";
 
@@ -47,6 +47,18 @@ function DropdownMenuLinks() {
           <RiSystemEyeLine class="h-5 w-5" />View
         </As>
       </DropdownMenu.Item>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/view")}>
+        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+          href="/events">
+          <RiWeatherFlashlightLine class="h-5 w-5" />Events
+        </As>
+      </DropdownMenu.Item>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/view")}>
+        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+          href="/files">
+          <RiDocumentFileLine class="h-5 w-5" />Files
+        </As>
+      </DropdownMenu.Item>
     </>
   )
 }
@@ -61,6 +73,14 @@ function MenuLinks() {
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
         href="/view" noScroll>
         <RiSystemEyeLine class="h-5 w-5" />View
+      </A>
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+        href="/events" noScroll>
+        <RiWeatherFlashlightLine class="h-5 w-5" />Events
+      </A>
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+        href="/files" noScroll>
+        <RiDocumentFileLine class="h-5 w-5" />Files
       </A>
     </div>
   )
