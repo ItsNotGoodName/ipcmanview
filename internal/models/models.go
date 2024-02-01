@@ -2,6 +2,11 @@ package models
 
 import "time"
 
+type Certificate struct {
+	CertFile string
+	KeyFile  string
+}
+
 // TimeRange is INCLUSIVE Start and EXCLUSIVE End.
 type TimeRange struct {
 	Start time.Time

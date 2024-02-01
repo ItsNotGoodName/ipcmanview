@@ -21,7 +21,7 @@ func userFrom(v repo.User) user {
 type user struct {
 	Email    string `validate:"required,lte=128,email,excludes= "`
 	Username string `validate:"gte=3,lte=64,excludes=@,excludes= "`
-	Password string `validate:"gte=8"`
+	Password string `validate:"gte=8,lte=64"`
 }
 
 func (u *user) normalizeEmailAndUsername() {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -93,5 +94,16 @@ func NilStringToNullString(s *string) sql.NullString {
 	return sql.NullString{
 		String: *s,
 		Valid:  true,
+	}
+}
+
+// https://stackoverflow.com/a/12518877
+func FileExists(filePath string) (bool, error) {
+	if _, err := os.Stat(filePath); err == nil {
+		return true, nil
+	} else if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	} else {
+		return false, err
 	}
 }

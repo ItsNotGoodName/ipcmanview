@@ -44,14 +44,14 @@ export function View() {
   return (
     <div class="flex h-screen flex-col">
       <Positioner class="flex-1 overflow-hidden" rectangles={rectangles} panels={panels} />
-      <div class="flex justify-between gap-2 p-2 overflow-x-auto">
-        <div class="flex gap-2">
+      <div class="flex justify-between gap-2 overflow-x-auto p-1">
+        <div class="flex gap-1">
           <Button onClick={() => setRectangles((_, i) => i == 1, "y", y => y - 10)}>Up</Button>
           <Button onClick={() => setRectangles((_, i) => i == 1, "x", x => x - 10)}>Left</Button>
           <Button onClick={() => setRectangles((_, i) => i == 1, "x", x => x + 10)}>Right</Button>
           <Button onClick={() => setRectangles((_, i) => i == 1, "y", y => y + 10)}>Down</Button>
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-1">
           <Button>Edit</Button>
         </div>
       </div>

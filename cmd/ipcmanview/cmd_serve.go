@@ -22,6 +22,7 @@ type CmdServe struct {
 	Shared
 	HTTPHost               string     `env:"HTTP_HOST" help:"HTTP host to listen on (e.g. \"127.0.0.1\")."`
 	HTTPPort               uint16     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
+	HTTPSPort              uint16     `env:"HTTPS_PORT" default:"8443" help:"HTTPS port to listen on."`
 	SMTPHost               string     `env:"SMTP_HOST" help:"SMTP host to listen on (e.g. \"127.0.0.1\")."`
 	SMTPPort               uint16     `env:"SMTP_PORT" default:"1025" help:"SMTP port to listen on."`
 	MQTTAddress            string     `env:"MQTT_ADDRESS" help:"MQTT server address (e.g. \"mqtt://192.168.1.20:1883\")."`
@@ -38,14 +39,23 @@ type CmdServe struct {
 }
 
 func (c *CmdServe) Run(ctx *Context) error {
+	if err := c.init(); err != nil {
+		return err
+	}
+
 	// Supervisor
 	super := suture.New("root", suture.Spec{
 		EventHook: sutureext.EventHook(),
 	})
 
-	// Secret
-	_, err := c.useSecret()
+	// Certificate
+	cert, err := c.useCert()
 	if err != nil {
+		return err
+	}
+
+	// Secret
+	if _, err := c.useSecret(); err != nil {
 		return err
 	}
 
@@ -135,7 +145,13 @@ func (c *CmdServe) Run(ctx *Context) error {
 		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.AdminAuthSession()))
 
 	// HTTP server
-	httpServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPPort)))
+	httpServer := http.NewHTTPServer(
+		httpRouter,
+		core.Address(c.HTTPHost, int(c.HTTPPort)),
+		core.Address(c.HTTPHost, int(c.HTTPSPort)),
+		true,
+		cert,
+	)
 	super.Add(httpServer)
 
 	return super.Serve(ctx)
