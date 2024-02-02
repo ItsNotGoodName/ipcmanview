@@ -201,11 +201,10 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 }
 
 func (u *User) GetDeviceDetail(ctx context.Context, req *rpc.GetDeviceDetailReq) (*rpc.GetDeviceDetailResp, error) {
-	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	client, err := u.dahuaStore.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	v, err := dahua.GetDahuaDetail(ctx, client.RPC)
 	if err != nil {
@@ -226,11 +225,10 @@ func (u *User) GetDeviceDetail(ctx context.Context, req *rpc.GetDeviceDetailReq)
 }
 
 func (u *User) ListDeviceLicenses(ctx context.Context, req *rpc.ListDeviceLicensesReq) (*rpc.ListDeviceLicensesResp, error) {
-	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	client, err := u.dahuaStore.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	vv, err := dahua.GetLicenseList(ctx, client.RPC)
 	if err != nil {
@@ -258,11 +256,10 @@ func (u *User) ListDeviceLicenses(ctx context.Context, req *rpc.ListDeviceLicens
 }
 
 func (u *User) GetDeviceSoftwareVersion(ctx context.Context, req *rpc.GetDeviceSoftwareVersionReq) (*rpc.GetDeviceSoftwareVersionResp, error) {
-	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	client, err := u.dahuaStore.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	v, err := dahua.GetSoftwareVersion(ctx, client.RPC)
 	if err != nil {
@@ -279,11 +276,10 @@ func (u *User) GetDeviceSoftwareVersion(ctx context.Context, req *rpc.GetDeviceS
 }
 
 func (u *User) GetDeviceRPCStatus(ctx context.Context, req *rpc.GetDeviceRPCStatusReq) (*rpc.GetDeviceRPCStatusResp, error) {
-	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	client, err := u.dahuaStore.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	v := dahua.GetRPCStatus(ctx, client.RPC)
 
@@ -295,11 +291,10 @@ func (u *User) GetDeviceRPCStatus(ctx context.Context, req *rpc.GetDeviceRPCStat
 }
 
 func (u *User) ListDeviceStorage(ctx context.Context, req *rpc.ListDeviceStorageReq) (*rpc.ListDeviceStorageResp, error) {
-	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	client, err := u.dahuaStore.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	vv, err := dahua.GetStorage(ctx, client.RPC)
 	if err != nil {

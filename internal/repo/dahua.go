@@ -114,6 +114,16 @@ func (db DB) DahuaGetFatDevice(ctx context.Context, arg DahuaFatDeviceParams) (D
 	return devices[0], nil
 }
 
+func (db DB) DahuaListDeviceIDs(ctx context.Context) ([]int64, error) {
+	sb := sq.
+		Select("id").
+		From("dahua_devices")
+
+	var res []int64
+	err := ssq.Query(ctx, db, &res, DahuaSelectFilter(ctx, sb, "dahua_devices.id"))
+	return res, err
+}
+
 func (db DB) DahuaCountDahuaFiles(ctx context.Context) (int64, error) {
 	sb := sq.
 		Select("COUNT(*) AS count").

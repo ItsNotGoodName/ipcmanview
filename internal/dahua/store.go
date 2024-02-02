@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 )
@@ -25,9 +26,10 @@ func (c storeClient) Close(ctx context.Context) {
 	}
 }
 
-func NewStore() *Store {
+func NewStore(db repo.DB) *Store {
 	return &Store{
 		ServiceContext: sutureext.NewServiceContext("dahua.Store"),
+		db:             db,
 		clientsMu:      sync.Mutex{},
 		clients:        make(map[int64]storeClient),
 	}
@@ -36,6 +38,7 @@ func NewStore() *Store {
 // Store deduplicates device clients.
 type Store struct {
 	sutureext.ServiceContext
+	db        repo.DB
 	clientsMu sync.Mutex
 	clients   map[int64]storeClient
 }
@@ -61,8 +64,8 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn Conn) Client {
 
 		client = newStoreClient(conn)
 		s.clients[conn.ID] = client
-	} else if !client.Client.Conn.EQ(conn) && conn.UpdatedAt.After(client.Client.Conn.UpdatedAt) {
-		// Found but not equal and newer
+	} else if !client.Client.Conn.EQ(conn) {
+		// Found but not equal
 
 		// Closing device connection should not block the store
 		go client.Close(s.Context())
@@ -78,43 +81,65 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn Conn) Client {
 	return client.Client
 }
 
-func (s *Store) ClientList(ctx context.Context, conns []Conn) []Client {
-	clients := make([]Client, 0, len(conns))
-
+func (s *Store) GetClient(ctx context.Context, id int64) (Client, error) {
 	s.clientsMu.Lock()
-	for _, conn := range conns {
-		clients = append(clients, s.getOrCreateClient(ctx, conn))
+	dev, err := s.db.DahuaGetDeviceForStore(ctx, id)
+	if err != nil {
+		s.clientsMu.Unlock()
+		return Client{}, err
 	}
+
+	client := s.getOrCreateClient(ctx, Conn{
+		ID:       id,
+		URL:      dev.Url.URL,
+		Username: dev.Username,
+		Password: dev.Password,
+		Location: dev.Location.Location,
+		Feature:  dev.Feature,
+		Seed:     int(dev.Seed),
+	})
 	s.clientsMu.Unlock()
 
-	return clients
+	return client, nil
 }
 
-func (s *Store) Client(ctx context.Context, conn Conn) Client {
+func (s *Store) ListClient(ctx context.Context, ids []int64) ([]Client, error) {
 	s.clientsMu.Lock()
-	client := s.getOrCreateClient(ctx, conn)
-	s.clientsMu.Unlock()
+	devi, err := s.db.DahuaListDeviceForStore(ctx, ids)
+	if err != nil {
+		s.clientsMu.Unlock()
+		return nil, err
+	}
 
-	return client
-}
-
-// FIXME: deleted clients are recreated when an old connection is passed to Store.Client or Store.ClientList
-func (s *Store) ClientDelete(ctx context.Context, id int64) {
-	s.clientsMu.Lock()
-	client, found := s.clients[id]
-	if found {
-		delete(s.clients, id)
+	var clients []Client
+	for _, dev := range devi {
+		clients = append(clients, s.getOrCreateClient(ctx, Conn{
+			ID:       dev.ID,
+			URL:      dev.Url.URL,
+			Username: dev.Username,
+			Password: dev.Password,
+			Location: dev.Location.Location,
+			Feature:  dev.Feature,
+			Seed:     int(dev.Seed),
+		}))
 	}
 	s.clientsMu.Unlock()
 
-	if found {
-		client.Close(ctx)
-	}
+	return clients, nil
 }
 
 func (s *Store) Register(bus *event.Bus) *Store {
 	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
-		s.ClientDelete(ctx, evt.DeviceID)
+		s.clientsMu.Lock()
+		client, found := s.clients[evt.DeviceID]
+		if found {
+			delete(s.clients, evt.DeviceID)
+		}
+		s.clientsMu.Unlock()
+
+		if found {
+			go client.Close(s.Context())
+		}
 		return nil
 	})
 	return s

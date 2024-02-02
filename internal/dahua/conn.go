@@ -10,14 +10,13 @@ import (
 
 func ConnFrom(v repo.DahuaFatDevice) Conn {
 	return Conn{
-		ID:        v.DahuaDevice.ID,
-		URL:       v.DahuaDevice.Url.URL,
-		Username:  v.DahuaDevice.Username,
-		Password:  v.DahuaDevice.Password,
-		Location:  v.DahuaDevice.Location.Location,
-		Feature:   v.DahuaDevice.Feature,
-		Seed:      int(v.Seed),
-		UpdatedAt: v.CreatedAt.Time,
+		ID:       v.DahuaDevice.ID,
+		URL:      v.DahuaDevice.Url.URL,
+		Username: v.DahuaDevice.Username,
+		Password: v.DahuaDevice.Password,
+		Location: v.DahuaDevice.Location.Location,
+		Feature:  v.DahuaDevice.Feature,
+		Seed:     int(v.Seed),
 	}
 }
 
@@ -31,14 +30,13 @@ func ConnsFrom(devices []repo.DahuaFatDevice) []Conn {
 
 // Conn is the bare minumum information required to create a connection to a Dahua device.
 type Conn struct {
-	ID        int64
-	URL       *url.URL
-	Username  string
-	Password  string
-	Location  *time.Location
-	Feature   models.DahuaFeature
-	Seed      int
-	UpdatedAt time.Time
+	ID       int64
+	URL      *url.URL
+	Username string
+	Password string
+	Location *time.Location
+	Feature  models.DahuaFeature
+	Seed     int
 }
 
 func (lhs Conn) EQ(rhs Conn) bool {

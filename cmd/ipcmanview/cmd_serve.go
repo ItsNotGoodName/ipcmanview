@@ -89,7 +89,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	}
 
 	dahuaStore := dahua.
-		NewStore().
+		NewStore(db).
 		Register(bus)
 	defer dahuaStore.Close()
 	super.Add(dahuaStore)

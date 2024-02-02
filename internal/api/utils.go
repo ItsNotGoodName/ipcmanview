@@ -47,7 +47,7 @@ func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Clien
 		return dahua.Client{}, 0, err
 	}
 
-	conn, err := db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{id}})
+	client, err := store.GetClient(ctx, id)
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return dahua.Client{}, 0, echo.ErrNotFound.WithInternal(err)
@@ -55,7 +55,7 @@ func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Clien
 		return dahua.Client{}, 0, err
 	}
 
-	return store.Client(ctx, dahua.ConnFrom(conn)), models.DahuaPermissionLevelUser, nil
+	return client, models.DahuaPermissionLevelUser, nil
 }
 
 // ---------- Stream

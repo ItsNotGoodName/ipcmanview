@@ -110,12 +110,15 @@ func (s *WorkerStore) Register(bus *event.Bus) *WorkerStore {
 }
 
 func (s *WorkerStore) Bootstrap(ctx context.Context, db repo.DB, store *Store) error {
-	devices, err := db.DahuaListFatDevices(ctx)
+	ids, err := db.DahuaListDeviceIDs(ctx)
+	if err != nil {
+		return err
+	}
+	clients, err := store.ListClient(ctx, ids)
 	if err != nil {
 		return err
 	}
 
-	clients := store.ClientList(ctx, ConnsFrom(devices))
 	for _, conn := range clients {
 		if err := s.Create(ctx, conn.Conn); err != nil {
 			return err

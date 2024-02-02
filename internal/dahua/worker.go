@@ -137,14 +137,13 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 }
 
 func (w CoaxialWorker) serve(ctx context.Context) error {
-	device, err := w.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{w.deviceID}})
+	client, err := w.store.GetClient(ctx, w.deviceID)
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return suture.ErrDoNotRestart
 		}
 		return err
 	}
-	client := w.store.Client(ctx, ConnFrom(device))
 
 	channel := 1
 
@@ -271,11 +270,10 @@ func (w QuickScanWorker) scan(ctx context.Context) error {
 	}
 	defer unlock()
 
-	device, err := w.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{w.deviceID}})
+	client, err := w.store.GetClient(ctx, w.deviceID)
 	if err != nil {
 		return err
 	}
-	client := w.store.Client(ctx, ConnFrom(device))
 
 	return Scan(ctx, w.db, client.RPC, client.Conn, models.DahuaScanTypeQuick)
 }

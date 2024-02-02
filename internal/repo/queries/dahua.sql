@@ -593,3 +593,33 @@ WHERE
   AND ready = true
 LIMIT
   ?;
+
+-- name: DahuaGetDeviceForStore :one
+SELECT
+  d.id,
+  d.url,
+  d.username,
+  d.password,
+  d.location,
+  d.feature,
+  coalesce(seed, d.id)
+FROM
+  dahua_devices as d
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
+WHERE
+  id = sqlc.arg ('id');
+
+-- name: DahuaListDeviceForStore :many
+SELECT
+  d.id,
+  d.url,
+  d.username,
+  d.password,
+  d.location,
+  d.feature,
+  coalesce(seed, d.id)
+FROM
+  dahua_devices as d
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
+WHERE
+  id IN (sqlc.slice ('ids'));

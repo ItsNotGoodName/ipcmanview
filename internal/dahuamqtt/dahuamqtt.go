@@ -85,7 +85,10 @@ func (c Conn) haSync(ctx context.Context) error {
 }
 
 func (c Conn) haSyncDevice(ctx context.Context, device repo.DahuaDevice, conn dahua.Conn) error {
-	client := c.store.Client(ctx, conn)
+	client, err := c.store.GetClient(ctx, device.ID)
+	if err != nil {
+		return err
+	}
 
 	detail, err := dahua.GetDahuaDetail(ctx, client.RPC)
 	if err != nil {
