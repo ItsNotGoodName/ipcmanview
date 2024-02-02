@@ -16,8 +16,8 @@ export type AdminDevicesPageSearchParams = {
 export default function({ params }: PageProps<AdminDevicesPageSearchParams>) {
   void getAdminDevicesPage({
     page: {
-      page: Number(params.page),
-      perPage: Number(params.perPage)
+      page: Number(params.page) || 0,
+      perPage: Number(params.perPage) || 0,
     },
     sort: {
       field: params.sort || "",

@@ -42,8 +42,8 @@ export function AdminUsers() {
   const [searchParams] = useSearchParams<AdminUsersPageSearchParams>()
   const data = createAsync(() => getAdminUsersPage({
     page: {
-      page: Number(searchParams.page) || 1,
-      perPage: Number(searchParams.perPage) || 10
+      page: Number(searchParams.page) || 0,
+      perPage: Number(searchParams.perPage) || 0
     },
     sort: {
       field: searchParams.sort || "",

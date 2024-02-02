@@ -38,8 +38,8 @@ export function AdminGroups() {
   const [searchParams] = useSearchParams<AdminGroupsPageSearchParams>()
   const data = createAsync(() => getAdminGroupsPage({
     page: {
-      page: Number(searchParams.page) || 1,
-      perPage: Number(searchParams.perPage) || 10
+      page: Number(searchParams.page) || 0,
+      perPage: Number(searchParams.perPage) || 0
     },
     sort: {
       field: searchParams.sort || "",

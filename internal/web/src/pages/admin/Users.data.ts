@@ -16,8 +16,8 @@ export type AdminUsersPageSearchParams = {
 export default function({ params }: PageProps<AdminUsersPageSearchParams>) {
   void getAdminUsersPage({
     page: {
-      page: Number(params.page),
-      perPage: Number(params.perPage)
+      page: Number(params.page) || 0,
+      perPage: Number(params.perPage) || 0,
     },
     sort: {
       field: params.sort || "",

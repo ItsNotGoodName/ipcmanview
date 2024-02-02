@@ -41,8 +41,8 @@ export function AdminDevices() {
   const [searchParams] = useSearchParams<AdminDevicesPageSearchParams>()
   const data = createAsync(() => getAdminDevicesPage({
     page: {
-      page: Number(searchParams.page) || 1,
-      perPage: Number(searchParams.perPage) || 10
+      page: Number(searchParams.page) || 0,
+      perPage: Number(searchParams.perPage) || 0
     },
     sort: {
       field: searchParams.sort || "",
