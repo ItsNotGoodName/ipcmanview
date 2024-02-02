@@ -1012,6 +1012,68 @@ func (q *Queries) DahuaGetStream(ctx context.Context, id int64) (DahuaStream, er
 	return i, err
 }
 
+const dahuaListDevice = `-- name: DahuaListDevice :many
+SELECT
+  dahua_devices.id, dahua_devices.name, dahua_devices.ip, dahua_devices.url, dahua_devices.username, dahua_devices.password, dahua_devices.location, dahua_devices.feature, dahua_devices.created_at, dahua_devices.updated_at, dahua_devices.disabled_at,
+  seed
+FROM
+  dahua_devices
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
+  LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
+WHERE
+  1 = ?1
+  OR p.user_id = ?1
+  OR p.group_id IN (
+    SELECT
+      group_id
+    FROM
+      group_users
+    WHERE
+      group_users.user_id = ?1
+  )
+`
+
+type DahuaListDeviceRow struct {
+	DahuaDevice DahuaDevice
+	Seed        sql.NullInt64
+}
+
+func (q *Queries) DahuaListDevice(ctx context.Context, userID interface{}) ([]DahuaListDeviceRow, error) {
+	rows, err := q.db.QueryContext(ctx, dahuaListDevice, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DahuaListDeviceRow
+	for rows.Next() {
+		var i DahuaListDeviceRow
+		if err := rows.Scan(
+			&i.DahuaDevice.ID,
+			&i.DahuaDevice.Name,
+			&i.DahuaDevice.Ip,
+			&i.DahuaDevice.Url,
+			&i.DahuaDevice.Username,
+			&i.DahuaDevice.Password,
+			&i.DahuaDevice.Location,
+			&i.DahuaDevice.Feature,
+			&i.DahuaDevice.CreatedAt,
+			&i.DahuaDevice.UpdatedAt,
+			&i.DahuaDevice.DisabledAt,
+			&i.Seed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const dahuaListEventActions = `-- name: DahuaListEventActions :many
 SELECT DISTINCT
   action

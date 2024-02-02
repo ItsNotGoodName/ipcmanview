@@ -9,6 +9,26 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
+func dahuaFilter(ctx context.Context, sb sq.SelectBuilder, tableField string) sq.SelectBuilder {
+	actor := core.UseActor(ctx)
+
+	if actor.Admin {
+		return sb
+	}
+
+	return sb.Join("dahua_permissions ON dahua_permissions.device_id = " + tableField).Where(sq.Expr(`
+	dahua_permissions.user_id = ?
+	OR dahua_permissions.group_id IN (
+		SELECT
+			group_id
+		FROM
+			group_users
+		WHERE
+			group_users.user_id = ?
+	)
+	`, actor.UserID, actor.UserID))
+}
+
 // DahuaFatDevice
 
 type DahuaFatDevice struct {
@@ -29,8 +49,6 @@ func (db DB) DahuaListFatDevices(ctx context.Context, args ...DahuaFatDevicePara
 		arg = args[0]
 	}
 
-	actor := core.UseActor(ctx)
-
 	// SELECT ...
 	sb := sq.
 		Select(
@@ -39,9 +57,7 @@ func (db DB) DahuaListFatDevices(ctx context.Context, args ...DahuaFatDevicePara
 		).
 		From("dahua_devices").
 		LeftJoin("dahua_seeds ON dahua_seeds.device_id = dahua_devices.id")
-	if !actor.Admin {
-		sb = sb.LeftJoin("dahua_permissions AS p ON p.device_id = dahua_devices.id")
-	}
+	sb = dahuaFilter(ctx, sb, "dahua_devices.id")
 	// WHERE
 	and := sq.And{}
 
@@ -62,28 +78,10 @@ func (db DB) DahuaListFatDevices(ctx context.Context, args ...DahuaFatDevicePara
 		and = append(and, sq.Expr("feature & ? = ?", feature, feature))
 	}
 
-	if !actor.Admin {
-		and = append(and, sq.Expr(`
-			p.user_id = ?
-			OR p.group_id IN (
-				SELECT
-					group_id
-				FROM
-					group_users
-				WHERE
-					group_users.user_id = ?
-			)
-		`, actor.UserID, actor.UserID))
-	}
-
 	sb = sb.Where(and)
 	// LIMIT
 	if arg.Limit != 0 {
 		sb = sb.Limit(uint64(arg.Limit))
-	}
-
-	if !actor.Admin {
-		sb = sb.GroupBy("dahua_devices.id")
 	}
 
 	var res []DahuaFatDevice
