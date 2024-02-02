@@ -169,7 +169,7 @@ func (s FileService) download(ctx context.Context, id int64) error {
 	if err != nil {
 		return err
 	}
-	client := s.store.Client(ctx, NewConn(device))
+	client := s.store.Client(ctx, ConnFrom(device))
 
 	return FileLocalDownload(ctx, s.db, s.afs, client, file.ID, file.FilePath, file.Type)
 }

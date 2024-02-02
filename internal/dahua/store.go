@@ -33,7 +33,7 @@ func NewStore() *Store {
 	}
 }
 
-// Store maintains device clients.
+// Store deduplicates device clients.
 type Store struct {
 	sutureext.ServiceContext
 	clientsMu sync.Mutex
@@ -61,11 +61,11 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn Conn) Client {
 
 		client = newStoreClient(conn)
 		s.clients[conn.ID] = client
-	} else if !client.Client.Conn.EQ(conn) {
-		// Found but not equal
+	} else if !client.Client.Conn.EQ(conn) && conn.UpdatedAt.After(client.Client.Conn.UpdatedAt) {
+		// Found but not equal and newer
 
-		// Closing device connection should not block that store
-		go client.Close(context.Background())
+		// Closing device connection should not block the store
+		go client.Close(s.Context())
 
 		client = newStoreClient(conn)
 		s.clients[conn.ID] = client
@@ -98,7 +98,7 @@ func (s *Store) Client(ctx context.Context, conn Conn) Client {
 	return client
 }
 
-// FIXME: deleted clients are created when an old connection is passed to Store.Client or Store.ClientList
+// FIXME: deleted clients are recreated when an old connection is passed to Store.Client or Store.ClientList
 func (s *Store) ClientDelete(ctx context.Context, id int64) {
 	s.clientsMu.Lock()
 	client, found := s.clients[id]

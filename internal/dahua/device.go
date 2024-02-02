@@ -15,21 +15,21 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-func NewDevice(v repo.DahuaDevice) Device {
-	return Device{
+func deviceFrom(v repo.DahuaDevice) device {
+	return device{
 		Name:     v.Name,
 		URL:      v.Url.URL,
 		Username: v.Username,
 	}
 }
 
-type Device struct {
+type device struct {
 	Name     string `validate:"required,lte=64"`
 	URL      *url.URL
 	Username string
 }
 
-func (d *Device) normalize(create bool) {
+func (d *device) normalize(create bool) {
 	// Name
 	d.Name = strings.TrimSpace(d.Name)
 	// URL
@@ -59,7 +59,7 @@ func (d *Device) normalize(create bool) {
 	}
 }
 
-func (d *Device) getIP() (string, error) {
+func (d *device) getIP() (string, error) {
 	ip := d.URL.Hostname()
 
 	ips, err := net.LookupIP(ip)
@@ -87,7 +87,7 @@ type CreateDeviceParams struct {
 }
 
 func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDeviceParams) (int64, error) {
-	model := Device{
+	model := device{
 		Name:     arg.Name,
 		URL:      arg.URL,
 		Username: arg.Username,
@@ -174,7 +174,7 @@ type UpdateDeviceParams struct {
 }
 
 func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.DahuaDevice, arg UpdateDeviceParams) error {
-	model := NewDevice(dbModel)
+	model := deviceFrom(dbModel)
 
 	model.Name = arg.Name
 	model.URL = arg.URL
@@ -231,4 +231,19 @@ func DeleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) err
 		DeviceID: id,
 	})
 	return nil
+}
+
+func UpdateDeviceDisabled(ctx context.Context, db repo.DB, id int64, disable bool) error {
+	if disable {
+		_, err := db.DahuaUpdateDeviceDisabledAt(ctx, repo.DahuaUpdateDeviceDisabledAtParams{
+			DisabledAt: types.NewNullTime(time.Now()),
+			ID:         id,
+		})
+		return err
+	}
+	_, err := db.DahuaUpdateDeviceDisabledAt(ctx, repo.DahuaUpdateDeviceDisabledAtParams{
+		DisabledAt: types.NullTime{},
+		ID:         id,
+	})
+	return err
 }

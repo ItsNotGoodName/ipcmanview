@@ -105,14 +105,14 @@ func RegisterStreams(bus *event.Bus, db repo.DB, store *Store) {
 	bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
 		if SupportStreams(evt.Device.DahuaDevice.Feature) {
 			// TODO: this should run on a different goroutine
-			return SyncStreams(ctx, db, evt.Device.DahuaDevice.ID, store.Client(ctx, NewConn(evt.Device)).RPC)
+			return SyncStreams(ctx, db, evt.Device.DahuaDevice.ID, store.Client(ctx, ConnFrom(evt.Device)).RPC)
 		}
 		return nil
 	})
 	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
 		if SupportStreams(evt.Device.DahuaDevice.Feature) {
 			// TODO: this should run on a different goroutine
-			return SyncStreams(ctx, db, evt.Device.DahuaDevice.ID, store.Client(ctx, NewConn(evt.Device)).RPC)
+			return SyncStreams(ctx, db, evt.Device.DahuaDevice.ID, store.Client(ctx, ConnFrom(evt.Device)).RPC)
 		}
 		return nil
 	})

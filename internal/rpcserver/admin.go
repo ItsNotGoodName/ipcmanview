@@ -212,8 +212,14 @@ func (a *Admin) DeleteDevice(ctx context.Context, req *rpc.DeleteDeviceReq) (*em
 	return &emptypb.Empty{}, nil
 }
 
-func (*Admin) SetDeviceDisable(context.Context, *rpc.SetDeviceDisableReq) (*emptypb.Empty, error) {
-	return nil, errNotImplemented
+func (a *Admin) SetDeviceDisable(ctx context.Context, req *rpc.SetDeviceDisableReq) (*emptypb.Empty, error) {
+	for _, v := range req.Items {
+		err := dahua.UpdateDeviceDisabled(ctx, a.db, v.Id, v.Disable)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &emptypb.Empty{}, nil
 }
 
 // ---------- User

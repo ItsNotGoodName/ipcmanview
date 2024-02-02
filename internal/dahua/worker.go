@@ -144,7 +144,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 		}
 		return err
 	}
-	client := w.store.Client(ctx, NewConn(device))
+	client := w.store.Client(ctx, ConnFrom(device))
 
 	channel := 1
 
@@ -275,7 +275,7 @@ func (w QuickScanWorker) scan(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	client := w.store.Client(ctx, NewConn(device))
+	client := w.store.Client(ctx, ConnFrom(device))
 
 	return Scan(ctx, w.db, client.RPC, client.Conn, models.DahuaScanTypeQuick)
 }

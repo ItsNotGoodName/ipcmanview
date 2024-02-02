@@ -36,6 +36,13 @@ SET
 WHERE
   id = ? RETURNING id;
 
+-- name: DahuaUpdateDeviceDisabledAt :one
+UPDATE dahua_devices
+SET
+  disabled_at = ?
+WHERE
+  id = ? RETURNING id;
+
 -- name: DahuaGetDeviceName :one
 SELECT
   name

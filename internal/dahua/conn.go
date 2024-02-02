@@ -8,35 +8,37 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-func NewConn(v repo.DahuaFatDevice) Conn {
+func ConnFrom(v repo.DahuaFatDevice) Conn {
 	return Conn{
-		ID:       v.DahuaDevice.ID,
-		URL:      v.DahuaDevice.Url.URL,
-		Username: v.DahuaDevice.Username,
-		Password: v.DahuaDevice.Password,
-		Location: v.DahuaDevice.Location.Location,
-		Feature:  v.DahuaDevice.Feature,
-		Seed:     int(v.Seed),
+		ID:        v.DahuaDevice.ID,
+		URL:       v.DahuaDevice.Url.URL,
+		Username:  v.DahuaDevice.Username,
+		Password:  v.DahuaDevice.Password,
+		Location:  v.DahuaDevice.Location.Location,
+		Feature:   v.DahuaDevice.Feature,
+		Seed:      int(v.Seed),
+		UpdatedAt: v.CreatedAt.Time,
 	}
 }
 
-func NewConns(devices []repo.DahuaFatDevice) []Conn {
+func ConnsFrom(devices []repo.DahuaFatDevice) []Conn {
 	conns := make([]Conn, 0, len(devices))
 	for _, v := range devices {
-		conns = append(conns, NewConn(v))
+		conns = append(conns, ConnFrom(v))
 	}
 	return conns
 }
 
 // Conn is the bare minumum information required to create a connection to a Dahua device.
 type Conn struct {
-	ID       int64
-	URL      *url.URL
-	Username string
-	Password string
-	Location *time.Location
-	Feature  models.DahuaFeature
-	Seed     int
+	ID        int64
+	URL       *url.URL
+	Username  string
+	Password  string
+	Location  *time.Location
+	Feature   models.DahuaFeature
+	Seed      int
+	UpdatedAt time.Time
 }
 
 func (lhs Conn) EQ(rhs Conn) bool {

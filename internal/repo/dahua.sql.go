@@ -1538,6 +1538,26 @@ func (q *Queries) DahuaUpdateDevice(ctx context.Context, arg DahuaUpdateDevicePa
 	return id, err
 }
 
+const dahuaUpdateDeviceDisabledAt = `-- name: DahuaUpdateDeviceDisabledAt :one
+UPDATE dahua_devices
+SET
+  disabled_at = ?
+WHERE
+  id = ? RETURNING id
+`
+
+type DahuaUpdateDeviceDisabledAtParams struct {
+	DisabledAt types.NullTime
+	ID         int64
+}
+
+func (q *Queries) DahuaUpdateDeviceDisabledAt(ctx context.Context, arg DahuaUpdateDeviceDisabledAtParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, dahuaUpdateDeviceDisabledAt, arg.DisabledAt, arg.ID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const dahuaUpdateEventRule = `-- name: DahuaUpdateEventRule :exec
 UPDATE dahua_event_rules
 SET

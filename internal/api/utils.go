@@ -55,7 +55,7 @@ func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Clien
 		return dahua.Client{}, 0, err
 	}
 
-	return store.Client(ctx, dahua.NewConn(conn)), models.DahuaPermissionLevelUser, nil
+	return store.Client(ctx, dahua.ConnFrom(conn)), models.DahuaPermissionLevelUser, nil
 }
 
 // ---------- Stream

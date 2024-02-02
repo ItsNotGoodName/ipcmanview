@@ -205,7 +205,7 @@ func (u *User) GetDeviceDetail(ctx context.Context, req *rpc.GetDeviceDetailReq)
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	v, err := dahua.GetDahuaDetail(ctx, client.RPC)
 	if err != nil {
@@ -230,7 +230,7 @@ func (u *User) ListDeviceLicenses(ctx context.Context, req *rpc.ListDeviceLicens
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	vv, err := dahua.GetLicenseList(ctx, client.RPC)
 	if err != nil {
@@ -262,7 +262,7 @@ func (u *User) GetDeviceSoftwareVersion(ctx context.Context, req *rpc.GetDeviceS
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	v, err := dahua.GetSoftwareVersion(ctx, client.RPC)
 	if err != nil {
@@ -283,7 +283,7 @@ func (u *User) GetDeviceRPCStatus(ctx context.Context, req *rpc.GetDeviceRPCStat
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	v := dahua.GetRPCStatus(ctx, client.RPC)
 
@@ -299,7 +299,7 @@ func (u *User) ListDeviceStorage(ctx context.Context, req *rpc.ListDeviceStorage
 	if err != nil {
 		return nil, err
 	}
-	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+	client := u.dahuaStore.Client(ctx, dahua.ConnFrom(device))
 
 	vv, err := dahua.GetStorage(ctx, client.RPC)
 	if err != nil {

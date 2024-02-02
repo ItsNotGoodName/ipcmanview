@@ -32,7 +32,7 @@ func (s *Server) DahuaDevices(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	clients := s.dahuaStore.ClientList(ctx, dahua.NewConns(devices))
+	clients := s.dahuaStore.ClientList(ctx, dahua.ConnsFrom(devices))
 
 	res := make([]models.DahuaRPCStatus, 0, len(clients))
 	for _, client := range clients {
