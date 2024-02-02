@@ -9,24 +9,26 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-func dahuaFilter(ctx context.Context, sb sq.SelectBuilder, tableField string) sq.SelectBuilder {
+func dahuaSelectFilter(ctx context.Context, sb sq.SelectBuilder, joinTableField string) sq.SelectBuilder {
 	actor := core.UseActor(ctx)
 
 	if actor.Admin {
 		return sb
 	}
 
-	return sb.Join("dahua_permissions ON dahua_permissions.device_id = " + tableField).Where(sq.Expr(`
-	dahua_permissions.user_id = ?
-	OR dahua_permissions.group_id IN (
-		SELECT
-			group_id
-		FROM
-			group_users
-		WHERE
-			group_users.user_id = ?
-	)
-	`, actor.UserID, actor.UserID))
+	return sb.
+		Join("dahua_permissions ON dahua_permissions.device_id = " + joinTableField).
+		Where(sq.Expr(`
+			dahua_permissions.user_id = ?
+			OR dahua_permissions.group_id IN (
+				SELECT
+					group_id
+				FROM
+					group_users
+				WHERE
+					group_users.user_id = ?
+			)
+		`, actor.UserID, actor.UserID))
 }
 
 // DahuaFatDevice
@@ -57,7 +59,6 @@ func (db DB) DahuaListFatDevices(ctx context.Context, args ...DahuaFatDevicePara
 		).
 		From("dahua_devices").
 		LeftJoin("dahua_seeds ON dahua_seeds.device_id = dahua_devices.id")
-	sb = dahuaFilter(ctx, sb, "dahua_devices.id")
 	// WHERE
 	and := sq.And{}
 
@@ -85,7 +86,7 @@ func (db DB) DahuaListFatDevices(ctx context.Context, args ...DahuaFatDevicePara
 	}
 
 	var res []DahuaFatDevice
-	return res, ssq.Query(ctx, db, &res, sb)
+	return res, ssq.Query(ctx, db, &res, dahuaSelectFilter(ctx, sb, "dahua_devices.id"))
 }
 
 func (db DB) DahuaGetFatDevice(ctx context.Context, arg DahuaFatDeviceParams) (DahuaFatDevice, error) {
