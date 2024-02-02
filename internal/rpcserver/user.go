@@ -49,10 +49,16 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		return nil, err
 	}
 
+	emailCount, err := u.db.DahuaCountDahuaEmails(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &rpc.GetHomePageResp{
 		Devices:    devices,
 		FileCount:  fileCount,
 		EventCount: eventCount,
+		EmailCount: emailCount,
 	}, nil
 }
 

@@ -28,12 +28,12 @@ export function Home() {
             </RowItem>
             <RowItem>
               <StatRoot>
-                <A class="flex items-center" href="/files">
-                  <RiDocumentFile2Line class="h-8 w-8" />
+                <A class="flex items-center" href="/emails">
+                  <RiBusinessMailLine class="h-8 w-8" />
                 </A>
                 <div class="flex-1">
-                  <StatTitle>Files</StatTitle>
-                  <StatValue>{data()?.fileCount.toString()}</StatValue>
+                  <StatTitle>Emails</StatTitle>
+                  <StatValue>{data()?.emailCount.toString()}</StatValue>
                 </div>
               </StatRoot>
             </RowItem>
@@ -50,12 +50,12 @@ export function Home() {
             </RowItem>
             <RowItem>
               <StatRoot>
-                <div class="flex items-center">
-                  <RiBusinessMailLine class="h-8 w-8" />
-                </div>
+                <A class="flex items-center" href="/files">
+                  <RiDocumentFile2Line class="h-8 w-8" />
+                </A>
                 <div class="flex-1">
-                  <StatTitle>Emails</StatTitle>
-                  <StatValue>N/A</StatValue>
+                  <StatTitle>Files</StatTitle>
+                  <StatValue>{data()?.fileCount.toString()}</StatValue>
                 </div>
               </StatRoot>
             </RowItem>
@@ -78,7 +78,7 @@ export function Home() {
 }
 
 function RowRoot(props: ParentProps) {
-  return <div class="flex flex-col flex-wrap gap-2 sm:flex-row">{props.children}</div>
+  return <div class="flex flex-col flex-wrap gap-4 sm:flex-row">{props.children}</div>
 }
 
 function RowItem(props: ParentProps) {

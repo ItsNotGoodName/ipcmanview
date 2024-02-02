@@ -586,22 +586,3 @@ WHERE
   AND ready = true
 LIMIT
   ?;
-
--- name: DahuaListDevice :many
-SELECT
-  sqlc.embed (dahua_devices),
-  seed
-FROM
-  dahua_devices
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = dahua_devices.id
-  LEFT JOIN dahua_permissions AS p ON p.device_id = dahua_devices.id
-WHERE
-  p.user_id = sqlc.arg ('user_id')
-  OR p.group_id IN (
-    SELECT
-      group_id
-    FROM
-      group_users
-    WHERE
-      group_users.user_id = sqlc.arg ('user_id')
-  );

@@ -132,6 +132,10 @@ export interface GetHomePageResp {
      * @generated from protobuf field: int64 event_count = 3;
      */
     eventCount: bigint;
+    /**
+     * @generated from protobuf field: int64 email_count = 4;
+     */
+    emailCount: bigint;
 }
 /**
  * @generated from protobuf message GetHomePageResp.Device
@@ -1362,7 +1366,8 @@ class GetHomePageResp$Type extends MessageType<GetHomePageResp> {
         super("GetHomePageResp", [
             { no: 1, name: "devices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetHomePageResp_Device },
             { no: 2, name: "file_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 3, name: "event_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 3, name: "event_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 4, name: "email_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
 }

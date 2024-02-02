@@ -9,7 +9,7 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-func DahuaSelectFilter(ctx context.Context, sb sq.SelectBuilder, joinTableField string, levels ...models.DahuaPermissionLevel) sq.SelectBuilder {
+func DahuaSelectFilter(ctx context.Context, sb sq.SelectBuilder, deviceIDField string, levels ...models.DahuaPermissionLevel) sq.SelectBuilder {
 	actor := core.UseActor(ctx)
 
 	if actor.Admin {
@@ -22,7 +22,7 @@ func DahuaSelectFilter(ctx context.Context, sb sq.SelectBuilder, joinTableField 
 	}
 
 	return sb.
-		Where(sq.Expr(joinTableField+` IN (
+		Where(sq.Expr(deviceIDField+` IN (
 			SELECT
 				device_id
 			FROM
@@ -135,5 +135,17 @@ func (db DB) DahuaCountDahuaEvents(ctx context.Context) (int64, error) {
 		Count int64
 	}
 	err := ssq.QueryOne(ctx, db, &res, DahuaSelectFilter(ctx, sb, "dahua_events.device_id"))
+	return res.Count, err
+}
+
+func (db DB) DahuaCountDahuaEmails(ctx context.Context) (int64, error) {
+	sb := sq.
+		Select("COUNT(*) AS count").
+		From("dahua_email_messages")
+
+	var res struct {
+		Count int64
+	}
+	err := ssq.QueryOne(ctx, db, &res, DahuaSelectFilter(ctx, sb, "dahua_email_messages.device_id", models.DahuaPermissionLevelAdmin))
 	return res.Count, err
 }

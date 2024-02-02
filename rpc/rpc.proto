@@ -95,6 +95,7 @@ message GetHomePageResp {
   repeated Device devices = 1;
   int64 file_count = 2;
   int64 event_count = 3;
+  int64 email_count = 4;
 }
 
 message GetDevicesPageReq {}
