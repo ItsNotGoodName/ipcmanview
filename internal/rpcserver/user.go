@@ -44,7 +44,7 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 	}, nil
 }
 
-func (u *User) GetDevicesPage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetDevicesPageResp, error) {
+func (u *User) GetDevicesPage(ctx context.Context, req *rpc.GetDevicesPageReq) (*rpc.GetDevicesPageResp, error) {
 	dbDevices, err := u.db.DahuaListFatDevices(ctx)
 	if err != nil {
 		return nil, err
@@ -260,23 +260,19 @@ func (u *User) GetDeviceSoftwareVersion(ctx context.Context, req *rpc.GetDeviceS
 	}, nil
 }
 
-func (u *User) GetDeviceStatus(ctx context.Context, req *rpc.GetDeviceStatusReq) (*rpc.GetDeviceStatusResp, error) {
+func (u *User) GetDeviceRPCStatus(ctx context.Context, req *rpc.GetDeviceRPCStatusReq) (*rpc.GetDeviceRPCStatusResp, error) {
 	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
 		return nil, err
 	}
 	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
 
-	v := dahua.GetStatus(ctx, client.Conn, client.RPC)
+	v := dahua.GetRPCStatus(ctx, client.RPC)
 
-	return &rpc.GetDeviceStatusResp{
-		Url:              v.URL,
-		Username:         v.Username,
-		Location:         v.Location,
-		Seed:             int32(v.Seed),
-		RpcError:         v.RPCError,
-		RpcState:         v.RPCState,
-		RpcLastLoginTime: timestamppb.New(v.RPCLastLogin),
+	return &rpc.GetDeviceRPCStatusResp{
+		Error:         v.Error,
+		State:         v.State,
+		LastLoginTime: timestamppb.New(v.LastLogin),
 	}, nil
 }
 

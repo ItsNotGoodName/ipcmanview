@@ -34,9 +34,9 @@ func (s *Server) DahuaDevices(c echo.Context) error {
 	}
 	clients := s.dahuaStore.ClientList(ctx, dahua.NewConns(devices))
 
-	res := make([]models.DahuaStatus, 0, len(clients))
+	res := make([]models.DahuaRPCStatus, 0, len(clients))
 	for _, client := range clients {
-		res = append(res, dahua.GetStatus(ctx, client.Conn, client.RPC))
+		res = append(res, dahua.GetRPCStatus(ctx, client.RPC))
 	}
 
 	return c.JSON(http.StatusOK, res)

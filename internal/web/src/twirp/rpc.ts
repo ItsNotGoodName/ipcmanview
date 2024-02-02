@@ -139,6 +139,11 @@ export interface GetHomePageResp_Device {
     name: string;
 }
 /**
+ * @generated from protobuf message GetDevicesPageReq
+ */
+export interface GetDevicesPageReq {
+}
+/**
  * @generated from protobuf message GetDevicesPageResp
  */
 export interface GetDevicesPageResp {
@@ -299,46 +304,30 @@ export interface RevokeMySessionReq {
     sessionId: bigint;
 }
 /**
- * @generated from protobuf message GetDeviceStatusReq
+ * @generated from protobuf message GetDeviceRPCStatusReq
  */
-export interface GetDeviceStatusReq {
+export interface GetDeviceRPCStatusReq {
     /**
      * @generated from protobuf field: int64 id = 1;
      */
     id: bigint;
 }
 /**
- * @generated from protobuf message GetDeviceStatusResp
+ * @generated from protobuf message GetDeviceRPCStatusResp
  */
-export interface GetDeviceStatusResp {
+export interface GetDeviceRPCStatusResp {
     /**
-     * @generated from protobuf field: string url = 1;
+     * @generated from protobuf field: string error = 1;
      */
-    url: string;
+    error: string;
     /**
-     * @generated from protobuf field: string username = 2;
+     * @generated from protobuf field: string state = 2;
      */
-    username: string;
+    state: string;
     /**
-     * @generated from protobuf field: string location = 3;
+     * @generated from protobuf field: google.protobuf.Timestamp last_login_time = 3;
      */
-    location: string;
-    /**
-     * @generated from protobuf field: int32 seed = 4;
-     */
-    seed: number;
-    /**
-     * @generated from protobuf field: string rpc_error = 5;
-     */
-    rpcError: string;
-    /**
-     * @generated from protobuf field: string rpc_state = 6;
-     */
-    rpcState: string;
-    /**
-     * @generated from protobuf field: google.protobuf.Timestamp rpc_last_login_time = 7;
-     */
-    rpcLastLoginTime?: Timestamp;
+    lastLoginTime?: Timestamp;
 }
 /**
  * @generated from protobuf message GetDeviceDetailReq
@@ -1385,6 +1374,16 @@ class GetHomePageResp_Device$Type extends MessageType<GetHomePageResp_Device> {
  */
 export const GetHomePageResp_Device = new GetHomePageResp_Device$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetDevicesPageReq$Type extends MessageType<GetDevicesPageReq> {
+    constructor() {
+        super("GetDevicesPageReq", []);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDevicesPageReq
+ */
+export const GetDevicesPageReq = new GetDevicesPageReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class GetDevicesPageResp$Type extends MessageType<GetDevicesPageResp> {
     constructor() {
         super("GetDevicesPageResp", [
@@ -1503,35 +1502,31 @@ class RevokeMySessionReq$Type extends MessageType<RevokeMySessionReq> {
  */
 export const RevokeMySessionReq = new RevokeMySessionReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetDeviceStatusReq$Type extends MessageType<GetDeviceStatusReq> {
+class GetDeviceRPCStatusReq$Type extends MessageType<GetDeviceRPCStatusReq> {
     constructor() {
-        super("GetDeviceStatusReq", [
+        super("GetDeviceRPCStatusReq", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message GetDeviceStatusReq
+ * @generated MessageType for protobuf message GetDeviceRPCStatusReq
  */
-export const GetDeviceStatusReq = new GetDeviceStatusReq$Type();
+export const GetDeviceRPCStatusReq = new GetDeviceRPCStatusReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class GetDeviceStatusResp$Type extends MessageType<GetDeviceStatusResp> {
+class GetDeviceRPCStatusResp$Type extends MessageType<GetDeviceRPCStatusResp> {
     constructor() {
-        super("GetDeviceStatusResp", [
-            { no: 1, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "seed", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 5, name: "rpc_error", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "rpc_state", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 7, name: "rpc_last_login_time", kind: "message", T: () => Timestamp }
+        super("GetDeviceRPCStatusResp", [
+            { no: 1, name: "error", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "state", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "last_login_time", kind: "message", T: () => Timestamp }
         ]);
     }
 }
 /**
- * @generated MessageType for protobuf message GetDeviceStatusResp
+ * @generated MessageType for protobuf message GetDeviceRPCStatusResp
  */
-export const GetDeviceStatusResp = new GetDeviceStatusResp$Type();
+export const GetDeviceRPCStatusResp = new GetDeviceRPCStatusResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetDeviceDetailReq$Type extends MessageType<GetDeviceDetailReq> {
     constructor() {
@@ -2303,13 +2298,13 @@ export const Public = new ServiceType("Public", [
  */
 export const User = new ServiceType("User", [
     { name: "GetHomePage", options: {}, I: Empty, O: GetHomePageResp },
-    { name: "GetDevicesPage", options: {}, I: Empty, O: GetDevicesPageResp },
+    { name: "GetDevicesPage", options: {}, I: GetDevicesPageReq, O: GetDevicesPageResp },
     { name: "GetProfilePage", options: {}, I: Empty, O: GetProfilePageResp },
     { name: "UpdateMyUsername", options: {}, I: UpdateMyUsernameReq, O: Empty },
     { name: "UpdateMyPassword", options: {}, I: UpdateMyPasswordReq, O: Empty },
     { name: "RevokeMySession", options: {}, I: RevokeMySessionReq, O: Empty },
     { name: "RevokeAllMySessions", options: {}, I: Empty, O: Empty },
-    { name: "GetDeviceStatus", options: {}, I: GetDeviceStatusReq, O: GetDeviceStatusResp },
+    { name: "GetDeviceRPCStatus", options: {}, I: GetDeviceRPCStatusReq, O: GetDeviceRPCStatusResp },
     { name: "GetDeviceDetail", options: {}, I: GetDeviceDetailReq, O: GetDeviceDetailResp },
     { name: "GetDeviceSoftwareVersion", options: {}, I: GetDeviceSoftwareVersionReq, O: GetDeviceSoftwareVersionResp },
     { name: "ListDeviceLicenses", options: {}, I: ListDeviceLicensesReq, O: ListDeviceLicensesResp },

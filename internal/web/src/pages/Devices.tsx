@@ -1,11 +1,11 @@
-import { createAsync, useSearchParams } from "@solidjs/router"
+import { A, createAsync, useSearchParams } from "@solidjs/router"
 import { ErrorBoundary, For, Show, Suspense } from "solid-js"
 import { PageError, PageLoading } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
 import { TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { GetDevicesPageResp_Device } from "~/twirp/rpc"
-import { getDeviceDetail, getDeviceSoftwareVersion, getDeviceStatus, getListDeviceLicenses, getListDeviceStorage, } from "./data"
+import { getDeviceDetail, getDeviceRPCStatus, getDeviceSoftwareVersion, getListDeviceLicenses, getListDeviceStorage, } from "./data"
 import { Skeleton } from "~/ui/Skeleton"
 import { ToggleButton } from "@kobalte/core"
 import { formatDate, parseDate } from "~/lib/utils"
@@ -13,8 +13,8 @@ import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
 
 export function Devices() {
-  const data = createAsync(getDevicesPage)
   const [searchParams, setSearchParams] = useSearchParams()
+  const data = createAsync(() => getDevicesPage())
 
   return (
     <LayoutNormal>
@@ -23,7 +23,7 @@ export function Devices() {
           <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>
             <TabsList class="w-full overflow-x-auto overflow-y-hidden">
               <TabsTrigger value="device" >Device</TabsTrigger>
-              <TabsTrigger value="status" >Status</TabsTrigger>
+              <TabsTrigger value="rpc-status" >RPC Status</TabsTrigger>
               <TabsTrigger value="detail" >Detail</TabsTrigger>
               <TabsTrigger value="software-version" >Software Version</TabsTrigger>
               <TabsTrigger value="license" >License</TabsTrigger>
@@ -32,8 +32,8 @@ export function Devices() {
             <TabsContent value="device">
               <DeviceTable devices={data()?.devices} />
             </TabsContent>
-            <TabsContent value="status">
-              <StatusTable devices={data()?.devices} />
+            <TabsContent value="rpc-status">
+              <RPCStatusTable devices={data()?.devices} />
             </TabsContent>
             <TabsContent value="detail">
               <DetailTable devices={data()?.devices} />
@@ -50,7 +50,7 @@ export function Devices() {
           </TabsRoot>
         </Suspense>
       </ErrorBoundary>
-    </LayoutNormal>
+    </LayoutNormal >
   )
 }
 
@@ -59,7 +59,7 @@ function DeviceTable(props: { devices?: GetDevicesPageResp_Device[] }) {
     <TableRoot>
       <TableHeader>
         <TableRow>
-          <TableHead>Name</TableHead>
+          <TableHead>Device</TableHead>
           <TableHead>URL</TableHead>
           <TableHead>Username</TableHead>
           <TableHead>Disabled</TableHead>
@@ -68,22 +68,22 @@ function DeviceTable(props: { devices?: GetDevicesPageResp_Device[] }) {
       </TableHeader>
       <TableBody>
         <For each={props.devices}>
-          {v => (
+          {item => (
             <TableRow>
               <TableCell>
-                {v.name}
+                <A class={linkVariants()} href={`./devices/${item.id}`}>{item.name}</A>
               </TableCell>
               <TableCell>
-                <a class={linkVariants()} href={v.url}>{v.url}</a>
+                <a class={linkVariants()} href={item.url}>{item.url}</a>
               </TableCell>
               <TableCell>
-                {v.username}
+                {item.username}
               </TableCell>
               <TableCell>
-                {v.disabled ? "TRUE" : "FALSE"}
+                {item.disabled ? "TRUE" : "FALSE"}
               </TableCell>
               <TableCell>
-                {formatDate(parseDate(v.createdAtTime))}
+                {formatDate(parseDate(item.createdAtTime))}
               </TableCell>
             </TableRow>
           )}
@@ -93,7 +93,7 @@ function DeviceTable(props: { devices?: GetDevicesPageResp_Device[] }) {
   )
 }
 
-function StatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
+function RPCStatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
   const colspan = 8
 
   return (
@@ -101,34 +101,26 @@ function StatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
       <TableHeader>
         <TableRow>
           <TableHead>Device</TableHead>
-          <TableHead>URL</TableHead>
-          <TableHead>Username</TableHead>
-          <TableHead>Location</TableHead>
-          <TableHead>Seed</TableHead>
-          <TableHead>RPC Error</TableHead>
-          <TableHead>RPC State</TableHead>
-          <TableHead>RPC Last Login</TableHead>
+          <TableHead>State</TableHead>
+          <TableHead>Last Login</TableHead>
+          <TableHead>Error</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         <For each={props.devices}>
           {item => {
-            const data = createAsync(() => getDeviceStatus(item.id))
+            const data = createAsync(() => getDeviceRPCStatus(item.id))
 
             return (
               <TableRow>
                 <TableCell>
-                  {item.name}
+                  <A class={linkVariants()} href={`./devices/${item.id}`}>{item.name}</A>
                 </TableCell>
                 <ErrorBoundary fallback={e => <ErrorTableCell colspan={colspan} error={e} />}>
                   <Suspense fallback={<LoadingTableCell colspan={colspan} />}>
-                    <TableCell>{data()?.url}</TableCell>
-                    <TableCell>{data()?.username}</TableCell>
-                    <TableCell>{data()?.location}</TableCell>
-                    <TableCell>{data()?.seed}</TableCell>
-                    <TableCell>{data()?.rpcError}</TableCell>
-                    <TableCell>{data()?.rpcState}</TableCell>
-                    <TableCell>{formatDate(parseDate(data()?.rpcLastLoginTime))}</TableCell>
+                    <TableCell>{data()?.state}</TableCell>
+                    <TableCell>{formatDate(parseDate(data()?.lastLoginTime))}</TableCell>
+                    <TableCell>{data()?.error}</TableCell>
                   </Suspense>
                 </ErrorBoundary>
               </TableRow>
@@ -166,9 +158,7 @@ function DetailTable(props: { devices?: GetDevicesPageResp_Device[] }) {
 
             return (
               <TableRow>
-                <TableCell>
-                  {item.name}
-                </TableCell>
+                <DeviceNameCell device={item} />
                 <ErrorBoundary fallback={e => <ErrorTableCell colspan={colspan} error={e} />}>
                   <Suspense fallback={<LoadingTableCell colspan={colspan} />}>
                     <TableCell>
@@ -221,9 +211,7 @@ function SoftwareVersionTable(props: { devices?: GetDevicesPageResp_Device[] }) 
 
             return (
               <TableRow>
-                <TableCell>
-                  {item.name}
-                </TableCell>
+                <DeviceNameCell device={item} />
                 <ErrorBoundary fallback={e => <ErrorTableCell colspan={colspan} error={e} />}>
                   <Suspense fallback={<LoadingTableCell colspan={colspan} />}>
                     <TableCell>{data()?.build}</TableCell>
@@ -268,25 +256,25 @@ function LicenseTable(props: { devices?: GetDevicesPageResp_Device[] }) {
           return (
             <ErrorBoundary fallback={e =>
               <TableRow>
-                <TableCell>{item.name}</TableCell>
+                <DeviceNameCell device={item} />
                 <ErrorTableCell colspan={colspan} error={e} />
               </TableRow>
             }>
               <Suspense fallback={
                 <TableRow>
-                  <TableCell>{item.name}</TableCell>
+                  <DeviceNameCell device={item} />
                   <LoadingTableCell colspan={colspan} />
                 </TableRow>
               }>
                 <For each={data()} fallback={
                   <TableRow>
-                    <TableCell>{item.name}</TableCell>
+                    <DeviceNameCell device={item} />
                     <TableCell colspan={colspan}>N/A</TableCell>
                   </TableRow>
                 }>
                   {v => (
                     <TableRow>
-                      <TableCell>{item.name}</TableCell>
+                      <DeviceNameCell device={item} />
                       <TableCell>{v.abroadInfo}</TableCell>
                       <TableCell>{v.allType}</TableCell>
                       <TableCell>{v.digitChannel}</TableCell>
@@ -333,25 +321,25 @@ function StorageTable(props: { devices?: GetDevicesPageResp_Device[] }) {
             return (
               <ErrorBoundary fallback={e =>
                 <TableRow>
-                  <TableCell>{item.name}</TableCell>
+                  <DeviceNameCell device={item} />
                   <ErrorTableCell colspan={colspan} error={e} />
                 </TableRow>
               }>
                 <Suspense fallback={
                   <TableRow>
-                    <TableCell>{item.name}</TableCell>
+                    <DeviceNameCell device={item} />
                     <LoadingTableCell colspan={colspan} />
                   </TableRow>
                 }>
                   <For each={data()} fallback={
                     <TableRow>
-                      <TableCell>{item.name}</TableCell>
+                      <DeviceNameCell device={item} />
                       <TableCell colspan={colspan}>N/A</TableCell>
                     </TableRow>
                   }>
                     {v => (
                       <TableRow>
-                        <TableCell>{item.name}</TableCell>
+                        <DeviceNameCell device={item} />
                         <TableCell>{v.name}</TableCell>
                         <TableCell>{v.state}</TableCell>
                         <TableCell>{v.type}</TableCell>
@@ -386,6 +374,14 @@ function ErrorTableCell(props: { colspan: number, error: Error }) {
       <div class="bg-destructive text-destructive-foreground rounded p-2">
         {props.error.message}
       </div>
+    </TableCell>
+  )
+}
+
+function DeviceNameCell(props: { device: { id: bigint, name: string } }) {
+  return (
+    <TableCell>
+      <A class={linkVariants()} href={`./devices/${props.device.id}`}>{props.device.name}</A>
     </TableCell>
   )
 }

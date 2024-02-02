@@ -18,7 +18,7 @@ func parsePagePagination(v *rpc.PagePagination) pagination.Page {
 	if page < 1 {
 		page = 1
 	}
-	if v.PerPage < 1 || v.PerPage > 100 {
+	if perPage < 1 || perPage > 100 {
 		perPage = 10
 	}
 

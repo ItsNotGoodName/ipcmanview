@@ -70,7 +70,7 @@ message ForgotPasswordReq {
 service User {
   // Pages
   rpc GetHomePage(google.protobuf.Empty) returns (GetHomePageResp);
-  rpc GetDevicesPage(google.protobuf.Empty) returns (GetDevicesPageResp);
+  rpc GetDevicesPage(GetDevicesPageReq) returns (GetDevicesPageResp);
   rpc GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
 
   // User
@@ -80,7 +80,7 @@ service User {
   rpc RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
 
   // Device
-  rpc GetDeviceStatus(GetDeviceStatusReq) returns (GetDeviceStatusResp);
+  rpc GetDeviceRPCStatus(GetDeviceRPCStatusReq) returns (GetDeviceRPCStatusResp);
   rpc GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
   rpc GetDeviceSoftwareVersion(GetDeviceSoftwareVersionReq) returns (GetDeviceSoftwareVersionResp);
   rpc ListDeviceLicenses(ListDeviceLicensesReq) returns (ListDeviceLicensesResp);
@@ -95,6 +95,7 @@ message GetHomePageResp {
   repeated Device devices = 1;
 }
 
+message GetDevicesPageReq {}
 message GetDevicesPageResp {
   message Device {
     int64 id = 1;
@@ -148,17 +149,13 @@ message RevokeMySessionReq {
   int64 session_id = 1;
 }
 
-message GetDeviceStatusReq {
+message GetDeviceRPCStatusReq {
   int64 id = 1;
 }
-message GetDeviceStatusResp {
-  string url = 1;
-  string username = 2;
-  string location = 3;
-  int32 seed = 4;
-  string rpc_error = 5;
-  string rpc_state = 6;
-  google.protobuf.Timestamp rpc_last_login_time = 7;
+message GetDeviceRPCStatusResp {
+  string error = 1;
+  string state = 2;
+  google.protobuf.Timestamp last_login_time = 3;
 }
 
 message GetDeviceDetailReq {

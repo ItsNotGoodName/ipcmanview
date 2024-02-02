@@ -87,14 +87,10 @@ type DahuaError struct {
 	Error string `json:"error"`
 }
 
-type DahuaStatus struct {
-	URL          string    `json:"url"`
-	Username     string    `json:"username"`
-	Location     string    `json:"location"`
-	Seed         int       `json:"seed"`
-	RPCError     string    `json:"rpc_error"`
-	RPCState     string    `json:"rpc_state"`
-	RPCLastLogin time.Time `json:"rpc_last_login"`
+type DahuaRPCStatus struct {
+	Error     string    `json:"error"`
+	State     string    `json:"state"`
+	LastLogin time.Time `json:"last_login"`
 }
 
 type DahuaDetail struct {

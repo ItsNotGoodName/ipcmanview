@@ -16,8 +16,8 @@ export type AdminGroupsPageSearchParams = {
 export default function({ params }: PageProps<AdminGroupsPageSearchParams>) {
   void getAdminGroupsPage({
     page: {
-      page: Number(params.page) || 1,
-      perPage: Number(params.perPage) || 10
+      page: Number(params.page),
+      perPage: Number(params.perPage)
     },
     sort: {
       field: params.sort || "",

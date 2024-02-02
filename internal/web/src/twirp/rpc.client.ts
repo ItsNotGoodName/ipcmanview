@@ -45,13 +45,14 @@ import type { GetDeviceSoftwareVersionResp } from "./rpc";
 import type { GetDeviceSoftwareVersionReq } from "./rpc";
 import type { GetDeviceDetailResp } from "./rpc";
 import type { GetDeviceDetailReq } from "./rpc";
-import type { GetDeviceStatusResp } from "./rpc";
-import type { GetDeviceStatusReq } from "./rpc";
+import type { GetDeviceRPCStatusResp } from "./rpc";
+import type { GetDeviceRPCStatusReq } from "./rpc";
 import type { RevokeMySessionReq } from "./rpc";
 import type { UpdateMyPasswordReq } from "./rpc";
 import type { UpdateMyUsernameReq } from "./rpc";
 import type { GetProfilePageResp } from "./rpc";
 import type { GetDevicesPageResp } from "./rpc";
+import type { GetDevicesPageReq } from "./rpc";
 import type { GetHomePageResp } from "./rpc";
 import { Public } from "./rpc";
 import type { ForgotPasswordReq } from "./rpc";
@@ -149,9 +150,9 @@ export interface IUserClient {
      */
     getHomePage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetHomePageResp>;
     /**
-     * @generated from protobuf rpc: GetDevicesPage(google.protobuf.Empty) returns (GetDevicesPageResp);
+     * @generated from protobuf rpc: GetDevicesPage(GetDevicesPageReq) returns (GetDevicesPageResp);
      */
-    getDevicesPage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetDevicesPageResp>;
+    getDevicesPage(input: GetDevicesPageReq, options?: RpcOptions): UnaryCall<GetDevicesPageReq, GetDevicesPageResp>;
     /**
      * @generated from protobuf rpc: GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
      */
@@ -177,9 +178,9 @@ export interface IUserClient {
     /**
      * Device
      *
-     * @generated from protobuf rpc: GetDeviceStatus(GetDeviceStatusReq) returns (GetDeviceStatusResp);
+     * @generated from protobuf rpc: GetDeviceRPCStatus(GetDeviceRPCStatusReq) returns (GetDeviceRPCStatusResp);
      */
-    getDeviceStatus(input: GetDeviceStatusReq, options?: RpcOptions): UnaryCall<GetDeviceStatusReq, GetDeviceStatusResp>;
+    getDeviceRPCStatus(input: GetDeviceRPCStatusReq, options?: RpcOptions): UnaryCall<GetDeviceRPCStatusReq, GetDeviceRPCStatusResp>;
     /**
      * @generated from protobuf rpc: GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
      */
@@ -218,11 +219,11 @@ export class UserClient implements IUserClient, ServiceInfo {
         return stackIntercept<Empty, GetHomePageResp>("unary", this._transport, method, opt, input);
     }
     /**
-     * @generated from protobuf rpc: GetDevicesPage(google.protobuf.Empty) returns (GetDevicesPageResp);
+     * @generated from protobuf rpc: GetDevicesPage(GetDevicesPageReq) returns (GetDevicesPageResp);
      */
-    getDevicesPage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetDevicesPageResp> {
+    getDevicesPage(input: GetDevicesPageReq, options?: RpcOptions): UnaryCall<GetDevicesPageReq, GetDevicesPageResp> {
         const method = this.methods[1], opt = this._transport.mergeOptions(options);
-        return stackIntercept<Empty, GetDevicesPageResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<GetDevicesPageReq, GetDevicesPageResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
@@ -264,11 +265,11 @@ export class UserClient implements IUserClient, ServiceInfo {
     /**
      * Device
      *
-     * @generated from protobuf rpc: GetDeviceStatus(GetDeviceStatusReq) returns (GetDeviceStatusResp);
+     * @generated from protobuf rpc: GetDeviceRPCStatus(GetDeviceRPCStatusReq) returns (GetDeviceRPCStatusResp);
      */
-    getDeviceStatus(input: GetDeviceStatusReq, options?: RpcOptions): UnaryCall<GetDeviceStatusReq, GetDeviceStatusResp> {
+    getDeviceRPCStatus(input: GetDeviceRPCStatusReq, options?: RpcOptions): UnaryCall<GetDeviceRPCStatusReq, GetDeviceRPCStatusResp> {
         const method = this.methods[7], opt = this._transport.mergeOptions(options);
-        return stackIntercept<GetDeviceStatusReq, GetDeviceStatusResp>("unary", this._transport, method, opt, input);
+        return stackIntercept<GetDeviceRPCStatusReq, GetDeviceRPCStatusResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
