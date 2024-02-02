@@ -36,7 +36,7 @@ func (s *Server) DahuaDevices(c echo.Context) error {
 
 	res := make([]models.DahuaStatus, 0, len(clients))
 	for _, client := range clients {
-		res = append(res, dahua.GetDahuaStatus(ctx, client.Conn, client.RPC))
+		res = append(res, dahua.GetStatus(ctx, client.Conn, client.RPC))
 	}
 
 	return c.JSON(http.StatusOK, res)

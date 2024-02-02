@@ -12,6 +12,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
 
+type contextKey string
+
 func SplitAddress(address string) [2]string {
 	s := strings.SplitN(address, ":", 2)
 	if len(s) != 2 {

@@ -292,14 +292,14 @@ func GetSeed(c Conn) int {
 	return int(c.ID)
 }
 
-func GetDahuaStatus(ctx context.Context, device Conn, rpcClient dahuarpc.Client) models.DahuaStatus {
+func GetStatus(ctx context.Context, device Conn, rpcClient dahuarpc.Client) models.DahuaStatus {
 	rpcState := rpcClient.State(ctx)
 	var rpcError string
 	if rpcState.Error != nil {
 		rpcError = rpcState.Error.Error()
 	}
 	return models.DahuaStatus{
-		Url:          device.URL.String(),
+		URL:          device.URL.String(),
 		Username:     device.Username,
 		Location:     device.Location.String(),
 		Seed:         device.Seed,

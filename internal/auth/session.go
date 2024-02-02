@@ -141,7 +141,8 @@ func UserSessionExpired(expiredAt time.Time) bool {
 	return expiredAt.Before(time.Now())
 }
 
-func WithSession(ctx context.Context, session Session) context.Context {
+func WithSessionAndActor(ctx context.Context, session Session) context.Context {
+	ctx = core.WithUserActor(ctx, session.UserID, session.Admin)
 	return context.WithValue(ctx, sessionCtxKey, session)
 }
 

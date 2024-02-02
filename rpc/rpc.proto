@@ -80,7 +80,11 @@ service User {
   rpc RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
 
   // Device
+  rpc GetDeviceStatus(GetDeviceStatusReq) returns (GetDeviceStatusResp);
   rpc GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
+  rpc GetDeviceSoftwareVersion(GetDeviceSoftwareVersionReq) returns (GetDeviceSoftwareVersionResp);
+  rpc ListDeviceLicenses(ListDeviceLicensesReq) returns (ListDeviceLicensesResp);
+  rpc ListDeviceStorage(ListDeviceStorageReq) returns (ListDeviceStorageResp);
 }
 
 message GetHomePageResp {
@@ -144,6 +148,19 @@ message RevokeMySessionReq {
   int64 session_id = 1;
 }
 
+message GetDeviceStatusReq {
+  int64 id = 1;
+}
+message GetDeviceStatusResp {
+  string url = 1;
+  string username = 2;
+  string location = 3;
+  int32 seed = 4;
+  string rpc_error = 5;
+  string rpc_state = 6;
+  google.protobuf.Timestamp rpc_last_login_time = 7;
+}
+
 message GetDeviceDetailReq {
   int64 id = 1;
 }
@@ -157,6 +174,51 @@ message GetDeviceDetailResp {
   string vendor = 7;
   string onvif_version = 8;
   string algorithm_version = 9;
+}
+
+message GetDeviceSoftwareVersionReq {
+  int64 id = 1;
+}
+message GetDeviceSoftwareVersionResp {
+  string build = 1;
+  string build_date = 2;
+  string security_base_line_version = 3;
+  string version = 4;
+  string web_version = 5;
+}
+
+message ListDeviceLicensesReq {
+  int64 id = 1;
+}
+message ListDeviceLicensesResp {
+  message License {
+    string abroad_info = 1;
+    bool all_type = 2;
+    int32 digit_channel = 3;
+    int32 effective_days = 4;
+    google.protobuf.Timestamp effective_time = 5;
+    int32 license_id = 6;
+    string product_type = 7;
+    int32 status = 8;
+    string username = 9;
+  }
+  repeated License items = 1;
+}
+
+message ListDeviceStorageReq {
+  int64 id = 1;
+}
+message ListDeviceStorageResp {
+  message Storage {
+    string name = 1;
+    string state = 2;
+    string path = 3;
+    string type = 4;
+    int64 total_bytes = 5;
+    int64 used_bytes = 6;
+    bool is_error = 7;
+  }
+  repeated Storage items = 1;
 }
 
 // ---------- Admin

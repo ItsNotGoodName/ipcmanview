@@ -5,8 +5,6 @@ import (
 	"net/http"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/labstack/echo/v4"
 	"github.com/twitchtv/twirp"
 )
@@ -86,11 +84,11 @@ func useAuthSession(ctx context.Context) auth.Session {
 	return u
 }
 
-func useDahuaPermissions(ctx context.Context, db repo.DB) (models.DahuaDevicePermissions, error) {
-	session := useAuthSession(ctx)
-	permissions, err := db.DahuaListDahuaDevicePermissions(ctx, session.UserID)
-	return permissions, err
-}
+// func useDahuaPermissions(ctx context.Context, db repo.DB) (models.DahuaDevicePermissions, error) {
+// 	session := useAuthSession(ctx)
+// 	permissions, err := db.DahuaListDahuaDevicePermissions(ctx, session.UserID)
+// 	return permissions, err
+// }
 
 // ---------- Error
 

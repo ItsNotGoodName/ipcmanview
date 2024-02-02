@@ -37,8 +37,16 @@ import type { GetAdminDevicesPageReq } from "./rpc";
 import type { GetAdminDevicesIDPageResp } from "./rpc";
 import type { GetAdminDevicesIDPageReq } from "./rpc";
 import { User } from "./rpc";
+import type { ListDeviceStorageResp } from "./rpc";
+import type { ListDeviceStorageReq } from "./rpc";
+import type { ListDeviceLicensesResp } from "./rpc";
+import type { ListDeviceLicensesReq } from "./rpc";
+import type { GetDeviceSoftwareVersionResp } from "./rpc";
+import type { GetDeviceSoftwareVersionReq } from "./rpc";
 import type { GetDeviceDetailResp } from "./rpc";
 import type { GetDeviceDetailReq } from "./rpc";
+import type { GetDeviceStatusResp } from "./rpc";
+import type { GetDeviceStatusReq } from "./rpc";
 import type { RevokeMySessionReq } from "./rpc";
 import type { UpdateMyPasswordReq } from "./rpc";
 import type { UpdateMyUsernameReq } from "./rpc";
@@ -169,9 +177,25 @@ export interface IUserClient {
     /**
      * Device
      *
+     * @generated from protobuf rpc: GetDeviceStatus(GetDeviceStatusReq) returns (GetDeviceStatusResp);
+     */
+    getDeviceStatus(input: GetDeviceStatusReq, options?: RpcOptions): UnaryCall<GetDeviceStatusReq, GetDeviceStatusResp>;
+    /**
      * @generated from protobuf rpc: GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
      */
     getDeviceDetail(input: GetDeviceDetailReq, options?: RpcOptions): UnaryCall<GetDeviceDetailReq, GetDeviceDetailResp>;
+    /**
+     * @generated from protobuf rpc: GetDeviceSoftwareVersion(GetDeviceSoftwareVersionReq) returns (GetDeviceSoftwareVersionResp);
+     */
+    getDeviceSoftwareVersion(input: GetDeviceSoftwareVersionReq, options?: RpcOptions): UnaryCall<GetDeviceSoftwareVersionReq, GetDeviceSoftwareVersionResp>;
+    /**
+     * @generated from protobuf rpc: ListDeviceLicenses(ListDeviceLicensesReq) returns (ListDeviceLicensesResp);
+     */
+    listDeviceLicenses(input: ListDeviceLicensesReq, options?: RpcOptions): UnaryCall<ListDeviceLicensesReq, ListDeviceLicensesResp>;
+    /**
+     * @generated from protobuf rpc: ListDeviceStorage(ListDeviceStorageReq) returns (ListDeviceStorageResp);
+     */
+    listDeviceStorage(input: ListDeviceStorageReq, options?: RpcOptions): UnaryCall<ListDeviceStorageReq, ListDeviceStorageResp>;
 }
 // ---------- User
 
@@ -240,11 +264,39 @@ export class UserClient implements IUserClient, ServiceInfo {
     /**
      * Device
      *
+     * @generated from protobuf rpc: GetDeviceStatus(GetDeviceStatusReq) returns (GetDeviceStatusResp);
+     */
+    getDeviceStatus(input: GetDeviceStatusReq, options?: RpcOptions): UnaryCall<GetDeviceStatusReq, GetDeviceStatusResp> {
+        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetDeviceStatusReq, GetDeviceStatusResp>("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
      */
     getDeviceDetail(input: GetDeviceDetailReq, options?: RpcOptions): UnaryCall<GetDeviceDetailReq, GetDeviceDetailResp> {
-        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        const method = this.methods[8], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetDeviceDetailReq, GetDeviceDetailResp>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: GetDeviceSoftwareVersion(GetDeviceSoftwareVersionReq) returns (GetDeviceSoftwareVersionResp);
+     */
+    getDeviceSoftwareVersion(input: GetDeviceSoftwareVersionReq, options?: RpcOptions): UnaryCall<GetDeviceSoftwareVersionReq, GetDeviceSoftwareVersionResp> {
+        const method = this.methods[9], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetDeviceSoftwareVersionReq, GetDeviceSoftwareVersionResp>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ListDeviceLicenses(ListDeviceLicensesReq) returns (ListDeviceLicensesResp);
+     */
+    listDeviceLicenses(input: ListDeviceLicensesReq, options?: RpcOptions): UnaryCall<ListDeviceLicensesReq, ListDeviceLicensesResp> {
+        const method = this.methods[10], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ListDeviceLicensesReq, ListDeviceLicensesResp>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ListDeviceStorage(ListDeviceStorageReq) returns (ListDeviceStorageResp);
+     */
+    listDeviceStorage(input: ListDeviceStorageReq, options?: RpcOptions): UnaryCall<ListDeviceStorageReq, ListDeviceStorageResp> {
+        const method = this.methods[11], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ListDeviceStorageReq, ListDeviceStorageResp>("unary", this._transport, method, opt, input);
     }
 }
 // ---------- Admin

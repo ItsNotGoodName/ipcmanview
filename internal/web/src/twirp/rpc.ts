@@ -299,6 +299,48 @@ export interface RevokeMySessionReq {
     sessionId: bigint;
 }
 /**
+ * @generated from protobuf message GetDeviceStatusReq
+ */
+export interface GetDeviceStatusReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message GetDeviceStatusResp
+ */
+export interface GetDeviceStatusResp {
+    /**
+     * @generated from protobuf field: string url = 1;
+     */
+    url: string;
+    /**
+     * @generated from protobuf field: string username = 2;
+     */
+    username: string;
+    /**
+     * @generated from protobuf field: string location = 3;
+     */
+    location: string;
+    /**
+     * @generated from protobuf field: int32 seed = 4;
+     */
+    seed: number;
+    /**
+     * @generated from protobuf field: string rpc_error = 5;
+     */
+    rpcError: string;
+    /**
+     * @generated from protobuf field: string rpc_state = 6;
+     */
+    rpcState: string;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp rpc_last_login_time = 7;
+     */
+    rpcLastLoginTime?: Timestamp;
+}
+/**
  * @generated from protobuf message GetDeviceDetailReq
  */
 export interface GetDeviceDetailReq {
@@ -347,6 +389,150 @@ export interface GetDeviceDetailResp {
      * @generated from protobuf field: string algorithm_version = 9;
      */
     algorithmVersion: string;
+}
+/**
+ * @generated from protobuf message GetDeviceSoftwareVersionReq
+ */
+export interface GetDeviceSoftwareVersionReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message GetDeviceSoftwareVersionResp
+ */
+export interface GetDeviceSoftwareVersionResp {
+    /**
+     * @generated from protobuf field: string build = 1;
+     */
+    build: string;
+    /**
+     * @generated from protobuf field: string build_date = 2;
+     */
+    buildDate: string;
+    /**
+     * @generated from protobuf field: string security_base_line_version = 3;
+     */
+    securityBaseLineVersion: string;
+    /**
+     * @generated from protobuf field: string version = 4;
+     */
+    version: string;
+    /**
+     * @generated from protobuf field: string web_version = 5;
+     */
+    webVersion: string;
+}
+/**
+ * @generated from protobuf message ListDeviceLicensesReq
+ */
+export interface ListDeviceLicensesReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message ListDeviceLicensesResp
+ */
+export interface ListDeviceLicensesResp {
+    /**
+     * @generated from protobuf field: repeated ListDeviceLicensesResp.License items = 1;
+     */
+    items: ListDeviceLicensesResp_License[];
+}
+/**
+ * @generated from protobuf message ListDeviceLicensesResp.License
+ */
+export interface ListDeviceLicensesResp_License {
+    /**
+     * @generated from protobuf field: string abroad_info = 1;
+     */
+    abroadInfo: string;
+    /**
+     * @generated from protobuf field: bool all_type = 2;
+     */
+    allType: boolean;
+    /**
+     * @generated from protobuf field: int32 digit_channel = 3;
+     */
+    digitChannel: number;
+    /**
+     * @generated from protobuf field: int32 effective_days = 4;
+     */
+    effectiveDays: number;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp effective_time = 5;
+     */
+    effectiveTime?: Timestamp;
+    /**
+     * @generated from protobuf field: int32 license_id = 6;
+     */
+    licenseId: number;
+    /**
+     * @generated from protobuf field: string product_type = 7;
+     */
+    productType: string;
+    /**
+     * @generated from protobuf field: int32 status = 8;
+     */
+    status: number;
+    /**
+     * @generated from protobuf field: string username = 9;
+     */
+    username: string;
+}
+/**
+ * @generated from protobuf message ListDeviceStorageReq
+ */
+export interface ListDeviceStorageReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message ListDeviceStorageResp
+ */
+export interface ListDeviceStorageResp {
+    /**
+     * @generated from protobuf field: repeated ListDeviceStorageResp.Storage items = 1;
+     */
+    items: ListDeviceStorageResp_Storage[];
+}
+/**
+ * @generated from protobuf message ListDeviceStorageResp.Storage
+ */
+export interface ListDeviceStorageResp_Storage {
+    /**
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string state = 2;
+     */
+    state: string;
+    /**
+     * @generated from protobuf field: string path = 3;
+     */
+    path: string;
+    /**
+     * @generated from protobuf field: string type = 4;
+     */
+    type: string;
+    /**
+     * @generated from protobuf field: int64 total_bytes = 5;
+     */
+    totalBytes: bigint;
+    /**
+     * @generated from protobuf field: int64 used_bytes = 6;
+     */
+    usedBytes: bigint;
+    /**
+     * @generated from protobuf field: bool is_error = 7;
+     */
+    isError: boolean;
 }
 /**
  * @generated from protobuf message GetAdminGroupsPageReq
@@ -1317,6 +1503,36 @@ class RevokeMySessionReq$Type extends MessageType<RevokeMySessionReq> {
  */
 export const RevokeMySessionReq = new RevokeMySessionReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceStatusReq$Type extends MessageType<GetDeviceStatusReq> {
+    constructor() {
+        super("GetDeviceStatusReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceStatusReq
+ */
+export const GetDeviceStatusReq = new GetDeviceStatusReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceStatusResp$Type extends MessageType<GetDeviceStatusResp> {
+    constructor() {
+        super("GetDeviceStatusResp", [
+            { no: 1, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "location", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "seed", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "rpc_error", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "rpc_state", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "rpc_last_login_time", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceStatusResp
+ */
+export const GetDeviceStatusResp = new GetDeviceStatusResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class GetDeviceDetailReq$Type extends MessageType<GetDeviceDetailReq> {
     constructor() {
         super("GetDeviceDetailReq", [
@@ -1348,6 +1564,120 @@ class GetDeviceDetailResp$Type extends MessageType<GetDeviceDetailResp> {
  * @generated MessageType for protobuf message GetDeviceDetailResp
  */
 export const GetDeviceDetailResp = new GetDeviceDetailResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceSoftwareVersionReq$Type extends MessageType<GetDeviceSoftwareVersionReq> {
+    constructor() {
+        super("GetDeviceSoftwareVersionReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceSoftwareVersionReq
+ */
+export const GetDeviceSoftwareVersionReq = new GetDeviceSoftwareVersionReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetDeviceSoftwareVersionResp$Type extends MessageType<GetDeviceSoftwareVersionResp> {
+    constructor() {
+        super("GetDeviceSoftwareVersionResp", [
+            { no: 1, name: "build", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "build_date", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "security_base_line_version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "web_version", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetDeviceSoftwareVersionResp
+ */
+export const GetDeviceSoftwareVersionResp = new GetDeviceSoftwareVersionResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceLicensesReq$Type extends MessageType<ListDeviceLicensesReq> {
+    constructor() {
+        super("ListDeviceLicensesReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceLicensesReq
+ */
+export const ListDeviceLicensesReq = new ListDeviceLicensesReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceLicensesResp$Type extends MessageType<ListDeviceLicensesResp> {
+    constructor() {
+        super("ListDeviceLicensesResp", [
+            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ListDeviceLicensesResp_License }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceLicensesResp
+ */
+export const ListDeviceLicensesResp = new ListDeviceLicensesResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceLicensesResp_License$Type extends MessageType<ListDeviceLicensesResp_License> {
+    constructor() {
+        super("ListDeviceLicensesResp.License", [
+            { no: 1, name: "abroad_info", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "all_type", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "digit_channel", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "effective_days", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 5, name: "effective_time", kind: "message", T: () => Timestamp },
+            { no: 6, name: "license_id", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 7, name: "product_type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 8, name: "status", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 9, name: "username", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceLicensesResp.License
+ */
+export const ListDeviceLicensesResp_License = new ListDeviceLicensesResp_License$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceStorageReq$Type extends MessageType<ListDeviceStorageReq> {
+    constructor() {
+        super("ListDeviceStorageReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceStorageReq
+ */
+export const ListDeviceStorageReq = new ListDeviceStorageReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceStorageResp$Type extends MessageType<ListDeviceStorageResp> {
+    constructor() {
+        super("ListDeviceStorageResp", [
+            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ListDeviceStorageResp_Storage }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceStorageResp
+ */
+export const ListDeviceStorageResp = new ListDeviceStorageResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceStorageResp_Storage$Type extends MessageType<ListDeviceStorageResp_Storage> {
+    constructor() {
+        super("ListDeviceStorageResp.Storage", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "state", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "path", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "total_bytes", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 6, name: "used_bytes", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 7, name: "is_error", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceStorageResp.Storage
+ */
+export const ListDeviceStorageResp_Storage = new ListDeviceStorageResp_Storage$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetAdminGroupsPageReq$Type extends MessageType<GetAdminGroupsPageReq> {
     constructor() {
@@ -1979,7 +2309,11 @@ export const User = new ServiceType("User", [
     { name: "UpdateMyPassword", options: {}, I: UpdateMyPasswordReq, O: Empty },
     { name: "RevokeMySession", options: {}, I: RevokeMySessionReq, O: Empty },
     { name: "RevokeAllMySessions", options: {}, I: Empty, O: Empty },
-    { name: "GetDeviceDetail", options: {}, I: GetDeviceDetailReq, O: GetDeviceDetailResp }
+    { name: "GetDeviceStatus", options: {}, I: GetDeviceStatusReq, O: GetDeviceStatusResp },
+    { name: "GetDeviceDetail", options: {}, I: GetDeviceDetailReq, O: GetDeviceDetailResp },
+    { name: "GetDeviceSoftwareVersion", options: {}, I: GetDeviceSoftwareVersionReq, O: GetDeviceSoftwareVersionResp },
+    { name: "ListDeviceLicenses", options: {}, I: ListDeviceLicensesReq, O: ListDeviceLicensesResp },
+    { name: "ListDeviceStorage", options: {}, I: ListDeviceStorageReq, O: ListDeviceStorageResp }
 ]);
 /**
  * @generated ServiceType for protobuf service Admin

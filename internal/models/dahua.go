@@ -88,7 +88,7 @@ type DahuaError struct {
 }
 
 type DahuaStatus struct {
-	Url          string    `json:"url"`
+	URL          string    `json:"url"`
 	Username     string    `json:"username"`
 	Location     string    `json:"location"`
 	Seed         int       `json:"seed"`

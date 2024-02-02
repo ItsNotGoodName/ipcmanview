@@ -150,7 +150,7 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 				return err
 			}
 
-			c.SetRequest(c.Request().WithContext(auth.WithSession(c.Request().Context(), auth.Session{
+			c.SetRequest(c.Request().WithContext(auth.WithSessionAndActor(c.Request().Context(), auth.Session{
 				SessionID: session.ID,
 				UserID:    session.UserID,
 				Username:  session.Username.String,

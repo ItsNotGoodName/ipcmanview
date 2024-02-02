@@ -232,17 +232,3 @@ func DeleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) err
 	})
 	return nil
 }
-
-func ListFatDevices(ctx context.Context, db repo.DB, permissions models.DahuaDevicePermissions, args ...repo.DahuaFatDeviceParams) ([]repo.DahuaFatDevice, error) {
-	var arg repo.DahuaFatDeviceParams
-	if len(args) != 0 {
-		arg = args[0]
-	}
-	arg.Filter = permissions.DeviceIDs()
-	return db.DahuaListFatDevices(ctx, arg)
-}
-
-func GetFatDevice(ctx context.Context, db repo.DB, permissions models.DahuaDevicePermissions, arg repo.DahuaFatDeviceParams) (repo.DahuaFatDevice, error) {
-	arg.Filter = permissions.DeviceIDs()
-	return db.DahuaGetFatDevice(ctx, arg)
-}

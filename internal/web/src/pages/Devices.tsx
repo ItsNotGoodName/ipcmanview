@@ -5,7 +5,7 @@ import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
 import { TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { GetDevicesPageResp_Device } from "~/twirp/rpc"
-import { getDeviceDetail } from "./data"
+import { getDeviceDetail, getDeviceSoftwareVersion, getDeviceStatus, getListDeviceLicenses, getListDeviceStorage, } from "./data"
 import { Skeleton } from "~/ui/Skeleton"
 import { ToggleButton } from "@kobalte/core"
 import { formatDate, parseDate } from "~/lib/utils"
@@ -33,19 +33,19 @@ export function Devices() {
               <DeviceTable devices={data()?.devices} />
             </TabsContent>
             <TabsContent value="status">
-              <StatusTable />
+              <StatusTable devices={data()?.devices} />
             </TabsContent>
             <TabsContent value="detail">
               <DetailTable devices={data()?.devices} />
             </TabsContent>
             <TabsContent value="software-version">
-              <SoftwareVersionTable />
+              <SoftwareVersionTable devices={data()?.devices} />
             </TabsContent>
             <TabsContent value="license">
-              <LicenseTable />
+              <LicenseTable devices={data()?.devices} />
             </TabsContent>
             <TabsContent value="storage">
-              <StorageTable />
+              <StorageTable devices={data()?.devices} />
             </TabsContent>
           </TabsRoot>
         </Suspense>
@@ -93,7 +93,9 @@ function DeviceTable(props: { devices?: GetDevicesPageResp_Device[] }) {
   )
 }
 
-function StatusTable() {
+function StatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
+  const colspan = 8
+
   return (
     <TableRoot>
       <TableHeader>
@@ -109,6 +111,30 @@ function StatusTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
+        <For each={props.devices}>
+          {item => {
+            const data = createAsync(() => getDeviceStatus(item.id))
+
+            return (
+              <TableRow>
+                <TableCell>
+                  {item.name}
+                </TableCell>
+                <ErrorBoundary fallback={e => <ErrorTableCell colspan={colspan} error={e} />}>
+                  <Suspense fallback={<LoadingTableCell colspan={colspan} />}>
+                    <TableCell>{data()?.url}</TableCell>
+                    <TableCell>{data()?.username}</TableCell>
+                    <TableCell>{data()?.location}</TableCell>
+                    <TableCell>{data()?.seed}</TableCell>
+                    <TableCell>{data()?.rpcError}</TableCell>
+                    <TableCell>{data()?.rpcState}</TableCell>
+                    <TableCell>{formatDate(parseDate(data()?.rpcLastLoginTime))}</TableCell>
+                  </Suspense>
+                </ErrorBoundary>
+              </TableRow>
+            )
+          }}
+        </For>
       </TableBody>
     </TableRoot>
   )
@@ -143,18 +169,8 @@ function DetailTable(props: { devices?: GetDevicesPageResp_Device[] }) {
                 <TableCell>
                   {item.name}
                 </TableCell>
-                <ErrorBoundary fallback={(e: Error) => (
-                  <TableCell colspan={colspan} class="py-0">
-                    <div class="bg-destructive text-destructive-foreground rounded p-2">
-                      {e.message}
-                    </div>
-                  </TableCell>
-                )}>
-                  <Suspense fallback={
-                    <TableCell colspan={colspan} class="py-0">
-                      <Skeleton class="h-8" />
-                    </TableCell>
-                  }>
+                <ErrorBoundary fallback={e => <ErrorTableCell colspan={colspan} error={e} />}>
+                  <Suspense fallback={<LoadingTableCell colspan={colspan} />}>
                     <TableCell>
                       <ToggleButton.Root>
                         {state => (
@@ -164,30 +180,14 @@ function DetailTable(props: { devices?: GetDevicesPageResp_Device[] }) {
                         )}
                       </ToggleButton.Root>
                     </TableCell>
-                    <TableCell>
-                      {data()?.deviceClass}
-                    </TableCell>
-                    <TableCell>
-                      {data()?.deviceType}
-                    </TableCell>
-                    <TableCell>
-                      {data()?.hardwareVersion}
-                    </TableCell>
-                    <TableCell>
-                      {data()?.marketArea}
-                    </TableCell>
-                    <TableCell>
-                      {data()?.processInfo}
-                    </TableCell>
-                    <TableCell>
-                      {data()?.vendor}
-                    </TableCell>
-                    <TableCell>
-                      {data()?.onvifVersion}
-                    </TableCell>
-                    <TableCell>
-                      {data()?.algorithmVersion}
-                    </TableCell>
+                    <TableCell>{data()?.deviceClass}</TableCell>
+                    <TableCell>{data()?.deviceType}</TableCell>
+                    <TableCell>{data()?.hardwareVersion}</TableCell>
+                    <TableCell>{data()?.marketArea}</TableCell>
+                    <TableCell>{data()?.processInfo}</TableCell>
+                    <TableCell>{data()?.vendor}</TableCell>
+                    <TableCell>{data()?.onvifVersion}</TableCell>
+                    <TableCell>{data()?.algorithmVersion}</TableCell>
                   </Suspense>
                 </ErrorBoundary>
               </TableRow>
@@ -199,7 +199,9 @@ function DetailTable(props: { devices?: GetDevicesPageResp_Device[] }) {
   )
 }
 
-function SoftwareVersionTable() {
+function SoftwareVersionTable(props: { devices?: GetDevicesPageResp_Device[] }) {
+  const colspan = 9
+
   return (
     <TableRoot>
       <TableHeader>
@@ -213,12 +215,36 @@ function SoftwareVersionTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
+        <For each={props.devices}>
+          {item => {
+            const data = createAsync(() => getDeviceSoftwareVersion(item.id))
+
+            return (
+              <TableRow>
+                <TableCell>
+                  {item.name}
+                </TableCell>
+                <ErrorBoundary fallback={e => <ErrorTableCell colspan={colspan} error={e} />}>
+                  <Suspense fallback={<LoadingTableCell colspan={colspan} />}>
+                    <TableCell>{data()?.build}</TableCell>
+                    <TableCell>{data()?.buildDate}</TableCell>
+                    <TableCell>{data()?.securityBaseLineVersion}</TableCell>
+                    <TableCell>{data()?.version}</TableCell>
+                    <TableCell>{data()?.webVersion}</TableCell>
+                  </Suspense>
+                </ErrorBoundary>
+              </TableRow>
+            )
+          }}
+        </For>
       </TableBody>
     </TableRoot>
   )
 }
 
-function LicenseTable() {
+function LicenseTable(props: { devices?: GetDevicesPageResp_Device[] }) {
+  const colspan = 9
+
   return (
     <TableRoot>
       <TableHeader>
@@ -235,13 +261,57 @@ function LicenseTable() {
           <TableHead>Username</TableHead>
         </TableRow>
       </TableHeader>
-      <TableBody>
-      </TableBody>
+      <For each={props.devices}>
+        {item => {
+          const data = createAsync(() => getListDeviceLicenses(item.id))
+
+          return (
+            <ErrorBoundary fallback={e =>
+              <TableRow>
+                <TableCell>{item.name}</TableCell>
+                <ErrorTableCell colspan={colspan} error={e} />
+              </TableRow>
+            }>
+              <Suspense fallback={
+                <TableRow>
+                  <TableCell>{item.name}</TableCell>
+                  <LoadingTableCell colspan={colspan} />
+                </TableRow>
+              }>
+                <For each={data()} fallback={
+                  <TableRow>
+                    <TableCell>{item.name}</TableCell>
+                    <TableCell colspan={colspan}>N/A</TableCell>
+                  </TableRow>
+                }>
+                  {v => (
+                    <TableRow>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{v.abroadInfo}</TableCell>
+                      <TableCell>{v.allType}</TableCell>
+                      <TableCell>{v.digitChannel}</TableCell>
+                      <TableCell>{v.effectiveDays}</TableCell>
+                      <TableCell>{formatDate(parseDate(v.effectiveTime))}</TableCell>
+                      <TableCell>{v.licenseId}</TableCell>
+                      <TableCell>{v.productType}</TableCell>
+                      <TableCell>{v.status}</TableCell>
+                      <TableCell>{v.username}</TableCell>
+                    </TableRow>
+                  )
+                  }
+                </For>
+              </Suspense>
+            </ErrorBoundary>
+          )
+        }}
+      </For>
     </TableRoot>
   )
 }
 
-function StorageTable() {
+function StorageTable(props: { devices?: GetDevicesPageResp_Device[] }) {
+  const colspan = 6;
+
   return (
     <TableRoot>
       <TableHeader>
@@ -256,7 +326,66 @@ function StorageTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
+        <For each={props.devices}>
+          {item => {
+            const data = createAsync(() => getListDeviceStorage(item.id))
+
+            return (
+              <ErrorBoundary fallback={e =>
+                <TableRow>
+                  <TableCell>{item.name}</TableCell>
+                  <ErrorTableCell colspan={colspan} error={e} />
+                </TableRow>
+              }>
+                <Suspense fallback={
+                  <TableRow>
+                    <TableCell>{item.name}</TableCell>
+                    <LoadingTableCell colspan={colspan} />
+                  </TableRow>
+                }>
+                  <For each={data()} fallback={
+                    <TableRow>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell colspan={colspan}>N/A</TableCell>
+                    </TableRow>
+                  }>
+                    {v => (
+                      <TableRow>
+                        <TableCell>{item.name}</TableCell>
+                        <TableCell>{v.name}</TableCell>
+                        <TableCell>{v.state}</TableCell>
+                        <TableCell>{v.type}</TableCell>
+                        <TableCell>{v.totalBytes.toString()}</TableCell>
+                        <TableCell>{v.usedBytes.toString()}</TableCell>
+                        <TableCell>{v.isError}</TableCell>
+                      </TableRow>
+                    )
+                    }
+                  </For>
+                </Suspense>
+              </ErrorBoundary>
+            )
+          }}
+        </For>
       </TableBody>
     </TableRoot>
+  )
+}
+
+function LoadingTableCell(props: { colspan: number }) {
+  return (
+    <TableCell colspan={props.colspan} class="py-0">
+      <Skeleton class="h-8" />
+    </TableCell>
+  )
+}
+
+function ErrorTableCell(props: { colspan: number, error: Error }) {
+  return (
+    <TableCell colspan={props.colspan} class="py-0">
+      <div class="bg-destructive text-destructive-foreground rounded p-2">
+        {props.error.message}
+      </div>
+    </TableCell>
   )
 }

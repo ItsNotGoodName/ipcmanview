@@ -26,12 +26,7 @@ type User struct {
 }
 
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
-	permissions, err := useDahuaPermissions(ctx, u.db)
-	if err != nil {
-		return nil, err
-	}
-
-	dbDevices, err := dahua.ListFatDevices(ctx, u.db, permissions)
+	dbDevices, err := u.db.DahuaListFatDevices(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -50,12 +45,7 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 }
 
 func (u *User) GetDevicesPage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetDevicesPageResp, error) {
-	permissions, err := useDahuaPermissions(ctx, u.db)
-	if err != nil {
-		return nil, err
-	}
-
-	dbDevices, err := dahua.ListFatDevices(ctx, u.db, permissions)
+	dbDevices, err := u.db.DahuaListFatDevices(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -193,19 +183,13 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 }
 
 func (u *User) GetDeviceDetail(ctx context.Context, req *rpc.GetDeviceDetailReq) (*rpc.GetDeviceDetailResp, error) {
-	permissions, err := useDahuaPermissions(ctx, u.db)
+	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
 	if err != nil {
 		return nil, err
 	}
+	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
 
-	device, err := dahua.GetFatDevice(ctx, u.db, permissions, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
-	if err != nil {
-		return nil, err
-	}
-
-	conn := u.dahuaStore.Client(ctx, dahua.NewConn(device))
-
-	v, err := dahua.GetDahuaDetail(ctx, conn.RPC)
+	v, err := dahua.GetDahuaDetail(ctx, client.RPC)
 	if err != nil {
 		return nil, err
 	}
@@ -220,5 +204,108 @@ func (u *User) GetDeviceDetail(ctx context.Context, req *rpc.GetDeviceDetailReq)
 		Vendor:           v.Vendor,
 		OnvifVersion:     v.OnvifVersion,
 		AlgorithmVersion: v.AlgorithmVersion,
+	}, nil
+}
+
+func (u *User) ListDeviceLicenses(ctx context.Context, req *rpc.ListDeviceLicensesReq) (*rpc.ListDeviceLicensesResp, error) {
+	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	if err != nil {
+		return nil, err
+	}
+	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+
+	vv, err := dahua.GetLicenseList(ctx, client.RPC)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*rpc.ListDeviceLicensesResp_License, 0, len(vv))
+	for _, v := range vv {
+		items = append(items, &rpc.ListDeviceLicensesResp_License{
+			AbroadInfo:    v.AbroadInfo,
+			AllType:       v.AllType,
+			DigitChannel:  int32(v.DigitChannel),
+			EffectiveDays: int32(v.EffectiveDays),
+			EffectiveTime: timestamppb.New(v.EffectiveTime),
+			LicenseId:     int32(v.LicenseID),
+			ProductType:   v.ProductType,
+			Status:        int32(v.Status),
+			Username:      v.Username,
+		})
+	}
+
+	return &rpc.ListDeviceLicensesResp{
+		Items: items,
+	}, nil
+}
+
+func (u *User) GetDeviceSoftwareVersion(ctx context.Context, req *rpc.GetDeviceSoftwareVersionReq) (*rpc.GetDeviceSoftwareVersionResp, error) {
+	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	if err != nil {
+		return nil, err
+	}
+	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+
+	v, err := dahua.GetSoftwareVersion(ctx, client.RPC)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.GetDeviceSoftwareVersionResp{
+		Build:                   v.Build,
+		BuildDate:               v.BuildDate,
+		SecurityBaseLineVersion: v.SecurityBaseLineVersion,
+		Version:                 v.Version,
+		WebVersion:              v.WebVersion,
+	}, nil
+}
+
+func (u *User) GetDeviceStatus(ctx context.Context, req *rpc.GetDeviceStatusReq) (*rpc.GetDeviceStatusResp, error) {
+	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	if err != nil {
+		return nil, err
+	}
+	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+
+	v := dahua.GetStatus(ctx, client.Conn, client.RPC)
+
+	return &rpc.GetDeviceStatusResp{
+		Url:              v.URL,
+		Username:         v.Username,
+		Location:         v.Location,
+		Seed:             int32(v.Seed),
+		RpcError:         v.RPCError,
+		RpcState:         v.RPCState,
+		RpcLastLoginTime: timestamppb.New(v.RPCLastLogin),
+	}, nil
+}
+
+func (u *User) ListDeviceStorage(ctx context.Context, req *rpc.ListDeviceStorageReq) (*rpc.ListDeviceStorageResp, error) {
+	device, err := u.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	if err != nil {
+		return nil, err
+	}
+	client := u.dahuaStore.Client(ctx, dahua.NewConn(device))
+
+	vv, err := dahua.GetStorage(ctx, client.RPC)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*rpc.ListDeviceStorageResp_Storage, 0, len(vv))
+	for _, v := range vv {
+		items = append(items, &rpc.ListDeviceStorageResp_Storage{
+			Name:       v.Name,
+			State:      v.State,
+			Path:       v.Path,
+			Type:       v.Type,
+			TotalBytes: v.TotalBytes,
+			UsedBytes:  v.UsedBytes,
+			IsError:    v.IsError,
+		})
+	}
+
+	return &rpc.ListDeviceStorageResp{
+		Items: items,
 	}, nil
 }
