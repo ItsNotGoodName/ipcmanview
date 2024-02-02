@@ -124,6 +124,14 @@ export interface GetHomePageResp {
      * @generated from protobuf field: repeated GetHomePageResp.Device devices = 1;
      */
     devices: GetHomePageResp_Device[];
+    /**
+     * @generated from protobuf field: int64 file_count = 2;
+     */
+    fileCount: bigint;
+    /**
+     * @generated from protobuf field: int64 event_count = 3;
+     */
+    eventCount: bigint;
 }
 /**
  * @generated from protobuf message GetHomePageResp.Device
@@ -1352,7 +1360,9 @@ export const ForgotPasswordReq = new ForgotPasswordReq$Type();
 class GetHomePageResp$Type extends MessageType<GetHomePageResp> {
     constructor() {
         super("GetHomePageResp", [
-            { no: 1, name: "devices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetHomePageResp_Device }
+            { no: 1, name: "devices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetHomePageResp_Device },
+            { no: 2, name: "file_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 3, name: "event_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
         ]);
     }
 }

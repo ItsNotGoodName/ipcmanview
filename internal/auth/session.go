@@ -11,6 +11,15 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
+func generateSession() (string, error) {
+	b := make([]byte, 64)
+	_, err := rand.Read(b)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
+}
+
 type Session struct {
 	SessionID int64
 	UserID    int64
@@ -32,13 +41,12 @@ type CreateUserSessionParams struct {
 	PreviousSession string
 }
 
+// CreateUserSession creates user for admin or when signing up.
 func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionParams) (string, error) {
-	b := make([]byte, 64)
-	_, err := rand.Read(b)
+	session, err := generateSession()
 	if err != nil {
 		return "", err
 	}
-	session := base64.URLEncoding.EncodeToString(b)
 
 	now := time.Now()
 	dbArg := repo.AuthCreateUserSessionParams{
@@ -85,10 +93,12 @@ func createUserSessionAndDeletePrevious(ctx context.Context, db repo.DB, arg rep
 	return tx.Commit()
 }
 
+// DeleteUserSessionBySession removes session by value and is called when signing out.
 func DeleteUserSessionBySession(ctx context.Context, db repo.DB, session string) error {
 	return db.AuthDeleteUserSessionBySession(ctx, session)
 }
 
+// DeleteUserSession revokes session for user.
 func DeleteUserSession(ctx context.Context, db repo.DB, userID int64, sessionID int64) error {
 	return db.AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
 		UserID: userID,
@@ -96,6 +106,7 @@ func DeleteUserSession(ctx context.Context, db repo.DB, userID int64, sessionID 
 	})
 }
 
+// DeleteOtherUserSessions revokes all other sessions for user.
 func DeleteOtherUserSessions(ctx context.Context, db repo.DB, userID int64, currentSessionID int64) error {
 	return db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
 		UserID: userID,
@@ -113,6 +124,7 @@ type TouchUserSessionParams struct {
 	IP               string
 }
 
+// TouchUserSession is called whenever a session is used.
 func TouchUserSession(ctx context.Context, db repo.DB, arg TouchUserSessionParams) error {
 	now := time.Now()
 	if arg.LastIP == arg.IP || arg.LastUsedAt.After(now.Add(-touchSessionThrottle)) {

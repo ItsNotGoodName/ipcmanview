@@ -39,8 +39,20 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		})
 	}
 
+	fileCount, err := u.db.DahuaCountDahuaFiles(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	eventCount, err := u.db.DahuaCountDahuaEvents(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	return &rpc.GetHomePageResp{
-		Devices: devices,
+		Devices:    devices,
+		FileCount:  fileCount,
+		EventCount: eventCount,
 	}, nil
 }
 

@@ -11,6 +11,7 @@ import { ToggleButton } from "@kobalte/core"
 import { formatDate, parseDate } from "~/lib/utils"
 import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
+import { Shared } from "~/components/Shared"
 
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -18,6 +19,7 @@ export function Devices() {
 
   return (
     <LayoutNormal>
+      <Shared.Title>Devices</Shared.Title>
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<PageLoading />}>
           <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>

@@ -9,26 +9,39 @@ import (
 	sq "github.com/Masterminds/squirrel"
 )
 
-func dahuaSelectFilter(ctx context.Context, sb sq.SelectBuilder, joinTableField string) sq.SelectBuilder {
+func DahuaSelectFilter(ctx context.Context, sb sq.SelectBuilder, joinTableField string, levels ...models.DahuaPermissionLevel) sq.SelectBuilder {
 	actor := core.UseActor(ctx)
 
 	if actor.Admin {
 		return sb
 	}
 
+	var level models.DahuaPermissionLevel
+	if len(levels) != 0 {
+		level = levels[0]
+	}
+
 	return sb.
-		Join("dahua_permissions ON dahua_permissions.device_id = " + joinTableField).
-		Where(sq.Expr(`
-			dahua_permissions.user_id = ?
-			OR dahua_permissions.group_id IN (
-				SELECT
-					group_id
-				FROM
-					group_users
-				WHERE
-					group_users.user_id = ?
+		Where(sq.Expr(joinTableField+` IN (
+			SELECT
+				device_id
+			FROM
+				dahua_permissions
+			WHERE
+				dahua_permissions.level > ?
+				AND (
+					dahua_permissions.user_id = ?
+					OR dahua_permissions.group_id IN (
+						SELECT
+							group_id
+						FROM
+							group_users
+						WHERE
+							group_users.user_id = ?
+					)
+				)
 			)
-		`, actor.UserID, actor.UserID))
+		`, level, actor.UserID, actor.UserID))
 }
 
 // DahuaFatDevice
@@ -86,7 +99,7 @@ func (db DB) DahuaListFatDevices(ctx context.Context, args ...DahuaFatDevicePara
 	}
 
 	var res []DahuaFatDevice
-	return res, ssq.Query(ctx, db, &res, dahuaSelectFilter(ctx, sb, "dahua_devices.id"))
+	return res, ssq.Query(ctx, db, &res, DahuaSelectFilter(ctx, sb, "dahua_devices.id"))
 }
 
 func (db DB) DahuaGetFatDevice(ctx context.Context, arg DahuaFatDeviceParams) (DahuaFatDevice, error) {
@@ -101,51 +114,26 @@ func (db DB) DahuaGetFatDevice(ctx context.Context, arg DahuaFatDeviceParams) (D
 	return devices[0], nil
 }
 
-// DahuaDevicePermission
+func (db DB) DahuaCountDahuaFiles(ctx context.Context) (int64, error) {
+	sb := sq.
+		Select("COUNT(*) AS count").
+		From("dahua_files")
 
-// var dahuaListDahuaDevicePermissions = fmt.Sprintf(`
-// SELECT
-//   d.id as device_id,
-//   CASE
-//     WHEN a.user_id IS NOT NULL THEN %d
-//     ELSE max(p.level)
-//   END AS level
-// FROM
-//   dahua_devices AS d
-//   LEFT JOIN dahua_permissions AS p ON p.device_id = d.id
-//   LEFT JOIN admins AS a ON a.user_id = ?1
-// WHERE
-//   -- Allow if user is admin
-//   a.user_id IS NOT NULL
-//   -- Filter by level
-//   OR (
-//     -- Allow if user owns the permission
-//     p.user_id = ?1
-//     -- Allow if user is a part of the group that owns the permission
-//     OR p.group_id IN (
-//       SELECT
-//         group_id
-//       FROM
-//         group_users
-//       WHERE
-//         group_users.user_id = ?1
-//     )
-//   )
-// GROUP BY
-//   d.id
-// 	`, models.DahuaPermissionLevelAdmin)
-//
-// func (db DB) DahuaListDahuaDevicePermissions(ctx context.Context, userID int64) (models.DahuaDevicePermissions, error) {
-// 	rows, err := db.QueryContext(ctx, dahuaListDahuaDevicePermissions, userID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-//
-// 	var res []models.DahuaDevicePermission
-// 	if err := sqlscan.ScanAll(&res, rows); err != nil {
-// 		return nil, err
-// 	}
-//
-// 	return res, nil
-// }
+	var res struct {
+		Count int64
+	}
+	err := ssq.QueryOne(ctx, db, &res, DahuaSelectFilter(ctx, sb, "dahua_files.device_id"))
+	return res.Count, err
+}
+
+func (db DB) DahuaCountDahuaEvents(ctx context.Context) (int64, error) {
+	sb := sq.
+		Select("COUNT(*) AS count").
+		From("dahua_events")
+
+	var res struct {
+		Count int64
+	}
+	err := ssq.QueryOne(ctx, db, &res, DahuaSelectFilter(ctx, sb, "dahua_events.device_id"))
+	return res.Count, err
+}
