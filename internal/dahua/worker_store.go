@@ -6,11 +6,12 @@ import (
 	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/thejerf/suture/v4"
 )
 
-type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device Conn) ([]suture.ServiceToken, error)
+type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device models.Conn) ([]suture.ServiceToken, error)
 
 // WorkerStore manages the lifecycle of workers to devices.
 type WorkerStore struct {
@@ -22,7 +23,7 @@ type WorkerStore struct {
 }
 
 type workerData struct {
-	conn   Conn
+	conn   models.Conn
 	tokens []suture.ServiceToken
 }
 
@@ -35,7 +36,7 @@ func NewWorkerStore(super *suture.Supervisor, factory WorkerFactory) *WorkerStor
 	}
 }
 
-func (s *WorkerStore) create(ctx context.Context, conn Conn) error {
+func (s *WorkerStore) create(ctx context.Context, conn models.Conn) error {
 	tokens, err := s.factory(ctx, s.super, conn)
 	if err != nil {
 		return err
@@ -49,7 +50,7 @@ func (s *WorkerStore) create(ctx context.Context, conn Conn) error {
 	return nil
 }
 
-func (s *WorkerStore) Create(ctx context.Context, device Conn) error {
+func (s *WorkerStore) Create(ctx context.Context, device models.Conn) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 
@@ -61,7 +62,7 @@ func (s *WorkerStore) Create(ctx context.Context, device Conn) error {
 	return s.create(ctx, device)
 }
 
-func (s *WorkerStore) Update(ctx context.Context, device Conn) error {
+func (s *WorkerStore) Update(ctx context.Context, device models.Conn) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 
@@ -98,10 +99,10 @@ func (s *WorkerStore) Delete(id int64) error {
 
 func (s *WorkerStore) Register(bus *event.Bus) *WorkerStore {
 	bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
-		return s.Create(ctx, ConnFrom(evt.Device))
+		return s.Create(ctx, evt.Conn)
 	})
 	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
-		return s.Update(ctx, ConnFrom(evt.Device))
+		return s.Update(ctx, evt.Conn)
 	})
 	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
 		return s.Delete(evt.DeviceID)

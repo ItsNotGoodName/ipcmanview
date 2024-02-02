@@ -70,13 +70,13 @@ func (c Conn) Sync(ctx context.Context) error {
 func (c Conn) haSync(ctx context.Context) error {
 	c.conn.Ready()
 
-	devices, err := c.db.DahuaListFatDevices(ctx)
+	ids, err := c.db.DahuaListDeviceIDs(ctx)
 	if err != nil {
 		return err
 	}
 
-	for _, device := range devices {
-		if err := c.haSyncDevice(ctx, device.DahuaDevice, dahua.ConnFrom(device)); err != nil {
+	for _, id := range ids {
+		if err := c.haSyncDevice(ctx, id); err != nil {
 			return err
 		}
 	}
@@ -84,8 +84,13 @@ func (c Conn) haSync(ctx context.Context) error {
 	return nil
 }
 
-func (c Conn) haSyncDevice(ctx context.Context, device repo.DahuaDevice, conn dahua.Conn) error {
-	client, err := c.store.GetClient(ctx, device.ID)
+func (c Conn) haSyncDevice(ctx context.Context, id int64) error {
+	device, err := c.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{id}})
+	if err != nil {
+		return err
+	}
+
+	client, err := c.store.GetClient(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -218,12 +223,12 @@ func (c Conn) Register(bus *event.Bus) error {
 		bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
 			c.conn.Ready()
 
-			return c.haSyncDevice(ctx, evt.Device.DahuaDevice, dahua.ConnFrom(evt.Device))
+			return c.haSyncDevice(ctx, evt.Conn.ID)
 		})
 		bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
 			c.conn.Ready()
 
-			return c.haSyncDevice(ctx, evt.Device.DahuaDevice, dahua.ConnFrom(evt.Device))
+			return c.haSyncDevice(ctx, evt.Conn.ID)
 		})
 	}
 	bus.OnDahuaEvent(func(ctx context.Context, evt event.DahuaEvent) error {

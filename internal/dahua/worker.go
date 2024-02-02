@@ -20,7 +20,7 @@ import (
 )
 
 func DefaultWorkerFactory(bus *event.Bus, pub pubsub.Pub, db repo.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
-	return func(ctx context.Context, super *suture.Supervisor, device Conn) ([]suture.ServiceToken, error) {
+	return func(ctx context.Context, super *suture.Supervisor, device models.Conn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
 		{
@@ -52,7 +52,7 @@ type EventHooks interface {
 	Event(ctx context.Context, deviceID int64, event dahuacgi.Event)
 }
 
-func NewEventWorker(device Conn, hooks EventHooks) EventWorker {
+func NewEventWorker(device models.Conn, hooks EventHooks) EventWorker {
 	return EventWorker{
 		device: device,
 		hooks:  hooks,
@@ -61,7 +61,7 @@ func NewEventWorker(device Conn, hooks EventHooks) EventWorker {
 
 // EventWorker subscribes to events.
 type EventWorker struct {
-	device Conn
+	device models.Conn
 	hooks  EventHooks
 }
 

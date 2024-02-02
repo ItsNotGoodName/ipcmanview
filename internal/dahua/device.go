@@ -120,13 +120,13 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDev
 		return 0, err
 	}
 
-	device, err := db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{id}})
+	conn, err := db.DahuaGetConn(ctx, id)
 	if err != nil {
 		return 0, err
 	}
 
 	bus.DahuaDeviceCreated(event.DahuaDeviceCreated{
-		Device: device,
+		Conn: conn,
 	})
 
 	return id, err
@@ -211,13 +211,13 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.
 		return err
 	}
 
-	device, err := db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{dbModel.ID}})
+	conn, err := db.DahuaGetConn(ctx, dbModel.ID)
 	if err != nil {
 		return err
 	}
 
 	bus.DahuaDeviceUpdated(event.DahuaDeviceUpdated{
-		Device: device,
+		Conn: conn,
 	})
 
 	return nil

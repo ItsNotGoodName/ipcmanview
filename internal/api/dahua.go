@@ -319,7 +319,7 @@ func (s *Server) DahuaDevicesIDFiles(c echo.Context) error {
 				}
 				break inner
 			case files := <-filesC:
-				res, err := dahua.NewDahuaFiles(files, dahua.GetSeed(client.Conn), client.Conn.Location)
+				res, err := dahua.NewDahuaFiles(files, client.Conn.Seed, client.Conn.Location)
 				if err != nil {
 					return writeStreamError(c, stream, err)
 				}

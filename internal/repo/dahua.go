@@ -159,3 +159,42 @@ func (db DB) DahuaCountDahuaEmails(ctx context.Context) (int64, error) {
 	err := ssq.QueryOne(ctx, db, &res, DahuaSelectFilter(ctx, sb, "dahua_email_messages.device_id", models.DahuaPermissionLevelAdmin))
 	return res.Count, err
 }
+
+func (db DB) DahuaGetConn(ctx context.Context, id int64) (models.Conn, error) {
+	v, err := db.dahuaGetConn(ctx, id)
+	if err != nil {
+		return models.Conn{}, nil
+	}
+
+	return models.Conn{
+		ID:       v.ID,
+		URL:      v.Url.URL,
+		Username: v.Username,
+		Password: v.Password,
+		Location: v.Location.Location,
+		Feature:  v.Feature,
+		Seed:     int(v.Seed),
+	}, nil
+}
+
+func (db DB) DahuaListConn(ctx context.Context, ids []int64) ([]models.Conn, error) {
+	vv, err := db.dahuaListConn(ctx, ids)
+	if err != nil {
+		return nil, nil
+	}
+
+	conns := make([]models.Conn, 0, len(ids))
+	for _, v := range vv {
+		conns = append(conns, models.Conn{
+			ID:       v.ID,
+			URL:      v.Url.URL,
+			Username: v.Username,
+			Password: v.Password,
+			Location: v.Location.Location,
+			Feature:  v.Feature,
+			Seed:     int(v.Seed),
+		})
+	}
+
+	return conns, nil
+}

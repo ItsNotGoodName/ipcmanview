@@ -85,7 +85,7 @@ func ScanReset(ctx context.Context, db repo.DB, deviceID int64) error {
 }
 
 // Scan cannot be called concurrently for the same device.
-func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn, scanType models.DahuaScanType) error {
+func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device models.Conn, scanType models.DahuaScanType) error {
 	fileCursor, err := db.DahuaUpdateFileCursorScanPercent(ctx, repo.DahuaUpdateFileCursorScanPercentParams{
 		DeviceID:    device.ID,
 		ScanPercent: 0,

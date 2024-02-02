@@ -284,14 +284,6 @@ func NewDahuaFiles(files []mediafilefind.FindNextFileInfo, affixSeed int, locati
 	return res, nil
 }
 
-func GetSeed(c Conn) int {
-	if c.Seed != 0 {
-		return c.Seed
-	}
-
-	return int(c.ID)
-}
-
 func GetRPCStatus(ctx context.Context, rpcClient dahuarpc.Client) models.DahuaRPCStatus {
 	rpcState := rpcClient.State(ctx)
 	var rpcError string

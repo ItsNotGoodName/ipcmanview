@@ -669,47 +669,6 @@ func (q *Queries) DahuaGetAferoFileByFileID(ctx context.Context, fileID sql.Null
 	return i, err
 }
 
-const dahuaGetDeviceForStore = `-- name: DahuaGetDeviceForStore :one
-SELECT
-  d.id,
-  d.url,
-  d.username,
-  d.password,
-  d.location,
-  d.feature,
-  coalesce(seed, d.id)
-FROM
-  dahua_devices as d
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
-WHERE
-  id = ?1
-`
-
-type DahuaGetDeviceForStoreRow struct {
-	ID       int64
-	Url      types.URL
-	Username string
-	Password string
-	Location types.Location
-	Feature  models.DahuaFeature
-	Seed     int64
-}
-
-func (q *Queries) DahuaGetDeviceForStore(ctx context.Context, id int64) (DahuaGetDeviceForStoreRow, error) {
-	row := q.db.QueryRowContext(ctx, dahuaGetDeviceForStore, id)
-	var i DahuaGetDeviceForStoreRow
-	err := row.Scan(
-		&i.ID,
-		&i.Url,
-		&i.Username,
-		&i.Password,
-		&i.Location,
-		&i.Feature,
-		&i.Seed,
-	)
-	return i, err
-}
-
 const dahuaGetDeviceName = `-- name: DahuaGetDeviceName :one
 SELECT
   name
@@ -1052,73 +1011,6 @@ func (q *Queries) DahuaGetStream(ctx context.Context, id int64) (DahuaStream, er
 		&i.MediamtxPath,
 	)
 	return i, err
-}
-
-const dahuaListDeviceForStore = `-- name: DahuaListDeviceForStore :many
-SELECT
-  d.id,
-  d.url,
-  d.username,
-  d.password,
-  d.location,
-  d.feature,
-  coalesce(seed, d.id)
-FROM
-  dahua_devices as d
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
-WHERE
-  id IN (/*SLICE:ids*/?)
-`
-
-type DahuaListDeviceForStoreRow struct {
-	ID       int64
-	Url      types.URL
-	Username string
-	Password string
-	Location types.Location
-	Feature  models.DahuaFeature
-	Seed     int64
-}
-
-func (q *Queries) DahuaListDeviceForStore(ctx context.Context, ids []int64) ([]DahuaListDeviceForStoreRow, error) {
-	query := dahuaListDeviceForStore
-	var queryParams []interface{}
-	if len(ids) > 0 {
-		for _, v := range ids {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
-	}
-	rows, err := q.db.QueryContext(ctx, query, queryParams...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []DahuaListDeviceForStoreRow
-	for rows.Next() {
-		var i DahuaListDeviceForStoreRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Url,
-			&i.Username,
-			&i.Password,
-			&i.Location,
-			&i.Feature,
-			&i.Seed,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const dahuaListEventActions = `-- name: DahuaListEventActions :many
@@ -1932,4 +1824,112 @@ WHERE
 func (q *Queries) DahuaUpdateStreamForInternal(ctx context.Context, deviceID int64) error {
 	_, err := q.db.ExecContext(ctx, dahuaUpdateStreamForInternal, deviceID)
 	return err
+}
+
+const dahuaGetConn = `-- name: dahuaGetConn :one
+SELECT
+  d.id,
+  d.url,
+  d.username,
+  d.password,
+  d.location,
+  d.feature,
+  coalesce(seed, d.id)
+FROM
+  dahua_devices as d
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
+WHERE
+  id = ?1
+`
+
+type dahuaGetConnRow struct {
+	ID       int64
+	Url      types.URL
+	Username string
+	Password string
+	Location types.Location
+	Feature  models.DahuaFeature
+	Seed     int64
+}
+
+func (q *Queries) dahuaGetConn(ctx context.Context, id int64) (dahuaGetConnRow, error) {
+	row := q.db.QueryRowContext(ctx, dahuaGetConn, id)
+	var i dahuaGetConnRow
+	err := row.Scan(
+		&i.ID,
+		&i.Url,
+		&i.Username,
+		&i.Password,
+		&i.Location,
+		&i.Feature,
+		&i.Seed,
+	)
+	return i, err
+}
+
+const dahuaListConn = `-- name: dahuaListConn :many
+SELECT
+  d.id,
+  d.url,
+  d.username,
+  d.password,
+  d.location,
+  d.feature,
+  coalesce(seed, d.id)
+FROM
+  dahua_devices as d
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
+WHERE
+  id IN (/*SLICE:ids*/?)
+`
+
+type dahuaListConnRow struct {
+	ID       int64
+	Url      types.URL
+	Username string
+	Password string
+	Location types.Location
+	Feature  models.DahuaFeature
+	Seed     int64
+}
+
+func (q *Queries) dahuaListConn(ctx context.Context, ids []int64) ([]dahuaListConnRow, error) {
+	query := dahuaListConn
+	var queryParams []interface{}
+	if len(ids) > 0 {
+		for _, v := range ids {
+			queryParams = append(queryParams, v)
+		}
+		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
+	} else {
+		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
+	}
+	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []dahuaListConnRow
+	for rows.Next() {
+		var i dahuaListConnRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Url,
+			&i.Username,
+			&i.Password,
+			&i.Location,
+			&i.Feature,
+			&i.Seed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

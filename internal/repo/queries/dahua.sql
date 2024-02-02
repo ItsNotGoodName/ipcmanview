@@ -594,7 +594,7 @@ WHERE
 LIMIT
   ?;
 
--- name: DahuaGetDeviceForStore :one
+-- name: dahuaGetConn :one
 SELECT
   d.id,
   d.url,
@@ -609,7 +609,7 @@ FROM
 WHERE
   id = sqlc.arg ('id');
 
--- name: DahuaListDeviceForStore :many
+-- name: dahuaListConn :many
 SELECT
   d.id,
   d.url,

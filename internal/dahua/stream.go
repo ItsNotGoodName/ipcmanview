@@ -103,24 +103,24 @@ func syncStreams(ctx context.Context, db repo.DB, deviceID int64, args []syncStr
 
 func RegisterStreams(bus *event.Bus, db repo.DB, store *Store) {
 	bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
-		if SupportStreams(evt.Device.DahuaDevice.Feature) {
+		if SupportStreams(evt.Conn.Feature) {
 			// TODO: this should run on a different goroutine
-			client, err := store.GetClient(ctx, evt.Device.ID)
+			client, err := store.GetClient(ctx, evt.Conn.ID)
 			if err != nil {
 				return err
 			}
-			return SyncStreams(ctx, db, evt.Device.DahuaDevice.ID, client.RPC)
+			return SyncStreams(ctx, db, evt.Conn.ID, client.RPC)
 		}
 		return nil
 	})
 	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
-		if SupportStreams(evt.Device.DahuaDevice.Feature) {
+		if SupportStreams(evt.Conn.Feature) {
 			// TODO: this should run on a different goroutine
-			client, err := store.GetClient(ctx, evt.Device.ID)
+			client, err := store.GetClient(ctx, evt.Conn.ID)
 			if err != nil {
 				return err
 			}
-			return SyncStreams(ctx, db, evt.Device.DahuaDevice.ID, client.RPC)
+			return SyncStreams(ctx, db, evt.Conn.ID, client.RPC)
 		}
 		return nil
 	})

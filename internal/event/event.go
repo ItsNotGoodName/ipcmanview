@@ -6,11 +6,11 @@ import (
 )
 
 type DahuaDeviceCreated struct {
-	Device repo.DahuaFatDevice
+	Conn models.Conn
 }
 
 type DahuaDeviceUpdated struct {
-	Device repo.DahuaFatDevice
+	Conn models.Conn
 }
 
 type DahuaDeviceDeleted struct {

@@ -5,12 +5,13 @@ import (
 	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 )
 
-func newStoreClient(conn Conn) storeClient {
+func newStoreClient(conn models.Conn) storeClient {
 	return storeClient{
 		Client: NewClient(conn),
 	}
@@ -35,7 +36,7 @@ func NewStore(db repo.DB) *Store {
 	}
 }
 
-// Store deduplicates device clients.
+// Store holds dahua clients.
 type Store struct {
 	sutureext.ServiceContext
 	db        repo.DB
@@ -43,6 +44,7 @@ type Store struct {
 	clients   map[int64]storeClient
 }
 
+// Close closes all clients.
 func (s *Store) Close() {
 	wg := sync.WaitGroup{}
 
@@ -57,7 +59,7 @@ func (s *Store) Close() {
 	wg.Wait()
 }
 
-func (s *Store) getOrCreateClient(ctx context.Context, conn Conn) Client {
+func (s *Store) getOrCreateClient(ctx context.Context, conn models.Conn) Client {
 	client, ok := s.clients[conn.ID]
 	if !ok {
 		// Not found
@@ -83,21 +85,13 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn Conn) Client {
 
 func (s *Store) GetClient(ctx context.Context, id int64) (Client, error) {
 	s.clientsMu.Lock()
-	dev, err := s.db.DahuaGetDeviceForStore(ctx, id)
+	conn, err := s.db.DahuaGetConn(ctx, id)
 	if err != nil {
 		s.clientsMu.Unlock()
 		return Client{}, err
 	}
 
-	client := s.getOrCreateClient(ctx, Conn{
-		ID:       id,
-		URL:      dev.Url.URL,
-		Username: dev.Username,
-		Password: dev.Password,
-		Location: dev.Location.Location,
-		Feature:  dev.Feature,
-		Seed:     int(dev.Seed),
-	})
+	client := s.getOrCreateClient(ctx, conn)
 	s.clientsMu.Unlock()
 
 	return client, nil
@@ -105,23 +99,15 @@ func (s *Store) GetClient(ctx context.Context, id int64) (Client, error) {
 
 func (s *Store) ListClient(ctx context.Context, ids []int64) ([]Client, error) {
 	s.clientsMu.Lock()
-	devi, err := s.db.DahuaListDeviceForStore(ctx, ids)
+	conns, err := s.db.DahuaListConn(ctx, ids)
 	if err != nil {
 		s.clientsMu.Unlock()
 		return nil, err
 	}
 
 	var clients []Client
-	for _, dev := range devi {
-		clients = append(clients, s.getOrCreateClient(ctx, Conn{
-			ID:       dev.ID,
-			URL:      dev.Url.URL,
-			Username: dev.Username,
-			Password: dev.Password,
-			Location: dev.Location.Location,
-			Feature:  dev.Feature,
-			Seed:     int(dev.Seed),
-		}))
+	for _, conn := range conns {
+		clients = append(clients, s.getOrCreateClient(ctx, conn))
 	}
 	s.clientsMu.Unlock()
 
@@ -129,6 +115,12 @@ func (s *Store) ListClient(ctx context.Context, ids []int64) ([]Client, error) {
 }
 
 func (s *Store) Register(bus *event.Bus) *Store {
+	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
+		s.clientsMu.Lock()
+		s.getOrCreateClient(ctx, evt.Conn)
+		s.clientsMu.Unlock()
+		return nil
+	})
 	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
 		s.clientsMu.Lock()
 		client, found := s.clients[evt.DeviceID]
