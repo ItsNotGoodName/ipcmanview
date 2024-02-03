@@ -137,8 +137,10 @@ func (s *session) Data(r io.Reader) error {
 		log.Warn().Err(err).Str("date", e.GetHeader("Date")).Msg("Failed to parse date")
 	}
 
+	host, _ := core.SplitAddress(s.address)
+
 	dbDevice, err := s.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{
-		IPs: []string{core.SplitAddress(s.address)[0]},
+		IPs: []string{host},
 	})
 	if err != nil {
 		if repo.IsNotFound(err) {

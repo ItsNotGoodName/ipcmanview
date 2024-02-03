@@ -69,7 +69,7 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn models.Conn) Client 
 	} else if !client.Client.Conn.EQ(conn) {
 		// Found but not equal
 
-		// Closing device connection should not block the store
+		// Closing client should not block the store
 		go client.Close(s.Context())
 
 		client = newStoreClient(conn)
@@ -116,10 +116,9 @@ func (s *Store) ListClient(ctx context.Context, ids []int64) ([]Client, error) {
 
 func (s *Store) Register(bus *event.Bus) *Store {
 	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
-		s.clientsMu.Lock()
-		s.getOrCreateClient(ctx, evt.Conn)
-		s.clientsMu.Unlock()
-		return nil
+		// Can't trust event ordering
+		_, err := s.GetClient(ctx, evt.Conn.ID)
+		return err
 	})
 	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
 		s.clientsMu.Lock()
@@ -130,7 +129,7 @@ func (s *Store) Register(bus *event.Bus) *Store {
 		s.clientsMu.Unlock()
 
 		if found {
-			go client.Close(s.Context())
+			client.Close(s.Context())
 		}
 		return nil
 	})

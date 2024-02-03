@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"io"
+	"net"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -14,12 +14,13 @@ import (
 
 type contextKey string
 
-func SplitAddress(address string) [2]string {
-	s := strings.SplitN(address, ":", 2)
-	if len(s) != 2 {
-		return [2]string{address}
+func SplitAddress(address string) (host string, port string) {
+	var err error
+	host, port, err = net.SplitHostPort(address)
+	if err != nil {
+		host = address
 	}
-	return [2]string{s[0], s[1]}
+	return
 }
 
 func Address(host string, port int) string {

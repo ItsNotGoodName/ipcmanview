@@ -60,6 +60,7 @@ type UpdateGroupParams struct {
 func UpdateGroup(ctx context.Context, db repo.DB, dbModel repo.Group, arg UpdateGroupParams) (int64, error) {
 	model := groupFrom(dbModel)
 
+	// Mutate
 	model.Name = arg.Name
 	model.Description = arg.Description
 	model.normalize()

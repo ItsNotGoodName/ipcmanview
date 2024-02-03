@@ -12,7 +12,10 @@ func NewRedirect(httpsPort string) *echo.Echo {
 
 	e.Any("*", func(c echo.Context) error {
 		r := c.Request()
-		http.Redirect(c.Response(), r, "https://"+core.SplitAddress(r.Host)[0]+":"+httpsPort+r.RequestURI, http.StatusMovedPermanently)
+
+		host, _ := core.SplitAddress(r.Host)
+
+		http.Redirect(c.Response(), r, "https://"+host+":"+httpsPort+r.RequestURI, http.StatusMovedPermanently)
 		return nil
 	})
 

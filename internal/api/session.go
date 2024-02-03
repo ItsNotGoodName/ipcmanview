@@ -2,7 +2,6 @@ package api
 
 import (
 	"net/http"
-	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -10,6 +9,51 @@ import (
 )
 
 const cookieKey = "session"
+
+func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			ctx := c.Request().Context()
+
+			cookie, err := c.Cookie(cookieKey)
+			if err != nil {
+				return next(c)
+			}
+
+			session, err := db.AuthGetUserSession(ctx, cookie.Value)
+			if err != nil {
+				if repo.IsNotFound(err) {
+					return next(c)
+				}
+				return err
+			}
+			if auth.UserSessionExpired(session.ExpiredAt.Time) {
+				return next(c)
+			}
+
+			if err := auth.TouchUserSession(ctx, db, auth.TouchUserSessionParams{
+				CurrentSessionID: session.ID,
+				LastUsedAt:       session.LastUsedAt.Time,
+				LastIP:           session.LastIp,
+				IP:               c.RealIP(),
+			}); err != nil {
+				if repo.IsNotFound(err) {
+					return next(c)
+				}
+				return err
+			}
+
+			c.SetRequest(c.Request().WithContext(auth.WithSessionAndActor(c.Request().Context(), auth.Session{
+				SessionID: session.ID,
+				UserID:    session.UserID,
+				Username:  session.Username.String,
+				Admin:     session.Admin,
+				Disabled:  session.UsersDisabledAt.Valid,
+			})))
+			return next(c)
+		}
+	}
+}
 
 type SesionResp struct {
 	Admin    bool   `json:"admin"`
@@ -39,7 +83,7 @@ func (s *Server) Session(c echo.Context) error {
 func (s *Server) SessionPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	// Parse and normalize request
+	// Parse request
 	var req struct {
 		UsernameOrEmail string
 		Password        string
@@ -48,10 +92,9 @@ func (s *Server) SessionPOST(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return err
 	}
-	req.UsernameOrEmail = strings.ToLower(strings.TrimSpace(req.UsernameOrEmail))
 
 	// Get user
-	user, err := s.db.AuthGetUserByUsernameOrEmail(ctx, req.UsernameOrEmail)
+	user, err := auth.GetUserByUsernameOrEmail(ctx, s.db, req.UsernameOrEmail)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Incorrect credentials.").WithInternal(err)
 	}
@@ -59,11 +102,6 @@ func (s *Server) SessionPOST(c echo.Context) error {
 	// Check password
 	if err := auth.CheckUserPassword(user.Password, req.Password); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Incorrect credentials.").WithInternal(err)
-	}
-
-	sessionDuration := auth.DefaultSessionDuration
-	if req.RememberMe {
-		sessionDuration = auth.RememberMeSessionDuration
 	}
 
 	previousSession := ""
@@ -76,7 +114,7 @@ func (s *Server) SessionPOST(c echo.Context) error {
 		UserAgent:       c.Request().UserAgent(),
 		IP:              c.RealIP(),
 		UserID:          user.ID,
-		Duration:        sessionDuration,
+		RememberMe:      req.RememberMe,
 		PreviousSession: previousSession,
 	})
 	if err != nil {
@@ -85,7 +123,7 @@ func (s *Server) SessionPOST(c echo.Context) error {
 
 	// Set cookie
 	c.SetCookie(&http.Cookie{
-		Name:     "session",
+		Name:     cookieKey,
 		Value:    session,
 		Path:     "/",
 		HttpOnly: true,
@@ -98,7 +136,7 @@ func (s *Server) SessionPOST(c echo.Context) error {
 func (s *Server) SessionDELETE(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	cookie, err := c.Cookie("session")
+	cookie, err := c.Cookie(cookieKey)
 	if err != nil {
 		return c.JSON(http.StatusOK, nil)
 	}
@@ -118,46 +156,4 @@ func (s *Server) SessionDELETE(c echo.Context) error {
 	})
 
 	return c.JSON(http.StatusOK, nil)
-}
-
-func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			ctx := c.Request().Context()
-
-			cookie, err := c.Cookie(cookieKey)
-			if err != nil {
-				return next(c)
-			}
-
-			session, err := db.AuthGetUserSession(ctx, cookie.Value)
-			if err != nil {
-				if repo.IsNotFound(err) {
-					return next(c)
-				}
-				return err
-			}
-			if auth.UserSessionExpired(session.ExpiredAt.Time) {
-				return next(c)
-			}
-
-			if err := auth.TouchUserSession(ctx, db, auth.TouchUserSessionParams{
-				CurrentSessionID: session.ID,
-				LastUsedAt:       session.LastUsedAt.Time,
-				LastIP:           session.LastIp,
-				IP:               c.RealIP(),
-			}); err != nil {
-				return err
-			}
-
-			c.SetRequest(c.Request().WithContext(auth.WithSessionAndActor(c.Request().Context(), auth.Session{
-				SessionID: session.ID,
-				UserID:    session.UserID,
-				Username:  session.Username.String,
-				Admin:     session.Admin,
-				Disabled:  session.UsersDisabledAt.Valid,
-			})))
-			return next(c)
-		}
-	}
 }

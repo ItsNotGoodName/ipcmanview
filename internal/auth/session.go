@@ -30,14 +30,14 @@ type Session struct {
 
 var sessionCtxKey contextKey = contextKey("session")
 
-const DefaultSessionDuration = 24 * time.Hour          // 1 Day
-const RememberMeSessionDuration = 365 * 24 * time.Hour // 1 Year
+const defaultSessionDuration = 24 * time.Hour          // 1 Day
+const rememberMeSessionDuration = 365 * 24 * time.Hour // 1 Year
 
 type CreateUserSessionParams struct {
 	UserAgent       string
 	IP              string
 	UserID          int64
-	Duration        time.Duration
+	RememberMe      bool
 	PreviousSession string
 }
 
@@ -48,6 +48,10 @@ func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionPar
 		return "", err
 	}
 
+	sessionDuration := defaultSessionDuration
+	if arg.RememberMe {
+		sessionDuration = rememberMeSessionDuration
+	}
 	now := time.Now()
 	dbArg := repo.AuthCreateUserSessionParams{
 		UserID:     arg.UserID,
@@ -57,7 +61,7 @@ func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionPar
 		LastIp:     arg.IP,
 		LastUsedAt: types.NewTime(now),
 		CreatedAt:  types.NewTime(now),
-		ExpiredAt:  types.NewTime(now.Add(arg.Duration)),
+		ExpiredAt:  types.NewTime(now.Add(sessionDuration)),
 	}
 
 	if arg.PreviousSession != "" {

@@ -15,12 +15,8 @@ type VideoSnapshotConfig struct {
 	Position time.Duration
 }
 
-func VideoSnapshot(ctx context.Context, inputPath, outputFormat string, outputWriter io.Writer, config ...VideoSnapshotConfig) error {
+func VideoSnapshot(ctx context.Context, inputPath, outputFormat string, outputWriter io.Writer, cfg VideoSnapshotConfig) error {
 	var stderr bytes.Buffer
-	var cfg VideoSnapshotConfig
-	if len(config) > 0 {
-		cfg = config[0]
-	}
 
 	// ffmpeg -hide_banner -i file:input.dav -ss 00:00:06.000 -vframes 1 pipe:1.jpg
 	var args []string = []string{
@@ -53,12 +49,8 @@ type ImageSnapshotConfig struct {
 	Height int
 }
 
-func ImageSnapshot(ctx context.Context, inputPath, outputFormat string, outputWriter io.Writer, config ...ImageSnapshotConfig) error {
+func ImageSnapshot(ctx context.Context, inputPath, outputFormat string, outputWriter io.Writer, cfg ImageSnapshotConfig) error {
 	var stderr bytes.Buffer
-	var cfg ImageSnapshotConfig
-	if len(config) > 0 {
-		cfg = config[0]
-	}
 
 	// ffmpeg -hide_banner file:input.jpg -vf scale=320:-1 pipe:1.jpg
 	args := []string{

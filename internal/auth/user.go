@@ -216,3 +216,7 @@ func UpdateUserAdmin(ctx context.Context, db repo.DB, id int64, admin bool) erro
 func CheckUserPassword(hash, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
+
+func GetUserByUsernameOrEmail(ctx context.Context, db repo.DB, usernameOrEmail string) (repo.User, error) {
+	return db.AuthGetUserByUsernameOrEmail(ctx, strings.ToLower(strings.TrimSpace(usernameOrEmail)))
+}
