@@ -553,7 +553,7 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 		return nil, err
 	}
 
-	_, err = auth.UpdateGroup(ctx, a.db, dbGroup, auth.UpdateGroupParams{
+	err = auth.UpdateGroup(ctx, a.db, dbGroup, auth.UpdateGroupParams{
 		Name:        req.Name,
 		Description: req.Description,
 	})

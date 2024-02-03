@@ -87,6 +87,10 @@ type CreateDeviceParams struct {
 }
 
 func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDeviceParams) (int64, error) {
+	if err := core.Admin(ctx); err != nil {
+		return 0, err
+	}
+
 	model := device{
 		Name:     arg.Name,
 		URL:      arg.URL,
@@ -174,8 +178,13 @@ type UpdateDeviceParams struct {
 }
 
 func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.DahuaDevice, arg UpdateDeviceParams) error {
+	if err := core.Admin(ctx); err != nil {
+		return err
+	}
+
 	model := deviceFrom(dbModel)
 
+	// Mutate
 	model.Name = arg.Name
 	model.URL = arg.URL
 	model.Username = arg.Username
@@ -224,16 +233,25 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.
 }
 
 func DeleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) error {
+	if err := core.Admin(ctx); err != nil {
+		return err
+	}
+
 	if err := db.DahuaDeleteDevice(ctx, id); err != nil {
 		return err
 	}
 	bus.DahuaDeviceDeleted(event.DahuaDeviceDeleted{
 		DeviceID: id,
 	})
+
 	return nil
 }
 
 func UpdateDeviceDisabled(ctx context.Context, db repo.DB, id int64, disable bool) error {
+	if err := core.Admin(ctx); err != nil {
+		return err
+	}
+
 	if disable {
 		_, err := db.DahuaUpdateDeviceDisabledAt(ctx, repo.DahuaUpdateDeviceDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),

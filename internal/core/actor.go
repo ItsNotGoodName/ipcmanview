@@ -9,6 +9,7 @@ type ActorType string
 const (
 	ActorTypeSystem = "system"
 	ActorTypeUser   = "user"
+	ActorTypePublic = "public"
 )
 
 type Actor struct {
@@ -17,6 +18,16 @@ type Actor struct {
 	Admin  bool
 }
 
+// WithPublicActor downcasts actor to public.
+func WithPublicActor(ctx context.Context) context.Context {
+	return context.WithValue(ctx, actorCtxKey, Actor{
+		Type:   ActorTypePublic,
+		UserID: 0,
+		Admin:  false,
+	})
+}
+
+// WithUserActor downcasts actor to user.
 func WithUserActor(ctx context.Context, userID int64, admin bool) context.Context {
 	return context.WithValue(ctx, actorCtxKey, Actor{
 		Type:   ActorTypeUser,

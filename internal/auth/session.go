@@ -41,7 +41,6 @@ type CreateUserSessionParams struct {
 	PreviousSession string
 }
 
-// CreateUserSession creates user for admin or when signing up.
 func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionParams) (string, error) {
 	session, err := generateSession()
 	if err != nil {
@@ -97,21 +96,24 @@ func createUserSessionAndDeletePrevious(ctx context.Context, db repo.DB, arg rep
 	return tx.Commit()
 }
 
-// DeleteUserSessionBySession removes session by value and is called when signing out.
 func DeleteUserSessionBySession(ctx context.Context, db repo.DB, session string) error {
 	return db.AuthDeleteUserSessionBySession(ctx, session)
 }
 
-// DeleteUserSession revokes session for user.
 func DeleteUserSession(ctx context.Context, db repo.DB, userID int64, sessionID int64) error {
+	if err := core.UserOrAdmin(ctx, userID); err != nil {
+		return err
+	}
 	return db.AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
 		UserID: userID,
 		ID:     sessionID,
 	})
 }
 
-// DeleteOtherUserSessions revokes all other sessions for user.
 func DeleteOtherUserSessions(ctx context.Context, db repo.DB, userID int64, currentSessionID int64) error {
+	if err := core.UserOrAdmin(ctx, userID); err != nil {
+		return err
+	}
 	return db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
 		UserID: userID,
 		ID:     currentSessionID,
@@ -128,7 +130,6 @@ type TouchUserSessionParams struct {
 	IP               string
 }
 
-// TouchUserSession is called whenever a session is used.
 func TouchUserSession(ctx context.Context, db repo.DB, arg TouchUserSessionParams) error {
 	now := time.Now()
 	if arg.LastIP == arg.IP || arg.LastUsedAt.After(now.Add(-touchSessionThrottle)) {
@@ -157,8 +158,7 @@ func UserSessionExpired(expiredAt time.Time) bool {
 	return expiredAt.Before(time.Now())
 }
 
-func WithSessionAndActor(ctx context.Context, session Session) context.Context {
-	ctx = core.WithUserActor(ctx, session.UserID, session.Admin)
+func WithSession(ctx context.Context, session Session) context.Context {
 	return context.WithValue(ctx, sessionCtxKey, session)
 }
 

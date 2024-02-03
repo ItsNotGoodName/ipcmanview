@@ -13,7 +13,8 @@ const cookieKey = "session"
 func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			ctx := c.Request().Context()
+			r := c.Request()
+			ctx := r.Context()
 
 			cookie, err := c.Cookie(cookieKey)
 			if err != nil {
@@ -43,7 +44,7 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 				return err
 			}
 
-			c.SetRequest(c.Request().WithContext(auth.WithSessionAndActor(c.Request().Context(), auth.Session{
+			c.SetRequest(r.WithContext(auth.WithSession(ctx, auth.Session{
 				SessionID: session.ID,
 				UserID:    session.UserID,
 				Username:  session.Username.String,

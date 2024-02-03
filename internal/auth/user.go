@@ -62,6 +62,15 @@ func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, e
 		return 0, err
 	}
 
+	var (
+		disabled bool
+		admin    bool
+	)
+	if core.UseActor(ctx).Admin {
+		disabled = arg.Disabled
+		admin = arg.Admin
+	}
+
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return 0, nil
@@ -77,14 +86,14 @@ func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, e
 		UpdatedAt: now,
 		DisabledAt: types.NullTime{
 			Time:  now.Time,
-			Valid: arg.Disabled,
+			Valid: disabled,
 		},
 	})
 	if err != nil {
 		return 0, err
 	}
 
-	if arg.Admin {
+	if admin {
 		tx.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
 			UserID:    id,
 			CreatedAt: now,
@@ -104,6 +113,10 @@ type UpdateUserParams struct {
 }
 
 func UpdateUser(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUserParams) error {
+	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
+		return err
+	}
+
 	model := userFrom(dbModel)
 
 	// Mutate
@@ -125,6 +138,9 @@ func UpdateUser(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUs
 }
 
 func DeleteUser(ctx context.Context, db repo.DB, id int64) error {
+	if err := core.UserOrAdmin(ctx, id); err != nil {
+		return err
+	}
 	return db.DeleteUser(ctx, id)
 }
 
@@ -134,6 +150,10 @@ type UpdateUserPasswordParams struct {
 }
 
 func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUserPasswordParams) error {
+	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
+		return err
+	}
+
 	model := userFrom(dbModel)
 
 	// Mutate
@@ -169,6 +189,10 @@ func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, arg 
 }
 
 func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newUsername string) error {
+	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
+		return err
+	}
+
 	model := userFrom(dbModel)
 
 	// Mutate
@@ -188,6 +212,10 @@ func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newU
 }
 
 func UpdateUserDisabled(ctx context.Context, db repo.DB, id int64, disable bool) error {
+	if err := core.Admin(ctx); err != nil {
+		return err
+	}
+
 	if disable {
 		_, err := db.AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
@@ -203,6 +231,10 @@ func UpdateUserDisabled(ctx context.Context, db repo.DB, id int64, disable bool)
 }
 
 func UpdateUserAdmin(ctx context.Context, db repo.DB, id int64, admin bool) error {
+	if err := core.Admin(ctx); err != nil {
+		return err
+	}
+
 	if admin {
 		_, err := db.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
 			UserID:    id,

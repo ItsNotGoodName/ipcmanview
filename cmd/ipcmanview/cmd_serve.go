@@ -132,6 +132,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	// HTTP middleware
 	httpRouter.Use(web.FS(api.Route, rpcserver.Route))
 	httpRouter.Use(api.SessionMiddleware(db))
+	httpRouter.Use(api.ActorMiddleware())
 
 	// API
 	api.

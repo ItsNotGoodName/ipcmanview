@@ -33,6 +33,10 @@ type CreateGroupParams struct {
 }
 
 func CreateGroup(ctx context.Context, db repo.DB, arg CreateGroupParams) (int64, error) {
+	if err := core.Admin(ctx); err != nil {
+		return 0, err
+	}
+
 	model := group{
 		Name:        arg.Name,
 		Description: arg.Description,
@@ -57,7 +61,11 @@ type UpdateGroupParams struct {
 	Description string
 }
 
-func UpdateGroup(ctx context.Context, db repo.DB, dbModel repo.Group, arg UpdateGroupParams) (int64, error) {
+func UpdateGroup(ctx context.Context, db repo.DB, dbModel repo.Group, arg UpdateGroupParams) error {
+	if err := core.Admin(ctx); err != nil {
+		return err
+	}
+
 	model := groupFrom(dbModel)
 
 	// Mutate
@@ -66,22 +74,30 @@ func UpdateGroup(ctx context.Context, db repo.DB, dbModel repo.Group, arg Update
 	model.normalize()
 
 	if err := core.Validate.Struct(model); err != nil {
-		return 0, err
+		return err
 	}
 
-	return db.AuthUpdateGroup(ctx, repo.AuthUpdateGroupParams{
+	_, err := db.AuthUpdateGroup(ctx, repo.AuthUpdateGroupParams{
 		Name:        arg.Name,
 		Description: arg.Description,
 		UpdatedAt:   types.NewTime(time.Now()),
 		ID:          dbModel.ID,
 	})
+	return err
 }
 
 func DeleteGroup(ctx context.Context, db repo.DB, id int64) error {
+	if err := core.Admin(ctx); err != nil {
+		return err
+	}
 	return db.AuthDeleteGroup(ctx, id)
 }
 
 func UpdateGroupDisable(ctx context.Context, db repo.DB, userID int64, disable bool) error {
+	if err := core.Admin(ctx); err != nil {
+		return err
+	}
+
 	if disable {
 		_, err := db.AuthUpdateGroupDisabledAt(ctx, repo.AuthUpdateGroupDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
