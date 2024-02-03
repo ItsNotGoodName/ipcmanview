@@ -6,11 +6,11 @@ import (
 )
 
 type DahuaDeviceCreated struct {
-	Conn models.Conn
+	DeviceID int64
 }
 
 type DahuaDeviceUpdated struct {
-	Conn models.Conn
+	DeviceID int64
 }
 
 type DahuaDeviceDeleted struct {

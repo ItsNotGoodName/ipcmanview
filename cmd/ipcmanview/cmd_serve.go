@@ -97,7 +97,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	dahuaScanLockStore := dahua.NewScanLockStore()
 
 	dahuaWorkerStore := dahua.
-		NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahuaScanLockStore, dahua.NewDefaultEventHooks(bus, db))).
+		NewWorkerStore(super, db, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahuaScanLockStore, dahua.NewDefaultEventHooks(bus, db))).
 		Register(bus)
 	if err := dahuaWorkerStore.Bootstrap(ctx, db, dahuaStore); err != nil {
 		return err

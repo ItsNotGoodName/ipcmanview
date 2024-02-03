@@ -116,8 +116,7 @@ func (s *Store) ListClient(ctx context.Context, ids []int64) ([]Client, error) {
 
 func (s *Store) Register(bus *event.Bus) *Store {
 	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
-		// Can't trust event ordering
-		_, err := s.GetClient(ctx, evt.Conn.ID)
+		_, err := s.GetClient(ctx, evt.DeviceID)
 		return err
 	})
 	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {

@@ -163,7 +163,7 @@ func (db DB) DahuaCountDahuaEmails(ctx context.Context) (int64, error) {
 func (db DB) DahuaGetConn(ctx context.Context, id int64) (models.Conn, error) {
 	v, err := db.dahuaGetConn(ctx, id)
 	if err != nil {
-		return models.Conn{}, nil
+		return models.Conn{}, err
 	}
 
 	return models.Conn{
@@ -180,7 +180,7 @@ func (db DB) DahuaGetConn(ctx context.Context, id int64) (models.Conn, error) {
 func (db DB) DahuaListConn(ctx context.Context, ids []int64) ([]models.Conn, error) {
 	vv, err := db.dahuaListConn(ctx, ids)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	conns := make([]models.Conn, 0, len(ids))

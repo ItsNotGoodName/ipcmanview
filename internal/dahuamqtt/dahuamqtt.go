@@ -223,12 +223,12 @@ func (c Conn) Register(bus *event.Bus) error {
 		bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
 			c.conn.Ready()
 
-			return c.haSyncDevice(ctx, evt.Conn.ID)
+			return c.haSyncDevice(ctx, evt.DeviceID)
 		})
 		bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
 			c.conn.Ready()
 
-			return c.haSyncDevice(ctx, evt.Conn.ID)
+			return c.haSyncDevice(ctx, evt.DeviceID)
 		})
 	}
 	bus.OnDahuaEvent(func(ctx context.Context, evt event.DahuaEvent) error {

@@ -16,6 +16,7 @@ type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device 
 // WorkerStore manages the lifecycle of workers to devices.
 type WorkerStore struct {
 	super   *suture.Supervisor
+	db      repo.DB
 	factory WorkerFactory
 
 	workersMu sync.Mutex
@@ -27,9 +28,10 @@ type workerData struct {
 	tokens []suture.ServiceToken
 }
 
-func NewWorkerStore(super *suture.Supervisor, factory WorkerFactory) *WorkerStore {
+func NewWorkerStore(super *suture.Supervisor, db repo.DB, factory WorkerFactory) *WorkerStore {
 	return &WorkerStore{
 		super:     super,
+		db:        db,
 		factory:   factory,
 		workersMu: sync.Mutex{},
 		workers:   make(map[int64]workerData),
@@ -50,27 +52,37 @@ func (s *WorkerStore) create(ctx context.Context, conn models.Conn) error {
 	return nil
 }
 
-func (s *WorkerStore) Create(ctx context.Context, device models.Conn) error {
+func (s *WorkerStore) Create(ctx context.Context, deviceID int64) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 
-	_, found := s.workers[device.ID]
-	if found {
-		return fmt.Errorf("workers already exists for device by ID: %d", device.ID)
+	conn, err := s.db.DahuaGetConn(ctx, deviceID)
+	if err != nil {
+		return err
 	}
 
-	return s.create(ctx, device)
+	_, found := s.workers[deviceID]
+	if found {
+		return fmt.Errorf("workers already exists for device by ID: %d", deviceID)
+	}
+
+	return s.create(ctx, conn)
 }
 
-func (s *WorkerStore) Update(ctx context.Context, device models.Conn) error {
+func (s *WorkerStore) Update(ctx context.Context, deviceID int64) error {
 	s.workersMu.Lock()
 	defer s.workersMu.Unlock()
 
-	worker, found := s.workers[device.ID]
-	if !found {
-		return fmt.Errorf("workers not found for device by ID: %d", device.ID)
+	conn, err := s.db.DahuaGetConn(ctx, deviceID)
+	if err != nil {
+		return err
 	}
-	if worker.conn.EQ(device) {
+
+	worker, found := s.workers[deviceID]
+	if !found {
+		return fmt.Errorf("workers not found for device by ID: %d", deviceID)
+	}
+	if worker.conn.EQ(conn) {
 		return nil
 	}
 
@@ -78,7 +90,7 @@ func (s *WorkerStore) Update(ctx context.Context, device models.Conn) error {
 		s.super.Remove(st)
 	}
 
-	return s.create(ctx, device)
+	return s.create(ctx, conn)
 }
 
 func (s *WorkerStore) Delete(id int64) error {
@@ -99,10 +111,10 @@ func (s *WorkerStore) Delete(id int64) error {
 
 func (s *WorkerStore) Register(bus *event.Bus) *WorkerStore {
 	bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
-		return s.Create(ctx, evt.Conn)
+		return s.Create(ctx, evt.DeviceID)
 	})
 	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
-		return s.Update(ctx, evt.Conn)
+		return s.Update(ctx, evt.DeviceID)
 	})
 	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
 		return s.Delete(evt.DeviceID)
@@ -115,13 +127,12 @@ func (s *WorkerStore) Bootstrap(ctx context.Context, db repo.DB, store *Store) e
 	if err != nil {
 		return err
 	}
-	clients, err := store.ListClient(ctx, ids)
-	if err != nil {
-		return err
-	}
 
-	for _, conn := range clients {
-		if err := s.Create(ctx, conn.Conn); err != nil {
+	for _, id := range ids {
+		if err := s.Create(ctx, id); err != nil {
+			if repo.IsNotFound(err) {
+				continue
+			}
 			return err
 		}
 	}

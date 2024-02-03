@@ -607,7 +607,8 @@ FROM
   dahua_devices as d
   LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
 WHERE
-  id = sqlc.arg ('id');
+  d.disabled_at IS NULL
+  AND id = sqlc.arg ('id');
 
 -- name: dahuaListConn :many
 SELECT
@@ -622,4 +623,5 @@ FROM
   dahua_devices as d
   LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
 WHERE
-  id IN (sqlc.slice ('ids'));
+  d.disabled_at IS NULL
+  AND id IN (sqlc.slice ('ids'));

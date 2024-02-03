@@ -4,6 +4,7 @@ package event
 import (
 	"context"
 	"errors"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
@@ -11,18 +12,20 @@ import (
 
 func busLogError(err error) {
 	if err != nil {
-		log.Err(err).Str("package", "event").Msg("Failed to handle event")
+		log.Err(err).Str("package", "event").Msg("Failed to emit event")
 	}
 }
 
 func NewBus() *Bus {
 	return &Bus{
+		lock: core.NewLockStore[string](),
 		ServiceContext: sutureext.NewServiceContext("event.Bus"),
 	}
 }
 
 type Bus struct {
 	sutureext.ServiceContext
+	lock *core.LockStore[string]
 	onDahuaDeviceCreated []func(ctx context.Context, event DahuaDeviceCreated) error
 	onDahuaDeviceUpdated []func(ctx context.Context, event DahuaDeviceUpdated) error
 	onDahuaDeviceDeleted []func(ctx context.Context, event DahuaDeviceDeleted) error
@@ -129,50 +132,106 @@ func (b *Bus) OnDahuaCoaxialStatus(h func(ctx context.Context, evt DahuaCoaxialS
 
 
 func (b *Bus) DahuaDeviceCreated(evt DahuaDeviceCreated) {
-	for _, v := range b.onDahuaDeviceCreated {
-		busLogError(v(b.Context(), evt))
+	ctx := b.Context()
+	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
+	if err != nil{
+		busLogError(err)
+		return
 	}
+	for _, v := range b.onDahuaDeviceCreated {
+		busLogError(v(ctx, evt))
+	}
+	unlock()
 }
 
 func (b *Bus) DahuaDeviceUpdated(evt DahuaDeviceUpdated) {
-	for _, v := range b.onDahuaDeviceUpdated {
-		busLogError(v(b.Context(), evt))
+	ctx := b.Context()
+	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
+	if err != nil{
+		busLogError(err)
+		return
 	}
+	for _, v := range b.onDahuaDeviceUpdated {
+		busLogError(v(ctx, evt))
+	}
+	unlock()
 }
 
 func (b *Bus) DahuaDeviceDeleted(evt DahuaDeviceDeleted) {
-	for _, v := range b.onDahuaDeviceDeleted {
-		busLogError(v(b.Context(), evt))
+	ctx := b.Context()
+	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
+	if err != nil{
+		busLogError(err)
+		return
 	}
+	for _, v := range b.onDahuaDeviceDeleted {
+		busLogError(v(ctx, evt))
+	}
+	unlock()
 }
 
 func (b *Bus) DahuaEvent(evt DahuaEvent) {
-	for _, v := range b.onDahuaEvent {
-		busLogError(v(b.Context(), evt))
+	ctx := b.Context()
+	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
+	if err != nil{
+		busLogError(err)
+		return
 	}
+	for _, v := range b.onDahuaEvent {
+		busLogError(v(ctx, evt))
+	}
+	unlock()
 }
 
 func (b *Bus) DahuaEventWorkerConnecting(evt DahuaEventWorkerConnecting) {
-	for _, v := range b.onDahuaEventWorkerConnecting {
-		busLogError(v(b.Context(), evt))
+	ctx := b.Context()
+	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
+	if err != nil{
+		busLogError(err)
+		return
 	}
+	for _, v := range b.onDahuaEventWorkerConnecting {
+		busLogError(v(ctx, evt))
+	}
+	unlock()
 }
 
 func (b *Bus) DahuaEventWorkerConnect(evt DahuaEventWorkerConnect) {
-	for _, v := range b.onDahuaEventWorkerConnect {
-		busLogError(v(b.Context(), evt))
+	ctx := b.Context()
+	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
+	if err != nil{
+		busLogError(err)
+		return
 	}
+	for _, v := range b.onDahuaEventWorkerConnect {
+		busLogError(v(ctx, evt))
+	}
+	unlock()
 }
 
 func (b *Bus) DahuaEventWorkerDisconnect(evt DahuaEventWorkerDisconnect) {
-	for _, v := range b.onDahuaEventWorkerDisconnect {
-		busLogError(v(b.Context(), evt))
+	ctx := b.Context()
+	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
+	if err != nil{
+		busLogError(err)
+		return
 	}
+	for _, v := range b.onDahuaEventWorkerDisconnect {
+		busLogError(v(ctx, evt))
+	}
+	unlock()
 }
 
 func (b *Bus) DahuaCoaxialStatus(evt DahuaCoaxialStatus) {
-	for _, v := range b.onDahuaCoaxialStatus {
-		busLogError(v(b.Context(), evt))
+	ctx := b.Context()
+	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
+	if err != nil{
+		busLogError(err)
+		return
 	}
+	for _, v := range b.onDahuaCoaxialStatus {
+		busLogError(v(ctx, evt))
+	}
+	unlock()
 }
 

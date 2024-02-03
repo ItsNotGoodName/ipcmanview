@@ -20,18 +20,20 @@ import (
 
 func busLogError(err error) {
 	if err != nil {
-		log.Err(err).Str("package", "{{ .Package }}").Msg("Failed to handle event")
+		log.Err(err).Str("package", "{{ .Package }}").Msg("Failed to emit event")
 	}
 }
 
 func NewBus() *Bus {
 	return &Bus{
+		lock: core.NewLockStore[string](),
 		ServiceContext: sutureext.NewServiceContext("{{ .Package }}.Bus"),
 	}
 }
 
 type Bus struct {
 	sutureext.ServiceContext
+	lock *core.LockStore[string]
 {{- range .Events }}
 	on{{.}} []func(ctx context.Context, event {{ $.EventPackage }}{{ . }}) error
 {{- end }}
@@ -58,9 +60,16 @@ func (b *Bus) On{{ . }}(h func(ctx context.Context, evt {{ $.EventPackage }}{{ .
 
 {{ range .Events }}
 func (b *Bus) {{ . }}(evt {{ $.EventPackage }}{{ . }}) {
-	for _, v := range b.on{{ . }} {
-		busLogError(v(b.Context(), evt))
+	ctx := b.Context()
+	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
+	if err != nil{
+		busLogError(err)
+		return
 	}
+	for _, v := range b.on{{ . }} {
+		busLogError(v(ctx, evt))
+	}
+	unlock()
 }
 {{ end }}
 `
@@ -97,6 +106,7 @@ func main() {
 		Imports: []string{
 			"context",
 			"errors",
+			"github.com/ItsNotGoodName/ipcmanview/internal/core",
 			"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub",
 			"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext",
 			"github.com/rs/zerolog/log",
