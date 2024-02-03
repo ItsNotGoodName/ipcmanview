@@ -124,8 +124,9 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDev
 		return 0, err
 	}
 
-	bus.DahuaDeviceCreated(event.DahuaDeviceCreated{
+	bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
 		DeviceID: id,
+		Created:  true,
 	})
 
 	return id, err
@@ -215,8 +216,9 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.
 		return err
 	}
 
-	bus.DahuaDeviceUpdated(event.DahuaDeviceUpdated{
+	bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
 		DeviceID: dbModel.ID,
+		Updated:  true,
 	})
 
 	return nil
@@ -230,14 +232,15 @@ func DeleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) err
 	if err := db.DahuaDeleteDevice(ctx, id); err != nil {
 		return err
 	}
-	bus.DahuaDeviceDeleted(event.DahuaDeviceDeleted{
+	bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
 		DeviceID: id,
+		Deleted:  true,
 	})
 
 	return nil
 }
 
-func UpdateDeviceDisabled(ctx context.Context, db repo.DB, id int64, disable bool) error {
+func UpdateDeviceDisabled(ctx context.Context, db repo.DB, bus *event.Bus, id int64, disable bool) error {
 	if err := core.Admin(ctx); err != nil {
 		return err
 	}
@@ -247,11 +250,19 @@ func UpdateDeviceDisabled(ctx context.Context, db repo.DB, id int64, disable boo
 			DisabledAt: types.NewNullTime(time.Now()),
 			ID:         id,
 		})
+		bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
+			DeviceID: id,
+			Disabled: true,
+		})
 		return err
 	}
 	_, err := db.DahuaUpdateDeviceDisabledAt(ctx, repo.DahuaUpdateDeviceDisabledAtParams{
 		DisabledAt: types.NullTime{},
 		ID:         id,
+	})
+	bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
+		DeviceID: id,
+		Enabled:  true,
 	})
 	return err
 }

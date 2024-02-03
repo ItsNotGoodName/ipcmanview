@@ -110,14 +110,15 @@ func (s *WorkerStore) Delete(id int64) error {
 }
 
 func (s *WorkerStore) Register(bus *event.Bus) *WorkerStore {
-	bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
-		return s.Create(ctx, evt.DeviceID)
-	})
-	bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
-		return s.Update(ctx, evt.DeviceID)
-	})
-	bus.OnDahuaDeviceDeleted(func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
-		return s.Delete(evt.DeviceID)
+	bus.OnDahuaDeviceChanged(func(ctx context.Context, evt event.DahuaDeviceChanged) error {
+		if evt.Created || evt.Enabled {
+			return s.Create(ctx, evt.DeviceID)
+		} else if evt.Updated {
+			return s.Update(ctx, evt.DeviceID)
+		} else if evt.Deleted || evt.Disabled {
+			return s.Delete(evt.DeviceID)
+		}
+		return nil
 	})
 	return s
 }

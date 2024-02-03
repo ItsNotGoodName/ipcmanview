@@ -220,12 +220,7 @@ func NewEvent(v repo.DahuaEvent) Event {
 
 func (c Conn) Register(bus *event.Bus) error {
 	if c.haEnable {
-		bus.OnDahuaDeviceCreated(func(ctx context.Context, evt event.DahuaDeviceCreated) error {
-			c.conn.Ready()
-
-			return c.haSyncDevice(ctx, evt.DeviceID)
-		})
-		bus.OnDahuaDeviceUpdated(func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
+		bus.OnDahuaDeviceChanged(func(ctx context.Context, evt event.DahuaDeviceChanged) error {
 			c.conn.Ready()
 
 			return c.haSyncDevice(ctx, evt.DeviceID)

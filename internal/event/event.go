@@ -5,16 +5,13 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-type DahuaDeviceCreated struct {
+type DahuaDeviceChanged struct {
 	DeviceID int64
-}
-
-type DahuaDeviceUpdated struct {
-	DeviceID int64
-}
-
-type DahuaDeviceDeleted struct {
-	DeviceID int64
+	Created  bool
+	Updated  bool
+	Deleted  bool
+	Disabled bool
+	Enabled  bool
 }
 
 type DahuaEvent struct {

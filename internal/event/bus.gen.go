@@ -26,9 +26,7 @@ func NewBus() *Bus {
 type Bus struct {
 	sutureext.ServiceContext
 	lock *core.LockStore[string]
-	onDahuaDeviceCreated []func(ctx context.Context, event DahuaDeviceCreated) error
-	onDahuaDeviceUpdated []func(ctx context.Context, event DahuaDeviceUpdated) error
-	onDahuaDeviceDeleted []func(ctx context.Context, event DahuaDeviceDeleted) error
+	onDahuaDeviceChanged []func(ctx context.Context, event DahuaDeviceChanged) error
 	onDahuaEvent []func(ctx context.Context, event DahuaEvent) error
 	onDahuaEventWorkerConnecting []func(ctx context.Context, event DahuaEventWorkerConnecting) error
 	onDahuaEventWorkerConnect []func(ctx context.Context, event DahuaEventWorkerConnect) error
@@ -37,21 +35,7 @@ type Bus struct {
 }
 
 func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
-	b.OnDahuaDeviceCreated(func(ctx context.Context, evt DahuaDeviceCreated) error {
-		err := pub.Publish(ctx, evt)
-		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
-			return nil
-		}
-		return err
-	})
-	b.OnDahuaDeviceUpdated(func(ctx context.Context, evt DahuaDeviceUpdated) error {
-		err := pub.Publish(ctx, evt)
-		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
-			return nil
-		}
-		return err
-	})
-	b.OnDahuaDeviceDeleted(func(ctx context.Context, evt DahuaDeviceDeleted) error {
+	b.OnDahuaDeviceChanged(func(ctx context.Context, evt DahuaDeviceChanged) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
@@ -97,16 +81,8 @@ func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 }
 
 
-func (b *Bus) OnDahuaDeviceCreated(h func(ctx context.Context, evt DahuaDeviceCreated) error) {
-	b.onDahuaDeviceCreated = append(b.onDahuaDeviceCreated, h)
-}
-
-func (b *Bus) OnDahuaDeviceUpdated(h func(ctx context.Context, evt DahuaDeviceUpdated) error) {
-	b.onDahuaDeviceUpdated = append(b.onDahuaDeviceUpdated, h)
-}
-
-func (b *Bus) OnDahuaDeviceDeleted(h func(ctx context.Context, evt DahuaDeviceDeleted) error) {
-	b.onDahuaDeviceDeleted = append(b.onDahuaDeviceDeleted, h)
+func (b *Bus) OnDahuaDeviceChanged(h func(ctx context.Context, evt DahuaDeviceChanged) error) {
+	b.onDahuaDeviceChanged = append(b.onDahuaDeviceChanged, h)
 }
 
 func (b *Bus) OnDahuaEvent(h func(ctx context.Context, evt DahuaEvent) error) {
@@ -131,40 +107,14 @@ func (b *Bus) OnDahuaCoaxialStatus(h func(ctx context.Context, evt DahuaCoaxialS
 
 
 
-func (b *Bus) DahuaDeviceCreated(evt DahuaDeviceCreated) {
+func (b *Bus) DahuaDeviceChanged(evt DahuaDeviceChanged) {
 	ctx := b.Context()
 	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
 	if err != nil{
 		busLogError(err)
 		return
 	}
-	for _, v := range b.onDahuaDeviceCreated {
-		busLogError(v(ctx, evt))
-	}
-	unlock()
-}
-
-func (b *Bus) DahuaDeviceUpdated(evt DahuaDeviceUpdated) {
-	ctx := b.Context()
-	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
-	if err != nil{
-		busLogError(err)
-		return
-	}
-	for _, v := range b.onDahuaDeviceUpdated {
-		busLogError(v(ctx, evt))
-	}
-	unlock()
-}
-
-func (b *Bus) DahuaDeviceDeleted(evt DahuaDeviceDeleted) {
-	ctx := b.Context()
-	unlock, err := b.lock.Lock(ctx, evt.EventTopic())
-	if err != nil{
-		busLogError(err)
-		return
-	}
-	for _, v := range b.onDahuaDeviceDeleted {
+	for _, v := range b.onDahuaDeviceChanged {
 		busLogError(v(ctx, evt))
 	}
 	unlock()
