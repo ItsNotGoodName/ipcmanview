@@ -218,7 +218,7 @@ func NewEvent(v repo.DahuaEvent) Event {
 		Code:      v.Code,
 		Action:    v.Action,
 		Index:     int(v.Index),
-		Data:      v.Data,
+		Data:      v.Data.RawMessage,
 		CreatedAt: v.CreatedAt.Time,
 		EventType: dahuaEventType,
 	}
@@ -226,10 +226,14 @@ func NewEvent(v repo.DahuaEvent) Event {
 
 func (c Conn) Register(bus *event.Bus) error {
 	if c.haEnable {
-		// bus.OnDahuaDeviceAction(func(ctx context.Context, evt event.DahuaDeviceAction) error {
-		// 	c.conn.Ready()
-		// 	return c.haSyncDevice(ctx, evt.DeviceID)
-		// })
+		bus.OnEventCreated(func(ctx context.Context, evt event.EventCreated) error {
+			switch evt.Event.Action {
+			case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
+				c.conn.Ready()
+				return c.haSyncDevice(ctx, event.UseDataDahuaDevice(evt.Event))
+			}
+			return nil
+		})
 	}
 	bus.OnDahuaEvent(func(ctx context.Context, evt event.DahuaEvent) error {
 		c.conn.Ready()

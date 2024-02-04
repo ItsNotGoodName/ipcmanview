@@ -83,9 +83,9 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn models.Conn) Client 
 	return client.Client
 }
 
-func (s *Store) GetClient(ctx context.Context, id int64) (Client, error) {
+func (s *Store) GetClient(ctx context.Context, deviceID int64) (Client, error) {
 	s.clientsMu.Lock()
-	conn, err := s.db.DahuaGetConn(ctx, id)
+	conn, err := s.db.DahuaGetConn(ctx, deviceID)
 	if err != nil {
 		s.clientsMu.Unlock()
 		return Client{}, err
@@ -97,9 +97,9 @@ func (s *Store) GetClient(ctx context.Context, id int64) (Client, error) {
 	return client, nil
 }
 
-func (s *Store) ListClient(ctx context.Context, ids []int64) ([]Client, error) {
+func (s *Store) ListClient(ctx context.Context) ([]Client, error) {
 	s.clientsMu.Lock()
-	conns, err := s.db.DahuaListConn(ctx, ids)
+	conns, err := s.db.DahuaListConn(ctx)
 	if err != nil {
 		s.clientsMu.Unlock()
 		return nil, err
@@ -114,27 +114,38 @@ func (s *Store) ListClient(ctx context.Context, ids []int64) ([]Client, error) {
 	return clients, nil
 }
 
+func (s *Store) DeleteClient(ctx context.Context, deviceID int64) error {
+	s.clientsMu.Lock()
+	client, found := s.clients[deviceID]
+	if found {
+		delete(s.clients, deviceID)
+	}
+	s.clientsMu.Unlock()
+
+	if found {
+		client.Close(s.Context())
+	}
+	return nil
+}
+
 func (s *Store) Register(bus *event.Bus) *Store {
-	// bus.OnDahuaDeviceAction(func(ctx context.Context, evt event.DahuaDeviceAction) error {
-	// 	switch evt.Action {
-	// 	case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated, event.ActionDahuaDeviceEnabled:
-	// 		_, err := s.GetClient(ctx, evt.DeviceID)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	case event.ActionDahuaDeviceDeleted, event.ActionDahuaDeviceDisabled:
-	// 		s.clientsMu.Lock()
-	// 		client, found := s.clients[evt.DeviceID]
-	// 		if found {
-	// 			delete(s.clients, evt.DeviceID)
-	// 		}
-	// 		s.clientsMu.Unlock()
-	//
-	// 		if found {
-	// 			client.Close(s.Context())
-	// 		}
-	// 	}
-	// 	return nil
-	// })
+	bus.OnEventCreated(func(ctx context.Context, evt event.EventCreated) error {
+		switch evt.Event.Action {
+		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
+			deviceID := event.UseDataDahuaDevice(evt.Event)
+
+			if _, err := s.GetClient(ctx, deviceID); err != nil {
+				if repo.IsNotFound(err) {
+					return s.DeleteClient(ctx, deviceID)
+				}
+				return err
+			}
+		case event.ActionDahuaDeviceDeleted:
+			deviceID := event.UseDataDahuaDevice(evt.Event)
+
+			return s.DeleteClient(ctx, deviceID)
+		}
+		return nil
+	})
 	return s
 }

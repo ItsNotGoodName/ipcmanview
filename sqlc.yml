@@ -17,7 +17,7 @@ sql:
           - column: "settings.default_location"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.Location"
           - db_type: "JSON"
-            go_type: "encoding/json.RawMessage"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.JSON"
           - column: "dahua_files.flags"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.StringSlice"
           - column: "dahua_files.events"

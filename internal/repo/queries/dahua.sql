@@ -608,7 +608,26 @@ FROM
   LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
 WHERE
   d.disabled_at IS NULL
-  AND id = sqlc.arg ('id');
+  AND id = sqlc.arg ('id')
+  AND (
+    true = sqlc.arg ('admin')
+    OR id IN (
+      SELECT
+        device_id
+      FROM
+        dahua_permissions
+      WHERE
+        dahua_permissions.user_id = sqlc.arg ('user_id')
+        OR dahua_permissions.group_id IN (
+          SELECT
+            group_id
+          FROM
+            group_users
+          WHERE
+            group_users.user_id = sqlc.arg ('user_id')
+        )
+    )
+  );
 
 -- name: dahuaListConn :many
 SELECT
@@ -624,4 +643,22 @@ FROM
   LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
 WHERE
   d.disabled_at IS NULL
-  AND id IN (sqlc.slice ('ids'));
+  AND (
+    true = sqlc.arg ('admin')
+    OR id IN (
+      SELECT
+        device_id
+      FROM
+        dahua_permissions
+      WHERE
+        dahua_permissions.user_id = sqlc.arg ('user_id')
+        OR dahua_permissions.group_id IN (
+          SELECT
+            group_id
+          FROM
+            group_users
+          WHERE
+            group_users.user_id = sqlc.arg ('user_id')
+        )
+    )
+  );

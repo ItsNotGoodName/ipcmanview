@@ -19,6 +19,8 @@ CREATE UNIQUE INDEX `groups_name` ON `groups` (`name`);
 CREATE TABLE `group_users` (`user_id` integer NOT NULL, `group_id` integer NOT NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON UPDATE CASCADE ON DELETE CASCADE, CONSTRAINT `1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "group_users_user_id_group_id" to table: "group_users"
 CREATE UNIQUE INDEX `group_users_user_id_group_id` ON `group_users` (`user_id`, `group_id`);
+-- create "events" table
+CREATE TABLE `events` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `action` text NOT NULL, `data` json NOT NULL, `actor` text NOT NULL, `user_id` integer NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE SET NULL);
 -- create "dahua_devices" table
 CREATE TABLE `dahua_devices` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `name` text NOT NULL, `ip` text NOT NULL, `url` text NOT NULL, `username` text NOT NULL, `password` text NOT NULL, `location` text NOT NULL, `feature` integer NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL, `disabled_at` datetime NULL);
 -- create index "dahua_devices_name" to table: "dahua_devices"
@@ -153,6 +155,8 @@ DROP INDEX `dahua_devices_ip`;
 DROP INDEX `dahua_devices_name`;
 -- reverse: create "dahua_devices" table
 DROP TABLE `dahua_devices`;
+-- reverse: create "events" table
+DROP TABLE `events`;
 -- reverse: create index "group_users_user_id_group_id" to table: "group_users"
 DROP INDEX `group_users_user_id_group_id`;
 -- reverse: create "group_users" table

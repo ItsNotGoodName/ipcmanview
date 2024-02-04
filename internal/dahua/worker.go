@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"sync"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
@@ -18,6 +19,115 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/thejerf/suture/v4"
 )
+
+type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device models.Conn) ([]suture.ServiceToken, error)
+
+// WorkerManager manages devices workers.
+type WorkerManager struct {
+	super   *suture.Supervisor
+	factory WorkerFactory
+
+	workersMu sync.Mutex
+	workers   map[int64]workerData
+}
+
+type workerData struct {
+	conn   models.Conn
+	tokens []suture.ServiceToken
+}
+
+func NewWorkerManager(super *suture.Supervisor, factory WorkerFactory) *WorkerManager {
+	return &WorkerManager{
+		super:     super,
+		factory:   factory,
+		workersMu: sync.Mutex{},
+		workers:   make(map[int64]workerData),
+	}
+}
+
+func (m *WorkerManager) Upsert(ctx context.Context, conn models.Conn) error {
+	m.workersMu.Lock()
+	defer m.workersMu.Unlock()
+
+	worker, found := m.workers[conn.ID]
+	if found {
+		if worker.conn.EQ(conn) {
+			return nil
+		}
+
+		for _, st := range worker.tokens {
+			m.super.Remove(st)
+		}
+	}
+
+	tokens, err := m.factory(ctx, m.super, conn)
+	if err != nil {
+		return err
+	}
+
+	m.workers[conn.ID] = workerData{
+		conn:   conn,
+		tokens: tokens,
+	}
+
+	return nil
+}
+
+func (m *WorkerManager) Delete(id int64) error {
+	m.workersMu.Lock()
+	worker, found := m.workers[id]
+	if !found {
+		m.workersMu.Unlock()
+		return nil
+	}
+
+	for _, token := range worker.tokens {
+		m.super.Remove(token)
+	}
+	delete(m.workers, id)
+	m.workersMu.Unlock()
+	return nil
+}
+
+func (m *WorkerManager) Register(bus *event.Bus, db repo.DB) *WorkerManager {
+	bus.OnEventCreated(func(ctx context.Context, evt event.EventCreated) error {
+		switch evt.Event.Action {
+		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
+			deviceID := event.UseDataDahuaDevice(evt.Event)
+
+			conn, err := db.DahuaGetConn(ctx, deviceID)
+			if err != nil {
+				if repo.IsNotFound(err) {
+					return m.Delete(deviceID)
+				}
+				return err
+			}
+
+			return m.Upsert(ctx, conn)
+		case event.ActionDahuaDeviceDeleted:
+			deviceID := event.UseDataDahuaDevice(evt.Event)
+
+			m.Delete(deviceID)
+		}
+		return nil
+	})
+	return m
+}
+
+func (m *WorkerManager) Bootstrap(ctx context.Context, db repo.DB, store *Store) error {
+	conns, err := db.DahuaListConn(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, conn := range conns {
+		if err := m.Upsert(ctx, conn); err != nil {
+			return err
+		}
+	}
+
+	return err
+}
 
 func DefaultWorkerFactory(bus *event.Bus, pub pubsub.Pub, db repo.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
 	return func(ctx context.Context, super *suture.Supervisor, device models.Conn) ([]suture.ServiceToken, error) {

@@ -102,19 +102,23 @@ func syncStreams(ctx context.Context, db repo.DB, deviceID int64, args []syncStr
 }
 
 func RegisterStreams(bus *event.Bus, db repo.DB, store *Store) {
-	// bus.OnDahuaDeviceAction(func(ctx context.Context, evt event.DahuaDeviceAction) error {
-	// 	if evt.Action == event.ActionDahuaDeviceDisabled {
-	// 		return nil
-	// 	}
-	//
-	// 	client, err := store.GetClient(ctx, evt.DeviceID)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	//
-	// 	if SupportStreams(client.Conn.Feature) {
-	// 		return SyncStreams(ctx, db, evt.DeviceID, client.RPC)
-	// 	}
-	// 	return nil
-	// })
+	bus.OnEventCreated(func(ctx context.Context, evt event.EventCreated) error {
+		switch evt.Event.Action {
+		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
+			deviceID := event.UseDataDahuaDevice(evt.Event)
+
+			client, err := store.GetClient(ctx, deviceID)
+			if err != nil {
+				if repo.IsNotFound(err) {
+					return nil
+				}
+				return err
+			}
+
+			if SupportStreams(client.Conn.Feature) {
+				return SyncStreams(ctx, db, deviceID, client.RPC)
+			}
+		}
+		return nil
+	})
 }

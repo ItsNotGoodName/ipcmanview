@@ -85,7 +85,7 @@ func (e DefaultEventHooks) Event(ctx context.Context, deviceID int64, evt dahuac
 		Code:      evt.Code,
 		Action:    evt.Action,
 		Index:     int64(evt.Index),
-		Data:      evt.Data,
+		Data:      types.NewJSON(evt.Data),
 		CreatedAt: types.NewTime(time.Now()),
 	}
 	if !eventRule.IgnoreDb {

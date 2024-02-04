@@ -34,7 +34,7 @@ func (q *Queries) GetEventCursor(ctx context.Context) (int64, error) {
 
 const nextEventByCursor = `-- name: NextEventByCursor :one
 SELECT
-  id, "action", slug, actor, user_id, created_at
+  id, "action", data, actor, user_id, created_at
 from
   events
 WHERE
@@ -49,7 +49,7 @@ func (q *Queries) NextEventByCursor(ctx context.Context, id int64) (Event, error
 	err := row.Scan(
 		&i.ID,
 		&i.Action,
-		&i.Slug,
+		&i.Data,
 		&i.Actor,
 		&i.UserID,
 		&i.CreatedAt,
@@ -59,14 +59,14 @@ func (q *Queries) NextEventByCursor(ctx context.Context, id int64) (Event, error
 
 const createEvent = `-- name: createEvent :one
 INSERT INTO
-  events (action, slug, user_id, actor, created_at)
+  events (action, data, user_id, actor, created_at)
 VALUES
   (?, ?, ?, ?, ?) RETURNING id
 `
 
 type createEventParams struct {
 	Action    models.EventAction
-	Slug      string
+	Data      types.JSON
 	UserID    sql.NullInt64
 	Actor     core.ActorType
 	CreatedAt types.Time
@@ -75,7 +75,7 @@ type createEventParams struct {
 func (q *Queries) createEvent(ctx context.Context, arg createEventParams) (int64, error) {
 	row := q.db.QueryRowContext(ctx, createEvent,
 		arg.Action,
-		arg.Slug,
+		arg.Data,
 		arg.UserID,
 		arg.Actor,
 		arg.CreatedAt,

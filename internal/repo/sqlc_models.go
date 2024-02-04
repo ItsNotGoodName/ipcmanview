@@ -6,7 +6,6 @@ package repo
 
 import (
 	"database/sql"
-	"encoding/json"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -69,7 +68,7 @@ type DahuaEvent struct {
 	Code      string
 	Action    string
 	Index     int64
-	Data      json.RawMessage
+	Data      types.JSON
 	CreatedAt types.Time
 }
 
@@ -176,7 +175,7 @@ type DahuaThumbnail struct {
 type Event struct {
 	ID        int64
 	Action    models.EventAction
-	Slug      string
+	Data      types.JSON
 	Actor     core.ActorType
 	UserID    sql.NullInt64
 	CreatedAt types.Time

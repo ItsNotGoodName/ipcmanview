@@ -161,7 +161,12 @@ func (db DB) DahuaCountDahuaEmails(ctx context.Context) (int64, error) {
 }
 
 func (db DB) DahuaGetConn(ctx context.Context, id int64) (models.Conn, error) {
-	v, err := db.dahuaGetConn(ctx, id)
+	actor := core.UseActor(ctx)
+	v, err := db.dahuaGetConn(ctx, dahuaGetConnParams{
+		ID:     id,
+		Admin:  actor.Admin,
+		UserID: core.NewNullInt64(actor.UserID),
+	})
 	if err != nil {
 		return models.Conn{}, err
 	}
@@ -177,13 +182,17 @@ func (db DB) DahuaGetConn(ctx context.Context, id int64) (models.Conn, error) {
 	}, nil
 }
 
-func (db DB) DahuaListConn(ctx context.Context, ids []int64) ([]models.Conn, error) {
-	vv, err := db.dahuaListConn(ctx, ids)
+func (db DB) DahuaListConn(ctx context.Context) ([]models.Conn, error) {
+	actor := core.UseActor(ctx)
+	vv, err := db.dahuaListConn(ctx, dahuaListConnParams{
+		Admin:  actor.Admin,
+		UserID: core.NewNullInt64(actor.UserID),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	conns := make([]models.Conn, 0, len(ids))
+	conns := make([]models.Conn, 0, len(vv))
 	for _, v := range vv {
 		conns = append(conns, models.Conn{
 			ID:       v.ID,

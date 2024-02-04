@@ -55,7 +55,7 @@ CREATE TABLE group_users (
 CREATE TABLE events (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   action TEXT NOT NULL,
-  slug TEXT NOT NULL,
+  data JSON NOT NULL,
   actor TEXT NOT NULL,
   user_id INTEGER,
   created_at DATETIME NOT NULL,

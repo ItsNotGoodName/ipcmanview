@@ -8,8 +8,6 @@ package repo
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
-	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -235,7 +233,7 @@ type DahuaCreateEventParams struct {
 	Code      string
 	Action    string
 	Index     int64
-	Data      json.RawMessage
+	Data      types.JSON
 	CreatedAt types.Time
 }
 
@@ -694,9 +692,9 @@ WHERE
   id = ?
 `
 
-func (q *Queries) DahuaGetEventData(ctx context.Context, id int64) (json.RawMessage, error) {
+func (q *Queries) DahuaGetEventData(ctx context.Context, id int64) (types.JSON, error) {
 	row := q.db.QueryRowContext(ctx, dahuaGetEventData, id)
-	var data json.RawMessage
+	var data types.JSON
 	err := row.Scan(&data)
 	return data, err
 }
@@ -1841,7 +1839,32 @@ FROM
 WHERE
   d.disabled_at IS NULL
   AND id = ?1
+  AND (
+    true = ?2
+    OR id IN (
+      SELECT
+        device_id
+      FROM
+        dahua_permissions
+      WHERE
+        dahua_permissions.user_id = ?3
+        OR dahua_permissions.group_id IN (
+          SELECT
+            group_id
+          FROM
+            group_users
+          WHERE
+            group_users.user_id = ?3
+        )
+    )
+  )
 `
+
+type dahuaGetConnParams struct {
+	ID     int64
+	Admin  interface{}
+	UserID sql.NullInt64
+}
 
 type dahuaGetConnRow struct {
 	ID       int64
@@ -1853,8 +1876,8 @@ type dahuaGetConnRow struct {
 	Seed     int64
 }
 
-func (q *Queries) dahuaGetConn(ctx context.Context, id int64) (dahuaGetConnRow, error) {
-	row := q.db.QueryRowContext(ctx, dahuaGetConn, id)
+func (q *Queries) dahuaGetConn(ctx context.Context, arg dahuaGetConnParams) (dahuaGetConnRow, error) {
+	row := q.db.QueryRowContext(ctx, dahuaGetConn, arg.ID, arg.Admin, arg.UserID)
 	var i dahuaGetConnRow
 	err := row.Scan(
 		&i.ID,
@@ -1882,8 +1905,31 @@ FROM
   LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
 WHERE
   d.disabled_at IS NULL
-  AND id IN (/*SLICE:ids*/?)
+  AND (
+    true = ?1
+    OR id IN (
+      SELECT
+        device_id
+      FROM
+        dahua_permissions
+      WHERE
+        dahua_permissions.user_id = ?2
+        OR dahua_permissions.group_id IN (
+          SELECT
+            group_id
+          FROM
+            group_users
+          WHERE
+            group_users.user_id = ?2
+        )
+    )
+  )
 `
+
+type dahuaListConnParams struct {
+	Admin  interface{}
+	UserID sql.NullInt64
+}
 
 type dahuaListConnRow struct {
 	ID       int64
@@ -1895,18 +1941,8 @@ type dahuaListConnRow struct {
 	Seed     int64
 }
 
-func (q *Queries) dahuaListConn(ctx context.Context, ids []int64) ([]dahuaListConnRow, error) {
-	query := dahuaListConn
-	var queryParams []interface{}
-	if len(ids) > 0 {
-		for _, v := range ids {
-			queryParams = append(queryParams, v)
-		}
-		query = strings.Replace(query, "/*SLICE:ids*/?", strings.Repeat(",?", len(ids))[1:], 1)
-	} else {
-		query = strings.Replace(query, "/*SLICE:ids*/?", "NULL", 1)
-	}
-	rows, err := q.db.QueryContext(ctx, query, queryParams...)
+func (q *Queries) dahuaListConn(ctx context.Context, arg dahuaListConnParams) ([]dahuaListConnRow, error) {
+	rows, err := q.db.QueryContext(ctx, dahuaListConn, arg.Admin, arg.UserID)
 	if err != nil {
 		return nil, err
 	}
