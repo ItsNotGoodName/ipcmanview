@@ -71,9 +71,12 @@ func (c *CmdServe) Run(ctx *Context) error {
 	pub := pubsub.NewPub()
 	super.Add(pub)
 
-	// Bus
+	// Event bus
 	bus := event.NewBus().Register(pub)
 	super.Add(bus)
+
+	// Event producer
+	super.Add(event.NewQueue(db, bus))
 
 	// MediaMTX
 	// mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))

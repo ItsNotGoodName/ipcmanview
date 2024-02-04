@@ -115,25 +115,26 @@ func (s *Store) ListClient(ctx context.Context, ids []int64) ([]Client, error) {
 }
 
 func (s *Store) Register(bus *event.Bus) *Store {
-	bus.OnDahuaDeviceChanged(func(ctx context.Context, evt event.DahuaDeviceChanged) error {
-		if evt.Created || evt.Updated || evt.Enabled {
-			_, err := s.GetClient(ctx, evt.DeviceID)
-			if err != nil {
-				return err
-			}
-		} else if evt.Deleted || evt.Disabled {
-			s.clientsMu.Lock()
-			client, found := s.clients[evt.DeviceID]
-			if found {
-				delete(s.clients, evt.DeviceID)
-			}
-			s.clientsMu.Unlock()
-
-			if found {
-				client.Close(s.Context())
-			}
-		}
-		return nil
-	})
+	// bus.OnDahuaDeviceAction(func(ctx context.Context, evt event.DahuaDeviceAction) error {
+	// 	switch evt.Action {
+	// 	case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated, event.ActionDahuaDeviceEnabled:
+	// 		_, err := s.GetClient(ctx, evt.DeviceID)
+	// 		if err != nil {
+	// 			return err
+	// 		}
+	// 	case event.ActionDahuaDeviceDeleted, event.ActionDahuaDeviceDisabled:
+	// 		s.clientsMu.Lock()
+	// 		client, found := s.clients[evt.DeviceID]
+	// 		if found {
+	// 			delete(s.clients, evt.DeviceID)
+	// 		}
+	// 		s.clientsMu.Unlock()
+	//
+	// 		if found {
+	// 			client.Close(s.Context())
+	// 		}
+	// 	}
+	// 	return nil
+	// })
 	return s
 }

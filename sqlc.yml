@@ -46,3 +46,7 @@ sql:
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.NullTime"
           - column: "dahua_devices.disabled_at"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.NullTime"
+          - column: "events.actor"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/core.ActorType"
+          - column: "events.action"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.EventAction"

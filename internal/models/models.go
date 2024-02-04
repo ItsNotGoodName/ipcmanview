@@ -2,6 +2,8 @@ package models
 
 import "time"
 
+type EventAction string
+
 // TimeRange is INCLUSIVE Start and EXCLUSIVE End.
 type TimeRange struct {
 	Start time.Time

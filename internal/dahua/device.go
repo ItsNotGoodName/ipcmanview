@@ -109,7 +109,7 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDev
 	}
 
 	now := types.NewTime(time.Now())
-	id, err := createDahuaDevice(ctx, db, repo.DahuaCreateDeviceParams{
+	id, err := createDahuaDevice(ctx, db, bus, repo.DahuaCreateDeviceParams{
 		Name:      model.Name,
 		Url:       types.NewURL(model.URL),
 		Ip:        ip,
@@ -124,15 +124,10 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDev
 		return 0, err
 	}
 
-	bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
-		DeviceID: id,
-		Created:  true,
-	})
-
 	return id, err
 }
 
-func createDahuaDevice(ctx context.Context, db repo.DB, arg repo.DahuaCreateDeviceParams) (int64, error) {
+func createDahuaDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg repo.DahuaCreateDeviceParams) (int64, error) {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return 0, err
@@ -156,11 +151,16 @@ func createDahuaDevice(ctx context.Context, db repo.DB, arg repo.DahuaCreateDevi
 		return 0, err
 	}
 
-	err = tx.Commit()
+	_, err = tx.CreateEvent(ctx, event.ActionDahuaDeviceCreated, id)
 	if err != nil {
 		return 0, err
 	}
 
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	bus.EventQueued(event.EventQueued{})
 	return id, nil
 }
 
@@ -201,7 +201,7 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.
 		password = arg.NewPassword
 	}
 
-	_, err = db.DahuaUpdateDevice(ctx, repo.DahuaUpdateDeviceParams{
+	err = updateDevice(ctx, db, bus, repo.DahuaUpdateDeviceParams{
 		Name:      model.Name,
 		Url:       types.NewURL(model.URL),
 		Ip:        ip,
@@ -216,11 +216,31 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.
 		return err
 	}
 
-	bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
-		DeviceID: dbModel.ID,
-		Updated:  true,
-	})
+	return nil
+}
 
+func updateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceParams) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.DahuaUpdateDevice(ctx, arg)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.CreateEvent(ctx, event.ActionDahuaDeviceUpdated, arg.ID)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	bus.EventQueued(event.EventQueued{})
 	return nil
 }
 
@@ -229,14 +249,34 @@ func DeleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) err
 		return err
 	}
 
-	if err := db.DahuaDeleteDevice(ctx, id); err != nil {
+	if err := deleteDevice(ctx, db, bus, id); err != nil {
 		return err
 	}
-	bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
-		DeviceID: id,
-		Deleted:  true,
-	})
 
+	return nil
+}
+
+func deleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := tx.DahuaDeleteDevice(ctx, id); err != nil {
+		return err
+	}
+
+	_, err = tx.CreateEvent(ctx, event.ActionDahuaDeviceDeleted, id)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	bus.EventQueued(event.EventQueued{})
 	return nil
 }
 
@@ -246,23 +286,40 @@ func UpdateDeviceDisabled(ctx context.Context, db repo.DB, bus *event.Bus, id in
 	}
 
 	if disable {
-		_, err := db.DahuaUpdateDeviceDisabledAt(ctx, repo.DahuaUpdateDeviceDisabledAtParams{
+		err := updateDeviceDisabled(ctx, db, bus, repo.DahuaUpdateDeviceDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
 			ID:         id,
 		})
-		bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
-			DeviceID: id,
-			Disabled: true,
-		})
 		return err
 	}
-	_, err := db.DahuaUpdateDeviceDisabledAt(ctx, repo.DahuaUpdateDeviceDisabledAtParams{
+	err := updateDeviceDisabled(ctx, db, bus, repo.DahuaUpdateDeviceDisabledAtParams{
 		DisabledAt: types.NullTime{},
 		ID:         id,
 	})
-	bus.DahuaDeviceChanged(event.DahuaDeviceChanged{
-		DeviceID: id,
-		Enabled:  true,
-	})
 	return err
+}
+
+func updateDeviceDisabled(ctx context.Context, db repo.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceDisabledAtParams) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.DahuaUpdateDeviceDisabledAt(ctx, arg)
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.CreateEvent(ctx, event.ActionDahuaDeviceUpdated, arg.ID)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	bus.EventQueued(event.EventQueued{})
+	return nil
 }

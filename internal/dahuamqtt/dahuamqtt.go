@@ -87,11 +87,17 @@ func (c Conn) haSync(ctx context.Context) error {
 func (c Conn) haSyncDevice(ctx context.Context, id int64) error {
 	device, err := c.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{id}})
 	if err != nil {
+		if repo.IsNotFound(err) {
+			return nil
+		}
 		return err
 	}
 
 	client, err := c.store.GetClient(ctx, id)
 	if err != nil {
+		if repo.IsNotFound(err) {
+			return nil
+		}
 		return err
 	}
 
@@ -220,11 +226,10 @@ func NewEvent(v repo.DahuaEvent) Event {
 
 func (c Conn) Register(bus *event.Bus) error {
 	if c.haEnable {
-		bus.OnDahuaDeviceChanged(func(ctx context.Context, evt event.DahuaDeviceChanged) error {
-			c.conn.Ready()
-
-			return c.haSyncDevice(ctx, evt.DeviceID)
-		})
+		// bus.OnDahuaDeviceAction(func(ctx context.Context, evt event.DahuaDeviceAction) error {
+		// 	c.conn.Ready()
+		// 	return c.haSyncDevice(ctx, evt.DeviceID)
+		// })
 	}
 	bus.OnDahuaEvent(func(ctx context.Context, evt event.DahuaEvent) error {
 		c.conn.Ready()

@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/json"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
@@ -170,6 +171,15 @@ type DahuaThumbnail struct {
 	EmailAttachmentID sql.NullInt64
 	Width             int64
 	Height            int64
+}
+
+type Event struct {
+	ID        int64
+	Action    models.EventAction
+	Slug      string
+	Actor     core.ActorType
+	UserID    sql.NullInt64
+	CreatedAt types.Time
 }
 
 type Group struct {

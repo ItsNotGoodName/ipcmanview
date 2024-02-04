@@ -5,13 +5,17 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-type DahuaDeviceChanged struct {
-	DeviceID int64
-	Created  bool
-	Updated  bool
-	Deleted  bool
-	Disabled bool
-	Enabled  bool
+const (
+	ActionDahuaDeviceCreated models.EventAction = "dahua-device:created"
+	ActionDahuaDeviceUpdated models.EventAction = "dahua-device:updated"
+	ActionDahuaDeviceDeleted models.EventAction = "dahua-device:deleted"
+)
+
+type EventQueued struct {
+}
+
+type EventCreated struct {
+	Event repo.Event
 }
 
 type DahuaEvent struct {
