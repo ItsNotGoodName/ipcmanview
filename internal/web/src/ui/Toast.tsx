@@ -65,20 +65,6 @@ export function ToastContent(props: JSX.HTMLAttributes<HTMLDivElement>) {
   />
 }
 
-// const ToastAction = React.forwardRef<
-//   React.ElementRef<typeof ToastPrimitives.Action>,
-//   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
-// >(({ className, ...props }, ref) => (
-//   <ToastPrimitives.Action
-//     ref={ref}
-//     className={cn(
-//       "ring-offset-background hover:bg-secondary focus:ring-ring group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-//       className
-//     )}
-//     {...props}
-//   />
-// ))
-
 export function ToastCloseButton(props: ComponentProps<typeof Toast.CloseButton>) {
   const [_, rest] = splitProps(props, ["class"])
   return (

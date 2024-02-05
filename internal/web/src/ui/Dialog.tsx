@@ -41,7 +41,6 @@ export function DialogModal(props: ComponentProps<typeof Dialog.Content>) {
       <span class="sr-only">Close</span>
     </Dialog.CloseButton>
   </Dialog.Content>
-
 }
 
 export function DialogHeader(props: JSX.HTMLAttributes<HTMLDivElement>) {

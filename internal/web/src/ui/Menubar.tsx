@@ -14,13 +14,9 @@ import { cn } from "~/lib/utils";
 
 
 export const MenubarMenu = Menubar.Menu
-
 export const MenubarGroup = Menubar.Group
-
 export const MenubarPortal = Menubar.Portal
-
 export const MenubarSub = Menubar.Sub
-
 export const MenubarRadioGroup = Menubar.RadioGroup
 
 export function MenubarRoot(props: ComponentProps<typeof Menubar.Root>) {
