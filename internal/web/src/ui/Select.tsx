@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/select
+// https://ui.shadcn.com/docs/components/select
 import { As, Select } from "@kobalte/core"
 import { RiArrowsArrowDownSLine, RiSystemCheckLine } from "solid-icons/ri"
 import { ComponentProps, JSX, splitProps } from "solid-js"

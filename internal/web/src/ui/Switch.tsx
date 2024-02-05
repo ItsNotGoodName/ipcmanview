@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/switch
+// https://ui.shadcn.com/docs/components/switch
 import { Switch } from "@kobalte/core"
 import { ComponentProps, splitProps } from "solid-js"
 

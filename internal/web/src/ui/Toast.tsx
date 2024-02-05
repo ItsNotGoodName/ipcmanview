@@ -1,3 +1,9 @@
+// # Changes
+// - Region is top right
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/toast
+// https://ui.shadcn.com/docs/components/toast
 import { Toast, toaster } from "@kobalte/core";
 import { cva, type VariantProps } from "class-variance-authority"
 import { RiSystemCloseLine } from "solid-icons/ri";

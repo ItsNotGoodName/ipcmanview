@@ -1,3 +1,9 @@
+// # Changes
+// - List is not 'justify-center'
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/tabs
+// https://ui.shadcn.com/docs/components/tabs
 import { Tabs } from "@kobalte/core"
 import { ComponentProps, splitProps } from "solid-js"
 

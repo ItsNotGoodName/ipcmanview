@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/progress
+// https://ui.shadcn.com/docs/components/progress
 import { Progress } from "@kobalte/core"
 import { ComponentProps, splitProps } from "solid-js"
 

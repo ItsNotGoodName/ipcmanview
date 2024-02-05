@@ -1,3 +1,9 @@
+// # Changes
+// - Description overflows in the Y direction
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/alert-dialog
+// https://ui.shadcn.com/docs/components/alert-dialog
 import { ComponentProps, JSX, splitProps } from "solid-js"
 import { AlertDialog } from "@kobalte/core"
 

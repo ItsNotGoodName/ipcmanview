@@ -1,3 +1,9 @@
+// # Changes
+// - Content overflows in the Y direction
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/dialog
+// https://ui.shadcn.com/docs/components/dialog
 import { Dialog } from "@kobalte/core";
 import { RiSystemCloseLine } from "solid-icons/ri";
 import { ComponentProps, JSX, splitProps } from "solid-js";

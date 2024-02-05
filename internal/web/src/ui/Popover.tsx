@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/popover
+// https://ui.shadcn.com/docs/components/popover
 import { Popover } from "@kobalte/core";
 import { RiSystemCloseLine } from "solid-icons/ri";
 import { splitProps } from "solid-js";

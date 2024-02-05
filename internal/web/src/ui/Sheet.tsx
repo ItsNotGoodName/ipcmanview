@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/sheet
+// https://ui.shadcn.com/docs/components/sheet
 import { Dialog } from "@kobalte/core"
 import { RiSystemCloseLine } from "solid-icons/ri";
 import { cva, type VariantProps } from "class-variance-authority"

@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/dropdown-menu
+// https://ui.shadcn.com/docs/components/dropdown-menu
 import { DropdownMenu } from "@kobalte/core";
 import { ComponentProps, JSX, splitProps } from "solid-js";
 import { RiArrowsArrowRightSLine, RiSystemCheckLine, RiSystemCheckboxBlankCircleFill } from "solid-icons/ri"

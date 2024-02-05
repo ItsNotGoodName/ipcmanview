@@ -1,9 +1,16 @@
+// FIXME: TooltipArrow does not work
+//
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/tooltip
+// https://ui.shadcn.com/docs/components/tooltip
 import { splitProps } from "solid-js"
 import { Tooltip } from "@kobalte/core"
 
 import { cn } from "~/lib/utils"
 
-// FIXME: TooltipArrow does not work
 
 export const TooltipRoot = Tooltip.Root
 export const TooltipTrigger = Tooltip.Trigger

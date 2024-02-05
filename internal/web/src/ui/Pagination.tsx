@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/pagination
+// https://ui.shadcn.com/docs/components/pagination
 import { ComponentProps, JSX, mergeProps, splitProps } from "solid-js"
 import { Pagination } from "@kobalte/core"
 import { RiArrowsArrowLeftSLine, RiArrowsArrowRightSLine, RiSystemMoreLine } from "solid-icons/ri"

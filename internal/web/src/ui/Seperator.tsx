@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/seperator
+// https://ui.shadcn.com/docs/components/seperator
 import { Separator } from "@kobalte/core";
 import { JSX, splitProps } from "solid-js";
 

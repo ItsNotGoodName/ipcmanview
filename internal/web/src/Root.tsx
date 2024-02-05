@@ -224,6 +224,7 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuO
 export function Root(props: ParentProps) {
   const session = createAsync(getSession)
   const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
+  const layoutActive = () => session()?.valid && !session()?.disabled
 
   return (
     <ErrorBoundary fallback={(e) =>
@@ -233,11 +234,11 @@ export function Root(props: ParentProps) {
     }>
       <Suspense fallback={<PageLoading class="pt-10" />}>
         <Portal>
-          <ToastRegion class={session()?.valid ? "top-12 sm:top-12" : ""}>
-            <ToastList class={session()?.valid ? "top-12 sm:top-12" : ""} />
+          <ToastRegion class={layoutActive() ? "top-12 sm:top-12" : ""}>
+            <ToastList class={layoutActive() ? "top-12 sm:top-12" : ""} />
           </ToastRegion>
         </Portal>
-        <Show when={session()?.valid && !session()?.disabled} fallback={<>{props.children}</>}>
+        <Show when={layoutActive()} fallback={<>{props.children}</>}>
           <Header onMenuClick={() => setMenuOpen((prev) => !prev)}>
             <DropdownMenuLinks />
           </Header>

@@ -1,10 +1,17 @@
+// FIXME: the animations are broken
+//
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/menubar
+// https://ui.shadcn.com/docs/components/menubar
 import { Menubar } from "@kobalte/core";
 import { RiArrowsArrowRightSLine, RiSystemCheckLine, RiSystemCheckboxBlankCircleFill } from "solid-icons/ri";
 import { ComponentProps, JSX, splitProps } from "solid-js";
 
 import { cn } from "~/lib/utils";
 
-// FIXME: the animations are broken
 
 export const MenubarMenu = Menubar.Menu
 

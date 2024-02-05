@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/checkbox
+// https://ui.shadcn.com/docs/components/checkbox
 import { Checkbox } from "@kobalte/core";
 import { RiSystemCheckLine } from "solid-icons/ri";
 import { ComponentProps, splitProps } from "solid-js";

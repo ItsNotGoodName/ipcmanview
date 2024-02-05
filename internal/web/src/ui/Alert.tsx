@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/alert
+// https://ui.shadcn.com/docs/components/alert
 import { cva, type VariantProps } from "class-variance-authority"
 import { Alert } from "@kobalte/core"
 import { ComponentProps, JSX, splitProps } from "solid-js"

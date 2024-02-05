@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/image
+// https://ui.shadcn.com/docs/components/avatar
 import { Image } from "@kobalte/core"
 import { ComponentProps, splitProps } from "solid-js"
 

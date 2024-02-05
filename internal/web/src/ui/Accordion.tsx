@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/accordion
+// https://ui.shadcn.com/docs/components/accordion
 import { Accordion } from "@kobalte/core"
 import { RiArrowsArrowDownSLine } from "solid-icons/ri"
 import { splitProps } from "solid-js"

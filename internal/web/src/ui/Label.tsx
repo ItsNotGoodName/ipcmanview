@@ -1,3 +1,8 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://ui.shadcn.com/docs/components/label
 import { cva, type VariantProps } from "class-variance-authority"
 import { JSX, splitProps } from "solid-js"
 

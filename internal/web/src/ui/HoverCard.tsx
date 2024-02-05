@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/hover-card
+// https://ui.shadcn.com/docs/components/hover-card
 import { splitProps } from "solid-js"
 import { HoverCard } from "@kobalte/core"
 
