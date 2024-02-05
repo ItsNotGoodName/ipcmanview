@@ -76,7 +76,7 @@ export function Home() {
             </StatParent>
           </div>
           <div class="flex flex-col gap-4 lg:flex-row">
-            <CardRoot class="flex-1 p-4">
+            <CardRoot class="flex-shrink-0 p-4 lg:max-w-sm">
               <Shared.Title>Latest emails</Shared.Title>
               <table class="w-full table-fixed">
                 <tbody>
@@ -114,9 +114,9 @@ export function Home() {
                 </tbody>
               </table>
             </CardRoot>
-            <CardRoot class="flex-1 p-4 lg:max-w-xl">
+            <CardRoot class="flex-2 p-4">
               <Shared.Title>Latest files</Shared.Title>
-              <div class="grid gap-4 pt-4 sm:grid-cols-4">
+              <div class="grid gap-4 pt-4 sm:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
                 <For each={Array(8)}>
                   {(_, i) =>
                     <div class="hover:bg-accent/50 flex flex-col gap-1 rounded border p-2 transition-all">

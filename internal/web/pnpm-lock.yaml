@@ -35,6 +35,9 @@ dependencies:
   clsx:
     specifier: ^2.1.0
     version: 2.1.0
+  humanize-plus:
+    specifier: ^1.8.2
+    version: 1.8.2
   solid-icons:
     specifier: ^1.1.0
     version: 1.1.0(solid-js@1.8.7)
@@ -49,6 +52,9 @@ devDependencies:
   '@protobuf-ts/plugin':
     specifier: ^2.9.3
     version: 2.9.3
+  '@types/humanize-plus':
+    specifier: ^1.8.2
+    version: 1.8.2
   '@types/node':
     specifier: ^20.10.5
     version: 20.10.5
@@ -1059,6 +1065,10 @@ packages:
       '@babel/types': 7.23.6
     dev: true
 
+  /@types/humanize-plus@1.8.2:
+    resolution: {integrity: sha512-uyFFCGYuqU/Cpr8h+iE2k0shDAnXltV0Pd/r6bmxFAvXVss2cvEiQqeZpwuX8BsAtWN0JTipeXrDxdHk4EEhPg==}
+    dev: true
+
   /@types/node@20.10.5:
     resolution: {integrity: sha512-nNPsNE65wjMxEKI93yOP+NPGGBJz/PoN3kZsVLee0XMiJolxSekEVD8wRwBUBqkwc7UWop0edW50yrCQW4CyRw==}
     dependencies:
@@ -1454,6 +1464,11 @@ packages:
   /html-entities@2.3.3:
     resolution: {integrity: sha512-DV5Ln36z34NNTDgnz0EWGBLZENelNAtkiFA4kyNOG2tDI6Mz1uSWiq1wAKdyjnJwyDiDO7Fa2SO1CTxPXL8VxA==}
     dev: true
+
+  /humanize-plus@1.8.2:
+    resolution: {integrity: sha512-jaLeQyyzjjINGv7O9JJegjsaUcWjSj/1dcXvLEgU3pGdqCdP1PiC/uwr+saJXhTNBHZtmKnmpXyazgh+eceRxA==}
+    engines: {node: '>= 0.8.0'}
+    dev: false
 
   /is-binary-path@2.1.0:
     resolution: {integrity: sha512-ZMERYes6pDydyuGidse7OsHxtbI7WVeUEozgR/g7rd0xUimYNlvZRE/K2MgZTjWy725IfelLeVcEM97mmtRGXw==}

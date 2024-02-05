@@ -1,3 +1,4 @@
+import Humanize from "humanize-plus"
 import { action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router"
 import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
 import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, } from "solid-js"
@@ -132,7 +133,7 @@ export function Profile() {
             </Button>
           </div>
           <TableRoot>
-            <TableCaption>{data()?.sessions.length} Session(s)</TableCaption>
+            <TableCaption>{data()?.sessions.length} {Humanize.pluralize(data()?.sessions.length || 0, "Session")}</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Active</TableHead>
@@ -174,7 +175,7 @@ export function Profile() {
 
         <Shared.Title>Groups</Shared.Title>
         <TableRoot>
-          <TableCaption>{data()?.groups.length} Groups(s)</TableCaption>
+          <TableCaption>{data()?.groups.length} {Humanize.pluralize(data()?.groups.length || 0, "Group")}</TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>

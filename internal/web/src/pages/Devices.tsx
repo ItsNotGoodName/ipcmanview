@@ -1,3 +1,4 @@
+import Humanize from "humanize-plus"
 import { A, createAsync, useSearchParams } from "@solidjs/router"
 import { ErrorBoundary, For, Show, Suspense } from "solid-js"
 import { PageError, PageLoading } from "~/ui/Page"
@@ -72,9 +73,7 @@ function DeviceTable(props: { devices?: GetDevicesPageResp_Device[] }) {
         <For each={props.devices}>
           {item => (
             <TableRow>
-              <TableCell>
-                <A class={linkVariants()} href={`./devices/${item.id}`}>{item.name}</A>
-              </TableCell>
+              <DeviceNameCell device={item} />
               <TableCell>
                 <a class={linkVariants()} href={item.url}>{item.url}</a>
               </TableCell>
@@ -115,9 +114,7 @@ function RPCStatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
 
             return (
               <TableRow>
-                <TableCell>
-                  <A class={linkVariants()} href={`./devices/${item.id}`}>{item.name}</A>
-                </TableCell>
+                <DeviceNameCell device={item} />
                 <ErrorBoundary fallback={e => <ErrorTableCell colspan={colspan} error={e} />}>
                   <Suspense fallback={<LoadingTableCell colspan={colspan} />}>
                     <TableCell>{data()?.state}</TableCell>
@@ -310,8 +307,8 @@ function StorageTable(props: { devices?: GetDevicesPageResp_Device[] }) {
           <TableHead>Name</TableHead>
           <TableHead>State</TableHead>
           <TableHead>Type</TableHead>
-          <TableHead>Total</TableHead>
           <TableHead>Used</TableHead>
+          <TableHead>Total</TableHead>
           <TableHead>Is Error</TableHead>
         </TableRow>
       </TableHeader>
@@ -345,8 +342,8 @@ function StorageTable(props: { devices?: GetDevicesPageResp_Device[] }) {
                         <TableCell>{v.name}</TableCell>
                         <TableCell>{v.state}</TableCell>
                         <TableCell>{v.type}</TableCell>
-                        <TableCell>{v.totalBytes.toString()}</TableCell>
-                        <TableCell>{v.usedBytes.toString()}</TableCell>
+                        <TableCell>{Humanize.fileSize(Number(v.usedBytes))}</TableCell>
+                        <TableCell>{Humanize.fileSize(Number(v.totalBytes))}</TableCell>
                         <TableCell>{v.isError}</TableCell>
                       </TableRow>
                     )
@@ -383,7 +380,7 @@ function ErrorTableCell(props: { colspan: number, error: Error }) {
 function DeviceNameCell(props: { device: { id: bigint, name: string } }) {
   return (
     <TableCell>
-      <A class={linkVariants()} href={`./devices/${props.device.id}`}>{props.device.name}</A>
+      <A class={linkVariants()} href={`./${props.device.id}`}>{props.device.name}</A>
     </TableCell>
   )
 }
