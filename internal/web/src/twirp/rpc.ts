@@ -136,6 +136,10 @@ export interface GetHomePageResp {
      * @generated from protobuf field: int64 email_count = 4;
      */
     emailCount: bigint;
+    /**
+     * @generated from protobuf field: GetHomePageResp.Build build = 5;
+     */
+    build?: GetHomePageResp_Build;
 }
 /**
  * @generated from protobuf message GetHomePageResp.Device
@@ -149,6 +153,35 @@ export interface GetHomePageResp_Device {
      * @generated from protobuf field: string name = 2;
      */
     name: string;
+}
+/**
+ * @generated from protobuf message GetHomePageResp.Build
+ */
+export interface GetHomePageResp_Build {
+    /**
+     * @generated from protobuf field: string commit = 1;
+     */
+    commit: string;
+    /**
+     * @generated from protobuf field: string version = 2;
+     */
+    version: string;
+    /**
+     * @generated from protobuf field: string date = 3;
+     */
+    date: string;
+    /**
+     * @generated from protobuf field: string repo_url = 4;
+     */
+    repoUrl: string;
+    /**
+     * @generated from protobuf field: string commit_url = 5;
+     */
+    commitUrl: string;
+    /**
+     * @generated from protobuf field: string license_url = 6;
+     */
+    licenseUrl: string;
 }
 /**
  * @generated from protobuf message GetDevicesPageReq
@@ -1367,7 +1400,8 @@ class GetHomePageResp$Type extends MessageType<GetHomePageResp> {
             { no: 1, name: "devices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetHomePageResp_Device },
             { no: 2, name: "file_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 3, name: "event_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 4, name: "email_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 4, name: "email_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 5, name: "build", kind: "message", T: () => GetHomePageResp_Build }
         ]);
     }
 }
@@ -1388,6 +1422,23 @@ class GetHomePageResp_Device$Type extends MessageType<GetHomePageResp_Device> {
  * @generated MessageType for protobuf message GetHomePageResp.Device
  */
 export const GetHomePageResp_Device = new GetHomePageResp_Device$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetHomePageResp_Build$Type extends MessageType<GetHomePageResp_Build> {
+    constructor() {
+        super("GetHomePageResp.Build", [
+            { no: 1, name: "commit", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "date", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "repo_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "commit_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "license_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetHomePageResp.Build
+ */
+export const GetHomePageResp_Build = new GetHomePageResp_Build$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetDevicesPageReq$Type extends MessageType<GetDevicesPageReq> {
     constructor() {

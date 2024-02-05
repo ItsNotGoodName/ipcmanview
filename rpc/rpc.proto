@@ -96,6 +96,16 @@ message GetHomePageResp {
   int64 file_count = 2;
   int64 event_count = 3;
   int64 email_count = 4;
+
+  message Build {
+    string commit = 1;
+    string version = 2;
+    string date = 3;
+    string repo_url = 4;
+    string commit_url = 5;
+    string license_url = 6;
+  }
+  Build build = 5;
 }
 
 message GetDevicesPageReq {}

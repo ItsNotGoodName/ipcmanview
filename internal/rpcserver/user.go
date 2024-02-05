@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -54,11 +55,21 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		return nil, err
 	}
 
+	build := &rpc.GetHomePageResp_Build{
+		Commit:     build.Current.Commit,
+		Version:    build.Current.Version,
+		Date:       build.Current.Date,
+		RepoUrl:    build.Current.RepoURL,
+		CommitUrl:  build.Current.CommitURL,
+		LicenseUrl: build.Current.LicenseURL,
+	}
+
 	return &rpc.GetHomePageResp{
 		Devices:    devices,
 		FileCount:  fileCount,
 		EventCount: eventCount,
 		EmailCount: emailCount,
+		Build:      build,
 	}, nil
 }
 
