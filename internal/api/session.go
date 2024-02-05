@@ -21,6 +21,7 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 				return next(c)
 			}
 
+			// Get session
 			session, err := db.AuthGetUserSession(ctx, cookie.Value)
 			if err != nil {
 				if repo.IsNotFound(err) {
@@ -32,6 +33,7 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 				return next(c)
 			}
 
+			// Touch session
 			if err := auth.TouchUserSession(ctx, db, auth.TouchUserSessionParams{
 				CurrentSessionID: session.ID,
 				LastUsedAt:       session.LastUsedAt.Time,
@@ -44,6 +46,7 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 				return err
 			}
 
+			// Set session context
 			c.SetRequest(r.WithContext(auth.WithSession(ctx, auth.Session{
 				SessionID: session.ID,
 				UserID:    session.UserID,

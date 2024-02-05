@@ -132,7 +132,7 @@ type TouchUserSessionParams struct {
 
 func TouchUserSession(ctx context.Context, db repo.DB, arg TouchUserSessionParams) error {
 	now := time.Now()
-	if arg.LastIP == arg.IP || arg.LastUsedAt.After(now.Add(-touchSessionThrottle)) {
+	if arg.LastIP == arg.IP && arg.LastUsedAt.After(now.Add(-touchSessionThrottle)) {
 		return nil
 	}
 
