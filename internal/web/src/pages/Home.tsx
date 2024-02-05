@@ -83,9 +83,9 @@ export function Home() {
                   <For each={Array(5)}>
                     {_ =>
                       <tr class="hover:bg-muted/50 flex flex-col overflow-hidden border-b py-2 transition-colors sm:flex-row">
-                        <td class="text-nowrap px-2 font-bold">
+                        <td class="text-nowrap px-2">
                           <TooltipRoot>
-                            <TooltipTrigger>19 minutes ago</TooltipTrigger>
+                            <TooltipTrigger class="text-sm font-bold">19 minutes ago</TooltipTrigger>
                             <TooltipContent>
                               {formatDate(new Date())}
                             </TooltipContent>

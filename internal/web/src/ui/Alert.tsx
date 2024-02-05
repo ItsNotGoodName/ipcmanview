@@ -1,5 +1,5 @@
 // # Changes
-// N/A
+// - Destructive has a red background
 //
 // # URLs
 // https://kobalte.dev/docs/core/components/alert
