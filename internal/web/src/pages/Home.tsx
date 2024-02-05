@@ -84,7 +84,7 @@ export function Home() {
                     {_ =>
                       <tr class="hover:bg-muted/50 flex flex-col overflow-hidden border-b py-2 transition-colors sm:flex-row">
                         <td class="text-nowrap px-2 font-bold">
-                          <TooltipRoot placement="right">
+                          <TooltipRoot>
                             <TooltipTrigger>19 minutes ago</TooltipTrigger>
                             <TooltipContent>
                               {formatDate(new Date())}
@@ -96,10 +96,10 @@ export function Home() {
                             Lorem ipsum dolor sit amet consectetur, adipisicing elit. Dolore, illum nostrum sit iusto architecto nobis tenetur repellat enim cumque esse quia consequatur hic, quidem velit magni modi alias beatae eos.
                           </A>
                         </td>
-                        <td class="flex items-center px-1">
+                        <td class="px-1">
                           <A href={`/emails/3?tab=attachments`}>
-                            <TooltipRoot placement="left">
-                              <TooltipTrigger>
+                            <TooltipRoot>
+                              <TooltipTrigger class="flex h-full items-center">
                                 <RiEditorAttachment2 />
                               </TooltipTrigger>
                               <TooltipContent>
@@ -114,12 +114,12 @@ export function Home() {
                 </tbody>
               </table>
             </CardRoot>
-            <CardRoot class="flex-1 lg:max-w-xl p-4">
+            <CardRoot class="flex-1 p-4 lg:max-w-xl">
               <Shared.Title>Latest files</Shared.Title>
               <div class="grid gap-4 pt-4 sm:grid-cols-4">
                 <For each={Array(8)}>
                   {(_, i) =>
-                    <div class="flex flex-col gap-1 hover:bg-accent/50 rounded border p-2 transition-all">
+                    <div class="hover:bg-accent/50 flex flex-col gap-1 rounded border p-2 transition-all">
                       <A href={`/files/3`}>
                         <Show when={i() % 2 == 0} fallback={
                           <RiMediaImageLine class="aspect-square h-full w-full" />
