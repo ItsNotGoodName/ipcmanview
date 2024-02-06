@@ -9,6 +9,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
@@ -18,13 +19,13 @@ const (
 	ActionDahuaDeviceDeleted models.EventAction = "dahua-device:deleted"
 )
 
-func CreateEvent(ctx context.Context, db repo.DBTX, action models.EventAction, data any) (int64, error) {
+func CreateEvent(ctx context.Context, db sqlite.DBTx, action models.EventAction, data any) (int64, error) {
 	actor := core.UseActor(ctx)
 	b, err := json.Marshal(data)
 	if err != nil {
 		return 0, err
 	}
-	return repo.New(db).CreateEvent(ctx, repo.CreateEventParams{
+	return db.CreateEvent(ctx, repo.CreateEventParams{
 		Action: action,
 		Data:   types.NewJSON(b),
 		UserID: sql.NullInt64{

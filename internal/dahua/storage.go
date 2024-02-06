@@ -9,6 +9,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -76,7 +77,7 @@ func (arg *StorageDestination) normalize(create bool) {
 	}
 }
 
-func CreateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestination) (int64, error) {
+func CreateStorageDestination(ctx context.Context, db sqlite.DB, arg StorageDestination) (int64, error) {
 	arg.normalize(true)
 
 	err := core.Validate.Struct(arg)
@@ -84,7 +85,7 @@ func CreateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestin
 		return 0, err
 	}
 
-	return db.DahuaCreateStorageDestination(ctx, repo.DahuaCreateStorageDestinationParams{
+	return db.C().DahuaCreateStorageDestination(ctx, repo.DahuaCreateStorageDestinationParams{
 		Name:            arg.Name,
 		Storage:         arg.Storage,
 		ServerAddress:   arg.ServerAddress,
@@ -95,7 +96,7 @@ func CreateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestin
 	})
 }
 
-func UpdateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestination) error {
+func UpdateStorageDestination(ctx context.Context, db sqlite.DB, arg StorageDestination) error {
 	arg.normalize(false)
 
 	err := core.Validate.Struct(arg)
@@ -103,7 +104,7 @@ func UpdateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestin
 		return err
 	}
 
-	_, err = db.DahuaUpdateStorageDestination(ctx, repo.DahuaUpdateStorageDestinationParams{
+	_, err = db.C().DahuaUpdateStorageDestination(ctx, repo.DahuaUpdateStorageDestinationParams{
 		Name:            arg.Name,
 		Storage:         arg.Storage,
 		ServerAddress:   arg.ServerAddress,
@@ -120,8 +121,8 @@ func UpdateStorageDestination(ctx context.Context, db repo.DB, arg StorageDestin
 	return nil
 }
 
-func DeleteStorageDestination(ctx context.Context, db repo.DB, id int64) error {
-	return db.DahuaDeleteStorageDestination(ctx, id)
+func DeleteStorageDestination(ctx context.Context, db sqlite.DB, id int64) error {
+	return db.C().DahuaDeleteStorageDestination(ctx, id)
 }
 
 func TestStorageDestination(ctx context.Context, arg StorageDestination) error {

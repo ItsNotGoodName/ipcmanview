@@ -11,6 +11,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/labstack/echo/v4"
 )
 
@@ -23,7 +24,7 @@ func paramID(c echo.Context) (int64, error) {
 	return number, nil
 }
 
-// func useDahuaPermissions(c echo.Context, db repo.DB) (models.DahuaDevicePermissions, error) {
+// func useDahuaPermissions(c echo.Context, db sqlite.DB) (models.DahuaDevicePermissions, error) {
 // 	ctx := c.Request().Context()
 //
 // 	session, ok := auth.UseSession(ctx)
@@ -39,7 +40,7 @@ func paramID(c echo.Context) (int64, error) {
 // 	return permissions, nil
 // }
 
-func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, models.DahuaPermissionLevel, error) {
+func useDahuaClient(c echo.Context, db sqlite.DB, store *dahua.Store) (dahua.Client, models.DahuaPermissionLevel, error) {
 	ctx := c.Request().Context()
 
 	id, err := paramID(c)

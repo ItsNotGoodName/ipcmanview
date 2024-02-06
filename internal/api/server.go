@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	echo "github.com/labstack/echo/v4"
 	"github.com/spf13/afero"
@@ -12,7 +12,7 @@ import (
 
 func NewServer(
 	pub pubsub.Pub,
-	db repo.DB,
+	db sqlite.DB,
 	dahuaStore *dahua.Store,
 	dahuaFileFS afero.Fs,
 ) *Server {
@@ -26,7 +26,7 @@ func NewServer(
 
 type Server struct {
 	pub         pubsub.Pub
-	db          repo.DB
+	db          sqlite.DB
 	dahuaStore  *dahua.Store
 	dahuaFileFS afero.Fs
 }

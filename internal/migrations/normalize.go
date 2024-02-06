@@ -6,9 +6,10 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 )
 
-func Normalize(ctx context.Context, db repo.DB) error {
+func Normalize(ctx context.Context, db sqlite.DB) error {
 	_, err := db.ExecContext(ctx, `
 WITH RECURSIVE generate_series(value) AS (
   SELECT 1
@@ -24,7 +25,7 @@ INSERT OR IGNORE INTO dahua_event_rules (code) VALUES ('');
 
 	{
 		c := dahua.NewFileCursor()
-		err := db.DahuaNormalizeFileCursors(context.Background(), repo.DahuaNormalizeFileCursorsParams{
+		err := db.C().DahuaNormalizeFileCursors(context.Background(), repo.DahuaNormalizeFileCursorsParams{
 			QuickCursor: c.QuickCursor,
 			FullCursor:  c.FullCursor,
 			FullEpoch:   c.FullEpoch,

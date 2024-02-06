@@ -6,6 +6,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
@@ -56,7 +57,7 @@ func updateScanFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPer
 	return fileCursor
 }
 
-func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCursor, scanType models.DahuaScanType) (models.TimeRange, error) {
+func getScanRange(ctx context.Context, db sqlite.DB, fileCursor repo.DahuaFileCursor, scanType models.DahuaScanType) (models.TimeRange, error) {
 	switch scanType {
 	case models.DahuaScanTypeFull:
 		return models.TimeRange{
@@ -69,7 +70,7 @@ func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCurs
 			End:   time.Now(),
 		}, nil
 	case models.DahuaScanTypeReverse:
-		startTime, err := db.DahuaGetOldestFileStartTime(ctx, fileCursor.DeviceID)
+		startTime, err := db.C().DahuaGetOldestFileStartTime(ctx, fileCursor.DeviceID)
 		if err != nil {
 			if repo.IsNotFound(err) {
 				return models.TimeRange{}, nil
@@ -90,9 +91,9 @@ func getScanRange(ctx context.Context, db repo.DB, fileCursor repo.DahuaFileCurs
 }
 
 // ScanReset cannot be called concurrently for the same device.
-func ScanReset(ctx context.Context, db repo.DB, deviceID int64) error {
+func ScanReset(ctx context.Context, db sqlite.DB, deviceID int64) error {
 	fileCursor := NewFileCursor()
-	_, err := db.DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
+	_, err := db.C().DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
@@ -105,8 +106,8 @@ func ScanReset(ctx context.Context, db repo.DB, deviceID int64) error {
 }
 
 // Scan cannot be called concurrently for the same device.
-func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn, scanType models.DahuaScanType) error {
-	fileCursor, err := db.DahuaUpdateFileCursorScanPercent(ctx, repo.DahuaUpdateFileCursorScanPercentParams{
+func Scan(ctx context.Context, db sqlite.DB, rpcClient dahuarpc.Conn, device Conn, scanType models.DahuaScanType) error {
+	fileCursor, err := db.C().DahuaUpdateFileCursorScanPercent(ctx, repo.DahuaUpdateFileCursorScanPercentParams{
 		DeviceID:    device.ID,
 		ScanPercent: 0,
 	})
@@ -123,7 +124,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn,
 	updated_at := types.NewTime(time.Now())
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
 
-	fileCursor, err = db.DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
+	fileCursor, err = db.C().DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
@@ -186,7 +187,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn,
 			}
 		}
 
-		err := db.DahuaDeleteFile(ctx, repo.DahuaDeleteFileParams{
+		err := db.C().DahuaDeleteFile(ctx, repo.DahuaDeleteFileParams{
 			UpdatedAt: updated_at,
 			DeviceID:  device.ID,
 			Start:     types.NewTime(scannerPeriod.Start.UTC()),
@@ -198,7 +199,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn,
 
 		fileCursor = updateScanFileCursor(fileCursor, scannerPeriod, scanType)
 
-		fileCursor, err = db.DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
+		fileCursor, err = db.C().DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 			QuickCursor: fileCursor.QuickCursor,
 			FullCursor:  fileCursor.FullCursor,
 			FullEpoch:   fileCursor.FullEpoch,
@@ -211,7 +212,7 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn,
 			return err
 		}
 	}
-	fileCursor, err = db.DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
+	fileCursor, err = db.C().DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
 		FullCursor:  fileCursor.FullCursor,
 		FullEpoch:   fileCursor.FullEpoch,
@@ -227,8 +228,8 @@ func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn,
 	return nil
 }
 
-func UpsertDahuaFiles(ctx context.Context, db repo.DB, arg repo.DahuaCreateFileParams) (int64, error) {
-	id, err := db.DahuaUpdateFile(ctx, repo.DahuaUpdateFileParams{
+func UpsertDahuaFiles(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateFileParams) (int64, error) {
+	id, err := db.C().DahuaUpdateFile(ctx, repo.DahuaUpdateFileParams{
 		DeviceID:    arg.DeviceID,
 		Channel:     arg.Channel,
 		StartTime:   arg.StartTime,
@@ -257,5 +258,5 @@ func UpsertDahuaFiles(ctx context.Context, db repo.DB, arg repo.DahuaCreateFileP
 		return 0, err
 	}
 
-	return db.DahuaCreateFile(ctx, arg)
+	return db.C().DahuaCreateFile(ctx, arg)
 }

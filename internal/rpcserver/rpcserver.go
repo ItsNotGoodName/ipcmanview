@@ -84,7 +84,7 @@ func useAuthSession(ctx context.Context) auth.Session {
 	return u
 }
 
-// func useDahuaPermissions(ctx context.Context, db repo.DB) (models.DahuaDevicePermissions, error) {
+// func useDahuaPermissions(ctx context.Context, db sqlite.DB) (models.DahuaDevicePermissions, error) {
 // 	session := useAuthSession(ctx)
 // 	permissions, err := db.DahuaListDahuaDevicePermissions(ctx, session.UserID)
 // 	return permissions, err

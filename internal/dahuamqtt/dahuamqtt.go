@@ -11,6 +11,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/rs/zerolog/log"
 	"github.com/thejerf/suture/v4"
 )
@@ -26,13 +27,13 @@ func newDeviceUID(deviceID string, extra ...string) string {
 
 type Conn struct {
 	conn     mqtt.Conn
-	db       repo.DB
+	db       sqlite.DB
 	store    *dahua.Store
 	haEnable bool
 	haTopic  mqtt.Topic
 }
 
-func NewConn(mqtt mqtt.Conn, db repo.DB, store *dahua.Store, haEnable bool, haTopic mqtt.Topic) Conn {
+func NewConn(mqtt mqtt.Conn, db sqlite.DB, store *dahua.Store, haEnable bool, haTopic mqtt.Topic) Conn {
 	return Conn{
 		conn:     mqtt,
 		db:       db,
@@ -85,7 +86,7 @@ func (c Conn) haSync(ctx context.Context) error {
 }
 
 func (c Conn) haSyncDevice(ctx context.Context, id int64) error {
-	device, err := c.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{id}})
+	device, err := dahua.GetDevice(ctx, c.db, dahua.GetDeviceFilter{ID: id})
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return nil

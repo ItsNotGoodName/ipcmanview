@@ -5,12 +5,13 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	echo "github.com/labstack/echo/v4"
 )
 
 const cookieKey = "session"
 
-func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
+func SessionMiddleware(db sqlite.DB) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			r := c.Request()
@@ -22,7 +23,7 @@ func SessionMiddleware(db repo.DB) echo.MiddlewareFunc {
 			}
 
 			// Get session
-			session, err := db.AuthGetUserSession(ctx, cookie.Value)
+			session, err := db.C().AuthGetUserSession(ctx, cookie.Value)
 			if err != nil {
 				if repo.IsNotFound(err) {
 					return next(c)

@@ -12,6 +12,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/emersion/go-smtp"
 	"github.com/jhillyerd/enmime"
@@ -21,11 +22,11 @@ import (
 )
 
 type App struct {
-	db  repo.DB
+	db  sqlite.DB
 	afs afero.Fs
 }
 
-func NewApp(db repo.DB, afs afero.Fs) App {
+func NewApp(db sqlite.DB, afs afero.Fs) App {
 	return App{
 		db:  db,
 		afs: afs,
@@ -139,8 +140,8 @@ func (s *session) Data(r io.Reader) error {
 
 	host, _ := core.SplitAddress(s.address)
 
-	dbDevice, err := s.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{
-		IPs: []string{host},
+	device, err := dahua.GetDevice(ctx, s.db, dahua.GetDeviceFilter{
+		IP: host,
 	})
 	if err != nil {
 		if repo.IsNotFound(err) {
@@ -149,11 +150,11 @@ func (s *session) Data(r io.Reader) error {
 		log.Err(err).Msg("Failed to get device")
 		return err
 	}
-	log = log.With().Str("device", dbDevice.DahuaDevice.Name).Logger()
+	log = log.With().Str("device", device.Name).Logger()
 
 	body := dahua.ParseEmailContent(e.Text)
 	arg := repo.DahuaCreateEmailMessageParams{
-		DeviceID:          dbDevice.DahuaDevice.ID,
+		DeviceID:          device.ID,
 		Date:              types.NewTime(date),
 		From:              s.from,
 		To:                types.NewStringSlice(to),
@@ -172,7 +173,7 @@ func (s *session) Data(r io.Reader) error {
 		})
 	}
 
-	email, err := CreateDahuaEmail(ctx, s.db, arg, args...)
+	email, err := dahua.CreateEmail(ctx, s.db, arg, args...)
 	if err != nil {
 		log.Err(err).Msg("Failed to create email")
 		return err

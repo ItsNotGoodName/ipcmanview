@@ -5,6 +5,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/spf13/afero"
 )
 
@@ -18,8 +19,8 @@ type Thumbnail struct {
 	repo.DahuaThumbnail
 }
 
-func CreateThumbnail(ctx context.Context, db repo.DB, afs afero.Fs, fk ThumbnailForeignKeys, width, height int64, aferoFileName string) (Thumbnail, error) {
-	thumbnail, err := db.DahuaCreateThumbnail(ctx, repo.DahuaCreateThumbnailParams{
+func CreateThumbnail(ctx context.Context, db sqlite.DB, afs afero.Fs, fk ThumbnailForeignKeys, width, height int64, aferoFileName string) (Thumbnail, error) {
+	thumbnail, err := db.C().DahuaCreateThumbnail(ctx, repo.DahuaCreateThumbnailParams{
 		EmailAttachmentID: core.Int64ToNullInt64(fk.EmailAttachmentID),
 		FileID:            core.Int64ToNullInt64(fk.FileID),
 		Width:             int64(width),

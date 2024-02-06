@@ -339,7 +339,7 @@ func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 	}
 
 	filePath := c.Param("*")
-	dbFile, err := s.db.DahuaGetFileByFilePath(ctx, repo.DahuaGetFileByFilePathParams{
+	dbFile, err := s.db.C().DahuaGetFileByFilePath(ctx, repo.DahuaGetFileByFilePathParams{
 		DeviceID: client.Conn.ID,
 		FilePath: filePath,
 	})
@@ -354,7 +354,7 @@ func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 
 	rd, err := func() (io.ReadCloser, error) {
 		aferoFileFound := true
-		aferoFile, err := s.db.DahuaGetAferoFileByFileID(ctx, sql.NullInt64{Int64: dbFile.ID, Valid: true})
+		aferoFile, err := s.db.C().DahuaGetAferoFileByFileID(ctx, sql.NullInt64{Int64: dbFile.ID, Valid: true})
 		if repo.IsNotFound(err) {
 			aferoFileFound = false
 		} else if err != nil {

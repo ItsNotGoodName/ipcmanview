@@ -10,13 +10,14 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewUser(db repo.DB, dahuaStore *dahua.Store) *User {
+func NewUser(db sqlite.DB, dahuaStore *dahua.Store) *User {
 	return &User{
 		db:         db,
 		dahuaStore: dahuaStore,
@@ -24,12 +25,12 @@ func NewUser(db repo.DB, dahuaStore *dahua.Store) *User {
 }
 
 type User struct {
-	db         repo.DB
+	db         sqlite.DB
 	dahuaStore *dahua.Store
 }
 
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
-	dbDevices, err := u.db.DahuaListFatDevices(ctx)
+	dbDevices, err := dahua.ListDevices(ctx, u.db)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +114,7 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 }
 
 func (u *User) GetDevicesPage(ctx context.Context, req *rpc.GetDevicesPageReq) (*rpc.GetDevicesPageResp, error) {
-	dbDevices, err := u.db.DahuaListFatDevices(ctx)
+	dbDevices, err := dahua.ListDevices(ctx, u.db)
 	if err != nil {
 		return nil, err
 	}
@@ -138,12 +139,12 @@ func (u *User) GetDevicesPage(ctx context.Context, req *rpc.GetDevicesPageReq) (
 func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetProfilePageResp, error) {
 	session := useAuthSession(ctx)
 
-	user, err := u.db.AuthGetUser(ctx, session.UserID)
+	user, err := u.db.C().AuthGetUser(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}
 
-	dbSessions, err := u.db.AuthListUserSessionsForUserAndNotExpired(ctx, repo.AuthListUserSessionsForUserAndNotExpiredParams{
+	dbSessions, err := u.db.C().AuthListUserSessionsForUserAndNotExpired(ctx, repo.AuthListUserSessionsForUserAndNotExpiredParams{
 		UserID: session.UserID,
 		Now:    types.NewTime(time.Now()),
 	})
@@ -166,7 +167,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 		})
 	}
 
-	dbGroups, err := u.db.AuthListGroupsForUser(ctx, session.UserID)
+	dbGroups, err := u.db.C().AuthListGroupsForUser(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +196,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	dbUser, err := u.db.AuthGetUser(ctx, session.UserID)
+	dbUser, err := u.db.C().AuthGetUser(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +218,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	dbUser, err := u.db.AuthGetUser(ctx, session.UserID)
+	dbUser, err := u.db.C().AuthGetUser(ctx, session.UserID)
 	if err != nil {
 		return nil, err
 	}

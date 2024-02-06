@@ -6,6 +6,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 )
@@ -26,7 +27,7 @@ func (c storeClient) Close(ctx context.Context) {
 	}
 }
 
-func NewStore(db repo.DB) *Store {
+func NewStore(db sqlite.DB) *Store {
 	return &Store{
 		ServiceContext: sutureext.NewServiceContext("dahua.Store"),
 		db:             db,
@@ -38,7 +39,7 @@ func NewStore(db repo.DB) *Store {
 // Store holds clients.
 type Store struct {
 	sutureext.ServiceContext
-	db        repo.DB
+	db        sqlite.DB
 	clientsMu sync.Mutex
 	clients   map[int64]storeClient
 }

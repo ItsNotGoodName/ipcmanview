@@ -12,6 +12,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
@@ -86,7 +87,7 @@ type CreateDeviceParams struct {
 	Feature  models.DahuaFeature
 }
 
-func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDeviceParams) (int64, error) {
+func CreateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg CreateDeviceParams) (int64, error) {
 	if err := core.Admin(ctx); err != nil {
 		return 0, err
 	}
@@ -127,31 +128,31 @@ func CreateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg CreateDev
 	return id, err
 }
 
-func createDahuaDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg repo.DahuaCreateDeviceParams) (int64, error) {
+func createDahuaDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.DahuaCreateDeviceParams) (int64, error) {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return 0, err
 	}
 	defer tx.Rollback()
 
-	id, err := tx.DahuaCreateDevice(ctx, arg)
+	id, err := tx.C().DahuaCreateDevice(ctx, arg)
 	if err != nil {
 		return 0, err
 	}
 
-	err = tx.DahuaAllocateSeed(ctx, core.NewNullInt64(id))
+	err = tx.C().DahuaAllocateSeed(ctx, core.NewNullInt64(id))
 	if err != nil {
 		return 0, err
 	}
 
 	arg2 := NewFileCursor()
 	arg2.DeviceID = id
-	err = tx.DahuaCreateFileCursor(ctx, arg2)
+	err = tx.C().DahuaCreateFileCursor(ctx, arg2)
 	if err != nil {
 		return 0, err
 	}
 
-	_, err = event.CreateEvent(ctx, tx, event.ActionDahuaDeviceCreated, id)
+	_, err = event.CreateEvent(ctx, tx.C(), event.ActionDahuaDeviceCreated, id)
 	if err != nil {
 		return 0, err
 	}
@@ -173,7 +174,7 @@ type UpdateDeviceParams struct {
 	Feature     models.DahuaFeature
 }
 
-func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.DahuaDevice, arg UpdateDeviceParams) error {
+func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, dbModel repo.DahuaDevice, arg UpdateDeviceParams) error {
 	if err := core.Admin(ctx); err != nil {
 		return err
 	}
@@ -219,19 +220,19 @@ func UpdateDevice(ctx context.Context, db repo.DB, bus *event.Bus, dbModel repo.
 	return nil
 }
 
-func updateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceParams) error {
+func updateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceParams) error {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	_, err = tx.DahuaUpdateDevice(ctx, arg)
+	_, err = tx.C().DahuaUpdateDevice(ctx, arg)
 	if err != nil {
 		return err
 	}
 
-	_, err = event.CreateEvent(ctx, tx, event.ActionDahuaDeviceUpdated, arg.ID)
+	_, err = event.CreateEvent(ctx, tx.C(), event.ActionDahuaDeviceUpdated, arg.ID)
 	if err != nil {
 		return err
 	}
@@ -244,7 +245,7 @@ func updateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg repo.Dahu
 	return nil
 }
 
-func DeleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) error {
+func DeleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) error {
 	if err := core.Admin(ctx); err != nil {
 		return err
 	}
@@ -256,18 +257,18 @@ func DeleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) err
 	return nil
 }
 
-func deleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) error {
+func deleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) error {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if err := tx.DahuaDeleteDevice(ctx, id); err != nil {
+	if err := tx.C().DahuaDeleteDevice(ctx, id); err != nil {
 		return err
 	}
 
-	_, err = event.CreateEvent(ctx, tx, event.ActionDahuaDeviceDeleted, id)
+	_, err = event.CreateEvent(ctx, tx.C(), event.ActionDahuaDeviceDeleted, id)
 	if err != nil {
 		return err
 	}
@@ -280,7 +281,7 @@ func deleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) err
 	return nil
 }
 
-func UpdateDeviceDisabled(ctx context.Context, db repo.DB, bus *event.Bus, id int64, disable bool) error {
+func UpdateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, disable bool) error {
 	if err := core.Admin(ctx); err != nil {
 		return err
 	}
@@ -299,19 +300,19 @@ func UpdateDeviceDisabled(ctx context.Context, db repo.DB, bus *event.Bus, id in
 	return err
 }
 
-func updateDeviceDisabled(ctx context.Context, db repo.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceDisabledAtParams) error {
+func updateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceDisabledAtParams) error {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	_, err = tx.DahuaUpdateDeviceDisabledAt(ctx, arg)
+	_, err = tx.C().DahuaUpdateDeviceDisabledAt(ctx, arg)
 	if err != nil {
 		return err
 	}
 
-	_, err = event.CreateEvent(ctx, tx, event.ActionDahuaDeviceUpdated, arg.ID)
+	_, err = event.CreateEvent(ctx, tx.C(), event.ActionDahuaDeviceUpdated, arg.ID)
 	if err != nil {
 		return err
 	}

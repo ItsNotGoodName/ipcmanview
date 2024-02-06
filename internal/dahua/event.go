@@ -8,12 +8,13 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/rs/zerolog/log"
 )
 
-func NewDefaultEventHooks(bus *event.Bus, db repo.DB) DefaultEventHooks {
+func NewDefaultEventHooks(bus *event.Bus, db sqlite.DB) DefaultEventHooks {
 	return DefaultEventHooks{
 		bus: bus,
 		db:  db,
@@ -22,7 +23,7 @@ func NewDefaultEventHooks(bus *event.Bus, db repo.DB) DefaultEventHooks {
 
 type DefaultEventHooks struct {
 	bus *event.Bus
-	db  repo.DB
+	db  sqlite.DB
 }
 
 func (e DefaultEventHooks) logError(err error) {
@@ -32,7 +33,7 @@ func (e DefaultEventHooks) logError(err error) {
 }
 
 func (e DefaultEventHooks) Connecting(ctx context.Context, deviceID int64) {
-	e.logError(e.db.DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
+	e.logError(e.db.C().DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnecting,
 		CreatedAt: types.NewTime(time.Now()),
@@ -43,7 +44,7 @@ func (e DefaultEventHooks) Connecting(ctx context.Context, deviceID int64) {
 }
 
 func (e DefaultEventHooks) Connect(ctx context.Context, deviceID int64) {
-	e.logError(e.db.DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
+	e.logError(e.db.C().DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateConnected,
 		CreatedAt: types.NewTime(time.Now()),
@@ -54,7 +55,7 @@ func (e DefaultEventHooks) Connect(ctx context.Context, deviceID int64) {
 }
 
 func (e DefaultEventHooks) Disconnect(ctx context.Context, deviceID int64, err error) {
-	e.logError(e.db.DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
+	e.logError(e.db.C().DahuaCreateEventWorkerState(ctx, repo.DahuaCreateEventWorkerStateParams{
 		DeviceID:  deviceID,
 		State:     models.DahuaEventWorkerStateDisconnected,
 		Error:     core.ErrorToNullString(err),
@@ -73,7 +74,7 @@ func (e DefaultEventHooks) Event(ctx context.Context, deviceID int64, evt dahuac
 		return
 	}
 
-	deviceName, err := e.db.DahuaGetDeviceName(ctx, deviceID)
+	deviceName, err := e.db.C().DahuaGetDeviceName(ctx, deviceID)
 	if err != nil && !repo.IsNotFound(err) {
 		e.logError(err)
 		return
@@ -89,7 +90,7 @@ func (e DefaultEventHooks) Event(ctx context.Context, deviceID int64, evt dahuac
 		CreatedAt: types.NewTime(time.Now()),
 	}
 	if !eventRule.IgnoreDb {
-		id, err := e.db.DahuaCreateEvent(ctx, repo.DahuaCreateEventParams{
+		id, err := e.db.C().DahuaCreateEvent(ctx, repo.DahuaCreateEventParams{
 			DeviceID:  v.DeviceID,
 			Code:      v.Code,
 			Action:    v.Action,

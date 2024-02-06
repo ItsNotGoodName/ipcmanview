@@ -7,6 +7,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -45,7 +46,7 @@ type CreateUserParams struct {
 	Disabled bool
 }
 
-func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, error) {
+func CreateUser(ctx context.Context, db sqlite.DB, arg CreateUserParams) (int64, error) {
 	model := user{
 		Email:    arg.Email,
 		Username: arg.Username,
@@ -78,7 +79,7 @@ func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, e
 	defer tx.Rollback()
 
 	now := types.NewTime(time.Now())
-	id, err := tx.AuthCreateUser(ctx, repo.AuthCreateUserParams{
+	id, err := tx.C().AuthCreateUser(ctx, repo.AuthCreateUserParams{
 		Email:     arg.Email,
 		Username:  arg.Username,
 		Password:  password,
@@ -94,7 +95,7 @@ func CreateUser(ctx context.Context, db repo.DB, arg CreateUserParams) (int64, e
 	}
 
 	if admin {
-		tx.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
+		tx.C().AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
 			UserID:    id,
 			CreatedAt: now,
 		})
@@ -112,7 +113,7 @@ type UpdateUserParams struct {
 	Username string
 }
 
-func UpdateUser(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUserParams) error {
+func UpdateUser(ctx context.Context, db sqlite.DB, dbModel repo.User, arg UpdateUserParams) error {
 	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
 		return err
 	}
@@ -128,7 +129,7 @@ func UpdateUser(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUs
 		return err
 	}
 
-	_, err := db.AuthPatchUser(ctx, repo.AuthPatchUserParams{
+	_, err := db.C().AuthPatchUser(ctx, repo.AuthPatchUserParams{
 		Username:  core.NewNullString(model.Username),
 		Email:     core.NewNullString(model.Email),
 		UpdatedAt: types.NewTime(time.Now()),
@@ -137,11 +138,11 @@ func UpdateUser(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUs
 	return err
 }
 
-func DeleteUser(ctx context.Context, db repo.DB, id int64) error {
+func DeleteUser(ctx context.Context, db sqlite.DB, id int64) error {
 	if err := core.UserOrAdmin(ctx, id); err != nil {
 		return err
 	}
-	return db.DeleteUser(ctx, id)
+	return db.C().DeleteUser(ctx, id)
 }
 
 type UpdateUserPasswordParams struct {
@@ -149,7 +150,7 @@ type UpdateUserPasswordParams struct {
 	CurrentSessionID int64
 }
 
-func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, arg UpdateUserPasswordParams) error {
+func UpdateUserPassword(ctx context.Context, db sqlite.DB, dbModel repo.User, arg UpdateUserPasswordParams) error {
 	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
 		return err
 	}
@@ -168,7 +169,7 @@ func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, arg 
 		return err
 	}
 
-	_, err = db.AuthPatchUser(ctx, repo.AuthPatchUserParams{
+	_, err = db.C().AuthPatchUser(ctx, repo.AuthPatchUserParams{
 		Password:  core.NewNullString(password),
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        dbModel.ID,
@@ -177,7 +178,7 @@ func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, arg 
 		return err
 	}
 
-	err = db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
+	err = db.C().AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
 		UserID: dbModel.ID,
 		ID:     arg.CurrentSessionID,
 	})
@@ -188,7 +189,7 @@ func UpdateUserPassword(ctx context.Context, db repo.DB, dbModel repo.User, arg 
 	return nil
 }
 
-func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newUsername string) error {
+func UpdateUserUsername(ctx context.Context, db sqlite.DB, dbModel repo.User, newUsername string) error {
 	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
 		return err
 	}
@@ -203,7 +204,7 @@ func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newU
 		return err
 	}
 
-	_, err := db.AuthPatchUser(ctx, repo.AuthPatchUserParams{
+	_, err := db.C().AuthPatchUser(ctx, repo.AuthPatchUserParams{
 		Username:  core.NewNullString(model.Username),
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        dbModel.ID,
@@ -211,44 +212,44 @@ func UpdateUserUsername(ctx context.Context, db repo.DB, dbModel repo.User, newU
 	return err
 }
 
-func UpdateUserDisabled(ctx context.Context, db repo.DB, id int64, disable bool) error {
+func UpdateUserDisabled(ctx context.Context, db sqlite.DB, id int64, disable bool) error {
 	if err := core.Admin(ctx); err != nil {
 		return err
 	}
 
 	if disable {
-		_, err := db.AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
+		_, err := db.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
 			ID:         id,
 		})
 		return err
 	}
-	_, err := db.AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
+	_, err := db.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 		DisabledAt: types.NullTime{},
 		ID:         id,
 	})
 	return err
 }
 
-func UpdateUserAdmin(ctx context.Context, db repo.DB, id int64, admin bool) error {
+func UpdateUserAdmin(ctx context.Context, db sqlite.DB, id int64, admin bool) error {
 	if err := core.Admin(ctx); err != nil {
 		return err
 	}
 
 	if admin {
-		_, err := db.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
+		_, err := db.C().AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
 			UserID:    id,
 			CreatedAt: types.NewTime(time.Now()),
 		})
 		return err
 	}
-	return db.AuthDeleteAdmin(ctx, id)
+	return db.C().AuthDeleteAdmin(ctx, id)
 }
 
 func CheckUserPassword(hash, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
-func GetUserByUsernameOrEmail(ctx context.Context, db repo.DB, usernameOrEmail string) (repo.User, error) {
-	return db.AuthGetUserByUsernameOrEmail(ctx, strings.ToLower(strings.TrimSpace(usernameOrEmail)))
+func GetUserByUsernameOrEmail(ctx context.Context, db sqlite.DB, usernameOrEmail string) (repo.User, error) {
+	return db.C().AuthGetUserByUsernameOrEmail(ctx, strings.ToLower(strings.TrimSpace(usernameOrEmail)))
 }

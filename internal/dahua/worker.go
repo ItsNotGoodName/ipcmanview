@@ -12,6 +12,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuaevents"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
@@ -89,7 +90,7 @@ func (m *WorkerManager) Delete(id int64) error {
 	return nil
 }
 
-func (m *WorkerManager) Register(bus *event.Bus, db repo.DB) *WorkerManager {
+func (m *WorkerManager) Register(bus *event.Bus, db sqlite.DB) *WorkerManager {
 	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
@@ -114,7 +115,7 @@ func (m *WorkerManager) Register(bus *event.Bus, db repo.DB) *WorkerManager {
 	return m
 }
 
-func (m *WorkerManager) Bootstrap(ctx context.Context, db repo.DB, store *Store) error {
+func (m *WorkerManager) Bootstrap(ctx context.Context, db sqlite.DB, store *Store) error {
 	conns, err := ListConn(ctx, db)
 	if err != nil {
 		return err
@@ -129,7 +130,7 @@ func (m *WorkerManager) Bootstrap(ctx context.Context, db repo.DB, store *Store)
 	return err
 }
 
-func DefaultWorkerFactory(bus *event.Bus, pub pubsub.Pub, db repo.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
+func DefaultWorkerFactory(bus *event.Bus, pub pubsub.Pub, db sqlite.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
 	return func(ctx context.Context, super *suture.Supervisor, device Conn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
@@ -221,7 +222,7 @@ func (w EventWorker) serve(ctx context.Context) error {
 	}
 }
 
-func NewCoaxialWorker(bus *event.Bus, db repo.DB, store *Store, deviceID int64) CoaxialWorker {
+func NewCoaxialWorker(bus *event.Bus, db sqlite.DB, store *Store, deviceID int64) CoaxialWorker {
 	return CoaxialWorker{
 		bus:      bus,
 		db:       db,
@@ -233,7 +234,7 @@ func NewCoaxialWorker(bus *event.Bus, db repo.DB, store *Store, deviceID int64) 
 // CoaxialWorker publishes coaxial status to the bus.
 type CoaxialWorker struct {
 	bus      *event.Bus
-	db       repo.DB
+	db       sqlite.DB
 	store    *Store
 	deviceID int64
 }
@@ -304,7 +305,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 	}
 }
 
-func NewQuickScanWorker(pub pubsub.Pub, db repo.DB, store *Store, scanLockStore ScanLockStore, deviceID int64) QuickScanWorker {
+func NewQuickScanWorker(pub pubsub.Pub, db sqlite.DB, store *Store, scanLockStore ScanLockStore, deviceID int64) QuickScanWorker {
 	return QuickScanWorker{
 		pub:           pub,
 		db:            db,
@@ -316,7 +317,7 @@ func NewQuickScanWorker(pub pubsub.Pub, db repo.DB, store *Store, scanLockStore 
 
 type QuickScanWorker struct {
 	pub           pubsub.Pub
-	db            repo.DB
+	db            sqlite.DB
 	store         *Store
 	scanLockStore ScanLockStore
 	deviceID      int64

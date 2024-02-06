@@ -11,6 +11,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	sq "github.com/Masterminds/squirrel"
@@ -18,7 +19,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewAdmin(db repo.DB, bus *event.Bus) *Admin {
+func NewAdmin(db sqlite.DB, bus *event.Bus) *Admin {
 	return &Admin{
 		db:  db,
 		bus: bus,
@@ -26,7 +27,7 @@ func NewAdmin(db repo.DB, bus *event.Bus) *Admin {
 }
 
 type Admin struct {
-	db  repo.DB
+	db  sqlite.DB
 	bus *event.Bus
 }
 
@@ -107,22 +108,22 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 }
 
 func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevicesIDPageReq) (*rpc.GetAdminDevicesIDPageResp, error) {
-	v, err := a.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	v, err := dahua.GetDevice(ctx, a.db, dahua.GetDeviceFilter{ID: req.Id})
 	if err != nil {
 		return nil, err
 	}
 
 	return &rpc.GetAdminDevicesIDPageResp{
 		Device: &rpc.GetAdminDevicesIDPageResp_Device{
-			Id:             v.DahuaDevice.ID,
-			Name:           v.DahuaDevice.Name,
-			Url:            v.DahuaDevice.Url.String(),
-			Username:       v.DahuaDevice.Username,
+			Id:             v.ID,
+			Name:           v.Name,
+			Url:            v.Url.String(),
+			Username:       v.Username,
 			Disabled:       v.DisabledAt.Valid,
-			Location:       v.DahuaDevice.Location.String(),
-			CreatedAtTime:  timestamppb.New(v.DahuaDevice.CreatedAt.Time),
-			UpdatedAtTime:  timestamppb.New(v.DahuaDevice.UpdatedAt.Time),
-			DisabledAtTime: timestamppb.New(v.DahuaDevice.DisabledAt.Time),
+			Location:       v.Location.String(),
+			CreatedAtTime:  timestamppb.New(v.CreatedAt.Time),
+			UpdatedAtTime:  timestamppb.New(v.UpdatedAt.Time),
+			DisabledAtTime: timestamppb.New(v.DisabledAt.Time),
 			Features:       dahua.FeatureToStrings(v.Feature),
 		},
 	}, nil
@@ -130,7 +131,7 @@ func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevi
 }
 
 func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
-	v, err := a.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	v, err := dahua.GetDevice(ctx, a.db, dahua.GetDeviceFilter{ID: req.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -182,12 +183,14 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 		return nil, err
 	}
 
-	dbDevice, err := a.db.DahuaGetFatDevice(ctx, repo.DahuaFatDeviceParams{IDs: []int64{req.Id}})
+	dbDevice, err := dahua.GetDevice(ctx, a.db, dahua.GetDeviceFilter{
+		ID: req.Id,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	err = dahua.UpdateDevice(ctx, a.db, a.bus, dbDevice.DahuaDevice, dahua.UpdateDeviceParams{
+	err = dahua.UpdateDevice(ctx, a.db, a.bus, dbDevice, dahua.UpdateDeviceParams{
 		Name:        req.Name,
 		URL:         urL,
 		Username:    req.Username,
@@ -320,7 +323,7 @@ func (a *Admin) CreateUser(ctx context.Context, req *rpc.CreateUserReq) (*emptyp
 }
 
 func (a *Admin) GetUser(ctx context.Context, req *rpc.GetUserReq) (*rpc.GetUserResp, error) {
-	v, err := a.db.AuthGetUser(ctx, req.Id)
+	v, err := a.db.C().AuthGetUser(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +336,7 @@ func (a *Admin) GetUser(ctx context.Context, req *rpc.GetUserReq) (*rpc.GetUserR
 }
 
 func (a *Admin) UpdateUser(ctx context.Context, req *rpc.UpdateUserReq) (*emptypb.Empty, error) {
-	dbUser, err := a.db.AuthGetUser(ctx, req.Id)
+	dbUser, err := a.db.C().AuthGetUser(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -394,7 +397,7 @@ func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*em
 func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	dbUser, err := a.db.AuthGetUser(ctx, req.Id)
+	dbUser, err := a.db.C().AuthGetUser(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -489,7 +492,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 }
 
 func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroupsIDPageReq) (*rpc.GetAdminGroupsIDPageResp, error) {
-	dbUsers, err := a.db.AuthListUsersByGroup(ctx, req.Id)
+	dbUsers, err := a.db.C().AuthListUsersByGroup(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -502,7 +505,7 @@ func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroup
 		})
 	}
 
-	v, err := a.db.AuthGetGroup(ctx, req.Id)
+	v, err := a.db.C().AuthGetGroup(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -522,7 +525,7 @@ func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroup
 }
 
 func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGroupResp, error) {
-	v, err := a.db.AuthGetGroup(ctx, req.Id)
+	v, err := a.db.C().AuthGetGroup(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -548,7 +551,7 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 }
 
 func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
-	dbGroup, err := a.db.AuthGetGroup(ctx, req.Id)
+	dbGroup, err := a.db.C().AuthGetGroup(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}

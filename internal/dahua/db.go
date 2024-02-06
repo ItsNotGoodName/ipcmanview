@@ -6,6 +6,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
 	sq "github.com/Masterminds/squirrel"
 )
@@ -50,9 +51,9 @@ func dbSelectFilter(ctx context.Context, sb sq.SelectBuilder, deviceIDField stri
 		`, level, actor.UserID, actor.UserID))
 }
 
-func GetConn(ctx context.Context, db repo.DB, id int64) (Conn, error) {
+func GetConn(ctx context.Context, db sqlite.DB, id int64) (Conn, error) {
 	actor := core.UseActor(ctx)
-	v, err := db.DahuaGetConn(ctx, repo.DahuaGetConnParams{
+	v, err := db.C().DahuaGetConn(ctx, repo.DahuaGetConnParams{
 		ID:     id,
 		Admin:  actor.Admin,
 		UserID: core.NewNullInt64(actor.UserID),
@@ -72,9 +73,9 @@ func GetConn(ctx context.Context, db repo.DB, id int64) (Conn, error) {
 	}, nil
 }
 
-func ListConn(ctx context.Context, db repo.DB) ([]Conn, error) {
+func ListConn(ctx context.Context, db sqlite.DB) ([]Conn, error) {
 	actor := core.UseActor(ctx)
-	vv, err := db.DahuaListConn(ctx, repo.DahuaListConnParams{
+	vv, err := db.C().DahuaListConn(ctx, repo.DahuaListConnParams{
 		Admin:  actor.Admin,
 		UserID: core.NewNullInt64(actor.UserID),
 	})
@@ -98,7 +99,7 @@ func ListConn(ctx context.Context, db repo.DB) ([]Conn, error) {
 	return conns, nil
 }
 
-func ListDeviceIDs(ctx context.Context, db repo.DB) ([]int64, error) {
+func ListDeviceIDs(ctx context.Context, db sqlite.DB) ([]int64, error) {
 	sb := sq.
 		Select("id").
 		From("dahua_devices")
@@ -108,7 +109,7 @@ func ListDeviceIDs(ctx context.Context, db repo.DB) ([]int64, error) {
 	return res, err
 }
 
-func CountFiles(ctx context.Context, db repo.DB) (int64, error) {
+func CountFiles(ctx context.Context, db sqlite.DB) (int64, error) {
 	sb := sq.
 		Select("COUNT(*) AS count").
 		From("dahua_files")
@@ -118,7 +119,7 @@ func CountFiles(ctx context.Context, db repo.DB) (int64, error) {
 	return res.Count, err
 }
 
-func CountEvents(ctx context.Context, db repo.DB) (int64, error) {
+func CountEvents(ctx context.Context, db sqlite.DB) (int64, error) {
 	sb := sq.
 		Select("COUNT(*) AS count").
 		From("dahua_events")
@@ -128,7 +129,7 @@ func CountEvents(ctx context.Context, db repo.DB) (int64, error) {
 	return res.Count, err
 }
 
-func CountEmails(ctx context.Context, db repo.DB) (int64, error) {
+func CountEmails(ctx context.Context, db sqlite.DB) (int64, error) {
 	sb := sq.
 		Select("COUNT(*) AS count").
 		From("dahua_email_messages")
@@ -143,7 +144,7 @@ type ListLatestEmailsResult struct {
 	AttachmentCount int64
 }
 
-func ListLatestEmails(ctx context.Context, db repo.DB, count int) ([]ListLatestEmailsResult, error) {
+func ListLatestEmails(ctx context.Context, db sqlite.DB, count int) ([]ListLatestEmailsResult, error) {
 	sb := sq.
 		Select("dahua_email_messages.*", "COUNT(dahua_email_attachments.id) AS attachment_count").
 		From("dahua_email_messages").
@@ -154,14 +155,10 @@ func ListLatestEmails(ctx context.Context, db repo.DB, count int) ([]ListLatestE
 
 	var res []ListLatestEmailsResult
 	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", models.DahuaPermissionLevelAdmin))
-	if err != nil {
-		return nil, err
-	}
-
-	return res, nil
+	return res, err
 }
 
-func ListLatestFiles(ctx context.Context, db repo.DB, count int) ([]repo.DahuaFile, error) {
+func ListLatestFiles(ctx context.Context, db sqlite.DB, count int) ([]repo.DahuaFile, error) {
 	sb := sq.
 		Select("*").
 		From("dahua_files").
@@ -170,9 +167,39 @@ func ListLatestFiles(ctx context.Context, db repo.DB, count int) ([]repo.DahuaFi
 
 	var res []repo.DahuaFile
 	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id"))
-	if err != nil {
-		return nil, err
+	return res, err
+}
+
+type GetDeviceFilter struct {
+	ID int64
+	IP string
+}
+
+func GetDevice(ctx context.Context, db sqlite.DB, filter GetDeviceFilter) (repo.DahuaDevice, error) {
+	eq := sq.Eq{}
+	if filter.ID != 0 {
+		eq["id"] = filter.ID
+	}
+	if filter.IP != "" {
+		eq["ip"] = filter.IP
 	}
 
-	return res, nil
+	sb := sq.
+		Select("*").
+		From("dahua_devices").
+		Where(eq)
+
+	var res repo.DahuaDevice
+	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id"))
+	return res, err
+}
+
+func ListDevices(ctx context.Context, db sqlite.DB) ([]repo.DahuaDevice, error) {
+	sb := sq.
+		Select("*").
+		From("dahua_devices")
+
+	var res []repo.DahuaDevice
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id"))
+	return res, err
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/server"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/spf13/afero"
@@ -61,25 +60,20 @@ func (c Shared) useSecret() ([]byte, error) {
 	return b, nil
 }
 
-func (c Shared) useDB(ctx *Context) (repo.DB, error) {
-	sqlDB, err := sqlite.New(filepath.Join(c.Dir, "sqlite.db"))
+func (c Shared) useDB(ctx *Context) (sqlite.DB, error) {
+	sqlDB, err := sqlite.NewSQLDB(filepath.Join(c.Dir, "sqlite.db"))
 	if err != nil {
-		return repo.DB{}, err
+		return sqlite.DB{}, err
 	}
 	if err := migrations.Migrate(sqlDB); err != nil {
-		return repo.DB{}, err
+		return sqlite.DB{}, err
 	}
 
-	var db repo.DB
-	if ctx.Debug {
-		db = repo.NewDB(sqlite.NewDebugDB(sqlDB))
-	} else {
-		db = repo.NewDB(sqlite.NewDB(sqlDB))
-	}
+	db := sqlite.NewDB(sqlDB)
 
 	err = migrations.Normalize(ctx, db)
 	if err != nil {
-		return repo.DB{}, err
+		return sqlite.DB{}, err
 	}
 
 	return db, nil
@@ -114,7 +108,7 @@ func (c Shared) useCert() (server.Certificate, error) {
 // 	All bool    `help:"Run on all devices."`
 // }
 
-// func (c SharedDevices) useDevices(ctx context.Context, db repo.DB) ([]models.DahuaDeviceConn, error) {
+// func (c SharedDevices) useDevices(ctx context.Context, db sqlite.DB) ([]models.DahuaDeviceConn, error) {
 // 	var devices []models.DahuaDeviceConn
 // 	if c.All {
 // 		dbDevices, err := db.DahuaListDevices(ctx)

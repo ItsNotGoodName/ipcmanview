@@ -6,19 +6,20 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func NewPublic(db repo.DB) *Public {
+func NewPublic(db sqlite.DB) *Public {
 	return &Public{
 		db: db,
 	}
 }
 
 type Public struct {
-	db repo.DB
+	db sqlite.DB
 }
 
 func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*emptypb.Empty, error) {
@@ -32,7 +33,7 @@ func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*emptypb.Empty
 	}
 
 	// TODO: remove this
-	p.db.AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{UserID: id, CreatedAt: types.NewTime(time.Now())})
+	p.db.C().AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{UserID: id, CreatedAt: types.NewTime(time.Now())})
 
 	return &emptypb.Empty{}, nil
 }

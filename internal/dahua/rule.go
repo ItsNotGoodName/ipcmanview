@@ -6,17 +6,18 @@ import (
 	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 )
 
-func CreateEventRule(ctx context.Context, db repo.DB, arg repo.DahuaCreateEventRuleParams) error {
+func CreateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateEventRuleParams) error {
 	arg.Code = strings.TrimSpace(arg.Code)
 	if arg.Code == "" {
 		return errors.New("code cannot be empty")
 	}
-	return db.DahuaCreateEventRule(ctx, arg)
+	return db.C().DahuaCreateEventRule(ctx, arg)
 }
 
-func UpdateEventRule(ctx context.Context, db repo.DB, rule repo.DahuaEventRule, arg repo.DahuaUpdateEventRuleParams) error {
+func UpdateEventRule(ctx context.Context, db sqlite.DB, rule repo.DahuaEventRule, arg repo.DahuaUpdateEventRuleParams) error {
 	arg.Code = strings.TrimSpace(arg.Code)
 	if rule.Code == "" {
 		arg.Code = rule.Code
@@ -26,18 +27,18 @@ func UpdateEventRule(ctx context.Context, db repo.DB, rule repo.DahuaEventRule, 
 		return errors.New("code cannot be empty")
 	}
 
-	return db.DahuaUpdateEventRule(ctx, arg)
+	return db.C().DahuaUpdateEventRule(ctx, arg)
 }
 
-func DeleteEventRule(ctx context.Context, db repo.DB, rule repo.DahuaEventRule) error {
+func DeleteEventRule(ctx context.Context, db sqlite.DB, rule repo.DahuaEventRule) error {
 	if rule.Code == "" {
 		return errors.New("code cannot be empty")
 	}
-	return db.DahuaDeleteEventRule(ctx, rule.ID)
+	return db.C().DahuaDeleteEventRule(ctx, rule.ID)
 }
 
-func GetEventRuleByEvent(ctx context.Context, db repo.DB, deviceID int64, code string) (repo.DahuaEventRule, error) {
-	res, err := db.DahuaGetEventRuleByEvent(ctx, repo.DahuaGetEventRuleByEventParams{
+func GetEventRuleByEvent(ctx context.Context, db sqlite.DB, deviceID int64, code string) (repo.DahuaEventRule, error) {
+	res, err := db.C().DahuaGetEventRuleByEvent(ctx, repo.DahuaGetEventRuleByEventParams{
 		DeviceID: deviceID,
 		Code:     code,
 	})

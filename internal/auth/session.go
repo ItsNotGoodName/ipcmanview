@@ -8,6 +8,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
@@ -41,7 +42,7 @@ type CreateUserSessionParams struct {
 	PreviousSession string
 }
 
-func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionParams) (string, error) {
+func CreateUserSession(ctx context.Context, db sqlite.DB, arg CreateUserSessionParams) (string, error) {
 	session, err := generateSession()
 	if err != nil {
 		return "", err
@@ -69,7 +70,7 @@ func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionPar
 			return "", nil
 		}
 	} else {
-		err := db.AuthCreateUserSession(ctx, dbArg)
+		err := db.C().AuthCreateUserSession(ctx, dbArg)
 		if err != nil {
 			return "", nil
 		}
@@ -78,43 +79,43 @@ func CreateUserSession(ctx context.Context, db repo.DB, arg CreateUserSessionPar
 	return session, nil
 }
 
-func createUserSessionAndDeletePrevious(ctx context.Context, db repo.DB, arg repo.AuthCreateUserSessionParams, previousSession string) error {
+func createUserSessionAndDeletePrevious(ctx context.Context, db sqlite.DB, arg repo.AuthCreateUserSessionParams, previousSession string) error {
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	if err := tx.AuthCreateUserSession(ctx, arg); err != nil {
+	if err := tx.C().AuthCreateUserSession(ctx, arg); err != nil {
 		return err
 	}
 
-	if err := tx.AuthDeleteUserSessionBySession(ctx, previousSession); err != nil {
+	if err := tx.C().AuthDeleteUserSessionBySession(ctx, previousSession); err != nil {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-func DeleteUserSessionBySession(ctx context.Context, db repo.DB, session string) error {
-	return db.AuthDeleteUserSessionBySession(ctx, session)
+func DeleteUserSessionBySession(ctx context.Context, db sqlite.DB, session string) error {
+	return db.C().AuthDeleteUserSessionBySession(ctx, session)
 }
 
-func DeleteUserSession(ctx context.Context, db repo.DB, userID int64, sessionID int64) error {
+func DeleteUserSession(ctx context.Context, db sqlite.DB, userID int64, sessionID int64) error {
 	if err := core.UserOrAdmin(ctx, userID); err != nil {
 		return err
 	}
-	return db.AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
+	return db.C().AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
 		UserID: userID,
 		ID:     sessionID,
 	})
 }
 
-func DeleteOtherUserSessions(ctx context.Context, db repo.DB, userID int64, currentSessionID int64) error {
+func DeleteOtherUserSessions(ctx context.Context, db sqlite.DB, userID int64, currentSessionID int64) error {
 	if err := core.UserOrAdmin(ctx, userID); err != nil {
 		return err
 	}
-	return db.AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
+	return db.C().AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
 		UserID: userID,
 		ID:     currentSessionID,
 	})
@@ -130,7 +131,7 @@ type TouchUserSessionParams struct {
 	IP               string
 }
 
-func TouchUserSession(ctx context.Context, db repo.DB, arg TouchUserSessionParams) error {
+func TouchUserSession(ctx context.Context, db sqlite.DB, arg TouchUserSessionParams) error {
 	now := time.Now()
 	if arg.LastIP == arg.IP && arg.LastUsedAt.After(now.Add(-touchSessionThrottle)) {
 		return nil
@@ -142,7 +143,7 @@ func TouchUserSession(ctx context.Context, db repo.DB, arg TouchUserSessionParam
 	}
 	defer unlock()
 
-	err = db.AuthUpdateUserSession(ctx, repo.AuthUpdateUserSessionParams{
+	err = db.C().AuthUpdateUserSession(ctx, repo.AuthUpdateUserSessionParams{
 		LastIp:     arg.IP,
 		LastUsedAt: types.NewTime(now),
 		ID:         arg.CurrentSessionID,

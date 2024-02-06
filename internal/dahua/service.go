@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -13,7 +13,7 @@ import (
 
 var ErrFileServiceConflict = fmt.Errorf("file service conflict")
 
-func NewAferoService(db repo.DB, afs afero.Fs) AferoService {
+func NewAferoService(db sqlite.DB, afs afero.Fs) AferoService {
 	return AferoService{
 		interval: 8 * time.Hour,
 		db:       db,
@@ -25,7 +25,7 @@ func NewAferoService(db repo.DB, afs afero.Fs) AferoService {
 // AferoService handles deleting orphan afero files.
 type AferoService struct {
 	interval time.Duration
-	db       repo.DB
+	db       sqlite.DB
 	afs      afero.Fs
 	queueC   chan struct{}
 }
@@ -98,7 +98,7 @@ type fileServiceFilterRes struct {
 	err        error
 }
 
-func NewFileService(db repo.DB, afs afero.Fs, store *Store) FileService {
+func NewFileService(db sqlite.DB, afs afero.Fs, store *Store) FileService {
 	return FileService{
 		db:        db,
 		afs:       afs,
@@ -110,7 +110,7 @@ func NewFileService(db repo.DB, afs afero.Fs, store *Store) FileService {
 
 // FileService handles downloading files.
 type FileService struct {
-	db        repo.DB
+	db        sqlite.DB
 	afs       afero.Fs
 	store     *Store
 	req       chan fileServiceReq
@@ -160,7 +160,7 @@ func (s FileService) serve(ctx context.Context) error {
 }
 
 func (s FileService) download(ctx context.Context, id int64) error {
-	file, err := s.db.DahuaGetFile(ctx, id)
+	file, err := s.db.C().DahuaGetFile(ctx, id)
 	if err != nil {
 		return err
 	}
