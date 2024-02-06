@@ -11,6 +11,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -23,12 +24,14 @@ import (
 
 type App struct {
 	db  sqlite.DB
+	bus *event.Bus
 	afs afero.Fs
 }
 
-func NewApp(db sqlite.DB, afs afero.Fs) App {
+func NewApp(db sqlite.DB, bus *event.Bus, afs afero.Fs) App {
 	return App{
 		db:  db,
+		bus: bus,
 		afs: afs,
 	}
 }
@@ -208,6 +211,11 @@ func (s *session) Data(r io.Reader) error {
 		}(); err != nil {
 			return err
 		}
+	}
+
+	err = event.CreateEvent(ctx, s.db.C(), s.bus, event.ActionDahuaEmailCreated, email.Message.ID)
+	if err != nil {
+		return err
 	}
 
 	log.Info().Msg("Created email")

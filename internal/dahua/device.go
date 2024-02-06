@@ -152,7 +152,7 @@ func createDahuaDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg re
 		return 0, err
 	}
 
-	_, err = event.CreateEvent(ctx, tx.C(), event.ActionDahuaDeviceCreated, id)
+	err = event.CreateEvent(ctx, tx.C(), bus, event.ActionDahuaDeviceCreated, id)
 	if err != nil {
 		return 0, err
 	}
@@ -161,7 +161,6 @@ func createDahuaDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg re
 		return 0, err
 	}
 
-	bus.EventQueued(event.EventQueued{})
 	return id, nil
 }
 
@@ -202,7 +201,7 @@ func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, dbModel rep
 		password = arg.NewPassword
 	}
 
-	err = updateDevice(ctx, db, bus, repo.DahuaUpdateDeviceParams{
+	return updateDevice(ctx, db, bus, repo.DahuaUpdateDeviceParams{
 		Name:      model.Name,
 		Url:       types.NewURL(model.URL),
 		Ip:        ip,
@@ -213,11 +212,6 @@ func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, dbModel rep
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        dbModel.ID,
 	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func updateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceParams) error {
@@ -232,17 +226,12 @@ func updateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.Da
 		return err
 	}
 
-	_, err = event.CreateEvent(ctx, tx.C(), event.ActionDahuaDeviceUpdated, arg.ID)
+	err = event.CreateEvent(ctx, tx.C(), bus, event.ActionDahuaDeviceUpdated, arg.ID)
 	if err != nil {
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	bus.EventQueued(event.EventQueued{})
-	return nil
+	return tx.Commit()
 }
 
 func DeleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) error {
@@ -250,11 +239,7 @@ func DeleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) e
 		return err
 	}
 
-	if err := deleteDevice(ctx, db, bus, id); err != nil {
-		return err
-	}
-
-	return nil
+	return deleteDevice(ctx, db, bus, id)
 }
 
 func deleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) error {
@@ -268,17 +253,12 @@ func deleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) e
 		return err
 	}
 
-	_, err = event.CreateEvent(ctx, tx.C(), event.ActionDahuaDeviceDeleted, id)
+	err = event.CreateEvent(ctx, tx.C(), bus, event.ActionDahuaDeviceDeleted, id)
 	if err != nil {
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	bus.EventQueued(event.EventQueued{})
-	return nil
+	return tx.Commit()
 }
 
 func UpdateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, disable bool) error {
@@ -287,17 +267,15 @@ func UpdateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id 
 	}
 
 	if disable {
-		err := updateDeviceDisabled(ctx, db, bus, repo.DahuaUpdateDeviceDisabledAtParams{
+		return updateDeviceDisabled(ctx, db, bus, repo.DahuaUpdateDeviceDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
 			ID:         id,
 		})
-		return err
 	}
-	err := updateDeviceDisabled(ctx, db, bus, repo.DahuaUpdateDeviceDisabledAtParams{
+	return updateDeviceDisabled(ctx, db, bus, repo.DahuaUpdateDeviceDisabledAtParams{
 		DisabledAt: types.NullTime{},
 		ID:         id,
 	})
-	return err
 }
 
 func updateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceDisabledAtParams) error {
@@ -312,15 +290,10 @@ func updateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, arg
 		return err
 	}
 
-	_, err = event.CreateEvent(ctx, tx.C(), event.ActionDahuaDeviceUpdated, arg.ID)
+	err = event.CreateEvent(ctx, tx.C(), bus, event.ActionDahuaDeviceUpdated, arg.ID)
 	if err != nil {
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	bus.EventQueued(event.EventQueued{})
-	return nil
+	return tx.Commit()
 }

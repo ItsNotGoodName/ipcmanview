@@ -94,7 +94,7 @@ func (m *WorkerManager) Register(bus *event.Bus, db sqlite.DB) *WorkerManager {
 	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
-			deviceID := event.UseDataDahuaDevice(evt.Event)
+			deviceID := event.DataAsInt64(evt.Event)
 
 			conn, err := GetConn(ctx, db, deviceID)
 			if err != nil {
@@ -106,7 +106,7 @@ func (m *WorkerManager) Register(bus *event.Bus, db sqlite.DB) *WorkerManager {
 
 			return m.Upsert(ctx, conn)
 		case event.ActionDahuaDeviceDeleted:
-			deviceID := event.UseDataDahuaDevice(evt.Event)
+			deviceID := event.DataAsInt64(evt.Event)
 
 			m.Delete(deviceID)
 		}

@@ -124,7 +124,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	}
 
 	// SMTP
-	dahuaSMTPApp := dahuasmtp.NewApp(db, dahuaAFS)
+	dahuaSMTPApp := dahuasmtp.NewApp(db, bus, dahuaAFS)
 	dahuaSMTPBackend := dahuasmtp.NewBackend(dahuaSMTPApp)
 	dahuaSMTPServer := dahuasmtp.NewServer(dahuaSMTPBackend, core.Address(c.SMTPHost, int(c.SMTPPort)))
 	super.Add(dahuaSMTPServer)

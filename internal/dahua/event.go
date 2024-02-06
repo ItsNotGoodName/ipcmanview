@@ -74,12 +74,6 @@ func (e DefaultEventHooks) Event(ctx context.Context, deviceID int64, evt dahuac
 		return
 	}
 
-	deviceName, err := e.db.C().DahuaGetDeviceName(ctx, deviceID)
-	if err != nil && !repo.IsNotFound(err) {
-		e.logError(err)
-		return
-	}
-
 	v := repo.DahuaEvent{
 		ID:        0,
 		DeviceID:  deviceID,
@@ -106,8 +100,7 @@ func (e DefaultEventHooks) Event(ctx context.Context, deviceID int64, evt dahuac
 	}
 
 	e.bus.DahuaEvent(event.DahuaEvent{
-		DeviceName: deviceName,
-		Event:      v,
-		EventRule:  eventRule,
+		Event:     v,
+		EventRule: eventRule,
 	})
 }

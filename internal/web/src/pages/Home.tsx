@@ -13,6 +13,7 @@ import { Seperator } from "~/ui/Seperator"
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
 import { createDate, createTimeAgo } from "@solid-primitives/date"
 import { Image } from "@kobalte/core"
+import { linkVariants } from "~/ui/Link"
 
 export function Home() {
   const data = createAsync(getHomePage)
@@ -132,38 +133,40 @@ export function Home() {
                     const [startTime] = createDate(() => parseDate(v.startTime));
                     const [startTimeAgo] = createTimeAgo(startTime);
 
-                    return <div class="hover:bg-accent/50 flex flex-col gap-1 rounded border p-2 transition-all">
-                      <A href={`/files/${v.id}`} >
-                        <Image.Root>
-                          <Image.Img src={v.thumbnailUrl} class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
-                          <Image.Fallback>
-                            <Show when={v.type == "jpg"} fallback={
-                              <RiMediaVideoLine class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
-                            }>
-                              <RiMediaImageLine class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
-                            </Show>
-                          </Image.Fallback>
-                        </Image.Root>
-                      </A>
-                      <Seperator />
-                      <div class="flex justify-between gap-2 items-center">
-                        <TooltipRoot>
-                          <TooltipTrigger class="text-sm">{startTimeAgo()}</TooltipTrigger>
-                          <TooltipContent>
-                            {formatDate(startTime())}
-                          </TooltipContent>
-                        </TooltipRoot>
-                        <a href={v.url} target="_blank">
-                          <RiSystemDownloadLine class="h-4 w-4 " />
-                        </a>
+                    return (
+                      <div class="hover:bg-accent/50 flex flex-col rounded-b border transition-all">
+                        <A href={`/files/${v.id}`} >
+                          <Image.Root>
+                            <Image.Img src={v.thumbnailUrl} class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
+                            <Image.Fallback>
+                              <Show when={v.type == "jpg"} fallback={
+                                <RiMediaVideoLine class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
+                              }>
+                                <RiMediaImageLine class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
+                              </Show>
+                            </Image.Fallback>
+                          </Image.Root>
+                        </A>
+                        <Seperator />
+                        <div class="flex items-center justify-between gap-2 p-2">
+                          <TooltipRoot>
+                            <TooltipTrigger class="text-sm">{startTimeAgo()}</TooltipTrigger>
+                            <TooltipContent>
+                              {formatDate(startTime())}
+                            </TooltipContent>
+                          </TooltipRoot>
+                          <a href={v.url} target="_blank">
+                            <RiSystemDownloadLine class="h-4 w-4 " />
+                          </a>
+                        </div>
                       </div>
-                    </div>
+                    )
                   }}
                 </For>
               </div>
             </div>
           </div>
-          <div class="sm:max-w-sm">
+          <div class="flex flex-col sm:flex-row">
             <CardRoot class="p-4">
               <Shared.Title>Build</Shared.Title>
               <div class="relative overflow-x-auto">
@@ -171,7 +174,7 @@ export function Home() {
                   <tbody>
                     <tr class="border-b">
                       <td class="p-2">Commit</td>
-                      <td class="p-2"><a href={data()?.build?.commitUrl}>{data()?.build?.commit}</a></td>
+                      <td class="p-2"><a class={linkVariants()} href={data()?.build?.commitUrl}>{data()?.build?.commit}</a></td>
                     </tr>
                     <tr class="border-b">
                       <td class="p-2">Date</td>

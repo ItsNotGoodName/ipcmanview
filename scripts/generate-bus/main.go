@@ -75,7 +75,7 @@ type Data struct {
 
 func main() {
 	outputFilePath := "./internal/event/bus.gen.go"
-	inputFilePath := "./internal/event/event.go"
+	inputFilePath := "./internal/event/models.go"
 
 	flag.StringVar(&outputFilePath, "output", "", "")
 	flag.StringVar(&inputFilePath, "input", "", "")

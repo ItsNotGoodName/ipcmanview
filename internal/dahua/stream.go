@@ -106,7 +106,7 @@ func RegisterStreams(bus *event.Bus, db sqlite.DB, store *Store) {
 	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
-			deviceID := event.UseDataDahuaDevice(evt.Event)
+			deviceID := event.DataAsInt64(evt.Event)
 
 			client, err := store.GetClient(ctx, deviceID)
 			if err != nil {

@@ -734,22 +734,6 @@ func (q *Queries) DahuaGetConn(ctx context.Context, arg DahuaGetConnParams) (Dah
 	return i, err
 }
 
-const dahuaGetDeviceName = `-- name: DahuaGetDeviceName :one
-SELECT
-  name
-FROM
-  dahua_devices
-WHERE
-  id = ?
-`
-
-func (q *Queries) DahuaGetDeviceName(ctx context.Context, id int64) (string, error) {
-	row := q.db.QueryRowContext(ctx, dahuaGetDeviceName, id)
-	var name string
-	err := row.Scan(&name)
-	return name, err
-}
-
 const dahuaGetEventData = `-- name: DahuaGetEventData :one
 SELECT
   data

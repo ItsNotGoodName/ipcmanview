@@ -231,7 +231,7 @@ func (c Conn) Register(bus *event.Bus) error {
 			switch evt.Event.Action {
 			case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
 				c.conn.Ready()
-				return c.haSyncDevice(ctx, event.UseDataDahuaDevice(evt.Event))
+				return c.haSyncDevice(ctx, event.DataAsInt64(evt.Event))
 			}
 			return nil
 		})

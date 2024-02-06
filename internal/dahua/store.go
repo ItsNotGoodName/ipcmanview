@@ -132,7 +132,7 @@ func (s *Store) Register(bus *event.Bus) *Store {
 	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
-			deviceID := event.UseDataDahuaDevice(evt.Event)
+			deviceID := event.DataAsInt64(evt.Event)
 
 			if _, err := s.GetClient(ctx, deviceID); err != nil {
 				if repo.IsNotFound(err) {
@@ -141,7 +141,7 @@ func (s *Store) Register(bus *event.Bus) *Store {
 				return err
 			}
 		case event.ActionDahuaDeviceDeleted:
-			deviceID := event.UseDataDahuaDevice(evt.Event)
+			deviceID := event.DataAsInt64(evt.Event)
 
 			return s.DeleteClient(ctx, deviceID)
 		}

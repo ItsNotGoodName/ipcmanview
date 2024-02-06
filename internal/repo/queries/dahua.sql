@@ -43,14 +43,6 @@ SET
 WHERE
   id = ? RETURNING id;
 
--- name: DahuaGetDeviceName :one
-SELECT
-  name
-FROM
-  dahua_devices
-WHERE
-  id = ?;
-
 -- name: DahuaDeleteDevice :exec
 DELETE FROM dahua_devices
 WHERE
