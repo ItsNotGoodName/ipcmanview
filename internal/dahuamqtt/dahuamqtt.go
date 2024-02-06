@@ -70,7 +70,7 @@ func (c Conn) Sync(ctx context.Context) error {
 func (c Conn) haSync(ctx context.Context) error {
 	c.conn.Ready()
 
-	ids, err := c.db.DahuaListDeviceIDs(ctx)
+	ids, err := dahua.ListDeviceIDs(ctx, c.db)
 	if err != nil {
 		return err
 	}
@@ -226,7 +226,7 @@ func NewEvent(v repo.DahuaEvent) Event {
 
 func (c Conn) Register(bus *event.Bus) error {
 	if c.haEnable {
-		bus.OnEventCreated(func(ctx context.Context, evt event.EventCreated) error {
+		bus.OnEvent(func(ctx context.Context, evt event.Event) error {
 			switch evt.Event.Action {
 			case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
 				c.conn.Ready()

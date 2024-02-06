@@ -667,6 +667,73 @@ func (q *Queries) DahuaGetAferoFileByFileID(ctx context.Context, fileID sql.Null
 	return i, err
 }
 
+const dahuaGetConn = `-- name: DahuaGetConn :one
+SELECT
+  d.id,
+  d.url,
+  d.username,
+  d.password,
+  d.location,
+  d.feature,
+  coalesce(seed, d.id)
+FROM
+  dahua_devices as d
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
+WHERE
+  d.disabled_at IS NULL
+  AND id = ?1
+  AND (
+    true = ?2
+    OR id IN (
+      SELECT
+        device_id
+      FROM
+        dahua_permissions
+      WHERE
+        dahua_permissions.user_id = ?3
+        OR dahua_permissions.group_id IN (
+          SELECT
+            group_id
+          FROM
+            group_users
+          WHERE
+            group_users.user_id = ?3
+        )
+    )
+  )
+`
+
+type DahuaGetConnParams struct {
+	ID     int64
+	Admin  interface{}
+	UserID sql.NullInt64
+}
+
+type DahuaGetConnRow struct {
+	ID       int64
+	Url      types.URL
+	Username string
+	Password string
+	Location types.Location
+	Feature  models.DahuaFeature
+	Seed     int64
+}
+
+func (q *Queries) DahuaGetConn(ctx context.Context, arg DahuaGetConnParams) (DahuaGetConnRow, error) {
+	row := q.db.QueryRowContext(ctx, dahuaGetConn, arg.ID, arg.Admin, arg.UserID)
+	var i DahuaGetConnRow
+	err := row.Scan(
+		&i.ID,
+		&i.Url,
+		&i.Username,
+		&i.Password,
+		&i.Location,
+		&i.Feature,
+		&i.Seed,
+	)
+	return i, err
+}
+
 const dahuaGetDeviceName = `-- name: DahuaGetDeviceName :one
 SELECT
   name
@@ -1009,6 +1076,87 @@ func (q *Queries) DahuaGetStream(ctx context.Context, id int64) (DahuaStream, er
 		&i.MediamtxPath,
 	)
 	return i, err
+}
+
+const dahuaListConn = `-- name: DahuaListConn :many
+SELECT
+  d.id,
+  d.url,
+  d.username,
+  d.password,
+  d.location,
+  d.feature,
+  coalesce(seed, d.id)
+FROM
+  dahua_devices as d
+  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
+WHERE
+  d.disabled_at IS NULL
+  AND (
+    true = ?1
+    OR id IN (
+      SELECT
+        device_id
+      FROM
+        dahua_permissions
+      WHERE
+        dahua_permissions.user_id = ?2
+        OR dahua_permissions.group_id IN (
+          SELECT
+            group_id
+          FROM
+            group_users
+          WHERE
+            group_users.user_id = ?2
+        )
+    )
+  )
+`
+
+type DahuaListConnParams struct {
+	Admin  interface{}
+	UserID sql.NullInt64
+}
+
+type DahuaListConnRow struct {
+	ID       int64
+	Url      types.URL
+	Username string
+	Password string
+	Location types.Location
+	Feature  models.DahuaFeature
+	Seed     int64
+}
+
+func (q *Queries) DahuaListConn(ctx context.Context, arg DahuaListConnParams) ([]DahuaListConnRow, error) {
+	rows, err := q.db.QueryContext(ctx, dahuaListConn, arg.Admin, arg.UserID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DahuaListConnRow
+	for rows.Next() {
+		var i DahuaListConnRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Url,
+			&i.Username,
+			&i.Password,
+			&i.Location,
+			&i.Feature,
+			&i.Seed,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const dahuaListEventActions = `-- name: DahuaListEventActions :many
@@ -1822,152 +1970,4 @@ WHERE
 func (q *Queries) DahuaUpdateStreamForInternal(ctx context.Context, deviceID int64) error {
 	_, err := q.db.ExecContext(ctx, dahuaUpdateStreamForInternal, deviceID)
 	return err
-}
-
-const dahuaGetConn = `-- name: dahuaGetConn :one
-SELECT
-  d.id,
-  d.url,
-  d.username,
-  d.password,
-  d.location,
-  d.feature,
-  coalesce(seed, d.id)
-FROM
-  dahua_devices as d
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
-WHERE
-  d.disabled_at IS NULL
-  AND id = ?1
-  AND (
-    true = ?2
-    OR id IN (
-      SELECT
-        device_id
-      FROM
-        dahua_permissions
-      WHERE
-        dahua_permissions.user_id = ?3
-        OR dahua_permissions.group_id IN (
-          SELECT
-            group_id
-          FROM
-            group_users
-          WHERE
-            group_users.user_id = ?3
-        )
-    )
-  )
-`
-
-type dahuaGetConnParams struct {
-	ID     int64
-	Admin  interface{}
-	UserID sql.NullInt64
-}
-
-type dahuaGetConnRow struct {
-	ID       int64
-	Url      types.URL
-	Username string
-	Password string
-	Location types.Location
-	Feature  models.DahuaFeature
-	Seed     int64
-}
-
-func (q *Queries) dahuaGetConn(ctx context.Context, arg dahuaGetConnParams) (dahuaGetConnRow, error) {
-	row := q.db.QueryRowContext(ctx, dahuaGetConn, arg.ID, arg.Admin, arg.UserID)
-	var i dahuaGetConnRow
-	err := row.Scan(
-		&i.ID,
-		&i.Url,
-		&i.Username,
-		&i.Password,
-		&i.Location,
-		&i.Feature,
-		&i.Seed,
-	)
-	return i, err
-}
-
-const dahuaListConn = `-- name: dahuaListConn :many
-SELECT
-  d.id,
-  d.url,
-  d.username,
-  d.password,
-  d.location,
-  d.feature,
-  coalesce(seed, d.id)
-FROM
-  dahua_devices as d
-  LEFT JOIN dahua_seeds ON dahua_seeds.device_id = d.id
-WHERE
-  d.disabled_at IS NULL
-  AND (
-    true = ?1
-    OR id IN (
-      SELECT
-        device_id
-      FROM
-        dahua_permissions
-      WHERE
-        dahua_permissions.user_id = ?2
-        OR dahua_permissions.group_id IN (
-          SELECT
-            group_id
-          FROM
-            group_users
-          WHERE
-            group_users.user_id = ?2
-        )
-    )
-  )
-`
-
-type dahuaListConnParams struct {
-	Admin  interface{}
-	UserID sql.NullInt64
-}
-
-type dahuaListConnRow struct {
-	ID       int64
-	Url      types.URL
-	Username string
-	Password string
-	Location types.Location
-	Feature  models.DahuaFeature
-	Seed     int64
-}
-
-func (q *Queries) dahuaListConn(ctx context.Context, arg dahuaListConnParams) ([]dahuaListConnRow, error) {
-	rows, err := q.db.QueryContext(ctx, dahuaListConn, arg.Admin, arg.UserID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []dahuaListConnRow
-	for rows.Next() {
-		var i dahuaListConnRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Url,
-			&i.Username,
-			&i.Password,
-			&i.Location,
-			&i.Feature,
-			&i.Seed,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }

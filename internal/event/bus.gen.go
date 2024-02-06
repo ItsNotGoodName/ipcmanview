@@ -24,7 +24,7 @@ func NewBus() *Bus {
 type Bus struct {
 	sutureext.ServiceContext
 	onEventQueued []func(ctx context.Context, event EventQueued) error
-	onEventCreated []func(ctx context.Context, event EventCreated) error
+	onEvent []func(ctx context.Context, event Event) error
 	onDahuaEvent []func(ctx context.Context, event DahuaEvent) error
 	onDahuaEventWorkerConnecting []func(ctx context.Context, event DahuaEventWorkerConnecting) error
 	onDahuaEventWorkerConnect []func(ctx context.Context, event DahuaEventWorkerConnect) error
@@ -40,7 +40,7 @@ func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 		}
 		return err
 	})
-	b.OnEventCreated(func(ctx context.Context, evt EventCreated) error {
+	b.OnEvent(func(ctx context.Context, evt Event) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
@@ -90,8 +90,8 @@ func (b *Bus) OnEventQueued(h func(ctx context.Context, evt EventQueued) error) 
 	b.onEventQueued = append(b.onEventQueued, h)
 }
 
-func (b *Bus) OnEventCreated(h func(ctx context.Context, evt EventCreated) error) {
-	b.onEventCreated = append(b.onEventCreated, h)
+func (b *Bus) OnEvent(h func(ctx context.Context, evt Event) error) {
+	b.onEvent = append(b.onEvent, h)
 }
 
 func (b *Bus) OnDahuaEvent(h func(ctx context.Context, evt DahuaEvent) error) {
@@ -122,8 +122,8 @@ func (b *Bus) EventQueued(evt EventQueued) {
 	}
 }
 
-func (b *Bus) EventCreated(evt EventCreated) {
-	for _, v := range b.onEventCreated {
+func (b *Bus) Event(evt Event) {
+	for _, v := range b.onEvent {
 		busLogError(v(b.Context(), evt))
 	}
 }

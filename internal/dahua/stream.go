@@ -102,7 +102,7 @@ func syncStreams(ctx context.Context, db repo.DB, deviceID int64, args []syncStr
 }
 
 func RegisterStreams(bus *event.Bus, db repo.DB, store *Store) {
-	bus.OnEventCreated(func(ctx context.Context, evt event.EventCreated) error {
+	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
 			deviceID := event.UseDataDahuaDevice(evt.Event)
@@ -116,6 +116,7 @@ func RegisterStreams(bus *event.Bus, db repo.DB, store *Store) {
 			}
 
 			if SupportStreams(client.Conn.Feature) {
+				// TODO: this should just schedula a background job
 				return SyncStreams(ctx, db, deviceID, client.RPC)
 			}
 		}

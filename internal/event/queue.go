@@ -41,18 +41,20 @@ func (q Queue) Serve(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-q.check:
-			event, err := q.db.NextEventByCursor(ctx, cursor)
-			if err != nil {
-				if repo.IsNotFound(err) {
-					continue
+			for {
+				event, err := q.db.NextEventByCursor(ctx, cursor)
+				if err != nil {
+					if repo.IsNotFound(err) {
+						break
+					}
+					return err
 				}
-				return err
-			}
-			cursor = event.ID
+				cursor = event.ID
 
-			q.bus.EventCreated(EventCreated{
-				Event: event,
-			})
+				q.bus.Event(Event{
+					Event: event,
+				})
+			}
 		}
 	}
 }

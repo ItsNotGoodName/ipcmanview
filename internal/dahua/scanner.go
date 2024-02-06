@@ -9,21 +9,10 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
 )
 
-func init() {
-	var err error
-	ScannerEpoch, err = time.ParseInLocation(time.DateTime, "2009-12-31 00:00:00", time.UTC)
-	if err != nil {
-		panic(err)
-	}
-}
-
 const (
 	// MaxScannerPeriod is longest allowed time range for a mediafilefind query because some devices give invalid data past the MaxScannerPeriod.
 	MaxScannerPeriod = 30 * 24 * time.Hour
 )
-
-// ScannerEpoch is the oldest time a file can exist.
-var ScannerEpoch time.Time
 
 // ScannerPeriod is INCLUSIVE Start and EXCLUSIVE End.
 type ScannerPeriod struct {

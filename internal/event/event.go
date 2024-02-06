@@ -1,10 +1,15 @@
 package event
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
+	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
 const (
@@ -12,6 +17,24 @@ const (
 	ActionDahuaDeviceUpdated models.EventAction = "dahua-device:updated"
 	ActionDahuaDeviceDeleted models.EventAction = "dahua-device:deleted"
 )
+
+func CreateEvent(ctx context.Context, db repo.DBTX, action models.EventAction, data any) (int64, error) {
+	actor := core.UseActor(ctx)
+	b, err := json.Marshal(data)
+	if err != nil {
+		return 0, err
+	}
+	return repo.New(db).CreateEvent(ctx, repo.CreateEventParams{
+		Action: action,
+		Data:   types.NewJSON(b),
+		UserID: sql.NullInt64{
+			Int64: actor.UserID,
+			Valid: actor.Type == core.ActorTypeUser,
+		},
+		Actor:     actor.Type,
+		CreatedAt: types.NewTime(time.Now()),
+	})
+}
 
 func UseDataDahuaDevice(evt repo.Event) int64 {
 	var deviceID int64
@@ -25,7 +48,7 @@ func UseDataDahuaDevice(evt repo.Event) int64 {
 type EventQueued struct {
 }
 
-type EventCreated struct {
+type Event struct {
 	Event repo.Event
 }
 

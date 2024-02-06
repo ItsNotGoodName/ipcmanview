@@ -11,7 +11,27 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
 )
 
+func init() {
+	var err error
+	scanEpoch, err = time.ParseInLocation(time.DateTime, "2009-12-31 00:00:00", time.UTC)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// scanEpoch is the oldest time a file can exist.
+var scanEpoch time.Time
+
 const scanVolatileDuration = 8 * time.Hour
+
+func NewFileCursor() repo.DahuaCreateFileCursorParams {
+	now := time.Now()
+	return repo.DahuaCreateFileCursorParams{
+		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
+		FullCursor:  types.NewTime(now),
+		FullEpoch:   types.NewTime(scanEpoch),
+	}
+}
 
 func updateScanFileCursor(fileCursor repo.DahuaFileCursor, scanPeriod ScannerPeriod, scanType models.DahuaScanType) repo.DahuaFileCursor {
 	switch scanType {
@@ -85,7 +105,7 @@ func ScanReset(ctx context.Context, db repo.DB, deviceID int64) error {
 }
 
 // Scan cannot be called concurrently for the same device.
-func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device models.Conn, scanType models.DahuaScanType) error {
+func Scan(ctx context.Context, db repo.DB, rpcClient dahuarpc.Conn, device Conn, scanType models.DahuaScanType) error {
 	fileCursor, err := db.DahuaUpdateFileCursorScanPercent(ctx, repo.DahuaUpdateFileCursorScanPercentParams{
 		DeviceID:    device.ID,
 		ScanPercent: 0,

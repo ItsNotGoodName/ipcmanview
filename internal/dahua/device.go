@@ -151,7 +151,7 @@ func createDahuaDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg repo
 		return 0, err
 	}
 
-	_, err = tx.CreateEvent(ctx, event.ActionDahuaDeviceCreated, id)
+	_, err = event.CreateEvent(ctx, tx, event.ActionDahuaDeviceCreated, id)
 	if err != nil {
 		return 0, err
 	}
@@ -231,7 +231,7 @@ func updateDevice(ctx context.Context, db repo.DB, bus *event.Bus, arg repo.Dahu
 		return err
 	}
 
-	_, err = tx.CreateEvent(ctx, event.ActionDahuaDeviceUpdated, arg.ID)
+	_, err = event.CreateEvent(ctx, tx, event.ActionDahuaDeviceUpdated, arg.ID)
 	if err != nil {
 		return err
 	}
@@ -267,7 +267,7 @@ func deleteDevice(ctx context.Context, db repo.DB, bus *event.Bus, id int64) err
 		return err
 	}
 
-	_, err = tx.CreateEvent(ctx, event.ActionDahuaDeviceDeleted, id)
+	_, err = event.CreateEvent(ctx, tx, event.ActionDahuaDeviceDeleted, id)
 	if err != nil {
 		return err
 	}
@@ -311,7 +311,7 @@ func updateDeviceDisabled(ctx context.Context, db repo.DB, bus *event.Bus, arg r
 		return err
 	}
 
-	_, err = tx.CreateEvent(ctx, event.ActionDahuaDeviceUpdated, arg.ID)
+	_, err = event.CreateEvent(ctx, tx, event.ActionDahuaDeviceUpdated, arg.ID)
 	if err != nil {
 		return err
 	}

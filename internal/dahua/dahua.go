@@ -8,8 +8,6 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
@@ -73,7 +71,7 @@ func GetDahuaDetail(ctx context.Context, rpcClient dahuarpc.Conn) (models.DahuaD
 		return models.DahuaDetail{}, err
 	}
 
-	ProcessInfo, err := magicbox.GetProcessInfo(ctx, rpcClient)
+	processInfo, err := magicbox.GetProcessInfo(ctx, rpcClient)
 	if err != nil && !ignorableError(err) {
 		return models.DahuaDetail{}, err
 	}
@@ -105,7 +103,7 @@ func GetDahuaDetail(ctx context.Context, rpcClient dahuarpc.Conn) (models.DahuaD
 		DeviceType:       deviceType,
 		HardwareVersion:  hardwareVersion,
 		MarketArea:       marketArea,
-		ProcessInfo:      ProcessInfo,
+		ProcessInfo:      processInfo,
 		Vendor:           vendor,
 		OnvifVersion:     onvifVersion,
 		AlgorithmVersion: algorithmVersion,
@@ -352,13 +350,4 @@ func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location,
 		SwitchMode:  cfg.Tables[0].Data.SwitchMode(),
 		TimeSection: cfg.Tables[0].Data.TimeSection[0][0],
 	}, nil
-}
-
-func NewFileCursor() repo.DahuaCreateFileCursorParams {
-	now := time.Now()
-	return repo.DahuaCreateFileCursorParams{
-		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
-		FullCursor:  types.NewTime(now),
-		FullEpoch:   types.NewTime(ScannerEpoch),
-	}
 }

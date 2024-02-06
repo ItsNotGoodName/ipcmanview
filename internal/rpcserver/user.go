@@ -42,17 +42,17 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		})
 	}
 
-	fileCount, err := u.db.DahuaCountDahuaFiles(ctx)
+	fileCount, err := dahua.CountFiles(ctx, u.db)
 	if err != nil {
 		return nil, err
 	}
 
-	eventCount, err := u.db.DahuaCountDahuaEvents(ctx)
+	eventCount, err := dahua.CountEvents(ctx, u.db)
 	if err != nil {
 		return nil, err
 	}
 
-	emailCount, err := u.db.DahuaCountDahuaEmails(ctx)
+	emailCount, err := dahua.CountEmails(ctx, u.db)
 	if err != nil {
 		return nil, err
 	}

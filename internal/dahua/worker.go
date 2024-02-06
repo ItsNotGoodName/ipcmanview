@@ -20,7 +20,7 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device models.Conn) ([]suture.ServiceToken, error)
+type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device Conn) ([]suture.ServiceToken, error)
 
 // WorkerManager manages devices workers.
 type WorkerManager struct {
@@ -32,7 +32,7 @@ type WorkerManager struct {
 }
 
 type workerData struct {
-	conn   models.Conn
+	conn   Conn
 	tokens []suture.ServiceToken
 }
 
@@ -45,7 +45,7 @@ func NewWorkerManager(super *suture.Supervisor, factory WorkerFactory) *WorkerMa
 	}
 }
 
-func (m *WorkerManager) Upsert(ctx context.Context, conn models.Conn) error {
+func (m *WorkerManager) Upsert(ctx context.Context, conn Conn) error {
 	m.workersMu.Lock()
 	defer m.workersMu.Unlock()
 
@@ -90,12 +90,12 @@ func (m *WorkerManager) Delete(id int64) error {
 }
 
 func (m *WorkerManager) Register(bus *event.Bus, db repo.DB) *WorkerManager {
-	bus.OnEventCreated(func(ctx context.Context, evt event.EventCreated) error {
+	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
 			deviceID := event.UseDataDahuaDevice(evt.Event)
 
-			conn, err := db.DahuaGetConn(ctx, deviceID)
+			conn, err := GetConn(ctx, db, deviceID)
 			if err != nil {
 				if repo.IsNotFound(err) {
 					return m.Delete(deviceID)
@@ -115,7 +115,7 @@ func (m *WorkerManager) Register(bus *event.Bus, db repo.DB) *WorkerManager {
 }
 
 func (m *WorkerManager) Bootstrap(ctx context.Context, db repo.DB, store *Store) error {
-	conns, err := db.DahuaListConn(ctx)
+	conns, err := ListConn(ctx, db)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (m *WorkerManager) Bootstrap(ctx context.Context, db repo.DB, store *Store)
 }
 
 func DefaultWorkerFactory(bus *event.Bus, pub pubsub.Pub, db repo.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
-	return func(ctx context.Context, super *suture.Supervisor, device models.Conn) ([]suture.ServiceToken, error) {
+	return func(ctx context.Context, super *suture.Supervisor, device Conn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
 		{
@@ -162,7 +162,7 @@ type EventHooks interface {
 	Event(ctx context.Context, deviceID int64, event dahuacgi.Event)
 }
 
-func NewEventWorker(device models.Conn, hooks EventHooks) EventWorker {
+func NewEventWorker(device Conn, hooks EventHooks) EventWorker {
 	return EventWorker{
 		device: device,
 		hooks:  hooks,
@@ -171,7 +171,7 @@ func NewEventWorker(device models.Conn, hooks EventHooks) EventWorker {
 
 // EventWorker subscribes to events.
 type EventWorker struct {
-	device models.Conn
+	device Conn
 	hooks  EventHooks
 }
 

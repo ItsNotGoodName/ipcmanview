@@ -14,6 +14,34 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
+const createEvent = `-- name: CreateEvent :one
+INSERT INTO
+  events (action, data, user_id, actor, created_at)
+VALUES
+  (?, ?, ?, ?, ?) RETURNING id
+`
+
+type CreateEventParams struct {
+	Action    models.EventAction
+	Data      types.JSON
+	UserID    sql.NullInt64
+	Actor     core.ActorType
+	CreatedAt types.Time
+}
+
+func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createEvent,
+		arg.Action,
+		arg.Data,
+		arg.UserID,
+		arg.Actor,
+		arg.CreatedAt,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getEventCursor = `-- name: GetEventCursor :one
 SELECT
   id
@@ -55,32 +83,4 @@ func (q *Queries) NextEventByCursor(ctx context.Context, id int64) (Event, error
 		&i.CreatedAt,
 	)
 	return i, err
-}
-
-const createEvent = `-- name: createEvent :one
-INSERT INTO
-  events (action, data, user_id, actor, created_at)
-VALUES
-  (?, ?, ?, ?, ?) RETURNING id
-`
-
-type createEventParams struct {
-	Action    models.EventAction
-	Data      types.JSON
-	UserID    sql.NullInt64
-	Actor     core.ActorType
-	CreatedAt types.Time
-}
-
-func (q *Queries) createEvent(ctx context.Context, arg createEventParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, createEvent,
-		arg.Action,
-		arg.Data,
-		arg.UserID,
-		arg.Actor,
-		arg.CreatedAt,
-	)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
 }

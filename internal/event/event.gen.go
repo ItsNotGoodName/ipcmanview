@@ -5,8 +5,8 @@ func (e EventQueued) EventTopic() string {
 	return "EventQueued"
 }
 
-func (e EventCreated) EventTopic() string {
-	return "EventCreated"
+func (e Event) EventTopic() string {
+	return "Event"
 }
 
 func (e DahuaEvent) EventTopic() string {

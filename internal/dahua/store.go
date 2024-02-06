@@ -5,13 +5,12 @@ import (
 	"sync"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 )
 
-func newStoreClient(conn models.Conn) storeClient {
+func newStoreClient(conn Conn) storeClient {
 	return storeClient{
 		Client: NewClient(conn),
 	}
@@ -36,7 +35,7 @@ func NewStore(db repo.DB) *Store {
 	}
 }
 
-// Store holds dahua clients.
+// Store holds clients.
 type Store struct {
 	sutureext.ServiceContext
 	db        repo.DB
@@ -59,7 +58,7 @@ func (s *Store) Close() {
 	wg.Wait()
 }
 
-func (s *Store) getOrCreateClient(ctx context.Context, conn models.Conn) Client {
+func (s *Store) getOrCreateClient(ctx context.Context, conn Conn) Client {
 	client, ok := s.clients[conn.ID]
 	if !ok {
 		// Not found
@@ -85,7 +84,7 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn models.Conn) Client 
 
 func (s *Store) GetClient(ctx context.Context, deviceID int64) (Client, error) {
 	s.clientsMu.Lock()
-	conn, err := s.db.DahuaGetConn(ctx, deviceID)
+	conn, err := GetConn(ctx, s.db, deviceID)
 	if err != nil {
 		s.clientsMu.Unlock()
 		return Client{}, err
@@ -99,7 +98,7 @@ func (s *Store) GetClient(ctx context.Context, deviceID int64) (Client, error) {
 
 func (s *Store) ListClient(ctx context.Context) ([]Client, error) {
 	s.clientsMu.Lock()
-	conns, err := s.db.DahuaListConn(ctx)
+	conns, err := ListConn(ctx, s.db)
 	if err != nil {
 		s.clientsMu.Unlock()
 		return nil, err
@@ -129,7 +128,7 @@ func (s *Store) DeleteClient(ctx context.Context, deviceID int64) error {
 }
 
 func (s *Store) Register(bus *event.Bus) *Store {
-	bus.OnEventCreated(func(ctx context.Context, evt event.EventCreated) error {
+	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
 			deviceID := event.UseDataDahuaDevice(evt.Event)

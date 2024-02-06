@@ -594,7 +594,7 @@ WHERE
 LIMIT
   ?;
 
--- name: dahuaGetConn :one
+-- name: DahuaGetConn :one
 SELECT
   d.id,
   d.url,
@@ -629,7 +629,7 @@ WHERE
     )
   );
 
--- name: dahuaListConn :many
+-- name: DahuaListConn :many
 SELECT
   d.id,
   d.url,

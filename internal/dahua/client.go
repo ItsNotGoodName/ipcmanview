@@ -5,13 +5,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
 )
 
-func NewClient(conn models.Conn) Client {
+func NewClient(conn Conn) Client {
 	rpcHTTPClient := &http.Client{
 		Timeout: 5 * time.Second,
 	}
@@ -33,7 +32,7 @@ func NewClient(conn models.Conn) Client {
 }
 
 type Client struct {
-	Conn models.Conn
+	Conn Conn
 	RPC  dahuarpc.Client
 	PTZ  ptz.Client
 	CGI  dahuacgi.Client
