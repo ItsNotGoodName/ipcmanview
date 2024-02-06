@@ -288,7 +288,6 @@ SELECT
   admins.user_id IS NOT NULL as 'admin',
   user_sessions.last_ip,
   user_sessions.last_used_at,
-  user_sessions.expired_at,
   users.disabled_at AS 'users_disabled_at',
   user_sessions.session
 FROM
@@ -297,7 +296,13 @@ FROM
   LEFT JOIN admins ON admins.user_id = user_sessions.user_id
 WHERE
   session = ?
+  AND expired_at < ?
 `
+
+type AuthGetUserSessionParams struct {
+	Session   string
+	ExpiredAt types.Time
+}
 
 type AuthGetUserSessionRow struct {
 	ID              int64
@@ -306,13 +311,12 @@ type AuthGetUserSessionRow struct {
 	Admin           bool
 	LastIp          string
 	LastUsedAt      types.Time
-	ExpiredAt       types.Time
 	UsersDisabledAt types.NullTime
 	Session         string
 }
 
-func (q *Queries) AuthGetUserSession(ctx context.Context, session string) (AuthGetUserSessionRow, error) {
-	row := q.db.QueryRowContext(ctx, authGetUserSession, session)
+func (q *Queries) AuthGetUserSession(ctx context.Context, arg AuthGetUserSessionParams) (AuthGetUserSessionRow, error) {
+	row := q.db.QueryRowContext(ctx, authGetUserSession, arg.Session, arg.ExpiredAt)
 	var i AuthGetUserSessionRow
 	err := row.Scan(
 		&i.ID,
@@ -321,7 +325,6 @@ func (q *Queries) AuthGetUserSession(ctx context.Context, session string) (AuthG
 		&i.Admin,
 		&i.LastIp,
 		&i.LastUsedAt,
-		&i.ExpiredAt,
 		&i.UsersDisabledAt,
 		&i.Session,
 	)

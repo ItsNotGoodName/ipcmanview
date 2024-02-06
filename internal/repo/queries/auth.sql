@@ -82,7 +82,6 @@ SELECT
   admins.user_id IS NOT NULL as 'admin',
   user_sessions.last_ip,
   user_sessions.last_used_at,
-  user_sessions.expired_at,
   users.disabled_at AS 'users_disabled_at',
   user_sessions.session
 FROM
@@ -90,7 +89,8 @@ FROM
   LEFT JOIN users ON users.id = user_sessions.user_id
   LEFT JOIN admins ON admins.user_id = user_sessions.user_id
 WHERE
-  session = ?;
+  session = ?
+  AND expired_at < ?;
 
 -- name: AuthDeleteUserSessionForUser :exec
 DELETE FROM user_sessions

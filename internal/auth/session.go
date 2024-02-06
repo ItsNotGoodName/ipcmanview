@@ -155,8 +155,11 @@ func TouchUserSession(ctx context.Context, db sqlite.DB, arg TouchUserSessionPar
 	return nil
 }
 
-func UserSessionExpired(expiredAt time.Time) bool {
-	return expiredAt.Before(time.Now())
+func GetUserSession(ctx context.Context, db sqlite.DB, session string) (repo.AuthGetUserSessionRow, error) {
+	return db.C().AuthGetUserSession(ctx, repo.AuthGetUserSessionParams{
+		Session:   session,
+		ExpiredAt: types.NewTime(time.Now()),
+	})
 }
 
 func WithSession(ctx context.Context, session Session) context.Context {

@@ -23,15 +23,12 @@ func SessionMiddleware(db sqlite.DB) echo.MiddlewareFunc {
 			}
 
 			// Get session
-			session, err := db.C().AuthGetUserSession(ctx, cookie.Value)
+			session, err := auth.GetUserSession(ctx, db, cookie.Value)
 			if err != nil {
 				if repo.IsNotFound(err) {
 					return next(c)
 				}
 				return err
-			}
-			if auth.UserSessionExpired(session.ExpiredAt.Time) {
-				return next(c)
 			}
 
 			// Touch session
