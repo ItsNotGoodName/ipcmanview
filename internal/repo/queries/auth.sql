@@ -74,7 +74,7 @@ INSERT INTO
 VALUES
   (?, ?, ?, ?, ?, ?, ?, ?);
 
--- name: AuthGetUserSession :one
+-- name: AuthGetUserSessionForContext :one
 SELECT
   user_sessions.id as id,
   user_sessions.user_id as user_id,
@@ -90,7 +90,7 @@ FROM
   LEFT JOIN admins ON admins.user_id = user_sessions.user_id
 WHERE
   session = ?
-  AND expired_at < ?;
+  AND expired_at > sqlc.arg ('now');
 
 -- name: AuthDeleteUserSessionForUser :exec
 DELETE FROM user_sessions

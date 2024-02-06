@@ -155,10 +155,10 @@ func TouchUserSession(ctx context.Context, db sqlite.DB, arg TouchUserSessionPar
 	return nil
 }
 
-func GetUserSession(ctx context.Context, db sqlite.DB, session string) (repo.AuthGetUserSessionRow, error) {
-	return db.C().AuthGetUserSession(ctx, repo.AuthGetUserSessionParams{
-		Session:   session,
-		ExpiredAt: types.NewTime(time.Now()),
+func GetUserSessionForContext(ctx context.Context, db sqlite.DB, session string) (repo.AuthGetUserSessionForContextRow, error) {
+	return db.C().AuthGetUserSessionForContext(ctx, repo.AuthGetUserSessionForContextParams{
+		Session: session,
+		Now:     types.NewTime(time.Now()),
 	})
 }
 

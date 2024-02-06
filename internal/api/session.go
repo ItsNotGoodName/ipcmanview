@@ -23,7 +23,7 @@ func SessionMiddleware(db sqlite.DB) echo.MiddlewareFunc {
 			}
 
 			// Get session
-			session, err := auth.GetUserSession(ctx, db, cookie.Value)
+			session, err := auth.GetUserSessionForContext(ctx, db, cookie.Value)
 			if err != nil {
 				if repo.IsNotFound(err) {
 					return next(c)

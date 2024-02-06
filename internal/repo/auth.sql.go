@@ -280,7 +280,7 @@ func (q *Queries) AuthGetUserByUsernameOrEmail(ctx context.Context, usernameOrEm
 	return i, err
 }
 
-const authGetUserSession = `-- name: AuthGetUserSession :one
+const authGetUserSessionForContext = `-- name: AuthGetUserSessionForContext :one
 SELECT
   user_sessions.id as id,
   user_sessions.user_id as user_id,
@@ -296,15 +296,15 @@ FROM
   LEFT JOIN admins ON admins.user_id = user_sessions.user_id
 WHERE
   session = ?
-  AND expired_at < ?
+  AND expired_at > ?2
 `
 
-type AuthGetUserSessionParams struct {
-	Session   string
-	ExpiredAt types.Time
+type AuthGetUserSessionForContextParams struct {
+	Session string
+	Now     types.Time
 }
 
-type AuthGetUserSessionRow struct {
+type AuthGetUserSessionForContextRow struct {
 	ID              int64
 	UserID          int64
 	Username        sql.NullString
@@ -315,9 +315,9 @@ type AuthGetUserSessionRow struct {
 	Session         string
 }
 
-func (q *Queries) AuthGetUserSession(ctx context.Context, arg AuthGetUserSessionParams) (AuthGetUserSessionRow, error) {
-	row := q.db.QueryRowContext(ctx, authGetUserSession, arg.Session, arg.ExpiredAt)
-	var i AuthGetUserSessionRow
+func (q *Queries) AuthGetUserSessionForContext(ctx context.Context, arg AuthGetUserSessionForContextParams) (AuthGetUserSessionForContextRow, error) {
+	row := q.db.QueryRowContext(ctx, authGetUserSessionForContext, arg.Session, arg.Now)
+	var i AuthGetUserSessionForContextRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
