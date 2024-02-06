@@ -52,7 +52,7 @@ func (d *device) normalize(create bool) {
 	// Name/Username
 	if create {
 		if d.Name == "" {
-			d.Name = d.URL.String()
+			d.Name = d.URL.Hostname()
 		}
 		if d.Username == "" {
 			d.Username = "admin"
