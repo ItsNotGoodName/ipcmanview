@@ -1,3 +1,4 @@
+import Humanize from "humanize-plus"
 import { A, createAsync } from "@solidjs/router"
 import { CardRoot, } from "~/ui/Card"
 import { getHomePage } from "./Home.data"
@@ -5,11 +6,13 @@ import { ErrorBoundary, For, ParentProps, Show, Suspense } from "solid-js"
 import { BiRegularCctv } from "solid-icons/bi"
 import { PageError, PageLoading } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
-import { RiBusinessMailLine, RiMediaVideoLine, RiDeviceHardDrive2Line, RiDocumentFile2Line, RiEditorAttachment2, RiWeatherFlashlightLine, RiMediaImageLine } from "solid-icons/ri"
+import { RiBusinessMailLine, RiMediaVideoLine, RiDeviceHardDrive2Line, RiDocumentFile2Line, RiEditorAttachment2, RiWeatherFlashlightLine, RiMediaImageLine, RiSystemDownloadLine } from "solid-icons/ri"
 import { Shared } from "~/components/Shared"
-import { formatDate } from "~/lib/utils"
+import { formatDate, parseDate } from "~/lib/utils"
 import { Seperator } from "~/ui/Seperator"
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
+import { createDate, createTimeAgo } from "@solid-primitives/date"
+import { Image } from "@kobalte/core"
 
 export function Home() {
   const data = createAsync(getHomePage)
@@ -76,72 +79,92 @@ export function Home() {
             </StatParent>
           </div>
           <div class="flex flex-col gap-4 lg:flex-row">
-            <CardRoot class="flex-shrink-0 p-4 lg:max-w-sm">
-              <Shared.Title>Latest emails</Shared.Title>
-              <table class="w-full table-fixed">
-                <tbody>
-                  <For each={Array(5)}>
-                    {_ =>
-                      <tr class="hover:bg-muted/50 flex flex-col overflow-hidden border-b py-2 transition-colors sm:flex-row">
-                        <td class="text-nowrap px-2">
-                          <TooltipRoot>
-                            <TooltipTrigger class="text-sm font-bold">19 minutes ago</TooltipTrigger>
-                            <TooltipContent>
-                              {formatDate(new Date())}
-                            </TooltipContent>
-                          </TooltipRoot>
-                        </td>
-                        <td class="w-full truncate px-2">
-                          <A href={`/emails/3`}>
-                            Lorem ipsum dolor sit amet consectetur, adipisicing elit. Dolore, illum nostrum sit iusto architecto nobis tenetur repellat enim cumque esse quia consequatur hic, quidem velit magni modi alias beatae eos.
-                          </A>
-                        </td>
-                        <td class="px-1">
-                          <A href={`/emails/3?tab=attachments`}>
+            <div class="flex-1 lg:max-w-sm">
+              <CardRoot class="p-4">
+                <Shared.Title>Latest emails</Shared.Title>
+                <div>
+                  <For each={data()?.emails}>
+                    {v => {
+                      const [createdAt] = createDate(() => parseDate(v.createdAtTime));
+                      const [createdAtAgo] = createTimeAgo(createdAt);
+
+                      return (
+                        <div class="hover:bg-muted/50 flex flex-col border-b p-2 transition-colors sm:flex-row sm:gap-2">
+                          <div class="sm:min-w-32">
                             <TooltipRoot>
-                              <TooltipTrigger class="flex h-full items-center">
-                                <RiEditorAttachment2 />
-                              </TooltipTrigger>
+                              <TooltipTrigger class="w-full truncate text-start text-sm font-bold">{createdAtAgo()}</TooltipTrigger>
                               <TooltipContent>
-                                2 attachment(s)
+                                {formatDate(createdAt())}
                               </TooltipContent>
                             </TooltipRoot>
-                          </A>
-                        </td>
-                      </tr>
-                    }
+                          </div>
+                          <div class="flex-1 truncate">
+                            <A href={`/emails/${v.id}`}>
+                              {v.subject}
+                            </A>
+                          </div>
+                          <div>
+                            <Show when={v.attachmentCount > 0}>
+                              <A href={`/emails/3?tab=attachments`}>
+                                <TooltipRoot>
+                                  <TooltipTrigger class="flex h-full items-center">
+                                    <RiEditorAttachment2 />
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
+                                  </TooltipContent>
+                                </TooltipRoot>
+                              </A>
+                            </Show>
+                          </div>
+                        </div>
+                      )
+                    }}
                   </For>
-                </tbody>
-              </table>
-            </CardRoot>
-            <CardRoot class="flex-2 p-4">
+                </div>
+              </CardRoot>
+            </div>
+            <div class="flex flex-1 flex-col gap-4">
               <Shared.Title>Latest files</Shared.Title>
-              <div class="grid gap-4 pt-4 sm:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
-                <For each={Array(8)}>
-                  {(_, i) =>
-                    <div class="hover:bg-accent/50 flex flex-col gap-1 rounded border p-2 transition-all">
-                      <A href={`/files/3`}>
-                        <Show when={i() % 2 == 0} fallback={
-                          <RiMediaImageLine class="aspect-square h-full w-full" />
-                        }>
-                          <RiMediaVideoLine class="aspect-square h-full w-full" />
-                        </Show>
+              <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
+                <For each={data()?.files}>
+                  {(v) => {
+                    const [startTime] = createDate(() => parseDate(v.startTime));
+                    const [startTimeAgo] = createTimeAgo(startTime);
+
+                    return <div class="hover:bg-accent/50 flex flex-col gap-1 rounded border p-2 transition-all">
+                      <A href={`/files/${v.id}`} >
+                        <Image.Root>
+                          <Image.Img src={v.thumbnailUrl} class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
+                          <Image.Fallback>
+                            <Show when={v.type == "jpg"} fallback={
+                              <RiMediaVideoLine class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
+                            }>
+                              <RiMediaImageLine class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
+                            </Show>
+                          </Image.Fallback>
+                        </Image.Root>
                       </A>
                       <Seperator />
-                      <TooltipRoot>
-                        <TooltipTrigger class="text-sm">19 minutes ago</TooltipTrigger>
-                        <TooltipContent>
-                          {formatDate(new Date())}
-                        </TooltipContent>
-                      </TooltipRoot>
+                      <div class="flex justify-between gap-2 items-center">
+                        <TooltipRoot>
+                          <TooltipTrigger class="text-sm">{startTimeAgo()}</TooltipTrigger>
+                          <TooltipContent>
+                            {formatDate(startTime())}
+                          </TooltipContent>
+                        </TooltipRoot>
+                        <a href={v.url} target="_blank">
+                          <RiSystemDownloadLine class="h-4 w-4 " />
+                        </a>
+                      </div>
                     </div>
-                  }
+                  }}
                 </For>
               </div>
-            </CardRoot>
+            </div>
           </div>
-          <div class="max-w-sm">
-            <CardRoot class="p-4 ">
+          <div class="sm:max-w-sm">
+            <CardRoot class="p-4">
               <Shared.Title>Build</Shared.Title>
               <div class="relative overflow-x-auto">
                 <table class="w-full">

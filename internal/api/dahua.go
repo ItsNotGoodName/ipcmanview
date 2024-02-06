@@ -333,8 +333,7 @@ func (s *Server) DahuaDevicesIDFiles(c echo.Context) error {
 func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, _, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
 	}

@@ -31,6 +31,7 @@ import { SheetCloseButton, SheetContent, SheetDescription, SheetFooter, SheetHea
 import { HoverCardArrow, HoverCardContent, HoverCardRoot, HoverCardTrigger } from "~/ui/HoverCard";
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from "~/ui/Accordion";
+import { createRowSelection } from "~/lib/utils";
 
 export function Ui() {
   const showToast = () => {
@@ -47,9 +48,12 @@ export function Ui() {
     toast.show("Hello World")
   }
 
+  const rowSelection = createRowSelection(() => [1, 2])
+
   const [progress, setProgress] = createSignal(0)
   const timer = setInterval(() => setProgress((prev) => (prev + 10) % 100), 200)
   onCleanup(() => clearInterval(timer))
+
 
   return (
     <div class="flex flex-col gap-4 p-4">
@@ -225,7 +229,11 @@ export function Ui() {
         <TableHeader>
           <TableRow>
             <TableHead>
-              <CheckboxRoot>
+              <CheckboxRoot
+                indeterminate={rowSelection.indeterminate()}
+                checked={rowSelection.multiple()}
+                onChange={(checked) => rowSelection.setAll(checked)}
+              >
                 <CheckboxControl />
               </CheckboxRoot>
             </TableHead>
@@ -235,7 +243,10 @@ export function Ui() {
         <TableBody>
           <TableRow>
             <TableCell>
-              <CheckboxRoot>
+              <CheckboxRoot
+                checked={rowSelection.rows[0].checked}
+                onChange={(checked) => rowSelection.set(rowSelection.rows[0].id, checked)}
+              >
                 <CheckboxControl />
               </CheckboxRoot>
             </TableCell>
@@ -243,7 +254,10 @@ export function Ui() {
           </TableRow>
           <TableRow>
             <TableCell>
-              <CheckboxRoot>
+              <CheckboxRoot
+                checked={rowSelection.rows[1].checked}
+                onChange={(checked) => rowSelection.set(rowSelection.rows[1].id, checked)}
+              >
                 <CheckboxControl />
               </CheckboxRoot>
             </TableCell>

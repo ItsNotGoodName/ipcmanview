@@ -24,14 +24,16 @@ export function Devices() {
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<PageLoading />}>
           <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>
-            <TabsList class="w-full overflow-x-auto overflow-y-hidden">
-              <TabsTrigger value="device" >Device</TabsTrigger>
-              <TabsTrigger value="rpc-status" >RPC Status</TabsTrigger>
-              <TabsTrigger value="detail" >Detail</TabsTrigger>
-              <TabsTrigger value="software-version" >Software Version</TabsTrigger>
-              <TabsTrigger value="license" >License</TabsTrigger>
-              <TabsTrigger value="storage" >Storage</TabsTrigger>
-            </TabsList>
+            <div class="overflow-x-auto">
+              <TabsList>
+                <TabsTrigger value="device" >Device</TabsTrigger>
+                <TabsTrigger value="rpc-status" >RPC Status</TabsTrigger>
+                <TabsTrigger value="detail" >Detail</TabsTrigger>
+                <TabsTrigger value="software-version" >Software Version</TabsTrigger>
+                <TabsTrigger value="license" >License</TabsTrigger>
+                <TabsTrigger value="storage" >Storage</TabsTrigger>
+              </TabsList>
+            </div>
             <TabsContent value="device">
               <DeviceTable devices={data()?.devices} />
             </TabsContent>

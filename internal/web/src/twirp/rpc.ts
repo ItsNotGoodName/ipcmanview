@@ -140,6 +140,14 @@ export interface GetHomePageResp {
      * @generated from protobuf field: GetHomePageResp.Build build = 5;
      */
     build?: GetHomePageResp_Build;
+    /**
+     * @generated from protobuf field: repeated GetHomePageResp.File files = 6;
+     */
+    files: GetHomePageResp_File[];
+    /**
+     * @generated from protobuf field: repeated GetHomePageResp.Email emails = 7;
+     */
+    emails: GetHomePageResp_Email[];
 }
 /**
  * @generated from protobuf message GetHomePageResp.Device
@@ -182,6 +190,52 @@ export interface GetHomePageResp_Build {
      * @generated from protobuf field: string license_url = 6;
      */
     licenseUrl: string;
+}
+/**
+ * @generated from protobuf message GetHomePageResp.File
+ */
+export interface GetHomePageResp_File {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string url = 2;
+     */
+    url: string;
+    /**
+     * @generated from protobuf field: string thumbnail_url = 3;
+     */
+    thumbnailUrl: string;
+    /**
+     * @generated from protobuf field: string type = 4;
+     */
+    type: string;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp start_time = 5;
+     */
+    startTime?: Timestamp;
+}
+/**
+ * @generated from protobuf message GetHomePageResp.Email
+ */
+export interface GetHomePageResp_Email {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string subject = 2;
+     */
+    subject: string;
+    /**
+     * @generated from protobuf field: int32 attachment_count = 3;
+     */
+    attachmentCount: number;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 4;
+     */
+    createdAtTime?: Timestamp;
 }
 /**
  * @generated from protobuf message GetDevicesPageReq
@@ -1401,7 +1455,9 @@ class GetHomePageResp$Type extends MessageType<GetHomePageResp> {
             { no: 2, name: "file_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 3, name: "event_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 4, name: "email_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 5, name: "build", kind: "message", T: () => GetHomePageResp_Build }
+            { no: 5, name: "build", kind: "message", T: () => GetHomePageResp_Build },
+            { no: 6, name: "files", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetHomePageResp_File },
+            { no: 7, name: "emails", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetHomePageResp_Email }
         ]);
     }
 }
@@ -1439,6 +1495,37 @@ class GetHomePageResp_Build$Type extends MessageType<GetHomePageResp_Build> {
  * @generated MessageType for protobuf message GetHomePageResp.Build
  */
 export const GetHomePageResp_Build = new GetHomePageResp_Build$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetHomePageResp_File$Type extends MessageType<GetHomePageResp_File> {
+    constructor() {
+        super("GetHomePageResp.File", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "thumbnail_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "start_time", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetHomePageResp.File
+ */
+export const GetHomePageResp_File = new GetHomePageResp_File$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetHomePageResp_Email$Type extends MessageType<GetHomePageResp_Email> {
+    constructor() {
+        super("GetHomePageResp.Email", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "subject", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "attachment_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 4, name: "created_at_time", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetHomePageResp.Email
+ */
+export const GetHomePageResp_Email = new GetHomePageResp_Email$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetDevicesPageReq$Type extends MessageType<GetDevicesPageReq> {
     constructor() {

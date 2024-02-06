@@ -4,9 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -55,6 +57,41 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		return nil, err
 	}
 
+	latestFilesDTO, err := dahua.ListLatestFiles(ctx, u.db, 8)
+	if err != nil {
+		return nil, err
+	}
+
+	latestFiles := make([]*rpc.GetHomePageResp_File, 0, len(latestFilesDTO))
+	for _, v := range latestFilesDTO {
+		var thumbnailURL string
+		if v.Type == models.DahuaFileTypeJPG {
+			thumbnailURL = api.FileURI(v.DeviceID, v.FilePath)
+		}
+		latestFiles = append(latestFiles, &rpc.GetHomePageResp_File{
+			Id:           v.ID,
+			Url:          api.FileURI(v.DeviceID, v.FilePath),
+			ThumbnailUrl: thumbnailURL,
+			Type:         v.Type,
+			StartTime:    timestamppb.New(v.StartTime.Time),
+		})
+	}
+
+	latestEmailsDTO, err := dahua.ListLatestEmails(ctx, u.db, 5)
+	if err != nil {
+		return nil, err
+	}
+
+	latestEmails := make([]*rpc.GetHomePageResp_Email, 0, len(latestEmailsDTO))
+	for _, v := range latestEmailsDTO {
+		latestEmails = append(latestEmails, &rpc.GetHomePageResp_Email{
+			Id:              v.DahuaEmailMessage.ID,
+			Subject:         v.DahuaEmailMessage.Subject,
+			AttachmentCount: int32(v.AttachmentCount),
+			CreatedAtTime:   timestamppb.New(v.DahuaEmailMessage.CreatedAt.Time),
+		})
+	}
+
 	build := &rpc.GetHomePageResp_Build{
 		Commit:     build.Current.Commit,
 		Version:    build.Current.Version,
@@ -70,6 +107,8 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		EventCount: eventCount,
 		EmailCount: emailCount,
 		Build:      build,
+		Files:      latestFiles,
+		Emails:     latestEmails,
 	}, nil
 }
 

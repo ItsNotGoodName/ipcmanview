@@ -11,12 +11,30 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"golang.org/x/crypto/ssh"
 )
+
+func ListLatestFiles(ctx context.Context, db repo.DB, count int) ([]repo.DahuaFile, error) {
+	sb := sq.
+		Select("*").
+		From("dahua_files").
+		OrderBy("start_time DESC").
+		Limit(uint64(count))
+
+	var res []repo.DahuaFile
+	err := ssq.Query(ctx, db, &res, repo.DahuaSelectFilter(ctx, sb, "dahua_files.device_id"))
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
 
 func FileFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (io.ReadCloser, error) {
 	u, err := url.Parse(fileFilePath)

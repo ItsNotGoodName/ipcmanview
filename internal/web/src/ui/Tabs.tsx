@@ -1,5 +1,5 @@
 // # Changes
-// - List is not 'justify-center'
+// N/A
 //
 // # URLs
 // https://kobalte.dev/docs/core/components/tabs
@@ -15,7 +15,7 @@ export function TabsList(props: ComponentProps<typeof Tabs.List>) {
   const [_, rest] = splitProps(props, ["class"])
   return <Tabs.List
     class={cn(
-      "bg-muted text-muted-foreground inline-flex h-10 items-center rounded-md p-1",
+      "bg-muted text-muted-foreground inline-flex h-10 items-center justify-center rounded-md p-1",
       props.class
     )}
     {...rest}

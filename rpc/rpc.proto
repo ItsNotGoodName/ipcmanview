@@ -106,6 +106,23 @@ message GetHomePageResp {
     string license_url = 6;
   }
   Build build = 5;
+
+  message File {
+    int64 id = 1;
+    string url = 2;
+    string thumbnail_url = 3;
+    string type = 4;
+    google.protobuf.Timestamp start_time = 5;
+  }
+  repeated File files = 6;
+
+  message Email {
+    int64 id = 1;
+    string subject = 2;
+    int32 attachment_count = 3;
+    google.protobuf.Timestamp created_at_time = 4;
+  }
+  repeated Email emails = 7;
 }
 
 message GetDevicesPageReq {}
