@@ -102,7 +102,7 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 
 	return &rpc.GetAdminDevicesPageResp{
 		Items:      items,
-		PageResult: parsePagePaginationResult(page.Result(int(count))),
+		PageResult: encodePagePaginationResult(page.Result(int(count))),
 		Sort:       req.Sort,
 	}, nil
 }
@@ -301,7 +301,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 
 	return &rpc.GetAdminUsersPageResp{
 		Items:      items,
-		PageResult: parsePagePaginationResult(page.Result(int(count))),
+		PageResult: encodePagePaginationResult(page.Result(int(count))),
 		Sort:       req.Sort,
 	}, nil
 
@@ -486,7 +486,7 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 
 	return &rpc.GetAdminGroupsPageResp{
 		Items:      items,
-		PageResult: parsePagePaginationResult(page.Result(int(count))),
+		PageResult: encodePagePaginationResult(page.Result(int(count))),
 		Sort:       req.Sort,
 	}, nil
 }

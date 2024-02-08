@@ -18,7 +18,7 @@ import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, 
 import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, ToastProgressTrack, ToastTitle, toast } from "~/ui/Toast";
 import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
-import { PaginationContent, PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
+import { PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
@@ -279,11 +279,9 @@ export function Ui() {
           <PaginationEllipsis />
         )}
       >
-        <PaginationContent>
-          <PaginationPrevious />
-          <PaginationItems />
-          <PaginationNext />
-        </PaginationContent>
+        <PaginationPrevious />
+        <PaginationItems />
+        <PaginationNext />
       </PaginationRoot>
       <SelectRoot
         defaultValue="Apple"

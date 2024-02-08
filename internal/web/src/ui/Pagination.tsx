@@ -1,5 +1,5 @@
 // # Changes
-// N/A
+// - Pagination is hidden when less then sm
 //
 // # URLs
 // https://kobalte.dev/docs/core/components/pagination
@@ -14,21 +14,21 @@ import { ButtonProps, buttonVariants } from "./Button"
 export function PaginationRoot(props: ComponentProps<typeof Pagination.Root>) {
   const [_, rest] = splitProps(props, ["class"])
   return <Pagination.Root
-    class={cn("mx-auto flex w-full justify-center", props.class)}
-    {...rest}
-  />
-}
-
-export function PaginationContent(props: JSX.HTMLAttributes<HTMLUListElement>) {
-  const [_, rest] = splitProps(props, ["class"])
-  return <ul
-    class={cn("flex flex-row items-center gap-1", props.class)}
+    class={cn("hidden flex-row gap-1 sm:flex [&>ul]:flex [&>ul]:w-full [&>ul]:items-center [&>ul]:gap-1 ", props.class)}
     {...rest}
   />
 }
 
 export const PaginationItem = Pagination.Item
 export const PaginationItems = Pagination.Items
+
+export function PaginationEnd(props: JSX.HTMLAttributes<HTMLDivElement>) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <div
+    class={cn("flex flex-1 items-center justify-end gap-1", props.class)}
+    {...rest}
+  />
+}
 
 type PaginationLinkProps = {
   isActive?: boolean
@@ -58,7 +58,7 @@ export function PaginationPrevious(props: PaginationNextPreviousProps) {
         variant: "ghost",
         size: props.size as any,
       }),
-      "gap-1 pl-2.5",
+      "gap-1 pl-2.5 select-none",
       props.class)}
     {...rest}
   >
@@ -76,7 +76,7 @@ export function PaginationNext(props: PaginationNextPreviousProps) {
         variant: "ghost",
         size: props.size as any,
       }),
-      "gap-1 pl-2.5",
+      "gap-1 pl-2.5 select-none",
       props.class)}
     {...rest}
   >

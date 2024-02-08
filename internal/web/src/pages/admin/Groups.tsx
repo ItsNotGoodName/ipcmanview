@@ -296,7 +296,7 @@ export function AdminGroups() {
               </For>
             </TableBody>
             <TableCaption>
-              <Crud.Metadata pageResult={data()?.pageResult} />
+              <Crud.PageMetadata pageResult={data()?.pageResult} />
             </TableCaption>
           </TableRoot>
         </Suspense>

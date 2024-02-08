@@ -19,6 +19,13 @@ func (s rpcSort) withDefaultOrder(order rpc.Order) rpcSort {
 	return s
 }
 
+func (s rpcSort) encode() *rpc.Sort {
+	return &rpc.Sort{
+		Field: s.Field,
+		Order: s.Order,
+	}
+}
+
 func parseSort(v *rpc.Sort) rpcSort {
 	if v == nil {
 		return rpcSort{}
@@ -67,7 +74,7 @@ func parsePagePagination(v *rpc.PagePagination) pagination.Page {
 	}
 }
 
-func parsePagePaginationResult(v pagination.PageResult) *rpc.PagePaginationResult {
+func encodePagePaginationResult(v pagination.PageResult) *rpc.PagePaginationResult {
 	return &rpc.PagePaginationResult{
 		Page:         int32(v.Page),
 		PerPage:      int32(v.PerPage),

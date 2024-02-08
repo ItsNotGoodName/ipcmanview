@@ -220,8 +220,8 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 
 	return &rpc.GetEmailsPageResp{
 		Emails:     emails,
-		PageResult: parsePagePaginationResult(vv.PageResult),
-		Sort:       req.Sort,
+		PageResult: encodePagePaginationResult(vv.PageResult),
+		Sort:       sort.encode(),
 	}, nil
 }
 

@@ -1,7 +1,7 @@
 import Humanize from "humanize-plus"
 import { A, createAsync, useSearchParams } from "@solidjs/router"
 import { ErrorBoundary, For, Show, Suspense } from "solid-js"
-import { PageError, PageLoading } from "~/ui/Page"
+import { PageError } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
 import { TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
@@ -22,7 +22,7 @@ export function Devices() {
     <LayoutNormal>
       <Shared.Title>Devices</Shared.Title>
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-        <Suspense fallback={<PageLoading />}>
+        <Suspense fallback={<Skeleton class="h-32" />}>
           <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>
             <div class="overflow-x-auto">
               <TabsList>

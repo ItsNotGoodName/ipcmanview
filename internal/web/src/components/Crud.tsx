@@ -8,26 +8,27 @@ import { TableCell, TableHead } from "~/ui/Table"
 import { Button } from "~/ui/Button"
 import { DropdownMenuTrigger } from "~/ui/DropdownMenu"
 
-function SortButton(props: ParentProps<{ onClick: (name: string) => void, name: string, sort?: Sort }>) {
+function SortButton(props: ParentProps<{ onClick: (name: string) => void, name?: string, sort?: Sort }>) {
+  const name = () => props.name ?? ""
   return (
     <button
-      onClick={[props.onClick, props.name]}
-      class={cn("text-nowrap flex items-center whitespace-nowrap", props.name == props.sort?.field && 'text-blue-500')}
+      onClick={[props.onClick, name()]}
+      class={cn("text-nowrap flex items-center whitespace-nowrap", name() == props.sort?.field && 'text-blue-500')}
     >
       {props.children}
-      <RiArrowsArrowDownSLine data-selected={props.sort?.field == props.name && props.sort.order == Order.ASC} class="h-5 w-5 transition-all data-[selected=true]:rotate-180" />
+      <RiArrowsArrowDownSLine data-selected={props.sort?.field == name() && props.sort.order == Order.ASC} class="h-5 w-5 transition-all data-[selected=true]:rotate-180" />
     </button>
   )
 }
 
-function Metadata(props: { pageResult?: PagePaginationResult }) {
+function PageMetadata(props: { pageResult?: PagePaginationResult }) {
   return (
     <div class="flex justify-between">
       <div>
-        {props.pageResult?.seenItems.toString() || 0} / {props.pageResult?.totalItems.toString() || 0}
+        Seen {props.pageResult?.seenItems.toString() || 0} of {props.pageResult?.totalItems.toString() || 0}
       </div>
       <div>
-        Page {props.pageResult?.page || 0} / {props.pageResult?.totalPages || 0}
+        Page {props.pageResult?.page || 0} of {props.pageResult?.totalPages || 0}
       </div>
     </div>
   )
@@ -38,7 +39,11 @@ function PerPageSelect(props: { class?: string, perPage?: number, onChange: (val
     <SelectRoot
       class={props.class}
       value={props.perPage}
-      onChange={props.onChange}
+      onChange={(value) => {
+        if (value == null)
+          return
+        props.onChange(value)
+      }}
       options={[10, 25, 50, 100]}
       itemComponent={props => (
         <SelectItem item={props.item}>
@@ -58,20 +63,24 @@ function PerPageSelect(props: { class?: string, perPage?: number, onChange: (val
   )
 }
 
-function PageButtons(props: { previousPageDisabled: boolean, previousPage: () => void, nextPageDisabled: boolean, nextPage: () => void }) {
+function PageButtons(props: { class?: string, previousPageDisabled: boolean, previousPage: () => void, nextPageDisabled: boolean, nextPage: () => void }) {
   return (
-    <div class="flex gap-2">
+    <div class={cn("flex gap-1", props.class)}>
       <Button
+        aria-label="Go to previous page"
         title="Previous"
         size="icon"
+        variant="ghost"
         disabled={props.previousPageDisabled}
         onClick={props.previousPage}
       >
         <RiArrowsArrowLeftSLine class="h-6 w-6" />
       </Button>
       <Button
+        aria-label="Go to next page"
         title="Next"
         size="icon"
+        variant="ghost"
         disabled={props.nextPageDisabled}
         onClick={props.nextPage}
       >
@@ -111,7 +120,7 @@ function MoreDropdownMenuTrigger() {
 
 export const Crud = {
   SortButton,
-  Metadata,
+  PageMetadata,
   PerPageSelect,
   PageButtons,
   LastTableCell,
