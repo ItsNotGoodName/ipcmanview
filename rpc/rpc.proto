@@ -72,6 +72,7 @@ service User {
   rpc GetHomePage(google.protobuf.Empty) returns (GetHomePageResp);
   rpc GetDevicesPage(GetDevicesPageReq) returns (GetDevicesPageResp);
   rpc GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
+  rpc GetEmailsPage(GetEmailsPageReq) returns (GetEmailsPageResp);
 
   // User
   rpc UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
@@ -136,6 +137,25 @@ message GetDevicesPageResp {
     bool disabled = 6;
   }
   repeated Device devices = 1;
+}
+
+message GetEmailsPageReq {
+  PagePagination page = 1;
+  Sort sort = 2;
+}
+message GetEmailsPageResp {
+  message Email {
+    int64 id = 1;
+    int64 device_id = 2;
+    string device_name = 3;
+    string from = 4;
+    string subject = 5;
+    int32 attachment_count = 6;
+    google.protobuf.Timestamp created_at_time = 7;
+  }
+  repeated Email emails = 1;
+  PagePaginationResult pageResult = 2;
+  Sort sort = 3;
 }
 
 message GetProfilePageResp {

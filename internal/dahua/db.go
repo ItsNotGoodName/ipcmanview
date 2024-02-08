@@ -7,6 +7,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
 	sq "github.com/Masterminds/squirrel"
 )
@@ -202,4 +203,58 @@ func ListDevices(ctx context.Context, db sqlite.DB) ([]repo.DahuaDevice, error) 
 	var res []repo.DahuaDevice
 	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id"))
 	return res, err
+}
+
+type ListEmailsParams struct {
+	pagination.Page
+	Ascending bool
+}
+
+type ListEmailsResult struct {
+	pagination.PageResult
+	Items []ListEmailsResultItems
+}
+
+type ListEmailsResultItems struct {
+	repo.DahuaEmailMessage
+	DeviceName      string
+	AttachmentCount int
+}
+
+func ListEmails(ctx context.Context, db sqlite.DB, arg ListEmailsParams) (ListEmailsResult, error) {
+	order := "dahua_email_messages.created_at"
+	if arg.Ascending {
+		order += " ASC"
+	} else {
+		order += " DESC"
+	}
+	sb := sq.
+		Select(
+			"dahua_email_messages.*",
+			"COUNT(dahua_email_attachments.id) AS attachment_count",
+			"dahua_devices.name AS device_name",
+		).
+		From("dahua_email_messages").
+		LeftJoin("dahua_email_attachments ON dahua_email_attachments.message_id = dahua_email_messages.id").
+		LeftJoin("dahua_devices ON dahua_devices.id = dahua_email_messages.device_id").
+		OrderBy(order).
+		GroupBy("dahua_email_messages.id").
+		Offset(uint64(arg.Offset())).
+		Limit(uint64(arg.Limit()))
+
+	var items []ListEmailsResultItems
+	err := ssq.Query(ctx, db, &items, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", models.DahuaPermissionLevelAdmin))
+	if err != nil {
+		return ListEmailsResult{}, err
+	}
+
+	count, err := CountEmails(ctx, db)
+	if err != nil {
+		return ListEmailsResult{}, err
+	}
+
+	return ListEmailsResult{
+		PageResult: arg.Result(int(count)),
+		Items:      items,
+	}, nil
 }

@@ -281,6 +281,69 @@ export interface GetDevicesPageResp_Device {
     disabled: boolean;
 }
 /**
+ * @generated from protobuf message GetEmailsPageReq
+ */
+export interface GetEmailsPageReq {
+    /**
+     * @generated from protobuf field: PagePagination page = 1;
+     */
+    page?: PagePagination;
+    /**
+     * @generated from protobuf field: Sort sort = 2;
+     */
+    sort?: Sort;
+}
+/**
+ * @generated from protobuf message GetEmailsPageResp
+ */
+export interface GetEmailsPageResp {
+    /**
+     * @generated from protobuf field: repeated GetEmailsPageResp.Email emails = 1;
+     */
+    emails: GetEmailsPageResp_Email[];
+    /**
+     * @generated from protobuf field: PagePaginationResult pageResult = 2;
+     */
+    pageResult?: PagePaginationResult;
+    /**
+     * @generated from protobuf field: Sort sort = 3;
+     */
+    sort?: Sort;
+}
+/**
+ * @generated from protobuf message GetEmailsPageResp.Email
+ */
+export interface GetEmailsPageResp_Email {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: int64 device_id = 2;
+     */
+    deviceId: bigint;
+    /**
+     * @generated from protobuf field: string device_name = 3;
+     */
+    deviceName: string;
+    /**
+     * @generated from protobuf field: string from = 4;
+     */
+    from: string;
+    /**
+     * @generated from protobuf field: string subject = 5;
+     */
+    subject: string;
+    /**
+     * @generated from protobuf field: int32 attachment_count = 6;
+     */
+    attachmentCount: number;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 7;
+     */
+    createdAtTime?: Timestamp;
+}
+/**
  * @generated from protobuf message GetProfilePageResp
  */
 export interface GetProfilePageResp {
@@ -1566,6 +1629,51 @@ class GetDevicesPageResp_Device$Type extends MessageType<GetDevicesPageResp_Devi
  */
 export const GetDevicesPageResp_Device = new GetDevicesPageResp_Device$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetEmailsPageReq$Type extends MessageType<GetEmailsPageReq> {
+    constructor() {
+        super("GetEmailsPageReq", [
+            { no: 1, name: "page", kind: "message", T: () => PagePagination },
+            { no: 2, name: "sort", kind: "message", T: () => Sort }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetEmailsPageReq
+ */
+export const GetEmailsPageReq = new GetEmailsPageReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetEmailsPageResp$Type extends MessageType<GetEmailsPageResp> {
+    constructor() {
+        super("GetEmailsPageResp", [
+            { no: 1, name: "emails", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetEmailsPageResp_Email },
+            { no: 2, name: "pageResult", kind: "message", T: () => PagePaginationResult },
+            { no: 3, name: "sort", kind: "message", T: () => Sort }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetEmailsPageResp
+ */
+export const GetEmailsPageResp = new GetEmailsPageResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetEmailsPageResp_Email$Type extends MessageType<GetEmailsPageResp_Email> {
+    constructor() {
+        super("GetEmailsPageResp.Email", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "device_id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 3, name: "device_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "from", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "subject", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "attachment_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 7, name: "created_at_time", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetEmailsPageResp.Email
+ */
+export const GetEmailsPageResp_Email = new GetEmailsPageResp_Email$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class GetProfilePageResp$Type extends MessageType<GetProfilePageResp> {
     constructor() {
         super("GetProfilePageResp", [
@@ -2453,6 +2561,7 @@ export const User = new ServiceType("User", [
     { name: "GetHomePage", options: {}, I: Empty, O: GetHomePageResp },
     { name: "GetDevicesPage", options: {}, I: GetDevicesPageReq, O: GetDevicesPageResp },
     { name: "GetProfilePage", options: {}, I: Empty, O: GetProfilePageResp },
+    { name: "GetEmailsPage", options: {}, I: GetEmailsPageReq, O: GetEmailsPageResp },
     { name: "UpdateMyUsername", options: {}, I: UpdateMyUsernameReq, O: Empty },
     { name: "UpdateMyPassword", options: {}, I: UpdateMyPasswordReq, O: Empty },
     { name: "RevokeMySession", options: {}, I: RevokeMySessionReq, O: Empty },

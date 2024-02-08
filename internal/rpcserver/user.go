@@ -193,6 +193,38 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 	}, nil
 }
 
+func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*rpc.GetEmailsPageResp, error) {
+	page := parsePagePagination(req.Page)
+	sort := parseSort(req.Sort).withDefaultOrder(rpc.Order_DESC)
+
+	vv, err := dahua.ListEmails(ctx, u.db, dahua.ListEmailsParams{
+		Page:      page,
+		Ascending: sort.Order == rpc.Order_ASC,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var emails []*rpc.GetEmailsPageResp_Email
+	for _, v := range vv.Items {
+		emails = append(emails, &rpc.GetEmailsPageResp_Email{
+			Id:              v.ID,
+			DeviceId:        v.DeviceID,
+			DeviceName:      v.DeviceName,
+			From:            v.From,
+			Subject:         v.Subject,
+			AttachmentCount: int32(v.AttachmentCount),
+			CreatedAtTime:   timestamppb.New(v.CreatedAt.Time),
+		})
+	}
+
+	return &rpc.GetEmailsPageResp{
+		Emails:     emails,
+		PageResult: parsePagePaginationResult(vv.PageResult),
+		Sort:       req.Sort,
+	}, nil
+}
+
 func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 

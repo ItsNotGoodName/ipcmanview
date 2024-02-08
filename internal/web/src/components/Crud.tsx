@@ -12,7 +12,7 @@ function SortButton(props: ParentProps<{ onClick: (name: string) => void, name: 
   return (
     <button
       onClick={[props.onClick, props.name]}
-      class={cn("text-nowrap flex items-center whitespace-nowrap text-lg", props.name == props.sort?.field && 'text-blue-500')}
+      class={cn("text-nowrap flex items-center whitespace-nowrap", props.name == props.sort?.field && 'text-blue-500')}
     >
       {props.children}
       <RiArrowsArrowDownSLine data-selected={props.sort?.field == props.name && props.sort.order == Order.ASC} class="h-5 w-5 transition-all data-[selected=true]:rotate-180" />

@@ -27,6 +27,8 @@ import { AdminDevicesID } from "./pages/admin/DevicesID";
 import { Live } from "./pages/Live";
 import { Devices } from "./pages/Devices";
 import loadDevices from "./pages/Devices.data";
+import { Emails } from "./pages/Emails";
+import loadEmails from "./pages/Emails.data";
 
 const Debug = lazy(() => import("./pages/debug"));
 
@@ -51,6 +53,7 @@ function App() {
           <Route path="/profile" component={Profile} load={loadProfile} />
           <Route path="/live" component={Live} />
           <Route path="/devices" component={Devices} load={loadDevices} />
+          <Route path="/emails" component={Emails} load={loadEmails} />
           <Show when={sessionCache.admin} fallback={<Route path="/admin/*" component={() => <>You are not an admin.</>}></Route>}>
             <Route path="/admin" component={AdminHome} />
             <Route path="/admin/users" component={AdminUsers} load={loadAdminUsers} />

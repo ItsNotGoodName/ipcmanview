@@ -50,6 +50,8 @@ import type { GetDeviceRPCStatusReq } from "./rpc";
 import type { RevokeMySessionReq } from "./rpc";
 import type { UpdateMyPasswordReq } from "./rpc";
 import type { UpdateMyUsernameReq } from "./rpc";
+import type { GetEmailsPageResp } from "./rpc";
+import type { GetEmailsPageReq } from "./rpc";
 import type { GetProfilePageResp } from "./rpc";
 import type { GetDevicesPageResp } from "./rpc";
 import type { GetDevicesPageReq } from "./rpc";
@@ -158,6 +160,10 @@ export interface IUserClient {
      */
     getProfilePage(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetProfilePageResp>;
     /**
+     * @generated from protobuf rpc: GetEmailsPage(GetEmailsPageReq) returns (GetEmailsPageResp);
+     */
+    getEmailsPage(input: GetEmailsPageReq, options?: RpcOptions): UnaryCall<GetEmailsPageReq, GetEmailsPageResp>;
+    /**
      * User
      *
      * @generated from protobuf rpc: UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
@@ -233,33 +239,40 @@ export class UserClient implements IUserClient, ServiceInfo {
         return stackIntercept<Empty, GetProfilePageResp>("unary", this._transport, method, opt, input);
     }
     /**
+     * @generated from protobuf rpc: GetEmailsPage(GetEmailsPageReq) returns (GetEmailsPageResp);
+     */
+    getEmailsPage(input: GetEmailsPageReq, options?: RpcOptions): UnaryCall<GetEmailsPageReq, GetEmailsPageResp> {
+        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        return stackIntercept<GetEmailsPageReq, GetEmailsPageResp>("unary", this._transport, method, opt, input);
+    }
+    /**
      * User
      *
      * @generated from protobuf rpc: UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
      */
     updateMyUsername(input: UpdateMyUsernameReq, options?: RpcOptions): UnaryCall<UpdateMyUsernameReq, Empty> {
-        const method = this.methods[3], opt = this._transport.mergeOptions(options);
+        const method = this.methods[4], opt = this._transport.mergeOptions(options);
         return stackIntercept<UpdateMyUsernameReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: UpdateMyPassword(UpdateMyPasswordReq) returns (google.protobuf.Empty);
      */
     updateMyPassword(input: UpdateMyPasswordReq, options?: RpcOptions): UnaryCall<UpdateMyPasswordReq, Empty> {
-        const method = this.methods[4], opt = this._transport.mergeOptions(options);
+        const method = this.methods[5], opt = this._transport.mergeOptions(options);
         return stackIntercept<UpdateMyPasswordReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RevokeMySession(RevokeMySessionReq) returns (google.protobuf.Empty);
      */
     revokeMySession(input: RevokeMySessionReq, options?: RpcOptions): UnaryCall<RevokeMySessionReq, Empty> {
-        const method = this.methods[5], opt = this._transport.mergeOptions(options);
+        const method = this.methods[6], opt = this._transport.mergeOptions(options);
         return stackIntercept<RevokeMySessionReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
      */
     revokeAllMySessions(input: Empty, options?: RpcOptions): UnaryCall<Empty, Empty> {
-        const method = this.methods[6], opt = this._transport.mergeOptions(options);
+        const method = this.methods[7], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, Empty>("unary", this._transport, method, opt, input);
     }
     /**
@@ -268,35 +281,35 @@ export class UserClient implements IUserClient, ServiceInfo {
      * @generated from protobuf rpc: GetDeviceRPCStatus(GetDeviceRPCStatusReq) returns (GetDeviceRPCStatusResp);
      */
     getDeviceRPCStatus(input: GetDeviceRPCStatusReq, options?: RpcOptions): UnaryCall<GetDeviceRPCStatusReq, GetDeviceRPCStatusResp> {
-        const method = this.methods[7], opt = this._transport.mergeOptions(options);
+        const method = this.methods[8], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetDeviceRPCStatusReq, GetDeviceRPCStatusResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
      */
     getDeviceDetail(input: GetDeviceDetailReq, options?: RpcOptions): UnaryCall<GetDeviceDetailReq, GetDeviceDetailResp> {
-        const method = this.methods[8], opt = this._transport.mergeOptions(options);
+        const method = this.methods[9], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetDeviceDetailReq, GetDeviceDetailResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: GetDeviceSoftwareVersion(GetDeviceSoftwareVersionReq) returns (GetDeviceSoftwareVersionResp);
      */
     getDeviceSoftwareVersion(input: GetDeviceSoftwareVersionReq, options?: RpcOptions): UnaryCall<GetDeviceSoftwareVersionReq, GetDeviceSoftwareVersionResp> {
-        const method = this.methods[9], opt = this._transport.mergeOptions(options);
+        const method = this.methods[10], opt = this._transport.mergeOptions(options);
         return stackIntercept<GetDeviceSoftwareVersionReq, GetDeviceSoftwareVersionResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ListDeviceLicenses(ListDeviceLicensesReq) returns (ListDeviceLicensesResp);
      */
     listDeviceLicenses(input: ListDeviceLicensesReq, options?: RpcOptions): UnaryCall<ListDeviceLicensesReq, ListDeviceLicensesResp> {
-        const method = this.methods[10], opt = this._transport.mergeOptions(options);
+        const method = this.methods[11], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListDeviceLicensesReq, ListDeviceLicensesResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ListDeviceStorage(ListDeviceStorageReq) returns (ListDeviceStorageResp);
      */
     listDeviceStorage(input: ListDeviceStorageReq, options?: RpcOptions): UnaryCall<ListDeviceStorageReq, ListDeviceStorageResp> {
-        const method = this.methods[11], opt = this._transport.mergeOptions(options);
+        const method = this.methods[12], opt = this._transport.mergeOptions(options);
         return stackIntercept<ListDeviceStorageReq, ListDeviceStorageResp>("unary", this._transport, method, opt, input);
     }
 }

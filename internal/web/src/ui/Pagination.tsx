@@ -36,41 +36,53 @@ type PaginationLinkProps = {
   JSX.ButtonHTMLAttributes<HTMLButtonElement>
 
 export function PaginationLink(props: PaginationLinkProps) {
-  const [_, rest] = splitProps(mergeProps({ size: "icon" }, props), ["class"])
+  const [_, rest] = splitProps(mergeProps({ size: "icon" }, props), ["class", "isActive", "size"])
   return <button
     class={cn(
       buttonVariants({
-        variant: rest.isActive ? "outline" : "ghost",
-        size: rest.size as any,
+        variant: props.isActive ? "outline" : "ghost",
+        size: props.size as any,
       }), props.class)}
     {...rest}
   />
 }
 
-export function PaginationPrevious(props: PaginationLinkProps) {
-  const [_, rest] = splitProps(props, ["class"])
-  return <PaginationLink
+type PaginationNextPreviousProps = Pick<ButtonProps, "size"> & JSX.ButtonHTMLAttributes<HTMLButtonElement>
+
+export function PaginationPrevious(props: PaginationNextPreviousProps) {
+  const [_, rest] = splitProps(mergeProps({ size: "default" }, props), ["class", "size"])
+  return <Pagination.Previous
     aria-label="Go to previous page"
-    size="default"
-    class={cn("gap-1 pl-2.5", props.class)}
+    class={cn(
+      buttonVariants({
+        variant: "ghost",
+        size: props.size as any,
+      }),
+      "gap-1 pl-2.5",
+      props.class)}
     {...rest}
   >
     <RiArrowsArrowLeftSLine class="h-4 w-4" />
     <span>Previous</span>
-  </PaginationLink>
+  </Pagination.Previous>
 }
 
-export function PaginationNext(props: PaginationLinkProps) {
-  const [_, rest] = splitProps(props, ["class"])
-  return <PaginationLink
+export function PaginationNext(props: PaginationNextPreviousProps) {
+  const [_, rest] = splitProps(mergeProps({ size: "default" }, props), ["class", "size"])
+  return <Pagination.Next
     aria-label="Go to next page"
-    size="default"
-    class={cn("gap-1 pr-2.5", props.class)}
+    class={cn(
+      buttonVariants({
+        variant: "ghost",
+        size: props.size as any,
+      }),
+      "gap-1 pl-2.5",
+      props.class)}
     {...rest}
   >
     <span>Next</span>
     <RiArrowsArrowRightSLine class="h-4 w-4" />
-  </PaginationLink>
+  </Pagination.Next>
 }
 
 export function PaginationEllipsis(props: ComponentProps<typeof Pagination.Ellipsis>) {
