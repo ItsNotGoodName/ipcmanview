@@ -29,8 +29,12 @@ func (p Page) Result(totalItems int) PageResult {
 	if totalPage == 0 {
 		totalPage = 1
 	}
+	page := p.Page
+	if page > totalPage {
+		page = totalPage + 1
+	}
 	return PageResult{
-		Page:       p.Page,
+		Page:       page,
 		PerPage:    p.PerPage,
 		TotalPages: totalPage,
 		TotalItems: totalItems,

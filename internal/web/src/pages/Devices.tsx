@@ -12,7 +12,6 @@ import { ToggleButton } from "@kobalte/core"
 import { formatDate, parseDate } from "~/lib/utils"
 import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
-import { Shared } from "~/components/Shared"
 
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -20,40 +19,49 @@ export function Devices() {
 
   return (
     <LayoutNormal>
-      <Shared.Title>Devices</Shared.Title>
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-        <Suspense fallback={<Skeleton class="h-32" />}>
-          <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>
-            <div class="overflow-x-auto">
-              <TabsList>
-                <TabsTrigger value="device" >Device</TabsTrigger>
-                <TabsTrigger value="rpc-status" >RPC Status</TabsTrigger>
-                <TabsTrigger value="detail" >Detail</TabsTrigger>
-                <TabsTrigger value="software-version" >Software Version</TabsTrigger>
-                <TabsTrigger value="license" >License</TabsTrigger>
-                <TabsTrigger value="storage" >Storage</TabsTrigger>
-              </TabsList>
-            </div>
-            <TabsContent value="device">
+        <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>
+          <div class="overflow-x-auto">
+            <TabsList>
+              <TabsTrigger value="device" >Device</TabsTrigger>
+              <TabsTrigger value="rpc-status" >RPC Status</TabsTrigger>
+              <TabsTrigger value="detail" >Detail</TabsTrigger>
+              <TabsTrigger value="software-version" >Software Version</TabsTrigger>
+              <TabsTrigger value="license" >License</TabsTrigger>
+              <TabsTrigger value="storage" >Storage</TabsTrigger>
+            </TabsList>
+          </div>
+          <TabsContent value="device">
+            <Suspense fallback={<Skeleton class="h-32" />}>
               <DeviceTable devices={data()?.devices} />
-            </TabsContent>
-            <TabsContent value="rpc-status">
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="rpc-status">
+            <Suspense fallback={<Skeleton class="h-32" />}>
               <RPCStatusTable devices={data()?.devices} />
-            </TabsContent>
-            <TabsContent value="detail">
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="detail">
+            <Suspense fallback={<Skeleton class="h-32" />}>
               <DetailTable devices={data()?.devices} />
-            </TabsContent>
-            <TabsContent value="software-version">
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="software-version">
+            <Suspense fallback={<Skeleton class="h-32" />}>
               <SoftwareVersionTable devices={data()?.devices} />
-            </TabsContent>
-            <TabsContent value="license">
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="license">
+            <Suspense fallback={<Skeleton class="h-32" />}>
               <LicenseTable devices={data()?.devices} />
-            </TabsContent>
-            <TabsContent value="storage">
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="storage">
+            <Suspense fallback={<Skeleton class="h-32" />}>
               <StorageTable devices={data()?.devices} />
-            </TabsContent>
-          </TabsRoot>
-        </Suspense>
+            </Suspense>
+          </TabsContent>
+        </TabsRoot>
       </ErrorBoundary>
     </LayoutNormal >
   )
@@ -250,50 +258,52 @@ function LicenseTable(props: { devices?: GetDevicesPageResp_Device[] }) {
           <TableHead>Username</TableHead>
         </TableRow>
       </TableHeader>
-      <For each={props.devices}>
-        {item => {
-          const data = createAsync(() => getListDeviceLicenses(item.id))
+      <TableBody>
+        <For each={props.devices}>
+          {item => {
+            const data = createAsync(() => getListDeviceLicenses(item.id))
 
-          return (
-            <ErrorBoundary fallback={e =>
-              <TableRow>
-                <DeviceNameCell device={item} />
-                <ErrorTableCell colspan={colspan} error={e} />
-              </TableRow>
-            }>
-              <Suspense fallback={
+            return (
+              <ErrorBoundary fallback={e =>
                 <TableRow>
                   <DeviceNameCell device={item} />
-                  <LoadingTableCell colspan={colspan} />
+                  <ErrorTableCell colspan={colspan} error={e} />
                 </TableRow>
               }>
-                <For each={data()} fallback={
+                <Suspense fallback={
                   <TableRow>
                     <DeviceNameCell device={item} />
-                    <TableCell colspan={colspan}>N/A</TableCell>
+                    <LoadingTableCell colspan={colspan} />
                   </TableRow>
                 }>
-                  {v => (
+                  <For each={data()} fallback={
                     <TableRow>
                       <DeviceNameCell device={item} />
-                      <TableCell>{v.abroadInfo}</TableCell>
-                      <TableCell>{v.allType}</TableCell>
-                      <TableCell>{v.digitChannel}</TableCell>
-                      <TableCell>{v.effectiveDays}</TableCell>
-                      <TableCell>{formatDate(parseDate(v.effectiveTime))}</TableCell>
-                      <TableCell>{v.licenseId}</TableCell>
-                      <TableCell>{v.productType}</TableCell>
-                      <TableCell>{v.status}</TableCell>
-                      <TableCell>{v.username}</TableCell>
+                      <TableCell colspan={colspan}>N/A</TableCell>
                     </TableRow>
-                  )
-                  }
-                </For>
-              </Suspense>
-            </ErrorBoundary>
-          )
-        }}
-      </For>
+                  }>
+                    {v => (
+                      <TableRow>
+                        <DeviceNameCell device={item} />
+                        <TableCell>{v.abroadInfo}</TableCell>
+                        <TableCell>{v.allType}</TableCell>
+                        <TableCell>{v.digitChannel}</TableCell>
+                        <TableCell>{v.effectiveDays}</TableCell>
+                        <TableCell>{formatDate(parseDate(v.effectiveTime))}</TableCell>
+                        <TableCell>{v.licenseId}</TableCell>
+                        <TableCell>{v.productType}</TableCell>
+                        <TableCell>{v.status}</TableCell>
+                        <TableCell>{v.username}</TableCell>
+                      </TableRow>
+                    )
+                    }
+                  </For>
+                </Suspense>
+              </ErrorBoundary>
+            )
+          }}
+        </For>
+      </TableBody>
     </TableRoot>
   )
 }

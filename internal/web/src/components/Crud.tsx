@@ -74,7 +74,7 @@ function PageButtons(props: { class?: string, previousPageDisabled: boolean, pre
         disabled={props.previousPageDisabled}
         onClick={props.previousPage}
       >
-        <RiArrowsArrowLeftSLine class="h-6 w-6" />
+        <RiArrowsArrowLeftSLine class="h-4 w-4" />
       </Button>
       <Button
         aria-label="Go to next page"
@@ -84,7 +84,7 @@ function PageButtons(props: { class?: string, previousPageDisabled: boolean, pre
         disabled={props.nextPageDisabled}
         onClick={props.nextPage}
       >
-        <RiArrowsArrowRightSLine class="h-6 w-6" />
+        <RiArrowsArrowRightSLine class="h-4 w-4" />
       </Button>
     </div>
   )

@@ -90,34 +90,30 @@ export function Home() {
                       const [createdAtAgo] = createTimeAgo(createdAt);
 
                       return (
-                        <div class="hover:bg-muted/50 flex flex-col border-b p-2 transition-colors sm:flex-row sm:gap-2">
-                          <div class="sm:min-w-32">
+                        <div class="hover:bg-muted/50 flex flex-col border-b transition-colors sm:flex-row">
+                          <div class="sm:min-w-32 sm:p-2 p-1">
                             <TooltipRoot>
-                              <TooltipTrigger class="w-full truncate text-start text-sm font-bold">{createdAtAgo()}</TooltipTrigger>
+                              <TooltipTrigger class="truncate text-start text-sm font-bold">{createdAtAgo()}</TooltipTrigger>
                               <TooltipContent>
                                 {formatDate(createdAt())}
                               </TooltipContent>
                             </TooltipRoot>
                           </div>
-                          <div class="flex-1 truncate">
-                            <A href={`/emails/${v.id}`}>
-                              {v.subject}
+                          <A href={`/emails/${v.id}`} class="flex-1 truncate sm:p-2 p-1">
+                            {v.subject}
+                          </A>
+                          <Show when={v.attachmentCount > 0}>
+                            <A href={`/emails/${v.id}?tab=attachments`} class="sm:p-2 p-1">
+                              <TooltipRoot>
+                                <TooltipTrigger class="flex h-full items-center">
+                                  <RiEditorAttachment2 />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
+                                </TooltipContent>
+                              </TooltipRoot>
                             </A>
-                          </div>
-                          <div>
-                            <Show when={v.attachmentCount > 0}>
-                              <A href={`/emails/3?tab=attachments`}>
-                                <TooltipRoot>
-                                  <TooltipTrigger class="flex h-full items-center">
-                                    <RiEditorAttachment2 />
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
-                                  </TooltipContent>
-                                </TooltipRoot>
-                              </A>
-                            </Show>
-                          </div>
+                          </Show>
                         </div>
                       )
                     }}

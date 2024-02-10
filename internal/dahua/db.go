@@ -222,7 +222,7 @@ type ListEmailsResultItems struct {
 }
 
 func ListEmails(ctx context.Context, db sqlite.DB, arg ListEmailsParams) (ListEmailsResult, error) {
-	order := "dahua_email_messages.created_at"
+	order := "dahua_email_messages.id"
 	if arg.Ascending {
 		order += " ASC"
 	} else {

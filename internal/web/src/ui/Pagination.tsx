@@ -12,9 +12,11 @@ import { cn } from "~/lib/utils"
 import { ButtonProps, buttonVariants } from "./Button"
 
 export function PaginationRoot(props: ComponentProps<typeof Pagination.Root>) {
-  const [_, rest] = splitProps(props, ["class"])
+  const [_, rest] = splitProps(props, ["class", "count"])
+  const count = () => props.page != undefined && props.page > props.count ? props.page : props.count
   return <Pagination.Root
     class={cn("hidden flex-row gap-1 sm:flex [&>ul]:flex [&>ul]:w-full [&>ul]:items-center [&>ul]:gap-1 ", props.class)}
+    count={count()}
     {...rest}
   />
 }
