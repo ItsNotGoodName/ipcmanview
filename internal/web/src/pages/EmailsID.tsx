@@ -18,7 +18,7 @@ export function EmailsID({ params }: any) {
       </Shared.Title>
       <div class="flex items-center gap-2 justify-between">
         <div>
-          <Button size="icon" variant="ghost" title="Back">
+          <Button size="icon" variant="outline" title="Back">
             <RiArrowsArrowLeftLine class="h-5 w-5" />
           </Button>
         </div>
@@ -56,8 +56,8 @@ export function EmailsID({ params }: any) {
         </div>
       </CardRoot>
       <TabsRoot value={searchParams.tab || "text"} onChange={(value) => setSearchParams({ tab: value })}>
-        <div class="flex overflow-x-auto">
-          <TabsList>
+        <div class="overflow-x-auto">
+          <TabsList class="w-full">
             <TabsTrigger value="text" >Text</TabsTrigger>
             <TabsTrigger value="attachments" >Attachments</TabsTrigger>
           </TabsList>

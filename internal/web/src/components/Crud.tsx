@@ -70,7 +70,7 @@ function PageButtons(props: { class?: string, previousPageDisabled?: boolean, pr
         aria-label="Go to previous page"
         title="Previous"
         size="icon"
-        variant="ghost"
+        variant="outline"
         disabled={props.previousPageDisabled}
         onClick={props.previousPage}
       >
@@ -80,7 +80,7 @@ function PageButtons(props: { class?: string, previousPageDisabled?: boolean, pr
         aria-label="Go to next page"
         title="Next"
         size="icon"
-        variant="ghost"
+        variant="outline"
         disabled={props.nextPageDisabled}
         onClick={props.nextPage}
       >
