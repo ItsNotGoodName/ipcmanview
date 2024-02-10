@@ -335,11 +335,15 @@ export interface GetEmailsPageResp_Email {
      */
     subject: string;
     /**
-     * @generated from protobuf field: int32 attachment_count = 6;
+     * @generated from protobuf field: string alarm_event = 6;
+     */
+    alarmEvent: string;
+    /**
+     * @generated from protobuf field: int32 attachment_count = 7;
      */
     attachmentCount: number;
     /**
-     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 7;
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 8;
      */
     createdAtTime?: Timestamp;
 }
@@ -1664,8 +1668,9 @@ class GetEmailsPageResp_Email$Type extends MessageType<GetEmailsPageResp_Email> 
             { no: 3, name: "device_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "from", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "subject", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "attachment_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
-            { no: 7, name: "created_at_time", kind: "message", T: () => Timestamp }
+            { no: 6, name: "alarm_event", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "attachment_count", kind: "scalar", T: 5 /*ScalarType.INT32*/ },
+            { no: 8, name: "created_at_time", kind: "message", T: () => Timestamp }
         ]);
     }
 }

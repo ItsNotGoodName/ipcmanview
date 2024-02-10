@@ -63,7 +63,7 @@ function PerPageSelect(props: { class?: string, perPage?: number, onChange: (val
   )
 }
 
-function PageButtons(props: { class?: string, previousPageDisabled: boolean, previousPage: () => void, nextPageDisabled: boolean, nextPage: () => void }) {
+function PageButtons(props: { class?: string, previousPageDisabled?: boolean, previousPage?: () => void, nextPageDisabled?: boolean, nextPage?: () => void }) {
   return (
     <div class={cn("flex gap-1", props.class)}>
       <Button
@@ -74,7 +74,7 @@ function PageButtons(props: { class?: string, previousPageDisabled: boolean, pre
         disabled={props.previousPageDisabled}
         onClick={props.previousPage}
       >
-        <RiArrowsArrowLeftSLine class="h-4 w-4" />
+        <RiArrowsArrowLeftSLine class="h-5 w-5" />
       </Button>
       <Button
         aria-label="Go to next page"
@@ -84,7 +84,7 @@ function PageButtons(props: { class?: string, previousPageDisabled: boolean, pre
         disabled={props.nextPageDisabled}
         onClick={props.nextPage}
       >
-        <RiArrowsArrowRightSLine class="h-4 w-4" />
+        <RiArrowsArrowRightSLine class="h-5 w-5" />
       </Button>
     </div>
   )

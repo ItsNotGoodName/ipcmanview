@@ -67,11 +67,11 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 	for _, v := range latestFilesDTO {
 		var thumbnailURL string
 		if v.Type == models.DahuaFileTypeJPG {
-			thumbnailURL = api.FileURI(v.DeviceID, v.FilePath)
+			thumbnailURL = api.DahuaDeviceFileURI(v.DeviceID, v.FilePath)
 		}
 		latestFiles = append(latestFiles, &rpc.GetHomePageResp_File{
 			Id:           v.ID,
-			Url:          api.FileURI(v.DeviceID, v.FilePath),
+			Url:          api.DahuaDeviceFileURI(v.DeviceID, v.FilePath),
 			ThumbnailUrl: thumbnailURL,
 			Type:         v.Type,
 			StartTime:    timestamppb.New(v.StartTime.Time),
@@ -213,6 +213,7 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 			DeviceName:      v.DeviceName,
 			From:            v.From,
 			Subject:         v.Subject,
+			AlarmEvent:      v.AlarmEvent,
 			AttachmentCount: int32(v.AttachmentCount),
 			CreatedAtTime:   timestamppb.New(v.CreatedAt.Time),
 		})

@@ -150,8 +150,9 @@ message GetEmailsPageResp {
     string device_name = 3;
     string from = 4;
     string subject = 5;
-    int32 attachment_count = 6;
-    google.protobuf.Timestamp created_at_time = 7;
+    string alarm_event = 6;
+    int32 attachment_count = 7;
+    google.protobuf.Timestamp created_at_time = 8;
   }
   repeated Email emails = 1;
   PagePaginationResult pageResult = 2;

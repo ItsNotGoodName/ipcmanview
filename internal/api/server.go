@@ -33,11 +33,11 @@ type Server struct {
 
 const Route = "/v1"
 
-func AferoFileURI(name string) string {
+func DahuaAferoFileURI(name string) string {
 	return "/v1/dahua/afs/" + name
 }
 
-func FileURI(deviceID int64, filePath string) string {
+func DahuaDeviceFileURI(deviceID int64, filePath string) string {
 	return fmt.Sprintf("/v1/dahua/devices/%d/files/%s", deviceID, filePath)
 }
 

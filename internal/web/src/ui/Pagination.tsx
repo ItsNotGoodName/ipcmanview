@@ -64,7 +64,7 @@ export function PaginationPrevious(props: PaginationNextPreviousProps) {
       props.class)}
     {...rest}
   >
-    <RiArrowsArrowLeftSLine class="h-4 w-4" />
+    <RiArrowsArrowLeftSLine class="h-5 w-5" />
     <span>Previous</span>
   </Pagination.Previous>
 }
@@ -83,7 +83,7 @@ export function PaginationNext(props: PaginationNextPreviousProps) {
     {...rest}
   >
     <span>Next</span>
-    <RiArrowsArrowRightSLine class="h-4 w-4" />
+    <RiArrowsArrowRightSLine class="h-5 w-5" />
   </Pagination.Next>
 }
 
@@ -94,7 +94,7 @@ export function PaginationEllipsis(props: ComponentProps<typeof Pagination.Ellip
     class={cn("flex h-9 w-9 items-center justify-center", props.class)}
     {...rest}
   >
-    <RiSystemMoreLine class="h-4 w-4" />
+    <RiSystemMoreLine class="h-5 w-5" />
     <span class="sr-only">More pages</span>
   </Pagination.Ellipsis>
 }
