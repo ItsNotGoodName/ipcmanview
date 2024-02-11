@@ -18,7 +18,7 @@ import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert";
 
 function Layout(props: ParentProps) {
   return (
-    <div class="mx-auto flex max-w-xs flex-col gap-4 pt-10">
+    <div class="mx-auto flex max-w-sm flex-col gap-4 p-4 pt-10">
       {props.children}
     </div>
   )

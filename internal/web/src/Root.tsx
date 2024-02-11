@@ -1,8 +1,8 @@
 import { cva } from "class-variance-authority"
 import { As, DropdownMenu } from "@kobalte/core";
 import { ErrorBoundary, JSX, ParentProps, Show, Suspense, createEffect, createSignal, splitProps } from "solid-js";
-import { A, action, createAsync, revalidate, useAction, useLocation, useNavigate, useSubmission } from "@solidjs/router";
-import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine, RiMediaLiveLine, RiBusinessMailLine } from "solid-icons/ri";
+import { A, action, createAsync, revalidate, useAction, useLocation, Location, useNavigate, useSubmission } from "@solidjs/router";
+import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine, RiMediaLiveLine, RiBusinessMailLine, RiUserFacesGroupLine, RiSystemSettings2Line } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
 import { makePersisted } from "@solid-primitives/storage";
 
@@ -30,6 +30,10 @@ const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacit
     variant: "default"
   }
 })
+
+function useIsAdminPage<T>(location: Location<T>) {
+  return () => location.pathname.startsWith("/admin")
+}
 
 function DropdownMenuLinks() {
   const navigate = useNavigate()
@@ -107,6 +111,62 @@ function MenuLinks() {
   )
 }
 
+function AdminDropdownMenuLinks() {
+  const navigate = useNavigate()
+
+  return (
+    <>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/admin")}>
+        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+          href="/admin" end>
+          <RiSystemSettings2Line class="h-5 w-5" />Settings
+        </As>
+      </DropdownMenu.Item>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/admin/users")}>
+        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+          href="/admin/users" end>
+          <RiUserFacesUserLine class="h-5 w-5" />Users
+        </As>
+      </DropdownMenu.Item>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/admin/groups")}>
+        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+          href="/admin/groups" end>
+          <RiUserFacesGroupLine class="h-5 w-5" />Groups
+        </As>
+      </DropdownMenu.Item>
+      <DropdownMenu.Item asChild onSelect={() => navigate("/admin/devices")}>
+        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+          href="/admin/devices" end>
+          <BiRegularCctv class="h-5 w-5" />Devices
+        </As>
+      </DropdownMenu.Item>
+    </>
+  )
+}
+
+function AdminMenuLinks() {
+  return (
+    <div class="flex flex-col p-2">
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+        href="/admin" noScroll end>
+        <RiSystemSettings2Line class="h-5 w-5" />Settings
+      </A>
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+        href="/admin/users" noScroll>
+        <RiUserFacesUserLine class="h-5 w-5" />Users
+      </A>
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+        href="/admin/groups" noScroll>
+        <RiUserFacesGroupLine class="h-5 w-5" />Groups
+      </A>
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+        href="/admin/devices" noScroll>
+        <BiRegularCctv class="h-5 w-5" />Devices
+      </A>
+    </div>
+  )
+}
+
 const actionSignOut = action(() =>
   fetch("/v1/session", {
     credentials: "include",
@@ -128,13 +188,11 @@ function Header(props: ParentProps<{ onMenuClick: () => void }>) {
   const session = createAsync(getSession)
   const location = useLocation()
   const navigate = useNavigate()
+  const isAdminPage = useIsAdminPage(location)
 
   return (
-    <div
-      class="bg-background text-foreground border-b-border z-10 h-12 w-full overflow-x-hidden border-b">
-      <div
-        class="flex h-full items-center gap-1 px-1"
-      >
+    <div class="bg-background text-foreground border-b-border z-10 h-12 w-full overflow-x-hidden border-b">
+      <div class="flex h-full items-center gap-1 px-1">
         <DropdownMenuRoot>
           <DropdownMenuTrigger title="Menu" class={cn(menuLinkVariants(), "md:hidden")}>
             <RiSystemMenuLine class="h-6 w-6" />
@@ -149,11 +207,9 @@ function Header(props: ParentProps<{ onMenuClick: () => void }>) {
         <button onClick={props.onMenuClick} title="Menu" class={cn(menuLinkVariants(), "hidden md:inline-flex")}>
           <RiSystemMenuLine class="h-6 w-6" />
         </button>
-        <div class="flex flex-1 items-center truncate text-xl">
+        <A href="/" class="flex flex-1 items-center truncate text-xl">
           IPCManView
-        </div>
-        <div>
-        </div>
+        </A>
         <div class="flex gap-1">
           <Show when={import.meta.env.DEV}>
             <A class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}
@@ -163,7 +219,7 @@ function Header(props: ParentProps<{ onMenuClick: () => void }>) {
           </Show>
           <Show when={session()?.admin}>
             <A class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}
-              href="/admin" title="Admin">
+              href={isAdminPage() ? "/" : "/admin"} title="Toggle admin">
               <RiUserFacesAdminLine class="h-6 w-6" />
             </A>
           </Show>
@@ -194,7 +250,7 @@ function Header(props: ParentProps<{ onMenuClick: () => void }>) {
           </button>
         </div>
       </div>
-    </div >
+    </div>
   )
 }
 
@@ -221,10 +277,11 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuO
   )
 }
 
-export function Root(props: ParentProps) {
+export function Root(props: any) {
   const session = createAsync(getSession)
   const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
   const layoutActive = () => session()?.valid && !session()?.disabled
+  const isAdminPage = useIsAdminPage(props.location)
 
   return (
     <ErrorBoundary fallback={(e) =>
@@ -240,11 +297,15 @@ export function Root(props: ParentProps) {
         </Portal>
         <Show when={layoutActive()} fallback={<>{props.children}</>}>
           <Header onMenuClick={() => setMenuOpen((prev) => !prev)}>
-            <DropdownMenuLinks />
+            <Show when={!isAdminPage()} fallback={<AdminDropdownMenuLinks />}>
+              <DropdownMenuLinks />
+            </Show>
           </Header>
           <div class="flex">
             <Menu menuOpen={menuOpen()}>
-              <MenuLinks />
+              <Show when={!isAdminPage()} fallback={<AdminMenuLinks />}>
+                <MenuLinks />
+              </Show>
             </Menu>
             <div class="w-full overflow-x-auto"> {/* FIXME: overflow-x-auto is needed to fix overflowing tables BUT it also breaks something and I forgot what it was ¯\_(ツ)_/¯ */}
               {props.children}

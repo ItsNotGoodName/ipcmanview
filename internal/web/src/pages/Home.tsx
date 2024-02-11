@@ -151,7 +151,7 @@ export function Home() {
                           <Seperator />
                           <div class="flex items-center justify-between gap-2 p-2">
                             <TooltipRoot>
-                              <TooltipTrigger class="text-sm">{startTimeAgo()}</TooltipTrigger>
+                              <TooltipTrigger class="truncate text-sm">{startTimeAgo()}</TooltipTrigger>
                               <TooltipContent>
                                 <TooltipArrow />
                                 {formatDate(startTime())}

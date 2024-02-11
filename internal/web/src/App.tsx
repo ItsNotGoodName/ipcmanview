@@ -15,7 +15,6 @@ import { ClientProvider } from "./providers/client";
 import { sessionCache } from "./providers/session";
 import { AdminGroups } from "./pages/admin/Groups";
 import loadAdminGroups from "./pages/admin/Groups.data";
-import { AdminHome } from "./pages/admin/Home";
 import { AdminGroupsID } from "./pages/admin/GroupsID";
 import loadAdminGroupsID from "./pages/admin/GroupsID.data";
 import { AdminUsers } from "./pages/admin/Users";
@@ -31,8 +30,18 @@ import { Emails } from "./pages/Emails";
 import loadEmails from "./pages/Emails.data";
 import { EmailsID } from "./pages/EmailsID";
 import loadEmailsID from "./pages/EmailsID.data";
+import { AdminSettings } from "./pages/admin/Settings";
+import loadAdminSettings from "./pages/admin/Settings.data";
+import { Files } from "./pages/Files";
+import loadFiles from "./pages/Files.data";
+import { Events } from "./pages/Events";
+import loadEvents from "./pages/Events.data";
 
 const Debug = lazy(() => import("./pages/debug"));
+
+function NavigateHome() {
+  return <Navigate href="/" />
+}
 
 function App() {
   provideTheme()
@@ -49,7 +58,7 @@ function App() {
           <Route path="/signin" component={SignIn} />
           <Route path="/signup" component={Signup} />
           <Route path="/forgot" component={Forgot} />
-          <Route path="*404" component={() => <Navigate href="/signin" />} />
+          <Route path="*404" component={SignIn} />
         </>}>
           <Route path="/" component={Home} load={loadHome} />
           <Route path="/profile" component={Profile} load={loadProfile} />
@@ -57,15 +66,17 @@ function App() {
           <Route path="/devices" component={Devices} load={loadDevices} />
           <Route path="/emails" component={Emails} load={loadEmails} />
           <Route path="/emails/:id" component={EmailsID} load={loadEmailsID} />
-          <Show when={sessionCache.admin} fallback={<Route path="/admin/*" component={() => <>You are not an admin.</>}></Route>}>
-            <Route path="/admin" component={AdminHome} />
+          <Route path="/events" component={Events} load={loadEvents} />
+          <Route path="/files" component={Files} load={loadFiles} />
+          <Show when={sessionCache.admin} fallback={<Route path="/admin/*" component={NavigateHome} />}>
+            <Route path="/admin" component={AdminSettings} load={loadAdminSettings} />
             <Route path="/admin/users" component={AdminUsers} load={loadAdminUsers} />
             <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />
             <Route path="/admin/groups/:id" component={AdminGroupsID} load={loadAdminGroupsID} />
             <Route path="/admin/devices" component={AdminDevices} load={loadAdminDevices} />
             <Route path="/admin/devices/:id" component={AdminDevicesID} load={loadAdminDevicesID} />
           </Show>
-          <Route path={["/signin", "/signup", "/forgot"]} component={() => <Navigate href="/" />} />
+          <Route path={["/signin", "/signup", "/forgot"]} component={NavigateHome} />
           <Route path="*404" component={NotFound} />
         </Show>
       </Router>
