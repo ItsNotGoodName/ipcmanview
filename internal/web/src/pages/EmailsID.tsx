@@ -23,7 +23,10 @@ export function EmailsID({ params }: any) {
   const [searchParams, setSearchParams] = useSearchParams()
   const data = createAsync(() => getEmailsIDPage(BigInt(params.id)))
   const query = () => searchParams.tab ? "?tab=" + searchParams.tab : ""
-  const backPage = () => Math.ceil(Number(data()?.emailSeen) / 10) || 1
+  const backQuery = () => {
+    const page = Math.ceil(Number(data()?.emailSeen) / 10)
+    return page != 1 ? `?page=${page}` : ""
+  }
 
   return (
     <LayoutNormal class="max-w-4xl">
@@ -50,7 +53,7 @@ export function EmailsID({ params }: any) {
         <Suspense fallback={<Skeleton class="h-32" />}>
           <div class="flex items-center justify-between gap-2">
             <div>
-              <A href={`/emails?page=${backPage()}`} title="Back" class={buttonVariants({ size: "icon", variant: "ghost" })}>
+              <A href={`/emails${backQuery()}`} title="Back" class={buttonVariants({ size: "icon", variant: "ghost" })}>
                 <RiArrowsArrowLeftLine class="h-5 w-5" />
               </A>
             </div>
