@@ -14,7 +14,7 @@ import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
 import { Shared } from "~/components/Shared"
 import { createDate, createTimeAgo } from "@solid-primitives/date"
-import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
 
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -300,7 +300,10 @@ function LicenseTable(props: { devices?: GetDevicesPageResp_Device[] }) {
                           <TableCell>
                             <TooltipRoot>
                               <TooltipTrigger>{formatDate(effectiveTime())}</TooltipTrigger>
-                              <TooltipContent>{effectiveTimeAgo()}</TooltipContent>
+                              <TooltipContent>
+                                <TooltipArrow />
+                                {effectiveTimeAgo()}
+                              </TooltipContent>
                             </TooltipRoot>
                           </TableCell>
                           <TableCell>{v.licenseId}</TableCell>

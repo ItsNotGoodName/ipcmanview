@@ -10,7 +10,7 @@ import { useClient } from "~/providers/client";
 import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
-import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { LayoutNormal } from "~/ui/Layout";
 import { SetDeviceDisableReq } from "~/twirp/rpc";
 import { Crud } from "~/components/Crud";
@@ -263,6 +263,7 @@ export function AdminDevices() {
                               <RiSystemLockLine class="h-5 w-5" />
                             </TooltipTrigger>
                             <TooltipContent>
+                              <TooltipArrow />
                               Disabled since {formatDate(parseDate(item.disabledAtTime))}
                             </TooltipContent>
                           </TooltipRoot>

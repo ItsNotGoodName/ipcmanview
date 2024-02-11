@@ -10,7 +10,7 @@ import { RiBusinessMailLine, RiMediaVideoLine, RiDeviceHardDrive2Line, RiDocumen
 import { Shared } from "~/components/Shared"
 import { formatDate, parseDate } from "~/lib/utils"
 import { Seperator } from "~/ui/Seperator"
-import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
 import { createDate, createTimeAgo } from "@solid-primitives/date"
 import { Image } from "@kobalte/core"
 import { linkVariants } from "~/ui/Link"
@@ -96,6 +96,7 @@ export function Home() {
                               <TooltipRoot>
                                 <TooltipTrigger class="truncate text-start text-sm font-bold">{createdAtAgo()}</TooltipTrigger>
                                 <TooltipContent>
+                                  <TooltipArrow />
                                   {formatDate(createdAt())}
                                 </TooltipContent>
                               </TooltipRoot>
@@ -111,6 +112,7 @@ export function Home() {
                                   <RiEditorAttachment2 class="h-5 w-5" />
                                 </TooltipTrigger>
                                 <TooltipContent>
+                                  <TooltipArrow />
                                   {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
                                 </TooltipContent>
                               </TooltipRoot>
@@ -151,6 +153,7 @@ export function Home() {
                             <TooltipRoot>
                               <TooltipTrigger class="text-sm">{startTimeAgo()}</TooltipTrigger>
                               <TooltipContent>
+                                <TooltipArrow />
                                 {formatDate(startTime())}
                               </TooltipContent>
                             </TooltipRoot>

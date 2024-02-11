@@ -6,7 +6,7 @@ import { catchAsToast, createPagePagination, createRowSelection, createToggleSor
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
-import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AdminUsersPageSearchParams, getAdminUsersPage } from "./Users.data";
 import { LayoutNormal } from "~/ui/Layout";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, } from "~/ui/DropdownMenu";
@@ -286,6 +286,7 @@ export function AdminUsers() {
                               <RiDesignFocus2Line class="h-5 w-5" />
                             </TooltipTrigger>
                             <TooltipContent>
+                              <TooltipArrow />
                               You
                             </TooltipContent>
                           </TooltipRoot>
@@ -296,6 +297,7 @@ export function AdminUsers() {
                               <RiUserFacesAdminLine class="h-5 w-5" />
                             </TooltipTrigger>
                             <TooltipContent>
+                              <TooltipArrow />
                               Admin
                             </TooltipContent>
                           </TooltipRoot>
@@ -306,6 +308,7 @@ export function AdminUsers() {
                               <RiSystemLockLine class="h-5 w-5" />
                             </TooltipTrigger>
                             <TooltipContent>
+                              <TooltipArrow />
                               Disabled since {formatDate(parseDate(item.disabledAtTime))}
                             </TooltipContent>
                           </TooltipRoot>

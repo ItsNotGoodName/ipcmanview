@@ -8,7 +8,7 @@ import { createPagePagination, createToggleSortField, formatDate, parseDate, par
 import { LayoutNormal } from "~/ui/Layout";
 import { PaginationEllipsis, PaginationEnd, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
-import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { getEmailsPage } from "./Emails.data";
 import { linkVariants } from "~/ui/Link";
 import { PageError } from "~/ui/Page";
@@ -122,6 +122,7 @@ export function Emails() {
                                 <RiEditorAttachment2 class="h-4 w-4" />
                               </TooltipTrigger>
                               <TooltipContent>
+                                <TooltipArrow />
                                 {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
                               </TooltipContent>
                             </TooltipRoot>

@@ -17,7 +17,7 @@ import { PageError } from "~/ui/Page"
 import { Badge } from "~/ui/Badge"
 import { Seperator } from "~/ui/Seperator"
 import { Image } from "@kobalte/core"
-import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
 
 export function EmailsID(props: any) {
   const navigate = useNavigate()
@@ -126,7 +126,10 @@ export function EmailsID(props: any) {
                       <div>
                         <TooltipRoot>
                           <TooltipTrigger class="w-full truncate">{v.name}</TooltipTrigger>
-                          <TooltipContent>{v.name}</TooltipContent>
+                          <TooltipContent>
+                            <TooltipArrow />
+                            {v.name}
+                          </TooltipContent>
                         </TooltipRoot>
                       </div>
                       <div class="flex items-center justify-between gap-2">
