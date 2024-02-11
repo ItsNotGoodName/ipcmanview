@@ -13,6 +13,8 @@ import { formatDate, parseDate } from "~/lib/utils"
 import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
 import { Shared } from "~/components/Shared"
+import { createDate, createTimeAgo } from "@solid-primitives/date"
+import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
 
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -284,20 +286,30 @@ function LicenseTable(props: { devices?: GetDevicesPageResp_Device[] }) {
                       <TableCell colspan={colspan}>N/A</TableCell>
                     </TableRow>
                   }>
-                    {v => (
-                      <TableRow>
-                        <DeviceNameCell device={item} />
-                        <TableCell>{v.abroadInfo}</TableCell>
-                        <TableCell>{v.allType}</TableCell>
-                        <TableCell>{v.digitChannel}</TableCell>
-                        <TableCell>{v.effectiveDays}</TableCell>
-                        <TableCell>{formatDate(parseDate(v.effectiveTime))}</TableCell>
-                        <TableCell>{v.licenseId}</TableCell>
-                        <TableCell>{v.productType}</TableCell>
-                        <TableCell>{v.status}</TableCell>
-                        <TableCell>{v.username}</TableCell>
-                      </TableRow>
-                    )
+                    {v => {
+                      const [effectiveTime] = createDate(() => parseDate(v.effectiveTime));
+                      const [effectiveTimeAgo] = createTimeAgo(effectiveTime, { interval: 0 });
+
+                      return (
+                        <TableRow>
+                          <DeviceNameCell device={item} />
+                          <TableCell>{v.abroadInfo}</TableCell>
+                          <TableCell>{v.allType}</TableCell>
+                          <TableCell>{v.digitChannel}</TableCell>
+                          <TableCell>{v.effectiveDays}</TableCell>
+                          <TableCell>
+                            <TooltipRoot>
+                              <TooltipTrigger>{formatDate(effectiveTime())}</TooltipTrigger>
+                              <TooltipContent>{effectiveTimeAgo()}</TooltipContent>
+                            </TooltipRoot>
+                          </TableCell>
+                          <TableCell>{v.licenseId}</TableCell>
+                          <TableCell>{v.productType}</TableCell>
+                          <TableCell>{v.status}</TableCell>
+                          <TableCell>{v.username}</TableCell>
+                        </TableRow>
+                      )
+                    }
                     }
                   </For>
                 </Suspense>

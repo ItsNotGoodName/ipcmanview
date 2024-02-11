@@ -5,7 +5,7 @@ import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, } from "
 import { createForm, required, reset } from "@modular-forms/solid"
 
 import { formatDate, parseDate, catchAsToast, throwAsFormError } from "~/lib/utils"
-import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
+import { CardRoot, } from "~/ui/Card"
 import { getProfilePage } from "./Profile.data"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
@@ -77,42 +77,39 @@ export function Profile() {
           </AlertDialogModal>
         </AlertDialogRoot>
 
-        <CardRoot>
-          <CardHeader>
-            <CardTitle>Profile</CardTitle>
-          </CardHeader>
-          <CardContent class="overflow-x-auto">
-            <Suspense fallback={<Skeleton class="h-32" />}>
-              <table>
-                <tbody>
-                  <tr>
-                    <td class="pr-2"><Badge class="flex w-full justify-center">Username</Badge></td>
-                    <td>{data()?.username}</td>
-                  </tr>
-                  <tr>
-                    <td class="pr-2"><Badge class="flex w-full justify-center">Email</Badge></td>
-                    <td>{data()?.email}</td>
-                  </tr>
-                  <tr>
-                    <td class="pr-2"><Badge class="flex w-full justify-center">Admin</Badge></td>
-                    <td>
-                      <Show when={data()?.admin} fallback={<RiSystemCloseLine class="h-6 w-6 text-red-500" />}>
-                        <RiSystemCheckLine class="h-6 w-6 text-green-500" />
-                      </Show>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="pr-2"><Badge class="flex w-full justify-center">Created At</Badge></td>
-                    <td>{formatDate(parseDate(data()?.createdAtTime))}</td>
-                  </tr>
-                  <tr>
-                    <td class="pr-2"><Badge class="w-full">Updated At</Badge></td>
-                    <td>{formatDate(parseDate(data()?.updatedAtTime))}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </Suspense>
-          </CardContent>
+        <Shared.Title>Profile</Shared.Title>
+
+        <CardRoot class="overflow-x-auto p-4">
+          <Suspense fallback={<Skeleton class="h-32" />}>
+            <table>
+              <tbody>
+                <tr>
+                  <th class="pr-2">Username</th>
+                  <td>{data()?.username}</td>
+                </tr>
+                <tr>
+                  <th class="pr-2">Email</th>
+                  <td>{data()?.email}</td>
+                </tr>
+                <tr>
+                  <th class="pr-2">Admin</th>
+                  <td>
+                    <Show when={data()?.admin} fallback={<RiSystemCloseLine class="h-6 w-6 text-red-500" />}>
+                      <RiSystemCheckLine class="h-6 w-6 text-green-500" />
+                    </Show>
+                  </td>
+                </tr>
+                <tr>
+                  <th class="pr-2">Created At</th>
+                  <td>{formatDate(parseDate(data()?.createdAtTime))}</td>
+                </tr>
+                <tr>
+                  <th class="pr-2">Updated At</th>
+                  <td>{formatDate(parseDate(data()?.updatedAtTime))}</td>
+                </tr>
+              </tbody>
+            </table>
+          </Suspense>
         </CardRoot>
 
         <Shared.Title>Change username</Shared.Title>

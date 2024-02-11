@@ -63,13 +63,13 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		return nil, err
 	}
 
-	latestFiles := make([]*rpc.GetHomePageResp_File, 0, len(latestFilesDTO))
+	files := make([]*rpc.GetHomePageResp_File, 0, len(latestFilesDTO))
 	for _, v := range latestFilesDTO {
 		var thumbnailURL string
 		if v.Type == models.DahuaFileTypeJPG {
 			thumbnailURL = api.DahuaDeviceFileURI(v.DeviceID, v.FilePath)
 		}
-		latestFiles = append(latestFiles, &rpc.GetHomePageResp_File{
+		files = append(files, &rpc.GetHomePageResp_File{
 			Id:           v.ID,
 			Url:          api.DahuaDeviceFileURI(v.DeviceID, v.FilePath),
 			ThumbnailUrl: thumbnailURL,
@@ -83,9 +83,9 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		return nil, err
 	}
 
-	latestEmails := make([]*rpc.GetHomePageResp_Email, 0, len(latestEmailsDTO))
+	emails := make([]*rpc.GetHomePageResp_Email, 0, len(latestEmailsDTO))
 	for _, v := range latestEmailsDTO {
-		latestEmails = append(latestEmails, &rpc.GetHomePageResp_Email{
+		emails = append(emails, &rpc.GetHomePageResp_Email{
 			Id:              v.DahuaEmailMessage.ID,
 			Subject:         v.DahuaEmailMessage.Subject,
 			AttachmentCount: int32(v.AttachmentCount),
@@ -108,8 +108,8 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		EventCount: eventCount,
 		EmailCount: emailCount,
 		Build:      build,
-		Files:      latestFiles,
-		Emails:     latestEmails,
+		Files:      files,
+		Emails:     emails,
 	}, nil
 }
 
@@ -197,7 +197,7 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 	page := parsePagePagination(req.Page)
 	sort := parseSort(req.Sort).withDefaultOrder(rpc.Order_DESC)
 
-	vv, err := dahua.ListEmails(ctx, u.db, dahua.ListEmailsParams{
+	v, err := dahua.ListEmails(ctx, u.db, dahua.ListEmailsParams{
 		Page:      page,
 		Ascending: sort.Order == rpc.Order_ASC,
 	})
@@ -206,7 +206,7 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 	}
 
 	var emails []*rpc.GetEmailsPageResp_Email
-	for _, v := range vv.Items {
+	for _, v := range v.Items {
 		emails = append(emails, &rpc.GetEmailsPageResp_Email{
 			Id:              v.ID,
 			DeviceId:        v.DeviceID,
@@ -221,7 +221,7 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 
 	return &rpc.GetEmailsPageResp{
 		Emails:     emails,
-		PageResult: encodePagePaginationResult(vv.PageResult),
+		PageResult: encodePagePaginationResult(v.PageResult),
 		Sort:       sort.encode(),
 	}, nil
 }
@@ -358,13 +358,13 @@ func (u *User) ListDeviceLicenses(ctx context.Context, req *rpc.ListDeviceLicens
 		return nil, err
 	}
 
-	vv, err := dahua.GetLicenseList(ctx, client.RPC)
+	v, err := dahua.GetLicenseList(ctx, client.RPC)
 	if err != nil {
 		return nil, err
 	}
 
-	items := make([]*rpc.ListDeviceLicensesResp_License, 0, len(vv))
-	for _, v := range vv {
+	items := make([]*rpc.ListDeviceLicensesResp_License, 0, len(v))
+	for _, v := range v {
 		items = append(items, &rpc.ListDeviceLicensesResp_License{
 			AbroadInfo:    v.AbroadInfo,
 			AllType:       v.AllType,
@@ -424,13 +424,13 @@ func (u *User) ListDeviceStorage(ctx context.Context, req *rpc.ListDeviceStorage
 		return nil, err
 	}
 
-	vv, err := dahua.GetStorage(ctx, client.RPC)
+	v, err := dahua.GetStorage(ctx, client.RPC)
 	if err != nil {
 		return nil, err
 	}
 
-	items := make([]*rpc.ListDeviceStorageResp_Storage, 0, len(vv))
-	for _, v := range vv {
+	items := make([]*rpc.ListDeviceStorageResp_Storage, 0, len(v))
+	for _, v := range v {
 		items = append(items, &rpc.ListDeviceStorageResp_Storage{
 			Name:       v.Name,
 			State:      v.State,

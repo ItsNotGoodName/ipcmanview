@@ -44,7 +44,7 @@ func CreateEvent(ctx context.Context, db sqlite.DB, bus *Bus, action models.Even
 	return nil
 }
 
-func CreateEventTx(ctx context.Context, tx sqlite.Tx, bus *Bus, action models.EventAction, data any) error {
+func CreateEventAndCommit(ctx context.Context, tx sqlite.Tx, bus *Bus, action models.EventAction, data any) error {
 	err := createEvent(ctx, tx.C(), bus, action, action)
 	if err != nil {
 		return err

@@ -2,13 +2,13 @@ import { Breadcrumbs } from "@kobalte/core";
 import { ParentProps, splitProps } from "solid-js";
 import { cn } from "~/lib/utils";
 
-
-export const BreadcrumbsRoot = Breadcrumbs.Root
-
-export function BreadcrumbsList(props: ParentProps) {
-  return <ol class="inline-flex items-center" >
-    {props.children}
-  </ol>
+export function BreadcrumbsRoot(props: Breadcrumbs.BreadcrumbsRootProps) {
+  const [_, rest] = splitProps(props, ["children"])
+  return <Breadcrumbs.Root {...rest}>
+    <ol class="inline-flex items-center" >
+      {props.children}
+    </ol>
+  </Breadcrumbs.Root>
 }
 
 export function BreadcrumbsItem(props: ParentProps) {

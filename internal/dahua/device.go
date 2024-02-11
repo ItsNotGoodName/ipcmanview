@@ -152,12 +152,8 @@ func createDahuaDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg re
 		return 0, err
 	}
 
-	err = event.CreateEventTx(ctx, tx, bus, event.ActionDahuaDeviceCreated, id)
+	err = event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceCreated, id)
 	if err != nil {
-		return 0, err
-	}
-
-	if err := tx.Commit(); err != nil {
 		return 0, err
 	}
 
@@ -226,12 +222,7 @@ func updateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.Da
 		return err
 	}
 
-	err = event.CreateEventTx(ctx, tx, bus, event.ActionDahuaDeviceUpdated, arg.ID)
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceUpdated, arg.ID)
 }
 
 func DeleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) error {
@@ -253,12 +244,7 @@ func deleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) e
 		return err
 	}
 
-	err = event.CreateEventTx(ctx, tx, bus, event.ActionDahuaDeviceDeleted, id)
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceDeleted, id)
 }
 
 func UpdateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, disable bool) error {
@@ -290,10 +276,5 @@ func updateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, arg
 		return err
 	}
 
-	err = event.CreateEventTx(ctx, tx, bus, event.ActionDahuaDeviceUpdated, arg.ID)
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceUpdated, arg.ID)
 }

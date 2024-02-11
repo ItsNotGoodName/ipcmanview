@@ -13,6 +13,7 @@ import { getEmailsPage } from "./Emails.data";
 import { linkVariants } from "~/ui/Link";
 import { PageError } from "~/ui/Page";
 import { Skeleton } from "~/ui/Skeleton";
+import { BreadcrumbsItem, BreadcrumbsRoot } from "~/ui/Breadcrumbs";
 
 export function Emails() {
   const navigate = useNavigate()
@@ -32,7 +33,13 @@ export function Emails() {
 
   return (
     <LayoutNormal class="max-w-4xl">
-      <Shared.Title>Emails</Shared.Title>
+      <Shared.Title>
+        <BreadcrumbsRoot>
+          <BreadcrumbsItem>
+            Emails
+          </BreadcrumbsItem>
+        </BreadcrumbsRoot>
+      </Shared.Title>
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>
           <div>

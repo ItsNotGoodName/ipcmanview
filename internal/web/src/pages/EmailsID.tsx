@@ -1,5 +1,5 @@
 import Humanize from "humanize-plus"
-import { A, createAsync, useSearchParams } from "@solidjs/router"
+import { A, createAsync, useNavigate, useSearchParams } from "@solidjs/router"
 import { Crud } from "~/components/Crud"
 import { Shared } from "~/components/Shared"
 import { formatDate, parseDate } from "~/lib/utils"
@@ -8,7 +8,7 @@ import { CardRoot } from "~/ui/Card"
 import { RiArrowsArrowLeftLine, RiDeviceHardDrive2Line, RiMediaImageLine, RiSystemDownloadLine } from "solid-icons/ri"
 import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
-import { BreadcrumbsItem, BreadcrumbsLink, BreadcrumbsList, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs"
+import { BreadcrumbsItem, BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs"
 import { As } from "@kobalte/core"
 import { getEmailsIDPage } from "./EmailsID.data"
 import { ErrorBoundary, For, Show, Suspense } from "solid-js"
@@ -20,6 +20,7 @@ import { Image } from "@kobalte/core"
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
 
 export function EmailsID(props: any) {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const data = createAsync(() => getEmailsIDPage(BigInt(props.params.id ?? 0)))
   const query = () => searchParams.tab ? "?tab=" + searchParams.tab : ""
@@ -32,21 +33,17 @@ export function EmailsID(props: any) {
     <LayoutNormal class="max-w-4xl">
       <Shared.Title>
         <BreadcrumbsRoot>
-          <BreadcrumbsList>
-            <BreadcrumbsItem>
-              <BreadcrumbsLink asChild>
-                <As component={A} href="/emails">
-                  Emails
-                </As>
-              </BreadcrumbsLink>
-              <BreadcrumbsSeparator />
-            </BreadcrumbsItem>
-            <BreadcrumbsItem>
-              <BreadcrumbsLink>
-                {props.params.id}
-              </BreadcrumbsLink>
-            </BreadcrumbsItem>
-          </BreadcrumbsList>
+          <BreadcrumbsItem>
+            <BreadcrumbsLink asChild>
+              <As component={A} href="/emails">
+                Emails
+              </As>
+            </BreadcrumbsLink>
+            <BreadcrumbsSeparator />
+          </BreadcrumbsItem>
+          <BreadcrumbsItem>
+            {props.params.id}
+          </BreadcrumbsItem>
         </BreadcrumbsRoot>
       </Shared.Title>
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
@@ -59,41 +56,41 @@ export function EmailsID(props: any) {
             </div>
             <div class="flex items-center gap-2">
               <div>{data()?.emailSeen.toString()} of {data()?.emailCount.toString()}</div>
-              <Crud.PageButtonsLinks
-                previousPage={`/emails/${data()?.previousEmailId}${query()}`}
+              <Crud.PageButtons
+                previousPage={() => navigate(`/emails/${data()?.previousEmailId}${query()}`)}
                 previousPageDisabled={data()?.previousEmailId == data()?.id}
                 nextPageDisabled={data()?.nextEmailId == data()?.id}
-                nextPage={`/emails/${data()?.nextEmailId}${query()}`}
+                nextPage={() => navigate(`/emails/${data()?.nextEmailId}${query()}`)}
               />
             </div>
           </div>
           <CardRoot>
-            <div class="overflow-x-auto p-2">
+            <div class="overflow-x-auto p-4">
               <table>
                 <tbody>
                   <tr>
-                    <th class="px-2">From</th>
-                    <td class="px-2">{data()?.from}</td>
+                    <th class="pr-2">From</th>
+                    <td>{data()?.from}</td>
                   </tr>
                   <tr>
-                    <th class="px-2">Subject</th>
-                    <td class="px-2">{data()?.subject}</td>
+                    <th class="pr-2">Subject</th>
+                    <td>{data()?.subject}</td>
                   </tr>
                   <tr>
-                    <th class="px-2">To</th>
-                    <td class="flex gap-2 px-2">
+                    <th class="pr-2">To</th>
+                    <td class="flex gap-2">
                       <For each={data()?.to}>
                         {v => <Badge>{v}</Badge>}
                       </For>
                     </td>
                   </tr>
                   <tr>
-                    <th class="px-2">Date</th>
-                    <td class="px-2">{formatDate(parseDate(data()?.date))}</td>
+                    <th class="pr-2">Date</th>
+                    <td>{formatDate(parseDate(data()?.date))}</td>
                   </tr>
                   <tr>
-                    <th class="px-2">Created At</th>
-                    <td class="px-2">{formatDate(parseDate(data()?.createdAtTime))}</td>
+                    <th class="pr-2">Created At</th>
+                    <td>{formatDate(parseDate(data()?.createdAtTime))}</td>
                   </tr>
                 </tbody>
               </table>

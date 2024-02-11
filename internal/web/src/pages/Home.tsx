@@ -91,22 +91,24 @@ export function Home() {
 
                       return (
                         <div class="hover:bg-muted/50 flex flex-col border-b transition-colors sm:flex-row">
-                          <div class="sm:min-w-32 p-1 sm:p-2">
-                            <TooltipRoot>
-                              <TooltipTrigger class="truncate text-start text-sm font-bold">{createdAtAgo()}</TooltipTrigger>
-                              <TooltipContent>
-                                {formatDate(createdAt())}
-                              </TooltipContent>
-                            </TooltipRoot>
-                          </div>
-                          <A href={`/emails/${v.id}`} class="flex-1 truncate p-1 sm:p-2">
-                            {v.subject}
+                          <A href={`/emails/${v.id}`} class="flex flex-1 flex-col gap-2 p-2 max-sm:pb-1 sm:flex-row sm:pr-1">
+                            <div class="sm:min-w-32 flex">
+                              <TooltipRoot>
+                                <TooltipTrigger class="truncate text-start text-sm font-bold">{createdAtAgo()}</TooltipTrigger>
+                                <TooltipContent>
+                                  {formatDate(createdAt())}
+                                </TooltipContent>
+                              </TooltipRoot>
+                            </div>
+                            <div class="flex-1 truncate">
+                              {v.subject}
+                            </div>
                           </A>
                           <Show when={v.attachmentCount > 0}>
-                            <A href={`/emails/${v.id}?tab=attachments`} class="p-1 sm:p-2">
+                            <A href={`/emails/${v.id}?tab=attachments`} class="p-2 max-sm:pt-1 sm:pl-1">
                               <TooltipRoot>
                                 <TooltipTrigger class="flex h-full items-center">
-                                  <RiEditorAttachment2 />
+                                  <RiEditorAttachment2 class="h-5 w-5" />
                                 </TooltipTrigger>
                                 <TooltipContent>
                                   {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
@@ -153,7 +155,7 @@ export function Home() {
                               </TooltipContent>
                             </TooltipRoot>
                             <a href={v.url} target="_blank">
-                              <RiSystemDownloadLine class="h-4 w-4 " />
+                              <RiSystemDownloadLine class="h-5 w-5" />
                             </a>
                           </div>
                         </div>
