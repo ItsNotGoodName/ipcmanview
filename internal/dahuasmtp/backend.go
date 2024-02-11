@@ -213,7 +213,7 @@ func (s *session) Data(r io.Reader) error {
 		}
 	}
 
-	err = event.CreateEvent(ctx, s.db.C(), s.bus, event.ActionDahuaEmailCreated, email.Message.ID)
+	err = event.CreateEvent(ctx, s.db, s.bus, event.ActionDahuaEmailCreated, email.Message.ID)
 	if err != nil {
 		return err
 	}

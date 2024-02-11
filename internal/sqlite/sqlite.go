@@ -23,7 +23,7 @@ func BeginTx(ctx context.Context, db *sql.DB, write bool) (*sql.Tx, error) {
 	return tx, nil
 }
 
-func NewSQLDB(dbPath string) (*sql.DB, error) {
+func New(dbPath string) (*sql.DB, error) {
 	if dbPath == "" {
 		return nil, fmt.Errorf("invalid database path: %s", dbPath)
 	}

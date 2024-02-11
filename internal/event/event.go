@@ -13,12 +13,14 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-func CreateEvent(ctx context.Context, db sqlite.DBTx, bus *Bus, action models.EventAction, data any) error {
-	actor := core.UseActor(ctx)
+func createEvent(ctx context.Context, db sqlite.DBTx, bus *Bus, action models.EventAction, data any) error {
 	b, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
+
+	actor := core.UseActor(ctx)
+
 	_, err = db.CreateEvent(ctx, repo.CreateEventParams{
 		Action: action,
 		Data:   types.NewJSON(b),
@@ -29,9 +31,29 @@ func CreateEvent(ctx context.Context, db sqlite.DBTx, bus *Bus, action models.Ev
 		Actor:     actor.Type,
 		CreatedAt: types.NewTime(time.Now()),
 	})
+	return err
+}
+
+func CreateEvent(ctx context.Context, db sqlite.DB, bus *Bus, action models.EventAction, data any) error {
+	err := createEvent(ctx, db.C(), bus, action, data)
 	if err != nil {
 		return err
 	}
+
 	bus.EventQueued(EventQueued{})
-	return err
+	return nil
+}
+
+func CreateEventTx(ctx context.Context, tx sqlite.Tx, bus *Bus, action models.EventAction, data any) error {
+	err := createEvent(ctx, tx.C(), bus, action, action)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	bus.EventQueued(EventQueued{})
+	return nil
 }

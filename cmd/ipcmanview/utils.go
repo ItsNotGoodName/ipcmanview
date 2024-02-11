@@ -61,7 +61,7 @@ func (c Shared) useSecret() ([]byte, error) {
 }
 
 func (c Shared) useDB(ctx *Context) (sqlite.DB, error) {
-	sqlDB, err := sqlite.NewSQLDB(filepath.Join(c.Dir, "sqlite.db"))
+	sqlDB, err := sqlite.New(filepath.Join(c.Dir, "sqlite.db"))
 	if err != nil {
 		return sqlite.DB{}, err
 	}
