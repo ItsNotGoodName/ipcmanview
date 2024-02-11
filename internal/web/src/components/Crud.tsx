@@ -5,8 +5,9 @@ import { Order, PagePaginationResult, Sort } from "~/twirp/rpc"
 import { cn } from "~/lib/utils"
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select"
 import { TableCell, TableHead } from "~/ui/Table"
-import { Button } from "~/ui/Button"
+import { Button, buttonVariants } from "~/ui/Button"
 import { DropdownMenuTrigger } from "~/ui/DropdownMenu"
+import { A } from "@solidjs/router"
 
 function SortButton(props: ParentProps<{ onClick: (name: string) => void, name?: string, sort?: Sort }>) {
   const name = () => props.name ?? ""
@@ -70,7 +71,7 @@ function PageButtons(props: { class?: string, previousPageDisabled?: boolean, pr
         aria-label="Go to previous page"
         title="Previous"
         size="icon"
-        variant="outline"
+        variant="ghost"
         disabled={props.previousPageDisabled}
         onClick={props.previousPage}
       >
@@ -80,12 +81,37 @@ function PageButtons(props: { class?: string, previousPageDisabled?: boolean, pr
         aria-label="Go to next page"
         title="Next"
         size="icon"
-        variant="outline"
+        variant="ghost"
         disabled={props.nextPageDisabled}
         onClick={props.nextPage}
       >
         <RiArrowsArrowRightSLine class="h-5 w-5" />
       </Button>
+    </div>
+  )
+}
+
+function PageButtonsLinks(props: { class?: string, previousPageDisabled?: boolean, previousPage: string, nextPageDisabled?: boolean, nextPage: string }) {
+  return (
+    <div class={cn("flex gap-1", props.class)}>
+      <A
+        href={props.previousPage}
+        aria-label="Go to previous page"
+        title="Previous"
+        class={buttonVariants({ size: "icon", variant: "ghost" })}
+        aria-disabled={props.previousPageDisabled}
+      >
+        <RiArrowsArrowLeftSLine class="h-5 w-5" />
+      </A>
+      <A
+        href={props.nextPage}
+        aria-label="Go to next page"
+        title="Next"
+        class={buttonVariants({ size: "icon", variant: "ghost" })}
+        aria-disabled={props.nextPageDisabled}
+      >
+        <RiArrowsArrowRightSLine class="h-5 w-5" />
+      </A>
     </div>
   )
 }
@@ -123,6 +149,7 @@ export const Crud = {
   PageMetadata,
   PerPageSelect,
   PageButtons,
+  PageButtonsLinks,
   LastTableCell,
   LastTableHead,
   MoreDropdownMenuTrigger

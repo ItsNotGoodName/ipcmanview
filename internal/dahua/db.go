@@ -2,6 +2,7 @@ package dahua
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -17,16 +18,11 @@ type dbCountRow struct {
 }
 
 // dbSelectFilter applies an authorization filter to a select query.
-func dbSelectFilter(ctx context.Context, sb sq.SelectBuilder, deviceIDField string, levels ...models.DahuaPermissionLevel) sq.SelectBuilder {
+func dbSelectFilter(ctx context.Context, sb sq.SelectBuilder, deviceIDField string, level models.DahuaPermissionLevel) sq.SelectBuilder {
 	actor := core.UseActor(ctx)
 
 	if actor.Admin {
 		return sb
-	}
-
-	var level models.DahuaPermissionLevel
-	if len(levels) != 0 {
-		level = levels[0]
 	}
 
 	return sb.
@@ -50,6 +46,11 @@ func dbSelectFilter(ctx context.Context, sb sq.SelectBuilder, deviceIDField stri
 				)
 			)
 		`, level, actor.UserID, actor.UserID))
+}
+
+func CheckAferoFile(ctx context.Context, db sqlite.DB, name string) error {
+	// TODO: check permissions
+	return nil
 }
 
 func GetConn(ctx context.Context, db sqlite.DB, id int64) (Conn, error) {
@@ -106,7 +107,7 @@ func ListDeviceIDs(ctx context.Context, db sqlite.DB) ([]int64, error) {
 		From("dahua_devices")
 
 	var res []int64
-	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id"))
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id", models.DahuaPermissionLevelUser))
 	return res, err
 }
 
@@ -116,7 +117,7 @@ func CountFiles(ctx context.Context, db sqlite.DB) (int64, error) {
 		From("dahua_files")
 
 	var res dbCountRow
-	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id"))
+	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", models.DahuaPermissionLevelUser))
 	return res.Count, err
 }
 
@@ -126,7 +127,7 @@ func CountEvents(ctx context.Context, db sqlite.DB) (int64, error) {
 		From("dahua_events")
 
 	var res dbCountRow
-	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_events.device_id"))
+	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_events.device_id", models.DahuaPermissionLevelUser))
 	return res.Count, err
 }
 
@@ -167,7 +168,7 @@ func ListLatestFiles(ctx context.Context, db sqlite.DB, count int) ([]repo.Dahua
 		Limit(uint64(count))
 
 	var res []repo.DahuaFile
-	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id"))
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", models.DahuaPermissionLevelUser))
 	return res, err
 }
 
@@ -191,7 +192,7 @@ func GetDevice(ctx context.Context, db sqlite.DB, filter GetDeviceFilter) (repo.
 		Where(eq)
 
 	var res repo.DahuaDevice
-	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id"))
+	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id", models.DahuaPermissionLevelUser))
 	return res, err
 }
 
@@ -201,7 +202,7 @@ func ListDevices(ctx context.Context, db sqlite.DB) ([]repo.DahuaDevice, error) 
 		From("dahua_devices")
 
 	var res []repo.DahuaDevice
-	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id"))
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id", models.DahuaPermissionLevelUser))
 	return res, err
 }
 
@@ -256,5 +257,81 @@ func ListEmails(ctx context.Context, db sqlite.DB, arg ListEmailsParams) (ListEm
 	return ListEmailsResult{
 		PageResult: arg.Result(int(count)),
 		Items:      items,
+	}, nil
+}
+
+type GetEmailResult struct {
+	NextEmailID int64
+	Message     repo.DahuaEmailMessage
+	Attachments []repo.DahuaListEmailAttachmentsForMessageRow
+}
+
+type GetEmailResultAttachments struct {
+	repo.DahuaEmailAttachment
+	repo.DahuaAferoFile
+}
+
+func GetEmail(ctx context.Context, db sqlite.DB, id int64) (GetEmailResult, error) {
+	sb := sq.
+		Select("*").
+		From("dahua_email_messages").
+		Where("id <= ?", id).
+		OrderBy("id DESC").
+		Limit(2)
+	var messages []repo.DahuaEmailMessage
+	if err := ssq.Query(ctx, db, &messages, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", models.DahuaPermissionLevelAdmin)); err != nil {
+		return GetEmailResult{}, err
+	}
+	if len(messages) == 0 || messages[0].ID != id {
+		return GetEmailResult{}, repo.ErrNotFound
+	}
+	message := messages[0]
+	nextEmailID := messages[0].ID
+	if len(messages) == 2 {
+		nextEmailID = messages[1].ID
+	}
+
+	attachments, err := db.C().DahuaListEmailAttachmentsForMessage(ctx, id)
+	if err != nil {
+		return GetEmailResult{}, err
+	}
+
+	return GetEmailResult{
+		NextEmailID: nextEmailID,
+		Message:     message,
+		Attachments: attachments,
+	}, nil
+}
+
+type GetEmailAroundResult struct {
+	EmailSeen       int64
+	PreviousEmailID int64
+}
+
+func GetEmailAround(ctx context.Context, db sqlite.DB, id int64) (GetEmailAroundResult, error) {
+	sb := sq.
+		Select(
+			"MIN(id) AS previous_email_id",
+			"COUNT(*) as email_seen",
+		).
+		From("dahua_email_messages").
+		Where("id > ?", id)
+	var res struct {
+		PreviousEmailID sql.NullInt64
+		EmailSeen       int64
+	}
+	if err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", models.DahuaPermissionLevelAdmin)); err != nil {
+		return GetEmailAroundResult{}, err
+	}
+
+	emailSeen := res.EmailSeen
+	previousEmailID := id
+	if res.PreviousEmailID.Valid {
+		previousEmailID = res.PreviousEmailID.Int64
+	}
+
+	return GetEmailAroundResult{
+		EmailSeen:       emailSeen + 1,
+		PreviousEmailID: previousEmailID,
 	}, nil
 }

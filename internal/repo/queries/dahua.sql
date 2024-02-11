@@ -654,3 +654,13 @@ WHERE
         )
     )
   );
+
+-- name: DahuaListEmailAttachmentsForMessage :many
+select
+  sqlc.embed(dahua_email_attachments),
+  sqlc.embed(dahua_afero_files)
+from
+  dahua_email_attachments
+  JOIN dahua_afero_files ON dahua_afero_files.email_attachment_id = dahua_email_attachments.id
+where
+  dahua_email_attachments.message_id == ?;

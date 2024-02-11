@@ -22,7 +22,18 @@ import (
 )
 
 func (s *Server) DahuaAfero(route string) echo.HandlerFunc {
-	return echo.WrapHandler(http.StripPrefix(route, http.FileServer(afero.NewHttpFs(s.dahuaFileFS))))
+	h := echo.WrapHandler(http.StripPrefix(route, http.FileServer(afero.NewHttpFs(s.dahuaFileFS))))
+	return func(c echo.Context) error {
+		err := dahua.CheckAferoFile(c.Request().Context(), s.db, c.Param("*"))
+		if err != nil {
+			if repo.IsNotFound(err) {
+				return echo.ErrNotFound.WithInternal(err)
+			}
+			return err
+		}
+
+		return h(c)
+	}
 }
 
 func (s *Server) DahuaDevices(c echo.Context) error {

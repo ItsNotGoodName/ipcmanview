@@ -109,7 +109,7 @@ export function Emails() {
                     <TableCell class="p-0">
                       <div class="flex justify-end gap-4">
                         <Show when={v.attachmentCount > 0}>
-                          <A href={`/emails/${v.id}?tab=attachments`} class="p-4">
+                          <A href={`/emails/${v.id}?tab=attachments`}>
                             <TooltipRoot>
                               <TooltipTrigger class="flex h-full items-center">
                                 <RiEditorAttachment2 class="h-4 w-4" />

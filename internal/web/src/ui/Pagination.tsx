@@ -57,7 +57,7 @@ export function PaginationPrevious(props: PaginationNextPreviousProps) {
     aria-label="Go to previous page"
     class={cn(
       buttonVariants({
-        variant: "outline",
+        variant: "ghost",
         size: props.size as any,
       }),
       "gap-1 pl-2.5 select-none",
@@ -75,7 +75,7 @@ export function PaginationNext(props: PaginationNextPreviousProps) {
     aria-label="Go to next page"
     class={cn(
       buttonVariants({
-        variant: "outline",
+        variant: "ghost",
         size: props.size as any,
       }),
       "gap-1 pl-2.5 select-none",

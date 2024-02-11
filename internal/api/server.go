@@ -48,7 +48,7 @@ func (s *Server) Register(e *echo.Echo) {
 	g.POST("/session", s.SessionPOST)
 	g.DELETE("/session", s.SessionDELETE)
 
-	g.GET("/dahua/afs", s.DahuaAfero("/v1/dahua/afs"))
+	g.GET("/dahua/afs/*", s.DahuaAfero("/v1/dahua/afs"))
 	g.GET("/dahua/events", s.DahuaEvents)
 
 	g.GET("/dahua/devices", s.DahuaDevices)

@@ -32,6 +32,8 @@ import { HoverCardArrow, HoverCardContent, HoverCardRoot, HoverCardTrigger } fro
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from "~/ui/Accordion";
 import { createRowSelection } from "~/lib/utils";
+import { BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
+import { A } from "@solidjs/router";
 
 export function Ui() {
   const showToast = () => {
@@ -556,7 +558,18 @@ export function Ui() {
           </AccordionContent>
         </AccordionItem>
       </AccordionRoot>
-
+      <BreadcrumbsRoot>
+        <ol>
+          <li>
+            <BreadcrumbsLink asChild>
+              <As component={A} href="/">
+                Home
+              </As>
+            </BreadcrumbsLink>
+            <BreadcrumbsSeparator />
+          </li>
+        </ol>
+      </BreadcrumbsRoot>
       <Skeleton class="h-screen" />
     </div >
   )

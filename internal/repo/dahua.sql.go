@@ -1143,6 +1143,57 @@ func (q *Queries) DahuaListConn(ctx context.Context, arg DahuaListConnParams) ([
 	return items, nil
 }
 
+const dahuaListEmailAttachmentsForMessage = `-- name: DahuaListEmailAttachmentsForMessage :many
+select
+  dahua_email_attachments.id, dahua_email_attachments.message_id, dahua_email_attachments.file_name,
+  dahua_afero_files.id, dahua_afero_files.file_id, dahua_afero_files.thumbnail_id, dahua_afero_files.email_attachment_id, dahua_afero_files.name, dahua_afero_files.ready, dahua_afero_files.size, dahua_afero_files.created_at
+from
+  dahua_email_attachments
+  JOIN dahua_afero_files ON dahua_afero_files.email_attachment_id = dahua_email_attachments.id
+where
+  dahua_email_attachments.message_id == ?
+`
+
+type DahuaListEmailAttachmentsForMessageRow struct {
+	DahuaEmailAttachment DahuaEmailAttachment
+	DahuaAferoFile       DahuaAferoFile
+}
+
+func (q *Queries) DahuaListEmailAttachmentsForMessage(ctx context.Context, messageID int64) ([]DahuaListEmailAttachmentsForMessageRow, error) {
+	rows, err := q.db.QueryContext(ctx, dahuaListEmailAttachmentsForMessage, messageID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []DahuaListEmailAttachmentsForMessageRow
+	for rows.Next() {
+		var i DahuaListEmailAttachmentsForMessageRow
+		if err := rows.Scan(
+			&i.DahuaEmailAttachment.ID,
+			&i.DahuaEmailAttachment.MessageID,
+			&i.DahuaEmailAttachment.FileName,
+			&i.DahuaAferoFile.ID,
+			&i.DahuaAferoFile.FileID,
+			&i.DahuaAferoFile.ThumbnailID,
+			&i.DahuaAferoFile.EmailAttachmentID,
+			&i.DahuaAferoFile.Name,
+			&i.DahuaAferoFile.Ready,
+			&i.DahuaAferoFile.Size,
+			&i.DahuaAferoFile.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const dahuaListEventActions = `-- name: DahuaListEventActions :many
 SELECT DISTINCT
   action

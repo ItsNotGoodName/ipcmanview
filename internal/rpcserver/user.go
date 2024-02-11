@@ -226,6 +226,50 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 	}, nil
 }
 
+func (u *User) GetEmailsIDPage(ctx context.Context, req *rpc.GetEmailsIDPageReq) (*rpc.GetEmailsIDPageResp, error) {
+	email, err := dahua.GetEmail(ctx, u.db, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	emailAround, err := dahua.GetEmailAround(ctx, u.db, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	attachments := make([]*rpc.GetEmailsIDPageResp_Attachment, 0, len(email.Attachments))
+	for _, v := range email.Attachments {
+		attachments = append(attachments, &rpc.GetEmailsIDPageResp_Attachment{
+			Id:           v.DahuaEmailAttachment.ID,
+			Name:         v.DahuaEmailAttachment.FileName,
+			Url:          api.DahuaAferoFileURI(v.DahuaAferoFile.Name),
+			ThumbnailUrl: api.DahuaAferoFileURI(v.DahuaAferoFile.Name),
+			Size:         v.DahuaAferoFile.Size,
+		})
+	}
+
+	emailCount, err := dahua.CountEmails(ctx, u.db)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.GetEmailsIDPageResp{
+		Id:              email.Message.ID,
+		DeviceId:        email.Message.DeviceID,
+		From:            email.Message.From,
+		Subject:         email.Message.Subject,
+		To:              email.Message.To.Slice,
+		Date:            timestamppb.New(email.Message.Date.Time),
+		CreatedAtTime:   timestamppb.New(email.Message.CreatedAt.Time),
+		Text:            email.Message.Text,
+		Attachments:     attachments,
+		NextEmailId:     email.NextEmailID,
+		PreviousEmailId: emailAround.PreviousEmailID,
+		EmailSeen:       emailAround.EmailSeen,
+		EmailCount:      emailCount,
+	}, nil
+}
+
 func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 

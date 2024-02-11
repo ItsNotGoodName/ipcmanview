@@ -73,6 +73,7 @@ service User {
   rpc GetDevicesPage(GetDevicesPageReq) returns (GetDevicesPageResp);
   rpc GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
   rpc GetEmailsPage(GetEmailsPageReq) returns (GetEmailsPageResp);
+  rpc GetEmailsIDPage(GetEmailsIDPageReq) returns (GetEmailsIDPageResp);
 
   // User
   rpc UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
@@ -157,6 +158,34 @@ message GetEmailsPageResp {
   repeated Email emails = 1;
   PagePaginationResult pageResult = 2;
   Sort sort = 3;
+}
+
+message GetEmailsIDPageReq {
+  int64 id = 1;
+}
+message GetEmailsIDPageResp {
+  int64 id = 1;
+  int64 device_id = 2;
+  string from = 3;
+  string subject = 4;
+  repeated string to = 5;
+  google.protobuf.Timestamp date = 6;
+  google.protobuf.Timestamp created_at_time = 7;
+  string text = 8;
+
+  message Attachment {
+    int64 id = 1;
+    string name = 2;
+    string url = 3;
+    string thumbnail_url = 4;
+    int64 size = 5;
+  }
+  repeated Attachment attachments = 9;
+
+  int64 next_email_id = 10;
+  int64 previous_email_id = 11;
+  int64 email_seen = 12;
+  int64 email_count = 13;
 }
 
 message GetProfilePageResp {

@@ -24,7 +24,7 @@ export function Devices() {
         <Shared.Title>Devices</Shared.Title>
         <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>
           <div class="overflow-x-auto">
-            <TabsList class="w-full">
+            <TabsList>
               <TabsTrigger value="device" >Device</TabsTrigger>
               <TabsTrigger value="rpc-status" >RPC Status</TabsTrigger>
               <TabsTrigger value="detail" >Detail</TabsTrigger>
