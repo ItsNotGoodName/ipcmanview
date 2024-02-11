@@ -108,8 +108,7 @@ export function ToastProgressTrack(props: ComponentProps<typeof Toast.ProgressTr
 export function ToastProgressFill(props: ComponentProps<typeof Toast.ProgressFill>) {
   const [_, rest] = splitProps(props, ["class"])
   return <Toast.ProgressFill
-    style={{ width: "var(--kb-toast-progress-fill-width)" }}
-    class={cn("bg-primary h-full rounded transition-all", props.class)}
+    class={cn("bg-primary h-full w-[var(--kb-toast-progress-fill-width)] rounded transition-all", props.class)}
     {...rest}
   />
 }

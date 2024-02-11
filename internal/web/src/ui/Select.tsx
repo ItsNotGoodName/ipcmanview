@@ -51,9 +51,8 @@ export function SelectContent(props: Omit<Select.SelectContentProps, "style">) {
   const [_, rest] = splitProps(props, ["class"])
   return <Select.Portal>
     <Select.Content
-      style={{ "max-width": "var(--kb-popper-content-available-width)", "transform-origin": "var(--kb-menu-content-transform-origin)" }}
       class={cn(
-        "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 relative z-50 min-w-[8rem] overflow-hidden rounded-md border shadow-md",
+        "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 relative z-50 min-w-[8rem] max-w-[var(--kb-popper-content-available-width)] origin-[var(--kb-select-content-transform-origin)] overflow-hidden rounded-md border shadow-md",
         props.class
       )}
       {...rest}
@@ -95,7 +94,7 @@ export function SelectItem(props: ComponentProps<typeof Select.Item>) {
 export function SelectSeparator(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
-    class={cn("-mx-1 my-1 h-px bg-muted", props.class)}
+    class={cn("bg-muted -mx-1 my-1 h-px", props.class)}
     {...rest}
   />
 }

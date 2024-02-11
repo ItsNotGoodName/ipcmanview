@@ -18,9 +18,8 @@ export const PopoverPortal = Popover.Portal
 export function PopoverContent(props: Omit<Popover.PopoverContentProps, "style">) {
   const [_, rest] = splitProps(props, ["class"])
   return <Popover.Content
-    style={{ "max-width": "var(--kb-popper-content-available-width)", "transform-origin": "var(--kb-menu-content-transform-origin)" }}
     class={cn(
-      "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 z-50 w-72 rounded-md border p-4 shadow-md outline-none",
+      "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 z-50 w-72 max-w-[var(--kb-popper-content-available-width)] origin-[var(--kb-menu-content-transform-origin)] rounded-md border p-4 shadow-md outline-none",
       props.class
     )}
     {...rest}
