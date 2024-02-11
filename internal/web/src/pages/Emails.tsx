@@ -123,7 +123,6 @@ export function Emails() {
                       </div>
                     </TableCell>
                   </TableRow>
-
                 }
               </For>
             </TableBody>

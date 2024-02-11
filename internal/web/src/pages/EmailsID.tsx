@@ -19,9 +19,9 @@ import { Seperator } from "~/ui/Seperator"
 import { Image } from "@kobalte/core"
 import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
 
-export function EmailsID({ params }: any) {
+export function EmailsID(props: any) {
   const [searchParams, setSearchParams] = useSearchParams()
-  const data = createAsync(() => getEmailsIDPage(BigInt(params.id)))
+  const data = createAsync(() => getEmailsIDPage(BigInt(props.params.id ?? 0)))
   const query = () => searchParams.tab ? "?tab=" + searchParams.tab : ""
   const backQuery = () => {
     const page = Math.ceil(Number(data()?.emailSeen) / 10)
@@ -43,7 +43,7 @@ export function EmailsID({ params }: any) {
             </BreadcrumbsItem>
             <BreadcrumbsItem>
               <BreadcrumbsLink>
-                {params.id}
+                {props.params.id}
               </BreadcrumbsLink>
             </BreadcrumbsItem>
           </BreadcrumbsList>

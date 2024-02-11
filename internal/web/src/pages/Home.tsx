@@ -91,7 +91,7 @@ export function Home() {
 
                       return (
                         <div class="hover:bg-muted/50 flex flex-col border-b transition-colors sm:flex-row">
-                          <div class="sm:min-w-32 sm:p-2 p-1">
+                          <div class="sm:min-w-32 p-1 sm:p-2">
                             <TooltipRoot>
                               <TooltipTrigger class="truncate text-start text-sm font-bold">{createdAtAgo()}</TooltipTrigger>
                               <TooltipContent>
@@ -99,11 +99,11 @@ export function Home() {
                               </TooltipContent>
                             </TooltipRoot>
                           </div>
-                          <A href={`/emails/${v.id}`} class="flex-1 truncate sm:p-2 p-1">
+                          <A href={`/emails/${v.id}`} class="flex-1 truncate p-1 sm:p-2">
                             {v.subject}
                           </A>
                           <Show when={v.attachmentCount > 0}>
-                            <A href={`/emails/${v.id}?tab=attachments`} class="sm:p-2 p-1">
+                            <A href={`/emails/${v.id}?tab=attachments`} class="p-1 sm:p-2">
                               <TooltipRoot>
                                 <TooltipTrigger class="flex h-full items-center">
                                   <RiEditorAttachment2 />
@@ -130,30 +130,32 @@ export function Home() {
                     const [startTimeAgo] = createTimeAgo(startTime);
 
                     return (
-                      <div class="hover:bg-accent/50 flex flex-col rounded-b border transition-all">
-                        <A href={`/files/${v.id}`} >
-                          <Image.Root>
-                            <Image.Img src={v.thumbnailUrl} class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
-                            <Image.Fallback>
-                              <Show when={v.type == "jpg"} fallback={
-                                <RiMediaVideoLine class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
-                              }>
-                                <RiMediaImageLine class="max-w-48 mx-auto aspect-square h-full max-h-48 w-full" />
-                              </Show>
-                            </Image.Fallback>
-                          </Image.Root>
-                        </A>
-                        <Seperator />
-                        <div class="flex items-center justify-between gap-2 p-2">
-                          <TooltipRoot>
-                            <TooltipTrigger class="text-sm">{startTimeAgo()}</TooltipTrigger>
-                            <TooltipContent>
-                              {formatDate(startTime())}
-                            </TooltipContent>
-                          </TooltipRoot>
-                          <a href={v.url} target="_blank">
-                            <RiSystemDownloadLine class="h-4 w-4 " />
-                          </a>
+                      <div>
+                        <div class="hover:bg-accent/50 sm:max-w-48 flex w-full flex-col rounded-b border transition-all">
+                          <A href={`/files/${v.id}`} >
+                            <Image.Root class="mx-auto max-h-48 w-full">
+                              <Image.Img src={v.thumbnailUrl} class="h-full w-full object-contain" />
+                              <Image.Fallback>
+                                <Show when={v.type == "jpg"} fallback={
+                                  <RiMediaVideoLine class="h-full w-full object-contain" />
+                                }>
+                                  <RiMediaImageLine class="h-full w-full object-contain" />
+                                </Show>
+                              </Image.Fallback>
+                            </Image.Root>
+                          </A>
+                          <Seperator />
+                          <div class="flex items-center justify-between gap-2 p-2">
+                            <TooltipRoot>
+                              <TooltipTrigger class="text-sm">{startTimeAgo()}</TooltipTrigger>
+                              <TooltipContent>
+                                {formatDate(startTime())}
+                              </TooltipContent>
+                            </TooltipRoot>
+                            <a href={v.url} target="_blank">
+                              <RiSystemDownloadLine class="h-4 w-4 " />
+                            </a>
+                          </div>
                         </div>
                       </div>
                     )
