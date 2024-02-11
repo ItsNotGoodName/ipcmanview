@@ -29,7 +29,7 @@ import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDesc
 import { Toggle } from "~/ui/Toggle";
 import { SheetCloseButton, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetRoot, SheetTitle, SheetTrigger } from "~/ui/Sheet";
 import { HoverCardArrow, HoverCardContent, HoverCardRoot, HoverCardTrigger } from "~/ui/HoverCard";
-import { TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from "~/ui/Accordion";
 import { createRowSelection } from "~/lib/utils";
 import { BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
@@ -541,6 +541,7 @@ export function Ui() {
       <TooltipRoot>
         <TooltipTrigger>Tooltip</TooltipTrigger>
         <TooltipContent>
+          <TooltipArrow />
           <p>Add to library</p>
         </TooltipContent>
       </TooltipRoot>

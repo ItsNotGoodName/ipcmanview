@@ -53,7 +53,7 @@ export function MenubarSubTrigger(props: ComponentProps<typeof Menubar.SubTrigge
   </Menubar.SubTrigger>
 }
 
-export function MenubarSubContent(props: Omit<Menubar.MenubarSubContentProps, "style">) {
+export function MenubarSubContent(props: Menubar.MenubarSubContentProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <Menubar.Portal>
     <Menubar.SubContent
@@ -66,7 +66,7 @@ export function MenubarSubContent(props: Omit<Menubar.MenubarSubContentProps, "s
   </Menubar.Portal>
 }
 
-export function MenubarContent(props: Omit<Menubar.MenubarContentProps, "style">) {
+export function MenubarContent(props: Menubar.MenubarContentProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <Menubar.Portal>
     <Menubar.Content

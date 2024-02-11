@@ -15,7 +15,7 @@ export const PopoverTrigger = Popover.Trigger
 export const PopoverAnchor = Popover.Anchor
 export const PopoverPortal = Popover.Portal
 
-export function PopoverContent(props: Omit<Popover.PopoverContentProps, "style">) {
+export function PopoverContent(props: Popover.PopoverContentProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <Popover.Content
     class={cn(

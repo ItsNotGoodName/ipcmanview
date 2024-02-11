@@ -47,7 +47,7 @@ export function SelectTrigger(props: ComponentProps<typeof Select.Trigger>) {
   </Select.Trigger>
 }
 
-export function SelectContent(props: Omit<Select.SelectContentProps, "style">) {
+export function SelectContent(props: Select.SelectContentProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <Select.Portal>
     <Select.Content

@@ -13,7 +13,7 @@ export const HoverCardRoot = HoverCard.Root
 export const HoverCardTrigger = HoverCard.Trigger
 export const HoverCardArrow = HoverCard.Arrow
 
-export function HoverCardContent(props: Omit<HoverCard.HoverCardContentProps, "style">) {
+export function HoverCardContent(props: HoverCard.HoverCardContentProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <HoverCard.Portal>
     <HoverCard.Content

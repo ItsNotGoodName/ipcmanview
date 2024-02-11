@@ -38,7 +38,7 @@ export function DropdownMenuSubTriggerIndicator() {
   return <RiArrowsArrowRightSLine class="ml-auto h-4 w-4" />
 }
 
-export function DropdownMenuSubContent(props: Omit<DropdownMenu.DropdownMenuSubContentProps, "style">) {
+export function DropdownMenuSubContent(props: DropdownMenu.DropdownMenuSubContentProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <DropdownMenu.SubContent
     class={cn(
@@ -49,7 +49,7 @@ export function DropdownMenuSubContent(props: Omit<DropdownMenu.DropdownMenuSubC
   />
 }
 
-export function DropdownMenuContent(props: Omit<DropdownMenu.DropdownMenuContentProps, "style">) {
+export function DropdownMenuContent(props: DropdownMenu.DropdownMenuContentProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <DropdownMenu.Content
     class={cn(
