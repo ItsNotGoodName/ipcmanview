@@ -1,5 +1,7 @@
 package build
 
+import "time"
+
 var (
 	commit  = ""
 	date    = ""
@@ -8,6 +10,8 @@ var (
 )
 
 func init() {
+	date, _ := time.Parse(time.RFC3339, date)
+
 	Current = Build{
 		Commit:     commit,
 		Version:    version,
@@ -29,7 +33,7 @@ var Current Build
 type Build struct {
 	Commit     string
 	Version    string
-	Date       string
+	Date       time.Time
 	RepoURL    string
 	CommitURL  string
 	LicenseURL string

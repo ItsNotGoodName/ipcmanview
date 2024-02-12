@@ -80,7 +80,7 @@ const actionSignIn = action((form: SignInForm) =>
 export function SignIn() {
   const [signInForm, { Field, Form }] = createForm<SignInForm>();
   const signIn = useAction(actionSignIn)
-  const session = createAsync(getSession)
+  const session = createAsync(() => getSession())
 
   return (
     <Layout>

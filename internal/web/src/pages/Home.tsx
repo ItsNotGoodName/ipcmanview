@@ -16,7 +16,7 @@ import { Image } from "@kobalte/core"
 import { linkVariants } from "~/ui/Link"
 
 export function Home() {
-  const data = createAsync(getHomePage)
+  const data = createAsync(() => getHomePage())
 
   return (
     <LayoutNormal>
@@ -181,7 +181,7 @@ export function Home() {
                     </tr>
                     <tr class="border-b">
                       <td class="p-2">Date</td>
-                      <td class="p-2">{data()?.build?.date}</td>
+                      <td class="p-2">{formatDate(parseDate(data()?.build?.date))}</td>
                     </tr>
                     <tr class="border-b">
                       <td class="p-2">Version</td>

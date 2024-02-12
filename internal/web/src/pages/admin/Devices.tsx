@@ -345,8 +345,8 @@ function CreateForm(props: { close: () => void }) {
     }
   }
 
-  const locations = createAsync(getListLocations)
-  const deviceFeatures = createAsync(getListDeviceFeatures)
+  const locations = createAsync(() => getListLocations())
+  const deviceFeatures = createAsync(() => getListDeviceFeatures())
 
   return (
     <ErrorBoundary fallback={(e) => <PageError error={e} />}>
@@ -509,8 +509,8 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
       } satisfies UpdateForm)))
   const disabled = syncForm(form, data)
 
-  const locations = createAsync(getListLocations)
-  const deviceFeatures = createAsync(getListDeviceFeatures)
+  const locations = createAsync(() => getListLocations())
+  const deviceFeatures = createAsync(() => getListDeviceFeatures())
 
   return (
     <ErrorBoundary fallback={(e) => <PageError error={e} />}>

@@ -175,9 +175,9 @@ export interface GetHomePageResp_Build {
      */
     version: string;
     /**
-     * @generated from protobuf field: string date = 3;
+     * @generated from protobuf field: google.protobuf.Timestamp date = 3;
      */
-    date: string;
+    date?: Timestamp;
     /**
      * @generated from protobuf field: string repo_url = 4;
      */
@@ -1646,7 +1646,7 @@ class GetHomePageResp_Build$Type extends MessageType<GetHomePageResp_Build> {
         super("GetHomePageResp.Build", [
             { no: 1, name: "commit", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 2, name: "version", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "date", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "date", kind: "message", T: () => Timestamp },
             { no: 4, name: "repo_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "commit_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 6, name: "license_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },

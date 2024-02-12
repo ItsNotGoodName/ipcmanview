@@ -185,7 +185,7 @@ function Header(props: ParentProps<{ onMenuClick: () => void }>) {
   const signOutSubmission = useSubmission(actionSignOut)
   const signOutAction = useAction(actionSignOut)
   const signOut = () => signOutAction().catch(catchAsToast)
-  const session = createAsync(getSession)
+  const session = createAsync(() => getSession())
   const location = useLocation()
   const navigate = useNavigate()
   const isAdminPage = useIsAdminPage(location)
@@ -278,7 +278,7 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuO
 }
 
 export function Root(props: any) {
-  const session = createAsync(getSession)
+  const session = createAsync(() => getSession())
   const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
   const layoutActive = () => session()?.valid && !session()?.disabled
   const isAdminPage = useIsAdminPage(props.location)

@@ -87,7 +87,7 @@ export function AdminUsers() {
   // Reset password
   const [openResetPasswordForm, setOpenResetPasswordForm] = createSignal<bigint>(BigInt(0))
 
-  const session = createAsync(getSession)
+  const session = createAsync(() => getSession())
 
   return (
     <LayoutNormal class="max-w-4xl">

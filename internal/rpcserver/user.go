@@ -96,7 +96,7 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 	build := &rpc.GetHomePageResp_Build{
 		Commit:     build.Current.Commit,
 		Version:    build.Current.Version,
-		Date:       build.Current.Date,
+		Date:       timestamppb.New(build.Current.Date),
 		RepoUrl:    build.Current.RepoURL,
 		CommitUrl:  build.Current.CommitURL,
 		LicenseUrl: build.Current.LicenseURL,

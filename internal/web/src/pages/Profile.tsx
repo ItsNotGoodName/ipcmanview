@@ -31,7 +31,7 @@ const actionRevokeMySession = action((sessionId: bigint) => useClient()
   .catch(catchAsToast))
 
 export function Profile() {
-  const data = createAsync(getProfilePage)
+  const data = createAsync(() => getProfilePage())
 
   const [revokeAllMySessionsConfirm, setRevokeAllMySessionsConfirm] = createSignal(false)
   const revokeAllMySessionsSubmission = useSubmission(actionRevokeAllMySessions)
@@ -123,12 +123,12 @@ export function Profile() {
         </Center>
 
         <Shared.Title>Sessions</Shared.Title>
+        <div class="flex">
+          <Button variant="destructive" onClick={() => setRevokeAllMySessionsConfirm(true)}>
+            Revoke all sessions
+          </Button>
+        </div>
         <Suspense fallback={<Skeleton class="h-32" />}>
-          <div class="flex">
-            <Button variant="destructive" onClick={() => setRevokeAllMySessionsConfirm(true)}>
-              Revoke all sessions
-            </Button>
-          </div>
           <TableRoot>
             <TableCaption>{data()?.sessions.length} {Humanize.pluralize(data()?.sessions.length || 0, "Session")}</TableCaption>
             <TableHeader>
@@ -171,27 +171,29 @@ export function Profile() {
         </Suspense>
 
         <Shared.Title>Groups</Shared.Title>
-        <TableRoot>
-          <TableCaption>{data()?.groups.length} {Humanize.pluralize(data()?.groups.length || 0, "Group")}</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Joined At</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={data()?.groups}>
-              {(group) =>
-                <TableRow>
-                  <TableCell>{group.name}</TableCell>
-                  <TableCell>{group.description}</TableCell>
-                  <TableCell>{formatDate(parseDate(group.joinedAtTime))}</TableCell>
-                </TableRow>
-              }
-            </For>
-          </TableBody>
-        </TableRoot>
+        <Suspense fallback={<Skeleton class="h-32" />}>
+          <TableRoot>
+            <TableCaption>{data()?.groups.length} {Humanize.pluralize(data()?.groups.length || 0, "Group")}</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Joined At</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={data()?.groups}>
+                {(group) =>
+                  <TableRow>
+                    <TableCell>{group.name}</TableCell>
+                    <TableCell>{group.description}</TableCell>
+                    <TableCell>{formatDate(parseDate(group.joinedAtTime))}</TableCell>
+                  </TableRow>
+                }
+              </For>
+            </TableBody>
+          </TableRoot>
+        </Suspense>
 
       </ErrorBoundary>
     </LayoutNormal>

@@ -102,7 +102,7 @@ message GetHomePageResp {
   message Build {
     string commit = 1;
     string version = 2;
-    string date = 3;
+    google.protobuf.Timestamp date = 3;
     string repo_url = 4;
     string commit_url = 5;
     string license_url = 6;

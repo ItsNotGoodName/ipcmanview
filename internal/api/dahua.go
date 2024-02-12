@@ -83,12 +83,9 @@ func (s *Server) DahuaDevicesIDRPCPOST(c echo.Context) error {
 func (s *Server) DahuaDevicesIDDetail(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
+	client, _, err := useDahuaClient(c, s.db, s.dahuaStore)
 	if err != nil {
 		return err
-	}
-	if !dahua.ActionDetailsRead.Can(ctx, level) {
-		return echo.ErrForbidden
 	}
 
 	res, err := dahua.GetDahuaDetail(ctx, client.RPC)
