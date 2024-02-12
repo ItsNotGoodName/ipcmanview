@@ -140,15 +140,16 @@ func (c *CmdServe) Run(ctx *Context) error {
 	// API
 	api.
 		NewServer(pub, db, dahuaStore, dahuaAFS).
-		Register(httpRouter)
+		RegisterSession(httpRouter).
+		RegisterDahua(httpRouter, api.RequireAuthMiddleware())
 
 	// RPC
 	rpcLogger := rpcserver.Logger()
 	rpcserver.NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
 		Register(rpc.NewPublicServer(rpcserver.NewPublic(db), rpcLogger)).
-		Register(rpc.NewUserServer(rpcserver.NewUser(db, dahuaStore), rpcLogger, rpcserver.AuthSession())).
-		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.AdminAuthSession()))
+		Register(rpc.NewUserServer(rpcserver.NewUser(db, dahuaStore), rpcLogger, rpcserver.RequireAuthSession())).
+		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.RequireAdminAuthSession()))
 
 	// HTTP server
 	httpServer := server.NewHTTP(

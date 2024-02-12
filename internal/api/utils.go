@@ -23,22 +23,6 @@ func paramID(c echo.Context) (int64, error) {
 	return number, nil
 }
 
-// func useDahuaPermissions(c echo.Context, db sqlite.DB) (models.DahuaDevicePermissions, error) {
-// 	ctx := c.Request().Context()
-//
-// 	session, ok := auth.UseSession(ctx)
-// 	if !ok {
-// 		return nil, echo.ErrUnauthorized
-// 	}
-//
-// 	permissions, err := db.DahuaListDahuaDevicePermissions(ctx, session.UserID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-//
-// 	return permissions, nil
-// }
-
 func useDahuaClient(c echo.Context, store *dahua.Store) (dahua.Client, error) {
 	ctx := c.Request().Context()
 

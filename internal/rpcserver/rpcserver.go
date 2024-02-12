@@ -43,7 +43,8 @@ func Logger() twirp.ServerOption {
 
 // ---------- Middleware
 
-func AuthSession() twirp.ServerOption {
+// RequireAuthSession allows only valid sessions.
+func RequireAuthSession() twirp.ServerOption {
 	return twirp.WithServerHooks(&twirp.ServerHooks{
 		RequestReceived: func(ctx context.Context) (context.Context, error) {
 			session, ok := auth.UseSession(ctx)
@@ -58,7 +59,8 @@ func AuthSession() twirp.ServerOption {
 	})
 }
 
-func AdminAuthSession() twirp.ServerOption {
+// RequireAuthSession allows only valid admin sessions.
+func RequireAdminAuthSession() twirp.ServerOption {
 	return twirp.WithServerHooks(&twirp.ServerHooks{
 		RequestReceived: func(ctx context.Context) (context.Context, error) {
 			session, ok := auth.UseSession(ctx)
@@ -79,7 +81,7 @@ func AdminAuthSession() twirp.ServerOption {
 func useAuthSession(ctx context.Context) auth.Session {
 	u, ok := auth.UseSession(ctx)
 	if !ok {
-		panic("rpcserver.useAuthSession must be called after rpcserver.AuthSessionMiddleware")
+		panic("rpcserver.useAuthSession must be called after rpcserver.RequireAuthSession or rpcserver.RequireAdminAuthSession")
 	}
 	return u
 }
