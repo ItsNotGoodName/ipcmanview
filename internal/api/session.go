@@ -11,6 +11,7 @@ import (
 
 const cookieKey = "session"
 
+// SessionMiddleware sets the session context.
 func SessionMiddleware(db sqlite.DB) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

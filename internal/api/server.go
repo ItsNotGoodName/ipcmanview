@@ -82,7 +82,7 @@ func (s *Server) RegisterDahua(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
 
 // ---------- Middleware
 
-// ActorMiddleware sets the actor context.
+// ActorMiddleware sets the actor context from session context or token.
 func ActorMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -104,7 +104,7 @@ func ActorMiddleware() echo.MiddlewareFunc {
 	}
 }
 
-// RequireAuthMiddleware allows only if the actor is authenticated.
+// RequireAuthMiddleware allows only if actor is system or session is valid.
 func RequireAuthMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -115,7 +115,7 @@ func RequireAuthMiddleware() echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			// Allow valid session
+			// Deny invalid session
 			session, ok := auth.UseSession(ctx)
 			if !ok {
 				return echo.NewHTTPError(http.StatusUnauthorized, "Invalid session or not signed in.")
