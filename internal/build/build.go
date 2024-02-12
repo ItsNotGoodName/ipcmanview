@@ -17,6 +17,11 @@ func init() {
 		LicenseURL: repoURL + "/blob/master/LICENSE",
 		ReleaseURL: repoURL + "/releases/tag/" + version,
 	}
+	if repoURL == "" {
+		Current.CommitURL = "#"
+		Current.LicenseURL = "#"
+		Current.ReleaseURL = "#"
+	}
 }
 
 var Current Build
