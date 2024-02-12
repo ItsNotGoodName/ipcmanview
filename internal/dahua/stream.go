@@ -103,7 +103,7 @@ func syncStreams(ctx context.Context, db sqlite.DB, deviceID int64, args []syncS
 }
 
 func RegisterStreams(bus *event.Bus, db sqlite.DB, store *Store) {
-	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
+	bus.OnEvent("dahua.SyncStreams", func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
 			deviceID := event.DataAsInt64(evt.Event)

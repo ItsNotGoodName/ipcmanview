@@ -25,14 +25,6 @@ func newDeviceUID(deviceID string, extra ...string) string {
 	return "ipcmanview_dahua_" + deviceID
 }
 
-type Conn struct {
-	conn     mqtt.Conn
-	db       sqlite.DB
-	store    *dahua.Store
-	haEnable bool
-	haTopic  mqtt.Topic
-}
-
 func NewConn(mqtt mqtt.Conn, db sqlite.DB, store *dahua.Store, haEnable bool, haTopic mqtt.Topic) Conn {
 	return Conn{
 		conn:     mqtt,
@@ -41,6 +33,14 @@ func NewConn(mqtt mqtt.Conn, db sqlite.DB, store *dahua.Store, haEnable bool, ha
 		haEnable: haEnable,
 		haTopic:  haTopic,
 	}
+}
+
+type Conn struct {
+	conn     mqtt.Conn
+	db       sqlite.DB
+	store    *dahua.Store
+	haEnable bool
+	haTopic  mqtt.Topic
 }
 
 func (Conn) String() string {
@@ -227,7 +227,7 @@ func NewEvent(v repo.DahuaEvent) Event {
 
 func (c Conn) Register(bus *event.Bus) error {
 	if c.haEnable {
-		bus.OnEvent(func(ctx context.Context, evt event.Event) error {
+		bus.OnEvent(c.String(), func(ctx context.Context, evt event.Event) error {
 			switch evt.Event.Action {
 			case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
 				c.conn.Ready()
@@ -236,7 +236,7 @@ func (c Conn) Register(bus *event.Bus) error {
 			return nil
 		})
 	}
-	bus.OnDahuaEvent(func(ctx context.Context, evt event.DahuaEvent) error {
+	bus.OnDahuaEvent(c.String(), func(ctx context.Context, evt event.DahuaEvent) error {
 		c.conn.Ready()
 
 		if evt.EventRule.IgnoreMqtt {
@@ -250,7 +250,7 @@ func (c Conn) Register(bus *event.Bus) error {
 
 		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(evt.Event.DeviceID), "event"), 0, false, b))
 	})
-	bus.OnDahuaEventWorkerConnect(func(ctx context.Context, evt event.DahuaEventWorkerConnect) error {
+	bus.OnDahuaEventWorkerConnect(c.String(), func(ctx context.Context, evt event.DahuaEventWorkerConnect) error {
 		c.conn.Ready()
 
 		if err := publishEventError(ctx, c.conn, evt.DeviceID, nil); err != nil {
@@ -259,7 +259,7 @@ func (c Conn) Register(bus *event.Bus) error {
 
 		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", strconv.FormatInt(evt.DeviceID, 10), "event", "state"), 0, true, "online"))
 	})
-	bus.OnDahuaEventWorkerDisconnect(func(ctx context.Context, evt event.DahuaEventWorkerDisconnect) error {
+	bus.OnDahuaEventWorkerDisconnect(c.String(), func(ctx context.Context, evt event.DahuaEventWorkerDisconnect) error {
 		c.conn.Ready()
 
 		if err := publishEventError(ctx, c.conn, evt.DeviceID, evt.Error); err != nil {
@@ -268,7 +268,7 @@ func (c Conn) Register(bus *event.Bus) error {
 
 		return mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(evt.DeviceID), "event", "state"), 0, true, "offline"))
 	})
-	bus.OnDahuaCoaxialStatus(func(ctx context.Context, event event.DahuaCoaxialStatus) error {
+	bus.OnDahuaCoaxialStatus(c.String(), func(ctx context.Context, event event.DahuaCoaxialStatus) error {
 		c.conn.Ready()
 
 		{

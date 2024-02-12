@@ -32,6 +32,10 @@ type WorkerManager struct {
 	workers   map[int64]workerData
 }
 
+func (*WorkerManager) String() string {
+	return "dahua.WorkerManager"
+}
+
 type workerData struct {
 	conn   Conn
 	tokens []suture.ServiceToken
@@ -91,7 +95,7 @@ func (m *WorkerManager) Delete(id int64) error {
 }
 
 func (m *WorkerManager) Register(bus *event.Bus, db sqlite.DB) *WorkerManager {
-	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
+	bus.OnEvent(m.String(), func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
 			deviceID := event.DataAsInt64(evt.Event)

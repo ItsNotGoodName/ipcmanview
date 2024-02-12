@@ -9,9 +9,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func busLogError(err error) {
+func busLogError(name string, err error) {
 	if err != nil {
-		log.Err(err).Str("package", "event").Send()
+		log.Err(err).Str("package", "event").Str("name", name).Send()
 	}
 }
 
@@ -24,58 +24,65 @@ func NewBus() *Bus {
 type Bus struct {
 	sutureext.ServiceContext
 	onEventQueued []func(ctx context.Context, event EventQueued) error
+	namesEventQueued []string
 	onEvent []func(ctx context.Context, event Event) error
+	namesEvent []string
 	onDahuaEvent []func(ctx context.Context, event DahuaEvent) error
+	namesDahuaEvent []string
 	onDahuaEventWorkerConnecting []func(ctx context.Context, event DahuaEventWorkerConnecting) error
+	namesDahuaEventWorkerConnecting []string
 	onDahuaEventWorkerConnect []func(ctx context.Context, event DahuaEventWorkerConnect) error
+	namesDahuaEventWorkerConnect []string
 	onDahuaEventWorkerDisconnect []func(ctx context.Context, event DahuaEventWorkerDisconnect) error
+	namesDahuaEventWorkerDisconnect []string
 	onDahuaCoaxialStatus []func(ctx context.Context, event DahuaCoaxialStatus) error
+	namesDahuaCoaxialStatus []string
 }
 
 func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
-	b.OnEventQueued(func(ctx context.Context, evt EventQueued) error {
+	b.OnEventQueued("pubsub", func(ctx context.Context, evt EventQueued) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
 		}
 		return err
 	})
-	b.OnEvent(func(ctx context.Context, evt Event) error {
+	b.OnEvent("pubsub", func(ctx context.Context, evt Event) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
 		}
 		return err
 	})
-	b.OnDahuaEvent(func(ctx context.Context, evt DahuaEvent) error {
+	b.OnDahuaEvent("pubsub", func(ctx context.Context, evt DahuaEvent) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
 		}
 		return err
 	})
-	b.OnDahuaEventWorkerConnecting(func(ctx context.Context, evt DahuaEventWorkerConnecting) error {
+	b.OnDahuaEventWorkerConnecting("pubsub", func(ctx context.Context, evt DahuaEventWorkerConnecting) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
 		}
 		return err
 	})
-	b.OnDahuaEventWorkerConnect(func(ctx context.Context, evt DahuaEventWorkerConnect) error {
+	b.OnDahuaEventWorkerConnect("pubsub", func(ctx context.Context, evt DahuaEventWorkerConnect) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
 		}
 		return err
 	})
-	b.OnDahuaEventWorkerDisconnect(func(ctx context.Context, evt DahuaEventWorkerDisconnect) error {
+	b.OnDahuaEventWorkerDisconnect("pubsub", func(ctx context.Context, evt DahuaEventWorkerDisconnect) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
 		}
 		return err
 	})
-	b.OnDahuaCoaxialStatus(func(ctx context.Context, evt DahuaCoaxialStatus) error {
+	b.OnDahuaCoaxialStatus("pubsub", func(ctx context.Context, evt DahuaCoaxialStatus) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
@@ -86,75 +93,82 @@ func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 }
 
 
-func (b *Bus) OnEventQueued(h func(ctx context.Context, evt EventQueued) error) {
+func (b *Bus) OnEventQueued(name string, h func(ctx context.Context, evt EventQueued) error) {
 	b.onEventQueued = append(b.onEventQueued, h)
+	b.namesEventQueued = append(b.namesEventQueued, name)
 }
 
-func (b *Bus) OnEvent(h func(ctx context.Context, evt Event) error) {
+func (b *Bus) OnEvent(name string, h func(ctx context.Context, evt Event) error) {
 	b.onEvent = append(b.onEvent, h)
+	b.namesEvent = append(b.namesEvent, name)
 }
 
-func (b *Bus) OnDahuaEvent(h func(ctx context.Context, evt DahuaEvent) error) {
+func (b *Bus) OnDahuaEvent(name string, h func(ctx context.Context, evt DahuaEvent) error) {
 	b.onDahuaEvent = append(b.onDahuaEvent, h)
+	b.namesDahuaEvent = append(b.namesDahuaEvent, name)
 }
 
-func (b *Bus) OnDahuaEventWorkerConnecting(h func(ctx context.Context, evt DahuaEventWorkerConnecting) error) {
+func (b *Bus) OnDahuaEventWorkerConnecting(name string, h func(ctx context.Context, evt DahuaEventWorkerConnecting) error) {
 	b.onDahuaEventWorkerConnecting = append(b.onDahuaEventWorkerConnecting, h)
+	b.namesDahuaEventWorkerConnecting = append(b.namesDahuaEventWorkerConnecting, name)
 }
 
-func (b *Bus) OnDahuaEventWorkerConnect(h func(ctx context.Context, evt DahuaEventWorkerConnect) error) {
+func (b *Bus) OnDahuaEventWorkerConnect(name string, h func(ctx context.Context, evt DahuaEventWorkerConnect) error) {
 	b.onDahuaEventWorkerConnect = append(b.onDahuaEventWorkerConnect, h)
+	b.namesDahuaEventWorkerConnect = append(b.namesDahuaEventWorkerConnect, name)
 }
 
-func (b *Bus) OnDahuaEventWorkerDisconnect(h func(ctx context.Context, evt DahuaEventWorkerDisconnect) error) {
+func (b *Bus) OnDahuaEventWorkerDisconnect(name string, h func(ctx context.Context, evt DahuaEventWorkerDisconnect) error) {
 	b.onDahuaEventWorkerDisconnect = append(b.onDahuaEventWorkerDisconnect, h)
+	b.namesDahuaEventWorkerDisconnect = append(b.namesDahuaEventWorkerDisconnect, name)
 }
 
-func (b *Bus) OnDahuaCoaxialStatus(h func(ctx context.Context, evt DahuaCoaxialStatus) error) {
+func (b *Bus) OnDahuaCoaxialStatus(name string, h func(ctx context.Context, evt DahuaCoaxialStatus) error) {
 	b.onDahuaCoaxialStatus = append(b.onDahuaCoaxialStatus, h)
+	b.namesDahuaCoaxialStatus = append(b.namesDahuaCoaxialStatus, name)
 }
 
 
 
 func (b *Bus) EventQueued(evt EventQueued) {
-	for _, v := range b.onEventQueued {
-		busLogError(v(b.Context(), evt))
+	for i, v := range b.onEventQueued {
+		busLogError(b.namesEventQueued[i],v(b.Context(), evt))
 	}
 }
 
 func (b *Bus) Event(evt Event) {
-	for _, v := range b.onEvent {
-		busLogError(v(b.Context(), evt))
+	for i, v := range b.onEvent {
+		busLogError(b.namesEvent[i],v(b.Context(), evt))
 	}
 }
 
 func (b *Bus) DahuaEvent(evt DahuaEvent) {
-	for _, v := range b.onDahuaEvent {
-		busLogError(v(b.Context(), evt))
+	for i, v := range b.onDahuaEvent {
+		busLogError(b.namesDahuaEvent[i],v(b.Context(), evt))
 	}
 }
 
 func (b *Bus) DahuaEventWorkerConnecting(evt DahuaEventWorkerConnecting) {
-	for _, v := range b.onDahuaEventWorkerConnecting {
-		busLogError(v(b.Context(), evt))
+	for i, v := range b.onDahuaEventWorkerConnecting {
+		busLogError(b.namesDahuaEventWorkerConnecting[i],v(b.Context(), evt))
 	}
 }
 
 func (b *Bus) DahuaEventWorkerConnect(evt DahuaEventWorkerConnect) {
-	for _, v := range b.onDahuaEventWorkerConnect {
-		busLogError(v(b.Context(), evt))
+	for i, v := range b.onDahuaEventWorkerConnect {
+		busLogError(b.namesDahuaEventWorkerConnect[i],v(b.Context(), evt))
 	}
 }
 
 func (b *Bus) DahuaEventWorkerDisconnect(evt DahuaEventWorkerDisconnect) {
-	for _, v := range b.onDahuaEventWorkerDisconnect {
-		busLogError(v(b.Context(), evt))
+	for i, v := range b.onDahuaEventWorkerDisconnect {
+		busLogError(b.namesDahuaEventWorkerDisconnect[i],v(b.Context(), evt))
 	}
 }
 
 func (b *Bus) DahuaCoaxialStatus(evt DahuaCoaxialStatus) {
-	for _, v := range b.onDahuaCoaxialStatus {
-		busLogError(v(b.Context(), evt))
+	for i, v := range b.onDahuaCoaxialStatus {
+		busLogError(b.namesDahuaCoaxialStatus[i],v(b.Context(), evt))
 	}
 }
 

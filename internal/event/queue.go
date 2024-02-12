@@ -14,7 +14,7 @@ func NewQueue(db sqlite.DB, bus *Bus) Queue {
 		check: make(chan struct{}, 1),
 	}
 
-	q.bus.OnEventQueued(func(ctx context.Context, evt EventQueued) error {
+	q.bus.OnEventQueued(q.String(),func(ctx context.Context, evt EventQueued) error {
 		select {
 		case q.check <- struct{}{}:
 		default:
@@ -29,6 +29,10 @@ type Queue struct {
 	db    sqlite.DB
 	bus   *Bus
 	check chan struct{}
+}
+
+func (Queue) String() string {
+	return "event.Queue"
 }
 
 func (q Queue) Serve(ctx context.Context) error {

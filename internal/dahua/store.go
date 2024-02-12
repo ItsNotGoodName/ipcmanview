@@ -125,7 +125,7 @@ func (s *Store) deleteClient(ctx context.Context, deviceID int64) error {
 }
 
 func (s *Store) Register(bus *event.Bus) *Store {
-	bus.OnEvent(func(ctx context.Context, evt event.Event) error {
+	bus.OnEvent(s.String(), func(ctx context.Context, evt event.Event) error {
 		switch evt.Event.Action {
 		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
 			deviceID := event.DataAsInt64(evt.Event)

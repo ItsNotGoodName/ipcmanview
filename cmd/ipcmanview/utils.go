@@ -94,7 +94,7 @@ func (c Shared) useCert() (server.Certificate, error) {
 		return cert, err
 	}
 	if !(certFileExists && keyFileExists) {
-		err := server.GenerateCertificate(cert)
+		err := cert.ForceGenerate()
 		if err != nil {
 			return cert, err
 		}

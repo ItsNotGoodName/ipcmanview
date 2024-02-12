@@ -18,9 +18,9 @@ import (
 {{- end }}
 )
 
-func busLogError(err error) {
+func busLogError(name string, err error) {
 	if err != nil {
-		log.Err(err).Str("package", "{{ .Package }}").Send()
+		log.Err(err).Str("package", "{{ .Package }}").Str("name", name).Send()
 	}
 }
 
@@ -34,12 +34,13 @@ type Bus struct {
 	sutureext.ServiceContext
 {{- range .Events }}
 	on{{.}} []func(ctx context.Context, event {{ $.EventPackage }}{{ . }}) error
+	names{{.}} []string
 {{- end }}
 }
 
 func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 {{- range .Events }}
-	b.On{{ . }}(func(ctx context.Context, evt {{ $.EventPackage }}{{ . }}) error {
+	b.On{{ . }}("pubsub", func(ctx context.Context, evt {{ $.EventPackage }}{{ . }}) error {
 		err := pub.Publish(ctx, evt)
 		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
 			return nil
@@ -51,15 +52,16 @@ func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
 }
 
 {{ range .Events }}
-func (b *Bus) On{{ . }}(h func(ctx context.Context, evt {{ $.EventPackage }}{{ . }}) error) {
+func (b *Bus) On{{ . }}(name string, h func(ctx context.Context, evt {{ $.EventPackage }}{{ . }}) error) {
 	b.on{{ . }} = append(b.on{{ . }}, h)
+	b.names{{ . }} = append(b.names{{ . }}, name)
 }
 {{ end }}
 
 {{ range .Events }}
 func (b *Bus) {{ . }}(evt {{ $.EventPackage }}{{ . }}) {
-	for _, v := range b.on{{ . }} {
-		busLogError(v(b.Context(), evt))
+	for i, v := range b.on{{ . }} {
+		busLogError(b.names{{ . }}[i],v(b.Context(), evt))
 	}
 }
 {{ end }}
