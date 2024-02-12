@@ -190,6 +190,10 @@ export interface GetHomePageResp_Build {
      * @generated from protobuf field: string license_url = 6;
      */
     licenseUrl: string;
+    /**
+     * @generated from protobuf field: string release_url = 7;
+     */
+    releaseUrl: string;
 }
 /**
  * @generated from protobuf message GetHomePageResp.File
@@ -1645,7 +1649,8 @@ class GetHomePageResp_Build$Type extends MessageType<GetHomePageResp_Build> {
             { no: 3, name: "date", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 4, name: "repo_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
             { no: 5, name: "commit_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 6, name: "license_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 6, name: "license_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "release_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

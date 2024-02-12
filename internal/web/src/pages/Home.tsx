@@ -185,7 +185,7 @@ export function Home() {
                     </tr>
                     <tr class="border-b">
                       <td class="p-2">Version</td>
-                      <td class="p-2">{data()?.build?.version}</td>
+                      <td class="p-2"><a class={linkVariants()} href={data()?.build?.releaseUrl}>{data()?.build?.version}</a></td>
                     </tr>
                   </tbody>
                 </table>
@@ -207,9 +207,9 @@ function StatRoot(props: ParentProps) {
 }
 
 function StatTitle(props: ParentProps) {
-  return <div class="text-nowrap">{props.children}</div>
+  return <h2 class="text-nowrap">{props.children}</h2>
 }
 
 function StatValue(props: ParentProps) {
-  return <div class="text-nowrap text-lg font-bold">{props.children}</div>
+  return <p class="text-nowrap text-lg font-bold">{props.children}</p>
 }

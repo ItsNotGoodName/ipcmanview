@@ -106,6 +106,7 @@ message GetHomePageResp {
     string repo_url = 4;
     string commit_url = 5;
     string license_url = 6;
+    string release_url = 7;
   }
   Build build = 5;
 

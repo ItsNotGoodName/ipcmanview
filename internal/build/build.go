@@ -10,11 +10,12 @@ var (
 func init() {
 	Current = Build{
 		Commit:     commit,
-		Date:       date,
 		Version:    version,
+		Date:       date,
 		RepoURL:    repoURL,
 		CommitURL:  repoURL + "/tree/" + commit,
 		LicenseURL: repoURL + "/blob/master/LICENSE",
+		ReleaseURL: repoURL + "/releases/tag/" + version,
 	}
 }
 
@@ -27,4 +28,5 @@ type Build struct {
 	RepoURL    string
 	CommitURL  string
 	LicenseURL string
+	ReleaseURL string
 }
