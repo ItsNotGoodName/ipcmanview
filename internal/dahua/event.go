@@ -2,6 +2,7 @@ package dahua
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -11,8 +12,20 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/rs/zerolog/log"
 )
+
+func SubscribeEvents(ctx context.Context, db sqlite.DB, pub pubsub.Pub, ids []int64) (<-chan event.DahuaEvent, pubsub.Sub, error) {
+	// sub, eventsC, err := s.pub.
+	// 	Subscribe(event.DahuaEvent{}).
+	// 	Channel(ctx, 10)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer sub.Close()
+	return nil, pubsub.Sub{}, fmt.Errorf("not impl")
+}
 
 func NewDefaultEventHooks(bus *event.Bus, db sqlite.DB) DefaultEventHooks {
 	return DefaultEventHooks{

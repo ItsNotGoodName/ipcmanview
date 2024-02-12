@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"slices"
 	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
@@ -22,18 +21,7 @@ import (
 )
 
 func (s *Server) DahuaAfero(route string) echo.HandlerFunc {
-	h := echo.WrapHandler(http.StripPrefix(route, http.FileServer(afero.NewHttpFs(s.dahuaFileFS))))
-	return func(c echo.Context) error {
-		err := dahua.CheckAferoFile(c.Request().Context(), s.db, c.Param("*"))
-		if err != nil {
-			if repo.IsNotFound(err) {
-				return echo.ErrNotFound.WithInternal(err)
-			}
-			return err
-		}
-
-		return h(c)
-	}
+	return echo.WrapHandler(http.StripPrefix(route, http.FileServer(afero.NewHttpFs(s.dahuaFileFS))))
 }
 
 func (s *Server) DahuaDevices(c echo.Context) error {
@@ -55,11 +43,11 @@ func (s *Server) DahuaDevices(c echo.Context) error {
 func (s *Server) DahuaDevicesIDRPCPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
+	return echo.ErrNotImplemented
 
 	var req struct {
 		Method string          `json:"method"`
@@ -83,7 +71,7 @@ func (s *Server) DahuaDevicesIDRPCPOST(c echo.Context) error {
 func (s *Server) DahuaDevicesIDDetail(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, _, err := useDahuaClient(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -99,8 +87,7 @@ func (s *Server) DahuaDevicesIDDetail(c echo.Context) error {
 func (s *Server) DahuaDevicesIDSoftware(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -116,8 +103,7 @@ func (s *Server) DahuaDevicesIDSoftware(c echo.Context) error {
 func (s *Server) DahuaDevicesIDLicenses(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -133,8 +119,7 @@ func (s *Server) DahuaDevicesIDLicenses(c echo.Context) error {
 func (s *Server) DahuaDevicesIDError(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -147,8 +132,7 @@ func (s *Server) DahuaDevicesIDError(c echo.Context) error {
 func (s *Server) DahuaDevicesIDSnapshot(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -178,8 +162,7 @@ func (s *Server) DahuaDevicesIDSnapshot(c echo.Context) error {
 func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -257,9 +240,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 		return err
 	}
 
-	sub, eventsC, err := s.pub.
-		Subscribe(event.DahuaEvent{}).
-		Channel(ctx, 10)
+	eventsC, sub, err := dahua.SubscribeEvents(ctx, s.db, s.pub, ids)
 	if err != nil {
 		return err
 	}
@@ -267,16 +248,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 
 	stream := newStream(c)
 
-	for e := range eventsC {
-		evt, ok := e.(event.DahuaEvent)
-		if !ok {
-			continue
-		}
-
-		if len(ids) != 0 && !slices.Contains(ids, evt.Event.DeviceID) {
-			continue
-		}
-
+	for evt := range eventsC {
 		if err := writeStream(c, stream, evt.Event); err != nil {
 			return writeStreamError(c, stream, err)
 		}
@@ -292,8 +264,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 func (s *Server) DahuaDevicesIDFiles(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -341,7 +312,7 @@ func (s *Server) DahuaDevicesIDFiles(c echo.Context) error {
 func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, _, err := useDahuaClient(c, s.db, s.dahuaStore)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -414,8 +385,7 @@ func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 func (s *Server) DahuaDevicesIDAudio(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -443,8 +413,7 @@ func (s *Server) DahuaDevicesIDAudio(c echo.Context) error {
 func (s *Server) DahuaDevicesIDCoaxialStatus(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -465,8 +434,7 @@ func (s *Server) DahuaDevicesIDCoaxialStatus(c echo.Context) error {
 func (s *Server) DahuaDevicesIDCoaxialCaps(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -487,11 +455,11 @@ func (s *Server) DahuaDevicesIDCoaxialCaps(c echo.Context) error {
 func (s *Server) DahuaDevicesIDPTZPresetPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
+	return echo.ErrNotImplemented
 
 	channel, err := queryIntOptional(c, "channel")
 	if err != nil {
@@ -514,8 +482,7 @@ func (s *Server) DahuaDevicesIDPTZPresetPOST(c echo.Context) error {
 func (s *Server) DahuaDevicesIDStorage(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}
@@ -531,8 +498,7 @@ func (s *Server) DahuaDevicesIDStorage(c echo.Context) error {
 func (s *Server) DahuaDevicesIDUsers(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	client, level, err := useDahuaClient(c, s.db, s.dahuaStore)
-	panic(level)
+	client, err := useDahuaClient(c, s.dahuaStore)
 	if err != nil {
 		return err
 	}

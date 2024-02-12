@@ -28,7 +28,7 @@ func SupportStreams(feature models.DahuaFeature) bool {
 	return feature.EQ(models.DahuaFeatureCamera)
 }
 
-// SyncStreams fetches streams from device and inserts them into the database.
+// SyncStreams fetches streams from device and upserts them into the database.
 // SupportStreams should be called to check if sync streams is possible.
 func SyncStreams(ctx context.Context, db sqlite.DB, deviceID int64, conn dahuarpc.Conn) error {
 	caps, err := encode.GetCaps(ctx, conn, 1)

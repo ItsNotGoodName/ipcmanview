@@ -14,11 +14,14 @@ func ActorMiddleware() echo.MiddlewareFunc {
 			r := c.Request()
 			ctx := r.Context()
 
-			// User or public actor
 			var newCtx context.Context
-			if session, ok := auth.UseSession(ctx); ok {
+			if token := c.QueryParam("token"); token == core.RuntimeToken {
+				// System
+			} else if session, ok := auth.UseSession(ctx); ok {
+				// User
 				newCtx = core.WithUserActor(ctx, session.UserID, session.Admin)
 			} else {
+				// Public
 				newCtx = core.WithPublicActor(ctx)
 			}
 

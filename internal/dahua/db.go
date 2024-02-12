@@ -48,11 +48,6 @@ func dbSelectFilter(ctx context.Context, sb sq.SelectBuilder, deviceIDField stri
 		`, level, actor.UserID, actor.UserID))
 }
 
-func CheckAferoFile(ctx context.Context, db sqlite.DB, name string) error {
-	// TODO: check permissions
-	return nil
-}
-
 func GetConn(ctx context.Context, db sqlite.DB, id int64) (Conn, error) {
 	actor := core.UseActor(ctx)
 	v, err := db.C().DahuaGetConn(ctx, repo.DahuaGetConnParams{
@@ -107,7 +102,7 @@ func ListDeviceIDs(ctx context.Context, db sqlite.DB) ([]int64, error) {
 		From("dahua_devices")
 
 	var res []int64
-	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id", defaultlevel))
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id", levelDefault))
 	return res, err
 }
 
@@ -117,7 +112,7 @@ func CountFiles(ctx context.Context, db sqlite.DB) (int64, error) {
 		From("dahua_files")
 
 	var res dbCountRow
-	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", defaultlevel))
+	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", levelDefault))
 	return res.Count, err
 }
 
@@ -127,7 +122,7 @@ func CountEvents(ctx context.Context, db sqlite.DB) (int64, error) {
 		From("dahua_events")
 
 	var res dbCountRow
-	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_events.device_id", defaultlevel))
+	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_events.device_id", levelDefault))
 	return res.Count, err
 }
 
@@ -137,7 +132,7 @@ func CountEmails(ctx context.Context, db sqlite.DB) (int64, error) {
 		From("dahua_email_messages")
 
 	var res dbCountRow
-	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", emailLevel))
+	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail))
 	return res.Count, err
 }
 
@@ -156,7 +151,7 @@ func ListLatestEmails(ctx context.Context, db sqlite.DB, count int) ([]ListLates
 		Limit(uint64(count))
 
 	var res []ListLatestEmailsResult
-	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", emailLevel))
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail))
 	return res, err
 }
 
@@ -168,7 +163,7 @@ func ListLatestFiles(ctx context.Context, db sqlite.DB, count int) ([]repo.Dahua
 		Limit(uint64(count))
 
 	var res []repo.DahuaFile
-	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", emailLevel))
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", levelEmail))
 	return res, err
 }
 
@@ -192,7 +187,7 @@ func GetDevice(ctx context.Context, db sqlite.DB, filter GetDeviceFilter) (repo.
 		Where(eq)
 
 	var res repo.DahuaDevice
-	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id", defaultlevel))
+	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id", levelDefault))
 	return res, err
 }
 
@@ -202,7 +197,7 @@ func ListDevices(ctx context.Context, db sqlite.DB) ([]repo.DahuaDevice, error) 
 		From("dahua_devices")
 
 	var res []repo.DahuaDevice
-	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id", defaultlevel))
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_devices.id", levelDefault))
 	return res, err
 }
 
@@ -244,7 +239,7 @@ func ListEmails(ctx context.Context, db sqlite.DB, arg ListEmailsParams) (ListEm
 		Limit(uint64(arg.Limit()))
 
 	var items []ListEmailsResultItems
-	err := ssq.Query(ctx, db, &items, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", emailLevel))
+	err := ssq.Query(ctx, db, &items, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail))
 	if err != nil {
 		return ListEmailsResult{}, err
 	}
@@ -279,7 +274,7 @@ func GetEmail(ctx context.Context, db sqlite.DB, id int64) (GetEmailResult, erro
 		OrderBy("id DESC").
 		Limit(2)
 	var messages []repo.DahuaEmailMessage
-	if err := ssq.Query(ctx, db, &messages, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", emailLevel)); err != nil {
+	if err := ssq.Query(ctx, db, &messages, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail)); err != nil {
 		return GetEmailResult{}, err
 	}
 	if len(messages) == 0 || messages[0].ID != id {
@@ -320,7 +315,7 @@ func GetEmailAround(ctx context.Context, db sqlite.DB, id int64) (GetEmailAround
 		PreviousEmailID sql.NullInt64
 		EmailSeen       int64
 	}
-	if err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", emailLevel)); err != nil {
+	if err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail)); err != nil {
 		return GetEmailAroundResult{}, err
 	}
 

@@ -4,8 +4,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
 
-const defaultlevel = models.DahuaPermissionLevelUser
-const emailLevel = models.DahuaPermissionLevelUser
+const levelDefault = models.DahuaPermissionLevelUser
+const levelEmail = models.DahuaPermissionLevelUser
 
 // type Action string
 //

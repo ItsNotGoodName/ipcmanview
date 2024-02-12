@@ -74,10 +74,6 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn Conn) Client {
 
 		client = newStoreClient(conn)
 		s.clients[conn.ID] = client
-	} else {
-		// Found
-
-		s.clients[conn.ID] = client
 	}
 
 	return client.Client
@@ -114,7 +110,7 @@ func (s *Store) ListClient(ctx context.Context) ([]Client, error) {
 	return clients, nil
 }
 
-func (s *Store) DeleteClient(ctx context.Context, deviceID int64) error {
+func (s *Store) deleteClient(ctx context.Context, deviceID int64) error {
 	s.clientsMu.Lock()
 	client, found := s.clients[deviceID]
 	if found {
@@ -136,14 +132,14 @@ func (s *Store) Register(bus *event.Bus) *Store {
 
 			if _, err := s.GetClient(ctx, deviceID); err != nil {
 				if repo.IsNotFound(err) {
-					return s.DeleteClient(ctx, deviceID)
+					return s.deleteClient(ctx, deviceID)
 				}
 				return err
 			}
 		case event.ActionDahuaDeviceDeleted:
 			deviceID := event.DataAsInt64(evt.Event)
 
-			return s.DeleteClient(ctx, deviceID)
+			return s.deleteClient(ctx, deviceID)
 		}
 		return nil
 	})

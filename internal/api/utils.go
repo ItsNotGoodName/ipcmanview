@@ -11,7 +11,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/labstack/echo/v4"
 )
 
@@ -40,29 +39,29 @@ func paramID(c echo.Context) (int64, error) {
 // 	return permissions, nil
 // }
 
-func useDahuaClient(c echo.Context, db sqlite.DB, store *dahua.Store) (dahua.Client, models.DahuaPermissionLevel, error) {
+func useDahuaClient(c echo.Context, store *dahua.Store) (dahua.Client, error) {
 	ctx := c.Request().Context()
 
 	id, err := paramID(c)
 	if err != nil {
-		return dahua.Client{}, 0, err
+		return dahua.Client{}, err
 	}
 
 	client, err := store.GetClient(ctx, id)
 	if err != nil {
 		if repo.IsNotFound(err) {
-			return dahua.Client{}, 0, echo.ErrNotFound.WithInternal(err)
+			return dahua.Client{}, echo.ErrNotFound.WithInternal(err)
 		}
-		return dahua.Client{}, 0, err
+		return dahua.Client{}, err
 	}
 
-	return client, models.DahuaPermissionLevelUser, nil
+	return client, nil
 }
 
 // ---------- Stream
 
 func newStream(c echo.Context) *json.Encoder {
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	c.Response().Header().Set(echo.HeaderContentType, "application/x-ndjson")
 	c.Response().WriteHeader(http.StatusOK)
 	return json.NewEncoder(c.Response())
 }
