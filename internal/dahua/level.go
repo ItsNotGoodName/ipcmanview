@@ -6,6 +6,7 @@ import (
 
 const levelDefault = models.DahuaPermissionLevelUser
 const levelEmail = models.DahuaPermissionLevelUser
+const levelEvent = models.DahuaPermissionLevelUser
 
 // type Action string
 //

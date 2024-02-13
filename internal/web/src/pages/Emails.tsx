@@ -113,23 +113,21 @@ export function Emails() {
                     <TableCell class="truncate">
                       {v.subject}
                     </TableCell>
-                    <TableCell class="p-0">
-                      <div class="flex justify-end gap-4">
-                        <Show when={v.attachmentCount > 0}>
-                          <A href={`/emails/${v.id}?tab=attachments`}>
-                            <TooltipRoot>
-                              <TooltipTrigger class="flex h-full items-center">
-                                <RiEditorAttachment2 class="h-4 w-4" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <TooltipArrow />
-                                {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
-                              </TooltipContent>
-                            </TooltipRoot>
-                          </A>
-                        </Show>
-                      </div>
-                    </TableCell>
+                    <Crud.LastTableCell>
+                      <Show when={v.attachmentCount > 0}>
+                        <A href={`/emails/${v.id}?tab=attachments`}>
+                          <TooltipRoot>
+                            <TooltipTrigger class="flex h-full items-center">
+                              <RiEditorAttachment2 class="h-4 w-4" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <TooltipArrow />
+                              {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
+                            </TooltipContent>
+                          </TooltipRoot>
+                        </A>
+                      </Show>
+                    </Crud.LastTableCell>
                   </TableRow>
                 }
               </For>

@@ -443,6 +443,73 @@ export interface GetEmailsIDPageResp_Attachment {
     size: bigint;
 }
 /**
+ * @generated from protobuf message GetEventsPageReq
+ */
+export interface GetEventsPageReq {
+    /**
+     * @generated from protobuf field: PagePagination page = 1;
+     */
+    page?: PagePagination;
+    /**
+     * @generated from protobuf field: Sort sort = 2;
+     */
+    sort?: Sort;
+}
+/**
+ * @generated from protobuf message GetEventsPageResp
+ */
+export interface GetEventsPageResp {
+    /**
+     * @generated from protobuf field: repeated GetEventsPageResp.Event events = 1;
+     */
+    events: GetEventsPageResp_Event[];
+    /**
+     * @generated from protobuf field: PagePaginationResult pageResult = 2;
+     */
+    pageResult?: PagePaginationResult;
+    /**
+     * @generated from protobuf field: Sort sort = 3;
+     */
+    sort?: Sort;
+}
+/**
+ * @generated from protobuf message GetEventsPageResp.Event
+ */
+export interface GetEventsPageResp_Event {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: int64 device_id = 2;
+     */
+    deviceId: bigint;
+    /**
+     * @generated from protobuf field: string device_name = 4;
+     */
+    deviceName: string;
+    /**
+     * @generated from protobuf field: string code = 5;
+     */
+    code: string;
+    /**
+     * @generated from protobuf field: string action = 6;
+     */
+    action: string;
+    /**
+     * @generated from protobuf field: int64 index = 7;
+     */
+    index: bigint;
+    /**
+     * @generated from protobuf field: string data = 8;
+     */
+    data: string;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp created_at_time = 9;
+     */
+    createdAtTime?: Timestamp;
+}
+/**
  * @generated from protobuf message GetProfilePageResp
  */
 export interface GetProfilePageResp {
@@ -1827,6 +1894,52 @@ class GetEmailsIDPageResp_Attachment$Type extends MessageType<GetEmailsIDPageRes
  */
 export const GetEmailsIDPageResp_Attachment = new GetEmailsIDPageResp_Attachment$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetEventsPageReq$Type extends MessageType<GetEventsPageReq> {
+    constructor() {
+        super("GetEventsPageReq", [
+            { no: 1, name: "page", kind: "message", T: () => PagePagination },
+            { no: 2, name: "sort", kind: "message", T: () => Sort }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetEventsPageReq
+ */
+export const GetEventsPageReq = new GetEventsPageReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetEventsPageResp$Type extends MessageType<GetEventsPageResp> {
+    constructor() {
+        super("GetEventsPageResp", [
+            { no: 1, name: "events", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetEventsPageResp_Event },
+            { no: 2, name: "pageResult", kind: "message", T: () => PagePaginationResult },
+            { no: 3, name: "sort", kind: "message", T: () => Sort }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetEventsPageResp
+ */
+export const GetEventsPageResp = new GetEventsPageResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class GetEventsPageResp_Event$Type extends MessageType<GetEventsPageResp_Event> {
+    constructor() {
+        super("GetEventsPageResp.Event", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "device_id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 4, name: "device_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 6, name: "action", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 7, name: "index", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 8, name: "data", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 9, name: "created_at_time", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetEventsPageResp.Event
+ */
+export const GetEventsPageResp_Event = new GetEventsPageResp_Event$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class GetProfilePageResp$Type extends MessageType<GetProfilePageResp> {
     constructor() {
         super("GetProfilePageResp", [
@@ -2716,6 +2829,7 @@ export const User = new ServiceType("User", [
     { name: "GetProfilePage", options: {}, I: Empty, O: GetProfilePageResp },
     { name: "GetEmailsPage", options: {}, I: GetEmailsPageReq, O: GetEmailsPageResp },
     { name: "GetEmailsIDPage", options: {}, I: GetEmailsIDPageReq, O: GetEmailsIDPageResp },
+    { name: "GetEventsPage", options: {}, I: GetEventsPageReq, O: GetEventsPageResp },
     { name: "UpdateMyUsername", options: {}, I: UpdateMyUsernameReq, O: Empty },
     { name: "UpdateMyPassword", options: {}, I: UpdateMyPasswordReq, O: Empty },
     { name: "RevokeMySession", options: {}, I: RevokeMySessionReq, O: Empty },

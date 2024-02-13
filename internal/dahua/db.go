@@ -330,3 +330,53 @@ func GetEmailAround(ctx context.Context, db sqlite.DB, id int64) (GetEmailAround
 		PreviousEmailID: previousEmailID,
 	}, nil
 }
+
+type ListEventsParams struct {
+	pagination.Page
+	Ascending bool
+}
+
+type ListEventsResult struct {
+	pagination.PageResult
+	Items []ListEventsResultItems
+}
+
+type ListEventsResultItems struct {
+	repo.DahuaEvent
+	DeviceName string
+}
+
+func ListEvents(ctx context.Context, db sqlite.DB, arg ListEventsParams) (ListEventsResult, error) {
+	order := "dahua_events.id"
+	if arg.Ascending {
+		order += " ASC"
+	} else {
+		order += " DESC"
+	}
+	sb := sq.
+		Select(
+			"dahua_events.*",
+			"dahua_devices.name AS device_name",
+		).
+		From("dahua_events").
+		LeftJoin("dahua_devices ON dahua_devices.id = dahua_events.device_id").
+		OrderBy(order).
+		Offset(uint64(arg.Offset())).
+		Limit(uint64(arg.Limit()))
+
+	var items []ListEventsResultItems
+	err := ssq.Query(ctx, db, &items, dbSelectFilter(ctx, sb, "dahua_events.device_id", levelEvent))
+	if err != nil {
+		return ListEventsResult{}, err
+	}
+
+	count, err := CountEvents(ctx, db)
+	if err != nil {
+		return ListEventsResult{}, err
+	}
+
+	return ListEventsResult{
+		PageResult: arg.Result(int(count)),
+		Items:      items,
+	}, nil
+}

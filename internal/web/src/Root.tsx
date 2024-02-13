@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority"
 import { BiRegularCctv } from "solid-icons/bi";
 import { As, DropdownMenu } from "@kobalte/core";
-import { ErrorBoundary, JSX, ParentProps, Show, Suspense, createEffect, createSignal, splitProps } from "solid-js";
+import { ErrorBoundary, JSX, ParentProps, Show, Suspense, createSignal, splitProps } from "solid-js";
 import { A, action, createAsync, revalidate, useAction, useLocation, Location, useNavigate, useSubmission } from "@solidjs/router";
 import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine, RiMediaLiveLine, RiBusinessMailLine, RiUserFacesGroupLine, RiSystemSettings2Line } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
@@ -254,21 +254,11 @@ function Header(props: ParentProps<{ onMenuClick: () => void }>) {
   )
 }
 
-function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { menuOpen?: boolean }) {
-  const [_, rest] = splitProps(props, ["children"])
-
-  let refs: HTMLDivElement[] = []
-  createEffect(() => {
-    if (props.menuOpen) {
-      refs.forEach(r => r.dataset.open = "")
-    } else {
-      refs.forEach(r => delete r.dataset.open)
-    }
-  })
-
+function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { open?: boolean }) {
+  const [_, rest] = splitProps(props, ["children", "open"])
   return (
-    <div ref={refs[0]} class="border-border border-r-0 transition-all duration-200 md:data-[open=]:border-r" {...rest}>
-      <div ref={refs[1]} class="sticky top-0 w-0 transition-all duration-200 md:data-[open=]:w-48">
+    <div data-open={props.open} class="border-border border-r-0 transition-all duration-200 md:data-[open=true]:border-r" {...rest}>
+      <div data-open={props.open} class="sticky top-0 w-0 transition-all duration-200 md:data-[open=true]:w-48">
         <div class="h-screen overflow-y-auto">
           {props.children}
         </div>
@@ -296,13 +286,13 @@ export function Root(props: any) {
           </ToastRegion>
         </Portal>
         <Show when={layoutActive()} fallback={<>{props.children}</>}>
-          <Header onMenuClick={() => setMenuOpen((prev) => !prev)}>
+          <Header onMenuClick={() => setMenuOpen(!menuOpen())}>
             <Show when={!isAdminPage()} fallback={<AdminDropdownMenuLinks />}>
               <DropdownMenuLinks />
             </Show>
           </Header>
           <div class="flex">
-            <Menu menuOpen={menuOpen()}>
+            <Menu open={menuOpen()}>
               <Show when={!isAdminPage()} fallback={<AdminMenuLinks />}>
                 <MenuLinks />
               </Show>

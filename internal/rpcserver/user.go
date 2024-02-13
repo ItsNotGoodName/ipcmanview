@@ -271,6 +271,39 @@ func (u *User) GetEmailsIDPage(ctx context.Context, req *rpc.GetEmailsIDPageReq)
 	}, nil
 }
 
+func (u *User) GetEventsPage(ctx context.Context, req *rpc.GetEventsPageReq) (*rpc.GetEventsPageResp, error) {
+	page := parsePagePagination(req.Page)
+	sort := parseSort(req.Sort).withDefaultOrder(rpc.Order_DESC)
+
+	v, err := dahua.ListEvents(ctx, u.db, dahua.ListEventsParams{
+		Page:      page,
+		Ascending: sort.Order == rpc.Order_ASC,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var events []*rpc.GetEventsPageResp_Event
+	for _, v := range v.Items {
+		events = append(events, &rpc.GetEventsPageResp_Event{
+			Id:            v.ID,
+			DeviceId:      v.DeviceID,
+			DeviceName:    v.DeviceName,
+			Code:          v.Code,
+			Action:        v.Action,
+			Index:         v.Index,
+			Data:          string(v.Data.RawMessage),
+			CreatedAtTime: timestamppb.New(v.CreatedAt.Time),
+		})
+	}
+
+	return &rpc.GetEventsPageResp{
+		Events:     events,
+		PageResult: encodePagePaginationResult(v.PageResult),
+		Sort:       sort.encode(),
+	}, nil
+}
+
 func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 

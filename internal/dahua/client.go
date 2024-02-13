@@ -2,6 +2,7 @@ package dahua
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"time"
 
@@ -10,17 +11,23 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
 )
 
-func NewClient(conn Conn) Client {
-	rpcHTTPClient := &http.Client{
-		Timeout: 5 * time.Second,
+func clientDialTimeout(duration time.Duration) func(network, addr string) (net.Conn, error) {
+	return func(network, addr string) (net.Conn, error) {
+		return net.DialTimeout(network, addr, duration)
 	}
-	cgiHTTPClient := http.Client{}
-	fileHTTPClient := http.Client{}
+}
 
-	clientRPC := dahuarpc.NewClient(rpcHTTPClient, conn.URL, conn.Username, conn.Password)
+func NewClient(conn Conn) Client {
+	httpClient := http.Client{
+		Transport: &http.Transport{
+			Dial: clientDialTimeout(5 * time.Second),
+		},
+	}
+
+	clientRPC := dahuarpc.NewClient(&httpClient, conn.URL, conn.Username, conn.Password)
 	clientPTZ := ptz.NewClient(clientRPC)
-	clientCGI := dahuacgi.NewClient(cgiHTTPClient, conn.URL, conn.Username, conn.Password)
-	clientFile := dahuarpc.NewFileClient(&fileHTTPClient, 10)
+	clientCGI := dahuacgi.NewClient(httpClient, conn.URL, conn.Username, conn.Password)
+	clientFile := dahuarpc.NewFileClient(&httpClient, 10)
 
 	return Client{
 		Conn: conn,

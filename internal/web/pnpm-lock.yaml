@@ -20,6 +20,9 @@ dependencies:
   '@protobuf-ts/twirp-transport':
     specifier: ^2.9.3
     version: 2.9.3
+  '@solid-primitives/clipboard':
+    specifier: ^1.5.8
+    version: 1.5.8(solid-js@1.8.7)
   '@solid-primitives/date':
     specifier: ^2.0.19
     version: 2.0.19(solid-js@1.8.7)
@@ -38,6 +41,9 @@ dependencies:
   clsx:
     specifier: ^2.1.0
     version: 2.1.0
+  highlight.js:
+    specifier: ^11.9.0
+    version: 11.9.0
   humanize-plus:
     specifier: ^1.8.2
     version: 1.8.2
@@ -909,6 +915,15 @@ packages:
     dev: true
     optional: true
 
+  /@solid-primitives/clipboard@1.5.8(solid-js@1.8.7):
+    resolution: {integrity: sha512-yMwT3nRY1VHWJYtxvO9dUy4+h7GspgPpmvHaPV12jHSBlNWaCN72779MheS/hUYQii5WyE2UkrWwUDIx9JlfNw==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/utils': 6.2.2(solid-js@1.8.7)
+      solid-js: 1.8.7
+    dev: false
+
   /@solid-primitives/date@2.0.19(solid-js@1.8.7):
     resolution: {integrity: sha512-1zY3gQszqJgwrt3zt9uj8HlDVm6TAuv04YpJ9Rf6H+Zn20vHZnfLsECQz5HVvuGuIZnU89fCFsF/6p78iMLQqw==}
     peerDependencies:
@@ -1508,6 +1523,11 @@ packages:
     dependencies:
       function-bind: 1.1.2
     dev: true
+
+  /highlight.js@11.9.0:
+    resolution: {integrity: sha512-fJ7cW7fQGCYAkgv4CPfwFHrfd/cLS4Hau96JuJ+ZTOWhjnhoeN1ub1tFmALm/+lW5z4WCAuAV9bm05AP0mS6Gw==}
+    engines: {node: '>=12.0.0'}
+    dev: false
 
   /html-entities@2.3.3:
     resolution: {integrity: sha512-DV5Ln36z34NNTDgnz0EWGBLZENelNAtkiFA4kyNOG2tDI6Mz1uSWiq1wAKdyjnJwyDiDO7Fa2SO1CTxPXL8VxA==}

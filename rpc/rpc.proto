@@ -74,6 +74,7 @@ service User {
   rpc GetProfilePage(google.protobuf.Empty) returns (GetProfilePageResp);
   rpc GetEmailsPage(GetEmailsPageReq) returns (GetEmailsPageResp);
   rpc GetEmailsIDPage(GetEmailsIDPageReq) returns (GetEmailsIDPageResp);
+  rpc GetEventsPage(GetEventsPageReq) returns (GetEventsPageResp);
 
   // User
   rpc UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
@@ -187,6 +188,26 @@ message GetEmailsIDPageResp {
   int64 previous_email_id = 11;
   int64 email_seen = 12;
   int64 email_count = 13;
+}
+
+message GetEventsPageReq {
+  PagePagination page = 1;
+  Sort sort = 2;
+}
+message GetEventsPageResp {
+  message Event {
+    int64 id = 1;
+    int64 device_id = 2;
+    string device_name = 4;
+    string code = 5;
+    string action = 6;
+    int64 index = 7;
+    string data = 8;
+    google.protobuf.Timestamp created_at_time = 9;
+  }
+  repeated Event events = 1;
+  PagePaginationResult pageResult = 2;
+  Sort sort = 3;
 }
 
 message GetProfilePageResp {
