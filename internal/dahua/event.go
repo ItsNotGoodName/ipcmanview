@@ -2,6 +2,7 @@ package dahua
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -93,7 +94,7 @@ func (e DefaultEventHooks) Event(ctx context.Context, deviceID int64, evt dahuac
 		Code:      evt.Code,
 		Action:    evt.Action,
 		Index:     int64(evt.Index),
-		Data:      types.NewJSON(evt.Data),
+		Data:      types.NewJSON(core.IgnoreError(json.MarshalIndent(evt.Data, "", "  "))),
 		CreatedAt: types.NewTime(time.Now()),
 	}
 	if !eventRule.IgnoreDb {

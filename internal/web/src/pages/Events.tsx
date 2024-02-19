@@ -129,7 +129,7 @@ export function Events() {
                             <Button size="icon" variant="ghost" onClick={() => writeClipboard(v.data)} class="absolute right-4 top-2" title="Copy">
                               <RiDocumentClipboardLine class="h-5 w-5" />
                             </Button>
-                            <pre innerHTML={hljs.highlight("json", v.data).value} class="hljs p-4" />
+                            <pre><code innerHTML={hljs.highlight("json", v.data).value} class="hljs" /></pre>
                           </div>
                         </td>
                       </tr >

@@ -1,4 +1,5 @@
-import "./index.css";
+import "./styles/index.css";
+import "./styles/hljs.css";
 
 import { Navigate, Route, Router, } from '@solidjs/router'
 import { Show, lazy } from "solid-js";

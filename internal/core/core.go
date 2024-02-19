@@ -110,3 +110,7 @@ func FileExists(filePath string) (bool, error) {
 		return false, err
 	}
 }
+
+func IgnoreError[T any](data T, err error) T {
+	return data
+}
