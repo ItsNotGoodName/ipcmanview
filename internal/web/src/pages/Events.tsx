@@ -29,8 +29,8 @@ export function Events() {
   }))
   const toggleSort = createToggleSortField(() => data()?.sort)
   const pagination = createPagePagination(() => data()?.pageResult)
-
-  const [allDataOpen, setAllDataOpen] = createSignal(false)
+  const allDataOpen = () => Boolean(searchParams.data)
+  const setAllDataOpen = (value: boolean) => setSearchParams({ data: value ? String(value) : "" })
 
   return (
     <LayoutNormal class="max-w-4xl">

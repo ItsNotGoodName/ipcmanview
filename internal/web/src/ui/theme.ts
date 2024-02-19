@@ -52,7 +52,7 @@ const themeClass = () => {
 };
 
 export const provideTheme = () => {
-  return createEffect(() => {
+  createEffect(() => {
     document.getElementsByTagName("body")![0].className = themeClass()
   })
 }

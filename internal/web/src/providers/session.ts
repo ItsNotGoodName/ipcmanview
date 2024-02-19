@@ -10,8 +10,8 @@ export type Session = {
   disabled: boolean
 }
 
-// HACK: this is to allow switching routes based on session
-export const [sessionCache, setSessionCache] = makePersisted(createStore<Session>({ valid: false, username: "", admin: false, user_id: 0, disabled: false }), { name: "session" })
+// HACK: this allows App.tsx to switch routes based on session
+export const [lastSession, setLastSession] = makePersisted(createStore<Session>({ valid: false, username: "", admin: false, user_id: 0, disabled: false }), { name: "session" })
 
 export const getSession = cache(() =>
   fetch("/v1/session", {
@@ -24,6 +24,6 @@ export const getSession = cache(() =>
 
     throw new Error(`Invalid status code ${resp.status}`)
   }).then((data: Session) => {
-    setSessionCache(data)
+    setLastSession(data)
     return data
   }), "session")

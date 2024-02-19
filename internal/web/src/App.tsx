@@ -11,8 +11,9 @@ import { SignIn, Signup, Forgot } from "~/pages/Public";
 import { Profile } from "~/pages/Profile";
 import loadProfile from "~/pages/Profile.data";
 import { Root } from "~/Root";
+import loadRoot from "~/Root.data";
 import { ClientProvider } from "~/providers/client";
-import { sessionCache } from "~/providers/session";
+import { lastSession } from "~/providers/session";
 import { AdminGroups } from "~/pages/admin/Groups";
 import loadAdminGroups from "~/pages/admin/Groups.data";
 import { AdminGroupsID } from "~/pages/admin/GroupsID";
@@ -45,16 +46,18 @@ function NavigateHome() {
 
 function App() {
   provideTheme()
+  const isAuthenticated = () => lastSession.valid && !lastSession.disabled
+  const isAdmin = () => lastSession.admin
 
   return (
     <ClientProvider>
-      <Router root={Root} explicitLinks>
+      <Router root={Root} rootLoad={loadRoot} explicitLinks>
         <Show when={import.meta.env.DEV}>
           <Route path="/debug">
             <Debug />
           </Route>
         </Show>
-        <Show when={sessionCache.valid && !sessionCache.disabled} fallback={<>
+        <Show when={isAuthenticated()} fallback={<>
           <Route path="/signin" component={SignIn} />
           <Route path="/signup" component={Signup} />
           <Route path="/forgot" component={Forgot} />
@@ -68,7 +71,7 @@ function App() {
           <Route path="/emails/:id" component={EmailsID} load={loadEmailsID} />
           <Route path="/events" component={Events} load={loadEvents} />
           <Route path="/files" component={Files} load={loadFiles} />
-          <Show when={sessionCache.admin} fallback={<Route path="/admin/*" component={NavigateHome} />}>
+          <Show when={isAdmin()} fallback={<Route path="/admin/*" component={NavigateHome} />}>
             <Route path="/admin" component={AdminSettings} load={loadAdminSettings} />
             <Route path="/admin/users" component={AdminUsers} load={loadAdminUsers} />
             <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />

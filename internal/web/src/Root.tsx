@@ -2,7 +2,7 @@ import { cva } from "class-variance-authority"
 import { BiRegularCctv } from "solid-icons/bi";
 import { As, DropdownMenu } from "@kobalte/core";
 import { ErrorBoundary, JSX, ParentProps, Show, Suspense, createSignal, splitProps } from "solid-js";
-import { A, action, createAsync, revalidate, useAction, useLocation, Location, useNavigate, useSubmission } from "@solidjs/router";
+import { A, action, createAsync, revalidate, useAction, useLocation, Location, useNavigate, useSubmission, RouteSectionProps } from "@solidjs/router";
 import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine, RiMediaLiveLine, RiBusinessMailLine, RiUserFacesGroupLine, RiSystemSettings2Line } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
 import { makePersisted } from "@solid-primitives/storage";
@@ -267,10 +267,10 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { open?
   )
 }
 
-export function Root(props: any) {
+export function Root(props: RouteSectionProps) {
   const session = createAsync(() => getSession())
   const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
-  const layoutActive = () => session()?.valid && !session()?.disabled
+  const isAuthenticated = () => session()?.valid && !session()?.disabled
   const isAdminPage = useIsAdminPage(props.location)
 
   return (
@@ -281,11 +281,11 @@ export function Root(props: any) {
     }>
       <Suspense fallback={<PageLoading class="pt-10" />}>
         <Portal>
-          <ToastRegion class={layoutActive() ? "top-12 sm:top-12" : ""}>
-            <ToastList class={layoutActive() ? "top-12 sm:top-12" : ""} />
+          <ToastRegion class={isAuthenticated() ? "top-12 sm:top-12" : ""}>
+            <ToastList class={isAuthenticated() ? "top-12 sm:top-12" : ""} />
           </ToastRegion>
         </Portal>
-        <Show when={layoutActive()} fallback={<>{props.children}</>}>
+        <Show when={isAuthenticated()} fallback={<>{props.children}</>}>
           <Header onMenuClick={() => setMenuOpen(!menuOpen())}>
             <Show when={!isAdminPage()} fallback={<AdminDropdownMenuLinks />}>
               <DropdownMenuLinks />
