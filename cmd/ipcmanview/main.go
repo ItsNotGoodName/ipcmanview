@@ -24,7 +24,7 @@ var mainCmd struct {
 	Serve   CmdServe   `cmd:"" help:"Start application."`
 	// Scan    CmdScan    `cmd:"" help:"Scan files on devices."`
 	// RPC     CmdRPC     `cmd:"" help:"Run RPC on devices."`
-	// Debug_  CmdDebug   `name:"debug" cmd:"" help:"Debug."`
+	Debug_ CmdDebug `name:"debug" cmd:"" help:"Debug."`
 }
 
 func main() {
