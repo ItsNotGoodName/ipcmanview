@@ -7,21 +7,21 @@ require (
 	github.com/alecthomas/kong v0.8.1
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43
-	github.com/emersion/go-smtp v0.20.0
+	github.com/emersion/go-smtp v0.20.2
 	github.com/georgysavva/scany/v2 v2.1.0
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.18.0
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/icholy/digest v0.1.22
-	github.com/jhillyerd/enmime v1.1.0
+	github.com/jhillyerd/enmime v1.2.0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/nathan-osman/go-sunrise v1.1.0
 	github.com/pkg/sftp v1.13.6
-	github.com/pressly/goose/v3 v3.17.0
+	github.com/pressly/goose/v3 v3.18.0
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/afero v1.11.0
 	github.com/stretchr/testify v1.8.4
@@ -58,6 +58,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
