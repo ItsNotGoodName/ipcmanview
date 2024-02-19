@@ -34,6 +34,7 @@ import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from
 import { createRowSelection } from "~/lib/utils";
 import { BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
 import { A } from "@solidjs/router";
+import { MultipleSelectionExample } from "~/ui/Combobox";
 
 export function Ui() {
   const showToast = () => {
@@ -59,6 +60,7 @@ export function Ui() {
 
   return (
     <div class="flex flex-col gap-4 p-4">
+      <MultipleSelectionExample></MultipleSelectionExample>
       <Button onClick={toggleTheme} size="icon">
         <ThemeIcon class="h-6 w-6" />
       </Button>
