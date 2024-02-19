@@ -225,7 +225,7 @@ func NewEvent(v repo.DahuaEvent) Event {
 	}
 }
 
-func (c Conn) Register(bus *event.Bus) error {
+func (c Conn) Register(bus *event.Bus) Conn {
 	if c.haEnable {
 		bus.OnEvent(c.String(), func(ctx context.Context, evt event.Event) error {
 			switch evt.Event.Action {
@@ -295,7 +295,7 @@ func (c Conn) Register(bus *event.Bus) error {
 
 		return nil
 	})
-	return nil
+	return c
 }
 
 func publishEventError(ctx context.Context, conn mqtt.Conn, deviceID int64, err error) error {

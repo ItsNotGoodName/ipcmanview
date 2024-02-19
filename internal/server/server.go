@@ -23,21 +23,21 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-// ---------- HTTP
+// ---------- HTTP Server
 
-type HTTP struct {
+type HTTPServer struct {
 	e               *echo.Echo
 	address         string
 	cert            *Certificate
 	shutdownTimeout time.Duration
 }
 
-func NewHTTP(
+func NewHTTPServer(
 	e *echo.Echo,
 	address string,
 	cert *Certificate,
-) HTTP {
-	return HTTP{
+) HTTPServer {
+	return HTTPServer{
 		e:               e,
 		address:         address,
 		cert:            cert,
@@ -45,11 +45,11 @@ func NewHTTP(
 	}
 }
 
-func (s HTTP) String() string {
+func (s HTTPServer) String() string {
 	return fmt.Sprintf("server.HTTP(address=%s)", s.address)
 }
 
-func (s HTTP) Serve(ctx context.Context) error {
+func (s HTTPServer) Serve(ctx context.Context) error {
 	s.e.HideBanner = true
 	s.e.HidePort = true
 	log.Info().Str("address", s.address).Msg("Starting HTTP server")
@@ -81,9 +81,9 @@ func (s HTTP) Serve(ctx context.Context) error {
 	}
 }
 
-// ---------- Router
+// ---------- HTTP Router
 
-func NewRouter() *echo.Echo {
+func NewHTTPRouter() *echo.Echo {
 	e := echo.New()
 	e.IPExtractor = echo.ExtractIPFromXFFHeader()
 
@@ -106,9 +106,9 @@ func NewRouter() *echo.Echo {
 	return e
 }
 
-// ---------- Redirect
+// ---------- HTTP Redirect
 
-func NewRedirect(httpsPort string) *echo.Echo {
+func NewHTTPRedirect(httpsPort string) *echo.Echo {
 	e := echo.New()
 
 	e.Any("*", func(c echo.Context) error {

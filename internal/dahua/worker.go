@@ -112,7 +112,7 @@ func (m *WorkerManager) Register(bus *event.Bus, db sqlite.DB) *WorkerManager {
 		case event.ActionDahuaDeviceDeleted:
 			deviceID := event.DataAsInt64(evt.Event)
 
-			m.Delete(deviceID)
+			return m.Delete(deviceID)
 		}
 		return nil
 	})

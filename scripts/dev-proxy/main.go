@@ -1,4 +1,4 @@
-// main runs the development proxy.
+// Package main runs the HTTP development proxy.
 package main
 
 import (
@@ -81,7 +81,7 @@ func start(ctx context.Context, cfg Config) {
 		}(urL)
 	}
 
-	err := server.NewHTTP(e, cfg.Address, cfg.Certificate).Serve(ctx)
+	err := server.NewHTTPServer(e, cfg.Address, cfg.Certificate).Serve(ctx)
 	if err != nil && !errors.Is(err, context.Canceled) {
 		log.Fatal().Err(err).Send()
 	}

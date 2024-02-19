@@ -75,7 +75,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	bus := event.NewBus().Register(pub)
 	super.Add(bus)
 
-	// Event producer
+	// Event queue
 	super.Add(event.NewQueue(db, bus))
 
 	// MediaMTX
@@ -97,12 +97,10 @@ func (c *CmdServe) Run(ctx *Context) error {
 	defer dahuaStore.Close()
 	super.Add(dahuaStore)
 
-	dahuaScanLockStore := dahua.NewScanLockStore()
-
-	dahuaWorkerManager := dahua.
-		NewWorkerManager(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahuaScanLockStore, dahua.NewDefaultEventHooks(bus, db))).
-		Register(bus, db)
-	if err := dahuaWorkerManager.Bootstrap(ctx, db, dahuaStore); err != nil {
+	if err := dahua.
+		NewWorkerManager(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahua.NewScanLockStore(), dahua.NewDefaultEventHooks(bus, db))).
+		Register(bus, db).
+		Bootstrap(ctx, db, dahuaStore); err != nil {
 		return err
 	}
 
@@ -110,27 +108,23 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	super.Add(dahua.NewAferoService(db, dahuaAFS))
 
-	dahuaFileService := dahua.NewFileService(db, dahuaAFS, dahuaStore)
-	super.Add(dahuaFileService)
+	super.Add(dahua.NewFileService(db, dahuaAFS, dahuaStore))
 
 	// MQTT
 	if c.MQTTAddress != "" {
 		mqttConn := mqtt.NewConn(c.MQTTTopic, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
 		super.Add(mqttConn)
 
-		dahuaMQTTConn := dahuamqtt.NewConn(mqttConn, db, dahuaStore, c.MQTTHa, c.MQTTHaTopic)
-		dahuaMQTTConn.Register(bus)
-		super.Add(dahuaMQTTConn)
+		super.Add(dahuamqtt.NewConn(mqttConn, db, dahuaStore, c.MQTTHa, c.MQTTHaTopic).Register(bus))
 	}
 
 	// SMTP
-	dahuaSMTPApp := dahuasmtp.NewApp(db, bus, dahuaAFS)
-	dahuaSMTPBackend := dahuasmtp.NewBackend(dahuaSMTPApp)
-	dahuaSMTPServer := dahuasmtp.NewServer(dahuaSMTPBackend, core.Address(c.SMTPHost, int(c.SMTPPort)))
-	super.Add(dahuaSMTPServer)
+	super.Add(dahuasmtp.
+		NewServer(dahuasmtp.
+			NewBackend(dahuasmtp.NewApp(db, bus, dahuaAFS)), core.Address(c.SMTPHost, int(c.SMTPPort))))
 
 	// HTTP router
-	httpRouter := server.NewRouter()
+	httpRouter := server.NewHTTPRouter()
 
 	// HTTP middleware
 	httpRouter.Use(web.FS(api.Route, rpcserver.Route))
@@ -145,27 +139,26 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// RPC
 	rpcLogger := rpcserver.Logger()
-	rpcserver.NewServer(httpRouter).
+	rpcserver.
+		NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
 		Register(rpc.NewPublicServer(rpcserver.NewPublic(db), rpcLogger)).
 		Register(rpc.NewUserServer(rpcserver.NewUser(db, dahuaStore), rpcLogger, rpcserver.RequireAuthSession())).
 		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.RequireAdminAuthSession()))
 
 	// HTTP server
-	httpServer := server.NewHTTP(
-		server.NewRedirect(strconv.Itoa(int(c.HTTPSPort))),
+	super.Add(server.NewHTTPServer(
+		server.NewHTTPRedirect(strconv.Itoa(int(c.HTTPSPort))),
 		core.Address(c.HTTPHost, int(c.HTTPPort)),
 		nil,
-	)
-	super.Add(httpServer)
+	))
 
 	// HTTPS server
-	httpsServer := server.NewHTTP(
+	super.Add(server.NewHTTPServer(
 		httpRouter,
 		core.Address(c.HTTPHost, int(c.HTTPSPort)),
 		&cert,
-	)
-	super.Add(httpsServer)
+	))
 
 	return super.Serve(ctx)
 }
