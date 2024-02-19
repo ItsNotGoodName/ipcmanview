@@ -50,18 +50,12 @@ export const ClientProvider: ParentComponent<ClientContextProps> = (props) => {
   return (
     <ClientContext.Provider value={store}>
       {props.children}
-    </ClientContext.Provider>)
+    </ClientContext.Provider>
+  )
 };
 
-export function _useClient(): ClientContextType {
+export function useClient(): ClientContextType {
   const result = useContext(ClientContext);
   if (!result) throw new Error("useClient must be used within a ClientProvider");
   return result;
-}
-
-// HACK: ignore provider because solid-router's preloadRoute is not within the ClientProvider for some reason
-const store = createStore()
-
-export function useClient(): ClientContextType {
-  return store
 }
