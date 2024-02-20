@@ -4,12 +4,12 @@ import { RiEditorAttachment2, RiSystemAddCircleLine } from "solid-icons/ri";
 import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo } from "solid-js";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
-import { createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder } from "~/lib/utils";
+import { encodeQuery, createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { PaginationEllipsis, PaginationEnd, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
-import { getEmailsPage } from "./Emails.data";
+import { getEmailsPage, withEmailPageQuery } from "./Emails.data";
 import { linkVariants } from "~/ui/Link";
 import { PageError } from "~/ui/Page";
 import { Skeleton } from "~/ui/Skeleton";
@@ -35,11 +35,11 @@ export function Emails() {
     filterDeviceIDs: filterDeviceIDs(),
     filterAlarmEvents: filterAlarmEvents()
   }))
-  const toggleSort = createToggleSortField(() => data()?.sort)
-  const pagination = createPagePagination(() => data()?.pageResult)
-
   const listDevices = createAsync(() => getlistDevices())
   const listEmailAlarmEvents = createAsync(() => getlistEmailAlarmEvents())
+  const toggleSort = createToggleSortField(() => data()?.sort)
+  const pagination = createPagePagination(() => data()?.pageResult)
+  const query = (init?: string) => encodeQuery(withEmailPageQuery(new URLSearchParams(init), searchParams))
 
   return (
     <LayoutNormal class="max-w-4xl">
@@ -169,7 +169,7 @@ export function Emails() {
             <TableBody>
               <For each={data()?.emails}>
                 {v =>
-                  <TableRow onClick={(t) => (t as any).srcElement.tagName == "TD" && navigate(`/emails/${v.id}`)} class="cursor-pointer">
+                  <TableRow onClick={(t) => (t as any).srcElement.tagName == "TD" && navigate(`/emails/${v.id}${query()}`)} class="cursor-pointer">
                     <TableCell class="truncate">
                       {formatDate(parseDate(v.createdAtTime))}
                     </TableCell>
@@ -189,7 +189,7 @@ export function Emails() {
                     </TableCell>
                     <Crud.LastTableCell>
                       <Show when={v.attachmentCount > 0}>
-                        <A href={`/emails/${v.id}?tab=attachments`}>
+                        <A href={`/emails/${v.id}${query("?tab=attachments")}`}>
                           <TooltipRoot>
                             <TooltipTrigger class="flex h-full items-center">
                               <RiEditorAttachment2 class="h-4 w-4" />

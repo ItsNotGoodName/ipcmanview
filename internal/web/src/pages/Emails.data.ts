@@ -1,7 +1,15 @@
-import { cache } from "@solidjs/router";
+import { Params, cache } from "@solidjs/router";
 import { parseOrder } from "~/lib/utils";
 import { useClient } from "~/providers/client";
 import { GetEmailsPageReq } from "~/twirp/rpc";
+
+export function withEmailPageQuery(q: URLSearchParams, searchParams: Partial<Params>): URLSearchParams {
+  if (searchParams.alarmEvents)
+    q.set("alarmEvents", searchParams.alarmEvents)
+  if (searchParams.device)
+    q.set("device", searchParams.device)
+  return q
+}
 
 export const getEmailsPage = cache((input: GetEmailsPageReq) => useClient().user.getEmailsPage(input).then((req) => req.response), "getEmailsPage")
 

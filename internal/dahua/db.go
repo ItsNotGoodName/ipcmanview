@@ -201,11 +201,26 @@ func ListDevices(ctx context.Context, db sqlite.DB) ([]repo.DahuaDevice, error) 
 	return res, err
 }
 
-type ListEmailsParams struct {
-	pagination.Page
-	Ascending         bool
+type EmailFilter struct {
 	FilterDeviceIDs   []int64
 	FilterAlarmEvents []string
+}
+
+type ListEmailsParams struct {
+	pagination.Page
+	EmailFilter
+	Ascending bool
+}
+
+func (arg EmailFilter) where() sq.Eq {
+	where := sq.Eq{}
+	if len(arg.FilterDeviceIDs) != 0 {
+		where["dahua_email_messages.device_id"] = arg.FilterDeviceIDs
+	}
+	if len(arg.FilterAlarmEvents) != 0 {
+		where["dahua_email_messages.alarm_event"] = arg.FilterAlarmEvents
+	}
+	return where
 }
 
 type ListEmailsResult struct {
@@ -220,13 +235,7 @@ type ListEmailsResultItems struct {
 }
 
 func ListEmails(ctx context.Context, db sqlite.DB, arg ListEmailsParams) (ListEmailsResult, error) {
-	where := sq.Eq{}
-	if len(arg.FilterDeviceIDs) != 0 {
-		where["dahua_email_messages.device_id"] = arg.FilterDeviceIDs
-	}
-	if len(arg.FilterAlarmEvents) != 0 {
-		where["dahua_email_messages.alarm_event"] = arg.FilterAlarmEvents
-	}
+	where := arg.where()
 
 	order := "dahua_email_messages.id"
 	if arg.Ascending {
@@ -256,8 +265,8 @@ func ListEmails(ctx context.Context, db sqlite.DB, arg ListEmailsParams) (ListEm
 
 	sb = sq.
 		Select("COUNT(*) AS count").
-		Where(where).
-		From("dahua_email_messages")
+		From("dahua_email_messages").
+		Where(where)
 
 	var count dbCountRow
 	if err := ssq.QueryOne(ctx, db, &count, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail)); err != nil {
@@ -270,10 +279,16 @@ func ListEmails(ctx context.Context, db sqlite.DB, arg ListEmailsParams) (ListEm
 	}, nil
 }
 
+type GetEmailParams struct {
+	EmailFilter
+	ID int64
+}
+
 type GetEmailResult struct {
 	NextEmailID int64
 	Message     repo.DahuaEmailMessage
 	Attachments []repo.DahuaListEmailAttachmentsForMessageRow
+	Filter      EmailFilter
 }
 
 type GetEmailResultAttachments struct {
@@ -281,18 +296,19 @@ type GetEmailResultAttachments struct {
 	repo.DahuaAferoFile
 }
 
-func GetEmail(ctx context.Context, db sqlite.DB, id int64) (GetEmailResult, error) {
+func GetEmail(ctx context.Context, db sqlite.DB, arg GetEmailParams) (GetEmailResult, error) {
 	sb := sq.
 		Select("*").
 		From("dahua_email_messages").
-		Where("id <= ?", id).
+		Where("id <= ?", arg.ID).
+		Where(arg.where()).
 		OrderBy("id DESC").
 		Limit(2)
 	var messages []repo.DahuaEmailMessage
 	if err := ssq.Query(ctx, db, &messages, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail)); err != nil {
 		return GetEmailResult{}, err
 	}
-	if len(messages) == 0 || messages[0].ID != id {
+	if len(messages) == 0 || messages[0].ID != arg.ID {
 		return GetEmailResult{}, repo.ErrNotFound
 	}
 	message := messages[0]
@@ -301,7 +317,7 @@ func GetEmail(ctx context.Context, db sqlite.DB, id int64) (GetEmailResult, erro
 		nextEmailID = messages[1].ID
 	}
 
-	attachments, err := db.C().DahuaListEmailAttachmentsForMessage(ctx, id)
+	attachments, err := db.C().DahuaListEmailAttachmentsForMessage(ctx, arg.ID)
 	if err != nil {
 		return GetEmailResult{}, err
 	}
@@ -313,19 +329,28 @@ func GetEmail(ctx context.Context, db sqlite.DB, id int64) (GetEmailResult, erro
 	}, nil
 }
 
+type GetEmailAroundParams struct {
+	ID int64
+	EmailFilter
+}
+
 type GetEmailAroundResult struct {
 	EmailSeen       int64
 	PreviousEmailID int64
+	Count           int64
 }
 
-func GetEmailAround(ctx context.Context, db sqlite.DB, id int64) (GetEmailAroundResult, error) {
+func GetEmailAround(ctx context.Context, db sqlite.DB, arg GetEmailAroundParams) (GetEmailAroundResult, error) {
+	where := arg.where()
+
 	sb := sq.
 		Select(
 			"MIN(id) AS previous_email_id",
 			"COUNT(*) as email_seen",
 		).
 		From("dahua_email_messages").
-		Where("id > ?", id)
+		Where("id > ?", arg.ID).
+		Where(where)
 	var res struct {
 		PreviousEmailID sql.NullInt64
 		EmailSeen       int64
@@ -335,14 +360,25 @@ func GetEmailAround(ctx context.Context, db sqlite.DB, id int64) (GetEmailAround
 	}
 
 	emailSeen := res.EmailSeen
-	previousEmailID := id
+	previousEmailID := arg.ID
 	if res.PreviousEmailID.Valid {
 		previousEmailID = res.PreviousEmailID.Int64
+	}
+
+	sb = sq.
+		Select("COUNT(*) AS count").
+		From("dahua_email_messages").
+		Where(where)
+
+	var count dbCountRow
+	if err := ssq.QueryOne(ctx, db, &count, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail)); err != nil {
+		return GetEmailAroundResult{}, err
 	}
 
 	return GetEmailAroundResult{
 		EmailSeen:       emailSeen + 1,
 		PreviousEmailID: previousEmailID,
+		Count:           count.Count,
 	}, nil
 }
 

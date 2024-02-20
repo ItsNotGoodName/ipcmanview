@@ -169,6 +169,8 @@ message GetEmailsPageResp {
 
 message GetEmailsIDPageReq {
   int64 id = 1;
+  repeated int64 FilterDeviceIDs = 3;
+  repeated string FilterAlarmEvents = 4;
 }
 message GetEmailsIDPageResp {
   int64 id = 1;

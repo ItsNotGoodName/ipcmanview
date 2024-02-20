@@ -9,6 +9,13 @@ import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
 import { createStore } from "solid-js/store";
 import { useSearchParams } from "@solidjs/router";
 
+export function encodeQuery(q: URLSearchParams): string {
+  if (q.size == 0)
+    return ""
+  q.sort()
+  return "?" + q.toString()
+}
+
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
 }

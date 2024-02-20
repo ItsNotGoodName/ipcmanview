@@ -199,10 +199,12 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 	sort := parseSort(req.Sort).withDefaultOrder(rpc.Order_DESC)
 
 	v, err := dahua.ListEmails(ctx, u.db, dahua.ListEmailsParams{
-		Page:              page,
-		Ascending:         sort.Order == rpc.Order_ASC,
-		FilterDeviceIDs:   req.FilterDeviceIDs,
-		FilterAlarmEvents: req.FilterAlarmEvents,
+		Page:      page,
+		Ascending: sort.Order == rpc.Order_ASC,
+		EmailFilter: dahua.EmailFilter{
+			FilterDeviceIDs:   req.FilterDeviceIDs,
+			FilterAlarmEvents: req.FilterAlarmEvents,
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -230,12 +232,23 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 }
 
 func (u *User) GetEmailsIDPage(ctx context.Context, req *rpc.GetEmailsIDPageReq) (*rpc.GetEmailsIDPageResp, error) {
-	email, err := dahua.GetEmail(ctx, u.db, req.Id)
+	emailFilter := dahua.EmailFilter{
+		FilterDeviceIDs:   req.FilterDeviceIDs,
+		FilterAlarmEvents: req.FilterAlarmEvents,
+	}
+
+	email, err := dahua.GetEmail(ctx, u.db, dahua.GetEmailParams{
+		ID:          req.Id,
+		EmailFilter: emailFilter,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	emailAround, err := dahua.GetEmailAround(ctx, u.db, req.Id)
+	emailAround, err := dahua.GetEmailAround(ctx, u.db, dahua.GetEmailAroundParams{
+		ID:          req.Id,
+		EmailFilter: emailFilter,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -251,11 +264,6 @@ func (u *User) GetEmailsIDPage(ctx context.Context, req *rpc.GetEmailsIDPageReq)
 		})
 	}
 
-	emailCount, err := dahua.CountEmails(ctx, u.db)
-	if err != nil {
-		return nil, err
-	}
-
 	return &rpc.GetEmailsIDPageResp{
 		Id:              email.Message.ID,
 		DeviceId:        email.Message.DeviceID,
@@ -269,7 +277,7 @@ func (u *User) GetEmailsIDPage(ctx context.Context, req *rpc.GetEmailsIDPageReq)
 		NextEmailId:     email.NextEmailID,
 		PreviousEmailId: emailAround.PreviousEmailID,
 		EmailSeen:       emailAround.EmailSeen,
-		EmailCount:      emailCount,
+		EmailCount:      emailAround.Count,
 	}, nil
 }
 

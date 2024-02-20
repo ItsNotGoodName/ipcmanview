@@ -367,6 +367,14 @@ export interface GetEmailsIDPageReq {
      * @generated from protobuf field: int64 id = 1;
      */
     id: bigint;
+    /**
+     * @generated from protobuf field: repeated int64 FilterDeviceIDs = 3 [json_name = "FilterDeviceIDs"];
+     */
+    filterDeviceIDs: bigint[];
+    /**
+     * @generated from protobuf field: repeated string FilterAlarmEvents = 4 [json_name = "FilterAlarmEvents"];
+     */
+    filterAlarmEvents: string[];
 }
 /**
  * @generated from protobuf message GetEmailsIDPageResp
@@ -1886,7 +1894,9 @@ export const GetEmailsPageResp_Email = new GetEmailsPageResp_Email$Type();
 class GetEmailsIDPageReq$Type extends MessageType<GetEmailsIDPageReq> {
     constructor() {
         super("GetEmailsIDPageReq", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 3, name: "FilterDeviceIDs", kind: "scalar", jsonName: "FilterDeviceIDs", repeat: 1 /*RepeatType.PACKED*/, T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 4, name: "FilterAlarmEvents", kind: "scalar", jsonName: "FilterAlarmEvents", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

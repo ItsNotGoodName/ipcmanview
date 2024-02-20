@@ -2,7 +2,7 @@ import Humanize from "humanize-plus"
 import { A, createAsync, useNavigate, useSearchParams } from "@solidjs/router"
 import { Crud } from "~/components/Crud"
 import { Shared } from "~/components/Shared"
-import { formatDate, parseDate } from "~/lib/utils"
+import { encodeQuery, formatDate, parseDate } from "~/lib/utils"
 import { buttonVariants } from "~/ui/Button"
 import { CardRoot } from "~/ui/Card"
 import { RiArrowsArrowLeftLine, RiDeviceHardDrive2Line, RiMediaImageLine, RiSystemDownloadLine } from "solid-icons/ri"
@@ -18,15 +18,32 @@ import { Badge } from "~/ui/Badge"
 import { Seperator } from "~/ui/Seperator"
 import { Image } from "@kobalte/core"
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
+import { withEmailPageQuery } from "./Emails.data"
 
 export function EmailsID(props: any) {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const data = createAsync(() => getEmailsIDPage(BigInt(props.params.id ?? 0)))
-  const query = () => searchParams.tab ? "?tab=" + searchParams.tab : ""
+  const data = createAsync(() => getEmailsIDPage({
+    id: BigInt(props.params.id ?? 0),
+    filterAlarmEvents: searchParams.alarmEvents ? JSON.parse(searchParams.alarmEvents) : [],
+    filterDeviceIDs: searchParams.device ? searchParams.device.split('.').map((v: any) => BigInt(v)) : [],
+  }))
+  const query = () => {
+    const q = new URLSearchParams()
+
+    if (searchParams.tab)
+      q.set('tab', searchParams.tab);
+
+    return encodeQuery(withEmailPageQuery(q, searchParams))
+  }
   const backQuery = () => {
+    const q = new URLSearchParams()
+
     const page = Math.ceil(Number(data()?.emailSeen) / 10)
-    return page != 1 ? `?page=${page}` : ""
+    if (page != 1)
+      q.set('page', page.toString());
+
+    return encodeQuery(withEmailPageQuery(q, searchParams))
   }
 
   return (
