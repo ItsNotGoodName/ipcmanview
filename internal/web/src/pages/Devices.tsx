@@ -1,6 +1,6 @@
 import Humanize from "humanize-plus"
 import { A, createAsync, useSearchParams } from "@solidjs/router"
-import { ErrorBoundary, For, Show, Suspense } from "solid-js"
+import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo } from "solid-js"
 import { PageError } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
@@ -15,25 +15,62 @@ import { linkVariants } from "~/ui/Link"
 import { Shared } from "~/components/Shared"
 import { createDate, createTimeAgo } from "@solid-primitives/date"
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
+import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox"
+import { RiSystemAddCircleLine } from "solid-icons/ri"
 
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => searchParams.device ? searchParams.device.split('.').map(v => BigInt(v)) : [])
   const data = createAsync(() => getDevicesPage())
+  const filteredDevices = createMemo(() => filterDeviceIDs().length > 0 ? data()?.devices.filter(v => !v.disabled && filterDeviceIDs().includes(v.id)) : data()?.devices.filter(v => !v.disabled))
 
   return (
     <LayoutNormal>
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Shared.Title>Devices</Shared.Title>
         <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>
-          <div class="overflow-x-auto">
-            <TabsList>
-              <TabsTrigger value="device" >Device</TabsTrigger>
-              <TabsTrigger value="rpc-status" >RPC Status</TabsTrigger>
-              <TabsTrigger value="detail" >Detail</TabsTrigger>
-              <TabsTrigger value="software-version" >Software Version</TabsTrigger>
-              <TabsTrigger value="license" >License</TabsTrigger>
-              <TabsTrigger value="storage" >Storage</TabsTrigger>
-            </TabsList>
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div class="overflow-x-auto">
+              <TabsList>
+                <TabsTrigger value="device" >Device</TabsTrigger>
+                <TabsTrigger value="rpc-status" >RPC Status</TabsTrigger>
+                <TabsTrigger value="detail" >Detail</TabsTrigger>
+                <TabsTrigger value="software-version" >Software Version</TabsTrigger>
+                <TabsTrigger value="license" >License</TabsTrigger>
+                <TabsTrigger value="storage" >Storage</TabsTrigger>
+              </TabsList>
+            </div>
+            <ComboboxRoot<GetDevicesPageResp_Device>
+              multiple
+              optionValue="id"
+              optionTextValue="name"
+              optionLabel="name"
+              optionDisabled="disabled"
+              options={data()?.devices || []}
+              placeholder="Device"
+              value={data()?.devices.filter(v => filterDeviceIDs().includes(v.id))}
+              onChange={(value) => setSearchParams({ device: value.map(v => v.id).join('.') })}
+              itemComponent={props => (
+                <ComboboxItem item={props.item}>
+                  <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>
+                </ComboboxItem>
+              )}
+            >
+              <ComboboxControl<GetDevicesPageResp_Device> aria-label="Device">
+                {state => (
+                  <ComboboxTrigger>
+                    <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                    Device
+                    <ComboboxState state={state} optionToString={(option) => option.name} />
+                    <ComboboxReset state={state} class="size-4" />
+                  </ComboboxTrigger>
+                )}
+              </ComboboxControl>
+              <ComboboxContent >
+                <ComboboxInput />
+                <ComboboxListbox />
+              </ComboboxContent>
+            </ComboboxRoot>
           </div>
           <TabsContent value="device">
             <Suspense fallback={<Skeleton class="h-32" />}>
@@ -42,27 +79,27 @@ export function Devices() {
           </TabsContent>
           <TabsContent value="rpc-status">
             <Suspense fallback={<Skeleton class="h-32" />}>
-              <RPCStatusTable devices={data()?.devices} />
+              <RPCStatusTable devices={filteredDevices()} />
             </Suspense>
           </TabsContent>
           <TabsContent value="detail">
             <Suspense fallback={<Skeleton class="h-32" />}>
-              <DetailTable devices={data()?.devices} />
+              <DetailTable devices={filteredDevices()} />
             </Suspense>
           </TabsContent>
           <TabsContent value="software-version">
             <Suspense fallback={<Skeleton class="h-32" />}>
-              <SoftwareVersionTable devices={data()?.devices} />
+              <SoftwareVersionTable devices={filteredDevices()} />
             </Suspense>
           </TabsContent>
           <TabsContent value="license">
             <Suspense fallback={<Skeleton class="h-32" />}>
-              <LicenseTable devices={data()?.devices} />
+              <LicenseTable devices={filteredDevices()} />
             </Suspense>
           </TabsContent>
           <TabsContent value="storage">
             <Suspense fallback={<Skeleton class="h-32" />}>
-              <StorageTable devices={data()?.devices} />
+              <StorageTable devices={filteredDevices()} />
             </Suspense>
           </TabsContent>
         </TabsRoot>
