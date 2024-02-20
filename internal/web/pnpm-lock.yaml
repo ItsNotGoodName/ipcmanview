@@ -26,12 +26,18 @@ dependencies:
   '@solid-primitives/date':
     specifier: ^2.0.19
     version: 2.0.19(solid-js@1.8.15)
+  '@solid-primitives/event-bus':
+    specifier: ^1.0.9
+    version: 1.0.9(solid-js@1.8.15)
   '@solid-primitives/resize-observer':
     specifier: ^2.0.22
     version: 2.0.22(solid-js@1.8.15)
   '@solid-primitives/storage':
     specifier: ^2.1.1
     version: 2.1.1(solid-js@1.8.15)
+  '@solid-primitives/websocket':
+    specifier: ^1.2.1
+    version: 1.2.1(solid-js@1.8.15)
   '@solidjs/router':
     specifier: ^0.12.3
     version: 0.12.3(solid-js@1.8.15)
@@ -935,6 +941,15 @@ packages:
       solid-js: 1.8.15
     dev: false
 
+  /@solid-primitives/event-bus@1.0.9(solid-js@1.8.15):
+    resolution: {integrity: sha512-BI9dla3GQzINsufEzr/CV3B/9e0D1pyk7Ig6kPI6s4geUkiVgFadY5V8R95PEeHH1NagOny7AHpw+RaRIuBpkA==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/utils': 6.2.2(solid-js@1.8.15)
+      solid-js: 1.8.15
+    dev: false
+
   /@solid-primitives/event-listener@2.3.0(solid-js@1.8.15):
     resolution: {integrity: sha512-0DS7DQZvCExWSpurVZC9/wjI8RmkhuOtWOy6Pp1Woq9ElMT9/bfjNpkwXsOwisLpcTqh9eUs17kp7jtpWcC20w==}
     peerDependencies:
@@ -1079,6 +1094,14 @@ packages:
 
   /@solid-primitives/utils@6.2.2(solid-js@1.8.15):
     resolution: {integrity: sha512-11ypVbp987XxETeRqY5Y3OmmTpm8/jZqJXRvo6AyqBthzkvvjEdReuUMU2yVb+pwWGxfZpWHZ6EUCcGXUMhfwg==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      solid-js: 1.8.15
+    dev: false
+
+  /@solid-primitives/websocket@1.2.1(solid-js@1.8.15):
+    resolution: {integrity: sha512-mFX9kb/9IukZMrw24A1TQY69funGF+nHZ6HDk/avh7SupFQ2UpzxkFHTywEg+Piq3UKrq/hD/osGT6VGQrWNoQ==}
     peerDependencies:
       solid-js: ^1.6.12
     dependencies:

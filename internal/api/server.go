@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/apiws"
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
@@ -78,6 +79,24 @@ func (s *Server) RegisterDahua(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
 	g.POST("/dahua/devices/:id/rpc", s.DahuaDevicesIDRPCPOST)
 
 	return s
+}
+
+func (s *Server) RegisterWS(e *echo.Echo, m ...echo.MiddlewareFunc) {
+	g := e.Group(Route, m...)
+
+	g.GET("/ws", func(c echo.Context) error {
+		w := c.Response()
+		r := c.Request()
+
+		conn, err := apiws.Upgrade(w, r)
+		if err != nil {
+			return err
+		}
+
+		WS(r.Context(), conn)
+
+		return nil
+	})
 }
 
 // ---------- Middleware

@@ -1,4 +1,4 @@
-import { cva } from "class-variance-authority"
+import { VariantProps, cva } from "class-variance-authority"
 import { BiRegularCctv } from "solid-icons/bi";
 import { As, DropdownMenu } from "@kobalte/core";
 import { ErrorBoundary, JSX, ParentProps, Show, Suspense, createSignal, splitProps } from "solid-js";
@@ -14,6 +14,9 @@ import { ToastList, ToastRegion } from "~/ui/Toast";
 import { cn, catchAsToast } from "~/lib/utils";
 import { getSession } from "~/providers/session";
 import { PageError, PageLoading } from "~/ui/Page";
+import { WSState, useWS } from "./providers/ws";
+import { Shared } from "./components/Shared";
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "./ui/Tooltip";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
@@ -182,20 +185,35 @@ const actionSignOut = action(() =>
 )
 
 function Header(props: ParentProps<{ onMenuClick: () => void }>) {
+  const location = useLocation()
+  const navigate = useNavigate()
+
   const signOutSubmission = useSubmission(actionSignOut)
   const signOutAction = useAction(actionSignOut)
   const signOut = () => signOutAction().catch(catchAsToast)
+
   const session = createAsync(() => getSession())
-  const location = useLocation()
-  const navigate = useNavigate()
   const isAdminPage = useIsAdminPage(location)
+
+  const ws = useWS()
+  const wsState = (): VariantProps<typeof Shared.connectionIndicatorVariants>["state"] => {
+    switch (ws.state()) {
+      case WSState.Connecting:
+        return "connecting"
+      case WSState.Connected:
+        return "connected"
+      case WSState.Disconnecting:
+      case WSState.Disconnected:
+        return "disconnected"
+    }
+  }
 
   return (
     <div class="bg-background text-foreground border-b-border z-10 h-12 w-full overflow-x-hidden border-b">
       <div class="flex h-full items-center gap-1 px-1">
         <DropdownMenuRoot>
           <DropdownMenuTrigger title="Menu" class={cn(menuLinkVariants(), "md:hidden")}>
-            <RiSystemMenuLine class="h-6 w-6" />
+            <RiSystemMenuLine class="size-6" />
           </DropdownMenuTrigger>
           <DropdownMenuPortal>
             <DropdownMenuContent class="md:hidden">
@@ -205,27 +223,38 @@ function Header(props: ParentProps<{ onMenuClick: () => void }>) {
           </DropdownMenuPortal>
         </DropdownMenuRoot>
         <button onClick={props.onMenuClick} title="Menu" class={cn(menuLinkVariants(), "hidden md:inline-flex")}>
-          <RiSystemMenuLine class="h-6 w-6" />
+          <RiSystemMenuLine class="size-6" />
         </button>
-        <A href="/" class="flex flex-1 items-center truncate text-xl">
-          IPCManView
-        </A>
+        <div class="flex flex-1 truncate">
+          <A href="/" class="flex items-center text-xl">
+            IPCManView
+          </A>
+        </div>
         <div class="flex gap-1">
+          <TooltipRoot>
+            <TooltipTrigger class="px-2">
+              <div class={Shared.connectionIndicatorVariants({ state: wsState() })} />
+            </TooltipTrigger>
+            <TooltipContent>
+              <TooltipArrow />
+              <p>WebSocket {wsState()}</p>
+            </TooltipContent>
+          </TooltipRoot>
           <Show when={import.meta.env.DEV}>
             <A class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}
               href="/debug" title="Debug" end>
-              <RiDevelopmentBugLine class="h-6 w-6" />
+              <RiDevelopmentBugLine class="size-6" />
             </A>
           </Show>
           <Show when={session()?.admin}>
             <A class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}
               href={isAdminPage() ? "/" : "/admin"} title="Toggle admin">
-              <RiUserFacesAdminLine class="h-6 w-6" />
+              <RiUserFacesAdminLine class="size-6" />
             </A>
           </Show>
           <DropdownMenuRoot>
             <DropdownMenuTrigger class={menuLinkVariants({ size: "icon", variant: location.pathname.startsWith("/profile") ? "active" : "default" })} title="User">
-              <RiUserFacesUserLine class="h-6 w-6" />
+              <RiUserFacesUserLine class="size-6" />
             </DropdownMenuTrigger>
             <DropdownMenuPortal>
               <DropdownMenuContent class="z-[200]">
@@ -236,17 +265,17 @@ function Header(props: ParentProps<{ onMenuClick: () => void }>) {
                 <DropdownMenu.Item asChild onSelect={() => navigate("/profile")}>
                   <As component={A} inactiveClass={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })}
                     href="/profile" end>
-                    <RiUserFacesUserLine class="h-5 w-5" />Profile
+                    <RiUserFacesUserLine class="size-5" />Profile
                   </As>
                 </DropdownMenu.Item>
                 <DropdownMenu.Item class={menuLinkVariants()} onSelect={signOut} disabled={signOutSubmission.pending}>
-                  <RiSystemLogoutBoxRFill class="h-5 w-5" />Sign out
+                  <RiSystemLogoutBoxRFill class="size-5" />Sign out
                 </DropdownMenu.Item>
               </DropdownMenuContent>
             </DropdownMenuPortal>
           </DropdownMenuRoot>
           <button class={menuLinkVariants({ size: "icon" })} onClick={toggleTheme} title={useThemeTitle()}>
-            <ThemeIcon class="h-6 w-6" />
+            <ThemeIcon class="size-6" />
           </button>
         </div>
       </div>

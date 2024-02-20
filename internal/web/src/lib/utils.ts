@@ -9,12 +9,6 @@ import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
 import { createStore } from "solid-js/store";
 import { useSearchParams } from "@solidjs/router";
 
-export function encodeQuery(q: URLSearchParams): string {
-  if (q.size == 0)
-    return ""
-  return "?" + q.toString()
-}
-
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
 }
@@ -183,4 +177,14 @@ export function createToggleSortField(sort: () => Sort | undefined) {
     const s = toggleSortField(sort(), field)
     return setSearchParams({ sort: s.field, order: encodeOrder(s.order) })
   }
+}
+
+export function relativeWSURL(uri: string): string {
+  return `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}${uri}`
+}
+
+export function encodeQuery(q: URLSearchParams): string {
+  if (q.size == 0)
+    return ""
+  return "?" + q.toString()
 }
