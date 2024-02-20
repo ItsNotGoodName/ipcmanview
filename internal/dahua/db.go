@@ -203,7 +203,9 @@ func ListDevices(ctx context.Context, db sqlite.DB) ([]repo.DahuaDevice, error) 
 
 type ListEmailsParams struct {
 	pagination.Page
-	Ascending bool
+	Ascending         bool
+	FilterDeviceIDs   []int64
+	FilterAlarmEvents []string
 }
 
 type ListEmailsResult struct {
@@ -218,6 +220,14 @@ type ListEmailsResultItems struct {
 }
 
 func ListEmails(ctx context.Context, db sqlite.DB, arg ListEmailsParams) (ListEmailsResult, error) {
+	where := sq.Eq{}
+	if len(arg.FilterDeviceIDs) != 0 {
+		where["dahua_email_messages.device_id"] = arg.FilterDeviceIDs
+	}
+	if len(arg.FilterAlarmEvents) != 0 {
+		where["dahua_email_messages.alarm_event"] = arg.FilterAlarmEvents
+	}
+
 	order := "dahua_email_messages.id"
 	if arg.Ascending {
 		order += " ASC"
@@ -233,24 +243,29 @@ func ListEmails(ctx context.Context, db sqlite.DB, arg ListEmailsParams) (ListEm
 		From("dahua_email_messages").
 		LeftJoin("dahua_email_attachments ON dahua_email_attachments.message_id = dahua_email_messages.id").
 		LeftJoin("dahua_devices ON dahua_devices.id = dahua_email_messages.device_id").
+		Where(where).
 		OrderBy(order).
 		GroupBy("dahua_email_messages.id").
 		Offset(uint64(arg.Offset())).
 		Limit(uint64(arg.Limit()))
 
 	var items []ListEmailsResultItems
-	err := ssq.Query(ctx, db, &items, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail))
-	if err != nil {
+	if err := ssq.Query(ctx, db, &items, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail)); err != nil {
 		return ListEmailsResult{}, err
 	}
 
-	count, err := CountEmails(ctx, db)
-	if err != nil {
+	sb = sq.
+		Select("COUNT(*) AS count").
+		Where(where).
+		From("dahua_email_messages")
+
+	var count dbCountRow
+	if err := ssq.QueryOne(ctx, db, &count, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail)); err != nil {
 		return ListEmailsResult{}, err
 	}
 
 	return ListEmailsResult{
-		PageResult: arg.Result(int(count)),
+		PageResult: arg.Result(int(count.Count)),
 		Items:      items,
 	}, nil
 }
@@ -379,4 +394,16 @@ func ListEvents(ctx context.Context, db sqlite.DB, arg ListEventsParams) (ListEv
 		PageResult: arg.Result(int(count)),
 		Items:      items,
 	}, nil
+}
+
+func ListEmailAlarmEvents(ctx context.Context, db sqlite.DB) ([]string, error) {
+	sb := sq.Select("DISTINCT alarm_event").From("dahua_email_messages")
+
+	var res []string
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_email_messages.device_id", levelEmail))
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

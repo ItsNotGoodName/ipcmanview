@@ -296,6 +296,14 @@ export interface GetEmailsPageReq {
      * @generated from protobuf field: Sort sort = 2;
      */
     sort?: Sort;
+    /**
+     * @generated from protobuf field: repeated int64 FilterDeviceIDs = 3 [json_name = "FilterDeviceIDs"];
+     */
+    filterDeviceIDs: bigint[];
+    /**
+     * @generated from protobuf field: repeated string FilterAlarmEvents = 4 [json_name = "FilterAlarmEvents"];
+     */
+    filterAlarmEvents: string[];
 }
 /**
  * @generated from protobuf message GetEmailsPageResp
@@ -632,6 +640,28 @@ export interface RevokeMySessionReq {
     sessionId: bigint;
 }
 /**
+ * @generated from protobuf message ListDevicesResp
+ */
+export interface ListDevicesResp {
+    /**
+     * @generated from protobuf field: repeated ListDevicesResp.Device devices = 1;
+     */
+    devices: ListDevicesResp_Device[];
+}
+/**
+ * @generated from protobuf message ListDevicesResp.Device
+ */
+export interface ListDevicesResp_Device {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string name = 2;
+     */
+    name: string;
+}
+/**
  * @generated from protobuf message GetDeviceRPCStatusReq
  */
 export interface GetDeviceRPCStatusReq {
@@ -850,6 +880,15 @@ export interface ListDeviceStorageResp_Storage {
      * @generated from protobuf field: bool is_error = 7;
      */
     isError: boolean;
+}
+/**
+ * @generated from protobuf message ListEmailAlarmEventsResp
+ */
+export interface ListEmailAlarmEventsResp {
+    /**
+     * @generated from protobuf field: repeated string alarm_events = 1;
+     */
+    alarmEvents: string[];
 }
 /**
  * @generated from protobuf message GetAdminGroupsPageReq
@@ -1800,7 +1839,9 @@ class GetEmailsPageReq$Type extends MessageType<GetEmailsPageReq> {
     constructor() {
         super("GetEmailsPageReq", [
             { no: 1, name: "page", kind: "message", T: () => PagePagination },
-            { no: 2, name: "sort", kind: "message", T: () => Sort }
+            { no: 2, name: "sort", kind: "message", T: () => Sort },
+            { no: 3, name: "FilterDeviceIDs", kind: "scalar", jsonName: "FilterDeviceIDs", repeat: 1 /*RepeatType.PACKED*/, T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 4, name: "FilterAlarmEvents", kind: "scalar", jsonName: "FilterAlarmEvents", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -2029,6 +2070,31 @@ class RevokeMySessionReq$Type extends MessageType<RevokeMySessionReq> {
  */
 export const RevokeMySessionReq = new RevokeMySessionReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class ListDevicesResp$Type extends MessageType<ListDevicesResp> {
+    constructor() {
+        super("ListDevicesResp", [
+            { no: 1, name: "devices", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ListDevicesResp_Device }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDevicesResp
+ */
+export const ListDevicesResp = new ListDevicesResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDevicesResp_Device$Type extends MessageType<ListDevicesResp_Device> {
+    constructor() {
+        super("ListDevicesResp.Device", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDevicesResp.Device
+ */
+export const ListDevicesResp_Device = new ListDevicesResp_Device$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class GetDeviceRPCStatusReq$Type extends MessageType<GetDeviceRPCStatusReq> {
     constructor() {
         super("GetDeviceRPCStatusReq", [
@@ -2200,6 +2266,18 @@ class ListDeviceStorageResp_Storage$Type extends MessageType<ListDeviceStorageRe
  * @generated MessageType for protobuf message ListDeviceStorageResp.Storage
  */
 export const ListDeviceStorageResp_Storage = new ListDeviceStorageResp_Storage$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListEmailAlarmEventsResp$Type extends MessageType<ListEmailAlarmEventsResp> {
+    constructor() {
+        super("ListEmailAlarmEventsResp", [
+            { no: 1, name: "alarm_events", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListEmailAlarmEventsResp
+ */
+export const ListEmailAlarmEventsResp = new ListEmailAlarmEventsResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetAdminGroupsPageReq$Type extends MessageType<GetAdminGroupsPageReq> {
     constructor() {
@@ -2834,11 +2912,13 @@ export const User = new ServiceType("User", [
     { name: "UpdateMyPassword", options: {}, I: UpdateMyPasswordReq, O: Empty },
     { name: "RevokeMySession", options: {}, I: RevokeMySessionReq, O: Empty },
     { name: "RevokeAllMySessions", options: {}, I: Empty, O: Empty },
+    { name: "ListDevices", options: {}, I: Empty, O: ListDevicesResp },
     { name: "GetDeviceRPCStatus", options: {}, I: GetDeviceRPCStatusReq, O: GetDeviceRPCStatusResp },
     { name: "GetDeviceDetail", options: {}, I: GetDeviceDetailReq, O: GetDeviceDetailResp },
     { name: "GetDeviceSoftwareVersion", options: {}, I: GetDeviceSoftwareVersionReq, O: GetDeviceSoftwareVersionResp },
     { name: "ListDeviceLicenses", options: {}, I: ListDeviceLicensesReq, O: ListDeviceLicensesResp },
-    { name: "ListDeviceStorage", options: {}, I: ListDeviceStorageReq, O: ListDeviceStorageResp }
+    { name: "ListDeviceStorage", options: {}, I: ListDeviceStorageReq, O: ListDeviceStorageResp },
+    { name: "ListEmailAlarmEvents", options: {}, I: Empty, O: ListEmailAlarmEventsResp }
 ]);
 /**
  * @generated ServiceType for protobuf service Admin

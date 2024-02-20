@@ -19,7 +19,7 @@ export interface ComboboxControlState<T> {
 const tagVariants = cva("focus:ring-ring bg-secondary text-secondary-foreground hover:bg-secondary/80 inline-flex items-center rounded-sm border border-transparent px-1 py-0.5 text-xs font-normal transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2")
 
 export function ComboboxRoot<Option, OptGroup = never>(props: Combobox.ComboboxRootProps<Option, OptGroup>) {
-  return <Combobox.Root allowsEmptyCollection {...props} />
+  return <Combobox.Root placement="bottom-start" allowsEmptyCollection {...props} />
 }
 
 export function ComboboxItem(props: Combobox.ComboboxItemProps) {
@@ -38,7 +38,7 @@ export const ComboboxControl = Combobox.Control
 
 export function ComboboxTrigger(props: Combobox.ComboboxTriggerProps) {
   const [_, rest] = splitProps(props, ["class", "children"])
-  return <Combobox.Trigger class={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex items-center gap-2", props.class)} {...rest}>
+  return <Combobox.Trigger class={cn(buttonVariants({ variant: "outline" }), "flex items-center gap-2", props.class)} {...rest}>
     {props.children}
   </Combobox.Trigger>
 }
@@ -46,7 +46,7 @@ export function ComboboxTrigger(props: Combobox.ComboboxTriggerProps) {
 export const ComboboxIcon = Combobox.Icon
 
 export function ComboboxState<Option>(props: { state: ComboboxControlState<Option>, optionToString?: (option: Option) => string }) {
-  const mergedProps = mergeProps(props, { optionToString: (option: any) => (option as string) })
+  const mergedProps = mergeProps({ optionToString: (option: any) => (option as string) }, props)
   return <Show when={mergedProps.state.selectedOptions().length > 0}>
     <Seperator orientation="vertical" class="h-4" />
     <div class={cn(tagVariants(), "lg:hidden")}>

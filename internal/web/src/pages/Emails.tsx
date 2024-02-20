@@ -1,7 +1,7 @@
 import { A, createAsync, useNavigate, useSearchParams } from "@solidjs/router";
 import Humanize from "humanize-plus"
-import { RiEditorAttachment2 } from "solid-icons/ri";
-import { ErrorBoundary, For, Show, Suspense } from "solid-js";
+import { RiEditorAttachment2, RiSystemAddCircleLine } from "solid-icons/ri";
+import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo } from "solid-js";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
 import { createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder } from "~/lib/utils";
@@ -14,10 +14,15 @@ import { linkVariants } from "~/ui/Link";
 import { PageError } from "~/ui/Page";
 import { Skeleton } from "~/ui/Skeleton";
 import { BreadcrumbsItem, BreadcrumbsRoot } from "~/ui/Breadcrumbs";
+import { getlistDevices, getlistEmailAlarmEvents } from "./data";
+import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox";
+import { ListDevicesResp_Device } from "~/twirp/rpc";
 
 export function Emails() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => searchParams.device ? searchParams.device.split('.').map(v => BigInt(v)) : [])
+  const filterAlarmEvents: Accessor<string[]> = createMemo(() => searchParams.alarmEvents ? JSON.parse(searchParams.alarmEvents) : [])
   const data = createAsync(() => getEmailsPage({
     page: {
       page: Number(searchParams.page) || 0,
@@ -27,9 +32,14 @@ export function Emails() {
       field: searchParams.sort || "",
       order: parseOrder(searchParams.order)
     },
+    filterDeviceIDs: filterDeviceIDs(),
+    filterAlarmEvents: filterAlarmEvents()
   }))
   const toggleSort = createToggleSortField(() => data()?.sort)
   const pagination = createPagePagination(() => data()?.pageResult)
+
+  const listDevices = createAsync(() => getlistDevices())
+  const listEmailAlarmEvents = createAsync(() => getlistEmailAlarmEvents())
 
   return (
     <LayoutNormal class="max-w-4xl">
@@ -42,16 +52,79 @@ export function Emails() {
       </Shared.Title>
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>
-          <div>
-            <div class="flex justify-end gap-2">
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap gap-2">
+              <Crud.PerPageSelect
+                class="w-20"
+                perPage={data()?.pageResult?.perPage}
+                onChange={(perPage) => setSearchParams({ perPage })}
+              />
+              <ComboboxRoot<ListDevicesResp_Device>
+                multiple
+                optionValue="id"
+                optionTextValue="name"
+                optionLabel="name"
+                options={listDevices() || []}
+                placeholder="Device"
+                value={listDevices()?.filter(v => filterDeviceIDs().includes(v.id))}
+                onChange={(value) => setSearchParams({ device: value.map(v => v.id).join('.') })}
+                itemComponent={props => (
+                  <ComboboxItem item={props.item}>
+                    <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>
+                  </ComboboxItem>
+                )}
+              >
+                <ComboboxControl<ListDevicesResp_Device> aria-label="Device">
+                  {state => (
+                    <ComboboxTrigger>
+                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      Device
+                      <ComboboxState state={state} optionToString={(option) => option.name} />
+                      <ComboboxReset state={state} class="size-4" />
+                    </ComboboxTrigger>
+                  )}
+                </ComboboxControl>
+                <ComboboxContent >
+                  <ComboboxInput />
+                  <ComboboxListbox />
+                </ComboboxContent>
+              </ComboboxRoot>
+              <ComboboxRoot<string>
+                multiple
+                options={listEmailAlarmEvents() || []}
+                placeholder="Alarm Event"
+                value={listEmailAlarmEvents()?.filter(v => filterAlarmEvents().includes(v))}
+                onChange={(value) => setSearchParams({ alarmEvents: value.length != 0 ? JSON.stringify(value) : "" })}
+                itemComponent={props => (
+                  <ComboboxItem item={props.item}>
+                    <ComboboxItemLabel>{props.item.rawValue}</ComboboxItemLabel>
+                  </ComboboxItem>
+                )}
+              >
+                <ComboboxControl<string> aria-label="Alarm Event">
+                  {state => (
+                    <ComboboxTrigger>
+                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      Alarm Event
+                      <ComboboxState state={state} />
+                      <ComboboxReset state={state} class="size-4" />
+                    </ComboboxTrigger>
+                  )}
+                </ComboboxControl>
+                <ComboboxContent >
+                  <ComboboxInput />
+                  <ComboboxListbox />
+                </ComboboxContent>
+              </ComboboxRoot>
               <Crud.PageButtons
-                class="sm:hidden"
+                class="flex flex-1 items-center justify-end sm:hidden"
                 previousPageDisabled={pagination.previousPageDisabled()}
                 previousPage={pagination.previousPage}
                 nextPageDisabled={pagination.nextPageDisabled()}
                 nextPage={pagination.nextPage}
               />
             </div>
+
             <PaginationRoot
               page={data()?.pageResult?.page}
               count={data()?.pageResult?.totalPages || 0}
@@ -74,6 +147,7 @@ export function Emails() {
               </PaginationEnd>
             </PaginationRoot>
           </div>
+
           <TableRoot>
             <TableHeader>
               <TableRow>
@@ -136,19 +210,6 @@ export function Emails() {
               <Crud.PageMetadata pageResult={data()?.pageResult} />
             </TableCaption>
           </TableRoot>
-          <div class="flex justify-between gap-2">
-            <Crud.PerPageSelect
-              class="w-20"
-              perPage={data()?.pageResult?.perPage}
-              onChange={(perPage) => setSearchParams({ perPage })}
-            />
-            <Crud.PageButtons
-              previousPageDisabled={pagination.previousPageDisabled()}
-              previousPage={pagination.previousPage}
-              nextPageDisabled={pagination.nextPageDisabled()}
-              nextPage={pagination.nextPage}
-            />
-          </div>
         </Suspense>
       </ErrorBoundary>
     </LayoutNormal>

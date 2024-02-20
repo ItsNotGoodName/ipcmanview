@@ -83,11 +83,14 @@ service User {
   rpc RevokeAllMySessions(google.protobuf.Empty) returns (google.protobuf.Empty);
 
   // Device
+  rpc ListDevices(google.protobuf.Empty) returns (ListDevicesResp);
   rpc GetDeviceRPCStatus(GetDeviceRPCStatusReq) returns (GetDeviceRPCStatusResp);
   rpc GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
   rpc GetDeviceSoftwareVersion(GetDeviceSoftwareVersionReq) returns (GetDeviceSoftwareVersionResp);
   rpc ListDeviceLicenses(ListDeviceLicensesReq) returns (ListDeviceLicensesResp);
   rpc ListDeviceStorage(ListDeviceStorageReq) returns (ListDeviceStorageResp);
+
+  rpc ListEmailAlarmEvents(google.protobuf.Empty) returns (ListEmailAlarmEventsResp);
 }
 
 message GetHomePageResp {
@@ -145,6 +148,8 @@ message GetDevicesPageResp {
 message GetEmailsPageReq {
   PagePagination page = 1;
   Sort sort = 2;
+  repeated int64 FilterDeviceIDs = 3;
+  repeated string FilterAlarmEvents = 4;
 }
 message GetEmailsPageResp {
   message Email {
@@ -251,6 +256,14 @@ message RevokeMySessionReq {
   int64 session_id = 1;
 }
 
+message ListDevicesResp {
+  message Device {
+    int64 id = 1;
+    string name = 2;
+  }
+  repeated Device devices = 1;
+}
+
 message GetDeviceRPCStatusReq {
   int64 id = 1;
 }
@@ -318,6 +331,10 @@ message ListDeviceStorageResp {
     bool is_error = 7;
   }
   repeated Storage items = 1;
+}
+
+message ListEmailAlarmEventsResp {
+  repeated string alarm_events = 1;
 }
 
 // ---------- Admin

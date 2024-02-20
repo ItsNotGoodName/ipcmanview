@@ -199,8 +199,10 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 	sort := parseSort(req.Sort).withDefaultOrder(rpc.Order_DESC)
 
 	v, err := dahua.ListEmails(ctx, u.db, dahua.ListEmailsParams{
-		Page:      page,
-		Ascending: sort.Order == rpc.Order_ASC,
+		Page:              page,
+		Ascending:         sort.Order == rpc.Order_ASC,
+		FilterDeviceIDs:   req.FilterDeviceIDs,
+		FilterAlarmEvents: req.FilterAlarmEvents,
 	})
 	if err != nil {
 		return nil, err
@@ -362,6 +364,25 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 	return &emptypb.Empty{}, nil
 }
 
+func (u *User) ListDevices(ctx context.Context, _ *emptypb.Empty) (*rpc.ListDevicesResp, error) {
+	dbDevices, err := dahua.ListDevices(ctx, u.db)
+	if err != nil {
+		return nil, err
+	}
+
+	devices := make([]*rpc.ListDevicesResp_Device, 0, len(dbDevices))
+	for _, v := range dbDevices {
+		devices = append(devices, &rpc.ListDevicesResp_Device{
+			Id:   v.ID,
+			Name: v.Name,
+		})
+	}
+
+	return &rpc.ListDevicesResp{
+		Devices: devices,
+	}, nil
+}
+
 func (u *User) GetDeviceDetail(ctx context.Context, req *rpc.GetDeviceDetailReq) (*rpc.GetDeviceDetailResp, error) {
 	client, err := u.dahuaStore.GetClient(ctx, req.Id)
 	if err != nil {
@@ -478,5 +499,16 @@ func (u *User) ListDeviceStorage(ctx context.Context, req *rpc.ListDeviceStorage
 
 	return &rpc.ListDeviceStorageResp{
 		Items: items,
+	}, nil
+}
+
+func (u *User) ListEmailAlarmEvents(ctx context.Context, _ *emptypb.Empty) (*rpc.ListEmailAlarmEventsResp, error) {
+	alarmEvents, err := dahua.ListEmailAlarmEvents(ctx, u.db)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.ListEmailAlarmEventsResp{
+		AlarmEvents: alarmEvents,
 	}, nil
 }
