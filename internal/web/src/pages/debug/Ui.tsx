@@ -22,7 +22,7 @@ import { PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, Pa
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
-import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine, RiSystemAlertLine } from "solid-icons/ri";
+import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine, RiSystemAddLine, RiSystemAlertLine } from "solid-icons/ri";
 import { AvatarFallback, AvatarImage, AvatarRoot } from "~/ui/Avatar";
 import { ProgressFill, ProgressLabel, ProgressRoot, ProgressTrack, ProgressValueLabel } from "~/ui/Progress";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from "~/ui/AlertDialog";
@@ -34,7 +34,7 @@ import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from
 import { createRowSelection } from "~/lib/utils";
 import { BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
 import { A } from "@solidjs/router";
-import { MultipleSelectionExample } from "~/ui/Combobox";
+import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger, } from "~/ui/Combobox";
 
 export function Ui() {
   const showToast = () => {
@@ -57,10 +57,37 @@ export function Ui() {
   const timer = setInterval(() => setProgress((prev) => (prev + 10) % 100), 200)
   onCleanup(() => clearInterval(timer))
 
+  const [comboboxValue, setComboboxValue] = createSignal(["Blueberry", "Grapes"]);
 
   return (
     <div class="flex flex-col gap-4 p-4">
-      <MultipleSelectionExample></MultipleSelectionExample>
+      <ComboboxRoot<string>
+        multiple
+        options={["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50",]}
+        value={comboboxValue()}
+        onChange={setComboboxValue}
+        placeholder="Fruits"
+        itemComponent={props => (
+          <ComboboxItem item={props.item}>
+            <ComboboxItemLabel>{props.item.rawValue}</ComboboxItemLabel>
+          </ComboboxItem>
+        )}
+      >
+        <ComboboxControl<string> aria-label="Fruits">
+          {state => (
+            <ComboboxTrigger>
+              <ComboboxIcon as={RiSystemAddLine} class="size-4" />
+              Fruits
+              <ComboboxState state={state} />
+              <ComboboxReset state={state} class="size-4" />
+            </ComboboxTrigger>
+          )}
+        </ComboboxControl>
+        <ComboboxContent >
+          <ComboboxInput />
+          <ComboboxListbox />
+        </ComboboxContent>
+      </ComboboxRoot>
       <Button onClick={toggleTheme} size="icon">
         <ThemeIcon class="h-6 w-6" />
       </Button>
