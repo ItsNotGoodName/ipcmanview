@@ -87,13 +87,14 @@ func (s *Server) RegisterWS(e *echo.Echo, m ...echo.MiddlewareFunc) {
 	g.GET("/ws", func(c echo.Context) error {
 		w := c.Response()
 		r := c.Request()
+		ctx := r.Context()
 
 		conn, err := apiws.Upgrade(w, r)
 		if err != nil {
 			return err
 		}
 
-		WS(r.Context(), conn)
+		WS(ctx, conn, s.pub)
 
 		return nil
 	})

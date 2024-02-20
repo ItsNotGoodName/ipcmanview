@@ -32,14 +32,14 @@ export function WSProvider(props: ParentProps) {
 
   const webSocketState = createWSState(ws);
 
-  const { bus } = useBus()
+  const bus = useBus()
 
   const onMessage = (msg: MessageEvent<string>) => {
     const event = JSON.parse(msg.data) as WSEvent
 
     switch (event.type) {
       case "event":
-        bus.emit({ event: event.data })
+        bus.event.emit(event.data)
         break
     }
   }

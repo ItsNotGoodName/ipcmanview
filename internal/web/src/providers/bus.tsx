@@ -1,28 +1,27 @@
-import { EventBus, createEventBus } from '@solid-primitives/event-bus';
+import { EventBus, EventHub, createEventBus, createEventHub } from '@solid-primitives/event-bus';
 import {
   createContext,
   ParentComponent,
   useContext
 } from "solid-js";
 
-export type EventBusType = {
-  event: { action: string, data: unknown }
+export type BusForEvent = {
+  action: string,
+  data: unknown
 }
 
-type BusContextType = {
-  bus: EventBus<EventBusType>
-};
+type BusContextType = EventHub<{
+  event: EventBus<BusForEvent>;
+}>
 
 const BusContext = createContext<BusContextType>();
 
 type BusContextProps = {};
 
 export const BusProvider: ParentComponent<BusContextProps> = (props) => {
-  const bus = createEventBus<EventBusType>();
-
-  const store: BusContextType = {
-    bus
-  };
+  const store = createEventHub({
+    event: createEventBus<BusForEvent>()
+  })
 
   return (
     <BusContext.Provider value={store}>

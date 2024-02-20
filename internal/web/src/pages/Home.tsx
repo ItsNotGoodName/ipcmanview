@@ -1,5 +1,5 @@
 import Humanize from "humanize-plus"
-import { A, createAsync } from "@solidjs/router"
+import { A, createAsync, revalidate } from "@solidjs/router"
 import { CardRoot, } from "~/ui/Card"
 import { getHomePage } from "./Home.data"
 import { ErrorBoundary, For, ParentProps, Show, Suspense } from "solid-js"
@@ -14,9 +14,13 @@ import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/
 import { createDate, createTimeAgo } from "@solid-primitives/date"
 import { Image } from "@kobalte/core"
 import { linkVariants } from "~/ui/Link"
+import { useBus } from "~/providers/bus"
 
 export function Home() {
   const data = createAsync(() => getHomePage())
+  const bus = useBus()
+
+  bus.event.listen(() => revalidate(getHomePage.key))
 
   return (
     <LayoutNormal>
