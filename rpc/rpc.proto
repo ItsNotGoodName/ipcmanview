@@ -91,6 +91,7 @@ service User {
   rpc ListDeviceStorage(ListDeviceStorageReq) returns (ListDeviceStorageResp);
 
   rpc ListEmailAlarmEvents(google.protobuf.Empty) returns (ListEmailAlarmEventsResp);
+  rpc ListEventFilters(google.protobuf.Empty) returns (ListEventFiltersResp);
 }
 
 message GetHomePageResp {
@@ -169,8 +170,8 @@ message GetEmailsPageResp {
 
 message GetEmailsIDPageReq {
   int64 id = 1;
-  repeated int64 FilterDeviceIDs = 3;
-  repeated string FilterAlarmEvents = 4;
+  repeated int64 filterDeviceIDs = 3;
+  repeated string filterAlarmEvents = 4;
 }
 message GetEmailsIDPageResp {
   int64 id = 1;
@@ -200,6 +201,9 @@ message GetEmailsIDPageResp {
 message GetEventsPageReq {
   PagePagination page = 1;
   Sort sort = 2;
+  repeated int64 filterDeviceIDs = 3;
+  repeated string filterCodes = 4;
+  repeated string filterActions = 5;
 }
 message GetEventsPageResp {
   message Event {
@@ -337,6 +341,11 @@ message ListDeviceStorageResp {
 
 message ListEmailAlarmEventsResp {
   repeated string alarm_events = 1;
+}
+
+message ListEventFiltersResp {
+  repeated string codes = 1;
+  repeated string actions = 2;
 }
 
 // ---------- Admin

@@ -1,7 +1,7 @@
 import { writeClipboard } from "@solid-primitives/clipboard";
 import hljs from "~/lib/hljs"
 import { A, createAsync, useSearchParams } from "@solidjs/router";
-import { ErrorBoundary, For, Suspense, createEffect, createSignal, } from "solid-js";
+import { Accessor, ErrorBoundary, For, Suspense, createEffect, createMemo, createSignal, } from "solid-js";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
 import { createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder } from "~/lib/utils";
@@ -12,11 +12,17 @@ import { linkVariants } from "~/ui/Link";
 import { PageError } from "~/ui/Page";
 import { Skeleton } from "~/ui/Skeleton";
 import { getEventsPage } from "./Events.data";
-import { RiArrowsArrowDownSLine, RiDocumentClipboardLine } from "solid-icons/ri";
+import { RiArrowsArrowDownSLine, RiDocumentClipboardLine, RiSystemAddCircleLine } from "solid-icons/ri";
 import { Button } from "~/ui/Button";
+import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox";
+import { getlistDevices, getlistEventFilters } from "./data";
+import { ListDevicesResp_Device } from "~/twirp/rpc";
 
 export function Events() {
   const [searchParams, setSearchParams] = useSearchParams()
+  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => searchParams.device ? searchParams.device.split('.').map(v => BigInt(v)) : [])
+  const filterCodes: Accessor<string[]> = createMemo(() => searchParams.code ? JSON.parse(searchParams.code) : [])
+  const filterActions: Accessor<string[]> = createMemo(() => searchParams.action ? JSON.parse(searchParams.action) : [])
   const data = createAsync(() => getEventsPage({
     page: {
       page: Number(searchParams.page) || 0,
@@ -26,21 +32,116 @@ export function Events() {
       field: searchParams.sort || "",
       order: parseOrder(searchParams.order)
     },
+    filterDeviceIDs: filterDeviceIDs(),
+    filterCodes: filterCodes(),
+    filterActions: filterActions(),
   }))
+  const listDevices = createAsync(() => getlistDevices())
+  const listEventFilters = createAsync(() => getlistEventFilters())
   const toggleSort = createToggleSortField(() => data()?.sort)
   const pagination = createPagePagination(() => data()?.pageResult)
-  const allDataOpen = () => Boolean(searchParams.data)
-  const setAllDataOpen = (value: boolean) => setSearchParams({ data: value ? String(value) : "" })
+  const dataOpen = () => Boolean(searchParams.data)
+  const setDataOpen = (value: boolean) => setSearchParams({ data: value ? String(value) : "" })
 
   return (
     <LayoutNormal class="max-w-4xl">
       <Shared.Title>Events</Shared.Title>
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>
-          <div>
-            <div class="flex justify-end gap-2">
+          <div class="flex flex-col gap-2">
+            <div class="flex gap-2 flex-wrap">
+              <Crud.PerPageSelect
+                class="w-20"
+                perPage={data()?.pageResult?.perPage}
+                onChange={(perPage) => setSearchParams({ perPage })}
+              />
+              <ComboboxRoot<ListDevicesResp_Device>
+                multiple
+                optionValue="id"
+                optionTextValue="name"
+                optionLabel="name"
+                options={listDevices() || []}
+                placeholder="Device"
+                value={listDevices()?.filter(v => filterDeviceIDs().includes(v.id))}
+                onChange={(value) => setSearchParams({ device: value.map(v => v.id).join('.') })}
+                itemComponent={props => (
+                  <ComboboxItem item={props.item}>
+                    <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>
+                  </ComboboxItem>
+                )}
+              >
+                <ComboboxControl<ListDevicesResp_Device> aria-label="Device">
+                  {state => (
+                    <ComboboxTrigger>
+                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      Device
+                      <ComboboxState state={state} optionToString={(option) => option.name} />
+                      <ComboboxReset state={state} class="size-4" />
+                    </ComboboxTrigger>
+                  )}
+                </ComboboxControl>
+                <ComboboxContent >
+                  <ComboboxInput />
+                  <ComboboxListbox />
+                </ComboboxContent>
+              </ComboboxRoot>
+              <ComboboxRoot<string>
+                multiple
+                options={listEventFilters()?.codes || []}
+                placeholder="Code"
+                value={listEventFilters()?.codes.filter(v => filterCodes().includes(v))}
+                onChange={(value) => setSearchParams({ code: value.length != 0 ? JSON.stringify(value) : "" })}
+                itemComponent={props => (
+                  <ComboboxItem item={props.item}>
+                    <ComboboxItemLabel>{props.item.rawValue}</ComboboxItemLabel>
+                  </ComboboxItem>
+                )}
+              >
+                <ComboboxControl<string> aria-label="Code">
+                  {state => (
+                    <ComboboxTrigger>
+                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      Code
+                      <ComboboxState state={state} />
+                      <ComboboxReset state={state} class="size-4" />
+                    </ComboboxTrigger>
+                  )}
+                </ComboboxControl>
+                <ComboboxContent>
+                  <ComboboxInput />
+                  <ComboboxListbox />
+                </ComboboxContent>
+              </ComboboxRoot>
+              <ComboboxRoot<string>
+                multiple
+                options={listEventFilters()?.actions || []}
+                placeholder="Action"
+                value={listEventFilters()?.actions.filter(v => filterActions().includes(v))}
+                onChange={(value) => setSearchParams({ action: value.length != 0 ? JSON.stringify(value) : "" })}
+                itemComponent={props => (
+                  <ComboboxItem item={props.item}>
+                    <ComboboxItemLabel>{props.item.rawValue}</ComboboxItemLabel>
+                  </ComboboxItem>
+                )}
+              >
+                <ComboboxControl<string> aria-label="Action">
+                  {state => (
+                    <ComboboxTrigger>
+                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      Action
+                      <ComboboxState state={state} />
+                      <ComboboxReset state={state} class="size-4" />
+                    </ComboboxTrigger>
+                  )}
+                </ComboboxControl>
+                <ComboboxContent>
+                  <ComboboxInput />
+                  <ComboboxListbox />
+                </ComboboxContent>
+              </ComboboxRoot>
+
               <Crud.PageButtons
-                class="sm:hidden"
+                class="sm:hidden flex-1 justify-end"
                 previousPageDisabled={pagination.previousPageDisabled()}
                 previousPage={pagination.previousPage}
                 nextPageDisabled={pagination.nextPageDisabled()}
@@ -85,7 +186,7 @@ export function Events() {
                 <TableHead>Action</TableHead>
                 <TableHead>Index</TableHead>
                 <Crud.LastTableHead>
-                  <Button data-expanded={allDataOpen()} size="icon" variant="ghost" onClick={() => setAllDataOpen(!allDataOpen())} class="[&[data-expanded=true]>svg]:rotate-180" title="Data">
+                  <Button data-expanded={dataOpen()} size="icon" variant="ghost" onClick={() => setDataOpen(!dataOpen())} class="[&[data-expanded=true]>svg]:rotate-180" title="Data">
                     <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
                   </Button>
                 </Crud.LastTableHead>
@@ -94,8 +195,8 @@ export function Events() {
             <TableBody>
               <For each={data()?.events}>
                 {v => {
-                  const [dataOpen, setDataOpen] = createSignal(allDataOpen())
-                  createEffect(() => setDataOpen(allDataOpen()))
+                  const [rowDataOpen, setRowDataOpen] = createSignal(dataOpen())
+                  createEffect(() => setRowDataOpen(dataOpen()))
 
                   return (
                     <>
@@ -118,18 +219,18 @@ export function Events() {
                           {v.index.toString()}
                         </TableCell>
                         <Crud.LastTableCell>
-                          <Button data-expanded={dataOpen()} size="icon" variant="ghost" onClick={() => setDataOpen(!dataOpen())} class="[&[data-expanded=true]>svg]:rotate-180" title="Data">
+                          <Button data-expanded={rowDataOpen()} size="icon" variant="ghost" onClick={() => setRowDataOpen(!rowDataOpen())} class="[&[data-expanded=true]>svg]:rotate-180" title="Data">
                             <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
                           </Button>
                         </Crud.LastTableCell>
                       </TableRow>
                       <tr class="border-b">
                         <td colspan={6} class="p-0">
-                          <div data-expanded={dataOpen()} class="relative h-0 overflow-y-hidden data-[expanded=true]:h-full">
+                          <div data-expanded={rowDataOpen()} class="relative h-0 overflow-y-hidden data-[expanded=true]:h-full">
                             <Button size="icon" variant="ghost" onClick={() => writeClipboard(v.data)} class="absolute right-4 top-2" title="Copy">
                               <RiDocumentClipboardLine class="h-5 w-5" />
                             </Button>
-                            <pre><code innerHTML={hljs.highlight("json", v.data).value} class="hljs" /></pre>
+                            <pre><code innerHTML={hljs.highlight(v.data, { language: "json" }).value} class="hljs" /></pre>
                           </div>
                         </td>
                       </tr >
@@ -142,19 +243,6 @@ export function Events() {
               <Crud.PageMetadata pageResult={data()?.pageResult} />
             </TableCaption>
           </TableRoot>
-          <div class="flex justify-between gap-2">
-            <Crud.PerPageSelect
-              class="w-20"
-              perPage={data()?.pageResult?.perPage}
-              onChange={(perPage) => setSearchParams({ perPage })}
-            />
-            <Crud.PageButtons
-              previousPageDisabled={pagination.previousPageDisabled()}
-              previousPage={pagination.previousPage}
-              nextPageDisabled={pagination.nextPageDisabled()}
-              nextPage={pagination.nextPage}
-            />
-          </div>
         </Suspense>
       </ErrorBoundary>
     </LayoutNormal >

@@ -7,7 +7,7 @@ export const getEmailsIDPage = cache((input: GetEmailsIDPageReq) => useClient().
 export default function({ params }: any) {
   void getEmailsIDPage({
     id: BigInt(params.id ?? 0),
-    filterAlarmEvents: params.alarmEvents ? JSON.parse(params.alarmEvents) : [],
+    filterAlarmEvents: params.alarmEvent ? JSON.parse(params.alarmEvent) : [],
     filterDeviceIDs: params.device ? params.device.split('.').map((v: any) => BigInt(v)) : [],
   })
 }

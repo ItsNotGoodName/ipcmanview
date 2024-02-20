@@ -288,6 +288,11 @@ func (u *User) GetEventsPage(ctx context.Context, req *rpc.GetEventsPageReq) (*r
 	v, err := dahua.ListEvents(ctx, u.db, dahua.ListEventsParams{
 		Page:      page,
 		Ascending: sort.Order == rpc.Order_ASC,
+		EventFilter: dahua.EventFilter{
+			FilterDeviceIDs: req.FilterDeviceIDs,
+			FilterCodes:     req.FilterCodes,
+			FilterActions:   req.FilterActions,
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -518,5 +523,22 @@ func (u *User) ListEmailAlarmEvents(ctx context.Context, _ *emptypb.Empty) (*rpc
 
 	return &rpc.ListEmailAlarmEventsResp{
 		AlarmEvents: alarmEvents,
+	}, nil
+}
+
+func (u *User) ListEventFilters(ctx context.Context, _ *emptypb.Empty) (*rpc.ListEventFiltersResp, error) {
+	codes, err := dahua.ListEventCodes(ctx, u.db)
+	if err != nil {
+		return nil, err
+	}
+
+	actions, err := dahua.ListEventactions(ctx, u.db)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.ListEventFiltersResp{
+		Codes:   codes,
+		Actions: actions,
 	}, nil
 }

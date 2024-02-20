@@ -22,7 +22,7 @@ export function Emails() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => searchParams.device ? searchParams.device.split('.').map(v => BigInt(v)) : [])
-  const filterAlarmEvents: Accessor<string[]> = createMemo(() => searchParams.alarmEvents ? JSON.parse(searchParams.alarmEvents) : [])
+  const filterAlarmEvents: Accessor<string[]> = createMemo(() => searchParams.alarmEvent ? JSON.parse(searchParams.alarmEvent) : [])
   const data = createAsync(() => getEmailsPage({
     page: {
       page: Number(searchParams.page) || 0,
@@ -94,7 +94,7 @@ export function Emails() {
                 options={listEmailAlarmEvents() || []}
                 placeholder="Alarm Event"
                 value={listEmailAlarmEvents()?.filter(v => filterAlarmEvents().includes(v))}
-                onChange={(value) => setSearchParams({ alarmEvents: value.length != 0 ? JSON.stringify(value) : "" })}
+                onChange={(value) => setSearchParams({ alarmEvent: value.length != 0 ? JSON.stringify(value) : "" })}
                 itemComponent={props => (
                   <ComboboxItem item={props.item}>
                     <ComboboxItemLabel>{props.item.rawValue}</ComboboxItemLabel>

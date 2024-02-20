@@ -15,6 +15,9 @@ export default function({ params }: any) {
       field: params.sort || "",
       order: parseOrder(params.order)
     },
+    filterDeviceIDs: params.device ? params.device.split('.').map((v: any) => BigInt(v)) : [],
+    filterCodes: params.code ? JSON.parse(params.code) : [],
+    filterActions: params.action ? JSON.parse(params.action) : [],
   })
 }
 

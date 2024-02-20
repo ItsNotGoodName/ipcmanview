@@ -368,11 +368,11 @@ export interface GetEmailsIDPageReq {
      */
     id: bigint;
     /**
-     * @generated from protobuf field: repeated int64 FilterDeviceIDs = 3 [json_name = "FilterDeviceIDs"];
+     * @generated from protobuf field: repeated int64 filterDeviceIDs = 3;
      */
     filterDeviceIDs: bigint[];
     /**
-     * @generated from protobuf field: repeated string FilterAlarmEvents = 4 [json_name = "FilterAlarmEvents"];
+     * @generated from protobuf field: repeated string filterAlarmEvents = 4;
      */
     filterAlarmEvents: string[];
 }
@@ -470,6 +470,18 @@ export interface GetEventsPageReq {
      * @generated from protobuf field: Sort sort = 2;
      */
     sort?: Sort;
+    /**
+     * @generated from protobuf field: repeated int64 filterDeviceIDs = 3;
+     */
+    filterDeviceIDs: bigint[];
+    /**
+     * @generated from protobuf field: repeated string filterCodes = 4;
+     */
+    filterCodes: string[];
+    /**
+     * @generated from protobuf field: repeated string filterActions = 5;
+     */
+    filterActions: string[];
 }
 /**
  * @generated from protobuf message GetEventsPageResp
@@ -897,6 +909,19 @@ export interface ListEmailAlarmEventsResp {
      * @generated from protobuf field: repeated string alarm_events = 1;
      */
     alarmEvents: string[];
+}
+/**
+ * @generated from protobuf message ListEventFiltersResp
+ */
+export interface ListEventFiltersResp {
+    /**
+     * @generated from protobuf field: repeated string codes = 1;
+     */
+    codes: string[];
+    /**
+     * @generated from protobuf field: repeated string actions = 2;
+     */
+    actions: string[];
 }
 /**
  * @generated from protobuf message GetAdminGroupsPageReq
@@ -1895,8 +1920,8 @@ class GetEmailsIDPageReq$Type extends MessageType<GetEmailsIDPageReq> {
     constructor() {
         super("GetEmailsIDPageReq", [
             { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 3, name: "FilterDeviceIDs", kind: "scalar", jsonName: "FilterDeviceIDs", repeat: 1 /*RepeatType.PACKED*/, T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 4, name: "FilterAlarmEvents", kind: "scalar", jsonName: "FilterAlarmEvents", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+            { no: 3, name: "filterDeviceIDs", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 4, name: "filterAlarmEvents", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -1949,7 +1974,10 @@ class GetEventsPageReq$Type extends MessageType<GetEventsPageReq> {
     constructor() {
         super("GetEventsPageReq", [
             { no: 1, name: "page", kind: "message", T: () => PagePagination },
-            { no: 2, name: "sort", kind: "message", T: () => Sort }
+            { no: 2, name: "sort", kind: "message", T: () => Sort },
+            { no: 3, name: "filterDeviceIDs", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 4, name: "filterCodes", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "filterActions", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }
@@ -2288,6 +2316,19 @@ class ListEmailAlarmEventsResp$Type extends MessageType<ListEmailAlarmEventsResp
  * @generated MessageType for protobuf message ListEmailAlarmEventsResp
  */
 export const ListEmailAlarmEventsResp = new ListEmailAlarmEventsResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListEventFiltersResp$Type extends MessageType<ListEventFiltersResp> {
+    constructor() {
+        super("ListEventFiltersResp", [
+            { no: 1, name: "codes", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "actions", kind: "scalar", repeat: 2 /*RepeatType.UNPACKED*/, T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListEventFiltersResp
+ */
+export const ListEventFiltersResp = new ListEventFiltersResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetAdminGroupsPageReq$Type extends MessageType<GetAdminGroupsPageReq> {
     constructor() {
@@ -2928,7 +2969,8 @@ export const User = new ServiceType("User", [
     { name: "GetDeviceSoftwareVersion", options: {}, I: GetDeviceSoftwareVersionReq, O: GetDeviceSoftwareVersionResp },
     { name: "ListDeviceLicenses", options: {}, I: ListDeviceLicensesReq, O: ListDeviceLicensesResp },
     { name: "ListDeviceStorage", options: {}, I: ListDeviceStorageReq, O: ListDeviceStorageResp },
-    { name: "ListEmailAlarmEvents", options: {}, I: Empty, O: ListEmailAlarmEventsResp }
+    { name: "ListEmailAlarmEvents", options: {}, I: Empty, O: ListEmailAlarmEventsResp },
+    { name: "ListEventFilters", options: {}, I: Empty, O: ListEventFiltersResp }
 ]);
 /**
  * @generated ServiceType for protobuf service Admin

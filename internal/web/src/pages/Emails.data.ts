@@ -4,8 +4,8 @@ import { useClient } from "~/providers/client";
 import { GetEmailsPageReq } from "~/twirp/rpc";
 
 export function withEmailPageQuery(q: URLSearchParams, searchParams: Partial<Params>): URLSearchParams {
-  if (searchParams.alarmEvents)
-    q.set("alarmEvents", searchParams.alarmEvents)
+  if (searchParams.alarmEvent)
+    q.set("alarmEvent", searchParams.alarmEvent)
   if (searchParams.device)
     q.set("device", searchParams.device)
   return q
@@ -23,7 +23,7 @@ export default function({ params }: any) {
       field: params.sort || "",
       order: parseOrder(params.order)
     },
-    filterAlarmEvents: params.alarmEvents ? JSON.parse(params.alarmEvents) : [],
     filterDeviceIDs: params.device ? params.device.split('.').map((v: any) => BigInt(v)) : [],
+    filterAlarmEvents: params.alarmEvent ? JSON.parse(params.alarmEvent) : [],
   })
 }

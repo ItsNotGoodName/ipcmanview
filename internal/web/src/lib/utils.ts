@@ -12,7 +12,6 @@ import { useSearchParams } from "@solidjs/router";
 export function encodeQuery(q: URLSearchParams): string {
   if (q.size == 0)
     return ""
-  q.sort()
   return "?" + q.toString()
 }
 

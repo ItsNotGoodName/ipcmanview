@@ -8,3 +8,4 @@ export const getListDeviceStorage = cache((id: bigint) => useClient().user.listD
 export const getDeviceSoftwareVersion = cache((id: bigint) => useClient().user.getDeviceSoftwareVersion({ id }).then(res => res.response), "getDeviceSoftwareVersion")
 export const getListDeviceLicenses = cache((id: bigint) => useClient().user.listDeviceLicenses({ id }).then(res => res.response.items), "listDeviceLicenses")
 export const getlistEmailAlarmEvents = cache(() => useClient().user.listEmailAlarmEvents({}).then(res => res.response.alarmEvents), "listEmailAlarmEvents")
+export const getlistEventFilters = cache(() => useClient().user.listEventFilters({}).then(res => res.response), "listEventFilters")
