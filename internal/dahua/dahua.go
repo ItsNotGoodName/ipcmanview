@@ -308,6 +308,21 @@ func GetRPCStatus(ctx context.Context, rpcClient dahuarpc.Client) models.DahuaRP
 	}
 }
 
+func ListPresets(ctx context.Context, clientPTZ ptz.Client, channel int) ([]models.DahuaPreset, error) {
+	vv, err := ptz.GetPresets(ctx, clientPTZ, channel)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]models.DahuaPreset, 0, len(vv))
+	for _, v := range vv {
+		res = append(res, models.DahuaPreset{
+			Index: v.Index,
+			Name:  v.Name,
+		})
+	}
+	return res, nil
+}
+
 func SetPreset(ctx context.Context, clientPTZ ptz.Client, channel, index int) error {
 	return ptz.Start(ctx, clientPTZ, channel, ptz.Params{
 		Code: "GotoPreset",

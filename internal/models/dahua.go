@@ -182,6 +182,11 @@ type DahuaSunriseSunset struct {
 	TimeSection dahuarpc.TimeSection `json:"time_section"`
 }
 
+type DahuaPreset struct {
+	Index int    `json:"index"`
+	Name  string `json:"name"`
+}
+
 type DahuaEvent struct {
 	ID        int64           `json:"id"`
 	DeviceID  int64           `json:"device_id"`

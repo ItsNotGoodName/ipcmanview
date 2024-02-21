@@ -75,6 +75,7 @@ func (s *Server) RegisterDahua(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
 	g.GET("/dahua/devices/:id/software", s.DahuaDevicesIDSoftware)
 	g.GET("/dahua/devices/:id/storage", s.DahuaDevicesIDStorage)
 	g.GET("/dahua/devices/:id/users", s.DahuaDevicesIDUsers)
+	g.GET("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetGET)
 	g.POST("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetPOST)
 	g.POST("/dahua/devices/:id/rpc", s.DahuaDevicesIDRPCPOST)
 

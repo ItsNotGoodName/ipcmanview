@@ -483,6 +483,36 @@ func (s *Server) DahuaDevicesIDCoaxialCaps(c echo.Context) error {
 	return c.JSON(http.StatusOK, status)
 }
 
+func (s *Server) DahuaDevicesIDPTZPresetGET(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := paramID(c)
+	if err != nil {
+		return err
+	}
+
+	if err := assertDahuaLevel(c, s, id, models.DahuaPermissionLevelOperator); err != nil {
+		return err
+	}
+
+	client, err := useDahuaClient(c, s, id)
+	if err != nil {
+		return err
+	}
+
+	channel, err := queryIntOptional(c, "channel")
+	if err != nil {
+		return err
+	}
+
+	presets, err := dahua.ListPresets(ctx, client.PTZ, channel)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, presets)
+}
+
 func (s *Server) DahuaDevicesIDPTZPresetPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
