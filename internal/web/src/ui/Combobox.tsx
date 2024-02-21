@@ -24,7 +24,7 @@ export function ComboboxRoot<Option, OptGroup = never>(props: Combobox.ComboboxR
 
 export function ComboboxItem(props: Combobox.ComboboxItemProps) {
   const [_, rest] = splitProps(props, ["class"])
-  return <Combobox.Item class={cn("ui-highlighted:bg-accent ui-highlighted:text-accent-foreground hover:bg-accent hover:text-accent-foreground group relative flex w-full cursor-default select-none items-center justify-start gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors ui-disabled:pointer-events-none ui-disabled:opacity-50", props.class)} {...rest}>
+  return <Combobox.Item class={cn("ui-highlighted:bg-accent ui-highlighted:text-accent-foreground hover:bg-accent hover:text-accent-foreground ui-disabled:pointer-events-none ui-disabled:opacity-50 group relative flex w-full cursor-default select-none items-center justify-start gap-2 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", props.class)} {...rest}>
     <div class="size-4 border-primary group-data-[selected]:bg-primary group-data-[selected]:text-primary-foreground flex shrink-0 items-center justify-center rounded-sm border">
       <Combobox.ItemIndicator class="flex items-center justify-center text-current">
         <RiSystemCheckLine class="size-4" />

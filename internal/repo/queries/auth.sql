@@ -126,10 +126,10 @@ WHERE
   user_id = ?
   AND id != ?;
 
--- name: AuthDeleteUserSessionBySession :exec
+-- name: AuthDeleteUserSessionBySession :one
 DELETE FROM user_sessions
 WHERE
-  session = ?;
+  session = ? RETURNING user_id;
 
 -- name: AuthListGroupsForUser :many
 SELECT

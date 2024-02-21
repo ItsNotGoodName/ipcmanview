@@ -163,15 +163,17 @@ func (q *Queries) AuthDeleteUserSessionByExpired(ctx context.Context, expiredAt 
 	return err
 }
 
-const authDeleteUserSessionBySession = `-- name: AuthDeleteUserSessionBySession :exec
+const authDeleteUserSessionBySession = `-- name: AuthDeleteUserSessionBySession :one
 DELETE FROM user_sessions
 WHERE
-  session = ?
+  session = ? RETURNING user_id
 `
 
-func (q *Queries) AuthDeleteUserSessionBySession(ctx context.Context, session string) error {
-	_, err := q.db.ExecContext(ctx, authDeleteUserSessionBySession, session)
-	return err
+func (q *Queries) AuthDeleteUserSessionBySession(ctx context.Context, session string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, authDeleteUserSessionBySession, session)
+	var user_id int64
+	err := row.Scan(&user_id)
+	return user_id, err
 }
 
 const authDeleteUserSessionForUser = `-- name: AuthDeleteUserSessionForUser :exec

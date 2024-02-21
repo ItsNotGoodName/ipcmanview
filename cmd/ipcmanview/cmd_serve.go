@@ -133,7 +133,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	// API
 	apiRequireAuthMiddleware := api.RequireAuthMiddleware()
 	api.
-		NewServer(pub, db, dahuaStore, dahuaAFS).
+		NewServer(pub, db, bus, dahuaStore, dahuaAFS).
 		RegisterSession(httpRouter).
 		RegisterDahua(httpRouter, apiRequireAuthMiddleware).
 		RegisterWS(httpRouter, apiRequireAuthMiddleware)
@@ -144,7 +144,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 		NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
 		Register(rpc.NewPublicServer(rpcserver.NewPublic(db), rpcLogger)).
-		Register(rpc.NewUserServer(rpcserver.NewUser(db, dahuaStore), rpcLogger, rpcserver.RequireAuthSession())).
+		Register(rpc.NewUserServer(rpcserver.NewUser(db, bus, dahuaStore), rpcLogger, rpcserver.RequireAuthSession())).
 		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.RequireAdminAuthSession()))
 
 	// HTTP server

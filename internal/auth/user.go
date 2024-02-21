@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -150,7 +151,7 @@ type UpdateUserPasswordParams struct {
 	CurrentSessionID int64
 }
 
-func UpdateUserPassword(ctx context.Context, db sqlite.DB, dbModel repo.User, arg UpdateUserPasswordParams) error {
+func UpdateUserPassword(ctx context.Context, db sqlite.DB, bus *event.Bus, dbModel repo.User, arg UpdateUserPasswordParams) error {
 	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
 		return err
 	}
@@ -169,7 +170,13 @@ func UpdateUserPassword(ctx context.Context, db sqlite.DB, dbModel repo.User, ar
 		return err
 	}
 
-	_, err = db.C().AuthPatchUser(ctx, repo.AuthPatchUserParams{
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.C().AuthPatchUser(ctx, repo.AuthPatchUserParams{
 		Password:  core.NewNullString(password),
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        dbModel.ID,
@@ -178,7 +185,7 @@ func UpdateUserPassword(ctx context.Context, db sqlite.DB, dbModel repo.User, ar
 		return err
 	}
 
-	err = db.C().AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
+	err = tx.C().AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
 		UserID: dbModel.ID,
 		ID:     arg.CurrentSessionID,
 	})
@@ -186,7 +193,7 @@ func UpdateUserPassword(ctx context.Context, db sqlite.DB, dbModel repo.User, ar
 		return err
 	}
 
-	return nil
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, dbModel.ID)
 }
 
 func UpdateUserUsername(ctx context.Context, db sqlite.DB, dbModel repo.User, newUsername string) error {
@@ -212,38 +219,65 @@ func UpdateUserUsername(ctx context.Context, db sqlite.DB, dbModel repo.User, ne
 	return err
 }
 
-func UpdateUserDisabled(ctx context.Context, db sqlite.DB, id int64, disable bool) error {
+func UpdateUserDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, disable bool) error {
 	if err := core.Admin(ctx); err != nil {
 		return err
 	}
 
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
 	if disable {
-		_, err := db.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
+		_, err := tx.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
 			ID:         id,
 		})
-		return err
+		if err != nil {
+			return err
+		}
+	} else {
+		_, err := tx.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
+			DisabledAt: types.NullTime{},
+			ID:         id,
+		})
+		if err != nil {
+			return err
+		}
 	}
-	_, err := db.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
-		DisabledAt: types.NullTime{},
-		ID:         id,
-	})
-	return err
+
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, id)
 }
 
-func UpdateUserAdmin(ctx context.Context, db sqlite.DB, id int64, admin bool) error {
+func UpdateUserAdmin(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, admin bool) error {
 	if err := core.Admin(ctx); err != nil {
 		return err
 	}
 
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
 	if admin {
-		_, err := db.C().AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
+		_, err := tx.C().AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
 			UserID:    id,
 			CreatedAt: types.NewTime(time.Now()),
 		})
-		return err
+		if err != nil {
+			return err
+		}
+	} else {
+		err := tx.C().AuthDeleteAdmin(ctx, id)
+		if err != nil {
+			return err
+		}
 	}
-	return db.C().AuthDeleteAdmin(ctx, id)
+
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, id)
 }
 
 func CheckUserPassword(hash, password string) error {

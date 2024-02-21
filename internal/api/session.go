@@ -145,7 +145,7 @@ func (s *Server) SessionDELETE(c echo.Context) error {
 	}
 
 	// Delete session
-	if err := auth.DeleteUserSessionBySession(ctx, s.db, cookie.Value); err != nil {
+	if err := auth.DeleteUserSessionBySession(ctx, s.db, s.bus, cookie.Value); err != nil {
 		return err
 	}
 

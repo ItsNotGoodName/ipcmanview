@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	ActionDahuaDeviceCreated models.EventAction = "dahua-device:created"
-	ActionDahuaDeviceUpdated models.EventAction = "dahua-device:updated"
-	ActionDahuaDeviceDeleted models.EventAction = "dahua-device:deleted"
-	ActionDahuaEmailCreated  models.EventAction = "dahua-email:created"
+	ActionDahuaDeviceCreated  models.EventAction = "dahua-device:created"
+	ActionDahuaDeviceUpdated  models.EventAction = "dahua-device:updated"
+	ActionDahuaDeviceDeleted  models.EventAction = "dahua-device:deleted"
+	ActionDahuaEmailCreated   models.EventAction = "dahua-email:created"
+	ActionUserSecurityUpdated models.EventAction = "user-security:updated"
 )
 
 func DataAsInt64(evt repo.Event) int64 {

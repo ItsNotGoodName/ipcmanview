@@ -18,6 +18,7 @@ import { WSState, useWS } from "./providers/ws";
 import { Shared } from "./components/Shared";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "./ui/Tooltip";
 import { SheetContent, SheetHeader, SheetOverflow, SheetRoot, SheetTitle } from "./ui/Sheet";
+import { useBus } from "./providers/bus";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
@@ -214,7 +215,15 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { open?
 }
 
 export function Root(props: RouteSectionProps) {
+  const bus = useBus()
   const session = createAsync(() => getSession())
+
+  bus.event.listen((e) => {
+    if (e.action == "user-security:updated" && e.data == session()?.user_id) {
+      revalidate(getSession.key)
+    }
+  })
+
   const isAuthenticatedLayout = () => session()?.valid && !session()?.disabled
   const isAdminPage = useIsAdminPage(props.location)
 
@@ -248,8 +257,8 @@ export function Root(props: RouteSectionProps) {
         </Portal>
         <Show when={isAuthenticatedLayout()} fallback={<>{props.children}</>}>
           <SheetRoot open={mobileMenuOpen()} onOpenChange={toggleMobileMenuOpen}>
-            <SheetContent side="left" class="gap-2 py-2" >
-              <SheetHeader class="px-4">
+            <SheetContent side="left">
+              <SheetHeader>
                 <SheetTitle>IPCManView</SheetTitle>
               </SheetHeader>
               <SheetOverflow>

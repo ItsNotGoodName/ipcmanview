@@ -214,9 +214,9 @@ function StatRoot(props: ParentProps) {
 }
 
 function StatTitle(props: ParentProps) {
-  return <h2 class="text-nowrap">{props.children}</h2>
+  return <h2>{props.children}</h2>
 }
 
 function StatValue(props: ParentProps) {
-  return <p class="text-nowrap text-lg font-bold">{props.children}</p>
+  return <p class="text-lg font-bold">{props.children}</p>
 }

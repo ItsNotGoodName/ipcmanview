@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -90,35 +91,73 @@ func createUserSessionAndDeletePrevious(ctx context.Context, db sqlite.DB, arg r
 		return err
 	}
 
-	if err := tx.C().AuthDeleteUserSessionBySession(ctx, previousSession); err != nil {
+	if _, err := tx.C().AuthDeleteUserSessionBySession(ctx, previousSession); err != nil && !repo.IsNotFound(err) {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-func DeleteUserSessionBySession(ctx context.Context, db sqlite.DB, session string) error {
-	return db.C().AuthDeleteUserSessionBySession(ctx, session)
+func DeleteUserSessionBySession(ctx context.Context, db sqlite.DB, bus *event.Bus, session string) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	userID, err := tx.C().AuthDeleteUserSessionBySession(ctx, session)
+	if err != nil {
+		if repo.IsNotFound(err) {
+			return tx.Commit()
+		}
+		return err
+	}
+
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, userID)
 }
 
-func DeleteUserSession(ctx context.Context, db sqlite.DB, userID int64, sessionID int64) error {
+func DeleteUserSession(ctx context.Context, db sqlite.DB, bus *event.Bus, userID int64, sessionID int64) error {
 	if err := core.UserOrAdmin(ctx, userID); err != nil {
 		return err
 	}
-	return db.C().AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
+
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = tx.C().AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
 		UserID: userID,
 		ID:     sessionID,
 	})
+	if err != nil {
+		return err
+	}
+
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, userID)
 }
 
-func DeleteOtherUserSessions(ctx context.Context, db sqlite.DB, userID int64, currentSessionID int64) error {
+func DeleteOtherUserSessions(ctx context.Context, db sqlite.DB, bus *event.Bus, userID int64, currentSessionID int64) error {
 	if err := core.UserOrAdmin(ctx, userID); err != nil {
 		return err
 	}
-	return db.C().AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
+
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = tx.C().AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
 		UserID: userID,
 		ID:     currentSessionID,
 	})
+	if err != nil {
+		return err
+	}
+
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, userID)
 }
 
 var touchSessionLock = core.NewLockStore[int64]()

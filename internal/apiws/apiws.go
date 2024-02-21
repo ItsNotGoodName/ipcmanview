@@ -41,10 +41,8 @@ type Signal struct {
 }
 
 func NewSignal() Signal {
-	c := make(chan struct{}, 1)
-	c <- struct{}{}
 	return Signal{
-		C: c,
+		C: make(chan struct{}, 1),
 	}
 }
 
@@ -98,18 +96,18 @@ func (c Vistors) HasMore() bool {
 }
 
 type BufferVisitor struct {
-	events chan []byte
+	buffer chan []byte
 }
 
 func NewBufferVisitor(count int) *BufferVisitor {
 	return &BufferVisitor{
-		events: make(chan []byte, count),
+		buffer: make(chan []byte, count),
 	}
 }
 
-func (v *BufferVisitor) Push(event []byte) bool {
+func (v *BufferVisitor) Push(data []byte) bool {
 	select {
-	case v.events <- event:
+	case v.buffer <- data:
 		return true
 	default:
 		return false
@@ -117,16 +115,46 @@ func (v *BufferVisitor) Push(event []byte) bool {
 }
 
 func (v *BufferVisitor) HasMore() bool {
-	return len(v.events) > 0
+	return len(v.buffer) > 0
 }
 
 func (v *BufferVisitor) Visit(ctx context.Context) ([]byte, error) {
 	select {
-	case event := <-v.events:
+	case event := <-v.buffer:
 		return event, nil
 	default:
 		return nil, ErrVisitorEmpty
 	}
+}
+
+type OnceVisitor struct {
+	Done    bool
+	hasMore bool
+	data    []byte
+}
+
+func NewOnceVisitor() *OnceVisitor {
+	return &OnceVisitor{
+		data: []byte{},
+	}
+}
+
+func (v *OnceVisitor) Set(data []byte) {
+	v.data = data
+	v.hasMore = true
+	v.Done = true
+}
+
+func (v *OnceVisitor) HasMore() bool {
+	return v.hasMore
+}
+
+func (v *OnceVisitor) Visit(ctx context.Context) ([]byte, error) {
+	if !v.hasMore {
+		return nil, ErrVisitorEmpty
+	}
+	v.hasMore = false
+	return v.data, nil
 }
 
 func Check(visitor Visitor, sig Signal) {

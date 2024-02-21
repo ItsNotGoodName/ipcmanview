@@ -8,6 +8,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
@@ -17,15 +18,17 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewUser(db sqlite.DB, dahuaStore *dahua.Store) *User {
+func NewUser(db sqlite.DB, bus *event.Bus, dahuaStore *dahua.Store) *User {
 	return &User{
 		db:         db,
+		bus:        bus,
 		dahuaStore: dahuaStore,
 	}
 }
 
 type User struct {
 	db         sqlite.DB
+	bus        *event.Bus
 	dahuaStore *dahua.Store
 }
 
@@ -331,7 +334,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 		return nil, err
 	}
 
-	if err := auth.UpdateUserPassword(ctx, u.db, dbUser, auth.UpdateUserPasswordParams{
+	if err := auth.UpdateUserPassword(ctx, u.db, u.bus, dbUser, auth.UpdateUserPasswordParams{
 		NewPassword:      req.NewPassword,
 		CurrentSessionID: session.SessionID,
 	}); err != nil {
@@ -359,7 +362,7 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *emptypb.Empty) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	err := auth.DeleteOtherUserSessions(ctx, u.db, session.UserID, session.SessionID)
+	err := auth.DeleteOtherUserSessions(ctx, u.db, u.bus, session.UserID, session.SessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -370,7 +373,7 @@ func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *em
 func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	if err := auth.DeleteUserSession(ctx, u.db, session.UserID, req.SessionId); err != nil {
+	if err := auth.DeleteUserSession(ctx, u.db, u.bus, session.UserID, req.SessionId); err != nil {
 		return nil, err
 	}
 

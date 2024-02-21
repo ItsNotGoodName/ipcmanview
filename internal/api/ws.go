@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/apiws"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
@@ -23,6 +24,8 @@ type WSEvent struct {
 }
 
 func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub) {
+	actor := core.UseActor(ctx)
+
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -39,8 +42,9 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 	defer sub.Close()
 
 	// Visitors
+	final := apiws.NewOnceVisitor()
 	buffer := apiws.NewBufferVisitor(100)
-	visitors := apiws.NewVisitors(buffer)
+	visitors := apiws.NewVisitors(final, buffer)
 
 	// IO
 	sig := apiws.NewSignal()
@@ -48,6 +52,8 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 	readC := apiws.Reader(ctx, cancel, conn, log)
 
 	for {
+		apiws.Check(visitors, sig)
+
 		select {
 		case <-ctx.Done():
 			return
@@ -64,12 +70,17 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 				log.Err(err).Msg("Failed to flush")
 				return
 			}
+
+			if final.Done {
+				return
+			}
 		case evt, ok := <-eventC:
 			// Pub sub
 			if !ok {
 				return
 			}
 
+			var isFinal bool
 			var payload WSData
 			switch evt := evt.(type) {
 			case event.Event:
@@ -79,6 +90,10 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 						Action: string(evt.Event.Action),
 						Data:   evt.Event.Data.RawMessage,
 					},
+				}
+
+				if evt.Event.Action == event.ActionUserSecurityUpdated && event.DataAsInt64(evt.Event) == actor.UserID {
+					isFinal = true
 				}
 			case event.DahuaEvent:
 				if evt.EventRule.IgnoreLive {
@@ -100,8 +115,10 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 			if !buffer.Push(b) {
 				return
 			}
-		}
 
-		apiws.Check(visitors, sig)
+			if isFinal {
+				final.Set(b)
+			}
+		}
 	}
 }

@@ -76,6 +76,8 @@ func writer(ctx context.Context, cancel context.CancelFunc, conn *websocket.Conn
 	ticker := time.NewTicker(wsPingPeriod)
 	defer ticker.Stop()
 
+	defer conn.Close()
+
 	conn.SetWriteDeadline(time.Now().Add(wsWriteWait))
 
 	for {

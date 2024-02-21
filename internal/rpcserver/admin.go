@@ -370,7 +370,7 @@ func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) 
 	session := useAuthSession(ctx)
 	for _, item := range req.Items {
 		if item.Id != session.UserID {
-			err := auth.UpdateUserDisabled(ctx, a.db, item.Id, item.Disable)
+			err := auth.UpdateUserDisabled(ctx, a.db, a.bus, item.Id, item.Disable)
 			if err != nil {
 				return nil, err
 			}
@@ -386,7 +386,7 @@ func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*em
 		return nil, fmt.Errorf("Cannot modify current user.")
 	}
 
-	err := auth.UpdateUserAdmin(ctx, a.db, req.Id, req.Admin)
+	err := auth.UpdateUserAdmin(ctx, a.db, a.bus, req.Id, req.Admin)
 	if err != nil {
 		return nil, err
 	}
@@ -402,7 +402,7 @@ func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswor
 		return nil, err
 	}
 
-	if err := auth.UpdateUserPassword(ctx, a.db, dbUser, auth.UpdateUserPasswordParams{
+	if err := auth.UpdateUserPassword(ctx, a.db, a.bus, dbUser, auth.UpdateUserPasswordParams{
 		NewPassword:      req.NewPassword,
 		CurrentSessionID: session.SessionID,
 	}); err != nil {

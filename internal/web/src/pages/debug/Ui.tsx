@@ -27,7 +27,7 @@ import { AvatarFallback, AvatarImage, AvatarRoot } from "~/ui/Avatar";
 import { ProgressFill, ProgressLabel, ProgressRoot, ProgressTrack, ProgressValueLabel } from "~/ui/Progress";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from "~/ui/AlertDialog";
 import { Toggle } from "~/ui/Toggle";
-import { SheetCloseButton, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetRoot, SheetTitle, SheetTrigger } from "~/ui/Sheet";
+import { SheetCloseButton, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetOverflow, SheetRoot, SheetTitle, SheetTrigger } from "~/ui/Sheet";
 import { HoverCardArrow, HoverCardContent, HoverCardRoot, HoverCardTrigger } from "~/ui/HoverCard";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from "~/ui/Accordion";
@@ -537,20 +537,22 @@ export function Ui() {
               Make changes to your profile here. Click save when you're done.
             </SheetDescription>
           </SheetHeader>
-          <div class="grid gap-4 py-4">
-            <div class="grid grid-cols-4 items-center gap-4">
-              <Label for="name" class="text-right">
-                Name
-              </Label>
-              <Input id="name" value="Pedro Duarte" class="col-span-3" />
+          <SheetOverflow>
+            <div class="grid gap-4 py-4">
+              <div class="grid grid-cols-4 items-center gap-4">
+                <Label for="name" class="text-right">
+                  Name
+                </Label>
+                <Input id="name" value="Pedro Duarte" class="col-span-3" />
+              </div>
+              <div class="grid grid-cols-4 items-center gap-4">
+                <Label for="username" class="text-right">
+                  Username
+                </Label>
+                <Input id="username" value="@peduarte" class="col-span-3" />
+              </div>
             </div>
-            <div class="grid grid-cols-4 items-center gap-4">
-              <Label for="username" class="text-right">
-                Username
-              </Label>
-              <Input id="username" value="@peduarte" class="col-span-3" />
-            </div>
-          </div>
+          </SheetOverflow>
           <SheetFooter>
             <SheetCloseButton asChild>
               <As component={Button} type="submit">Save changes</As>

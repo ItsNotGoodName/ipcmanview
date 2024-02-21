@@ -7,6 +7,8 @@ import {
 import { useBus } from './bus';
 import { relativeWSURL } from '~/lib/utils';
 import { DahuaEvent, WSData, WSEvent } from '~/lib/models';
+import { revalidate } from '@solidjs/router';
+import { getSession } from './session';
 
 export enum WSState {
   Connecting,
@@ -26,6 +28,8 @@ export function WSProvider(props: ParentProps) {
 
   const ws = createReconnectingWS(relativeWSURL("/v1/ws"));
 
+  const onOpen = () => revalidate(getSession.key)
+
   const onMessage = (msg: MessageEvent<string>) => {
     const event = new WSData(msg.data)
     switch (event.type) {
@@ -42,9 +46,11 @@ export function WSProvider(props: ParentProps) {
     console.log(event)
   }
 
+  ws.addEventListener("open", onOpen)
   ws.addEventListener("message", onMessage)
   ws.addEventListener("error", onError)
   onCleanup(() => {
+    ws.removeEventListener("open", onOpen)
     ws.removeEventListener("message", onMessage)
     ws.removeEventListener("error", onError)
   })
