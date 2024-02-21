@@ -9,7 +9,7 @@ import { GetDevicesPageResp_Device } from "~/twirp/rpc"
 import { getDeviceDetail, getDeviceRPCStatus, getDeviceSoftwareVersion, getListDeviceLicenses, getListDeviceStorage, } from "./data"
 import { Skeleton } from "~/ui/Skeleton"
 import { ToggleButton } from "@kobalte/core"
-import { formatDate, parseDate } from "~/lib/utils"
+import { decodeQueryInts, encodeQueryInts, formatDate, parseDate } from "~/lib/utils"
 import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
 import { Shared } from "~/components/Shared"
@@ -20,7 +20,7 @@ import { RiSystemAddCircleLine } from "solid-icons/ri"
 
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => searchParams.device ? searchParams.device.split('.').map(v => BigInt(v)) : [])
+  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeQueryInts(searchParams.device))
   const data = createAsync(() => getDevicesPage())
   const filteredDevices = createMemo(() => filterDeviceIDs().length > 0 ? data()?.devices.filter(v => !v.disabled && filterDeviceIDs().includes(v.id)) : data()?.devices.filter(v => !v.disabled))
 
@@ -49,7 +49,7 @@ export function Devices() {
               options={data()?.devices || []}
               placeholder="Device"
               value={data()?.devices.filter(v => filterDeviceIDs().includes(v.id))}
-              onChange={(value) => setSearchParams({ device: value.map(v => v.id).join('.') })}
+              onChange={(value) => setSearchParams({ device: encodeQueryInts(value.map(v => v.id)) })}
               itemComponent={props => (
                 <ComboboxItem item={props.item}>
                   <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>

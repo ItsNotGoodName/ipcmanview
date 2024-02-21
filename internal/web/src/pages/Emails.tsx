@@ -4,7 +4,7 @@ import { RiEditorAttachment2, RiSystemAddCircleLine } from "solid-icons/ri";
 import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo } from "solid-js";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
-import { encodeQuery, createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder } from "~/lib/utils";
+import { encodeQuery, createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder, decodeQueryInts, encodeQueryInts } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { PaginationEllipsis, PaginationEnd, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
@@ -21,7 +21,7 @@ import { ListDevicesResp_Device } from "~/twirp/rpc";
 export function Emails() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => searchParams.device ? searchParams.device.split('.').map(v => BigInt(v)) : [])
+  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeQueryInts(searchParams.device))
   const filterAlarmEvents: Accessor<string[]> = createMemo(() => searchParams.alarmEvent ? JSON.parse(searchParams.alarmEvent) : [])
   const data = createAsync(() => getEmailsPage({
     page: {
@@ -67,7 +67,7 @@ export function Emails() {
                 options={listDevices() || []}
                 placeholder="Device"
                 value={listDevices()?.filter(v => filterDeviceIDs().includes(v.id))}
-                onChange={(value) => setSearchParams({ device: value.map(v => v.id).join('.') })}
+                onChange={(value) => setSearchParams({ device: encodeQueryInts(value.map(v => v.id)) })}
                 itemComponent={props => (
                   <ComboboxItem item={props.item}>
                     <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>

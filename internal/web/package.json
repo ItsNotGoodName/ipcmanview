@@ -20,7 +20,7 @@
     "@solid-primitives/resize-observer": "^2.0.22",
     "@solid-primitives/storage": "^2.1.1",
     "@solid-primitives/websocket": "^1.2.1",
-    "@solidjs/router": "^0.12.3",
+    "@solidjs/router": "^0.12.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "highlight.js": "^11.9.0",

@@ -26,6 +26,7 @@ export function Home() {
     if (e.action.startsWith("dahua-email:") || e.action.startsWith("dahua-device:"))
       revalidate(getHomePage.key)
   })
+  bus.dahuaEvent.listen(() => revalidate(getHomePage.key))
 
   return (
     <LayoutNormal>

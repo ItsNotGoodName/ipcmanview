@@ -7,30 +7,30 @@ import (
 
 // ---------- Sort
 
-type rpcSort struct {
+type Sort struct {
 	Field string
 	Order rpc.Order
 }
 
-func (s rpcSort) withDefaultOrder(order rpc.Order) rpcSort {
+func (s Sort) defaultOrder(order rpc.Order) Sort {
 	if s.Order == rpc.Order_ORDER_UNSPECIFIED {
 		s.Order = order
 	}
 	return s
 }
 
-func (s rpcSort) encode() *rpc.Sort {
+func (s Sort) Encode() *rpc.Sort {
 	return &rpc.Sort{
 		Field: s.Field,
 		Order: s.Order,
 	}
 }
 
-func parseSort(v *rpc.Sort) rpcSort {
+func parseSort(v *rpc.Sort) Sort {
 	if v == nil {
-		return rpcSort{}
+		return Sort{}
 	}
-	return rpcSort{
+	return Sort{
 		Field: v.Field,
 		Order: v.Order,
 	}

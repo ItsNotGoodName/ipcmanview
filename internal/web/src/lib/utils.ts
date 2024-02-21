@@ -188,3 +188,11 @@ export function encodeQuery(q: URLSearchParams): string {
     return ""
   return "?" + q.toString()
 }
+
+export function encodeQueryInts(q: bigint[]): string {
+  return q.join('.')
+}
+
+export function decodeQueryInts(q?: string): bigint[] {
+  return q ? q.split('.').map((v: any) => BigInt(v)) : []
+}

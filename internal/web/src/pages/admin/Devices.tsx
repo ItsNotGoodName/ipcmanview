@@ -27,14 +27,12 @@ import { Shared } from "~/components/Shared";
 const actionDeleteDevice = action((ids: bigint[]) => useClient()
   .admin.deleteDevice({ ids })
   .then(() => revalidate(getAdminDevicesPage.key))
-  .catch(catchAsToast)
-)
+  .catch(catchAsToast))
 
 const actionSetDisable = action((input: SetDeviceDisableReq) => useClient()
   .admin.setDeviceDisable(input)
   .then(() => revalidate(getAdminDevicesPage.key))
-  .catch(catchAsToast)
-)
+  .catch(catchAsToast))
 
 export function AdminDevices() {
   const navigate = useNavigate()
@@ -308,7 +306,6 @@ export function AdminDevices() {
     </LayoutNormal>)
 }
 
-
 type CreateForm = {
   name: string
   url: string
@@ -320,29 +317,28 @@ type CreateForm = {
   }
 }
 
-const actionCreateForm = action((data: CreateForm) => useClient()
-  .admin.createDevice({ ...data, features: data.features.array })
-  .then(() => revalidate(getAdminDevicesPage.key))
-  .catch(throwAsFormError))
-
 function CreateForm(props: { close: () => void }) {
   const [addMore, setAddMore] = createSignal(false)
 
   const [form, { Field, Form }] = createForm<CreateForm>({});
-  const action = useAction(actionCreateForm)
   const submit = async (data: CreateForm) => {
-    await action(data)
-    if (addMore()) {
-      reset(form, {
-        initialValues: {
-          ...data,
-          name: "",
-          url: ""
-        },
+    await useClient()
+      .admin.createDevice({ ...data, features: data.features.array })
+      .then(() => revalidate(getAdminDevicesPage.key))
+      .catch(throwAsFormError)
+      .then(() => {
+        if (addMore()) {
+          reset(form, {
+            initialValues: {
+              ...data,
+              name: "",
+              url: ""
+            },
+          })
+        } else {
+          props.close()
+        }
       })
-    } else {
-      props.close()
-    }
   }
 
   const locations = createAsync(() => getListLocations())
@@ -472,7 +468,6 @@ function CreateForm(props: { close: () => void }) {
         </Form>
       </Suspense>
     </ErrorBoundary>
-
   )
 }
 
@@ -488,16 +483,12 @@ type UpdateForm = {
   }
 }
 
-const actionUpdate = action((data: UpdateForm) => useClient()
-  .admin.updateDevice({ ...data, features: data.features.array })
-  .then(() => revalidate(getAdminDevicesPage.key))
-  .catch(throwAsFormError))
-
-
 function UpdateForm(props: { close: () => void, id: bigint }) {
   const [form, { Field, Form }] = createForm<UpdateForm>();
-  const action = useAction(actionUpdate)
-  const submit = (data: UpdateForm) => action(data)
+  const submit = (data: UpdateForm) => useClient()
+    .admin.updateDevice({ ...data, features: data.features.array })
+    .then(() => revalidate(getAdminDevicesPage.key))
+    .catch(throwAsFormError)
     .then(() => props.close())
 
   const [data] = createResource(() => props.id != BigInt(0),

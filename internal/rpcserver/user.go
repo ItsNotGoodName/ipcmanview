@@ -178,7 +178,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 
 func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*rpc.GetEmailsPageResp, error) {
 	page := parsePagePagination(req.Page)
-	sort := parseSort(req.Sort).withDefaultOrder(rpc.Order_DESC)
+	sort := parseSort(req.Sort).defaultOrder(rpc.Order_DESC)
 
 	v, err := dahua.ListEmails(ctx, u.db, dahua.ListEmailsParams{
 		Page:      page,
@@ -209,7 +209,7 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 	return &rpc.GetEmailsPageResp{
 		Emails:     emails,
 		PageResult: encodePagePaginationResult(v.PageResult),
-		Sort:       sort.encode(),
+		Sort:       sort.Encode(),
 	}, nil
 }
 
@@ -265,7 +265,7 @@ func (u *User) GetEmailsIDPage(ctx context.Context, req *rpc.GetEmailsIDPageReq)
 
 func (u *User) GetEventsPage(ctx context.Context, req *rpc.GetEventsPageReq) (*rpc.GetEventsPageResp, error) {
 	page := parsePagePagination(req.Page)
-	sort := parseSort(req.Sort).withDefaultOrder(rpc.Order_DESC)
+	sort := parseSort(req.Sort).defaultOrder(rpc.Order_DESC)
 
 	v, err := dahua.ListEvents(ctx, u.db, dahua.ListEventsParams{
 		Page:      page,
@@ -297,7 +297,7 @@ func (u *User) GetEventsPage(ctx context.Context, req *rpc.GetEventsPageReq) (*r
 	return &rpc.GetEventsPageResp{
 		Events:     events,
 		PageResult: encodePagePaginationResult(v.PageResult),
-		Sort:       sort.encode(),
+		Sort:       sort.Encode(),
 	}, nil
 }
 
