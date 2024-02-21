@@ -48,8 +48,8 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 
 	// IO
 	sig := apiws.NewSignal()
-	writerC := apiws.Writer(ctx, cancel, conn, log, sig)
-	readC := apiws.Reader(ctx, cancel, conn, log)
+	writerC := apiws.Writer(ctx, conn, log, sig)
+	readC := apiws.Reader(ctx, conn, log)
 
 	for {
 		apiws.Check(visitors, sig)
@@ -64,8 +64,12 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 			}
 
 			log.Error().Bytes("data", data).Msg("WebSocket client is not supposed to send data...")
-		case writeC := <-writerC:
+		case writeC, ok := <-writerC:
 			// Write
+			if !ok {
+				return
+			}
+
 			if err := apiws.Flush(ctx, visitors, writeC); err != nil {
 				log.Err(err).Msg("Failed to flush")
 				return
@@ -112,12 +116,10 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 				return
 			}
 
-			if !buffer.Push(b) {
-				return
-			}
-
 			if isFinal {
 				final.Set(b)
+			} else if !buffer.Push(b) {
+				return
 			}
 		}
 	}

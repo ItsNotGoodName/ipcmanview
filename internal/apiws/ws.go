@@ -32,14 +32,14 @@ func Upgrade(w http.ResponseWriter, r *http.Request) (*websocket.Conn, error) {
 	return wsUpgrader.Upgrade(w, r, nil)
 }
 
-func Reader(ctx context.Context, cancel context.CancelFunc, conn *websocket.Conn, log zerolog.Logger) chan []byte {
+func Reader(ctx context.Context, conn *websocket.Conn, log zerolog.Logger) <-chan []byte {
 	readC := make(chan []byte)
-	go reader(ctx, cancel, conn, log, readC)
+	go reader(ctx, conn, log, readC)
 	return readC
 }
 
-func reader(ctx context.Context, cancel context.CancelFunc, conn *websocket.Conn, log zerolog.Logger, readC chan []byte) {
-	defer cancel()
+func reader(ctx context.Context, conn *websocket.Conn, log zerolog.Logger, readC chan<- []byte) {
+	defer conn.Close()
 
 	conn.SetReadLimit(wsMaxMessageSize)
 	conn.SetReadDeadline(time.Now().Add(wsPongWait))
@@ -64,21 +64,18 @@ func reader(ctx context.Context, cancel context.CancelFunc, conn *websocket.Conn
 	}
 }
 
-func Writer(ctx context.Context, cancel context.CancelFunc, conn *websocket.Conn, log zerolog.Logger, sig Signal) chan chan []byte {
+func Writer(ctx context.Context, conn *websocket.Conn, log zerolog.Logger, sig Signal) <-chan chan []byte {
 	flushC := make(chan chan []byte)
-	go writer(ctx, cancel, conn, log, sig, flushC)
+	go writer(ctx, conn, log, sig, flushC)
 	return flushC
 }
 
-func writer(ctx context.Context, cancel context.CancelFunc, conn *websocket.Conn, log zerolog.Logger, sig Signal, flushC chan chan []byte) {
-	defer cancel()
+func writer(ctx context.Context, conn *websocket.Conn, log zerolog.Logger, sig Signal, flushC chan<- chan []byte) {
+	defer conn.Close()
+	defer close(flushC)
 
 	ticker := time.NewTicker(wsPingPeriod)
 	defer ticker.Stop()
-
-	defer conn.Close()
-
-	conn.SetWriteDeadline(time.Now().Add(wsWriteWait))
 
 	for {
 		select {
