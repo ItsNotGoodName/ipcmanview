@@ -4,7 +4,7 @@ import {
   ParentComponent,
   useContext
 } from "solid-js";
-import { WSDahuaEvent } from '~/lib/models';
+import { DahuaEvent } from '~/lib/models';
 
 export type EventType = {
   action: string,
@@ -13,7 +13,7 @@ export type EventType = {
 
 type BusContextType = EventHub<{
   event: EventBus<EventType>;
-  dahuaEvent: EventBus<WSDahuaEvent>
+  dahuaEvent: EventBus<DahuaEvent>
 }>
 
 const BusContext = createContext<BusContextType>();

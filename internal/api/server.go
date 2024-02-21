@@ -15,7 +15,7 @@ import (
 )
 
 func NewServer(
-	pub pubsub.Pub,
+	pub *pubsub.Pub,
 	db sqlite.DB,
 	dahuaStore *dahua.Store,
 	dahuaFileFS afero.Fs,
@@ -29,7 +29,7 @@ func NewServer(
 }
 
 type Server struct {
-	pub         pubsub.Pub
+	pub         *pubsub.Pub
 	db          sqlite.DB
 	dahuaStore  *dahua.Store
 	dahuaFileFS afero.Fs
@@ -94,7 +94,7 @@ func (s *Server) RegisterWS(e *echo.Echo, m ...echo.MiddlewareFunc) {
 			return err
 		}
 
-		WS(ctx, conn, s.pub)
+		WS(ctx, conn, s.db, s.pub)
 
 		return nil
 	})

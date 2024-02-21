@@ -21,7 +21,7 @@ export class WSEvent {
         this.data = source["data"];
     }
 }
-export class WSDahuaEvent {
+export class DahuaEvent {
     id: number;
     device_id: number;
     code: string;

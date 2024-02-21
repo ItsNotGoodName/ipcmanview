@@ -4,10 +4,12 @@ import (
 	"context"
 )
 
+type MiddlewareFunc func(next HandleFunc) HandleFunc
+
 type Sub struct {
+	pub   *Pub
 	doneC <-chan struct{}
 	errC  chan error
-	pub   Pub
 	id    int
 }
 
@@ -16,8 +18,6 @@ func (s Sub) Wait(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case <-s.pub.doneC:
-		return ErrPubSubClosed
 	case <-s.doneC:
 		err := <-s.errC
 		s.errC <- err
@@ -38,34 +38,17 @@ func (s Sub) Error() error {
 }
 
 func (s Sub) Close() error {
-	return s.close(context.Background())
-}
-
-func (s Sub) close(ctx context.Context) error {
-	select {
-	case <-s.doneC:
-		return nil
-	default:
-	}
-
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-s.pub.doneC:
-		return ErrPubSubClosed
-	case <-s.doneC:
-		return nil
-	case s.pub.unsubscribeC <- unsubscribe{id: s.id}:
-		return nil
-	}
+	s.pub.unsubscribe(s.id)
+	return nil
 }
 
 type SubscribeBuilder struct {
-	pub    Pub
-	topics []string
+	pub        *Pub
+	topics     []string
+	middleware []MiddlewareFunc
 }
 
-func (p Pub) Subscribe(events ...Event) SubscribeBuilder {
+func (p *Pub) Subscribe(events ...Event) SubscribeBuilder {
 	var topics []string
 	for _, e := range events {
 		topics = append(topics, e.EventTopic())
@@ -76,42 +59,39 @@ func (p Pub) Subscribe(events ...Event) SubscribeBuilder {
 	}
 }
 
-func (b SubscribeBuilder) Function(ctx context.Context, handle HandleFunc) (Sub, error) {
+// Middleware adds middleare between the handler.
+func (b SubscribeBuilder) Middleware(fn MiddlewareFunc) SubscribeBuilder {
+	b.middleware = append(b.middleware, fn)
+	return b
+}
+
+// Function creates a subscription with a function.
+func (b SubscribeBuilder) Function(ctx context.Context, fn HandleFunc) (Sub, error) {
+	handle := fn
+	for _, mw := range b.middleware {
+		handle = mw(handle)
+	}
+
 	resC := make(chan int, 1)
 	doneC := make(chan struct{})
 	errC := make(chan error, 1)
-	select {
-	case <-ctx.Done():
-		return Sub{}, ctx.Err()
-	case <-b.pub.doneC:
-		return Sub{}, ErrPubSubClosed
-	case b.pub.subscribeC <- subscribe{
+	id := b.pub.subscribe(subscribe{
 		topics: b.topics,
 		handle: handle,
 		resC:   resC,
 		doneC:  doneC,
 		errC:   errC,
-	}:
-	}
+	})
 
-	select {
-	case <-ctx.Done():
-		return Sub{}, ctx.Err()
-	case <-b.pub.doneC:
-		return Sub{}, ErrPubSubClosed
-	case id := <-resC:
-		return Sub{
-			doneC: doneC,
-			pub:   b.pub,
-			id:    id,
-			errC:  errC,
-		}, nil
-	}
+	return Sub{
+		pub:   b.pub,
+		doneC: doneC,
+		errC:  errC,
+		id:    id,
+	}, nil
 }
 
 // Channel creates a subscription with a channel.
-// The subscription is closed when the context is closed.
-// The channel is closed when the subscription is closed.
 func (b SubscribeBuilder) Channel(ctx context.Context, size int) (Sub, <-chan Event, error) {
 	eventsC := make(chan Event, size)
 
@@ -133,7 +113,6 @@ func (b SubscribeBuilder) Channel(ctx context.Context, size int) (Sub, <-chan Ev
 			sub.Close()
 			<-sub.doneC
 		case <-sub.doneC:
-		case <-b.pub.doneC:
 		}
 		// This assumes the publisher will not call the handle function after the subscription is fully closed
 		close(eventsC)

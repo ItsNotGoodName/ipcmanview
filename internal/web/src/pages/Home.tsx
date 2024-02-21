@@ -161,7 +161,7 @@ export function Home() {
                                 {formatDate(startTime())}
                               </TooltipContent>
                             </TooltipRoot>
-                            <a href={v.url} target="_blank">
+                            <a href={v.url} target="_blank" title="Download">
                               <RiSystemDownloadLine class="h-5 w-5" />
                             </a>
                           </div>

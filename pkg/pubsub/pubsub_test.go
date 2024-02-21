@@ -13,7 +13,6 @@ func TestPub(t *testing.T) {
 	ctx := context.Background()
 
 	pub := NewPub()
-	go pub.Serve(ctx)
 
 	topics := []string{"Potato", "Thing"}
 	eventTopics := func() []Event {

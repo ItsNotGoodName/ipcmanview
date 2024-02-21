@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/tkrajina/typescriptify-golang-structs/typescriptify"
 )
 
@@ -16,7 +17,7 @@ func main() {
 	converter = converter.
 		Add(api.WSData{}).
 		Add(api.WSEvent{}).
-		Add(api.WSDahuaEvent{}).
+		Add(models.DahuaEvent{}).
 		ManageType(time.Time{}, typescriptify.TypeOptions{TSType: "Date", TSTransform: "new Date(__VALUE__)"}).
 		ManageType(json.RawMessage{}, typescriptify.TypeOptions{TSType: "Object"})
 

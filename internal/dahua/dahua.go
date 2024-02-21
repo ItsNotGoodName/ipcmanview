@@ -8,6 +8,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
@@ -238,6 +239,18 @@ func GetUsers(ctx context.Context, rpcClient dahuarpc.Conn, location *time.Locat
 	}
 
 	return res, nil
+}
+
+func NewDahuaEvent(v repo.DahuaEvent) models.DahuaEvent {
+	return models.DahuaEvent{
+		ID:        v.ID,
+		DeviceID:  v.DeviceID,
+		Code:      v.Code,
+		Action:    v.Action,
+		Index:     v.Index,
+		Data:      v.Data.RawMessage,
+		CreatedAt: v.CreatedAt.Time,
+	}
 }
 
 func NewDahuaFile(file mediafilefind.FindNextFileInfo, affixSeed int, location *time.Location) (models.DahuaFile, error) {

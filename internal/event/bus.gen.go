@@ -3,7 +3,6 @@ package event
 
 import (
 	"context"
-	"errors"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
@@ -39,52 +38,52 @@ type Bus struct {
 	namesDahuaCoaxialStatus []string
 }
 
-func (b *Bus) Register(pub pubsub.Pub) (*Bus) {
+func (b *Bus) Register(pub *pubsub.Pub) (*Bus) {
 	b.OnEventQueued("pubsub", func(ctx context.Context, evt EventQueued) error {
 		err := pub.Publish(ctx, evt)
-		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+		if err == nil {
 			return nil
 		}
 		return err
 	})
 	b.OnEvent("pubsub", func(ctx context.Context, evt Event) error {
 		err := pub.Publish(ctx, evt)
-		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+		if err == nil {
 			return nil
 		}
 		return err
 	})
 	b.OnDahuaEvent("pubsub", func(ctx context.Context, evt DahuaEvent) error {
 		err := pub.Publish(ctx, evt)
-		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+		if err == nil {
 			return nil
 		}
 		return err
 	})
 	b.OnDahuaEventWorkerConnecting("pubsub", func(ctx context.Context, evt DahuaEventWorkerConnecting) error {
 		err := pub.Publish(ctx, evt)
-		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+		if err == nil {
 			return nil
 		}
 		return err
 	})
 	b.OnDahuaEventWorkerConnect("pubsub", func(ctx context.Context, evt DahuaEventWorkerConnect) error {
 		err := pub.Publish(ctx, evt)
-		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+		if err == nil {
 			return nil
 		}
 		return err
 	})
 	b.OnDahuaEventWorkerDisconnect("pubsub", func(ctx context.Context, evt DahuaEventWorkerDisconnect) error {
 		err := pub.Publish(ctx, evt)
-		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+		if err == nil {
 			return nil
 		}
 		return err
 	})
 	b.OnDahuaCoaxialStatus("pubsub", func(ctx context.Context, evt DahuaCoaxialStatus) error {
 		err := pub.Publish(ctx, evt)
-		if err == nil || errors.Is(err, pubsub.ErrPubSubClosed) {
+		if err == nil {
 			return nil
 		}
 		return err

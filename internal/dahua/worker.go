@@ -134,7 +134,7 @@ func (m *WorkerManager) Bootstrap(ctx context.Context, db sqlite.DB, store *Stor
 	return err
 }
 
-func DefaultWorkerFactory(bus *event.Bus, pub pubsub.Pub, db sqlite.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
+func DefaultWorkerFactory(bus *event.Bus, pub *pubsub.Pub, db sqlite.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
 	return func(ctx context.Context, super *suture.Supervisor, device Conn) ([]suture.ServiceToken, error) {
 		var tokens []suture.ServiceToken
 
@@ -309,7 +309,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 	}
 }
 
-func NewQuickScanWorker(pub pubsub.Pub, db sqlite.DB, store *Store, scanLockStore ScanLockStore, deviceID int64) QuickScanWorker {
+func NewQuickScanWorker(pub *pubsub.Pub, db sqlite.DB, store *Store, scanLockStore ScanLockStore, deviceID int64) QuickScanWorker {
 	return QuickScanWorker{
 		pub:           pub,
 		db:            db,
@@ -320,7 +320,7 @@ func NewQuickScanWorker(pub pubsub.Pub, db sqlite.DB, store *Store, scanLockStor
 }
 
 type QuickScanWorker struct {
-	pub           pubsub.Pub
+	pub           *pubsub.Pub
 	db            sqlite.DB
 	store         *Store
 	scanLockStore ScanLockStore

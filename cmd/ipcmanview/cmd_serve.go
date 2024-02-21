@@ -69,7 +69,6 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// Pub sub
 	pub := pubsub.NewPub()
-	super.Add(pub)
 
 	// Event bus
 	bus := event.NewBus().Register(pub)

@@ -664,3 +664,24 @@ from
   JOIN dahua_afero_files ON dahua_afero_files.email_attachment_id = dahua_email_attachments.id
 where
   dahua_email_attachments.message_id == ?;
+
+-- name: DahuaGetPermissionLevel :one
+SELECT
+  level
+FROM
+  dahua_permissions
+WHERE
+  device_id = sqlc.arg ('device_id')
+  AND (
+    dahua_permissions.user_id = sqlc.arg ('user_id')
+    OR dahua_permissions.group_id IN (
+      SELECT
+        group_id
+      FROM
+        group_users
+      WHERE
+        group_users.user_id = sqlc.arg ('user_id')
+    )
+  )
+ORDER BY
+  level DESC;

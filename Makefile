@@ -46,7 +46,7 @@ dev-web:
 
 # Gen
 
-gen: gen-sqlc gen-pubsub gen-bus gen-proto
+gen: gen-sqlc gen-pubsub gen-bus gen-proto gen-typescriptify
 
 gen-sqlc:
 	sqlc generate

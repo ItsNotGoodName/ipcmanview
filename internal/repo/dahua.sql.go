@@ -982,6 +982,40 @@ func (q *Queries) DahuaGetOldestFileStartTime(ctx context.Context, deviceID int6
 	return start_time, err
 }
 
+const dahuaGetPermissionLevel = `-- name: DahuaGetPermissionLevel :one
+SELECT
+  level
+FROM
+  dahua_permissions
+WHERE
+  device_id = ?1
+  AND (
+    dahua_permissions.user_id = ?2
+    OR dahua_permissions.group_id IN (
+      SELECT
+        group_id
+      FROM
+        group_users
+      WHERE
+        group_users.user_id = ?2
+    )
+  )
+ORDER BY
+  level DESC
+`
+
+type DahuaGetPermissionLevelParams struct {
+	DeviceID int64
+	UserID   sql.NullInt64
+}
+
+func (q *Queries) DahuaGetPermissionLevel(ctx context.Context, arg DahuaGetPermissionLevelParams) (models.DahuaPermissionLevel, error) {
+	row := q.db.QueryRowContext(ctx, dahuaGetPermissionLevel, arg.DeviceID, arg.UserID)
+	var level models.DahuaPermissionLevel
+	err := row.Scan(&level)
+	return level, err
+}
+
 const dahuaGetStorageDestination = `-- name: DahuaGetStorageDestination :one
 SELECT
   id, name, storage, server_address, port, username, password, remote_directory

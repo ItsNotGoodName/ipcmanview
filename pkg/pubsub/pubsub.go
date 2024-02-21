@@ -3,12 +3,9 @@ package pubsub
 
 import (
 	"context"
-	"errors"
 	"slices"
-	"time"
+	"sync"
 )
-
-var ErrPubSubClosed = errors.New("pub sub closed")
 
 type Event interface {
 	EventTopic() string
@@ -20,7 +17,7 @@ func (e EventTopic) EventTopic() string {
 	return string(e)
 }
 
-type HandleFunc func(ctx context.Context, event Event) error
+type HandleFunc func(ctx context.Context, evt Event) error
 
 type StateSubscriber struct {
 	Topics []string
@@ -29,36 +26,45 @@ type StateSubscriber struct {
 type State struct {
 	SubscriberCount int
 	Subscribers     []StateSubscriber
-	LastGC          time.Time
-}
-
-type Pub struct {
-	subscribeC   chan subscribe
-	unsubscribeC chan unsubscribe
-	stateC       chan state
-	eventC       chan Event
-	doneC        chan struct{}
-	subsGC       time.Duration
-}
-
-func NewPub() Pub {
-	return Pub{
-		subscribeC:   make(chan subscribe),
-		unsubscribeC: make(chan unsubscribe),
-		stateC:       make(chan state),
-		eventC:       make(chan Event),
-		doneC:        make(chan struct{}),
-		subsGC:       1 * time.Minute,
-	}
 }
 
 type sub struct {
-	id     int
 	topics []string
 	handle HandleFunc
 	doneC  chan<- struct{}
 	errC   chan<- error
-	closed bool
+}
+
+type Pub struct {
+	mu     sync.Mutex
+	lastID int
+	subs   map[int]sub
+}
+
+func NewPub() *Pub {
+	return &Pub{
+		mu:     sync.Mutex{},
+		lastID: 0,
+		subs:   make(map[int]sub),
+	}
+}
+
+func (p *Pub) Publish(ctx context.Context, event Event) error {
+	p.mu.Lock()
+	for i := range p.subs {
+		if !slices.Contains(p.subs[i].topics, event.EventTopic()) {
+			continue
+		}
+
+		if err := p.subs[i].handle(ctx, event); err != nil {
+			p.subs[i].errC <- nil
+			close(p.subs[i].doneC)
+			delete(p.subs, i)
+		}
+	}
+	p.mu.Unlock()
+
+	return nil
 }
 
 type subscribe struct {
@@ -70,140 +76,48 @@ type subscribe struct {
 	resC chan<- int
 }
 
-type unsubscribe struct {
-	id int
-}
-
-type state struct {
-	resC chan<- State
-}
-
-func (Pub) String() string {
-	return "pubsub.Pub"
-}
-
-// Serve starts the publisher and blocks until context is canceled.
-func (p Pub) Serve(ctx context.Context) error {
-	select {
-	case <-p.doneC:
-		return ErrPubSubClosed
-	default:
+func (p *Pub) subscribe(arg subscribe) int {
+	p.mu.Lock()
+	p.lastID++
+	id := p.lastID
+	p.subs[id] = sub{
+		topics: arg.topics,
+		handle: arg.handle,
+		doneC:  arg.doneC,
+		errC:   arg.errC,
 	}
-	defer close(p.doneC)
+	p.mu.Unlock()
 
-	t := time.NewTicker(p.subsGC)
-	defer t.Stop()
+	return id
+}
 
-	var lastID int
-	var subs []sub
-	defer func() {
-		for i := range subs {
-			if !subs[i].closed {
-				subs[i].errC <- ErrPubSubClosed
-				close(subs[i].doneC)
-				subs[i].closed = true
-			}
-		}
-	}()
-
-	var lastGC time.Time
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-t.C:
-			for i := range subs {
-				if subs[i].closed {
-					subs = slices.DeleteFunc(subs, func(s sub) bool { return s.closed })
-					break
-				}
-			}
-			lastGC = time.Now()
-		case command := <-p.subscribeC:
-			lastID++
-			sub := sub{
-				id:     lastID,
-				topics: command.topics,
-				handle: command.handle,
-				doneC:  command.doneC,
-				errC:   command.errC,
-				closed: false,
-			}
-			subs = append(subs, sub)
-			command.resC <- sub.id
-		case command := <-p.unsubscribeC:
-			for i := range subs {
-				if subs[i].id == command.id {
-					subs[i].errC <- nil
-					close(subs[i].doneC)
-					subs[i].closed = true
-				}
-			}
-		case command := <-p.stateC:
-			stateSubs := make([]StateSubscriber, 0, len(subs))
-			stateSubCount := 0
-			for i := range subs {
-				if subs[i].closed {
-					continue
-				}
-				stateSubCount++
-				stateSubs = append(stateSubs, StateSubscriber{
-					Topics: subs[i].topics,
-				})
-			}
-			s := State{
-				SubscriberCount: stateSubCount,
-				Subscribers:     stateSubs,
-				LastGC:          lastGC,
-			}
-			command.resC <- s
-		case command := <-p.eventC:
-			eventTopic := command.EventTopic()
-			for i := range subs {
-				if subs[i].closed || !slices.Contains(subs[i].topics, eventTopic) {
-					continue
-				}
-
-				err := subs[i].handle(ctx, command)
-				if err != nil {
-					subs[i].errC <- err
-					close(subs[i].doneC)
-					subs[i].closed = true
-				}
-			}
+func (p *Pub) unsubscribe(id int) {
+	p.mu.Lock()
+	for i := range p.subs {
+		if i == id {
+			p.subs[i].errC <- nil
+			close(p.subs[i].doneC)
+			delete(p.subs, i)
 		}
 	}
+	p.mu.Unlock()
 }
 
-func (p Pub) Publish(ctx context.Context, event Event) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	case <-p.doneC:
-		return ErrPubSubClosed
-	case p.eventC <- event:
-		return nil
+func (p *Pub) State(ctx context.Context) (State, error) {
+	p.mu.Lock()
+	ss := make([]StateSubscriber, 0, len(p.subs))
+	ssc := 0
+	for i := range p.subs {
+		ssc++
+		ss = append(ss, StateSubscriber{
+			Topics: p.subs[i].topics,
+		})
 	}
-}
-
-func (p Pub) State(ctx context.Context) (State, error) {
-	resC := make(chan State, 1)
-
-	select {
-	case <-ctx.Done():
-		return State{}, ctx.Err()
-	case <-p.doneC:
-		return State{}, ErrPubSubClosed
-	case p.stateC <- state{resC: resC}:
+	s := State{
+		SubscriberCount: ssc,
+		Subscribers:     ss,
 	}
+	p.mu.Unlock()
 
-	select {
-	case <-ctx.Done():
-		return State{}, ctx.Err()
-	case <-p.doneC:
-		return State{}, ErrPubSubClosed
-	case s := <-resC:
-		return s, nil
-	}
+	return s, nil
 }

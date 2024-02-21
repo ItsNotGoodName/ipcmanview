@@ -19,26 +19,31 @@ func paramID(c echo.Context) (int64, error) {
 	if err != nil {
 		return 0, echo.ErrBadRequest.WithInternal(err)
 	}
-
 	return number, nil
 }
 
-func useDahuaClient(c echo.Context, store *dahua.Store) (dahua.Client, error) {
-	ctx := c.Request().Context()
-
-	id, err := paramID(c)
+func assertDahuaLevel(c echo.Context, s *Server, deviceID int64, level models.DahuaPermissionLevel) error {
+	ok, err := dahua.Level(c.Request().Context(), s.db, deviceID, level)
 	if err != nil {
-		return dahua.Client{}, err
+		if repo.IsNotFound(err) {
+			return echo.ErrNotFound.WithInternal(err)
+		}
+		return err
 	}
+	if !ok {
+		return echo.ErrForbidden
+	}
+	return nil
+}
 
-	client, err := store.GetClient(ctx, id)
+func useDahuaClient(c echo.Context, s *Server, deviceID int64) (dahua.Client, error) {
+	client, err := s.dahuaStore.GetClient(c.Request().Context(), deviceID)
 	if err != nil {
 		if repo.IsNotFound(err) {
 			return dahua.Client{}, echo.ErrNotFound.WithInternal(err)
 		}
 		return dahua.Client{}, err
 	}
-
 	return client, nil
 }
 

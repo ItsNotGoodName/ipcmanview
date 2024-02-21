@@ -3,10 +3,11 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/apiws"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/gorilla/websocket"
 )
@@ -21,23 +22,16 @@ type WSEvent struct {
 	Data   json.RawMessage `json:"data"`
 }
 
-type WSDahuaEvent struct {
-	ID        int64           `json:"id"`
-	DeviceID  int64           `json:"device_id"`
-	Code      string          `json:"code"`
-	Action    string          `json:"action"`
-	Index     int64           `json:"index"`
-	Data      json.RawMessage `json:"data"`
-	CreatedAt time.Time       `json:"created_at"`
-}
-
-func WS(ctx context.Context, conn *websocket.Conn, pub pubsub.Pub) {
+func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	log := apiws.Logger(conn)
 
-	sub, eventC, err := pub.Subscribe(event.Event{}, event.DahuaEvent{}).Channel(ctx, 1)
+	sub, eventC, err := pub.
+		Subscribe(event.Event{}, event.DahuaEvent{}).
+		Middleware(dahua.PubSubMiddleware(ctx, db)).
+		Channel(ctx, 1)
 	if err != nil {
 		log.Err(err).Send()
 		return
@@ -93,15 +87,7 @@ func WS(ctx context.Context, conn *websocket.Conn, pub pubsub.Pub) {
 
 				payload = WSData{
 					Type: "dahua-event",
-					Data: WSDahuaEvent{
-						ID:        evt.Event.ID,
-						DeviceID:  evt.Event.DeviceID,
-						Code:      evt.Event.Code,
-						Action:    evt.Event.Action,
-						Index:     evt.Event.Index,
-						Data:      evt.Event.Data.RawMessage,
-						CreatedAt: evt.Event.CreatedAt.Time,
-					},
+					Data: dahua.NewDahuaEvent(evt.Event),
 				}
 			}
 
