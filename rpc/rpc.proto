@@ -92,6 +92,7 @@ service User {
 
   rpc ListEmailAlarmEvents(google.protobuf.Empty) returns (ListEmailAlarmEventsResp);
   rpc ListEventFilters(google.protobuf.Empty) returns (ListEventFiltersResp);
+  rpc ListLatestFiles(google.protobuf.Empty) returns (ListLatestFilesResp);
 }
 
 message GetHomePageResp {
@@ -114,15 +115,6 @@ message GetHomePageResp {
     string release_url = 7;
   }
   Build build = 5;
-
-  message File {
-    int64 id = 1;
-    string url = 2;
-    string thumbnail_url = 3;
-    string type = 4;
-    google.protobuf.Timestamp start_time = 5;
-  }
-  repeated File files = 6;
 
   message Email {
     int64 id = 1;
@@ -346,6 +338,17 @@ message ListEmailAlarmEventsResp {
 message ListEventFiltersResp {
   repeated string codes = 1;
   repeated string actions = 2;
+}
+
+message ListLatestFilesResp {
+  message File {
+    int64 id = 1;
+    string url = 2;
+    string thumbnail_url = 3;
+    string type = 4;
+    google.protobuf.Timestamp start_time = 5;
+  }
+  repeated File files = 6;
 }
 
 // ---------- Admin

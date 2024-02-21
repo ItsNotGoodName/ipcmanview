@@ -61,26 +61,6 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		return nil, err
 	}
 
-	latestFilesDTO, err := dahua.ListLatestFiles(ctx, u.db, 8)
-	if err != nil {
-		return nil, err
-	}
-
-	files := make([]*rpc.GetHomePageResp_File, 0, len(latestFilesDTO))
-	for _, v := range latestFilesDTO {
-		var thumbnailURL string
-		if v.Type == models.DahuaFileTypeJPG {
-			thumbnailURL = api.DahuaDeviceFileURI(v.DeviceID, v.FilePath)
-		}
-		files = append(files, &rpc.GetHomePageResp_File{
-			Id:           v.ID,
-			Url:          api.DahuaDeviceFileURI(v.DeviceID, v.FilePath),
-			ThumbnailUrl: thumbnailURL,
-			Type:         v.Type,
-			StartTime:    timestamppb.New(v.StartTime.Time),
-		})
-	}
-
 	latestEmailsDTO, err := dahua.ListLatestEmails(ctx, u.db, 5)
 	if err != nil {
 		return nil, err
@@ -112,7 +92,6 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		EventCount: eventCount,
 		EmailCount: emailCount,
 		Build:      build,
-		Files:      files,
 		Emails:     emails,
 	}, nil
 }
@@ -543,5 +522,31 @@ func (u *User) ListEventFilters(ctx context.Context, _ *emptypb.Empty) (*rpc.Lis
 	return &rpc.ListEventFiltersResp{
 		Codes:   codes,
 		Actions: actions,
+	}, nil
+}
+
+func (u *User) ListLatestFiles(ctx context.Context, _ *emptypb.Empty) (*rpc.ListLatestFilesResp, error) {
+	latestFilesDTO, err := dahua.ListLatestFiles(ctx, u.db, 8)
+	if err != nil {
+		return nil, err
+	}
+
+	files := make([]*rpc.ListLatestFilesResp_File, 0, len(latestFilesDTO))
+	for _, v := range latestFilesDTO {
+		var thumbnailURL string
+		if v.Type == models.DahuaFileTypeJPG {
+			thumbnailURL = api.DahuaDeviceFileURI(v.DeviceID, v.FilePath)
+		}
+		files = append(files, &rpc.ListLatestFilesResp_File{
+			Id:           v.ID,
+			Url:          api.DahuaDeviceFileURI(v.DeviceID, v.FilePath),
+			ThumbnailUrl: thumbnailURL,
+			Type:         v.Type,
+			StartTime:    timestamppb.New(v.StartTime.Time),
+		})
+	}
+
+	return &rpc.ListLatestFilesResp{
+		Files: files,
 	}, nil
 }

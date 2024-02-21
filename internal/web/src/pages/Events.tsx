@@ -15,13 +15,13 @@ import { getEventsPage } from "./Events.data";
 import { RiArrowsArrowDownSLine, RiDocumentClipboardLine, RiSystemAddCircleLine } from "solid-icons/ri";
 import { Button, buttonVariants } from "~/ui/Button";
 import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox";
-import { getlistDevices, getlistEventFilters } from "./data";
+import { getlistDevices, getListEventFilters } from "./data";
 import { ListDevicesResp_Device } from "~/twirp/rpc";
 import { BreadcrumbsItem, BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
 import { useBus } from "~/providers/bus";
-import { WSDahuaEvent } from "~/lib/models";
 import { createDate, createTimeAgo } from "@solid-primitives/date";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
+import { DahuaEvent } from "~/lib/models";
 
 export function Events() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -44,7 +44,7 @@ export function Events() {
     filterActions: filterActions(),
   }))
   const listDevices = createAsync(() => getlistDevices())
-  const listEventFilters = createAsync(() => getlistEventFilters())
+  const listEventFilters = createAsync(() => getListEventFilters())
 
   const toggleSort = createToggleSortField(() => data()?.sort)
   const pagination = createPagePagination(() => data()?.pageResult)
@@ -272,7 +272,7 @@ export function EventsLive() {
 
   const dataOpen = () => Boolean(searchParams.data)
   const setDataOpen = (value: boolean) => setSearchParams({ data: value ? String(value) : "" })
-  const [events, setEvents] = createSignal<WSDahuaEvent[]>([])
+  const [events, setEvents] = createSignal<DahuaEvent[]>([])
   bus.dahuaEvent.listen((e) => {
     setEvents((prev) => [e, ...prev])
   })

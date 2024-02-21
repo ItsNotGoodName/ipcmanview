@@ -14,7 +14,7 @@ import { linkVariants } from "~/ui/Link";
 import { PageError } from "~/ui/Page";
 import { Skeleton } from "~/ui/Skeleton";
 import { BreadcrumbsItem, BreadcrumbsRoot } from "~/ui/Breadcrumbs";
-import { getlistDevices, getlistEmailAlarmEvents } from "./data";
+import { getlistDevices, getListEmailAlarmEvents } from "./data";
 import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox";
 import { ListDevicesResp_Device } from "~/twirp/rpc";
 
@@ -36,7 +36,7 @@ export function Emails() {
     filterAlarmEvents: filterAlarmEvents()
   }))
   const listDevices = createAsync(() => getlistDevices())
-  const listEmailAlarmEvents = createAsync(() => getlistEmailAlarmEvents())
+  const listEmailAlarmEvents = createAsync(() => getListEmailAlarmEvents())
   const toggleSort = createToggleSortField(() => data()?.sort)
   const pagination = createPagePagination(() => data()?.pageResult)
   const query = (init?: string) => encodeQuery(withEmailPageQuery(new URLSearchParams(init), searchParams))

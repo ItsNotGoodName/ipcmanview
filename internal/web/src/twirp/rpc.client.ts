@@ -37,6 +37,7 @@ import type { GetAdminDevicesPageReq } from "./rpc";
 import type { GetAdminDevicesIDPageResp } from "./rpc";
 import type { GetAdminDevicesIDPageReq } from "./rpc";
 import { User } from "./rpc";
+import type { ListLatestFilesResp } from "./rpc";
 import type { ListEventFiltersResp } from "./rpc";
 import type { ListEmailAlarmEventsResp } from "./rpc";
 import type { ListDeviceStorageResp } from "./rpc";
@@ -230,6 +231,10 @@ export interface IUserClient {
      * @generated from protobuf rpc: ListEventFilters(google.protobuf.Empty) returns (ListEventFiltersResp);
      */
     listEventFilters(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListEventFiltersResp>;
+    /**
+     * @generated from protobuf rpc: ListLatestFiles(google.protobuf.Empty) returns (ListLatestFilesResp);
+     */
+    listLatestFiles(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListLatestFilesResp>;
 }
 // ---------- User
 
@@ -373,6 +378,13 @@ export class UserClient implements IUserClient, ServiceInfo {
     listEventFilters(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListEventFiltersResp> {
         const method = this.methods[17], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, ListEventFiltersResp>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ListLatestFiles(google.protobuf.Empty) returns (ListLatestFilesResp);
+     */
+    listLatestFiles(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListLatestFilesResp> {
+        const method = this.methods[18], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Empty, ListLatestFilesResp>("unary", this._transport, method, opt, input);
     }
 }
 // ---------- Admin

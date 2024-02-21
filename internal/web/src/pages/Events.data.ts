@@ -2,7 +2,7 @@ import { cache } from "@solidjs/router";
 import { parseOrder } from "~/lib/utils";
 import { useClient } from "~/providers/client";
 import { GetEventsPageReq } from "~/twirp/rpc";
-import { getlistDevices, getlistEventFilters } from "./data";
+import { getlistDevices, getListEventFilters } from "./data";
 
 export const getEventsPage = cache((input: GetEventsPageReq) => useClient().user.getEventsPage(input).then((req) => req.response), "getEventsPage")
 
@@ -21,6 +21,6 @@ export default function({ params }: any) {
     filterActions: params.action ? JSON.parse(params.action) : [],
   })
   void getlistDevices()
-  void getlistEventFilters()
+  void getListEventFilters()
 }
 

@@ -15,9 +15,11 @@ import { createDate, createTimeAgo } from "@solid-primitives/date"
 import { Image } from "@kobalte/core"
 import { linkVariants } from "~/ui/Link"
 import { useBus } from "~/providers/bus"
+import { getListLatestFiles } from "./data"
 
 export function Home() {
   const data = createAsync(() => getHomePage())
+  const listLatestFiles = createAsync(() => getListLatestFiles())
   const bus = useBus()
 
   bus.event.listen((e) => {
@@ -135,7 +137,7 @@ export function Home() {
             <div class="flex flex-1 flex-col gap-4">
               <Shared.Title>Latest files</Shared.Title>
               <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
-                <For each={data()?.files}>
+                <For each={listLatestFiles()?.files}>
                   {(v) => {
                     const [startTime] = createDate(() => parseDate(v.startTime));
                     const [startTimeAgo] = createTimeAgo(startTime);

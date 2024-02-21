@@ -141,10 +141,6 @@ export interface GetHomePageResp {
      */
     build?: GetHomePageResp_Build;
     /**
-     * @generated from protobuf field: repeated GetHomePageResp.File files = 6;
-     */
-    files: GetHomePageResp_File[];
-    /**
      * @generated from protobuf field: repeated GetHomePageResp.Email emails = 7;
      */
     emails: GetHomePageResp_Email[];
@@ -194,31 +190,6 @@ export interface GetHomePageResp_Build {
      * @generated from protobuf field: string release_url = 7;
      */
     releaseUrl: string;
-}
-/**
- * @generated from protobuf message GetHomePageResp.File
- */
-export interface GetHomePageResp_File {
-    /**
-     * @generated from protobuf field: int64 id = 1;
-     */
-    id: bigint;
-    /**
-     * @generated from protobuf field: string url = 2;
-     */
-    url: string;
-    /**
-     * @generated from protobuf field: string thumbnail_url = 3;
-     */
-    thumbnailUrl: string;
-    /**
-     * @generated from protobuf field: string type = 4;
-     */
-    type: string;
-    /**
-     * @generated from protobuf field: google.protobuf.Timestamp start_time = 5;
-     */
-    startTime?: Timestamp;
 }
 /**
  * @generated from protobuf message GetHomePageResp.Email
@@ -922,6 +893,40 @@ export interface ListEventFiltersResp {
      * @generated from protobuf field: repeated string actions = 2;
      */
     actions: string[];
+}
+/**
+ * @generated from protobuf message ListLatestFilesResp
+ */
+export interface ListLatestFilesResp {
+    /**
+     * @generated from protobuf field: repeated ListLatestFilesResp.File files = 6;
+     */
+    files: ListLatestFilesResp_File[];
+}
+/**
+ * @generated from protobuf message ListLatestFilesResp.File
+ */
+export interface ListLatestFilesResp_File {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string url = 2;
+     */
+    url: string;
+    /**
+     * @generated from protobuf field: string thumbnail_url = 3;
+     */
+    thumbnailUrl: string;
+    /**
+     * @generated from protobuf field: string type = 4;
+     */
+    type: string;
+    /**
+     * @generated from protobuf field: google.protobuf.Timestamp start_time = 5;
+     */
+    startTime?: Timestamp;
 }
 /**
  * @generated from protobuf message GetAdminGroupsPageReq
@@ -1757,7 +1762,6 @@ class GetHomePageResp$Type extends MessageType<GetHomePageResp> {
             { no: 3, name: "event_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 4, name: "email_count", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
             { no: 5, name: "build", kind: "message", T: () => GetHomePageResp_Build },
-            { no: 6, name: "files", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetHomePageResp_File },
             { no: 7, name: "emails", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => GetHomePageResp_Email }
         ]);
     }
@@ -1797,22 +1801,6 @@ class GetHomePageResp_Build$Type extends MessageType<GetHomePageResp_Build> {
  * @generated MessageType for protobuf message GetHomePageResp.Build
  */
 export const GetHomePageResp_Build = new GetHomePageResp_Build$Type();
-// @generated message type with reflection information, may provide speed optimized methods
-class GetHomePageResp_File$Type extends MessageType<GetHomePageResp_File> {
-    constructor() {
-        super("GetHomePageResp.File", [
-            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
-            { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 3, name: "thumbnail_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 4, name: "type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 5, name: "start_time", kind: "message", T: () => Timestamp }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message GetHomePageResp.File
- */
-export const GetHomePageResp_File = new GetHomePageResp_File$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetHomePageResp_Email$Type extends MessageType<GetHomePageResp_Email> {
     constructor() {
@@ -2329,6 +2317,34 @@ class ListEventFiltersResp$Type extends MessageType<ListEventFiltersResp> {
  * @generated MessageType for protobuf message ListEventFiltersResp
  */
 export const ListEventFiltersResp = new ListEventFiltersResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListLatestFilesResp$Type extends MessageType<ListLatestFilesResp> {
+    constructor() {
+        super("ListLatestFilesResp", [
+            { no: 6, name: "files", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ListLatestFilesResp_File }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListLatestFilesResp
+ */
+export const ListLatestFilesResp = new ListLatestFilesResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListLatestFilesResp_File$Type extends MessageType<ListLatestFilesResp_File> {
+    constructor() {
+        super("ListLatestFilesResp.File", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "thumbnail_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 4, name: "type", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 5, name: "start_time", kind: "message", T: () => Timestamp }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListLatestFilesResp.File
+ */
+export const ListLatestFilesResp_File = new ListLatestFilesResp_File$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class GetAdminGroupsPageReq$Type extends MessageType<GetAdminGroupsPageReq> {
     constructor() {
@@ -2970,7 +2986,8 @@ export const User = new ServiceType("User", [
     { name: "ListDeviceLicenses", options: {}, I: ListDeviceLicensesReq, O: ListDeviceLicensesResp },
     { name: "ListDeviceStorage", options: {}, I: ListDeviceStorageReq, O: ListDeviceStorageResp },
     { name: "ListEmailAlarmEvents", options: {}, I: Empty, O: ListEmailAlarmEventsResp },
-    { name: "ListEventFilters", options: {}, I: Empty, O: ListEventFiltersResp }
+    { name: "ListEventFilters", options: {}, I: Empty, O: ListEventFiltersResp },
+    { name: "ListLatestFiles", options: {}, I: Empty, O: ListLatestFilesResp }
 ]);
 /**
  * @generated ServiceType for protobuf service Admin
