@@ -20,7 +20,10 @@ export function Home() {
   const data = createAsync(() => getHomePage())
   const bus = useBus()
 
-  bus.event.listen(() => revalidate(getHomePage.key))
+  bus.event.listen((e) => {
+    if (e.action.startsWith("dahua-email:") || e.action.startsWith("dahua-device:"))
+      revalidate(getHomePage.key)
+  })
 
   return (
     <LayoutNormal>

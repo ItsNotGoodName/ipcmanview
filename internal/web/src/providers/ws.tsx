@@ -6,7 +6,7 @@ import {
 } from "solid-js";
 import { useBus } from './bus';
 import { relativeWSURL } from '~/lib/utils';
-import { DahuaEvent, WSData } from '~/lib/models';
+import { DahuaEvent, WSData, WSEvent } from '~/lib/models';
 
 export enum WSState {
   Connecting,
@@ -27,11 +27,10 @@ export function WSProvider(props: ParentProps) {
   const ws = createReconnectingWS(relativeWSURL("/v1/ws"));
 
   const onMessage = (msg: MessageEvent<string>) => {
-    const event = new WSData(msg)
-
+    const event = new WSData(msg.data)
     switch (event.type) {
       case "event":
-        bus.event.emit(event.data)
+        bus.event.emit(new WSEvent(event.data))
         break
       case "dahua-event":
         bus.dahuaEvent.emit(new DahuaEvent(event.data))
