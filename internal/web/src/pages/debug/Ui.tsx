@@ -13,7 +13,7 @@ import { For, Show, createSignal, onCleanup, } from "solid-js";
 import { Badge } from "~/ui/Badge";
 import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { PopoverArrow, PopoverCloseButton, PopoverCloseIcon, PopoverContent, PopoverDescription, PopoverPortal, PopoverRoot, PopoverTitle, PopoverTrigger } from "~/ui/Popover";
-import { DialogModal, DialogDescription, DialogFooter, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverflow, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
 import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, ToastProgressTrack, ToastTitle, toast } from "~/ui/Toast";
 import { Skeleton } from "~/ui/Skeleton";
@@ -239,20 +239,20 @@ export function Ui() {
         </DialogTrigger>
         <DialogPortal>
           <DialogOverlay />
-          <DialogModal>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Header Title</DialogTitle>
               <DialogDescription>
                 Header Description
               </DialogDescription>
             </DialogHeader>
-            <DialogContent>
+            <DialogOverflow>
               I will overflow.
-            </DialogContent>
+            </DialogOverflow>
             <DialogFooter>
               Footer
             </DialogFooter>
-          </DialogModal>
+          </DialogContent>
         </DialogPortal>
       </DialogRoot>
       <TableRoot>

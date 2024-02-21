@@ -84,7 +84,7 @@ export function Emails() {
                     </ComboboxTrigger>
                   )}
                 </ComboboxControl>
-                <ComboboxContent >
+                <ComboboxContent>
                   <ComboboxInput />
                   <ComboboxListbox />
                 </ComboboxContent>
@@ -111,7 +111,7 @@ export function Emails() {
                     </ComboboxTrigger>
                   )}
                 </ComboboxControl>
-                <ComboboxContent >
+                <ComboboxContent>
                   <ComboboxInput />
                   <ComboboxListbox />
                 </ComboboxContent>

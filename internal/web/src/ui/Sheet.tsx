@@ -14,7 +14,6 @@ import { DialogOverlay, DialogPortal } from "./Dialog";
 
 export const SheetRoot = Dialog.Root
 export const SheetTrigger = Dialog.Trigger
-export const SheetPortal = Dialog.Portal
 export const SheetCloseButton = Dialog.CloseButton
 
 export function SheetOverlay(props: ComponentProps<typeof Dialog.Overlay>) {
@@ -28,8 +27,8 @@ export function SheetOverlay(props: ComponentProps<typeof Dialog.Overlay>) {
   />
 }
 
-const sheetVariants = cva(
-  "bg-background ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:duration-300 ui-expanded:duration-500 fixed z-50 gap-4 p-6 shadow-lg transition ease-in-out",
+export const sheetContentVariants = cva(
+  "bg-background ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:duration-300 ui-expanded:duration-500 fixed z-50 flex flex-col shadow-lg transition ease-in-out",
   {
     variants: {
       side: {
@@ -47,14 +46,12 @@ const sheetVariants = cva(
   }
 )
 
-type SheetContentProps = ComponentProps<typeof Dialog.Content> & VariantProps<typeof sheetVariants>
-
-export function SheetContent(props: SheetContentProps) {
+export function SheetContent(props: ComponentProps<typeof Dialog.Content> & VariantProps<typeof sheetContentVariants>) {
   const [_, rest] = splitProps(props, ["class", "side", "children"])
   return <DialogPortal>
     <DialogOverlay />
     <Dialog.Content
-      class={cn(sheetVariants({ side: props.side }), props.class)}
+      class={cn(sheetContentVariants({ side: props.side, }), props.class)}
       {...rest}
     >
       {props.children}
@@ -73,6 +70,14 @@ export function SheetHeader(props: JSX.HTMLAttributes<HTMLDivElement>) {
       "flex flex-col space-y-1.5 text-center sm:text-left",
       props.class
     )}
+    {...rest}
+  />
+}
+
+export function SheetOverflow(props: JSX.HTMLAttributes<HTMLDivElement>) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <div
+    class={cn("flex-grow overflow-y-auto px-2", props.class)}
     {...rest}
   />
 }

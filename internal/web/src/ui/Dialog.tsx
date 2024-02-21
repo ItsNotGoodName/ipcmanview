@@ -26,7 +26,7 @@ export function DialogOverlay(props: ComponentProps<typeof Dialog.Overlay>) {
   />
 }
 
-export function DialogModal(props: ComponentProps<typeof Dialog.Content>) {
+export function DialogContent(props: ComponentProps<typeof Dialog.Content>) {
   const [_, rest] = splitProps(props, ["class", "children"])
   return <Dialog.Content
     class={cn(
@@ -73,7 +73,7 @@ export function DialogDescription(props: ComponentProps<typeof Dialog.Descriptio
   />
 }
 
-export function DialogContent(props: JSX.HTMLAttributes<HTMLDivElement>) {
+export function DialogOverflow(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn("flex-grow overflow-y-auto px-2", props.class)}

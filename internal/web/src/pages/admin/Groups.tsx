@@ -13,7 +13,7 @@ import { createForm, required, reset } from "@modular-forms/solid";
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
 import { Input } from "~/ui/Input";
 import { Textarea } from "~/ui/Textarea";
-import { DialogModal, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, } from "~/ui/Dialog";
+import { DialogContent, DialogHeader, DialogOverflow, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, } from "~/ui/Dialog";
 import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
@@ -81,28 +81,28 @@ export function AdminGroups() {
       <DialogRoot open={openCreateForm()} onOpenChange={setOpenCreateForm}>
         <DialogPortal>
           <DialogOverlay />
-          <DialogModal>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Create group</DialogTitle>
             </DialogHeader>
-            <DialogContent>
+            <DialogOverflow>
               <CreateForm close={() => setOpenCreateForm(false)} />
-            </DialogContent>
-          </DialogModal>
+            </DialogOverflow>
+          </DialogContent>
         </DialogPortal>
       </DialogRoot>
 
       <DialogRoot open={openUpdateForm() != BigInt(0)} onOpenChange={() => setOpenUpdateForm(BigInt(0))}>
         <DialogPortal>
           <DialogOverlay />
-          <DialogModal>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Update group</DialogTitle>
             </DialogHeader>
-            <DialogContent>
+            <DialogOverflow>
               <UpdateForm close={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
-            </DialogContent>
-          </DialogModal>
+            </DialogOverflow>
+          </DialogContent>
         </DialogPortal>
       </DialogRoot>
 

@@ -61,6 +61,9 @@ gen-proto:
 	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto
 	cd "$(WEB_PATH)" && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=../../rpc rpc.proto
 
+gen-typescriptify:
+	go run ./scripts/typescriptify ./internal/web/src/lib/models.ts
+
 # Tooling
 
 tooling: tooling-air tooling-task tooling-goose tooling-atlas tooling-sqlc tooling-twirp tooling-protoc-gen-go

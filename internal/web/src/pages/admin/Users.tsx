@@ -15,7 +15,7 @@ import { Crud } from "~/components/Crud";
 import { useClient } from "~/providers/client";
 import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
-import { DialogContent, DialogHeader, DialogModal, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
+import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
 import { Button } from "~/ui/Button";
 import { createForm, required, reset } from "@modular-forms/solid";
@@ -95,28 +95,28 @@ export function AdminUsers() {
       <DialogRoot open={openCreateForm()} onOpenChange={setOpenCreateForm}>
         <DialogPortal>
           <DialogOverlay />
-          <DialogModal>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Create user</DialogTitle>
             </DialogHeader>
-            <DialogContent>
+            <DialogOverflow>
               <CreateForm close={() => setOpenCreateForm(false)} />
-            </DialogContent>
-          </DialogModal>
+            </DialogOverflow>
+          </DialogContent>
         </DialogPortal>
       </DialogRoot>
 
       <DialogRoot open={openUpdateForm() != BigInt(0)} onOpenChange={() => setOpenUpdateForm(BigInt(0))}>
         <DialogPortal>
           <DialogOverlay />
-          <DialogModal>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Update user</DialogTitle>
             </DialogHeader>
-            <DialogContent>
+            <DialogOverflow>
               <UpdateForm close={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
-            </DialogContent>
-          </DialogModal>
+            </DialogOverflow>
+          </DialogContent>
         </DialogPortal>
       </DialogRoot>
 
@@ -162,14 +162,14 @@ export function AdminUsers() {
       <DialogRoot open={openResetPasswordForm() != BigInt(0)} onOpenChange={() => setOpenResetPasswordForm(BigInt(0))}>
         <DialogPortal>
           <DialogOverlay />
-          <DialogModal>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Reset password</DialogTitle>
             </DialogHeader>
-            <DialogContent>
+            <DialogOverflow>
               <ResetPasswordForm close={() => setOpenResetPasswordForm(BigInt(0))} id={openResetPasswordForm()} />
-            </DialogContent>
-          </DialogModal>
+            </DialogOverflow>
+          </DialogContent>
         </DialogPortal>
       </DialogRoot>
 

@@ -29,6 +29,7 @@ require (
 	github.com/thejerf/suture/v4 v4.0.2
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/sjson v1.2.5
+	github.com/tkrajina/typescriptify-golang-structs v0.1.11
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	golang.org/x/crypto v0.19.0
 	google.golang.org/protobuf v1.32.0
@@ -69,6 +70,7 @@ require (
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tkrajina/go-reflector v0.5.5 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

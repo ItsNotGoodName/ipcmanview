@@ -36,7 +36,7 @@ import { AdminSettings } from "~/pages/admin/Settings";
 import loadAdminSettings from "~/pages/admin/Settings.data";
 import { Files } from "~/pages/Files";
 import loadFiles from "~/pages/Files.data";
-import { Events } from "~/pages/Events";
+import { Events, EventsLive } from "~/pages/Events";
 import loadEvents from "~/pages/Events.data";
 import { BusProvider } from "./providers/bus";
 import { WSProvider } from "./providers/ws";
@@ -75,6 +75,7 @@ function App() {
               <Route path="/emails" component={Emails} load={loadEmails} />
               <Route path="/emails/:id" component={EmailsID} load={loadEmailsID} />
               <Route path="/events" component={Events} load={loadEvents} />
+              <Route path="/events/live" component={EventsLive} />
               <Route path="/files" component={Files} load={loadFiles} />
               <Show when={isAdmin()} fallback={<Route path="/admin/*" component={NavigateHome} />}>
                 <Route path="/admin" component={AdminSettings} load={loadAdminSettings} />

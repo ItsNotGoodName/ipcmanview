@@ -116,7 +116,7 @@ export function EmailsID(props: any) {
           <TabsRoot value={searchParams.tab || "text"} onChange={(value) => setSearchParams({ tab: value })}>
             <div class="overflow-x-auto">
               <TabsList>
-                <TabsTrigger value="text" >Text</TabsTrigger>
+                <TabsTrigger value="text">Text</TabsTrigger>
                 <TabsTrigger value="attachments" class="flex items-center gap-2">
                   Attachments
                   <Show when={data()?.attachments.length || 0 > 0}>

@@ -6,6 +6,7 @@ import {
 } from "solid-js";
 import { useBus } from './bus';
 import { relativeWSURL } from '~/lib/utils';
+import { WSDahuaEvent } from '~/lib/models';
 
 export enum WSState {
   Connecting,
@@ -18,29 +19,27 @@ type WSContextType = {
   state: Accessor<WSState>
 };
 
-type BaseEvent<T extends string, D> = {
-  type: T
-  data: D
+type BaseEvent = {
+  type: string
+  data: any
 }
-
-type WSEvent = BaseEvent<"event", { action: string, data: any }>
 
 const WSContext = createContext<WSContextType>();
 
 export function WSProvider(props: ParentProps) {
-  const ws = createReconnectingWS(relativeWSURL("/v1/ws"));
-
-  const webSocketState = createWSState(ws);
-
   const bus = useBus()
 
+  const ws = createReconnectingWS(relativeWSURL("/v1/ws"));
+
   const onMessage = (msg: MessageEvent<string>) => {
-    const event = JSON.parse(msg.data) as WSEvent
+    const event = JSON.parse(msg.data) as BaseEvent
 
     switch (event.type) {
       case "event":
         bus.event.emit(event.data)
         break
+      case "dahua-event":
+        bus.dahuaEvent.emit(new WSDahuaEvent(event.data))
     }
   }
 
@@ -56,7 +55,7 @@ export function WSProvider(props: ParentProps) {
   })
 
   const store: WSContextType = {
-    state: webSocketState,
+    state: createWSState(ws),
   };
 
   return (

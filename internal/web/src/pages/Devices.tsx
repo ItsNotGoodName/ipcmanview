@@ -32,12 +32,12 @@ export function Devices() {
           <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
             <div class="overflow-x-auto">
               <TabsList>
-                <TabsTrigger value="device" >Device</TabsTrigger>
-                <TabsTrigger value="rpc-status" >RPC Status</TabsTrigger>
-                <TabsTrigger value="detail" >Detail</TabsTrigger>
-                <TabsTrigger value="software-version" >Software Version</TabsTrigger>
-                <TabsTrigger value="license" >License</TabsTrigger>
-                <TabsTrigger value="storage" >Storage</TabsTrigger>
+                <TabsTrigger value="device">Device</TabsTrigger>
+                <TabsTrigger value="rpc-status">RPC Status</TabsTrigger>
+                <TabsTrigger value="detail">Detail</TabsTrigger>
+                <TabsTrigger value="software-version">Software Version</TabsTrigger>
+                <TabsTrigger value="license">License</TabsTrigger>
+                <TabsTrigger value="storage">Storage</TabsTrigger>
               </TabsList>
             </div>
             <ComboboxRoot<GetDevicesPageResp_Device>
@@ -66,7 +66,7 @@ export function Devices() {
                   </ComboboxTrigger>
                 )}
               </ComboboxControl>
-              <ComboboxContent >
+              <ComboboxContent>
                 <ComboboxInput />
                 <ComboboxListbox />
               </ComboboxContent>
@@ -104,7 +104,7 @@ export function Devices() {
           </TabsContent>
         </TabsRoot>
       </ErrorBoundary>
-    </LayoutNormal >
+    </LayoutNormal>
   )
 }
 

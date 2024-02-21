@@ -4,14 +4,16 @@ import {
   ParentComponent,
   useContext
 } from "solid-js";
+import { WSDahuaEvent } from '~/lib/models';
 
-export type BusForEvent = {
+export type EventType = {
   action: string,
   data: unknown
 }
 
 type BusContextType = EventHub<{
-  event: EventBus<BusForEvent>;
+  event: EventBus<EventType>;
+  dahuaEvent: EventBus<WSDahuaEvent>
 }>
 
 const BusContext = createContext<BusContextType>();
@@ -19,8 +21,9 @@ const BusContext = createContext<BusContextType>();
 type BusContextProps = {};
 
 export const BusProvider: ParentComponent<BusContextProps> = (props) => {
-  const store = createEventHub({
-    event: createEventBus<BusForEvent>()
+  const store: BusContextType = createEventHub({
+    event: createEventBus(),
+    dahuaEvent: createEventBus()
   })
 
   return (

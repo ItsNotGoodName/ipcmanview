@@ -15,7 +15,7 @@ import { LayoutNormal } from "~/ui/Layout";
 import { SetDeviceDisableReq } from "~/twirp/rpc";
 import { Crud } from "~/components/Crud";
 import { RiSystemLockLine } from "solid-icons/ri";
-import { DialogContent, DialogHeader, DialogModal, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
+import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
 import { Button } from "~/ui/Button";
 import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
 import { createForm, required, reset } from "@modular-forms/solid";
@@ -84,28 +84,28 @@ export function AdminDevices() {
       <DialogRoot open={openCreateForm()} onOpenChange={setOpenCreateForm}>
         <DialogPortal>
           <DialogOverlay />
-          <DialogModal>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Create device</DialogTitle>
             </DialogHeader>
-            <DialogContent>
+            <DialogOverflow>
               <CreateForm close={() => setOpenCreateForm(false)} />
-            </DialogContent>
-          </DialogModal>
+            </DialogOverflow>
+          </DialogContent>
         </DialogPortal>
       </DialogRoot>
 
       <DialogRoot open={openUpdateForm() != BigInt(0)} onOpenChange={() => setOpenUpdateForm(BigInt(0))}>
         <DialogPortal>
           <DialogOverlay />
-          <DialogModal>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Update device</DialogTitle>
             </DialogHeader>
-            <DialogContent>
+            <DialogOverflow>
               <UpdateForm close={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
-            </DialogContent>
-          </DialogModal>
+            </DialogOverflow>
+          </DialogContent>
         </DialogPortal>
       </DialogRoot>
 

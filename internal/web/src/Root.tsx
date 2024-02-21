@@ -1,7 +1,7 @@
 import { VariantProps, cva } from "class-variance-authority"
 import { BiRegularCctv } from "solid-icons/bi";
 import { As, DropdownMenu } from "@kobalte/core";
-import { ErrorBoundary, JSX, ParentProps, Show, Suspense, createSignal, splitProps } from "solid-js";
+import { ErrorBoundary, JSX, Show, Suspense, batch, createSignal, splitProps } from "solid-js";
 import { A, action, createAsync, revalidate, useAction, useLocation, Location, useNavigate, useSubmission, RouteSectionProps } from "@solidjs/router";
 import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine, RiMediaLiveLine, RiBusinessMailLine, RiUserFacesGroupLine, RiSystemSettings2Line } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
@@ -17,6 +17,7 @@ import { PageError, PageLoading } from "~/ui/Page";
 import { WSState, useWS } from "./providers/ws";
 import { Shared } from "./components/Shared";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "./ui/Tooltip";
+import { SheetContent, SheetHeader, SheetOverflow, SheetRoot, SheetTitle } from "./ui/Sheet";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
@@ -38,75 +39,30 @@ function useIsAdminPage<T>(location: Location<T>) {
   return () => location.pathname.startsWith("/admin")
 }
 
-function DropdownMenuLinks() {
-  const navigate = useNavigate()
-
+function MenuLinks(props: { onClick?: () => void }) {
   return (
-    <>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/" end>
-          <RiBuildingsHomeLine class="h-5 w-5" />Home
-        </As>
-      </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/devices")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/devices">
-          <BiRegularCctv class="h-5 w-5" />Devices
-        </As>
-      </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/emails")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/emails">
-          <RiDocumentFileLine class="h-5 w-5" />Emails
-        </As>
-      </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/events")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/events">
-          <RiWeatherFlashlightLine class="h-5 w-5" />Events
-        </As>
-      </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/files")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/files">
-          <RiDocumentFileLine class="h-5 w-5" />Files
-        </As>
-      </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/live")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/live">
-          <RiMediaLiveLine class="h-5 w-5" />Live
-        </As>
-      </DropdownMenu.Item>
-    </>
-  )
-}
-
-function MenuLinks() {
-  return (
-    <div class="flex flex-col p-2">
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+    <div class="flex flex-col">
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/" noScroll end>
         <RiBuildingsHomeLine class="h-5 w-5" />Home
       </A>
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/devices" noScroll>
         <BiRegularCctv class="h-5 w-5" />Devices
       </A>
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/emails" noScroll>
         <RiBusinessMailLine class="h-5 w-5" />Emails
       </A>
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/events" noScroll>
         <RiWeatherFlashlightLine class="h-5 w-5" />Events
       </A>
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/files" noScroll>
         <RiDocumentFileLine class="h-5 w-5" />Files
       </A>
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/live" noScroll>
         <RiMediaLiveLine class="h-5 w-5" />Live
       </A>
@@ -114,55 +70,22 @@ function MenuLinks() {
   )
 }
 
-function AdminDropdownMenuLinks() {
-  const navigate = useNavigate()
-
+function AdminMenuLinks(props: { onClick?: () => void }) {
   return (
-    <>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/admin")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/admin" end>
-          <RiSystemSettings2Line class="h-5 w-5" />Settings
-        </As>
-      </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/admin/users")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/admin/users" end>
-          <RiUserFacesUserLine class="h-5 w-5" />Users
-        </As>
-      </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/admin/groups")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/admin/groups" end>
-          <RiUserFacesGroupLine class="h-5 w-5" />Groups
-        </As>
-      </DropdownMenu.Item>
-      <DropdownMenu.Item asChild onSelect={() => navigate("/admin/devices")}>
-        <As component={A} class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
-          href="/admin/devices" end>
-          <BiRegularCctv class="h-5 w-5" />Devices
-        </As>
-      </DropdownMenu.Item>
-    </>
-  )
-}
-
-function AdminMenuLinks() {
-  return (
-    <div class="flex flex-col p-2">
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+    <div class="flex flex-col">
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/admin" noScroll end>
         <RiSystemSettings2Line class="h-5 w-5" />Settings
       </A>
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/admin/users" noScroll>
         <RiUserFacesUserLine class="h-5 w-5" />Users
       </A>
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/admin/groups" noScroll>
         <RiUserFacesGroupLine class="h-5 w-5" />Groups
       </A>
-      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()}
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/admin/devices" noScroll>
         <BiRegularCctv class="h-5 w-5" />Devices
       </A>
@@ -184,7 +107,7 @@ const actionSignOut = action(() =>
   }).catch(catchAsToast)
 )
 
-function Header(props: ParentProps<{ onMenuClick: () => void }>) {
+function Header(props: { onMenuClick: () => void, onMobileMenuClick: () => void }) {
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -211,17 +134,9 @@ function Header(props: ParentProps<{ onMenuClick: () => void }>) {
   return (
     <div class="bg-background text-foreground border-b-border z-10 h-12 w-full overflow-x-hidden border-b">
       <div class="flex h-full items-center gap-1 px-1">
-        <DropdownMenuRoot>
-          <DropdownMenuTrigger title="Menu" class={cn(menuLinkVariants(), "md:hidden")}>
-            <RiSystemMenuLine class="size-6" />
-          </DropdownMenuTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuContent class="md:hidden">
-              <DropdownMenuArrow />
-              {props.children}
-            </DropdownMenuContent>
-          </DropdownMenuPortal>
-        </DropdownMenuRoot>
+        <div onClick={props.onMobileMenuClick} title="Menu" class={cn(menuLinkVariants(), "md:hidden")}>
+          <RiSystemMenuLine class="size-6" />
+        </div>
         <button onClick={props.onMenuClick} title="Menu" class={cn(menuLinkVariants(), "hidden md:inline-flex")}>
           <RiSystemMenuLine class="size-6" />
         </button>
@@ -289,7 +204,9 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { open?
     <div data-open={props.open} class="border-border border-r-0 transition-all duration-200 md:data-[open=true]:border-r" {...rest}>
       <div data-open={props.open} class="sticky top-0 w-0 transition-all duration-200 md:data-[open=true]:w-48">
         <div class="h-screen overflow-y-auto">
-          {props.children}
+          <div class="p-2">
+            {props.children}
+          </div>
         </div>
       </div>
     </div>
@@ -298,9 +215,24 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { open?
 
 export function Root(props: RouteSectionProps) {
   const session = createAsync(() => getSession())
-  const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
-  const isAuthenticated = () => session()?.valid && !session()?.disabled
+  const isAuthenticatedLayout = () => session()?.valid && !session()?.disabled
   const isAdminPage = useIsAdminPage(props.location)
+
+  const [mobileMenuOpen, setMobileMenuOpen] = createSignal(false)
+  const toggleMobileMenuOpen = () => setMobileMenuOpen(!mobileMenuOpen())
+  const closeMobileMenu = () => setMobileMenuOpen(false)
+
+  const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
+  const toggleMenuOpen = () => {
+    if (menuOpen()) {
+      batch(() => {
+        setMenuOpen(false)
+        setMobileMenuOpen(false)
+      })
+    } else {
+      setMenuOpen(true)
+    }
+  }
 
   return (
     <ErrorBoundary fallback={(e) =>
@@ -310,16 +242,24 @@ export function Root(props: RouteSectionProps) {
     }>
       <Suspense fallback={<PageLoading class="pt-10" />}>
         <Portal>
-          <ToastRegion class={isAuthenticated() ? "top-12 sm:top-12" : ""}>
-            <ToastList class={isAuthenticated() ? "top-12 sm:top-12" : ""} />
+          <ToastRegion class={isAuthenticatedLayout() ? "top-12 sm:top-12" : ""}>
+            <ToastList class={isAuthenticatedLayout() ? "top-12 sm:top-12" : ""} />
           </ToastRegion>
         </Portal>
-        <Show when={isAuthenticated()} fallback={<>{props.children}</>}>
-          <Header onMenuClick={() => setMenuOpen(!menuOpen())}>
-            <Show when={!isAdminPage()} fallback={<AdminDropdownMenuLinks />}>
-              <DropdownMenuLinks />
-            </Show>
-          </Header>
+        <Show when={isAuthenticatedLayout()} fallback={<>{props.children}</>}>
+          <SheetRoot open={mobileMenuOpen()} onOpenChange={toggleMobileMenuOpen}>
+            <SheetContent side="left" class="gap-2 py-2" >
+              <SheetHeader class="px-4">
+                <SheetTitle>IPCManView</SheetTitle>
+              </SheetHeader>
+              <SheetOverflow>
+                <Show when={!isAdminPage()} fallback={<AdminMenuLinks onClick={closeMobileMenu} />}>
+                  <MenuLinks onClick={closeMobileMenu} />
+                </Show>
+              </SheetOverflow>
+            </SheetContent>
+          </SheetRoot>
+          <Header onMenuClick={toggleMenuOpen} onMobileMenuClick={toggleMobileMenuOpen} />
           <div class="flex">
             <Menu open={menuOpen()}>
               <Show when={!isAdminPage()} fallback={<AdminMenuLinks />}>
@@ -329,9 +269,9 @@ export function Root(props: RouteSectionProps) {
             <div class="w-full overflow-x-auto"> {/* FIXME: overflow-x-auto is needed to fix overflowing tables BUT it also breaks something and I forgot what it was ¯\_(ツ)_/¯ */}
               {props.children}
             </div>
-          </div >
+          </div>
         </Show>
-      </Suspense >
-    </ErrorBoundary>
+      </Suspense>
+    </ErrorBoundary >
   )
 }
