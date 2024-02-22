@@ -340,7 +340,7 @@ func (w QuickScanWorker) serve(ctx context.Context) error {
 
 	sub, err := w.pub.
 		Subscribe(event.DahuaEvent{}).
-		Function(ctx, func(ctx context.Context, evt pubsub.Event) error {
+		Function(func(ctx context.Context, evt pubsub.Event) error {
 			switch e := evt.(type) {
 			// case event.DahuaQuickScanQueue:
 			// 	if !(e.DeviceID == 0 || e.DeviceID == w.deviceID) {

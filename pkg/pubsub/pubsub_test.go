@@ -10,8 +10,6 @@ import (
 func noopEventHandler(ctx context.Context, event Event) error { return nil }
 
 func TestPub(t *testing.T) {
-	ctx := context.Background()
-
 	pub := NewPub()
 
 	topics := []string{"Potato", "Thing"}
@@ -25,24 +23,22 @@ func TestPub(t *testing.T) {
 
 	sub, err := pub.
 		Subscribe(eventTopics...).
-		Function(ctx, noopEventHandler)
+		Function(noopEventHandler)
 	if !assert.NoError(t, err) {
 		return
 	}
 	defer sub.Close()
 
-	s, err := pub.State(ctx)
+	s, err := pub.State()
 	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, 1, s.SubscriberCount)
 	assert.Equal(t, topics, s.Subscribers[0].Topics)
 
-	if !assert.NoError(t, sub.Close()) {
-		return
-	}
+	sub.Close()
 
-	s, err = pub.State(ctx)
+	s, err = pub.State()
 	if !assert.NoError(t, err) {
 		return
 	}
