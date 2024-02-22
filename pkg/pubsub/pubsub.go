@@ -58,7 +58,7 @@ func NewPub(middleware ...MiddlewareFunc) *Pub {
 func (p *Pub) Publish(ctx context.Context, event Event) error {
 	p.mu.Lock()
 	for i := range p.subs {
-		if !slices.Contains(p.subs[i].topics, event.EventTopic()) {
+		if !(len(p.subs[i].topics) == 0 || slices.Contains(p.subs[i].topics, event.EventTopic())) {
 			continue
 		}
 
