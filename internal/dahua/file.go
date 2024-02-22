@@ -152,7 +152,7 @@ func FileLocalDownload(ctx context.Context, db sqlite.DB, afs afero.Fs, client C
 // 				err = SyncAferoFile(ctx, db, afs, aferoFile.ID, aferoFile.Name)
 // 			}
 //
-// 			if repo.IsNotFound(err) {
+// 			if core.IsNotFound(err) {
 // 				// File does not exist
 // 			} else if err != nil {
 // 				// File error

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
@@ -88,7 +89,7 @@ func (c Conn) haSync(ctx context.Context) error {
 func (c Conn) haSyncDevice(ctx context.Context, id int64) error {
 	device, err := dahua.GetDevice(ctx, c.db, dahua.GetDeviceFilter{ID: id})
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			return nil
 		}
 		return err
@@ -96,7 +97,7 @@ func (c Conn) haSyncDevice(ctx context.Context, id int64) error {
 
 	client, err := c.store.GetClient(ctx, id)
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			return nil
 		}
 		return err

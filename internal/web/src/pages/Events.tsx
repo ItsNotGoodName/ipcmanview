@@ -21,7 +21,7 @@ import { BreadcrumbsItem, BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator
 import { useBus } from "~/providers/bus";
 import { createDate, createTimeAgo } from "@solid-primitives/date";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
-import { DahuaEvent } from "~/lib/models";
+import { DahuaEvent } from "~/lib/models.gen";
 
 export function Events() {
   const [searchParams, setSearchParams] = useSearchParams()

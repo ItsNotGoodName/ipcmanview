@@ -7,8 +7,6 @@ sql:
       go:
         package: "repo"
         out: "internal/repo"
-        output_db_file_name: "sqlc_db.go"
-        output_models_file_name: "sqlc_models.go"
         overrides:
           - db_type: "DATETIME"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/types.Time"

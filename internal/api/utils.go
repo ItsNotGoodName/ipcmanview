@@ -10,7 +10,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/labstack/echo/v4"
 )
 
@@ -25,7 +24,7 @@ func paramID(c echo.Context) (int64, error) {
 func assertDahuaLevel(c echo.Context, s *Server, deviceID int64, level models.DahuaPermissionLevel) error {
 	ok, err := dahua.Level(c.Request().Context(), s.db, deviceID, level)
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			return echo.ErrNotFound.WithInternal(err)
 		}
 		return err
@@ -39,7 +38,7 @@ func assertDahuaLevel(c echo.Context, s *Server, deviceID int64, level models.Da
 func useDahuaClient(c echo.Context, s *Server, deviceID int64) (dahua.Client, error) {
 	client, err := s.dahuaStore.GetClient(c.Request().Context(), deviceID)
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			return dahua.Client{}, echo.ErrNotFound.WithInternal(err)
 		}
 		return dahua.Client{}, err

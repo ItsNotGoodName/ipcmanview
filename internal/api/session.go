@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	echo "github.com/labstack/echo/v4"
 )
@@ -26,7 +26,7 @@ func SessionMiddleware(db sqlite.DB) echo.MiddlewareFunc {
 			// Get session
 			session, err := auth.GetUserSessionForContext(ctx, db, cookie.Value)
 			if err != nil {
-				if repo.IsNotFound(err) {
+				if core.IsNotFound(err) {
 					return next(c)
 				}
 				return err
@@ -39,7 +39,7 @@ func SessionMiddleware(db sqlite.DB) echo.MiddlewareFunc {
 				LastIP:           session.LastIp,
 				IP:               c.RealIP(),
 			}); err != nil {
-				if repo.IsNotFound(err) {
+				if core.IsNotFound(err) {
 					return next(c)
 				}
 				return err

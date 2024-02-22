@@ -4,7 +4,7 @@ import {
   ParentComponent,
   useContext
 } from "solid-js";
-import { DahuaEvent, WSEvent } from '~/lib/models';
+import { DahuaEvent, WSEvent } from '~/lib/models.gen';
 
 export type EventType = {
   action: string,

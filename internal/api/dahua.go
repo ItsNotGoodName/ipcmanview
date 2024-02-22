@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -339,7 +340,7 @@ func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 		FilePath: filePath,
 	})
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			return echo.ErrNotFound.WithInternal(err)
 		}
 		return err
@@ -350,7 +351,7 @@ func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 	rd, err := func() (io.ReadCloser, error) {
 		aferoFileFound := true
 		aferoFile, err := s.db.C().DahuaGetAferoFileByFileID(ctx, sql.NullInt64{Int64: dbFile.ID, Valid: true})
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			aferoFileFound = false
 		} else if err != nil {
 			return nil, err

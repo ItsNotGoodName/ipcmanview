@@ -91,7 +91,7 @@ func createUserSessionAndDeletePrevious(ctx context.Context, db sqlite.DB, arg r
 		return err
 	}
 
-	if _, err := tx.C().AuthDeleteUserSessionBySession(ctx, previousSession); err != nil && !repo.IsNotFound(err) {
+	if _, err := tx.C().AuthDeleteUserSessionBySession(ctx, previousSession); err != nil && !core.IsNotFound(err) {
 		return err
 	}
 
@@ -107,7 +107,7 @@ func DeleteUserSessionBySession(ctx context.Context, db sqlite.DB, bus *event.Bu
 
 	userID, err := tx.C().AuthDeleteUserSessionBySession(ctx, session)
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			return tx.Commit()
 		}
 		return err
@@ -117,7 +117,7 @@ func DeleteUserSessionBySession(ctx context.Context, db sqlite.DB, bus *event.Bu
 }
 
 func DeleteUserSession(ctx context.Context, db sqlite.DB, bus *event.Bus, userID int64, sessionID int64) error {
-	if err := core.UserOrAdmin(ctx, userID); err != nil {
+	if _, err := core.AssertAdminOrUser(ctx, userID); err != nil {
 		return err
 	}
 
@@ -139,7 +139,7 @@ func DeleteUserSession(ctx context.Context, db sqlite.DB, bus *event.Bus, userID
 }
 
 func DeleteOtherUserSessions(ctx context.Context, db sqlite.DB, bus *event.Bus, userID int64, currentSessionID int64) error {
-	if err := core.UserOrAdmin(ctx, userID); err != nil {
+	if _, err := core.AssertAdminOrUser(ctx, userID); err != nil {
 		return err
 	}
 

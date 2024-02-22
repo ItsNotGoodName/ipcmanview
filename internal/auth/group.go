@@ -34,7 +34,7 @@ type CreateGroupParams struct {
 }
 
 func CreateGroup(ctx context.Context, db sqlite.DB, arg CreateGroupParams) (int64, error) {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return 0, err
 	}
 
@@ -63,7 +63,7 @@ type UpdateGroupParams struct {
 }
 
 func UpdateGroup(ctx context.Context, db sqlite.DB, dbModel repo.Group, arg UpdateGroupParams) error {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
@@ -88,14 +88,14 @@ func UpdateGroup(ctx context.Context, db sqlite.DB, dbModel repo.Group, arg Upda
 }
 
 func DeleteGroup(ctx context.Context, db sqlite.DB, id int64) error {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 	return db.C().AuthDeleteGroup(ctx, id)
 }
 
 func UpdateGroupDisable(ctx context.Context, db sqlite.DB, userID int64, disable bool) error {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 

@@ -147,7 +147,7 @@ func (s *session) Data(r io.Reader) error {
 		IP: host,
 	})
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			return err
 		}
 		log.Err(err).Msg("Failed to get device")

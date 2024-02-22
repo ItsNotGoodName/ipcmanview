@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -110,7 +111,7 @@ func RegisterStreams(bus *event.Bus, db sqlite.DB, store *Store) {
 
 			client, err := store.GetClient(ctx, deviceID)
 			if err != nil {
-				if repo.IsNotFound(err) {
+				if core.IsNotFound(err) {
 					return nil
 				}
 				return err

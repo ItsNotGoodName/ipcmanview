@@ -309,7 +309,7 @@ func GetEmail(ctx context.Context, db sqlite.DB, arg GetEmailParams) (GetEmailRe
 		return GetEmailResult{}, err
 	}
 	if len(messages) == 0 || messages[0].ID != arg.ID {
-		return GetEmailResult{}, repo.ErrNotFound
+		return GetEmailResult{}, core.ErrNotFound
 	}
 	message := messages[0]
 	nextEmailID := messages[0].ID

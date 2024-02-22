@@ -62,7 +62,7 @@ gen-proto:
 	cd "$(WEB_PATH)" && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=../../rpc rpc.proto
 
 gen-typescriptify:
-	go run ./scripts/typescriptify ./internal/web/src/lib/models.ts
+	go run ./scripts/typescriptify ./internal/web/src/lib/models.gen.ts
 
 # Tooling
 

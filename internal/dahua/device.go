@@ -88,7 +88,7 @@ type CreateDeviceParams struct {
 }
 
 func CreateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg CreateDeviceParams) (int64, error) {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return 0, err
 	}
 
@@ -170,7 +170,7 @@ type UpdateDeviceParams struct {
 }
 
 func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, dbModel repo.DahuaDevice, arg UpdateDeviceParams) error {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
@@ -226,7 +226,7 @@ func updateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.Da
 }
 
 func DeleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) error {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
@@ -248,7 +248,7 @@ func deleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) e
 }
 
 func UpdateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, disable bool) error {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 

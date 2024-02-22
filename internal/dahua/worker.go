@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuaevents"
@@ -102,7 +102,7 @@ func (m *WorkerManager) Register(bus *event.Bus, db sqlite.DB) *WorkerManager {
 
 			conn, err := GetConn(ctx, db, deviceID)
 			if err != nil {
-				if repo.IsNotFound(err) {
+				if core.IsNotFound(err) {
 					return m.Delete(deviceID)
 				}
 				return err
@@ -254,7 +254,7 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 func (w CoaxialWorker) serve(ctx context.Context) error {
 	client, err := w.store.GetClient(ctx, w.deviceID)
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			return suture.ErrDoNotRestart
 		}
 		return err

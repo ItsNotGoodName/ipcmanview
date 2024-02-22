@@ -54,21 +54,18 @@ func (c MultiReadCloser) Close() error {
 	return multiErr
 }
 
-func Int64ToNullInt64(a int64) sql.NullInt64 {
-	if a == 0 {
-		return sql.NullInt64{}
-	}
-	return sql.NullInt64{
-		Int64: a,
-		Valid: true,
-	}
-}
-
 func NewNullInt64(i int64) sql.NullInt64 {
 	return sql.NullInt64{
 		Int64: i,
 		Valid: true,
 	}
+}
+
+func Int64ToNullInt64(i int64) sql.NullInt64 {
+	if i == 0 {
+		return sql.NullInt64{}
+	}
+	return NewNullInt64(i)
 }
 
 func NewNullString(s string) sql.NullString {
@@ -82,22 +79,7 @@ func ErrorToNullString(err error) sql.NullString {
 	if err == nil {
 		return sql.NullString{}
 	}
-	return sql.NullString{
-		String: err.Error(),
-		Valid:  true,
-	}
-}
-
-func NilStringToNullString(s *string) sql.NullString {
-	if s == nil {
-		return sql.NullString{
-			Valid: true,
-		}
-	}
-	return sql.NullString{
-		String: *s,
-		Valid:  true,
-	}
+	return NewNullString(err.Error())
 }
 
 // https://stackoverflow.com/a/12518877

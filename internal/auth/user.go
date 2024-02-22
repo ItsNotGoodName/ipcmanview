@@ -115,7 +115,7 @@ type UpdateUserParams struct {
 }
 
 func UpdateUser(ctx context.Context, db sqlite.DB, dbModel repo.User, arg UpdateUserParams) error {
-	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
+	if _, err := core.AssertAdminOrUser(ctx, dbModel.ID); err != nil {
 		return err
 	}
 
@@ -140,7 +140,7 @@ func UpdateUser(ctx context.Context, db sqlite.DB, dbModel repo.User, arg Update
 }
 
 func DeleteUser(ctx context.Context, db sqlite.DB, id int64) error {
-	if err := core.UserOrAdmin(ctx, id); err != nil {
+	if _, err := core.AssertAdminOrUser(ctx, id); err != nil {
 		return err
 	}
 	return db.C().DeleteUser(ctx, id)
@@ -152,7 +152,7 @@ type UpdateUserPasswordParams struct {
 }
 
 func UpdateUserPassword(ctx context.Context, db sqlite.DB, bus *event.Bus, dbModel repo.User, arg UpdateUserPasswordParams) error {
-	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
+	if _, err := core.AssertAdminOrUser(ctx, dbModel.ID); err != nil {
 		return err
 	}
 
@@ -197,7 +197,7 @@ func UpdateUserPassword(ctx context.Context, db sqlite.DB, bus *event.Bus, dbMod
 }
 
 func UpdateUserUsername(ctx context.Context, db sqlite.DB, dbModel repo.User, newUsername string) error {
-	if err := core.UserOrAdmin(ctx, dbModel.ID); err != nil {
+	if _, err := core.AssertAdminOrUser(ctx, dbModel.ID); err != nil {
 		return err
 	}
 
@@ -220,7 +220,7 @@ func UpdateUserUsername(ctx context.Context, db sqlite.DB, dbModel repo.User, ne
 }
 
 func UpdateUserDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, disable bool) error {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
@@ -252,7 +252,7 @@ func UpdateUserDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id in
 }
 
 func UpdateUserAdmin(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, admin bool) error {
-	if err := core.Admin(ctx); err != nil {
+	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 

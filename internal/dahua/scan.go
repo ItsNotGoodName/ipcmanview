@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
@@ -72,7 +73,7 @@ func getScanRange(ctx context.Context, db sqlite.DB, fileCursor repo.DahuaFileCu
 	case models.DahuaScanTypeReverse:
 		startTime, err := db.C().DahuaGetOldestFileStartTime(ctx, fileCursor.DeviceID)
 		if err != nil {
-			if repo.IsNotFound(err) {
+			if core.IsNotFound(err) {
 				return models.TimeRange{}, nil
 			}
 			return models.TimeRange{}, err
@@ -254,7 +255,7 @@ func UpsertDahuaFiles(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateFil
 	if err == nil {
 		return id, nil
 	}
-	if !repo.IsNotFound(err) {
+	if !core.IsNotFound(err) {
 		return 0, err
 	}
 

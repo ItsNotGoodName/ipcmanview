@@ -1,6 +1,9 @@
 package core
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 var actorCtxKey contextKey = contextKey("actor")
 
@@ -46,4 +49,20 @@ func UseActor(ctx context.Context) Actor {
 		}
 	}
 	return actor
+}
+
+func AssertAdminOrUser(ctx context.Context, userID int64) (Actor, error) {
+	actor := UseActor(ctx)
+	if actor.Admin || actor.UserID == userID {
+		return actor, nil
+	}
+	return actor, fmt.Errorf("%w: not admin or user", ErrForbidden)
+}
+
+func AssertAdmin(ctx context.Context) (Actor, error) {
+	actor := UseActor(ctx)
+	if actor.Admin {
+		return actor, nil
+	}
+	return actor, fmt.Errorf("%w: not admin", ErrForbidden)
 }

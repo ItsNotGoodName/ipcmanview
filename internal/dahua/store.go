@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
@@ -131,7 +131,7 @@ func (s *Store) Register(bus *event.Bus) *Store {
 			deviceID := event.DataAsInt64(evt.Event)
 
 			if _, err := s.GetClient(ctx, deviceID); err != nil {
-				if repo.IsNotFound(err) {
+				if core.IsNotFound(err) {
 					return s.deleteClient(ctx, deviceID)
 				}
 				return err

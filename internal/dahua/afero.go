@@ -41,7 +41,7 @@ func SyncAferoFile(ctx context.Context, db sqlite.DB, afs afero.Fs, aferoFileID 
 		return err
 	}
 
-	return repo.ErrNotFound
+	return core.ErrNotFound
 }
 
 // DeleteOrphanAferoFiles deletes unreferenced afero files.

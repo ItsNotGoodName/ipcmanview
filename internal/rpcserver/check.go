@@ -6,7 +6,7 @@ package rpcserver
 // )
 //
 // func check(err error) twirp.Error {
-// 	if repo.IsNotFound(err) {
+// 	if core.IsNotFound(err) {
 // 		return NewError(err, "Not found.").NotFound()
 // 	}
 // 	return NewError(err, "Something went wrong.").Internal()

@@ -3,7 +3,7 @@ package event
 import (
 	"context"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 )
 
@@ -37,7 +37,7 @@ func (Queue) String() string {
 
 func (q Queue) Serve(ctx context.Context) error {
 	cursor, err := q.db.C().GetEventCursor(ctx)
-	if err != nil && !repo.IsNotFound(err) {
+	if err != nil && !core.IsNotFound(err) {
 		return err
 	}
 
@@ -49,7 +49,7 @@ func (q Queue) Serve(ctx context.Context) error {
 			for {
 				event, err := q.db.C().NextEventByCursor(ctx, cursor)
 				if err != nil {
-					if repo.IsNotFound(err) {
+					if core.IsNotFound(err) {
 						break
 					}
 					return err

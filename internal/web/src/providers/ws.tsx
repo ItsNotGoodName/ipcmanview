@@ -6,7 +6,7 @@ import {
 } from "solid-js";
 import { useBus } from './bus';
 import { relativeWSURL } from '~/lib/utils';
-import { DahuaEvent, WSData, WSEvent } from '~/lib/models';
+import { DahuaEvent, WSData, WSEvent } from '~/lib/models.gen';
 import { revalidate } from '@solidjs/router';
 import { getSession } from './session';
 
