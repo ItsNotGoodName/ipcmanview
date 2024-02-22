@@ -2,7 +2,7 @@
 env "local" {
   // Declare where the schema definition resides.
   // Also supported: ["file://multi.hcl", "file://schema.hcl"].
-  src = "file://internal/migrations/schema.sql"
+  src = "file://internal/sqlite/schema.sql"
 
   // Define the URL of the database which is managed
   // in this environment.
@@ -14,7 +14,7 @@ env "local" {
 
   migration {
     // URL where the migration directory resides.
-    dir = "file://internal/migrations/sql"
+    dir = "file://internal/sqlite/migrations"
     // An optional format of the migration directory:
     // atlas (default) | flyway | liquibase | goose | golang-migrate | dbmate
     format = goose

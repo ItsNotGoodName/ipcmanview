@@ -1,4 +1,4 @@
-package migrations
+package sqlite
 
 import (
 	"database/sql"
@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:embed sql/*.sql
+//go:embed migrations/*.sql
 var migrations embed.FS
 
 func Migrate(sqlDB *sql.DB) error {
@@ -20,7 +20,7 @@ func Migrate(sqlDB *sql.DB) error {
 		return err
 	}
 
-	if err := goose.Up(sqlDB, "sql"); err != nil {
+	if err := goose.Up(sqlDB, "migrations"); err != nil {
 		return err
 	}
 

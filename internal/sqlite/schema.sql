@@ -1,10 +1,3 @@
-CREATE TABLE settings (
-  setup BOOLEAN NOT NULL,
-  site_name TEXT NOT NULL,
-  location TEXT NOT NULL,
-  coordinates TEXT NOT NULL
-);
-
 CREATE TABLE users (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   email TEXT NOT NULL UNIQUE,

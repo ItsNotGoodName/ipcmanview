@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/migrations"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/server"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/spf13/afero"
@@ -65,13 +65,13 @@ func (c Shared) useDB(ctx *Context) (sqlite.DB, error) {
 	if err != nil {
 		return sqlite.DB{}, err
 	}
-	if err := migrations.Migrate(sqlDB); err != nil {
+	if err := sqlite.Migrate(sqlDB); err != nil {
 		return sqlite.DB{}, err
 	}
 
 	db := sqlite.NewDB(sqlDB)
 
-	err = migrations.Normalize(ctx, db)
+	err = dahua.Normalize(ctx, db)
 	if err != nil {
 		return sqlite.DB{}, err
 	}

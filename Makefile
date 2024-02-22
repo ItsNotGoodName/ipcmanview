@@ -11,7 +11,7 @@ clean:
 	rm -rf $(DIR)
 
 migrate:
-	goose -dir internal/migrations/sql sqlite3 "$(DIR)/sqlite.db" up
+	goose -dir internal/sqlite/migrations sqlite3 "$(DIR)/sqlite.db" up
 
 build:
 	go generate ./...

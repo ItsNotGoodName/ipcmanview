@@ -196,13 +196,6 @@ type GroupUser struct {
 	CreatedAt types.Time
 }
 
-type Setting struct {
-	Setup       bool
-	SiteName    string
-	Location    string
-	Coordinates string
-}
-
 type User struct {
 	ID         int64
 	Email      string
