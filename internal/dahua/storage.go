@@ -80,7 +80,7 @@ func (arg *StorageDestination) normalize(create bool) {
 func CreateStorageDestination(ctx context.Context, db sqlite.DB, arg StorageDestination) (int64, error) {
 	arg.normalize(true)
 
-	err := core.Validate.Struct(arg)
+	err := core.ValidateStruct(ctx, arg)
 	if err != nil {
 		return 0, err
 	}
@@ -99,7 +99,7 @@ func CreateStorageDestination(ctx context.Context, db sqlite.DB, arg StorageDest
 func UpdateStorageDestination(ctx context.Context, db sqlite.DB, arg StorageDestination) error {
 	arg.normalize(false)
 
-	err := core.Validate.Struct(arg)
+	err := core.ValidateStruct(ctx, arg)
 	if err != nil {
 		return err
 	}

@@ -304,16 +304,9 @@ func (u *User) GetEventsPage(ctx context.Context, req *rpc.GetEventsPageReq) (*r
 func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	dbUser, err := u.db.C().AuthGetUser(ctx, session.UserID)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := auth.CheckUserPassword(dbUser.Password, req.OldPassword); err != nil {
-		return nil, err
-	}
-
-	if err := auth.UpdateUserPassword(ctx, u.db, u.bus, dbUser, auth.UpdateUserPasswordParams{
+	if err := auth.UpdateUserPassword(ctx, u.db, u.bus, auth.UpdateUserPasswordParams{
+		UserID:           session.UserID,
+		OldPassword:      req.OldPassword,
 		NewPassword:      req.NewPassword,
 		CurrentSessionID: session.SessionID,
 	}); err != nil {
@@ -326,12 +319,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	dbUser, err := u.db.C().AuthGetUser(ctx, session.UserID)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := auth.UpdateUserUsername(ctx, u.db, dbUser, req.NewUsername); err != nil {
+	if err := auth.UpdateUserUsername(ctx, u.db, session.UserID, req.NewUsername); err != nil {
 		return nil, err
 	}
 

@@ -165,6 +165,12 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 		Feature:  dahua.FeatureFromStrings(req.Features),
 	})
 	if err != nil {
+		if errs, ok := core.AsFieldErrors(err); ok {
+			return nil, newInvalidArgument(errs,
+				keymap("name", "Name"),
+				keymap("url", "URL"),
+			)
+		}
 		return nil, err
 	}
 
@@ -183,14 +189,8 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 		return nil, err
 	}
 
-	dbDevice, err := dahua.GetDevice(ctx, a.db, dahua.GetDeviceFilter{
-		ID: req.Id,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	err = dahua.UpdateDevice(ctx, a.db, a.bus, dbDevice, dahua.UpdateDeviceParams{
+	err = dahua.UpdateDevice(ctx, a.db, a.bus, dahua.UpdateDeviceParams{
+		ID:          req.Id,
 		Name:        req.Name,
 		URL:         urL,
 		Username:    req.Username,
@@ -199,6 +199,12 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 		Feature:     dahua.FeatureFromStrings(req.Features),
 	})
 	if err != nil {
+		if errs, ok := core.AsFieldErrors(err); ok {
+			return nil, newInvalidArgument(errs,
+				keymap("name", "Name"),
+				keymap("url", "URL"),
+			)
+		}
 		return nil, err
 	}
 
@@ -336,12 +342,8 @@ func (a *Admin) GetUser(ctx context.Context, req *rpc.GetUserReq) (*rpc.GetUserR
 }
 
 func (a *Admin) UpdateUser(ctx context.Context, req *rpc.UpdateUserReq) (*emptypb.Empty, error) {
-	dbUser, err := a.db.C().AuthGetUser(ctx, req.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	err = auth.UpdateUser(ctx, a.db, dbUser, auth.UpdateUserParams{
+	err := auth.UpdateUser(ctx, a.db, auth.UpdateUserParams{
+		ID:       req.Id,
 		Email:    req.Email,
 		Username: req.Username,
 	})
@@ -397,12 +399,9 @@ func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*em
 func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	dbUser, err := a.db.C().AuthGetUser(ctx, req.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := auth.UpdateUserPassword(ctx, a.db, a.bus, dbUser, auth.UpdateUserPasswordParams{
+	if err := auth.UpdateUserPassword(ctx, a.db, a.bus, auth.UpdateUserPasswordParams{
+		UserID:           req.Id,
+		OldPasswordSkip:  true,
 		NewPassword:      req.NewPassword,
 		CurrentSessionID: session.SessionID,
 	}); err != nil {
@@ -551,12 +550,8 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 }
 
 func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
-	dbGroup, err := a.db.C().AuthGetGroup(ctx, req.Id)
-	if err != nil {
-		return nil, err
-	}
-
-	err = auth.UpdateGroup(ctx, a.db, dbGroup, auth.UpdateGroupParams{
+	err := auth.UpdateGroup(ctx, a.db, auth.UpdateGroupParams{
+		ID:          req.Id,
 		Name:        req.Name,
 		Description: req.Description,
 	})

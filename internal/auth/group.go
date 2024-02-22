@@ -44,7 +44,7 @@ func CreateGroup(ctx context.Context, db sqlite.DB, arg CreateGroupParams) (int6
 	}
 	model.normalize()
 
-	if err := core.Validate.Struct(model); err != nil {
+	if err := core.ValidateStruct(ctx, model); err != nil {
 		return 0, err
 	}
 
@@ -58,15 +58,20 @@ func CreateGroup(ctx context.Context, db sqlite.DB, arg CreateGroupParams) (int6
 }
 
 type UpdateGroupParams struct {
+	ID          int64
 	Name        string
 	Description string
 }
 
-func UpdateGroup(ctx context.Context, db sqlite.DB, dbModel repo.Group, arg UpdateGroupParams) error {
+func UpdateGroup(ctx context.Context, db sqlite.DB, arg UpdateGroupParams) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
+	dbModel, err := db.C().AuthGetGroup(ctx, arg.ID)
+	if err != nil {
+		return err
+	}
 	model := groupFrom(dbModel)
 
 	// Mutate
@@ -74,11 +79,11 @@ func UpdateGroup(ctx context.Context, db sqlite.DB, dbModel repo.Group, arg Upda
 	model.Description = arg.Description
 	model.normalize()
 
-	if err := core.Validate.Struct(model); err != nil {
+	if err := core.ValidateStruct(ctx, model); err != nil {
 		return err
 	}
 
-	_, err := db.C().AuthUpdateGroup(ctx, repo.AuthUpdateGroupParams{
+	_, err = db.C().AuthUpdateGroup(ctx, repo.AuthUpdateGroupParams{
 		Name:        arg.Name,
 		Description: arg.Description,
 		UpdatedAt:   types.NewTime(time.Now()),

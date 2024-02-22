@@ -65,7 +65,7 @@ func (d *device) getIP() (string, error) {
 
 	ips, err := net.LookupIP(ip)
 	if err != nil {
-		return "", err
+		return "", core.NewFieldError("URL", err.Error())
 	}
 
 	for _, v := range ips {
@@ -99,7 +99,7 @@ func CreateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg CreateD
 	}
 	model.normalize(true)
 
-	err := core.Validate.Struct(model)
+	err := core.ValidateStruct(ctx, model)
 	if err != nil {
 		return 0, err
 	}
@@ -161,6 +161,7 @@ func createDahuaDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg re
 }
 
 type UpdateDeviceParams struct {
+	ID          int64
 	Name        string
 	URL         *url.URL
 	Username    string
@@ -169,11 +170,17 @@ type UpdateDeviceParams struct {
 	Feature     models.DahuaFeature
 }
 
-func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, dbModel repo.DahuaDevice, arg UpdateDeviceParams) error {
+func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg UpdateDeviceParams) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
+	dbModel, err := GetDevice(ctx, db, GetDeviceFilter{
+		ID: arg.ID,
+	})
+	if err != nil {
+		return err
+	}
 	model := deviceFrom(dbModel)
 
 	// Mutate
@@ -182,8 +189,7 @@ func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, dbModel rep
 	model.Username = arg.Username
 	model.normalize(false)
 
-	err := core.Validate.Struct(model)
-	if err != nil {
+	if err := core.ValidateStruct(ctx, model); err != nil {
 		return err
 	}
 

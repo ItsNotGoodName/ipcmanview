@@ -55,7 +55,7 @@ func CreateUser(ctx context.Context, db sqlite.DB, arg CreateUserParams) (int64,
 	}
 	model.normalizeEmailAndUsername()
 
-	if err := core.Validate.Struct(model); err != nil {
+	if err := core.ValidateStruct(ctx, model); err != nil {
 		return 0, err
 	}
 
@@ -110,12 +110,18 @@ func CreateUser(ctx context.Context, db sqlite.DB, arg CreateUserParams) (int64,
 }
 
 type UpdateUserParams struct {
+	ID       int64
 	Email    string
 	Username string
 }
 
-func UpdateUser(ctx context.Context, db sqlite.DB, dbModel repo.User, arg UpdateUserParams) error {
-	if _, err := core.AssertAdminOrUser(ctx, dbModel.ID); err != nil {
+func UpdateUser(ctx context.Context, db sqlite.DB, arg UpdateUserParams) error {
+	if _, err := core.AssertAdminOrUser(ctx, arg.ID); err != nil {
+		return err
+	}
+
+	dbModel, err := db.C().AuthGetUser(ctx, arg.ID)
+	if err != nil {
 		return err
 	}
 
@@ -126,11 +132,11 @@ func UpdateUser(ctx context.Context, db sqlite.DB, dbModel repo.User, arg Update
 	model.Username = arg.Username
 	model.normalizeEmailAndUsername()
 
-	if err := core.Validate.StructPartial(model, "Email", "Username"); err != nil {
+	if err := core.ValidateStructPartial(ctx, model, "Email", "Username"); err != nil {
 		return err
 	}
 
-	_, err := db.C().AuthPatchUser(ctx, repo.AuthPatchUserParams{
+	_, err = db.C().AuthPatchUser(ctx, repo.AuthPatchUserParams{
 		Username:  core.NewNullString(model.Username),
 		Email:     core.NewNullString(model.Email),
 		UpdatedAt: types.NewTime(time.Now()),
@@ -147,21 +153,34 @@ func DeleteUser(ctx context.Context, db sqlite.DB, id int64) error {
 }
 
 type UpdateUserPasswordParams struct {
+	UserID           int64
+	OldPasswordSkip  bool
+	OldPassword      string
 	NewPassword      string
 	CurrentSessionID int64
 }
 
-func UpdateUserPassword(ctx context.Context, db sqlite.DB, bus *event.Bus, dbModel repo.User, arg UpdateUserPasswordParams) error {
-	if _, err := core.AssertAdminOrUser(ctx, dbModel.ID); err != nil {
+func UpdateUserPassword(ctx context.Context, db sqlite.DB, bus *event.Bus, arg UpdateUserPasswordParams) error {
+	if _, err := core.AssertAdminOrUser(ctx, arg.UserID); err != nil {
 		return err
 	}
 
+	dbModel, err := db.C().AuthGetUser(ctx, arg.UserID)
+	if err != nil {
+		return err
+	}
 	model := userFrom(dbModel)
+
+	if !arg.OldPasswordSkip {
+		if err := CheckUserPassword(model.Password, arg.OldPassword); err != nil {
+			core.NewFieldError("OldPassword", err.Error())
+		}
+	}
 
 	// Mutate
 	model.Password = arg.NewPassword
 
-	if err := core.Validate.StructPartial(model, "Password"); err != nil {
+	if err := core.ValidateStructPartial(ctx, model, "Password"); err != nil {
 		return err
 	}
 
@@ -196,22 +215,26 @@ func UpdateUserPassword(ctx context.Context, db sqlite.DB, bus *event.Bus, dbMod
 	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, dbModel.ID)
 }
 
-func UpdateUserUsername(ctx context.Context, db sqlite.DB, dbModel repo.User, newUsername string) error {
-	if _, err := core.AssertAdminOrUser(ctx, dbModel.ID); err != nil {
+func UpdateUserUsername(ctx context.Context, db sqlite.DB, userID int64, newUsername string) error {
+	if _, err := core.AssertAdminOrUser(ctx, userID); err != nil {
 		return err
 	}
 
+	dbModel, err := db.C().AuthGetUser(ctx, userID)
+	if err != nil {
+		return err
+	}
 	model := userFrom(dbModel)
 
 	// Mutate
 	model.Username = newUsername
 	model.normalizeEmailAndUsername()
 
-	if err := core.Validate.StructPartial(model, "Username"); err != nil {
+	if err := core.ValidateStructPartial(ctx, model, "Username"); err != nil {
 		return err
 	}
 
-	_, err := db.C().AuthPatchUser(ctx, repo.AuthPatchUserParams{
+	_, err = db.C().AuthPatchUser(ctx, repo.AuthPatchUserParams{
 		Username:  core.NewNullString(model.Username),
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        dbModel.ID,

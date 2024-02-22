@@ -30,7 +30,7 @@ type Session struct {
 	Disabled  bool
 }
 
-var sessionCtxKey contextKey = contextKey("session")
+type sessionCtxKey struct{}
 
 const defaultSessionDuration = 24 * time.Hour          // 1 Day
 const rememberMeSessionDuration = 365 * 24 * time.Hour // 1 Year
@@ -68,12 +68,12 @@ func CreateUserSession(ctx context.Context, db sqlite.DB, arg CreateUserSessionP
 	if arg.PreviousSession != "" {
 		err := createUserSessionAndDeletePrevious(ctx, db, dbArg, arg.PreviousSession)
 		if err != nil {
-			return "", nil
+			return "", err
 		}
 	} else {
 		err := db.C().AuthCreateUserSession(ctx, dbArg)
 		if err != nil {
-			return "", nil
+			return "", err
 		}
 	}
 
@@ -202,10 +202,10 @@ func GetUserSessionForContext(ctx context.Context, db sqlite.DB, session string)
 }
 
 func WithSession(ctx context.Context, session Session) context.Context {
-	return context.WithValue(ctx, sessionCtxKey, session)
+	return context.WithValue(ctx, sessionCtxKey{}, session)
 }
 
 func UseSession(ctx context.Context) (Session, bool) {
-	user, ok := ctx.Value(sessionCtxKey).(Session)
+	user, ok := ctx.Value(sessionCtxKey{}).(Session)
 	return user, ok
 }
