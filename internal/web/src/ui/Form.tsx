@@ -4,10 +4,11 @@
 // # URLs
 // https://ui.shadcn.com/docs/components/form
 import { JSX, Show, createUniqueId, splitProps, createContext, useContext, } from "solid-js";
-import { FieldStore, FormStore } from "@modular-forms/solid";
+import { FieldStore, FormStore, setValue } from "@modular-forms/solid";
 
 import { cn } from "~/lib/utils"
 import { Label, LabelProps } from "./Label"
+import { Switch } from "@kobalte/core";
 
 type FieldContextValue = {
   id: string
@@ -16,6 +17,16 @@ type FieldContextValue = {
 const FormItemContext = createContext<FieldContextValue>(
   {} as FieldContextValue
 )
+
+export function FieldSwitchRoot(props: Switch.SwitchRootProps & { field: FieldStore<any, any>, form: FormStore<any, any> }) {
+  const [_, rest] = splitProps(props, ["field", "form"])
+  return <Switch.Root
+    validationState={props.field.error ? "invalid" : "valid"}
+    checked={props.field.value}
+    onChange={(value) => setValue(props.form, props.field.name, value)}
+    {...rest}
+  />
+}
 
 export function FieldRoot(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "id">) {
   const [_, rest] = splitProps(props, ["class"])

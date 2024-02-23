@@ -24,7 +24,7 @@ export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
   const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeQueryInts(searchParams.device))
   const data = createAsync(() => getDevicesPage())
-  const filteredDevices = createMemo(() => filterDeviceIDs().length > 0 ? data()?.devices.filter(v => !v.disabled && filterDeviceIDs().includes(v.id)) : data()?.devices.filter(v => !v.disabled))
+  const filteredDevices = () => filterDeviceIDs().length > 0 ? data()?.devices.filter(v => !v.disabled && filterDeviceIDs().includes(v.id)) : data()?.devices.filter(v => !v.disabled)
 
   return (
     <LayoutNormal>

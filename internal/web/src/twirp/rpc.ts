@@ -1619,6 +1619,19 @@ export interface UpdateDeviceReq {
     features: string[];
 }
 /**
+ * @generated from protobuf message UpdateConfigReq
+ */
+export interface UpdateConfigReq {
+    /**
+     * @generated from protobuf field: string site_name = 1;
+     */
+    siteName: string;
+    /**
+     * @generated from protobuf field: bool enable_sign_up = 2;
+     */
+    enableSignUp: boolean;
+}
+/**
  * @generated from protobuf message DeleteDeviceReq
  */
 export interface DeleteDeviceReq {
@@ -2972,6 +2985,19 @@ class UpdateDeviceReq$Type extends MessageType<UpdateDeviceReq> {
  */
 export const UpdateDeviceReq = new UpdateDeviceReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class UpdateConfigReq$Type extends MessageType<UpdateConfigReq> {
+    constructor() {
+        super("UpdateConfigReq", [
+            { no: 1, name: "site_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "enable_sign_up", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UpdateConfigReq
+ */
+export const UpdateConfigReq = new UpdateConfigReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class DeleteDeviceReq$Type extends MessageType<DeleteDeviceReq> {
     constructor() {
         super("DeleteDeviceReq", [
@@ -3111,6 +3137,7 @@ export const Admin = new ServiceType("Admin", [
     { name: "GetDevice", options: {}, I: GetDeviceReq, O: GetDeviceResp },
     { name: "SetDeviceDisable", options: {}, I: SetDeviceDisableReq, O: Empty },
     { name: "UpdateDevice", options: {}, I: UpdateDeviceReq, O: Empty },
+    { name: "UpdateConfig", options: {}, I: UpdateConfigReq, O: Empty },
     { name: "ListLocations", options: {}, I: Empty, O: ListLocationsResp },
     { name: "ListDeviceFeatures", options: {}, I: Empty, O: ListDeviceFeaturesResp }
 ]);

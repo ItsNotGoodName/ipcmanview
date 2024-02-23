@@ -6,7 +6,7 @@ import { Input } from "~/ui/Input";
 import { Seperator } from "~/ui/Seperator";
 import { Textarea } from "~/ui/Textarea";
 import { Label } from "~/ui/Label";
-import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchInput, SwitchLabel, SwitchRoot } from "~/ui/Switch";
+import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchLabel, SwitchRoot } from "~/ui/Switch";
 import { toggleTheme } from "~/ui/theme";
 import { CardRoot, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/ui/Card";
 import { For, Show, createSignal, onCleanup, } from "solid-js";
@@ -88,6 +88,12 @@ export function Ui() {
           <ComboboxListbox />
         </ComboboxContent>
       </ComboboxRoot>
+      <SwitchRoot class="flex gap-2 items-center">
+        <SwitchControl />
+        <SwitchLabel>Switch</SwitchLabel>
+        <SwitchDescription />
+        <SwitchErrorMessage />
+      </SwitchRoot>
       <Button onClick={toggleTheme} size="icon">
         <ThemeIcon class="h-6 w-6" />
       </Button>
@@ -116,13 +122,6 @@ export function Ui() {
         <Seperator orientation="vertical" />
         <div>Right Seperator</div>
       </div>
-      <SwitchRoot class="flex gap-2">
-        <SwitchLabel>Switch</SwitchLabel>
-        <SwitchDescription />
-        <SwitchErrorMessage />
-        <SwitchInput />
-        <SwitchControl />
-      </SwitchRoot>
       <DropdownMenuRoot>
         <DropdownMenuTrigger asChild>
           <As component={Button}>

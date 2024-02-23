@@ -51,7 +51,7 @@ func write(filePath string, cfg Config) error {
 		return err
 	}
 
-	return os.Rename(filePathTmp, filePathTmp)
+	return os.Rename(filePathTmp, filePath)
 }
 
 func NewProvider(filePath string) (Provider, error) {
@@ -81,4 +81,18 @@ func (p Provider) GetConfig() (Config, error) {
 		return Config{}, err
 	}
 	return cfg, err
+}
+
+func (p Provider) UpdateConfig(fn func(cfg Config) (Config, error)) error {
+	cfg, err := p.GetConfig()
+	if err != nil {
+		return err
+	}
+
+	cfg, err = fn(cfg)
+	if err != nil {
+		return err
+	}
+
+	return write(p.filePath, cfg)
 }

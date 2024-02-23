@@ -590,6 +590,19 @@ func (a *Admin) SetGroupDisable(ctx context.Context, req *rpc.SetGroupDisableReq
 	return &emptypb.Empty{}, nil
 }
 
+func (a *Admin) UpdateConfig(cfg context.Context, req *rpc.UpdateConfigReq) (*emptypb.Empty, error) {
+	err := a.configProvider.UpdateConfig(func(cfg config.Config) (config.Config, error) {
+		cfg.SiteName = req.SiteName
+		cfg.EnableSignUp = req.EnableSignUp
+		return cfg, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (*Admin) ListLocations(context.Context, *emptypb.Empty) (*rpc.ListLocationsResp, error) {
 	return &rpc.ListLocationsResp{
 		Locations: core.Locations,
