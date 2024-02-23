@@ -7,6 +7,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
+	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -18,18 +19,20 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewUser(db sqlite.DB, bus *event.Bus, dahuaStore *dahua.Store) *User {
+func NewUser(configProvider config.Provider, db sqlite.DB, bus *event.Bus, dahuaStore *dahua.Store) *User {
 	return &User{
-		db:         db,
-		bus:        bus,
-		dahuaStore: dahuaStore,
+		configProvider: configProvider,
+		db:             db,
+		bus:            bus,
+		dahuaStore:     dahuaStore,
 	}
 }
 
 type User struct {
-	db         sqlite.DB
-	bus        *event.Bus
-	dahuaStore *dahua.Store
+	configProvider config.Provider
+	db             sqlite.DB
+	bus            *event.Bus
+	dahuaStore     *dahua.Store
 }
 
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {

@@ -2,7 +2,7 @@ import { Params, cache } from "@solidjs/router";
 import { decodeQueryInts, parseOrder } from "~/lib/utils";
 import { useClient } from "~/providers/client";
 import { GetEmailsPageReq } from "~/twirp/rpc";
-import { getlistDevices, getListEmailAlarmEvents } from "./data";
+import { getListDevices, getListEmailAlarmEvents } from "./data";
 
 export function withEmailPageQuery(q: URLSearchParams, searchParams: Partial<Params>): URLSearchParams {
   if (searchParams.alarmEvent)
@@ -27,6 +27,6 @@ export default function({ params }: any) {
     filterDeviceIDs: decodeQueryInts(params.device),
     filterAlarmEvents: params.alarmEvent ? JSON.parse(params.alarmEvent) : [],
   })
-  void getlistDevices()
+  void getListDevices()
   void getListEmailAlarmEvents()
 }

@@ -79,6 +79,10 @@ func (c Shared) useDB(ctx *Context) (sqlite.DB, error) {
 	return db, nil
 }
 
+func (c Shared) useConfigFile() string {
+	return filepath.Join(c.Dir, "config.toml")
+}
+
 func (c Shared) useCert() (server.Certificate, error) {
 	cert := server.Certificate{
 		CertFile: filepath.Join(c.Dir, "cert.pem"),

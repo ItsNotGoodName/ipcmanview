@@ -66,8 +66,9 @@ import type { GetDevicesPageReq } from "./rpc";
 import type { GetHomePageResp } from "./rpc";
 import { Public } from "./rpc";
 import type { ForgotPasswordReq } from "./rpc";
-import type { Empty } from "./google/protobuf/empty";
 import type { SignUpReq } from "./rpc";
+import type { GetConfigResp } from "./rpc";
+import type { Empty } from "./google/protobuf/empty";
 import type { RpcTransport } from "@protobuf-ts/runtime-rpc";
 import type { ServiceInfo } from "@protobuf-ts/runtime-rpc";
 import { HelloWorld } from "./rpc";
@@ -113,6 +114,10 @@ export class HelloWorldClient implements IHelloWorldClient, ServiceInfo {
  */
 export interface IPublicClient {
     /**
+     * @generated from protobuf rpc: GetConfig(google.protobuf.Empty) returns (GetConfigResp);
+     */
+    getConfig(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetConfigResp>;
+    /**
      * @generated from protobuf rpc: SignUp(SignUpReq) returns (google.protobuf.Empty);
      */
     signUp(input: SignUpReq, options?: RpcOptions): UnaryCall<SignUpReq, Empty>;
@@ -133,17 +138,24 @@ export class PublicClient implements IPublicClient, ServiceInfo {
     constructor(private readonly _transport: RpcTransport) {
     }
     /**
+     * @generated from protobuf rpc: GetConfig(google.protobuf.Empty) returns (GetConfigResp);
+     */
+    getConfig(input: Empty, options?: RpcOptions): UnaryCall<Empty, GetConfigResp> {
+        const method = this.methods[0], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Empty, GetConfigResp>("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: SignUp(SignUpReq) returns (google.protobuf.Empty);
      */
     signUp(input: SignUpReq, options?: RpcOptions): UnaryCall<SignUpReq, Empty> {
-        const method = this.methods[0], opt = this._transport.mergeOptions(options);
+        const method = this.methods[1], opt = this._transport.mergeOptions(options);
         return stackIntercept<SignUpReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ForgotPassword(ForgotPasswordReq) returns (google.protobuf.Empty);
      */
     forgotPassword(input: ForgotPasswordReq, options?: RpcOptions): UnaryCall<ForgotPasswordReq, Empty> {
-        const method = this.methods[1], opt = this._transport.mergeOptions(options);
+        const method = this.methods[2], opt = this._transport.mergeOptions(options);
         return stackIntercept<ForgotPasswordReq, Empty>("unary", this._transport, method, opt, input);
     }
 }

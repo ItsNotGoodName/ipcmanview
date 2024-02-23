@@ -2,7 +2,7 @@ import { VariantProps, cva } from "class-variance-authority"
 import { BiRegularCctv } from "solid-icons/bi";
 import { As, DropdownMenu } from "@kobalte/core";
 import { ErrorBoundary, JSX, Show, Suspense, batch, createSignal, splitProps } from "solid-js";
-import { A, action, createAsync, revalidate, useAction, useLocation, Location, useNavigate, useSubmission, RouteSectionProps } from "@solidjs/router";
+import { A, action, createAsync, revalidate, useAction, useLocation, useNavigate, useSubmission, RouteSectionProps } from "@solidjs/router";
 import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine, RiMediaLiveLine, RiBusinessMailLine, RiUserFacesGroupLine, RiSystemSettings2Line } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
 import { makePersisted } from "@solid-primitives/storage";
@@ -17,8 +17,9 @@ import { PageError, PageLoading } from "~/ui/Page";
 import { WSState, useWS } from "./providers/ws";
 import { Shared } from "./components/Shared";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "./ui/Tooltip";
-import { SheetContent, SheetHeader, SheetOverflow, SheetRoot, SheetTitle } from "./ui/Sheet";
+import { SheetContent, SheetDescription, SheetHeader, SheetOverflow, SheetRoot, SheetTitle } from "./ui/Sheet";
 import { useBus } from "./providers/bus";
+import { getConfig } from "./pages/data";
 
 const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex cursor-pointer select-none items-center gap-1 rounded-sm px-2 py-1.5 text-sm outline-none transition-colors", {
   variants: {
@@ -35,10 +36,6 @@ const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacit
     variant: "default"
   }
 })
-
-function useIsAdminPage<T>(location: Location<T>) {
-  return () => location.pathname.startsWith("/admin")
-}
 
 function MenuLinks(props: { onClick?: () => void }) {
   return (
@@ -108,16 +105,22 @@ const actionSignOut = action(() =>
   }).catch(catchAsToast)
 )
 
-function Header(props: { onMenuClick: () => void, onMobileMenuClick: () => void }) {
+type HeaderProps = {
+  onMenuClick: () => void
+  onMobileMenuClick: () => void
+  isAdminPage: boolean
+  siteName?: string
+}
+
+function Header(props: HeaderProps) {
   const location = useLocation()
   const navigate = useNavigate()
+
+  const session = createAsync(() => getSession())
 
   const signOutSubmission = useSubmission(actionSignOut)
   const signOutAction = useAction(actionSignOut)
   const signOut = () => signOutAction().catch(catchAsToast)
-
-  const session = createAsync(() => getSession())
-  const isAdminPage = useIsAdminPage(location)
 
   const ws = useWS()
   const wsState = (): VariantProps<typeof Shared.connectionIndicatorVariants>["state"] => {
@@ -141,10 +144,11 @@ function Header(props: { onMenuClick: () => void, onMobileMenuClick: () => void 
         <button onClick={props.onMenuClick} title="Menu" class={cn(menuLinkVariants(), "hidden md:inline-flex")}>
           <RiSystemMenuLine class="size-6" />
         </button>
-        <div class="flex flex-1 truncate">
+        <div class="flex flex-1 items-baseline gap-2 truncate">
           <A href="/" class="flex items-center text-xl">
             IPCManView
           </A>
+          <p class="text-muted-foreground text-sm">{props.siteName}</p>
         </div>
         <div class="flex gap-1">
           <TooltipRoot>
@@ -164,7 +168,7 @@ function Header(props: { onMenuClick: () => void, onMobileMenuClick: () => void 
           </Show>
           <Show when={session()?.admin}>
             <A class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}
-              href={isAdminPage() ? "/" : "/admin"} title="Toggle admin">
+              href={props.isAdminPage ? "/" : "/admin"} title="Toggle admin">
               <RiUserFacesAdminLine class="size-6" />
             </A>
           </Show>
@@ -216,16 +220,16 @@ function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { open?
 
 export function Root(props: RouteSectionProps) {
   const bus = useBus()
+  const config = createAsync(() => getConfig())
   const session = createAsync(() => getSession())
 
   bus.event.listen((e) => {
-    if (e.action == "user-security:updated" && e.data == session()?.user_id) {
+    if (e.action == "user-security:updated" && e.data == session()?.user_id)
       revalidate(getSession.key)
-    }
   })
 
   const isAuthenticatedLayout = () => session()?.valid && !session()?.disabled
-  const isAdminPage = useIsAdminPage(props.location)
+  const isAdminPage = () => location.pathname.startsWith("/admin")
 
   const [mobileMenuOpen, setMobileMenuOpen] = createSignal(false)
   const toggleMobileMenuOpen = () => setMobileMenuOpen(!mobileMenuOpen())
@@ -260,6 +264,7 @@ export function Root(props: RouteSectionProps) {
             <SheetContent side="left">
               <SheetHeader>
                 <SheetTitle>IPCManView</SheetTitle>
+                <SheetDescription>{config()?.siteName}</SheetDescription>
               </SheetHeader>
               <SheetOverflow>
                 <Show when={!isAdminPage()} fallback={<AdminMenuLinks onClick={closeMobileMenu} />}>
@@ -268,7 +273,12 @@ export function Root(props: RouteSectionProps) {
               </SheetOverflow>
             </SheetContent>
           </SheetRoot>
-          <Header onMenuClick={toggleMenuOpen} onMobileMenuClick={toggleMobileMenuOpen} />
+          <Header
+            onMenuClick={toggleMenuOpen}
+            onMobileMenuClick={toggleMobileMenuOpen}
+            isAdminPage={isAdminPage()}
+            siteName={config()?.siteName}
+          />
           <div class="flex">
             <Menu open={menuOpen()}>
               <Show when={!isAdminPage()} fallback={<AdminMenuLinks />}>

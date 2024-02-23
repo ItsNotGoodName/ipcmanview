@@ -33,6 +33,16 @@ func (l *Location) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func (src Location) MarshalText() (text []byte, err error) {
+	return []byte(src.String()), nil
+}
+
+func (dst *Location) UnmarshalText(text []byte) error {
+	var err error
+	dst.Location, err = time.LoadLocation(string(text))
+	return err
+}
+
 func (dst *Location) Scan(src any) error {
 	if src == nil {
 		return fmt.Errorf("cannot scan nil")

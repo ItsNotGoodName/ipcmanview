@@ -8,12 +8,11 @@ import { provideTheme } from "~/ui/theme";
 import { NotFound } from '~/pages/404'
 import { Home } from "~/pages/Home";
 import loadHome from "~/pages/Home.data";
-import { SignIn, Signup, Forgot } from "~/pages/Public";
+import { SignIn, SignUp, Forgot } from "~/pages/Public";
 import { Profile } from "~/pages/Profile";
 import loadProfile from "~/pages/Profile.data";
 import { Root } from "~/Root";
 import loadRoot from "~/Root.data";
-import { ClientProvider } from "~/providers/client";
 import { lastSession } from "~/providers/session";
 import { AdminGroups } from "~/pages/admin/Groups";
 import loadAdminGroups from "~/pages/admin/Groups.data";
@@ -38,8 +37,7 @@ import { Files } from "~/pages/Files";
 import loadFiles from "~/pages/Files.data";
 import { Events, EventsLive } from "~/pages/Events";
 import loadEvents from "~/pages/Events.data";
-import { BusProvider } from "./providers/bus";
-import { WSProvider } from "./providers/ws";
+import { lastConfig } from "./pages/data";
 
 const Debug = lazy(() => import("./pages/debug"));
 
@@ -53,45 +51,43 @@ function App() {
   const isAdmin = () => lastSession.admin
 
   return (
-    <BusProvider>
-      <WSProvider>
-        <ClientProvider>
-          <Router root={Root} rootLoad={loadRoot} explicitLinks>
-            <Show when={import.meta.env.DEV}>
-              <Route path="/debug">
-                <Debug />
-              </Route>
-            </Show>
-            <Show when={isAuthenticated()} fallback={<>
-              <Route path="/signin" component={SignIn} />
-              <Route path="/signup" component={Signup} />
-              <Route path="/forgot" component={Forgot} />
-              <Route path="*404" component={SignIn} />
-            </>}>
-              <Route path="/" component={Home} load={loadHome} />
-              <Route path="/profile" component={Profile} load={loadProfile} />
-              <Route path="/live" component={Live} />
-              <Route path="/devices" component={Devices} load={loadDevices} />
-              <Route path="/emails" component={Emails} load={loadEmails} />
-              <Route path="/emails/:id" component={EmailsID} load={loadEmailsID} />
-              <Route path="/events" component={Events} load={loadEvents} />
-              <Route path="/events/live" component={EventsLive} />
-              <Route path="/files" component={Files} load={loadFiles} />
-              <Show when={isAdmin()} fallback={<Route path="/admin/*" component={NavigateHome} />}>
-                <Route path="/admin" component={AdminSettings} load={loadAdminSettings} />
-                <Route path="/admin/users" component={AdminUsers} load={loadAdminUsers} />
-                <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />
-                <Route path="/admin/groups/:id" component={AdminGroupsID} load={loadAdminGroupsID} />
-                <Route path="/admin/devices" component={AdminDevices} load={loadAdminDevices} />
-                <Route path="/admin/devices/:id" component={AdminDevicesID} load={loadAdminDevicesID} />
-              </Show>
-              <Route path={["/signin", "/signup", "/forgot"]} component={NavigateHome} />
-              <Route path="*404" component={NotFound} />
-            </Show>
-          </Router>
-        </ClientProvider>
-      </WSProvider>
-    </BusProvider>
+    <Router root={Root} rootLoad={loadRoot} explicitLinks>
+      <Show when={import.meta.env.DEV}>
+        <Route path="/debug">
+          <Debug />
+        </Route>
+      </Show>
+      <Show when={isAuthenticated()} fallback={<>
+        <Route path="/signin" component={SignIn} />
+        <Show when={lastConfig.enableSignUp} fallback={
+          <Route path="/signup" component={() => <Navigate href="/signin" />} />
+        }>
+          <Route path="/signup" component={SignUp} />
+        </Show>
+        <Route path="/forgot" component={Forgot} />
+        <Route path="*404" component={SignIn} />
+      </>}>
+        <Route path="/" component={Home} load={loadHome} />
+        <Route path="/profile" component={Profile} load={loadProfile} />
+        <Route path="/live" component={Live} />
+        <Route path="/devices" component={Devices} load={loadDevices} />
+        <Route path="/emails" component={Emails} load={loadEmails} />
+        <Route path="/emails/:id" component={EmailsID} load={loadEmailsID} />
+        <Route path="/events" component={Events} load={loadEvents} />
+        <Route path="/events/live" component={EventsLive} />
+        <Route path="/files" component={Files} load={loadFiles} />
+        <Show when={isAdmin()} fallback={<Route path="/admin/*" component={NavigateHome} />}>
+          <Route path="/admin" component={AdminSettings} load={loadAdminSettings} />
+          <Route path="/admin/users" component={AdminUsers} load={loadAdminUsers} />
+          <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />
+          <Route path="/admin/groups/:id" component={AdminGroupsID} load={loadAdminGroupsID} />
+          <Route path="/admin/devices" component={AdminDevices} load={loadAdminDevices} />
+          <Route path="/admin/devices/:id" component={AdminDevicesID} load={loadAdminDevicesID} />
+        </Show>
+        <Route path={["/signin", "/signup", "/forgot"]} component={NavigateHome} />
+        <Route path="*404" component={NotFound} />
+      </Show>
+    </Router>
   )
 }
 

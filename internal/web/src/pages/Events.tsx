@@ -15,7 +15,7 @@ import { getEventsPage } from "./Events.data";
 import { RiArrowsArrowDownSLine, RiDocumentClipboardLine, RiSystemAddCircleLine } from "solid-icons/ri";
 import { Button, buttonVariants } from "~/ui/Button";
 import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox";
-import { getlistDevices, getListEventFilters } from "./data";
+import { getListDevices, getListEventFilters } from "./data";
 import { ListDevicesResp_Device } from "~/twirp/rpc";
 import { BreadcrumbsItem, BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
 import { useBus } from "~/providers/bus";
@@ -43,7 +43,7 @@ export function Events() {
     filterCodes: filterCodes(),
     filterActions: filterActions(),
   }))
-  const listDevices = createAsync(() => getlistDevices())
+  const listDevices = createAsync(() => getListDevices())
   const listEventFilters = createAsync(() => getListEventFilters())
 
   const toggleSort = createToggleSortField(() => data()?.sort)
@@ -268,7 +268,7 @@ export function EventsLive() {
   const bus = useBus()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const listDevices = createAsync(() => getlistDevices())
+  const listDevices = createAsync(() => getListDevices())
 
   const dataOpen = () => Boolean(searchParams.data)
   const setDataOpen = (value: boolean) => setSearchParams({ data: value ? String(value) : "" })

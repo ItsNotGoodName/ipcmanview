@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
@@ -19,16 +20,18 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewAdmin(db sqlite.DB, bus *event.Bus) *Admin {
+func NewAdmin(configProvider config.Provider, db sqlite.DB, bus *event.Bus) *Admin {
 	return &Admin{
-		db:  db,
-		bus: bus,
+		configProvider: configProvider,
+		db:             db,
+		bus:            bus,
 	}
 }
 
 type Admin struct {
-	db  sqlite.DB
-	bus *event.Bus
+	configProvider config.Provider
+	db             sqlite.DB
+	bus            *event.Bus
 }
 
 // ---------- Device
@@ -314,7 +317,12 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 }
 
 func (a *Admin) CreateUser(ctx context.Context, req *rpc.CreateUserReq) (*emptypb.Empty, error) {
-	_, err := auth.CreateUser(ctx, a.db, auth.CreateUserParams{
+	cfg, err := a.configProvider.GetConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = auth.CreateUser(ctx, cfg, a.db, auth.CreateUserParams{
 		Email:    req.Email,
 		Username: req.Username,
 		Password: req.Password,

@@ -1,6 +1,6 @@
 import { createForm, required, reset } from "@modular-forms/solid";
 import { A, action, createAsync, redirect, revalidate, useAction } from "@solidjs/router";
-import { ParentProps, Show } from "solid-js";
+import { ParentProps, Show, } from "solid-js";
 
 import { useClient } from "~/providers/client";
 import { Button } from "~/ui/Button";
@@ -15,6 +15,7 @@ import { throwAsFormError } from "~/lib/utils";
 import { toast } from "~/ui/Toast";
 import { getSession } from "~/providers/session";
 import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert";
+import { getConfig } from "./data";
 
 function Layout(props: ParentProps) {
   return (
@@ -24,9 +25,14 @@ function Layout(props: ParentProps) {
   )
 }
 
-function Header() {
+function Header(props: ParentProps) {
   return (
-    <div class="text-center text-2xl">IPCManView</div>
+    <div class="text-center ">
+      <div class="text-2xl">IPCManView</div>
+      <div class="text-muted-foreground text-sm">
+        {props.children}
+      </div>
+    </div>
   )
 }
 
@@ -78,13 +84,14 @@ const actionSignIn = action((form: SignInForm) =>
 )
 
 export function SignIn() {
+  const session = createAsync(() => getSession())
+  const config = createAsync(() => getConfig())
   const [signInForm, { Field, Form }] = createForm<SignInForm>();
   const signIn = useAction(actionSignIn)
-  const session = createAsync(() => getSession())
 
   return (
     <Layout>
-      <Header />
+      <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign in</CardHeader>
         <Form class="flex flex-col gap-4" onSubmit={signIn}>
@@ -154,9 +161,11 @@ export function SignIn() {
           </AlertRoot>
         </Show>
       </CardRoot>
-      <Footer>
-        <A href="/signup" class={linkVariants()}>Sign up</A>
-      </Footer>
+      <Show when={config()?.enableSignUp}>
+        <Footer>
+          <A href="/signup" class={linkVariants()}>Sign up</A>
+        </Footer>
+      </Show>
     </Layout>
   )
 }
@@ -174,7 +183,9 @@ const actionSignUp = action((form: SignUpForm) => useClient()
   .catch(throwAsFormError)
   .then(async () => { throw redirect("/signin") }))
 
-export function Signup() {
+export function SignUp() {
+  const config = createAsync(() => getConfig())
+  const signUp = useAction(actionSignUp)
   const [signUpForm, { Field, Form }] = createForm<SignUpForm>({
     validate: (form) => {
       if (form.password != form.confirmPassword) {
@@ -185,11 +196,10 @@ export function Signup() {
       return {}
     }
   });
-  const signUp = useAction(actionSignUp)
 
   return (
     <Layout>
-      <Header />
+      <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign up</CardHeader>
         <Form class="flex flex-col gap-4" onSubmit={signUp}>
@@ -292,12 +302,13 @@ const actionForgot = action((form: ForgotForm) => useClient()
   .catch(throwAsFormError))
 
 export function Forgot() {
+  const config = createAsync(() => getConfig())
   const [forgetForm, { Field, Form }] = createForm<ForgotForm>({ initialValues: { email: "" } });
   const forgotSubmit = useAction(actionForgot)
 
   return (
     <Layout>
-      <Header />
+      <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Forgot</CardHeader>
         <Form class="flex flex-col gap-4" onSubmit={(form) => forgotSubmit(form).then(() => reset(forgetForm))}>

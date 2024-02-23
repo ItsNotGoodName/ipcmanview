@@ -67,7 +67,7 @@ export function SheetHeader(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col space-y-1.5 px-4 pt-4 text-center sm:text-left",
+      "flex flex-col px-4 pt-4 text-center sm:text-left",
       props.class
     )}
     {...rest}

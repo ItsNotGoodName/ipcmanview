@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -47,7 +48,12 @@ type CreateUserParams struct {
 	Disabled bool
 }
 
-func CreateUser(ctx context.Context, db sqlite.DB, arg CreateUserParams) (int64, error) {
+func CreateUser(ctx context.Context, cfg config.Config, db sqlite.DB, arg CreateUserParams) (int64, error) {
+	actor := core.UseActor(ctx)
+	if !actor.Admin && !cfg.EnableSignUp {
+		return 0, core.ErrForbidden
+	}
+
 	model := user{
 		Email:    arg.Email,
 		Username: arg.Username,
@@ -68,7 +74,7 @@ func CreateUser(ctx context.Context, db sqlite.DB, arg CreateUserParams) (int64,
 		disabled bool
 		admin    bool
 	)
-	if core.UseActor(ctx).Admin {
+	if actor.Admin {
 		disabled = arg.Disabled
 		admin = arg.Admin
 	}

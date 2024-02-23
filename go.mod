@@ -3,6 +3,7 @@ module github.com/ItsNotGoodName/ipcmanview
 go 1.21
 
 require (
+	github.com/BurntSushi/toml v1.3.2
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/alecthomas/kong v0.8.1
 	github.com/eclipse/paho.mqtt.golang v1.4.3

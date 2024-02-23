@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
+	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
@@ -42,6 +43,11 @@ type CmdServe struct {
 
 func (c *CmdServe) Run(ctx *Context) error {
 	if err := c.init(); err != nil {
+		return err
+	}
+
+	configProvider, err := config.NewProvider(c.useConfigFile())
+	if err != nil {
 		return err
 	}
 
@@ -143,9 +149,9 @@ func (c *CmdServe) Run(ctx *Context) error {
 	rpcserver.
 		NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
-		Register(rpc.NewPublicServer(rpcserver.NewPublic(db), rpcLogger)).
-		Register(rpc.NewUserServer(rpcserver.NewUser(db, bus, dahuaStore), rpcLogger, rpcserver.RequireAuthSession())).
-		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db, bus), rpcLogger, rpcserver.RequireAdminAuthSession()))
+		Register(rpc.NewPublicServer(rpcserver.NewPublic(configProvider, db), rpcLogger)).
+		Register(rpc.NewUserServer(rpcserver.NewUser(configProvider, db, bus, dahuaStore), rpcLogger, rpcserver.RequireAuthSession())).
+		Register(rpc.NewAdminServer(rpcserver.NewAdmin(configProvider, db, bus), rpcLogger, rpcserver.RequireAdminAuthSession()))
 
 	// HTTP server
 	super.Add(server.NewHTTPServer(

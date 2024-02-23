@@ -91,6 +91,19 @@ export interface HelloResp {
     currentTime?: Timestamp;
 }
 /**
+ * @generated from protobuf message GetConfigResp
+ */
+export interface GetConfigResp {
+    /**
+     * @generated from protobuf field: string site_name = 1;
+     */
+    siteName: string;
+    /**
+     * @generated from protobuf field: bool enable_sign_up = 2;
+     */
+    enableSignUp: boolean;
+}
+/**
  * @generated from protobuf message SignUpReq
  */
 export interface SignUpReq {
@@ -1728,6 +1741,19 @@ class HelloResp$Type extends MessageType<HelloResp> {
  */
 export const HelloResp = new HelloResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class GetConfigResp$Type extends MessageType<GetConfigResp> {
+    constructor() {
+        super("GetConfigResp", [
+            { no: 1, name: "site_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "enable_sign_up", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message GetConfigResp
+ */
+export const GetConfigResp = new GetConfigResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class SignUpReq$Type extends MessageType<SignUpReq> {
     constructor() {
         super("SignUpReq", [
@@ -2962,6 +2988,7 @@ export const HelloWorld = new ServiceType("HelloWorld", [
  * @generated ServiceType for protobuf service Public
  */
 export const Public = new ServiceType("Public", [
+    { name: "GetConfig", options: {}, I: Empty, O: GetConfigResp },
     { name: "SignUp", options: {}, I: SignUpReq, O: Empty },
     { name: "ForgotPassword", options: {}, I: ForgotPasswordReq, O: Empty }
 ]);

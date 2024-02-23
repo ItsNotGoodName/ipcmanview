@@ -51,8 +51,14 @@ message HelloResp {
 // ---------- Public
 
 service Public {
+  rpc GetConfig(google.protobuf.Empty) returns (GetConfigResp);
   rpc SignUp(SignUpReq) returns (google.protobuf.Empty);
   rpc ForgotPassword(ForgotPasswordReq) returns (google.protobuf.Empty);
+}
+
+message GetConfigResp {
+  string site_name = 1;
+  bool enable_sign_up = 2;
 }
 
 message SignUpReq {
