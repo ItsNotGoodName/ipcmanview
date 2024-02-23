@@ -1,6 +1,6 @@
 import { A, createAsync, useNavigate, useSearchParams } from "@solidjs/router";
 import Humanize from "humanize-plus"
-import { RiEditorAttachment2, RiSystemAddCircleLine } from "solid-icons/ri";
+import { RiEditorAttachment2, RiSystemFilterLine } from "solid-icons/ri";
 import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo } from "solid-js";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
@@ -77,7 +77,7 @@ export function Emails() {
                 <ComboboxControl<ListDevicesResp_Device> aria-label="Device">
                   {state => (
                     <ComboboxTrigger>
-                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
                       Device
                       <ComboboxState state={state} optionToString={(option) => option.name} />
                       <ComboboxReset state={state} class="size-4" />
@@ -104,7 +104,7 @@ export function Emails() {
                 <ComboboxControl<string> aria-label="Alarm Event">
                   {state => (
                     <ComboboxTrigger>
-                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
                       Alarm Event
                       <ComboboxState state={state} />
                       <ComboboxReset state={state} class="size-4" />

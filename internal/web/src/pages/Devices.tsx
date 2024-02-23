@@ -1,6 +1,7 @@
+import { Image } from "@kobalte/core"
 import Humanize from "humanize-plus"
 import { A, createAsync, useSearchParams } from "@solidjs/router"
-import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo } from "solid-js"
+import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo, createSignal } from "solid-js"
 import { PageError } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
@@ -16,7 +17,8 @@ import { Shared } from "~/components/Shared"
 import { createDate, createTimeAgo } from "@solid-primitives/date"
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
 import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox"
-import { RiSystemAddCircleLine } from "solid-icons/ri"
+import { RiMediaImageLine, RiSystemFilterLine, RiSystemRefreshLine } from "solid-icons/ri"
+import { Button } from "~/ui/Button"
 
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -34,43 +36,46 @@ export function Devices() {
               <TabsList>
                 <TabsTrigger value="device">Device</TabsTrigger>
                 <TabsTrigger value="rpc-status">RPC Status</TabsTrigger>
+                <TabsTrigger value="snapshot">Snapshot</TabsTrigger>
                 <TabsTrigger value="detail">Detail</TabsTrigger>
                 <TabsTrigger value="software-version">Software Version</TabsTrigger>
                 <TabsTrigger value="license">License</TabsTrigger>
                 <TabsTrigger value="storage">Storage</TabsTrigger>
               </TabsList>
             </div>
-            <ComboboxRoot<GetDevicesPageResp_Device>
-              multiple
-              optionValue="id"
-              optionTextValue="name"
-              optionLabel="name"
-              optionDisabled="disabled"
-              options={data()?.devices || []}
-              placeholder="Device"
-              value={data()?.devices.filter(v => filterDeviceIDs().includes(v.id))}
-              onChange={(value) => setSearchParams({ device: encodeQueryInts(value.map(v => v.id)) })}
-              itemComponent={props => (
-                <ComboboxItem item={props.item}>
-                  <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>
-                </ComboboxItem>
-              )}
-            >
-              <ComboboxControl<GetDevicesPageResp_Device> aria-label="Device">
-                {state => (
-                  <ComboboxTrigger>
-                    <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
-                    Device
-                    <ComboboxState state={state} optionToString={(option) => option.name} />
-                    <ComboboxReset state={state} class="size-4" />
-                  </ComboboxTrigger>
+            <Suspense fallback={<Skeleton />}>
+              <ComboboxRoot<GetDevicesPageResp_Device>
+                multiple
+                optionValue="id"
+                optionTextValue="name"
+                optionLabel="name"
+                optionDisabled="disabled"
+                options={data()?.devices || []}
+                placeholder="Device"
+                value={data()?.devices.filter(v => filterDeviceIDs().includes(v.id))}
+                onChange={(value) => setSearchParams({ device: encodeQueryInts(value.map(v => v.id)) })}
+                itemComponent={props => (
+                  <ComboboxItem item={props.item}>
+                    <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>
+                  </ComboboxItem>
                 )}
-              </ComboboxControl>
-              <ComboboxContent>
-                <ComboboxInput />
-                <ComboboxListbox />
-              </ComboboxContent>
-            </ComboboxRoot>
+              >
+                <ComboboxControl<GetDevicesPageResp_Device> aria-label="Device">
+                  {state => (
+                    <ComboboxTrigger>
+                      <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
+                      Device
+                      <ComboboxState state={state} optionToString={(option) => option.name} />
+                      <ComboboxReset state={state} class="size-4" />
+                    </ComboboxTrigger>
+                  )}
+                </ComboboxControl>
+                <ComboboxContent>
+                  <ComboboxInput />
+                  <ComboboxListbox />
+                </ComboboxContent>
+              </ComboboxRoot>
+            </Suspense>
           </div>
           <TabsContent value="device">
             <Suspense fallback={<Skeleton class="h-32" />}>
@@ -80,6 +85,11 @@ export function Devices() {
           <TabsContent value="rpc-status">
             <Suspense fallback={<Skeleton class="h-32" />}>
               <RPCStatusTable devices={filteredDevices()} />
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="snapshot">
+            <Suspense fallback={<Skeleton class="h-32" />}>
+              <SnapshotGrid devices={filteredDevices()} />
             </Suspense>
           </TabsContent>
           <TabsContent value="detail">
@@ -181,6 +191,42 @@ function RPCStatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
     </TableRoot>
   )
 }
+
+function SnapshotGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
+  return (
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <For each={props.devices}>
+        {item => {
+          const [t, setT] = createSignal(new Date().getTime())
+          const refresh = () => setT(new Date().getTime())
+          const src = () => `/v1/dahua/devices/${item.id}/snapshot?t=${t()}`
+
+          return (
+            <div>
+              <div class="flex flex-col rounded-t border">
+                <div class="flex items-center gap-2 p-2">
+                  <div class="flex-1 px-2">
+                    <A href={`/devices/${item.id}`}>{item.name}</A>
+                  </div>
+                  <Button size="icon" variant="ghost">
+                    <RiSystemRefreshLine class="size-5" onClick={refresh} />
+                  </Button>
+                </div>
+                <Image.Root>
+                  <Image.Img src={src()} />
+                  <Image.Fallback>
+                    <RiMediaImageLine class="h-full w-full" />
+                  </Image.Fallback>
+                </Image.Root>
+              </div>
+            </div>
+          )
+        }}
+      </For>
+    </div>
+  )
+}
+
 
 function DetailTable(props: { devices?: GetDevicesPageResp_Device[] }) {
   const colspan = 9

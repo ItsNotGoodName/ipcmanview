@@ -184,7 +184,7 @@ func (s *Server) DahuaDevicesIDSnapshot(c echo.Context) error {
 	defer snapshot.Close()
 
 	c.Response().Header().Set(echo.HeaderContentLength, snapshot.ContentLength)
-	c.Response().Header().Set(echo.HeaderCacheControl, "no-store")
+	c.Response().Header().Set(echo.HeaderCacheControl, "no-store, must-revalidate")
 
 	_, err = io.Copy(c.Response().Writer, snapshot)
 	if err != nil {

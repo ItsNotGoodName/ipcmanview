@@ -12,7 +12,7 @@ import { linkVariants } from "~/ui/Link";
 import { PageError } from "~/ui/Page";
 import { Skeleton } from "~/ui/Skeleton";
 import { getEventsPage } from "./Events.data";
-import { RiArrowsArrowDownSLine, RiDocumentClipboardLine, RiSystemAddCircleLine } from "solid-icons/ri";
+import { RiArrowsArrowDownSLine, RiDocumentClipboardLine, RiSystemFilterLine } from "solid-icons/ri";
 import { Button, buttonVariants } from "~/ui/Button";
 import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox";
 import { getListDevices, getListEventFilters } from "./data";
@@ -87,7 +87,7 @@ export function Events() {
                 <ComboboxControl<ListDevicesResp_Device> aria-label="Device">
                   {state => (
                     <ComboboxTrigger>
-                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
                       Device
                       <ComboboxState state={state} optionToString={(option) => option.name} />
                       <ComboboxReset state={state} class="size-4" />
@@ -114,7 +114,7 @@ export function Events() {
                 <ComboboxControl<string> aria-label="Code">
                   {state => (
                     <ComboboxTrigger>
-                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
                       Code
                       <ComboboxState state={state} />
                       <ComboboxReset state={state} class="size-4" />
@@ -141,7 +141,7 @@ export function Events() {
                 <ComboboxControl<string> aria-label="Action">
                   {state => (
                     <ComboboxTrigger>
-                      <ComboboxIcon as={RiSystemAddCircleLine} class="size-4" />
+                      <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
                       Action
                       <ComboboxState state={state} />
                       <ComboboxReset state={state} class="size-4" />
