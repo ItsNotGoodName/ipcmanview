@@ -10,6 +10,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
@@ -19,12 +20,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewUser(configProvider config.Provider, db sqlite.DB, bus *event.Bus, dahuaStore *dahua.Store) *User {
+func NewUser(configProvider config.Provider, db sqlite.DB, bus *event.Bus, dahuaStore *dahua.Store, mediamtxConfig mediamtx.Config) *User {
 	return &User{
 		configProvider: configProvider,
 		db:             db,
 		bus:            bus,
 		dahuaStore:     dahuaStore,
+		mediamtxConfig: mediamtxConfig,
 	}
 }
 
@@ -33,6 +35,7 @@ type User struct {
 	db             sqlite.DB
 	bus            *event.Bus
 	dahuaStore     *dahua.Store
+	mediamtxConfig mediamtx.Config
 }
 
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
@@ -484,6 +487,25 @@ func (u *User) ListDeviceStorage(ctx context.Context, req *rpc.ListDeviceStorage
 	}
 
 	return &rpc.ListDeviceStorageResp{
+		Items: items,
+	}, nil
+}
+
+func (u *User) ListDeviceStreams(ctx context.Context, req *rpc.ListDeviceStreamsReq) (*rpc.ListDeviceStreamsResp, error) {
+	res, err := dahua.ListStreams(ctx, u.db, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*rpc.ListDeviceStreamsResp_Stream, 0, len(res))
+	for _, v := range res {
+		items = append(items, &rpc.ListDeviceStreamsResp_Stream{
+			Name: v.Name,
+			Url:  u.mediamtxConfig.DahuaEmbedURL(v),
+		})
+	}
+
+	return &rpc.ListDeviceStreamsResp{
 		Items: items,
 	}, nil
 }

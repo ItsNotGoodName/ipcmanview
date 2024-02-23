@@ -10,6 +10,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuasmtp"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	"github.com/ItsNotGoodName/ipcmanview/internal/server"
@@ -84,10 +85,10 @@ func (c *CmdServe) Run(ctx *Context) error {
 	super.Add(event.NewQueue(db, bus))
 
 	// MediaMTX
-	// mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))
-	// if err != nil {
-	// 	return err
-	// }
+	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))
+	if err != nil {
+		return err
+	}
 
 	// Dahua
 
@@ -142,7 +143,8 @@ func (c *CmdServe) Run(ctx *Context) error {
 		NewServer(pub, db, bus, dahuaStore, dahuaAFS).
 		RegisterSession(httpRouter).
 		RegisterDahua(httpRouter, apiRequireAuthMiddleware).
-		RegisterWS(httpRouter, apiRequireAuthMiddleware)
+		RegisterWS(httpRouter, apiRequireAuthMiddleware).
+		RegisterMediamtx(httpRouter, mediamtxConfig)
 
 	// RPC
 	rpcLogger := rpcserver.Logger()
@@ -150,7 +152,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 		NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
 		Register(rpc.NewPublicServer(rpcserver.NewPublic(configProvider, db), rpcLogger)).
-		Register(rpc.NewUserServer(rpcserver.NewUser(configProvider, db, bus, dahuaStore), rpcLogger, rpcserver.RequireAuthSession())).
+		Register(rpc.NewUserServer(rpcserver.NewUser(configProvider, db, bus, dahuaStore, mediamtxConfig), rpcLogger, rpcserver.RequireAuthSession())).
 		Register(rpc.NewAdminServer(rpcserver.NewAdmin(configProvider, db, bus), rpcLogger, rpcserver.RequireAdminAuthSession()))
 
 	// HTTP server

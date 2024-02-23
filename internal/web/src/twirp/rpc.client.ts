@@ -40,6 +40,8 @@ import { User } from "./rpc";
 import type { ListLatestFilesResp } from "./rpc";
 import type { ListEventFiltersResp } from "./rpc";
 import type { ListEmailAlarmEventsResp } from "./rpc";
+import type { ListDeviceStreamsResp } from "./rpc";
+import type { ListDeviceStreamsReq } from "./rpc";
 import type { ListDeviceStorageResp } from "./rpc";
 import type { ListDeviceStorageReq } from "./rpc";
 import type { ListDeviceLicensesResp } from "./rpc";
@@ -236,6 +238,10 @@ export interface IUserClient {
      */
     listDeviceStorage(input: ListDeviceStorageReq, options?: RpcOptions): UnaryCall<ListDeviceStorageReq, ListDeviceStorageResp>;
     /**
+     * @generated from protobuf rpc: ListDeviceStreams(ListDeviceStreamsReq) returns (ListDeviceStreamsResp);
+     */
+    listDeviceStreams(input: ListDeviceStreamsReq, options?: RpcOptions): UnaryCall<ListDeviceStreamsReq, ListDeviceStreamsResp>;
+    /**
      * @generated from protobuf rpc: ListEmailAlarmEvents(google.protobuf.Empty) returns (ListEmailAlarmEventsResp);
      */
     listEmailAlarmEvents(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListEmailAlarmEventsResp>;
@@ -378,24 +384,31 @@ export class UserClient implements IUserClient, ServiceInfo {
         return stackIntercept<ListDeviceStorageReq, ListDeviceStorageResp>("unary", this._transport, method, opt, input);
     }
     /**
+     * @generated from protobuf rpc: ListDeviceStreams(ListDeviceStreamsReq) returns (ListDeviceStreamsResp);
+     */
+    listDeviceStreams(input: ListDeviceStreamsReq, options?: RpcOptions): UnaryCall<ListDeviceStreamsReq, ListDeviceStreamsResp> {
+        const method = this.methods[16], opt = this._transport.mergeOptions(options);
+        return stackIntercept<ListDeviceStreamsReq, ListDeviceStreamsResp>("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: ListEmailAlarmEvents(google.protobuf.Empty) returns (ListEmailAlarmEventsResp);
      */
     listEmailAlarmEvents(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListEmailAlarmEventsResp> {
-        const method = this.methods[16], opt = this._transport.mergeOptions(options);
+        const method = this.methods[17], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, ListEmailAlarmEventsResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ListEventFilters(google.protobuf.Empty) returns (ListEventFiltersResp);
      */
     listEventFilters(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListEventFiltersResp> {
-        const method = this.methods[17], opt = this._transport.mergeOptions(options);
+        const method = this.methods[18], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, ListEventFiltersResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ListLatestFiles(google.protobuf.Empty) returns (ListLatestFilesResp);
      */
     listLatestFiles(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListLatestFilesResp> {
-        const method = this.methods[18], opt = this._transport.mergeOptions(options);
+        const method = this.methods[19], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, ListLatestFilesResp>("unary", this._transport, method, opt, input);
     }
 }

@@ -9,11 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Config struct {
-	embedAddress string
-	pathTemplate *template.Template
-}
-
 func NewConfig(host, pathTemplate, streamProtocol string, webrtcPort, hlsPort int) (Config, error) {
 	var tmpl *template.Template
 	if pathTemplate != "" {
@@ -40,6 +35,15 @@ func NewConfig(host, pathTemplate, streamProtocol string, webrtcPort, hlsPort in
 	}, nil
 }
 
+type Config struct {
+	embedAddress string
+	pathTemplate *template.Template
+}
+
+func (c Config) Address() string {
+	return c.embedAddress
+}
+
 type DahuaStream struct {
 	ID           int64
 	DeviceID     int64
@@ -60,7 +64,7 @@ func (c Config) DahuaEmbedURL(stream repo.DahuaStream) string {
 		return ""
 	}
 
-	return fmt.Sprintf("%s/%s", c.embedAddress, path)
+	return fmt.Sprintf("/v1/mediamtx/%s", path)
 }
 
 func (c Config) dahuaPath(stream repo.DahuaStream) (string, error) {

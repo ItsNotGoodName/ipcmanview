@@ -886,6 +886,37 @@ export interface ListDeviceStorageResp_Storage {
     isError: boolean;
 }
 /**
+ * @generated from protobuf message ListDeviceStreamsReq
+ */
+export interface ListDeviceStreamsReq {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message ListDeviceStreamsResp
+ */
+export interface ListDeviceStreamsResp {
+    /**
+     * @generated from protobuf field: repeated ListDeviceStreamsResp.Stream items = 1;
+     */
+    items: ListDeviceStreamsResp_Stream[];
+}
+/**
+ * @generated from protobuf message ListDeviceStreamsResp.Stream
+ */
+export interface ListDeviceStreamsResp_Stream {
+    /**
+     * @generated from protobuf field: string name = 1;
+     */
+    name: string;
+    /**
+     * @generated from protobuf field: string url = 2;
+     */
+    url: string;
+}
+/**
  * @generated from protobuf message ListEmailAlarmEventsResp
  */
 export interface ListEmailAlarmEventsResp {
@@ -2319,6 +2350,43 @@ class ListDeviceStorageResp_Storage$Type extends MessageType<ListDeviceStorageRe
  */
 export const ListDeviceStorageResp_Storage = new ListDeviceStorageResp_Storage$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceStreamsReq$Type extends MessageType<ListDeviceStreamsReq> {
+    constructor() {
+        super("ListDeviceStreamsReq", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceStreamsReq
+ */
+export const ListDeviceStreamsReq = new ListDeviceStreamsReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceStreamsResp$Type extends MessageType<ListDeviceStreamsResp> {
+    constructor() {
+        super("ListDeviceStreamsResp", [
+            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ListDeviceStreamsResp_Stream }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceStreamsResp
+ */
+export const ListDeviceStreamsResp = new ListDeviceStreamsResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListDeviceStreamsResp_Stream$Type extends MessageType<ListDeviceStreamsResp_Stream> {
+    constructor() {
+        super("ListDeviceStreamsResp.Stream", [
+            { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListDeviceStreamsResp.Stream
+ */
+export const ListDeviceStreamsResp_Stream = new ListDeviceStreamsResp_Stream$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class ListEmailAlarmEventsResp$Type extends MessageType<ListEmailAlarmEventsResp> {
     constructor() {
         super("ListEmailAlarmEventsResp", [
@@ -3012,6 +3080,7 @@ export const User = new ServiceType("User", [
     { name: "GetDeviceSoftwareVersion", options: {}, I: GetDeviceSoftwareVersionReq, O: GetDeviceSoftwareVersionResp },
     { name: "ListDeviceLicenses", options: {}, I: ListDeviceLicensesReq, O: ListDeviceLicensesResp },
     { name: "ListDeviceStorage", options: {}, I: ListDeviceStorageReq, O: ListDeviceStorageResp },
+    { name: "ListDeviceStreams", options: {}, I: ListDeviceStreamsReq, O: ListDeviceStreamsResp },
     { name: "ListEmailAlarmEvents", options: {}, I: Empty, O: ListEmailAlarmEventsResp },
     { name: "ListEventFilters", options: {}, I: Empty, O: ListEventFiltersResp },
     { name: "ListLatestFiles", options: {}, I: Empty, O: ListLatestFilesResp }

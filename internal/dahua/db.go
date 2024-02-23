@@ -492,3 +492,18 @@ func ListEventactions(ctx context.Context, db sqlite.DB) ([]string, error) {
 
 	return res, nil
 }
+
+func ListStreams(ctx context.Context, db sqlite.DB, deviceID int64) ([]repo.DahuaStream, error) {
+	sb := sq.
+		Select("*").
+		From("dahua_streams").
+		Where("device_id = ?", deviceID)
+
+	var res []repo.DahuaStream
+	sb = dbSelectFilter(ctx, sb, "dahua_streams.device_id", levelDefault)
+	if err := ssq.Query(ctx, db, &res, sb); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}

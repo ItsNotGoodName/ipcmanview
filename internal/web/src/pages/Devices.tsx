@@ -1,4 +1,4 @@
-import { Image } from "@kobalte/core"
+import { Image, Tabs } from "@kobalte/core"
 import Humanize from "humanize-plus"
 import { A, createAsync, useSearchParams } from "@solidjs/router"
 import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo, createSignal } from "solid-js"
@@ -7,7 +7,7 @@ import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
 import { TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { GetDevicesPageResp_Device } from "~/twirp/rpc"
-import { getDeviceDetail, getDeviceRPCStatus, getDeviceSoftwareVersion, getListDeviceLicenses, getListDeviceStorage, } from "./data"
+import { getDeviceDetail, getDeviceRPCStatus, getDeviceSoftwareVersion, getListDeviceLicenses, getListDeviceStorage, getListDeviceStreams, } from "./data"
 import { Skeleton } from "~/ui/Skeleton"
 import { ToggleButton } from "@kobalte/core"
 import { decodeQueryInts, encodeQueryInts, formatDate, parseDate } from "~/lib/utils"
@@ -31,11 +31,12 @@ export function Devices() {
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Shared.Title>Devices</Shared.Title>
         <TabsRoot value={searchParams.tab || "device"} onChange={(value) => setSearchParams({ tab: value })}>
-          <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div class="flex flex-col gap-2">
             <div class="overflow-x-auto">
               <TabsList>
                 <TabsTrigger value="device">Device</TabsTrigger>
                 <TabsTrigger value="rpc-status">RPC Status</TabsTrigger>
+                <TabsTrigger value="stream">Stream</TabsTrigger>
                 <TabsTrigger value="snapshot">Snapshot</TabsTrigger>
                 <TabsTrigger value="detail">Detail</TabsTrigger>
                 <TabsTrigger value="software-version">Software Version</TabsTrigger>
@@ -85,6 +86,11 @@ export function Devices() {
           <TabsContent value="rpc-status">
             <Suspense fallback={<Skeleton class="h-32" />}>
               <RPCStatusTable devices={filteredDevices()} />
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="stream">
+            <Suspense fallback={<Skeleton class="h-32" />}>
+              <StreamGrid devices={filteredDevices()} />
             </Suspense>
           </TabsContent>
           <TabsContent value="snapshot">
@@ -192,6 +198,58 @@ function RPCStatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
   )
 }
 
+function StreamGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
+  return (
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      <For each={props.devices}>
+        {device => {
+          const listDeviceStreams = createAsync(() => getListDeviceStreams(device.id))
+
+          return (
+            <div>
+              <div class="flex flex-col rounded-t border">
+                <TabsRoot>
+                  <div class="flex flex-col">
+                    <div class="flex items-center justify-between border-b p-2">
+                      <div class="flex-1 px-2">
+                        <A href={`/devices/${device.id}`}>{device.name}</A>
+                      </div>
+                      <ErrorBoundary fallback={() => <TabsList />} >
+                        <Suspense fallback={<Skeleton class="size-10" />}>
+                          <TabsList>
+                            <For each={listDeviceStreams()}>
+                              {item => <TabsTrigger value={item.name}>{item.name}</TabsTrigger>}
+                            </For>
+                          </TabsList>
+                        </Suspense>
+                      </ErrorBoundary>
+                    </div>
+                    <ErrorBoundary fallback={(e) => <div class="p-2"><PageError error={e} /></div>}>
+                      <Suspense fallback={<div class="p-2"><Skeleton class="h-32" /></div>}>
+                        <For each={listDeviceStreams()}>
+                          {item =>
+                            <Tabs.Content value={item.name}>
+                              <iframe
+                                class="h-full w-full aspect-video"
+                                src={item.url}
+                                allow="fullscreen"
+                              ></iframe>
+                            </Tabs.Content>
+                          }
+                        </For>
+                      </Suspense>
+                    </ErrorBoundary>
+                  </div>
+                </TabsRoot>
+              </div>
+            </div >
+          )
+        }}
+      </For >
+    </div >
+  )
+}
+
 function SnapshotGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
   return (
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
@@ -226,7 +284,6 @@ function SnapshotGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
     </div>
   )
 }
-
 
 function DetailTable(props: { devices?: GetDevicesPageResp_Device[] }) {
   const colspan = 9

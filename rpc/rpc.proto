@@ -95,6 +95,7 @@ service User {
   rpc GetDeviceSoftwareVersion(GetDeviceSoftwareVersionReq) returns (GetDeviceSoftwareVersionResp);
   rpc ListDeviceLicenses(ListDeviceLicensesReq) returns (ListDeviceLicensesResp);
   rpc ListDeviceStorage(ListDeviceStorageReq) returns (ListDeviceStorageResp);
+  rpc ListDeviceStreams(ListDeviceStreamsReq) returns (ListDeviceStreamsResp);
 
   rpc ListEmailAlarmEvents(google.protobuf.Empty) returns (ListEmailAlarmEventsResp);
   rpc ListEventFilters(google.protobuf.Empty) returns (ListEventFiltersResp);
@@ -335,6 +336,17 @@ message ListDeviceStorageResp {
     bool is_error = 7;
   }
   repeated Storage items = 1;
+}
+
+message ListDeviceStreamsReq {
+  int64 id = 1;
+}
+message ListDeviceStreamsResp {
+  message Stream {
+    string name = 1;
+    string url = 2;
+  }
+  repeated Stream items = 1;
 }
 
 message ListEmailAlarmEventsResp {

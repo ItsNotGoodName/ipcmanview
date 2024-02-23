@@ -3,12 +3,15 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/apiws"
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	echo "github.com/labstack/echo/v4"
@@ -86,7 +89,7 @@ func (s *Server) RegisterDahua(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
 	return s
 }
 
-func (s *Server) RegisterWS(e *echo.Echo, m ...echo.MiddlewareFunc) {
+func (s *Server) RegisterWS(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
 	g := e.Group(Route, m...)
 
 	g.GET("/ws", func(c echo.Context) error {
@@ -103,6 +106,20 @@ func (s *Server) RegisterWS(e *echo.Echo, m ...echo.MiddlewareFunc) {
 
 		return nil
 	})
+
+	return s
+}
+
+func (s *Server) RegisterMediamtx(e *echo.Echo, cfg mediamtx.Config, m ...echo.MiddlewareFunc) {
+	g := e.Group(Route, m...)
+
+	urL, err := url.Parse(cfg.Address())
+	if err != nil {
+		panic(err)
+	}
+
+	g.Any("/mediamtx/*", echo.WrapHandler(http.StripPrefix("/v1/mediamtx", httputil.NewSingleHostReverseProxy(urL))))
+
 }
 
 // ---------- Middleware
