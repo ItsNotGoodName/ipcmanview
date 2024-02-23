@@ -500,8 +500,8 @@ func (u *User) ListDeviceStreams(ctx context.Context, req *rpc.ListDeviceStreams
 	items := make([]*rpc.ListDeviceStreamsResp_Stream, 0, len(res))
 	for _, v := range res {
 		items = append(items, &rpc.ListDeviceStreamsResp_Stream{
-			Name: v.Name,
-			Url:  u.mediamtxConfig.DahuaEmbedURL(v),
+			Name:     v.Name,
+			EmbedUrl: api.MediamtxURI(u.mediamtxConfig.DahuaEmbedPath(v)),
 		})
 	}
 

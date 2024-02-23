@@ -912,9 +912,9 @@ export interface ListDeviceStreamsResp_Stream {
      */
     name: string;
     /**
-     * @generated from protobuf field: string url = 2;
+     * @generated from protobuf field: string embed_url = 2;
      */
-    url: string;
+    embedUrl: string;
 }
 /**
  * @generated from protobuf message ListEmailAlarmEventsResp
@@ -2378,7 +2378,7 @@ class ListDeviceStreamsResp_Stream$Type extends MessageType<ListDeviceStreamsRes
     constructor() {
         super("ListDeviceStreamsResp.Stream", [
             { no: 1, name: "name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "embed_url", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
         ]);
     }
 }

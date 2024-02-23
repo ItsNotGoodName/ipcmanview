@@ -3,6 +3,7 @@ package mediamtx
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"text/template"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
@@ -28,20 +29,24 @@ func NewConfig(host, pathTemplate, streamProtocol string, webrtcPort, hlsPort in
 	default:
 		return Config{}, fmt.Errorf("invalid stream protocol: %s", streamProtocol)
 	}
+	urL, err := url.Parse(embedAddress)
+	if err != nil {
+		return Config{}, err
+	}
 
 	return Config{
-		embedAddress: embedAddress,
+		url:          urL,
 		pathTemplate: tmpl,
 	}, nil
 }
 
 type Config struct {
-	embedAddress string
+	url          *url.URL
 	pathTemplate *template.Template
 }
 
-func (c Config) Address() string {
-	return c.embedAddress
+func (c Config) URL() *url.URL {
+	return c.url
 }
 
 type DahuaStream struct {
@@ -53,23 +58,9 @@ type DahuaStream struct {
 	MediamtxPath string
 }
 
-func (c Config) DahuaEmbedURL(stream repo.DahuaStream) string {
-	if c.embedAddress == "" {
-		return ""
-	}
-
-	path, err := c.dahuaPath(stream)
-	if err != nil {
-		log.Err(err).Msg("Failed to get mediamtx path")
-		return ""
-	}
-
-	return fmt.Sprintf("/v1/mediamtx/%s", path)
-}
-
-func (c Config) dahuaPath(stream repo.DahuaStream) (string, error) {
+func (c Config) DahuaEmbedPath(stream repo.DahuaStream) string {
 	if stream.MediamtxPath != "" {
-		return stream.MediamtxPath, nil
+		return stream.MediamtxPath
 	}
 
 	if c.pathTemplate != nil {
@@ -82,11 +73,12 @@ func (c Config) dahuaPath(stream repo.DahuaStream) (string, error) {
 			Subtype:  stream.Subtype,
 		})
 		if err != nil {
-			return "", err
+			log.Err(err).Str("package", "mediamtx").Send()
+			return ""
 		}
 
-		return buffer.String(), nil
+		return buffer.String()
 	}
 
-	return "", nil
+	return ""
 }

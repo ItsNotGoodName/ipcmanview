@@ -3,15 +3,12 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/apiws"
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
-	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	echo "github.com/labstack/echo/v4"
@@ -24,13 +21,15 @@ func NewServer(
 	bus *event.Bus,
 	dahuaStore *dahua.Store,
 	dahuaFileFS afero.Fs,
+	mediamtxURL *url.URL,
 ) *Server {
 	return &Server{
 		pub:         pub,
-		bus:         bus,
 		db:          db,
+		bus:         bus,
 		dahuaStore:  dahuaStore,
 		dahuaFileFS: dahuaFileFS,
+		mediamtxURL: mediamtxURL,
 	}
 }
 
@@ -40,16 +39,21 @@ type Server struct {
 	bus         *event.Bus
 	dahuaStore  *dahua.Store
 	dahuaFileFS afero.Fs
+	mediamtxURL *url.URL
 }
 
 const Route = "/v1"
 
+func MediamtxURI(path string) string {
+	return fmt.Sprintf("%s/mediamtx/%s", Route, path)
+}
+
 func DahuaAferoFileURI(name string) string {
-	return "/v1/dahua/afs/" + name
+	return Route + "/dahua/afs/" + name
 }
 
 func DahuaDeviceFileURI(deviceID int64, filePath string) string {
-	return fmt.Sprintf("/v1/dahua/devices/%d/files/%s", deviceID, filePath)
+	return fmt.Sprintf("%s/dahua/devices/%d/files/%s", Route, deviceID, filePath)
 }
 
 func (s *Server) RegisterSession(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
@@ -62,10 +66,14 @@ func (s *Server) RegisterSession(e *echo.Echo, m ...echo.MiddlewareFunc) *Server
 	return s
 }
 
-func (s *Server) RegisterDahua(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
+func (s *Server) Register(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
 	g := e.Group(Route, m...)
 
-	g.GET("/dahua/afs/*", s.DahuaAfero("/v1/dahua/afs"))
+	g.GET("/ws", s.WS)
+
+	g.Any("/mediamtx/*", s.Mediamtx(Route+"/mediamtx"))
+
+	g.GET("/dahua/afs/*", s.DahuaAfero(Route+"/dahua/afs"))
 	g.GET("/dahua/events", s.DahuaEvents)
 
 	g.GET("/dahua/devices", s.DahuaDevices)
@@ -78,48 +86,16 @@ func (s *Server) RegisterDahua(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
 	g.GET("/dahua/devices/:id/files", s.DahuaDevicesIDFiles)
 	g.GET("/dahua/devices/:id/files/*", s.DahuaDevicesIDFilesPath)
 	g.GET("/dahua/devices/:id/licenses", s.DahuaDevicesIDLicenses)
+	g.GET("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetGET)
 	g.GET("/dahua/devices/:id/snapshot", s.DahuaDevicesIDSnapshot)
 	g.GET("/dahua/devices/:id/software", s.DahuaDevicesIDSoftware)
 	g.GET("/dahua/devices/:id/storage", s.DahuaDevicesIDStorage)
 	g.GET("/dahua/devices/:id/users", s.DahuaDevicesIDUsers)
-	g.GET("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetGET)
+
 	g.POST("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetPOST)
 	g.POST("/dahua/devices/:id/rpc", s.DahuaDevicesIDRPCPOST)
 
 	return s
-}
-
-func (s *Server) RegisterWS(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
-	g := e.Group(Route, m...)
-
-	g.GET("/ws", func(c echo.Context) error {
-		w := c.Response()
-		r := c.Request()
-		ctx := r.Context()
-
-		conn, err := apiws.Upgrade(w, r)
-		if err != nil {
-			return err
-		}
-
-		WS(ctx, conn, s.db, s.pub)
-
-		return nil
-	})
-
-	return s
-}
-
-func (s *Server) RegisterMediamtx(e *echo.Echo, cfg mediamtx.Config, m ...echo.MiddlewareFunc) {
-	g := e.Group(Route, m...)
-
-	urL, err := url.Parse(cfg.Address())
-	if err != nil {
-		panic(err)
-	}
-
-	g.Any("/mediamtx/*", echo.WrapHandler(http.StripPrefix("/v1/mediamtx", httputil.NewSingleHostReverseProxy(urL))))
-
 }
 
 // ---------- Middleware

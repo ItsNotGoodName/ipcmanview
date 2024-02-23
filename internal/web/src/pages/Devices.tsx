@@ -200,7 +200,7 @@ function RPCStatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
 
 function StreamGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
   return (
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
       <For each={props.devices}>
         {device => {
           const listDeviceStreams = createAsync(() => getListDeviceStreams(device.id))
@@ -210,10 +210,7 @@ function StreamGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
               <div class="flex flex-col rounded-t border">
                 <TabsRoot>
                   <div class="flex flex-col">
-                    <div class="flex items-center justify-between border-b p-2">
-                      <div class="flex-1 px-2">
-                        <A href={`/devices/${device.id}`}>{device.name}</A>
-                      </div>
+                    <div class="flex items-center justify-between gap-2 border-b p-2">
                       <ErrorBoundary fallback={() => <TabsList />} >
                         <Suspense fallback={<Skeleton class="size-10" />}>
                           <TabsList>
@@ -223,6 +220,9 @@ function StreamGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
                           </TabsList>
                         </Suspense>
                       </ErrorBoundary>
+                      <div class="px-2">
+                        <A href={`/devices/${device.id}`}>{device.name}</A>
+                      </div>
                     </div>
                     <ErrorBoundary fallback={(e) => <div class="p-2"><PageError error={e} /></div>}>
                       <Suspense fallback={<div class="p-2"><Skeleton class="h-32" /></div>}>
@@ -230,8 +230,8 @@ function StreamGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
                           {item =>
                             <Tabs.Content value={item.name}>
                               <iframe
-                                class="h-full w-full aspect-video"
-                                src={item.url}
+                                class="aspect-video h-full w-full"
+                                src={item.embedUrl}
                                 allow="fullscreen"
                               ></iframe>
                             </Tabs.Content>
@@ -242,17 +242,17 @@ function StreamGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
                   </div>
                 </TabsRoot>
               </div>
-            </div >
+            </div>
           )
         }}
-      </For >
-    </div >
+      </For>
+    </div>
   )
 }
 
 function SnapshotGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
   return (
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
       <For each={props.devices}>
         {item => {
           const [t, setT] = createSignal(new Date().getTime())
@@ -262,13 +262,13 @@ function SnapshotGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
           return (
             <div>
               <div class="flex flex-col rounded-t border">
-                <div class="flex items-center gap-2 p-2">
-                  <div class="flex-1 px-2">
-                    <A href={`/devices/${item.id}`}>{item.name}</A>
-                  </div>
+                <div class="flex items-center justify-between border-b gap-2 p-2">
                   <Button size="icon" variant="ghost">
                     <RiSystemRefreshLine class="size-5" onClick={refresh} />
                   </Button>
+                  <div class="px-2">
+                    <A href={`/devices/${item.id}`}>{item.name}</A>
+                  </div>
                 </div>
                 <Image.Root>
                   <Image.Img src={src()} />

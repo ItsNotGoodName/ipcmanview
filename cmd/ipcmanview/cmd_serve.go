@@ -140,11 +140,9 @@ func (c *CmdServe) Run(ctx *Context) error {
 	// API
 	apiRequireAuthMiddleware := api.RequireAuthMiddleware()
 	api.
-		NewServer(pub, db, bus, dahuaStore, dahuaAFS).
+		NewServer(pub, db, bus, dahuaStore, dahuaAFS, mediamtxConfig.URL()).
 		RegisterSession(httpRouter).
-		RegisterDahua(httpRouter, apiRequireAuthMiddleware).
-		RegisterWS(httpRouter, apiRequireAuthMiddleware).
-		RegisterMediamtx(httpRouter, mediamtxConfig)
+		Register(httpRouter, apiRequireAuthMiddleware)
 
 	// RPC
 	rpcLogger := rpcserver.Logger()

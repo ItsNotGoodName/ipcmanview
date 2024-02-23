@@ -11,6 +11,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/gorilla/websocket"
+	echo "github.com/labstack/echo/v4"
 )
 
 type WSData struct {
@@ -21,6 +22,21 @@ type WSData struct {
 type WSEvent struct {
 	Action string          `json:"action"`
 	Data   json.RawMessage `json:"data"`
+}
+
+func (s Server) WS(c echo.Context) error {
+	w := c.Response()
+	r := c.Request()
+	ctx := r.Context()
+
+	conn, err := apiws.Upgrade(w, r)
+	if err != nil {
+		return err
+	}
+
+	WS(ctx, conn, s.db, s.pub)
+
+	return nil
 }
 
 func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub) {

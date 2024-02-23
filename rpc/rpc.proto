@@ -344,7 +344,7 @@ message ListDeviceStreamsReq {
 message ListDeviceStreamsResp {
   message Stream {
     string name = 1;
-    string url = 2;
+    string embed_url = 2;
   }
   repeated Stream items = 1;
 }

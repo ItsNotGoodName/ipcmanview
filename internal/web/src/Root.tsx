@@ -28,8 +28,8 @@ const menuLinkVariants = cva("ui-disabled:pointer-events-none ui-disabled:opacit
       icon: "h-10 w-10",
     },
     variant: {
-      default: "hover:bg-accent hover:text-accent-foreground",
-      active: "bg-primary text-primary-foreground hover:bg-primary/90",
+      default: "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+      active: "bg-primary text-primary-foreground hover:bg-primary/90 focus:bg-primary/90",
     }
   },
   defaultVariants: {
@@ -42,27 +42,27 @@ function MenuLinks(props: { onClick?: () => void }) {
     <div class="flex flex-col">
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/" noScroll end>
-        <RiBuildingsHomeLine class="h-5 w-5" />Home
+        <RiBuildingsHomeLine class="size-5" />Home
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/devices" noScroll>
-        <BiRegularCctv class="h-5 w-5" />Devices
+        <BiRegularCctv class="size-5" />Devices
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/emails" noScroll>
-        <RiBusinessMailLine class="h-5 w-5" />Emails
+        <RiBusinessMailLine class="size-5" />Emails
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/events" noScroll>
-        <RiWeatherFlashlightLine class="h-5 w-5" />Events
+        <RiWeatherFlashlightLine class="size-5" />Events
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/files" noScroll>
-        <RiDocumentFileLine class="h-5 w-5" />Files
+        <RiDocumentFileLine class="size-5" />Files
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/live" noScroll>
-        <RiMediaLiveLine class="h-5 w-5" />Live
+        <RiMediaLiveLine class="size-5" />Live
       </A>
     </div>
   )
@@ -73,19 +73,19 @@ function AdminMenuLinks(props: { onClick?: () => void }) {
     <div class="flex flex-col">
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/admin" noScroll end>
-        <RiSystemSettings2Line class="h-5 w-5" />Settings
+        <RiSystemSettings2Line class="size-5" />Settings
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/admin/users" noScroll>
-        <RiUserFacesUserLine class="h-5 w-5" />Users
+        <RiUserFacesUserLine class="size-5" />Users
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/admin/groups" noScroll>
-        <RiUserFacesGroupLine class="h-5 w-5" />Groups
+        <RiUserFacesGroupLine class="size-5" />Groups
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/admin/devices" noScroll>
-        <BiRegularCctv class="h-5 w-5" />Devices
+        <BiRegularCctv class="size-5" />Devices
       </A>
     </div>
   )
@@ -102,8 +102,7 @@ const actionSignOut = action(() =>
       throw new Error(json.message)
     }
     return revalidate(getSession.key)
-  }).catch(catchAsToast)
-)
+  }).catch(catchAsToast))
 
 type HeaderProps = {
   onMenuClick: () => void
@@ -203,13 +202,13 @@ function Header(props: HeaderProps) {
   )
 }
 
-function Menu(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "class"> & { open?: boolean }) {
-  const [_, rest] = splitProps(props, ["children", "open"])
+function Menu(props: JSX.HTMLAttributes<HTMLDivElement> & { open?: boolean }) {
+  const [_, rest] = splitProps(props, ["children", "open", "class"])
   return (
     <div data-open={props.open} class="border-border border-r-0 transition-all duration-200 md:data-[open=true]:border-r" {...rest}>
       <div data-open={props.open} class="sticky top-0 w-0 transition-all duration-200 md:data-[open=true]:w-48">
-        <div class="h-screen overflow-y-auto">
-          <div class="p-2">
+        <div class="h-screen overflow-y-auto overflow-x-hidden">
+          <div class={props.class}>
             {props.children}
           </div>
         </div>
@@ -229,7 +228,7 @@ export function Root(props: RouteSectionProps) {
   })
 
   const isAuthenticatedLayout = () => session()?.valid && !session()?.disabled
-  const isAdminPage = () => location.pathname.startsWith("/admin")
+  const isAdminPage = () => props.location.pathname.startsWith("/admin")
 
   const [mobileMenuOpen, setMobileMenuOpen] = createSignal(false)
   const toggleMobileMenuOpen = () => setMobileMenuOpen(!mobileMenuOpen())
@@ -280,17 +279,22 @@ export function Root(props: RouteSectionProps) {
             siteName={config()?.siteName}
           />
           <div class="flex">
-            <Menu open={menuOpen()}>
+            <Menu open={menuOpen()} class="flex h-full flex-col justify-between p-2">
               <Show when={!isAdminPage()} fallback={<AdminMenuLinks />}>
                 <MenuLinks />
               </Show>
+              <div class="flex flex-col">
+                <button class={menuLinkVariants()} onClick={toggleMenuOpen}>
+                  <RiSystemMenuLine class="size-5" />Menu
+                </button>
+              </div>
             </Menu>
-            <div class="w-full overflow-x-auto"> {/* FIXME: overflow-x-auto is needed to fix overflowing tables BUT it also breaks something and I forgot what it was ¯\_(ツ)_/¯ */}
+            <div class="w-full overflow-x-auto">
               {props.children}
             </div>
           </div>
         </Show>
       </Suspense>
-    </ErrorBoundary >
+    </ErrorBoundary>
   )
 }
