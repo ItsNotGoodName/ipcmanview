@@ -5,7 +5,7 @@
 // https://kobalte.dev/docs/core/components/switch
 // https://ui.shadcn.com/docs/components/switch
 import { Switch } from "@kobalte/core"
-import { ComponentProps, splitProps } from "solid-js"
+import { splitProps } from "solid-js"
 
 import { cn } from "~/lib/utils"
 import { labelVariants } from "./Label"
@@ -35,13 +35,13 @@ export function SwitchErrorMessage(props: Switch.SwitchErrorMessageProps) {
   />
 }
 
-export function SwitchControl(props: ComponentProps<typeof Switch.Control>) {
-  const [_, rest] = splitProps(props, ["class"])
+export function SwitchControl(props: Omit<Switch.SwitchControlProps, "children"> & { inputProps?: Omit<Switch.SwitchInputProps, "class"> }) {
+  const [_, rest] = splitProps(props, ["class", "inputProps"])
   return <>
-    <Switch.Input class="peer" />
+    <Switch.Input class="peer" {...props.inputProps} />
     <Switch.Control
       class={cn(
-        "peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background ui-checked:bg-primary ui-not-checked:bg-input inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        "peer-focus-visible:ring-ring peer-focus-visible:ring-offset-background ui-checked:bg-primary ui-not-checked:bg-input inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors disabled:cursor-not-allowed disabled:opacity-50 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2",
         props.class
       )}
       {...rest}

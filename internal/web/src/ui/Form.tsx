@@ -8,7 +8,8 @@ import { FieldStore, FormStore, setValue } from "@modular-forms/solid";
 
 import { cn } from "~/lib/utils"
 import { Label, LabelProps } from "./Label"
-import { Switch } from "@kobalte/core";
+import { Checkbox, Switch } from "@kobalte/core";
+import { CheckboxRoot } from "./Checkbox";
 
 type FieldContextValue = {
   id: string
@@ -18,7 +19,17 @@ const FormItemContext = createContext<FieldContextValue>(
   {} as FieldContextValue
 )
 
-export function FieldSwitchRoot(props: Switch.SwitchRootProps & { field: FieldStore<any, any>, form: FormStore<any, any> }) {
+export function CheckboxFieldRoot(props: Checkbox.CheckboxRootProps & { field: FieldStore<any, any>, form: FormStore<any, any> }) {
+  const [_, rest] = splitProps(props, ["field", "form"])
+  return <CheckboxRoot
+    validationState={props.field.error ? "invalid" : "valid"}
+    checked={props.field.value}
+    onChange={(value) => setValue(props.form, props.field.name, value)}
+    {...rest}
+  />
+}
+
+export function SwitchFieldRoot(props: Switch.SwitchRootProps & { field: FieldStore<any, any>, form: FormStore<any, any> }) {
   const [_, rest] = splitProps(props, ["field", "form"])
   return <Switch.Root
     validationState={props.field.error ? "invalid" : "valid"}

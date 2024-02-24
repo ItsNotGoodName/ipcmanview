@@ -14,7 +14,7 @@ import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "
 import { Input } from "~/ui/Input";
 import { Textarea } from "~/ui/Textarea";
 import { DialogContent, DialogHeader, DialogOverflow, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, } from "~/ui/Dialog";
-import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
@@ -369,7 +369,6 @@ function CreateForm(props: { close: () => void }) {
       </Button>
       <FormMessage form={form} />
       <CheckboxRoot checked={addMore()} onChange={setAddMore}>
-        <CheckboxInput />
         <CheckboxControl />
         <CheckboxLabel>Add more</CheckboxLabel>
       </CheckboxRoot>

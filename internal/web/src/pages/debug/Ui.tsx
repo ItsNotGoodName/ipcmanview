@@ -11,7 +11,7 @@ import { toggleTheme } from "~/ui/theme";
 import { CardRoot, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/ui/Card";
 import { For, Show, createSignal, onCleanup, } from "solid-js";
 import { Badge } from "~/ui/Badge";
-import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { PopoverArrow, PopoverCloseButton, PopoverCloseIcon, PopoverContent, PopoverDescription, PopoverPortal, PopoverRoot, PopoverTitle, PopoverTrigger } from "~/ui/Popover";
 import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverflow, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
@@ -209,7 +209,6 @@ export function Ui() {
         </For>
       </div>
       <CheckboxRoot validationState="invalid">
-        <CheckboxInput />
         <CheckboxControl />
         <CheckboxLabel>Checkbox Label</CheckboxLabel>
         <CheckboxDescription>Checkbox Description</CheckboxDescription>

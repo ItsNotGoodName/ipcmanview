@@ -143,7 +143,10 @@ export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFiel
 }
 
 export function createSyncForm<T extends FieldValues>(form: FormStore<T, undefined>, initialValues: Accessor<PartialValues<T>>) {
-  createEffect(() => form.dirty || setValues(form, initialValues()))
+  createEffect(() => {
+    if (form.dirty) return
+    setValues(form, initialValues())
+  })
 }
 
 export type CreatePagePaginationReturn = {

@@ -2,7 +2,7 @@ import { createForm, reset } from "@modular-forms/solid";
 import { ErrorBoundary, Show, Suspense, } from "solid-js";
 import { Shared } from "~/components/Shared";
 import { Button } from "~/ui/Button";
-import { FieldControl, FieldDescription, FieldLabel, FieldMessage, FieldRoot, FieldSwitchRoot, FormMessage } from "~/ui/Form";
+import { FieldControl, FieldDescription, FieldLabel, FieldMessage, FieldRoot, SwitchFieldRoot, FormMessage } from "~/ui/Form";
 import { Input } from "~/ui/Input";
 import { LayoutNormal } from "~/ui/Layout";
 import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchLabel } from "~/ui/Switch";
@@ -11,7 +11,7 @@ import { createAsync, revalidate } from "@solidjs/router";
 import { getConfig } from "../data";
 import { GetConfigResp } from "~/twirp/rpc";
 import { Skeleton } from "~/ui/Skeleton";
-import { createSyncForm, throwAsFormError } from "~/lib/utils";
+import { throwAsFormError } from "~/lib/utils";
 import { PageError } from "~/ui/Page";
 
 type UpdateForm = {
@@ -46,13 +46,8 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
       boolean: props.config.enableSignUp
     }
   })
-  const [updateForm, { Field, Form }] = createForm<UpdateForm>({
-    initialValues: formInitialValues()
-  });
-  createSyncForm(updateForm, formInitialValues)
-
-  const formReset = () => props.refetchConfig().then(() => reset(updateForm))
-
+  const [updateForm, { Field, Form }] = createForm<UpdateForm>({ initialValues: formInitialValues() });
+  const formReset = () => props.refetchConfig().then(() => reset(updateForm, { initialValues: formInitialValues() }))
   const formSubmit = (form: UpdateForm) => useClient()
     .admin.updateConfig({
       enableSignUp: form.enableSignUp.boolean,
@@ -80,8 +75,8 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
           )}
         </Field>
         <Field name="enableSignUp.boolean" type="boolean">
-          {(field) => (
-            <FieldSwitchRoot
+          {(field, props) => (
+            <SwitchFieldRoot
               form={updateForm}
               field={field}
               class="flex items-center justify-between gap-2"
@@ -91,8 +86,8 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
                 <SwitchDescription>Allow public sign up.</SwitchDescription>
                 <SwitchErrorMessage>{field.error}</SwitchErrorMessage>
               </div>
-              <SwitchControl />
-            </FieldSwitchRoot>
+              <SwitchControl inputProps={props} />
+            </SwitchFieldRoot>
           )}
         </Field>
         <div class="flex flex-col gap-4 sm:flex-row-reverse">

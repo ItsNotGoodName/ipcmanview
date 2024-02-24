@@ -7,7 +7,7 @@ import { catchAsToast, createPagePagination, createRowSelection, createToggleSor
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { useClient } from "~/providers/client";
-import { CheckboxControl, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
@@ -461,7 +461,6 @@ function CreateForm(props: { close: () => void }) {
           </Button>
           <FormMessage form={form} />
           <CheckboxRoot checked={addMore()} onChange={setAddMore}>
-            <CheckboxInput />
             <CheckboxControl />
             <CheckboxLabel>Add more</CheckboxLabel>
           </CheckboxRoot>

@@ -5,12 +5,12 @@ import { ParentProps, Show, } from "solid-js";
 import { useClient } from "~/providers/client";
 import { Button } from "~/ui/Button";
 import { CardRoot } from "~/ui/Card";
-import { FieldControl, FieldRoot, FieldLabel, FieldMessage, FormMessage } from "~/ui/Form";
+import { FieldControl, FieldRoot, FieldLabel, FieldMessage, FormMessage, CheckboxFieldRoot } from "~/ui/Form";
 import { Input } from "~/ui/Input";
 import { linkVariants } from "~/ui/Link";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { toggleTheme, useThemeTitle } from "~/ui/theme";
-import { CheckboxControl, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxErrorMessage, CheckboxLabel } from "~/ui/Checkbox";
 import { throwAsFormError } from "~/lib/utils";
 import { toast } from "~/ui/Toast";
 import { getSession } from "~/providers/session";
@@ -137,12 +137,11 @@ export function SignIn() {
           </Field>
           <Field name="rememberMe" type="boolean">
             {(field, props) => (
-              <CheckboxRoot validationState={field.error ? "invalid" : "valid"} checked={field.value}>
-                <CheckboxInput {...props} />
-                <CheckboxControl />
+              <CheckboxFieldRoot form={signInForm} field={field}>
+                <CheckboxControl inputProps={props} />
                 <CheckboxLabel>Remember me</CheckboxLabel>
                 <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
-              </CheckboxRoot>
+              </CheckboxFieldRoot>
             )}
           </Field>
           <Button type="submit" disabled={signInForm.submitting}>

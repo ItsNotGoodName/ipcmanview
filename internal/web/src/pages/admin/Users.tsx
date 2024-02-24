@@ -1,4 +1,4 @@
-import { CheckboxControl, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxErrorMessage, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission, } from "@solidjs/router";
 import { ErrorBoundary, For, Show, Suspense, createEffect, createResource, createSignal, } from "solid-js";
 import { RiDesignFocus2Line, RiSystemLockLine, RiUserFacesAdminLine, } from "solid-icons/ri";
@@ -16,7 +16,7 @@ import { useClient } from "~/providers/client";
 import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
 import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
-import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
+import { CheckboxFieldRoot, FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
 import { Button } from "~/ui/Button";
 import { createForm, required, reset } from "@modular-forms/solid";
 import { Input } from "~/ui/Input";
@@ -566,22 +566,20 @@ function CreateForm(props: { close: () => void }) {
       <div class="flex gap-4 flex-wrap">
         <Field name="admin" type="boolean">
           {(field, props) => (
-            <CheckboxRoot validationState={field.error ? "invalid" : "valid"} checked={field.value}>
-              <CheckboxInput {...props} />
-              <CheckboxControl />
+            <CheckboxFieldRoot form={form} field={field}>
+              <CheckboxControl inputProps={props} />
               <CheckboxLabel>Admin</CheckboxLabel>
               <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
-            </CheckboxRoot>
+            </CheckboxFieldRoot>
           )}
         </Field>
         <Field name="disabled" type="boolean">
           {(field, props) => (
-            <CheckboxRoot validationState={field.error ? "invalid" : "valid"} checked={field.value}>
-              <CheckboxInput {...props} />
-              <CheckboxControl />
+            <CheckboxFieldRoot form={form} field={field}>
+              <CheckboxControl inputProps={props} />
               <CheckboxLabel>Disabled</CheckboxLabel>
               <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
-            </CheckboxRoot>
+            </CheckboxFieldRoot>
           )}
         </Field>
       </div>
@@ -592,7 +590,6 @@ function CreateForm(props: { close: () => void }) {
       </Button>
       <FormMessage form={form} />
       <CheckboxRoot checked={addMore()} onChange={setAddMore}>
-        <CheckboxInput />
         <CheckboxControl />
         <CheckboxLabel>Add more</CheckboxLabel>
       </CheckboxRoot>
