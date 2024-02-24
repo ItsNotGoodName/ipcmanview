@@ -5,7 +5,7 @@ import { Seperator } from "~/ui/Seperator";
 function Title(props: ParentProps) {
   return (
     <div class="flex flex-col gap-2">
-      <div class="text-xl">{props.children}</div>
+      <div class="text-lg">{props.children}</div>
       <Seperator />
     </div>
   )

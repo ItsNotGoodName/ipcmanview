@@ -17,8 +17,9 @@ import { Shared } from "~/components/Shared"
 import { createDate, createTimeAgo } from "@solid-primitives/date"
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
 import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox"
-import { RiMediaImageLine, RiSystemFilterLine, RiSystemRefreshLine } from "solid-icons/ri"
+import { RiMediaImageLine, RiSystemFilterLine, RiSystemLockLine, RiSystemRefreshLine } from "solid-icons/ri"
 import { Button } from "~/ui/Button"
+import { Crud } from "~/components/Crud"
 
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -132,8 +133,8 @@ function DeviceTable(props: { devices?: GetDevicesPageResp_Device[] }) {
           <TableHead>Device</TableHead>
           <TableHead>URL</TableHead>
           <TableHead>Username</TableHead>
-          <TableHead>Disabled</TableHead>
           <TableHead>Created At</TableHead>
+          <TableHead></TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -141,18 +142,22 @@ function DeviceTable(props: { devices?: GetDevicesPageResp_Device[] }) {
           {item => (
             <TableRow>
               <DeviceNameCell device={item} />
-              <TableCell>
-                <a class={linkVariants()} href={item.url}>{item.url}</a>
-              </TableCell>
-              <TableCell>
-                {item.username}
-              </TableCell>
-              <TableCell>
-                {item.disabled ? "TRUE" : "FALSE"}
-              </TableCell>
-              <TableCell>
-                {formatDate(parseDate(item.createdAtTime))}
-              </TableCell>
+              <TableCell><a class={linkVariants()} href={item.url}>{item.url}</a></TableCell>
+              <TableCell>{item.username}</TableCell>
+              <TableCell>{formatDate(parseDate(item.createdAtTime))}</TableCell>
+              <Crud.LastTableCell>
+                <Show when={item.disabled}>
+                  <TooltipRoot>
+                    <TooltipTrigger>
+                      <RiSystemLockLine class="size-5" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <TooltipArrow />
+                      Disabled
+                    </TooltipContent>
+                  </TooltipRoot>
+                </Show>
+              </Crud.LastTableCell>
             </TableRow>
           )}
         </For>
@@ -264,7 +269,7 @@ function SnapshotGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
           return (
             <div>
               <div class="flex flex-col rounded-t border">
-                <div class="flex items-center justify-between border-b gap-2 p-2">
+                <div class="flex items-center justify-between gap-2 border-b p-2">
                   <Button size="icon" variant="ghost">
                     <RiSystemRefreshLine class="size-5" onClick={refresh} />
                   </Button>

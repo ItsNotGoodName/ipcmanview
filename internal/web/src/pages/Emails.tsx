@@ -55,7 +55,7 @@ export function Emails() {
           <div class="flex flex-col gap-2">
             <div class="flex flex-wrap gap-2">
               <Crud.PerPageSelect
-                class="w-20"
+                class="hidden w-20 sm:block"
                 perPage={data()?.pageResult?.perPage}
                 onChange={(perPage) => setSearchParams({ perPage })}
               />
@@ -116,8 +116,17 @@ export function Emails() {
                   <ComboboxListbox />
                 </ComboboxContent>
               </ComboboxRoot>
+            </div>
+
+            <div class="flex sm:hidden">
+              <Crud.PerPageSelect
+                class="w-20"
+                perPage={data()?.pageResult?.perPage}
+                onChange={(perPage) => setSearchParams({ perPage })}
+              />
+
               <Crud.PageButtons
-                class="flex flex-1 items-center justify-end sm:hidden"
+                class="flex-1 justify-end"
                 previousPageDisabled={pagination.previousPageDisabled()}
                 previousPage={pagination.previousPage}
                 nextPageDisabled={pagination.nextPageDisabled()}

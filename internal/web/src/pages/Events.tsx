@@ -66,7 +66,7 @@ export function Events() {
           <div class="flex flex-col gap-2">
             <div class="flex flex-wrap gap-2">
               <Crud.PerPageSelect
-                class="w-20"
+                class="hidden w-20 sm:block"
                 perPage={data()?.pageResult?.perPage}
                 onChange={(perPage) => setSearchParams({ perPage })}
               />
@@ -155,15 +155,24 @@ export function Events() {
                 </ComboboxContent>
               </ComboboxRoot>
               <A class={buttonVariants({ variant: "link" })} href="/events/live">Live</A>
+            </div>
+
+            <div class="flex sm:hidden">
+              <Crud.PerPageSelect
+                class="w-20"
+                perPage={data()?.pageResult?.perPage}
+                onChange={(perPage) => setSearchParams({ perPage })}
+              />
 
               <Crud.PageButtons
-                class="flex-1 justify-end sm:hidden"
+                class="flex-1 justify-end"
                 previousPageDisabled={pagination.previousPageDisabled()}
                 previousPage={pagination.previousPage}
                 nextPageDisabled={pagination.nextPageDisabled()}
                 nextPage={pagination.nextPage}
               />
             </div>
+
             <PaginationRoot
               page={data()?.pageResult?.page}
               count={data()?.pageResult?.totalPages || 0}
@@ -186,6 +195,7 @@ export function Events() {
               </PaginationEnd>
             </PaginationRoot>
           </div>
+
           <TableRoot>
             <TableHeader>
               <TableRow>
@@ -217,21 +227,21 @@ export function Events() {
                   return (
                     <>
                       <TableRow class="border-b-0">
-                        <TableCell class="truncate">
+                        <TableCell>
                           {formatDate(parseDate(v.createdAtTime))}
                         </TableCell>
-                        <TableCell class="truncate">
+                        <TableCell>
                           <A href={`/devices/${v.deviceId}`} class={linkVariants()}>
                             {v.deviceName}
                           </A>
                         </TableCell>
-                        <TableCell class="truncate">
+                        <TableCell>
                           {v.code}
                         </TableCell>
-                        <TableCell class="truncate">
+                        <TableCell>
                           {v.action}
                         </TableCell>
-                        <TableCell class="truncate">
+                        <TableCell>
                           {v.index.toString()}
                         </TableCell>
                         <Crud.LastTableCell>
@@ -312,7 +322,7 @@ export function EventsLive() {
                   return (
                     <>
                       <TableRow class="border-b-0">
-                        <TableCell class="truncate">
+                        <TableCell>
                           <TooltipRoot>
                             <TooltipTrigger>{createdAtAgo()}</TooltipTrigger>
                             <TooltipContent>
@@ -321,18 +331,18 @@ export function EventsLive() {
                             </TooltipContent>
                           </TooltipRoot>
                         </TableCell>
-                        <TableCell class="truncate">
+                        <TableCell>
                           <A href={`/devices/${v.device_id}`} class={linkVariants()}>
                             {listDevices()?.find((d) => d.id == BigInt(v.device_id))?.name}
                           </A>
                         </TableCell>
-                        <TableCell class="truncate">
+                        <TableCell>
                           {v.code}
                         </TableCell>
-                        <TableCell class="truncate">
+                        <TableCell>
                           {v.action}
                         </TableCell>
-                        <TableCell class="truncate">
+                        <TableCell>
                           {v.index.toString()}
                         </TableCell>
                         <Crud.LastTableCell>
