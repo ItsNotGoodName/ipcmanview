@@ -3,7 +3,7 @@ import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDesc
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot } from "~/ui/DropdownMenu";
 import { AdminDevicesPageSearchParams, getAdminDevicesPage } from "./Devices.data";
 import { ErrorBoundary, For, Show, Suspense, createSignal } from "solid-js";
-import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, createValueModal, formatDate, parseDate, throwAsFormError, } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, createModal, formatDate, isTableRowClick, parseDate, throwAsFormError, } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { useClient } from "~/providers/client";
@@ -17,13 +17,14 @@ import { Crud } from "~/components/Crud";
 import { RiSystemLockLine } from "solid-icons/ri";
 import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
 import { Button } from "~/ui/Button";
-import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage, SelectFieldRoot } from "~/ui/Form";
+import { FieldLabel, FieldMessage, FieldRoot, FormMessage, SelectFieldRoot, fieldControlProps } from "~/ui/Form";
 import { FieldElementProps, FieldStore, FormStore, createForm, required, reset, setValue } from "@modular-forms/solid";
 import { Input } from "~/ui/Input";
 import { SelectContent, SelectHTML, SelectItem, SelectLabel, SelectListbox, SelectTrigger, SelectValue } from "~/ui/Select";
 import { getDevice, getListDeviceFeatures, getListLocations } from "./data";
 import { Shared } from "~/components/Shared";
 import { Badge } from "~/ui/Badge";
+import { BreadcrumbsItem, BreadcrumbsRoot } from "~/ui/Breadcrumbs";
 
 const actionDeleteDevice = action((ids: bigint[]) => useClient()
   .admin.deleteDevice({ ids })
@@ -59,13 +60,13 @@ export function AdminDevices() {
   const [createFormModal, setCreateFormModal] = createSignal(false);
 
   // Update
-  const updateFormModal = createValueModal(BigInt(0))
+  const updateFormModal = createModal(BigInt(0))
 
   // Delete
   const deleteSubmission = useSubmission(actionDeleteDevice)
   const deleteAction = useAction(actionDeleteDevice)
   // Single
-  const deleteModal = createValueModal({ name: "", id: BigInt(0) })
+  const deleteModal = createModal({ name: "", id: BigInt(0) })
   const deleteSubmit = () =>
     deleteAction([deleteModal.value().id])
       .then(deleteModal.close)
@@ -151,7 +152,13 @@ export function AdminDevices() {
         </AlertDialogModal>
       </AlertDialogRoot>
 
-      <Shared.Title>Devices</Shared.Title>
+      <Shared.Title>
+        <BreadcrumbsRoot>
+          <BreadcrumbsItem>
+            Devices
+          </BreadcrumbsItem>
+        </BreadcrumbsRoot>
+      </Shared.Title>
 
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
         <Suspense fallback={<Skeleton class="h-32" />}>
@@ -243,11 +250,14 @@ export function AdminDevices() {
             <TableBody>
               <For each={data()?.items}>
                 {(item, index) => {
-                  const onClick = () => navigate(`./${item.id}`)
                   const toggleDisableSubmit = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
 
                   return (
-                    <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
+                    <TableRow
+                      data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}
+                      onClick={(t) => isTableRowClick(t) && navigate(`./${item.id}`)}
+                      class="cursor-pointer"
+                    >
                       <TableHead>
                         <CheckboxRoot
                           checked={rowSelection.rows[index()]?.checked}
@@ -256,9 +266,9 @@ export function AdminDevices() {
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.name}</TableCell>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.url}</TableCell>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
+                      <TableCell>{item.name}</TableCell>
+                      <TableCell>{item.url}</TableCell>
+                      <TableCell>{formatDate(parseDate(item.createdAtTime))}</TableCell>
                       <Crud.LastTableCell>
                         <Show when={item.disabled}>
                           <TooltipRoot>
@@ -355,13 +365,12 @@ function CreateForm(props: { onSubmit?: () => void }) {
             {(field, props) => (
               <FieldRoot>
                 <FieldLabel field={field}>Name</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    placeholder="Name"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  placeholder="Name"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -370,13 +379,12 @@ function CreateForm(props: { onSubmit?: () => void }) {
             {(field, props) => (
               <FieldRoot>
                 <FieldLabel field={field}>URL</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    placeholder="URL"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  placeholder="URL"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -385,13 +393,12 @@ function CreateForm(props: { onSubmit?: () => void }) {
             {(field, props) => (
               <FieldRoot>
                 <FieldLabel field={field}>Username</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    placeholder="Username"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  placeholder="Username"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -400,15 +407,14 @@ function CreateForm(props: { onSubmit?: () => void }) {
             {(field, props) => (
               <FieldRoot>
                 <FieldLabel field={field}>Password</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    autocomplete="off"
-                    placeholder="Password"
-                    type="password"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  autocomplete="off"
+                  placeholder="Password"
+                  type="password"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -417,16 +423,15 @@ function CreateForm(props: { onSubmit?: () => void }) {
             {(field, props) => (
               <FieldRoot>
                 <FieldLabel field={field}>Location</FieldLabel>
-                <FieldControl field={field}>
-                  <SelectHTML
-                    {...props}
-                    value={field.value}
-                  >
-                    <For each={locations()}>
-                      {v => <option value={v}>{v}</option>}
-                    </For>
-                  </SelectHTML>
-                </FieldControl>
+                <SelectHTML
+                  {...props}
+                  {...fieldControlProps(field)}
+                  value={field.value}
+                >
+                  <For each={locations()}>
+                    {v => <option value={v}>{v}</option>}
+                  </For>
+                </SelectHTML>
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -501,13 +506,12 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         {(field, props) => (
           <FieldRoot>
             <FieldLabel field={field}>Name</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="Name"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              placeholder="Name"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -516,13 +520,12 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         {(field, props) => (
           <FieldRoot>
             <FieldLabel field={field}>URL</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="URL"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              placeholder="URL"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -531,13 +534,12 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         {(field, props) => (
           <FieldRoot>
             <FieldLabel field={field}>Username</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="Username"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              placeholder="Username"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -546,15 +548,14 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         {(field, props) => (
           <FieldRoot>
             <FieldLabel field={field}>New password</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="off"
-                placeholder="New password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              autocomplete="off"
+              placeholder="New password"
+              type="password"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -563,16 +564,15 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         {(field, props) => (
           <FieldRoot>
             <FieldLabel field={field}>Location</FieldLabel>
-            <FieldControl field={field}>
-              <SelectHTML
-                {...props}
-                value={field.value}
-              >
-                <For each={locations()}>
-                  {v => <option value={v}>{v}</option>}
-                </For>
-              </SelectHTML>
-            </FieldControl>
+            <SelectHTML
+              {...props}
+              {...fieldControlProps(field)}
+              value={field.value}
+            >
+              <For each={locations()}>
+                {v => <option value={v}>{v}</option>}
+              </For>
+            </SelectHTML>
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -581,7 +581,7 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         {(field, props) => <DeviceFeaturesField form={form} field={field} props={props} />}
       </Field>
       <div class="flex flex-col gap-4 sm:flex-row-reverse">
-        <Button type="submit" disabled={form.submitting} class="flex-1">
+        <Button type="submit" disabled={form.submitting} class="sm:flex-1">
           <Show when={!form.submitting} fallback="Updating device">Update device</Show>
         </Button>
         <Button type="button" onClick={formReset} variant="destructive" disabled={form.submitting}>Reset</Button>

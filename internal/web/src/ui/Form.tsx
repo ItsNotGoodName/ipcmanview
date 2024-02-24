@@ -34,15 +34,12 @@ type SelectProps<Option, OptGroup> = Select.SelectRootProps<Option, OptGroup> & 
 }
 
 export function SelectFieldRoot<Option, OptGroup = never>(props: SelectProps<Option, OptGroup>) {
-  const [_, rest] = splitProps(props, ["children", "field", "selectProps"])
+  const [_, rest] = splitProps(props, ["field", "selectProps"])
   return <Select.Root
     validationState={props.field.error ? "invalid" : "valid"}
     placeholder={props.placeholder}
     {...rest}
-  >
-    <Select.HiddenSelect {...props.selectProps} />
-    {props.children}
-  </Select.Root>
+  />
 }
 
 export function SwitchFieldRoot(props: Switch.SwitchRootProps & { field: FieldStore<any, any>, form: FormStore<any, any> }) {
@@ -93,23 +90,32 @@ export function FieldLabel(props: Omit<LabelProps, "for"> & { field: FieldStore<
   )
 }
 
-export function FieldControl(props: JSX.HTMLAttributes<HTMLDivElement> & { field: FieldStore<any, any> }) {
-  const [_, rest] = splitProps(props, ["field"])
+export function fieldControlProps(field: FieldStore<any, any>) {
   const { formFieldId, formDescriptionId, formMessageId } = useField()
-
-  return (
-    <div
-      id={formFieldId}
-      aria-describedby={
-        !props.field.error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!props.field.error}
-      {...rest}
-    />
-  )
+  return {
+    id: formFieldId,
+    "aria-describedby": !field.error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`,
+    "aria-invalid": !!field.error
+  }
 }
+
+// export function FieldControl(props: JSX.HTMLAttributes<HTMLDivElement> & { field: FieldStore<any, any> }) {
+//   const [_, rest] = splitProps(props, ["field"])
+//   const { formFieldId, formDescriptionId, formMessageId } = useField()
+//
+//   return (
+//     <div
+//       id={formFieldId}
+//       aria-describedby={
+//         !props.field.error
+//           ? `${formDescriptionId}`
+//           : `${formDescriptionId} ${formMessageId}`
+//       }
+//       aria-invalid={!!props.field.error}
+//       {...rest}
+//     />
+//   )
+// }
 
 export function FieldDescription(props: JSX.HTMLAttributes<HTMLParagraphElement>) {
   const [_, rest] = splitProps(props, ["class"])

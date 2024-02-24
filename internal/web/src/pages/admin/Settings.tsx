@@ -2,7 +2,7 @@ import { createForm, reset } from "@modular-forms/solid";
 import { ErrorBoundary, Show, Suspense, } from "solid-js";
 import { Shared } from "~/components/Shared";
 import { Button } from "~/ui/Button";
-import { FieldControl, FieldDescription, FieldLabel, FieldMessage, FieldRoot, SwitchFieldRoot, FormMessage } from "~/ui/Form";
+import { FieldDescription, FieldLabel, FieldMessage, FieldRoot, SwitchFieldRoot, FormMessage, fieldControlProps } from "~/ui/Form";
 import { Input } from "~/ui/Input";
 import { LayoutNormal } from "~/ui/Layout";
 import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchLabel } from "~/ui/Switch";
@@ -63,12 +63,11 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
           {(field, props) => (
             <FieldRoot>
               <FieldLabel field={field}>Site name</FieldLabel>
-              <FieldControl field={field}>
-                <Input
-                  {...props}
-                  value={field.value}
-                />
-              </FieldControl>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                value={field.value}
+              />
               <FieldDescription>Name of site.</FieldDescription>
               <FieldMessage field={field} />
             </FieldRoot>
@@ -91,7 +90,7 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
           )}
         </Field>
         <div class="flex flex-col gap-4 sm:flex-row-reverse">
-          <Button type="submit" disabled={updateForm.submitting} class="flex-1">
+          <Button type="submit" disabled={updateForm.submitting} class="sm:flex-1">
             <Show when={!updateForm.submitting} fallback="Updating settings">Update settings</Show>
           </Button>
           <Button type="button" onClick={formReset} variant="destructive" disabled={updateForm.submitting}>Reset</Button>

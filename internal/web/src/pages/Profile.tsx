@@ -4,14 +4,14 @@ import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
 import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, } from "solid-js"
 import { createForm, required, reset } from "@modular-forms/solid"
 
-import { formatDate, parseDate, catchAsToast, throwAsFormError, createValueModal } from "~/lib/utils"
+import { formatDate, parseDate, catchAsToast, throwAsFormError, createModal } from "~/lib/utils"
 import { CardRoot, } from "~/ui/Card"
 import { getProfilePage } from "./Profile.data"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
 import { Badge } from "~/ui/Badge"
-import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form"
+import { FieldLabel, FieldMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form"
 import { Input } from "~/ui/Input"
 import { Skeleton } from "~/ui/Skeleton"
 import { getSession } from "~/providers/session"
@@ -47,7 +47,7 @@ export function Profile() {
   const revokeAllMySessions = () => revokeAllMySessionsAction()
     .then(() => setRevokeAllMySessionsModal(false))
 
-  const revokeMySessionModal = createValueModal(BigInt(0))
+  const revokeMySessionModal = createModal(BigInt(0))
   const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
   const revokeMySessionAction = useAction(actionRevokeMySession)
   const revokeMySession = () => revokeMySessionAction(revokeMySessionModal.value())
@@ -221,13 +221,12 @@ function ChangeUsernameForm() {
           {(field, props) => (
             <FieldRoot>
               <FieldLabel field={field}>New username</FieldLabel>
-              <FieldControl field={field}>
-                <Input
-                  {...props}
-                  placeholder="New username"
-                  value={field.value}
-                />
-              </FieldControl>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                placeholder="New username"
+                value={field.value}
+              />
               <FieldMessage field={field} />
             </FieldRoot>
           )}
@@ -275,15 +274,14 @@ function ChangePasswordForm() {
           {(field, props) => (
             <FieldRoot>
               <FieldLabel field={field}>Old password</FieldLabel>
-              <FieldControl field={field}>
-                <Input
-                  {...props}
-                  autocomplete="current-password"
-                  placeholder="Old password"
-                  type="password"
-                  value={field.value}
-                />
-              </FieldControl>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                autocomplete="current-password"
+                placeholder="Old password"
+                type="password"
+                value={field.value}
+              />
               <FieldMessage field={field} />
             </FieldRoot>
           )}
@@ -292,15 +290,14 @@ function ChangePasswordForm() {
           {(field, props) => (
             <FieldRoot>
               <FieldLabel field={field}>New password</FieldLabel>
-              <FieldControl field={field}>
-                <Input
-                  {...props}
-                  autocomplete="new-password"
-                  placeholder="New password"
-                  type="password"
-                  value={field.value}
-                />
-              </FieldControl>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                autocomplete="new-password"
+                placeholder="New password"
+                type="password"
+                value={field.value}
+              />
               <FieldMessage field={field} />
             </FieldRoot>
           )}
@@ -309,15 +306,14 @@ function ChangePasswordForm() {
           {(field, props) => (
             <FieldRoot>
               <FieldLabel field={field}>Confirm new password</FieldLabel>
-              <FieldControl field={field}>
-                <Input
-                  {...props}
-                  autocomplete="new-password"
-                  placeholder="Confirm new password"
-                  type="password"
-                  value={field.value}
-                />
-              </FieldControl>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                autocomplete="new-password"
+                placeholder="Confirm new password"
+                type="password"
+                value={field.value}
+              />
               <FieldMessage field={field} />
             </FieldRoot>
           )}

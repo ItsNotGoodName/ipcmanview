@@ -58,11 +58,11 @@ function MenuLinks(props: { onClick?: () => void }) {
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/files" noScroll>
-        <RiDocumentFileLine class="size-5" />Files
+        <RiDocumentFileLine class="size-5" />Files<div class="flex flex-1 justify-end"><div>🚧</div></div>
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/live" noScroll>
-        <RiMediaLiveLine class="size-5" />Live
+        <RiMediaLiveLine class="size-5" />Live<div class="flex flex-1 justify-end"><div>🚧</div></div>
       </A>
     </div>
   )
@@ -261,8 +261,8 @@ export function Root(props: RouteSectionProps) {
         </Portal>
         <Show when={isAuthenticated()} fallback={<>{props.children}</>}>
           <SheetRoot open={menu.mobileOpen()} onOpenChange={menu.toggleMobileOpen}>
-            <SheetContent side="left">
-              <SheetHeader>
+            <SheetContent side="left" class="p-2">
+              <SheetHeader class="px-2 sm:pt-2">
                 <SheetTitle>IPCManView</SheetTitle>
                 <SheetDescription>{config()?.siteName}</SheetDescription>
               </SheetHeader>

@@ -5,7 +5,7 @@ import { ParentProps, Show, } from "solid-js";
 import { useClient } from "~/providers/client";
 import { Button } from "~/ui/Button";
 import { CardRoot } from "~/ui/Card";
-import { FieldControl, FieldRoot, FieldLabel, FieldMessage, FormMessage, CheckboxFieldRoot } from "~/ui/Form";
+import { FieldRoot, FieldLabel, FieldMessage, FormMessage, CheckboxFieldRoot, fieldControlProps } from "~/ui/Form";
 import { Input } from "~/ui/Input";
 import { linkVariants } from "~/ui/Link";
 import { ThemeIcon } from "~/ui/ThemeIcon";
@@ -98,14 +98,13 @@ export function SignIn() {
             {(field, props) => (
               <FieldRoot>
                 <FieldLabel field={field}>Username or email</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    autocomplete="username"
-                    placeholder="Username or email"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  autocomplete="username"
+                  placeholder="Username or email"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -121,15 +120,14 @@ export function SignIn() {
                     Forgot password?
                   </A>
                 </div>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    autocomplete="current-password"
-                    placeholder="Password"
-                    type="password"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  autocomplete="current-password"
+                  placeholder="Password"
+                  type="password"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -206,14 +204,13 @@ export function SignUp() {
             {(field, props) => (
               <FieldRoot>
                 <FieldLabel field={field}>Email</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    placeholder="Email"
-                    type="email"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  placeholder="Email"
+                  type="email"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -222,14 +219,13 @@ export function SignUp() {
             {(field, props) => (
               <FieldRoot>
                 <FieldLabel field={field}>Username</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    autocomplete="username"
-                    placeholder="Username"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  autocomplete="username"
+                  placeholder="Username"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -242,15 +238,14 @@ export function SignUp() {
                     Password
                   </FieldLabel>
                 </div>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    autocomplete="new-password"
-                    placeholder="Password"
-                    type="password"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  autocomplete="new-password"
+                  placeholder="Password"
+                  type="password"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -263,15 +258,14 @@ export function SignUp() {
                     Confirm password
                   </FieldLabel>
                 </div>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    autocomplete="new-password"
-                    placeholder="Confirm password"
-                    type="password"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  autocomplete="new-password"
+                  placeholder="Confirm password"
+                  type="password"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}
@@ -315,14 +309,13 @@ export function Forgot() {
             {(field, props) => (
               <FieldRoot>
                 <FieldLabel field={field}>Email</FieldLabel>
-                <FieldControl field={field}>
-                  <Input
-                    {...props}
-                    placeholder="Email"
-                    type="email"
-                    value={field.value}
-                  />
-                </FieldControl>
+                <Input
+                  {...props}
+                  {...fieldControlProps(field)}
+                  placeholder="Email"
+                  type="email"
+                  value={field.value}
+                />
                 <FieldMessage field={field} />
               </FieldRoot>
             )}

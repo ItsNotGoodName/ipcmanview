@@ -4,7 +4,7 @@ import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
 import { RpcError } from "@protobuf-ts/runtime-rpc";
-import { FieldValues, FormError, FormStore, PartialValues, reset, setValues } from "@modular-forms/solid";
+import { FieldValues, FormError, FormStore, PartialValues, reset } from "@modular-forms/solid";
 import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
 import { createStore } from "solid-js/store";
 import { useSearchParams } from "@solidjs/router";
@@ -49,8 +49,6 @@ export type PageProps<T> = {
   params: Partial<T>
 }
 
-export const defaultPerPageOptions = [10, 25, 50, 100]
-
 export function parseOrder(s?: string): Order {
   if (s == "desc")
     return Order.DESC
@@ -67,20 +65,6 @@ export function encodeOrder(o: Order): string {
   return ""
 }
 
-export function toggleSortField(sort?: Sort, field?: string): { field?: string, order: Order } {
-  if (field == sort?.field) {
-    const order = ((sort?.order ?? Order.ORDER_UNSPECIFIED) + 1) % 3
-
-    if (order == Order.ORDER_UNSPECIFIED) {
-      return { field: undefined, order: Order.ORDER_UNSPECIFIED }
-    }
-
-    return { field: field, order: order }
-  }
-
-  return { field: field, order: Order.DESC }
-}
-
 export type CreateRowSelectionReturn<T> = {
   rows: Array<{ id: T, checked: boolean }>
   selections: Accessor<Array<T>>
@@ -92,8 +76,7 @@ export type CreateRowSelectionReturn<T> = {
 
 export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelectionReturn<T> {
   const [rows, setRows] = createStore<Array<{ id: T, checked: boolean }>>(ids().map(v => ({ id: v, checked: false })))
-  createEffect(() =>
-    setRows((prev) => ids().map(v => ({ id: v, checked: prev.find(p => p.id == v)?.checked || false }))))
+  createEffect(() => setRows((prev) => ids().map(v => ({ id: v, checked: prev.find(p => p.id == v)?.checked || false }))))
 
   const selections = () => rows.filter(v => v.checked == true).map(v => v.id)
 
@@ -125,14 +108,6 @@ export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelecti
   }
 }
 
-export function setupForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: Resource<PartialValues<TFieldValues> | undefined>) {
-  createEffect(() => {
-    if (!data.loading && !data.error) {
-      reset(form, { initialValues: data() })
-    }
-  })
-}
-
 export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: Resource<PartialValues<TFieldValues> | undefined>): Accessor<boolean> {
   createEffect(() => {
     if (!data.loading && !data.error) {
@@ -142,11 +117,8 @@ export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFiel
   return () => data.loading || !!data.error
 }
 
-export function createSyncForm<T extends FieldValues>(form: FormStore<T, undefined>, initialValues: Accessor<PartialValues<T>>) {
-  createEffect(() => {
-    if (form.dirty) return
-    setValues(form, initialValues())
-  })
+export function isTableRowClick(t: MouseEvent) {
+  return t.target && (t.target as any).tagName == "TD"
 }
 
 type CreateValueModalReturn<T> = {
@@ -156,7 +128,7 @@ type CreateValueModalReturn<T> = {
   setValue: Setter<T>
 }
 
-export function createValueModal<T>(value: T): CreateValueModalReturn<T> {
+export function createModal<T>(value: T): CreateValueModalReturn<T> {
   const [getOpen, setOpen] = createSignal(false)
   const [getValue, setValue] = createSignal(value)
   return {
@@ -190,6 +162,20 @@ export function createPagePagination(pageResult: () => PagePaginationResult | un
   }
 }
 
+function toggleSortField(sort?: Sort, field?: string): { field?: string, order: Order } {
+  if (field == sort?.field) {
+    const order = ((sort?.order ?? Order.ORDER_UNSPECIFIED) + 1) % 3
+
+    if (order == Order.ORDER_UNSPECIFIED) {
+      return { field: undefined, order: Order.ORDER_UNSPECIFIED }
+    }
+
+    return { field: field, order: order }
+  }
+
+  return { field: field, order: Order.DESC }
+}
+
 export function createToggleSortField(sort: () => Sort | undefined) {
   const [_, setSearchParams] = useSearchParams()
   return (field: string) => {
@@ -208,15 +194,15 @@ export function encodeQuery(q: URLSearchParams): string {
   return "?" + q.toString()
 }
 
-export function encodeQueryInts(q: bigint[]): string {
+export function encodeBigInts(q: bigint[]): string {
   return q.join('.')
 }
 
-export function decodeQueryInts(q?: string): bigint[] {
+export function decodeBigInts(q?: string): bigint[] {
   return q ? q.split('.').map((v: any) => BigInt(v)) : []
 }
 
-export function hideScrollbar() {
+export function useHiddenScrollbar(): void {
   const html = document.getElementsByTagName("html")[0]
   if (html.style.getPropertyValue("scrollbar-width") == "none") return
   html.style.setProperty("scrollbar-width", "none")

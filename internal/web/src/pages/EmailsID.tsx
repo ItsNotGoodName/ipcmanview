@@ -9,7 +9,6 @@ import { RiArrowsArrowLeftLine, RiDeviceHardDrive2Line, RiMediaImageLine, RiSyst
 import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
 import { BreadcrumbsItem, BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs"
-import { As } from "@kobalte/core"
 import { getEmailsIDPage } from "./EmailsID.data"
 import { ErrorBoundary, For, Show, Suspense } from "solid-js"
 import { Skeleton } from "~/ui/Skeleton"
@@ -51,10 +50,8 @@ export function EmailsID(props: any) {
       <Shared.Title>
         <BreadcrumbsRoot>
           <BreadcrumbsItem>
-            <BreadcrumbsLink asChild>
-              <As component={A} href="/emails">
-                Emails
-              </As>
+            <BreadcrumbsLink as={A} href="/emails">
+              Emails
             </BreadcrumbsLink>
             <BreadcrumbsSeparator />
           </BreadcrumbsItem>

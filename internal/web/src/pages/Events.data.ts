@@ -1,5 +1,5 @@
 import { cache } from "@solidjs/router";
-import { decodeQueryInts, parseOrder } from "~/lib/utils";
+import { decodeBigInts, parseOrder } from "~/lib/utils";
 import { useClient } from "~/providers/client";
 import { GetEventsPageReq } from "~/twirp/rpc";
 import { getListDevices, getListEventFilters } from "./data";
@@ -16,7 +16,7 @@ export default function({ params }: any) {
       field: params.sort || "",
       order: parseOrder(params.order)
     },
-    filterDeviceIDs: decodeQueryInts(params.device),
+    filterDeviceIDs: decodeBigInts(params.device),
     filterCodes: params.code ? JSON.parse(params.code) : [],
     filterActions: params.action ? JSON.parse(params.action) : [],
   })

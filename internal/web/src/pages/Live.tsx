@@ -3,7 +3,7 @@ import { Index, JSX, Show, batch, createMemo, createSignal, onMount, splitProps 
 import { createStore } from "solid-js/store"
 import { Component } from "solid-js/types/server/rendering.js"
 import { Dynamic } from "solid-js/web"
-import { cn, hideScrollbar } from "~/lib/utils"
+import { cn, useHiddenScrollbar } from "~/lib/utils"
 import { Button } from "~/ui/Button"
 
 type Rectangles = {
@@ -14,7 +14,7 @@ type Rectangles = {
 }
 
 export function Live() {
-  hideScrollbar()
+  useHiddenScrollbar()
 
   const [rectangles, setRectangles] = createStore<Rectangles[]>([
     { x: 0, y: 0, w: 4096, h: 4096 },

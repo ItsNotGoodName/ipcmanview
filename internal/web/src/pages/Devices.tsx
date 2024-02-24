@@ -10,7 +10,7 @@ import { GetDevicesPageResp_Device } from "~/twirp/rpc"
 import { getDeviceDetail, getDeviceRPCStatus, getDeviceSoftwareVersion, getListDeviceLicenses, getListDeviceStorage, getListDeviceStreams, } from "./data"
 import { Skeleton } from "~/ui/Skeleton"
 import { ToggleButton } from "@kobalte/core"
-import { decodeQueryInts, encodeQueryInts, formatDate, parseDate, hideScrollbar } from "~/lib/utils"
+import { decodeBigInts, encodeBigInts, formatDate, parseDate, useHiddenScrollbar } from "~/lib/utils"
 import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
 import { Shared } from "~/components/Shared"
@@ -22,7 +22,7 @@ import { Button } from "~/ui/Button"
 
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeQueryInts(searchParams.device))
+  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeBigInts(searchParams.device))
   const data = createAsync(() => getDevicesPage())
   const filteredDevices = () => filterDeviceIDs().length > 0 ? data()?.devices.filter(v => !v.disabled && filterDeviceIDs().includes(v.id)) : data()?.devices.filter(v => !v.disabled)
 
@@ -54,7 +54,7 @@ export function Devices() {
                 options={data()?.devices || []}
                 placeholder="Device"
                 value={data()?.devices.filter(v => filterDeviceIDs().includes(v.id))}
-                onChange={(value) => setSearchParams({ device: encodeQueryInts(value.map(v => v.id)) })}
+                onChange={(value) => setSearchParams({ device: encodeBigInts(value.map(v => v.id)) })}
                 itemComponent={props => (
                   <ComboboxItem item={props.item}>
                     <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>
@@ -199,7 +199,7 @@ function RPCStatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
 }
 
 function StreamGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
-  hideScrollbar()
+  useHiddenScrollbar()
 
   return (
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">

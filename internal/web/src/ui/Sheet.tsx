@@ -27,7 +27,7 @@ export function SheetOverlay(props: ComponentProps<typeof Dialog.Overlay>) {
   />
 }
 
-export const sheetContentVariants = cva(
+const sheetContentVariants = cva(
   "bg-background ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:duration-300 ui-expanded:duration-500 fixed z-50 flex flex-col gap-2 shadow-lg transition ease-in-out",
   {
     variants: {
@@ -67,7 +67,7 @@ export function SheetHeader(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col px-4 pt-4 text-center sm:text-left",
+      "flex flex-col text-center sm:text-left",
       props.class
     )}
     {...rest}
@@ -77,7 +77,7 @@ export function SheetHeader(props: JSX.HTMLAttributes<HTMLDivElement>) {
 export function SheetOverflow(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
-    class={cn("flex-grow overflow-y-auto px-2", props.class)}
+    class={cn("flex-grow overflow-y-auto", props.class)}
     {...rest}
   />
 }
@@ -86,7 +86,7 @@ export function SheetFooter(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col-reverse px-4 pb-4 sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
       props.class
     )}
     {...rest}

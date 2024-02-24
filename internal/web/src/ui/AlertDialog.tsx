@@ -33,7 +33,7 @@ export function AlertDialogModal(props: ComponentProps<typeof AlertDialog.Conten
     <AlertDialogOverlay />
     <AlertDialog.Content
       class={cn(
-        "bg-background ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 ui-not-expanded:slide-out-to-left-1/2 ui-not-expanded:slide-out-to-top-[48%] ui-expanded:slide-in-from-left-1/2 ui-expanded:slide-in-from-top-[48%] fixed left-[50%] top-[50%] z-50 flex max-h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] flex-col gap-4 border p-4 shadow-lg duration-200 sm:rounded-lg",
+        "bg-background ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 ui-not-expanded:slide-out-to-left-1/2 ui-not-expanded:slide-out-to-top-[48%] ui-expanded:slide-in-from-left-1/2 ui-expanded:slide-in-from-top-[48%] fixed left-[50%] top-[50%] z-50 flex max-h-screen w-full max-w-lg translate-x-[-50%] translate-y-[-50%] flex-col gap-4 border p-4 shadow-lg duration-200 sm:rounded-lg sm:p-6",
         props.class
       )}
       {...rest}
@@ -45,7 +45,7 @@ export function AlertDialogHeader(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col space-y-2 overflow-y-hidden px-2 text-center sm:text-left",
+      "flex flex-col space-y-2 overflow-y-hidden text-center sm:text-left",
       props.class
     )}
     {...rest}

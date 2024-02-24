@@ -10,7 +10,7 @@ import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { useClient } from "~/providers/client";
 import { createForm, required, reset } from "@modular-forms/solid";
-import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
+import { FieldLabel, FieldMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form";
 import { Input } from "~/ui/Input";
 import { Textarea } from "~/ui/Textarea";
 import { DialogContent, DialogHeader, DialogOverflow, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, } from "~/ui/Dialog";
@@ -336,13 +336,12 @@ function CreateForm(props: { close: () => void }) {
         {(field, props) => (
           <FieldRoot class="gap-1.5">
             <FieldLabel field={field}>Name</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="Name"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              placeholder="Name"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -351,13 +350,12 @@ function CreateForm(props: { close: () => void }) {
         {(field, props) => (
           <FieldRoot class="gap-1.5">
             <FieldLabel field={field}>Description</FieldLabel>
-            <FieldControl field={field}>
-              <Textarea
-                {...props}
-                value={field.value}
-                placeholder="Description"
-              />
-            </FieldControl>
+            <Textarea
+              {...props}
+              {...fieldControlProps(field)}
+              value={field.value}
+              placeholder="Description"
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -408,14 +406,13 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
           {(field, props) => (
             <FieldRoot class="gap-1.5">
               <FieldLabel field={field}>Name</FieldLabel>
-              <FieldControl field={field}>
-                <Input
-                  {...props}
-                  placeholder="Name"
-                  value={field.value}
-                  disabled={disabled()}
-                />
-              </FieldControl>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                placeholder="Name"
+                value={field.value}
+                disabled={disabled()}
+              />
               <FieldMessage field={field} />
             </FieldRoot>
           )}
@@ -424,15 +421,14 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
           {(field, props) => (
             <FieldRoot class="gap-1.5">
               <FieldLabel field={field}>Description</FieldLabel>
-              <FieldControl field={field}>
-                <Textarea
-                  {...props}
-                  placeholder="Description"
-                  disabled={disabled()}
-                >
-                  {field.value}
-                </Textarea>
-              </FieldControl>
+              <Textarea
+                {...props}
+                {...fieldControlProps(field)}
+                placeholder="Description"
+                disabled={disabled()}
+              >
+                {field.value}
+              </Textarea>
               <FieldMessage field={field} />
             </FieldRoot>
           )}

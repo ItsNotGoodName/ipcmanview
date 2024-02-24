@@ -16,7 +16,7 @@ import { useClient } from "~/providers/client";
 import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
 import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
-import { CheckboxFieldRoot, FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
+import { CheckboxFieldRoot, FieldLabel, FieldMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form";
 import { Button } from "~/ui/Button";
 import { createForm, required, reset } from "@modular-forms/solid";
 import { Input } from "~/ui/Input";
@@ -403,15 +403,14 @@ function ResetPasswordForm(props: { close: () => void, id: bigint }) {
         {(field, props) => (
           <FieldRoot class="gap-1.5">
             <FieldLabel field={field}>New password</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="new-password"
-                placeholder="New password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              autocomplete="new-password"
+              placeholder="New password"
+              type="password"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -420,15 +419,14 @@ function ResetPasswordForm(props: { close: () => void, id: bigint }) {
         {(field, props) => (
           <FieldRoot class="gap-1.5">
             <FieldLabel field={field}>Confirm new password</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="new-password"
-                placeholder="Confirm new password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              autocomplete="new-password"
+              placeholder="Confirm new password"
+              type="password"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -493,14 +491,13 @@ function CreateForm(props: { close: () => void }) {
         {(field, props) => (
           <FieldRoot class="gap-1.5">
             <FieldLabel field={field}>Email</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="Email"
-                type="email"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              placeholder="Email"
+              type="email"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -509,14 +506,13 @@ function CreateForm(props: { close: () => void }) {
         {(field, props) => (
           <FieldRoot class="gap-1.5">
             <FieldLabel field={field}>Username</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="username"
-                placeholder="Username"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              autocomplete="username"
+              placeholder="Username"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -529,15 +525,14 @@ function CreateForm(props: { close: () => void }) {
                 Password
               </FieldLabel>
             </div>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="new-password"
-                placeholder="Password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              autocomplete="new-password"
+              placeholder="Password"
+              type="password"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -550,15 +545,14 @@ function CreateForm(props: { close: () => void }) {
                 Confirm password
               </FieldLabel>
             </div>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="new-password"
-                placeholder="Confirm password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
+            <Input
+              {...props}
+              {...fieldControlProps(field)}
+              autocomplete="new-password"
+              placeholder="Confirm password"
+              type="password"
+              value={field.value}
+            />
             <FieldMessage field={field} />
           </FieldRoot>
         )}
@@ -630,15 +624,14 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
           {(field, props) => (
             <FieldRoot class="gap-1.5">
               <FieldLabel field={field}>Email</FieldLabel>
-              <FieldControl field={field}>
-                <Input
-                  {...props}
-                  placeholder="Email"
-                  type="email"
-                  value={field.value}
-                  disabled={disabled()}
-                />
-              </FieldControl>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                placeholder="Email"
+                type="email"
+                value={field.value}
+                disabled={disabled()}
+              />
               <FieldMessage field={field} />
             </FieldRoot>
           )}
@@ -647,15 +640,14 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
           {(field, props) => (
             <FieldRoot class="gap-1.5">
               <FieldLabel field={field}>Username</FieldLabel>
-              <FieldControl field={field}>
-                <Input
-                  {...props}
-                  autocomplete="username"
-                  placeholder="Username"
-                  value={field.value}
-                  disabled={disabled()}
-                />
-              </FieldControl>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                autocomplete="username"
+                placeholder="Username"
+                value={field.value}
+                disabled={disabled()}
+              />
               <FieldMessage field={field} />
             </FieldRoot>
           )}

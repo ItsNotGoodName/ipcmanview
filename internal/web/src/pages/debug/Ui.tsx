@@ -249,7 +249,30 @@ export function Ui() {
               </DialogDescription>
             </DialogHeader>
             <DialogOverflow>
-              I will overflow.
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
             </DialogOverflow>
             <DialogFooter>
               Footer
@@ -537,7 +560,7 @@ export function Ui() {
         <SheetTrigger asChild>
           <As component={Button} variant="outline">Open Sheet</As>
         </SheetTrigger>
-        <SheetContent>
+        <SheetContent class="p-4 sm:p-6">
           <SheetHeader>
             <SheetTitle>Edit profile</SheetTitle>
             <SheetDescription>
@@ -600,10 +623,8 @@ export function Ui() {
       <BreadcrumbsRoot>
         <ol>
           <li>
-            <BreadcrumbsLink asChild>
-              <As component={A} href="/">
-                Home
-              </As>
+            <BreadcrumbsLink as={A} href="/">
+              Home
             </BreadcrumbsLink>
             <BreadcrumbsSeparator />
           </li>
