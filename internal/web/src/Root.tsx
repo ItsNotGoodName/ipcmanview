@@ -1,7 +1,7 @@
 import { VariantProps, cva } from "class-variance-authority"
 import { BiRegularCctv } from "solid-icons/bi";
 import { As, DropdownMenu } from "@kobalte/core";
-import { ErrorBoundary, JSX, Show, Suspense, batch, createSignal, splitProps } from "solid-js";
+import { ErrorBoundary, Show, Suspense, batch, createSignal, } from "solid-js";
 import { A, action, createAsync, revalidate, useAction, useLocation, useNavigate, useSubmission, RouteSectionProps } from "@solidjs/router";
 import { RiDocumentFileLine, RiBuildingsHomeLine, RiDevelopmentBugLine, RiSystemLogoutBoxRFill, RiSystemMenuLine, RiUserFacesAdminLine, RiUserFacesUserLine, RiWeatherFlashlightLine, RiMediaLiveLine, RiBusinessMailLine, RiUserFacesGroupLine, RiSystemSettings2Line } from "solid-icons/ri";
 import { Portal } from "solid-js/web";
@@ -122,8 +122,7 @@ function Header(props: HeaderProps) {
   const session = createAsync(() => getSession())
 
   const signOutSubmission = useSubmission(actionSignOut)
-  const signOutAction = useAction(actionSignOut)
-  const signOut = () => signOutAction().catch(catchAsToast)
+  const signOut = useAction(actionSignOut)
 
   const ws = useWS()
   const wsState = (): VariantProps<typeof Shared.connectionIndicatorVariants>["state"] => {
@@ -206,19 +205,30 @@ function Header(props: HeaderProps) {
   )
 }
 
-function Menu(props: JSX.HTMLAttributes<HTMLDivElement> & { open?: boolean }) {
-  const [_, rest] = splitProps(props, ["children", "open", "class"])
-  return (
-    <div data-open={props.open} class="border-border border-r-0 transition-all duration-200 md:data-[open=true]:border-r" {...rest}>
-      <div data-open={props.open} class="sticky top-0 w-0 transition-all duration-200 md:data-[open=true]:w-48">
-        <div class="h-screen overflow-y-auto overflow-x-hidden">
-          <div class={props.class}>
-            {props.children}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+function createMenu() {
+  const [mobileOpen, setMobileOpen] = createSignal(false)
+  const toggleMobileOpen = () => setMobileOpen(!mobileOpen())
+  const closeMobile = () => setMobileOpen(false)
+
+  const [open, setOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
+  const toggleOpen = () => {
+    if (open()) {
+      batch(() => {
+        setOpen(false)
+        setMobileOpen(false)
+      })
+    } else {
+      setOpen(true)
+    }
+  }
+
+  return {
+    mobileOpen,
+    toggleMobileOpen,
+    closeMobile,
+    open,
+    toggleOpen,
+  }
 }
 
 export function Root(props: RouteSectionProps) {
@@ -235,21 +245,7 @@ export function Root(props: RouteSectionProps) {
   const isAuthenticated = () => session()?.valid && !session()?.disabled
   const isAdminPage = () => props.location.pathname.startsWith("/admin")
 
-  const [mobileMenuOpen, setMobileMenuOpen] = createSignal(false)
-  const toggleMobileMenuOpen = () => setMobileMenuOpen(!mobileMenuOpen())
-  const closeMobileMenu = () => setMobileMenuOpen(false)
-
-  const [menuOpen, setMenuOpen] = makePersisted(createSignal(true), { "name": "menu-open" })
-  const toggleMenuOpen = () => {
-    if (menuOpen()) {
-      batch(() => {
-        setMenuOpen(false)
-        setMobileMenuOpen(false)
-      })
-    } else {
-      setMenuOpen(true)
-    }
-  }
+  const menu = createMenu()
 
   return (
     <ErrorBoundary fallback={(e) =>
@@ -264,42 +260,46 @@ export function Root(props: RouteSectionProps) {
           </ToastRegion>
         </Portal>
         <Show when={isAuthenticated()} fallback={<>{props.children}</>}>
-          <SheetRoot open={mobileMenuOpen()} onOpenChange={toggleMobileMenuOpen}>
+          <SheetRoot open={menu.mobileOpen()} onOpenChange={menu.toggleMobileOpen}>
             <SheetContent side="left">
               <SheetHeader>
                 <SheetTitle>IPCManView</SheetTitle>
                 <SheetDescription>{config()?.siteName}</SheetDescription>
               </SheetHeader>
-              <SheetOverflow>
-                <Show when={!isAdminPage()} fallback={<AdminMenuLinks onClick={closeMobileMenu} />}>
-                  <MenuLinks onClick={closeMobileMenu} />
+              <SheetOverflow class="pb-2">
+                <Show when={!isAdminPage()} fallback={<AdminMenuLinks onClick={menu.closeMobile} />}>
+                  <MenuLinks onClick={menu.closeMobile} />
                 </Show>
               </SheetOverflow>
             </SheetContent>
           </SheetRoot>
           <Header
-            onMenuClick={toggleMenuOpen}
-            onMobileMenuClick={toggleMobileMenuOpen}
+            onMenuClick={menu.toggleOpen}
+            onMobileMenuClick={menu.toggleMobileOpen}
             isAdminPage={isAdminPage()}
             siteName={config()?.siteName}
           />
           <div class="flex">
-            <Menu open={menuOpen()} class="flex h-full flex-col justify-between p-2">
-              <Show when={!isAdminPage()} fallback={<AdminMenuLinks />}>
-                <MenuLinks />
-              </Show>
-              <div class="flex flex-col">
-                <button class={menuLinkVariants()} onClick={toggleMenuOpen}>
-                  <RiSystemMenuLine class="size-5" />Menu
-                </button>
+            <div data-open={menu.open()} class="border-border w-0 shrink-0 border-r-0 transition-all duration-200 md:data-[open=true]:w-48 md:data-[open=true]:border-r">
+              <div class="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
+                <div class="flex h-full flex-col justify-between p-2">
+                  <Show when={!isAdminPage()} fallback={<AdminMenuLinks />}>
+                    <MenuLinks />
+                  </Show>
+                  <div class="flex flex-col">
+                    <button class={menuLinkVariants()} onClick={menu.toggleOpen}>
+                      <RiSystemMenuLine class="size-5" />Menu
+                    </button>
+                  </div>
+                </div>
               </div>
-            </Menu>
+            </div>
             <div class="w-full overflow-x-auto">
               {props.children}
             </div>
           </div>
         </Show>
       </Suspense>
-    </ErrorBoundary>
+    </ErrorBoundary >
   )
 }

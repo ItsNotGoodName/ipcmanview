@@ -60,10 +60,10 @@ export const provideTheme = () => {
 export const useThemeTitle = () => {
   switch (useCurrentTheme()) {
     case Theme.System:
-      return "System Theme"
+      return "System theme"
     case Theme.Light:
-      return "Light Theme"
+      return "Light theme"
     case Theme.Dark:
-      return "Dark Theme"
+      return "Dark theme"
   }
 }
