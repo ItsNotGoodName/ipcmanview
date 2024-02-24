@@ -1,5 +1,5 @@
 import { PartialMessage } from "@protobuf-ts/runtime";
-import { Accessor, Resource, createEffect, createSignal } from "solid-js";
+import { Accessor, Resource, Setter, batch, createEffect, createSignal, onCleanup } from "solid-js";
 import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
@@ -149,6 +149,28 @@ export function createSyncForm<T extends FieldValues>(form: FormStore<T, undefin
   })
 }
 
+type CreateValueModalReturn<T> = {
+  open: Accessor<boolean>
+  value: Accessor<T>
+  close: () => void
+  setValue: Setter<T>
+}
+
+export function createValueModal<T>(value: T): CreateValueModalReturn<T> {
+  const [getOpen, setOpen] = createSignal(false)
+  const [getValue, setValue] = createSignal(value)
+  return {
+    open: getOpen,
+    value: getValue,
+    close: () => setOpen(false),
+    setValue: (...args) => batch(() => {
+      setOpen(true)
+      // @ts-ignore
+      return setValue(...args)
+    })
+  }
+}
+
 export type CreatePagePaginationReturn = {
   previousPageDisabled: Accessor<boolean>
   previousPage: () => void
@@ -192,4 +214,11 @@ export function encodeQueryInts(q: bigint[]): string {
 
 export function decodeQueryInts(q?: string): bigint[] {
   return q ? q.split('.').map((v: any) => BigInt(v)) : []
+}
+
+export function hideScrollbar() {
+  const html = document.getElementsByTagName("html")[0]
+  if (html.style.getPropertyValue("scrollbar-width") == "none") return
+  html.style.setProperty("scrollbar-width", "none")
+  onCleanup(() => html.style.removeProperty("scrollbar-width"))
 }

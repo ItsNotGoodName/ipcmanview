@@ -4,7 +4,7 @@ import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
 import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, } from "solid-js"
 import { createForm, required, reset } from "@modular-forms/solid"
 
-import { formatDate, parseDate, catchAsToast, throwAsFormError } from "~/lib/utils"
+import { formatDate, parseDate, catchAsToast, throwAsFormError, createValueModal } from "~/lib/utils"
 import { CardRoot, } from "~/ui/Card"
 import { getProfilePage } from "./Profile.data"
 import { Button } from "~/ui/Button"
@@ -20,6 +20,14 @@ import { LayoutNormal } from "~/ui/Layout"
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog"
 import { Shared } from "~/components/Shared"
 
+function Center(props: ParentProps) {
+  return (
+    <div class="flex justify-center">
+      {props.children}
+    </div>
+  )
+}
+
 const actionRevokeAllMySessions = action(() => useClient()
   .user.revokeAllMySessions({})
   .then(() => revalidate(getProfilePage.key))
@@ -33,23 +41,22 @@ const actionRevokeMySession = action((sessionId: bigint) => useClient()
 export function Profile() {
   const data = createAsync(() => getProfilePage())
 
-  const [revokeAllMySessionsConfirm, setRevokeAllMySessionsConfirm] = createSignal(false)
+  const [revokeAllMySessionsModal, setRevokeAllMySessionsModal] = createSignal(false)
   const revokeAllMySessionsSubmission = useSubmission(actionRevokeAllMySessions)
   const revokeAllMySessionsAction = useAction(actionRevokeAllMySessions)
   const revokeAllMySessions = () => revokeAllMySessionsAction()
-    .then(() => setRevokeAllMySessionsConfirm(false))
+    .then(() => setRevokeAllMySessionsModal(false))
 
-  const [revokeMySessionsConfirm, setRevokeMySessionsConfirm] = createSignal(BigInt(0))
+  const revokeMySessionModal = createValueModal(BigInt(0))
   const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
   const revokeMySessionAction = useAction(actionRevokeMySession)
-  const revokeMySession = () => revokeMySessionAction(revokeMySessionsConfirm()).
-    then(() => setRevokeMySessionsConfirm(BigInt(0)))
+  const revokeMySession = () => revokeMySessionAction(revokeMySessionModal.value())
+    .then(revokeMySessionModal.close)
 
   return (
     <LayoutNormal class="max-w-4xl">
       <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-
-        <AlertDialogRoot open={revokeAllMySessionsConfirm()} onOpenChange={setRevokeAllMySessionsConfirm}>
+        <AlertDialogRoot open={revokeAllMySessionsModal()} onOpenChange={setRevokeAllMySessionsModal}>
           <AlertDialogModal>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure you wish to revoke all sessions?</AlertDialogTitle>
@@ -63,7 +70,7 @@ export function Profile() {
           </AlertDialogModal>
         </AlertDialogRoot>
 
-        <AlertDialogRoot open={revokeMySessionsConfirm() != BigInt(0)} onOpenChange={() => setRevokeMySessionsConfirm(BigInt(0))}>
+        <AlertDialogRoot open={revokeMySessionModal.open()} onOpenChange={revokeMySessionModal.close}>
           <AlertDialogModal>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure you wish to revoke this session?</AlertDialogTitle>
@@ -120,7 +127,7 @@ export function Profile() {
 
         <Shared.Title>Sessions</Shared.Title>
         <div class="flex">
-          <Button variant="destructive" onClick={() => setRevokeAllMySessionsConfirm(true)}>
+          <Button variant="destructive" onClick={() => setRevokeAllMySessionsModal(true)}>
             Revoke all sessions
           </Button>
         </div>
@@ -154,7 +161,7 @@ export function Profile() {
                     <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
                     <TableCell class="py-0">
                       <Show when={!session.current} fallback={<Badge>Current</Badge>}>
-                        <Button variant="destructive" size="sm" onClick={() => setRevokeMySessionsConfirm(session.id)}>
+                        <Button variant="destructive" size="sm" onClick={() => revokeMySessionModal.setValue(session.id)}>
                           Revoke
                         </Button>
                       </Show>
@@ -190,7 +197,6 @@ export function Profile() {
             </TableBody>
           </TableRoot>
         </Suspense>
-
       </ErrorBoundary>
     </LayoutNormal>
   )
@@ -200,18 +206,17 @@ type ChangeUsernameForm = {
   newUsername: string
 }
 
-const actionUpdateMyUsername = action((form: ChangeUsernameForm) => useClient()
-  .user.updateMyUsername(form)
-  .then(() => revalidate([getProfilePage.key, getSession.key]))
-  .catch(throwAsFormError))
-
 function ChangeUsernameForm() {
-  const [changeUsernameForm, { Field, Form }] = createForm<ChangeUsernameForm>({ initialValues: { newUsername: "" } });
-  const submit = useAction(actionUpdateMyUsername)
+  const [form, { Field, Form }] = createForm<ChangeUsernameForm>({ initialValues: { newUsername: "" } });
+  const submit = (input: ChangeUsernameForm) => useClient()
+    .user.updateMyUsername(input)
+    .then(() => revalidate([getProfilePage.key, getSession.key]))
+    .then(() => reset(form))
+    .catch(throwAsFormError)
 
   return (
     <Center>
-      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={(form) => submit(form).then(() => reset(changeUsernameForm))}>
+      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={submit}>
         <Field name="newUsername" validate={required("Please enter a new username.")}>
           {(field, props) => (
             <FieldRoot>
@@ -227,12 +232,10 @@ function ChangeUsernameForm() {
             </FieldRoot>
           )}
         </Field>
-        <Button type="submit" disabled={changeUsernameForm.submitting}>
-          <Show when={!changeUsernameForm.submitting} fallback={<>Updating username</>}>
-            Update username
-          </Show>
+        <Button type="submit" disabled={form.submitting}>
+          <Show when={!form.submitting} fallback="Updating username">Update username</Show>
         </Button>
-        <FormMessage form={changeUsernameForm} />
+        <FormMessage form={form} />
       </Form>
     </Center>
   )
@@ -244,29 +247,29 @@ type ChangePasswordForm = {
   confirmPassword: string
 }
 
-const actionUpdateMyPassword = action((form: ChangePasswordForm) => useClient()
-  .user.updateMyPassword(form)
-  .then(() => revalidate(getProfilePage.key))
-  .catch(throwAsFormError)
-)
-
 function ChangePasswordForm() {
-  const [changePasswordForm, { Field, Form }] = createForm<ChangePasswordForm>({
-    initialValues: { oldPassword: "", newPassword: "", confirmPassword: "" },
-    validate: (form) => {
-      if (form.newPassword != form.confirmPassword) {
-        return {
-          confirmPassword: "Password does not match."
-        }
+  const [form, { Field, Form }] = createForm<ChangePasswordForm>({
+    initialValues: {
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+    validate: (input) => {
+      if (input.newPassword != input.confirmPassword) {
+        return { confirmPassword: "Password does not match." }
       }
       return {}
     }
   });
-  const submit = useAction(actionUpdateMyPassword)
+  const submit = (input: ChangePasswordForm) => useClient()
+    .user.updateMyPassword(input)
+    .then(() => revalidate(getProfilePage.key))
+    .then(() => reset(form))
+    .catch(throwAsFormError)
 
   return (
     <Center>
-      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={(form) => submit(form).then(() => reset(changePasswordForm))}>
+      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={submit}>
         <input class="hidden" type="text" name="username" autocomplete="username" />
         <Field name="oldPassword" validate={required("Please enter your old password.")}>
           {(field, props) => (
@@ -319,22 +322,12 @@ function ChangePasswordForm() {
             </FieldRoot>
           )}
         </Field>
-        <Button type="submit" disabled={changePasswordForm.submitting}>
-          <Show when={changePasswordForm.submitting} fallback={<>Update password</>}>
-            Updating password
-          </Show>
+        <Button type="submit" disabled={form.submitting}>
+          <Show when={form.submitting} fallback="Update password">Updating password</Show>
         </Button>
-        <FormMessage form={changePasswordForm} />
+        <FormMessage form={form} />
       </Form>
     </Center>
-  )
-}
-
-function Center(props: ParentProps) {
-  return (
-    <div class="flex justify-center">
-      {props.children}
-    </div>
   )
 }
 

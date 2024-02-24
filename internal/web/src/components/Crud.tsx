@@ -5,7 +5,7 @@ import { Order, PagePaginationResult, Sort } from "~/twirp/rpc"
 import { cn } from "~/lib/utils"
 import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select"
 import { TableCell, TableHead } from "~/ui/Table"
-import { Button } from "~/ui/Button"
+import { Button, buttonVariants } from "~/ui/Button"
 import { DropdownMenuTrigger } from "~/ui/DropdownMenu"
 
 function SortButton(props: ParentProps<{ onClick: (name: string) => void, name?: string, sort?: Sort }>) {
@@ -16,7 +16,7 @@ function SortButton(props: ParentProps<{ onClick: (name: string) => void, name?:
       class={cn("text-nowrap flex items-center whitespace-nowrap", name() == props.sort?.field && 'text-blue-500')}
     >
       {props.children}
-      <RiArrowsArrowDownSLine data-selected={props.sort?.field == name() && props.sort.order == Order.ASC} class="h-5 w-5 transition-all data-[selected=true]:rotate-180" />
+      <RiArrowsArrowDownSLine data-selected={props.sort?.field == name() && props.sort.order == Order.ASC} class="size-5 transition-all data-[selected=true]:rotate-180" />
     </button>
   )
 }
@@ -74,7 +74,7 @@ function PageButtons(props: { class?: string, previousPageDisabled?: boolean, pr
         disabled={props.previousPageDisabled}
         onClick={props.previousPage}
       >
-        <RiArrowsArrowLeftSLine class="h-5 w-5" />
+        <RiArrowsArrowLeftSLine class="size-5" />
       </Button>
       <Button
         aria-label="Go to next page"
@@ -84,7 +84,7 @@ function PageButtons(props: { class?: string, previousPageDisabled?: boolean, pr
         disabled={props.nextPageDisabled}
         onClick={props.nextPage}
       >
-        <RiArrowsArrowRightSLine class="h-5 w-5" />
+        <RiArrowsArrowRightSLine class="size-5" />
       </Button>
     </div>
   )
@@ -93,7 +93,7 @@ function PageButtons(props: { class?: string, previousPageDisabled?: boolean, pr
 function LastTableCell(props: ParentProps) {
   return (
     <TableCell class="py-0">
-      <div class="flex justify-end gap-2">
+      <div class="flex items-center justify-end gap-2">
         {props.children}
       </div>
     </TableCell>
@@ -103,7 +103,7 @@ function LastTableCell(props: ParentProps) {
 function LastTableHead(props: ParentProps) {
   return (
     <TableHead>
-      <div class="flex items-center justify-end">
+      <div class="flex items-center justify-end gap-2">
         {props.children}
       </div>
     </TableHead>
@@ -112,8 +112,8 @@ function LastTableHead(props: ParentProps) {
 
 function MoreDropdownMenuTrigger() {
   return (
-    <DropdownMenuTrigger class="hover:bg-accent hover:text-accent-foreground rounded p-1" title="Actions">
-      <RiSystemMore2Line class="h-5 w-5" />
+    <DropdownMenuTrigger class={buttonVariants({ size: "icon", variant: "ghost" })} title="More">
+      <RiSystemMore2Line class="size-5" />
     </DropdownMenuTrigger>
   )
 }

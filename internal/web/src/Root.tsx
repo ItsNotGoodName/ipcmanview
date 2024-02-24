@@ -223,6 +223,7 @@ function Menu(props: JSX.HTMLAttributes<HTMLDivElement> & { open?: boolean }) {
 
 export function Root(props: RouteSectionProps) {
   const bus = useBus()
+
   const config = createAsync(() => getConfig())
   const session = createAsync(() => getSession())
 
@@ -231,7 +232,7 @@ export function Root(props: RouteSectionProps) {
       revalidate(getSession.key)
   })
 
-  const isAuthenticatedLayout = () => session()?.valid && !session()?.disabled
+  const isAuthenticated = () => session()?.valid && !session()?.disabled
   const isAdminPage = () => props.location.pathname.startsWith("/admin")
 
   const [mobileMenuOpen, setMobileMenuOpen] = createSignal(false)
@@ -258,11 +259,11 @@ export function Root(props: RouteSectionProps) {
     }>
       <Suspense fallback={<PageLoading class="pt-10" />}>
         <Portal>
-          <ToastRegion class={isAuthenticatedLayout() ? "top-12 sm:top-12" : ""}>
-            <ToastList class={isAuthenticatedLayout() ? "top-12 sm:top-12" : ""} />
+          <ToastRegion class={isAuthenticated() ? "top-12 sm:top-12" : ""}>
+            <ToastList class={isAuthenticated() ? "top-12 sm:top-12" : ""} />
           </ToastRegion>
         </Portal>
-        <Show when={isAuthenticatedLayout()} fallback={<>{props.children}</>}>
+        <Show when={isAuthenticated()} fallback={<>{props.children}</>}>
           <SheetRoot open={mobileMenuOpen()} onOpenChange={toggleMobileMenuOpen}>
             <SheetContent side="left">
               <SheetHeader>

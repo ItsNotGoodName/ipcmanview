@@ -10,7 +10,7 @@ import { GetDevicesPageResp_Device } from "~/twirp/rpc"
 import { getDeviceDetail, getDeviceRPCStatus, getDeviceSoftwareVersion, getListDeviceLicenses, getListDeviceStorage, getListDeviceStreams, } from "./data"
 import { Skeleton } from "~/ui/Skeleton"
 import { ToggleButton } from "@kobalte/core"
-import { decodeQueryInts, encodeQueryInts, formatDate, parseDate } from "~/lib/utils"
+import { decodeQueryInts, encodeQueryInts, formatDate, parseDate, hideScrollbar } from "~/lib/utils"
 import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
 import { Shared } from "~/components/Shared"
@@ -199,6 +199,8 @@ function RPCStatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
 }
 
 function StreamGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
+  hideScrollbar()
+
   return (
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
       <For each={props.devices}>

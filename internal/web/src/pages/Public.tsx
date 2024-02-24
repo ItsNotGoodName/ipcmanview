@@ -84,6 +84,7 @@ export function SignIn() {
         const json = await resp.json()
         throw new Error(json.message)
       }
+
       return revalidate(getSession.key)
     }).catch(throwAsFormError)
 

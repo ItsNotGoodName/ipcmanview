@@ -1,9 +1,9 @@
 import { createResizeObserver } from "@solid-primitives/resize-observer"
-import { Index, JSX, Show, batch, createMemo, createSignal, onCleanup, onMount, splitProps } from "solid-js"
+import { Index, JSX, Show, batch, createMemo, createSignal, onMount, splitProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Component } from "solid-js/types/server/rendering.js"
 import { Dynamic } from "solid-js/web"
-import { cn } from "~/lib/utils"
+import { cn, hideScrollbar } from "~/lib/utils"
 import { Button } from "~/ui/Button"
 
 type Rectangles = {
@@ -14,11 +14,7 @@ type Rectangles = {
 }
 
 export function Live() {
-  // Remove scrollbar
-  document.getElementsByTagName("html")[0].style.setProperty("scrollbar-width", "none")
-  onCleanup(() => {
-    document.getElementsByTagName("html")[0].style.removeProperty("scrollbar-width")
-  })
+  hideScrollbar()
 
   const [rectangles, setRectangles] = createStore<Rectangles[]>([
     { x: 0, y: 0, w: 4096, h: 4096 },
