@@ -563,10 +563,10 @@ function CreateForm(props: { close: () => void }) {
           </FieldRoot>
         )}
       </Field>
-      <div class="flex gap-4 flex-wrap">
+      <div class="flex flex-wrap gap-4">
         <Field name="admin" type="boolean">
           {(field, props) => (
-            <CheckboxFieldRoot form={form} field={field}>
+            <CheckboxFieldRoot form={form} field={field} class="flex items-center gap-2">
               <CheckboxControl inputProps={props} />
               <CheckboxLabel>Admin</CheckboxLabel>
               <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
@@ -575,7 +575,7 @@ function CreateForm(props: { close: () => void }) {
         </Field>
         <Field name="disabled" type="boolean">
           {(field, props) => (
-            <CheckboxFieldRoot form={form} field={field}>
+            <CheckboxFieldRoot form={form} field={field} class="flex items-center gap-2">
               <CheckboxControl inputProps={props} />
               <CheckboxLabel>Disabled</CheckboxLabel>
               <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
@@ -589,7 +589,7 @@ function CreateForm(props: { close: () => void }) {
         </Show>
       </Button>
       <FormMessage form={form} />
-      <CheckboxRoot checked={addMore()} onChange={setAddMore}>
+      <CheckboxRoot checked={addMore()} onChange={setAddMore} class="flex items-center gap-2">
         <CheckboxControl />
         <CheckboxLabel>Add more</CheckboxLabel>
       </CheckboxRoot>

@@ -368,7 +368,7 @@ function CreateForm(props: { close: () => void }) {
         </Show>
       </Button>
       <FormMessage form={form} />
-      <CheckboxRoot checked={addMore()} onChange={setAddMore}>
+      <CheckboxRoot checked={addMore()} onChange={setAddMore} class="flex items-center gap-2">
         <CheckboxControl />
         <CheckboxLabel>Add more</CheckboxLabel>
       </CheckboxRoot>

@@ -136,9 +136,11 @@ export function SignIn() {
           </Field>
           <Field name="rememberMe" type="boolean">
             {(field, props) => (
-              <CheckboxFieldRoot form={form} field={field}>
-                <CheckboxControl inputProps={props} />
-                <CheckboxLabel>Remember me</CheckboxLabel>
+              <CheckboxFieldRoot form={form} field={field} class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <CheckboxControl inputProps={props} />
+                  <CheckboxLabel>Remember me</CheckboxLabel>
+                </div>
                 <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
               </CheckboxFieldRoot>
             )}

@@ -55,7 +55,7 @@ export function AdminDevices() {
   const toggleSort = createToggleSortField(() => data()?.sort)
 
   // Create
-  const [openCreateForm, setOpenCreateForm] = createSignal(false);
+  const [createFormModal, setCreateFormModal] = createSignal(false);
 
   // Update
   const updateFormModal = createValueModal(BigInt(0))
@@ -77,13 +77,13 @@ export function AdminDevices() {
   // Disable/Enable
   const setDisableSubmission = useSubmission(actionSetDisable)
   const setDisableAction = useAction(actionSetDisable)
-  const setDisableMultipleSubmit = (disable: boolean) =>
+  const setDisableSubmit = (disable: boolean) =>
     setDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
       .then(() => rowSelection.setAll(false))
 
   return (
     <LayoutNormal class="max-w-4xl">
-      <DialogRoot open={openCreateForm()} onOpenChange={setOpenCreateForm}>
+      <DialogRoot open={createFormModal()} onOpenChange={setCreateFormModal}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -91,7 +91,7 @@ export function AdminDevices() {
               <DialogTitle>Create device</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <CreateForm onSubmit={() => setOpenCreateForm(false)} />
+              <CreateForm onSubmit={() => setCreateFormModal(false)} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -105,20 +105,7 @@ export function AdminDevices() {
               <DialogTitle>Update device</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              {(() => {
-                const device = createAsync(() => getDevice(updateFormModal.value()))
-                const refetchDevice = () => revalidate(getDevice.key)
-
-                return (
-                  <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-                    <Suspense fallback={<Skeleton class="h-32" />}>
-                      <Show when={device()}>
-                        <UpdateForm onSubmit={updateFormModal.close} device={device()!} refetchDevice={refetchDevice} />
-                      </Show>
-                    </Suspense>
-                  </ErrorBoundary>
-                )
-              })()}
+              <UpdateForm onSubmit={updateFormModal.close} id={updateFormModal.value()} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -224,18 +211,18 @@ export function AdminDevices() {
                     <Crud.MoreDropdownMenuTrigger />
                     <DropdownMenuPortal>
                       <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={() => setOpenCreateForm(true)}>
+                        <DropdownMenuItem onSelect={() => setCreateFormModal(true)}>
                           Create
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
-                          onSelect={() => setDisableMultipleSubmit(true)}
+                          onSelect={() => setDisableSubmit(true)}
                         >
                           Disable
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
-                          onSelect={() => setDisableMultipleSubmit(false)}
+                          onSelect={() => setDisableSubmit(false)}
                         >
                           Enable
                         </DropdownMenuItem>
@@ -256,7 +243,7 @@ export function AdminDevices() {
               <For each={data()?.items}>
                 {(item, index) => {
                   const onClick = () => navigate(`./${item.id}`)
-                  const toggleDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
+                  const toggleDisableSubmit = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
 
                   return (
                     <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
@@ -275,7 +262,7 @@ export function AdminDevices() {
                         <Show when={item.disabled}>
                           <TooltipRoot>
                             <TooltipTrigger>
-                              <RiSystemLockLine class="h-5 w-5" />
+                              <RiSystemLockLine class="size-5" />
                             </TooltipTrigger>
                             <TooltipContent>
                               <TooltipArrow />
@@ -292,7 +279,7 @@ export function AdminDevices() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={setDisableSubmission.pending}
-                                onSelect={toggleDisable}
+                                onSelect={toggleDisableSubmit}
                               >
                                 <Show when={item.disabled} fallback="Disable">Enable</Show>
                               </DropdownMenuItem>
@@ -468,11 +455,26 @@ function CreateForm(props: { onSubmit?: () => void }) {
             <Show when={!form.submitting} fallback="Creating device">Create device</Show>
           </Button>
           <FormMessage form={form} />
-          <CheckboxRoot checked={addMore()} onChange={setAddMore}>
+          <CheckboxRoot checked={addMore()} onChange={setAddMore} class="flex items-center gap-2">
             <CheckboxControl />
             <CheckboxLabel>Add more</CheckboxLabel>
           </CheckboxRoot>
         </Form>
+      </Suspense>
+    </ErrorBoundary>
+  )
+}
+
+function UpdateForm(props: { onSubmit: () => void | Promise<void>, id: bigint }) {
+  const device = createAsync(() => getDevice(props.id))
+  const refetchDevice = () => revalidate(getDevice.key)
+
+  return (
+    <ErrorBoundary fallback={(e) => <PageError error={e} />}>
+      <Suspense fallback={<Skeleton class="h-32" />}>
+        <Show when={device()}>
+          <UpdateFormForm onSubmit={props.onSubmit} device={device()!} refetchDevice={refetchDevice} />
+        </Show>
       </Suspense>
     </ErrorBoundary>
   )
@@ -490,7 +492,7 @@ type UpdateForm = {
   }
 }
 
-function UpdateForm(props: { onSubmit: () => void | Promise<void>, device: GetDeviceResp, refetchDevice: () => Promise<void> }) {
+function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: GetDeviceResp, refetchDevice: () => Promise<void> }) {
   const locations = createAsync(() => getListLocations())
   const deviceFeatures = createAsync(() => getListDeviceFeatures())
 

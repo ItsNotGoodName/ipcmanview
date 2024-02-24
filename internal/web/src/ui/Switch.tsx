@@ -22,7 +22,7 @@ export function SwitchLabel(props: Switch.SwitchLabelProps) {
 export function SwitchDescription(props: Switch.SwitchDescriptionProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <Switch.Description
-    class={cn("text-muted-foreground w-full text-sm", props.class)}
+    class={cn("text-muted-foreground text-sm", props.class)}
     {...rest}
   />
 }
@@ -30,7 +30,7 @@ export function SwitchDescription(props: Switch.SwitchDescriptionProps) {
 export function SwitchErrorMessage(props: Switch.SwitchErrorMessageProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <Switch.ErrorMessage
-    class={cn("text-destructive w-full text-sm font-medium", props.class)}
+    class={cn("text-destructive text-sm font-medium", props.class)}
     {...rest}
   />
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/config"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
@@ -316,6 +317,12 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 		NewPassword:      req.NewPassword,
 		CurrentSessionID: session.SessionID,
 	}); err != nil {
+		if errs, ok := core.AsFieldErrors(err); ok {
+			return nil, newInvalidArgument(errs,
+				keymap("newPassword", "Password"),
+				keymap("oldPassword", "OldPassword", "Invalid password."),
+			)
+		}
 		return nil, err
 	}
 
@@ -326,6 +333,11 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 	session := useAuthSession(ctx)
 
 	if err := auth.UpdateUserUsername(ctx, u.db, session.UserID, req.NewUsername); err != nil {
+		if errs, ok := core.AsFieldErrors(err); ok {
+			return nil, newInvalidArgument(errs,
+				keymap("newUsername", "Username"),
+			)
+		}
 		return nil, err
 	}
 

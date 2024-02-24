@@ -93,16 +93,24 @@ func useAuthSession(ctx context.Context) auth.Session {
 
 // ---------- Error
 
-func keymap(external, internal string) [2]string {
-	return [2]string{external, internal}
+func keymap(external, internal string, message ...string) [3]string {
+	if len(message) > 0 {
+		return [3]string{external, internal, message[0]}
+	} else {
+		return [3]string{external, internal, ""}
+	}
 }
 
-func newInvalidArgument(errs core.FieldErrors, keymap ...[2]string) twirp.Error {
+func newInvalidArgument(errs core.FieldErrors, keymap ...[3]string) twirp.Error {
 	twirpErr := twirp.InvalidArgument.Error("Invalid argument.")
 	for _, f := range errs {
 		for _, km := range keymap {
 			if km[1] == f.Field {
-				twirpErr = twirpErr.WithMeta(km[0], f.Message())
+				if km[2] == "" {
+					twirpErr = twirpErr.WithMeta(km[0], f.Message())
+				} else {
+					twirpErr = twirpErr.WithMeta(km[0], km[2])
+				}
 			}
 		}
 	}

@@ -9,14 +9,9 @@ import { RiSystemCheckLine } from "solid-icons/ri";
 import { ComponentProps, splitProps } from "solid-js";
 
 import { cn } from "~/lib/utils"
+import { labelVariants } from "./Label";
 
-export function CheckboxRoot(props: Checkbox.CheckboxRootProps) {
-  const [_, rest] = splitProps(props, ["class"])
-  return <Checkbox.Root
-    class={cn("flex flex-wrap items-center space-x-2", props.class)}
-    {...rest}
-  />
-}
+export const CheckboxRoot = Checkbox.Root
 
 export function CheckboxControl(props: Omit<Checkbox.CheckboxControlProps, "children"> & { inputProps?: Omit<Checkbox.CheckboxInputProps, "class"> }) {
   const [_, rest] = splitProps(props, ["class", "inputProps"])
@@ -24,7 +19,7 @@ export function CheckboxControl(props: Omit<Checkbox.CheckboxControlProps, "chil
     <Checkbox.Input class="peer" {...props.inputProps} />
     <Checkbox.Control
       class={cn(
-        "border-primary peer-focus-visible:ring-ring ui-checked:bg-primary ui-checked:text-primary-foreground peer h-4 w-4 shrink-0 cursor-pointer rounded-sm border shadow ui-disabled:cursor-not-allowed ui-disabled:opacity-50 peer-focus-visible:outline-none peer-focus-visible:ring-1",
+        "border-primary peer-focus-visible:ring-ring ui-checked:bg-primary ui-checked:text-primary-foreground ui-disabled:cursor-not-allowed ui-disabled:opacity-50 peer h-4 w-4 shrink-0 cursor-pointer rounded-sm border shadow peer-focus-visible:outline-none peer-focus-visible:ring-1",
         props.class
       )}
       {...rest}
@@ -36,12 +31,18 @@ export function CheckboxControl(props: Omit<Checkbox.CheckboxControlProps, "chil
   </>
 }
 
-export const CheckboxLabel = Checkbox.Label
+export function CheckboxLabel(props: Checkbox.CheckboxLabelProps) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Checkbox.Label
+    class={cn(labelVariants(), props.class)}
+    {...rest}
+  />
+}
 
 export function CheckboxDescription(props: ComponentProps<typeof Checkbox.Description>) {
   const [_, rest] = splitProps(props, ["class"])
   return <Checkbox.Description
-    class={cn("w-full text-sm font-medium")}
+    class={cn("text-muted-foreground text-sm")}
     {...rest}
   />
 }
@@ -49,7 +50,7 @@ export function CheckboxDescription(props: ComponentProps<typeof Checkbox.Descri
 export function CheckboxErrorMessage(props: ComponentProps<typeof Checkbox.ErrorMessage>) {
   const [_, rest] = splitProps(props, ["class"])
   return <Checkbox.ErrorMessage
-    class={cn("text-destructive w-full text-sm font-medium")}
+    class={cn("text-destructive text-sm font-medium")}
     {...rest}
   />
 }

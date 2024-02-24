@@ -76,7 +76,7 @@ export function DialogDescription(props: ComponentProps<typeof Dialog.Descriptio
 export function DialogOverflow(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
-    class={cn("flex-grow overflow-y-auto px-2", props.class)}
+    class={cn("flex-grow overflow-y-auto p-1", props.class)}
     {...rest}
   />
 }

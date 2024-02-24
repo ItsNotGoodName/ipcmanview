@@ -178,8 +178,8 @@ func UpdateUserPassword(ctx context.Context, db sqlite.DB, bus *event.Bus, arg U
 	model := userFrom(dbModel)
 
 	if !arg.OldPasswordSkip {
-		if err := CheckUserPassword(model.Password, arg.OldPassword); err != nil {
-			core.NewFieldError("OldPassword", err.Error())
+		if err := CheckUserPassword(dbModel.Password, arg.OldPassword); err != nil {
+			return core.NewFieldError("OldPassword", err.Error())
 		}
 	}
 

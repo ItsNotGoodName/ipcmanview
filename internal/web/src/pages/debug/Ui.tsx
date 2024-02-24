@@ -88,7 +88,7 @@ export function Ui() {
           <ComboboxListbox />
         </ComboboxContent>
       </ComboboxRoot>
-      <SwitchRoot class="flex gap-2 items-center">
+      <SwitchRoot class="flex items-center gap-2">
         <SwitchControl />
         <SwitchLabel>Switch</SwitchLabel>
         <SwitchDescription />
@@ -208,9 +208,11 @@ export function Ui() {
           }
         </For>
       </div>
-      <CheckboxRoot validationState="invalid">
-        <CheckboxControl />
-        <CheckboxLabel>Checkbox Label</CheckboxLabel>
+      <CheckboxRoot validationState="invalid" class="space-y-2">
+        <div class="flex items-center gap-2">
+          <CheckboxControl />
+          <CheckboxLabel>Checkbox Label</CheckboxLabel>
+        </div>
         <CheckboxDescription>Checkbox Description</CheckboxDescription>
         <CheckboxErrorMessage>Checkbox Error Message</CheckboxErrorMessage>
       </CheckboxRoot>
