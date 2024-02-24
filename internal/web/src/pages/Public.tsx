@@ -1,5 +1,5 @@
 import { createForm, required, reset } from "@modular-forms/solid";
-import { A, action, createAsync, redirect, revalidate, useAction } from "@solidjs/router";
+import { A, createAsync, revalidate, useNavigate } from "@solidjs/router";
 import { ParentProps, Show, } from "solid-js";
 
 import { useClient } from "~/providers/client";
@@ -68,36 +68,34 @@ type SignInForm = {
   rememberMe: boolean
 }
 
-const actionSignIn = action((form: SignInForm) =>
-  fetch("/v1/session", {
-    credentials: "include",
-    headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
-    method: "POST",
-    body: JSON.stringify(form),
-  }).then(async (resp) => {
-    if (!resp.ok) {
-      const json = await resp.json()
-      throw new Error(json.message)
-    }
-    return revalidate(getSession.key)
-  }).catch(throwAsFormError)
-)
-
 export function SignIn() {
-  const session = createAsync(() => getSession())
   const config = createAsync(() => getConfig())
-  const [signInForm, { Field, Form }] = createForm<SignInForm>();
-  const signIn = useAction(actionSignIn)
+  const session = createAsync(() => getSession())
+
+  const [form, { Field, Form }] = createForm<SignInForm>();
+  const submit = (input: SignInForm) =>
+    fetch("/v1/session", {
+      credentials: "include",
+      headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
+      method: "POST",
+      body: JSON.stringify(input),
+    }).then(async (resp) => {
+      if (!resp.ok) {
+        const json = await resp.json()
+        throw new Error(json.message)
+      }
+      return revalidate(getSession.key)
+    }).catch(throwAsFormError)
 
   return (
     <Layout>
       <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign in</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={signIn}>
+        <Form class="flex flex-col gap-4" onSubmit={submit}>
           <Field name="usernameOrEmail" validate={required("Please enter your username or email.")}>
             {(field, props) => (
-              <FieldRoot class="gap-1.5">
+              <FieldRoot>
                 <FieldLabel field={field}>Username or email</FieldLabel>
                 <FieldControl field={field}>
                   <Input
@@ -113,7 +111,7 @@ export function SignIn() {
           </Field>
           <Field name="password">
             {(field, props) => (
-              <FieldRoot class="gap-1.5">
+              <FieldRoot>
                 <div class="flex items-center justify-between gap-2">
                   <FieldLabel field={field}>
                     Password
@@ -137,19 +135,17 @@ export function SignIn() {
           </Field>
           <Field name="rememberMe" type="boolean">
             {(field, props) => (
-              <CheckboxFieldRoot form={signInForm} field={field}>
+              <CheckboxFieldRoot form={form} field={field}>
                 <CheckboxControl inputProps={props} />
                 <CheckboxLabel>Remember me</CheckboxLabel>
                 <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
               </CheckboxFieldRoot>
             )}
           </Field>
-          <Button type="submit" disabled={signInForm.submitting}>
-            <Show when={!signInForm.submitting} fallback={<>Signing in</>}>
-              Sign in
-            </Show>
+          <Button type="submit" disabled={form.submitting}>
+            <Show when={!form.submitting} fallback="Signing in">Sign in</Show>
           </Button>
-          <FormMessage form={signInForm} />
+          <FormMessage form={form} />
         </Form>
         <Show when={session()?.valid && session()?.disabled}>
           <AlertRoot variant="destructive">
@@ -176,18 +172,14 @@ type SignUpForm = {
   confirmPassword: string
 }
 
-const actionSignUp = action((form: SignUpForm) => useClient()
-  .public.signUp(form)
-  .then()
-  .catch(throwAsFormError)
-  .then(async () => { throw redirect("/signin") }))
-
 export function SignUp() {
+  const navigate = useNavigate()
+
   const config = createAsync(() => getConfig())
-  const signUp = useAction(actionSignUp)
-  const [signUpForm, { Field, Form }] = createForm<SignUpForm>({
-    validate: (form) => {
-      if (form.password != form.confirmPassword) {
+
+  const [form, { Field, Form }] = createForm<SignUpForm>({
+    validate: (input) => {
+      if (input.password != input.confirmPassword) {
         return {
           confirmPassword: "Password does not match."
         }
@@ -195,16 +187,21 @@ export function SignUp() {
       return {}
     }
   });
+  const submit = (input: SignUpForm) => useClient()
+    .public.signUp(input)
+    .then()
+    .catch(throwAsFormError)
+    .then(() => navigate("/signin"))
 
   return (
     <Layout>
       <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign up</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={signUp}>
+        <Form class="flex flex-col gap-4" onSubmit={submit}>
           <Field name="email" validate={required('Please enter your email.')}>
             {(field, props) => (
-              <FieldRoot class="gap-1.5">
+              <FieldRoot>
                 <FieldLabel field={field}>Email</FieldLabel>
                 <FieldControl field={field}>
                   <Input
@@ -220,7 +217,7 @@ export function SignUp() {
           </Field>
           <Field name="username" validate={required('Please enter a username.')}>
             {(field, props) => (
-              <FieldRoot class="gap-1.5">
+              <FieldRoot>
                 <FieldLabel field={field}>Username</FieldLabel>
                 <FieldControl field={field}>
                   <Input
@@ -236,7 +233,7 @@ export function SignUp() {
           </Field>
           <Field name="password" validate={required('Please enter a password.')}>
             {(field, props) => (
-              <FieldRoot class="gap-1.5">
+              <FieldRoot>
                 <div class="flex items-center justify-between gap-2">
                   <FieldLabel field={field}>
                     Password
@@ -257,7 +254,7 @@ export function SignUp() {
           </Field>
           <Field name="confirmPassword" validate={required('Please confirm your password.')}>
             {(field, props) => (
-              <FieldRoot class="gap-1.5">
+              <FieldRoot>
                 <div class="flex items-center justify-between gap-2">
                   <FieldLabel field={field}>
                     Confirm password
@@ -276,12 +273,10 @@ export function SignUp() {
               </FieldRoot>
             )}
           </Field>
-          <Button type="submit" disabled={signUpForm.submitting}>
-            <Show when={!signUpForm.submitting} fallback={<>Signing up</>}>
-              Sign up
-            </Show>
+          <Button type="submit" disabled={form.submitting}>
+            <Show when={!form.submitting} fallback="Signing up">Sign up</Show>
           </Button>
-          <FormMessage form={signUpForm} />
+          <FormMessage form={form} />
         </Form>
       </CardRoot>
       <Footer>
@@ -295,25 +290,27 @@ type ForgotForm = {
   email: string
 }
 
-const actionForgot = action((form: ForgotForm) => useClient()
-  .public.forgotPassword(form)
-  .then(() => { toast.success("Sent password reset email.") })
-  .catch(throwAsFormError))
-
 export function Forgot() {
   const config = createAsync(() => getConfig())
-  const [forgetForm, { Field, Form }] = createForm<ForgotForm>({ initialValues: { email: "" } });
-  const forgotSubmit = useAction(actionForgot)
+
+  const [form, { Field, Form }] = createForm<ForgotForm>({ initialValues: { email: "" } });
+  const submit = (input: ForgotForm) => useClient()
+    .public.forgotPassword(input)
+    .then(() => {
+      toast.success("Sent password reset email.")
+      reset(form)
+    })
+    .catch(throwAsFormError)
 
   return (
     <Layout>
       <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Forgot</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={(form) => forgotSubmit(form).then(() => reset(forgetForm))}>
+        <Form class="flex flex-col gap-4" onSubmit={submit}>
           <Field name="email" validate={required('Please enter your email.')}>
             {(field, props) => (
-              <FieldRoot class="gap-1.5">
+              <FieldRoot>
                 <FieldLabel field={field}>Email</FieldLabel>
                 <FieldControl field={field}>
                   <Input
@@ -327,12 +324,10 @@ export function Forgot() {
               </FieldRoot>
             )}
           </Field>
-          <Button type="submit" disabled={forgetForm.submitting}>
-            <Show when={!forgetForm.submitting} fallback={<>Sending password reset email</>}>
-              Send password reset email
-            </Show>
+          <Button type="submit" disabled={form.submitting}>
+            <Show when={!form.submitting} fallback="Sending password reset email">Send password reset email</Show>
           </Button>
-          <FormMessage form={forgetForm} />
+          <FormMessage form={form} />
         </Form>
       </CardRoot>
       <Footer>

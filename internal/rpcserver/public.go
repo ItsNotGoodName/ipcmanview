@@ -6,6 +6,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/config"
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -49,6 +50,13 @@ func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*emptypb.Empty
 		Password: req.Password,
 	})
 	if err != nil {
+		if errs, ok := core.AsFieldErrors(err); ok {
+			return nil, newInvalidArgument(errs,
+				keymap("email", "Email"),
+				keymap("username", "Username"),
+				keymap("password", "Password"),
+			)
+		}
 		return nil, err
 	}
 
