@@ -73,6 +73,10 @@ function AdminMenuLinks(props: { onClick?: () => void }) {
     <div class="flex flex-col">
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
         href="/admin" noScroll end>
+        <RiBuildingsHomeLine class="size-5" />Home
+      </A>
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
+        href="/admin/settings" noScroll>
         <RiSystemSettings2Line class="size-5" />Settings
       </A>
       <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}

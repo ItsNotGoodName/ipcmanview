@@ -4,7 +4,7 @@ import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
 import { RpcError } from "@protobuf-ts/runtime-rpc";
-import { FieldValues, FormError, FormStore, PartialValues, reset } from "@modular-forms/solid";
+import { FieldValues, FormError, FormStore, PartialValues, reset, setValues } from "@modular-forms/solid";
 import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
 import { createStore } from "solid-js/store";
 import { useSearchParams } from "@solidjs/router";
@@ -142,15 +142,9 @@ export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFiel
   return () => data.loading || !!data.error
 }
 
-// export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFieldValues, any>, data: PartialValues<TFieldValues> | undefined): boolean {
-//   if (form.submitted || form.dirty) {
-//     return false
-//   }
-//
-//   reset(form, { initialValues: data })
-//
-//   return false
-// }
+export function createSyncForm<T extends FieldValues>(form: FormStore<T, undefined>, initialValues: Accessor<PartialValues<T>>) {
+  createEffect(() => form.dirty || setValues(form, initialValues()))
+}
 
 export type CreatePagePaginationReturn = {
   previousPageDisabled: Accessor<boolean>

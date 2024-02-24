@@ -38,6 +38,8 @@ import loadFiles from "~/pages/Files.data";
 import { Events, EventsLive } from "~/pages/Events";
 import loadEvents from "~/pages/Events.data";
 import { lastConfig } from "./pages/data";
+import { AdminHome } from "./pages/admin/Home";
+import loadAdminHome from "./pages/admin/Home.data";
 
 const Debug = lazy(() => import("./pages/debug"));
 
@@ -77,7 +79,8 @@ function App() {
         <Route path="/events/live" component={EventsLive} />
         <Route path="/files" component={Files} load={loadFiles} />
         <Show when={isAdmin()} fallback={<Route path="/admin/*" component={NavigateHome} />}>
-          <Route path="/admin" component={AdminSettings} load={loadAdminSettings} />
+          <Route path="/admin" component={AdminHome} load={loadAdminHome} />
+          <Route path="/admin/settings" component={AdminSettings} load={loadAdminSettings} />
           <Route path="/admin/users" component={AdminUsers} load={loadAdminUsers} />
           <Route path="/admin/groups" component={AdminGroups} load={loadAdminGroups} />
           <Route path="/admin/groups/:id" component={AdminGroupsID} load={loadAdminGroupsID} />

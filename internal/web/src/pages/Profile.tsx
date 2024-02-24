@@ -113,14 +113,10 @@ export function Profile() {
         </CardRoot>
 
         <Shared.Title>Change username</Shared.Title>
-        <Center>
-          <ChangeUsernameForm />
-        </Center>
+        <ChangeUsernameForm />
 
         <Shared.Title>Change password</Shared.Title>
-        <Center>
-          <ChangePasswordForm />
-        </Center>
+        <ChangePasswordForm />
 
         <Shared.Title>Sessions</Shared.Title>
         <div class="flex">
@@ -214,29 +210,31 @@ function ChangeUsernameForm() {
   const submit = useAction(actionUpdateMyUsername)
 
   return (
-    <Form class="flex w-full max-w-xs flex-col gap-4" onSubmit={(form) => submit(form).then(() => reset(changeUsernameForm))}>
-      <Field name="newUsername" validate={required("Please enter a new username.")}>
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>New username</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="New username"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Button type="submit" disabled={changeUsernameForm.submitting}>
-        <Show when={!changeUsernameForm.submitting} fallback={<>Updating username</>}>
-          Update username
-        </Show>
-      </Button>
-      <FormMessage form={changeUsernameForm} />
-    </Form>
+    <Center>
+      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={(form) => submit(form).then(() => reset(changeUsernameForm))}>
+        <Field name="newUsername" validate={required("Please enter a new username.")}>
+          {(field, props) => (
+            <FieldRoot>
+              <FieldLabel field={field}>New username</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  placeholder="New username"
+                  value={field.value}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Button type="submit" disabled={changeUsernameForm.submitting}>
+          <Show when={!changeUsernameForm.submitting} fallback={<>Updating username</>}>
+            Update username
+          </Show>
+        </Button>
+        <FormMessage form={changeUsernameForm} />
+      </Form>
+    </Center>
   )
 }
 
@@ -267,66 +265,68 @@ function ChangePasswordForm() {
   const submit = useAction(actionUpdateMyPassword)
 
   return (
-    <Form class="flex w-full max-w-xs flex-col gap-4" onSubmit={(form) => submit(form).then(() => reset(changePasswordForm))}>
-      <input class="hidden" type="text" name="username" autocomplete="username" />
-      <Field name="oldPassword" validate={required("Please enter your old password.")}>
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Old password</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="current-password"
-                placeholder="Old password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Field name="newPassword" validate={required("Please enter a new password.")}>
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>New password</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="new-password"
-                placeholder="New password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Field name="confirmPassword">
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Confirm new password</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="new-password"
-                placeholder="Confirm new password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Button type="submit" disabled={changePasswordForm.submitting}>
-        <Show when={changePasswordForm.submitting} fallback={<>Update password</>}>
-          Updating password
-        </Show>
-      </Button>
-      <FormMessage form={changePasswordForm} />
-    </Form>
+    <Center>
+      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={(form) => submit(form).then(() => reset(changePasswordForm))}>
+        <input class="hidden" type="text" name="username" autocomplete="username" />
+        <Field name="oldPassword" validate={required("Please enter your old password.")}>
+          {(field, props) => (
+            <FieldRoot>
+              <FieldLabel field={field}>Old password</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  autocomplete="current-password"
+                  placeholder="Old password"
+                  type="password"
+                  value={field.value}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="newPassword" validate={required("Please enter a new password.")}>
+          {(field, props) => (
+            <FieldRoot>
+              <FieldLabel field={field}>New password</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  autocomplete="new-password"
+                  placeholder="New password"
+                  type="password"
+                  value={field.value}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="confirmPassword">
+          {(field, props) => (
+            <FieldRoot>
+              <FieldLabel field={field}>Confirm new password</FieldLabel>
+              <FieldControl field={field}>
+                <Input
+                  {...props}
+                  autocomplete="new-password"
+                  placeholder="Confirm new password"
+                  type="password"
+                  value={field.value}
+                />
+              </FieldControl>
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Button type="submit" disabled={changePasswordForm.submitting}>
+          <Show when={changePasswordForm.submitting} fallback={<>Update password</>}>
+            Updating password
+          </Show>
+        </Button>
+        <FormMessage form={changePasswordForm} />
+      </Form>
+    </Center>
   )
 }
 
