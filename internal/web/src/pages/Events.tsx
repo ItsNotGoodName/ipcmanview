@@ -48,6 +48,7 @@ export function Events() {
 
   const toggleSort = createToggleSortField(() => data()?.sort)
   const pagination = createPagePagination(() => data()?.pageResult)
+
   const dataOpen = () => Boolean(searchParams.data)
   const setDataOpen = (value: boolean) => setSearchParams({ data: value ? String(value) : "" })
 
@@ -239,16 +240,7 @@ export function Events() {
                           </Button>
                         </Crud.LastTableCell>
                       </TableRow>
-                      <tr class="border-b">
-                        <td colspan={6} class="p-0">
-                          <div data-expanded={rowDataOpen()} class="relative h-0 overflow-y-hidden data-[expanded=true]:h-full">
-                            <Button size="icon" variant="ghost" onClick={() => writeClipboard(v.data)} class="absolute right-4 top-2" title="Copy">
-                              <RiDocumentClipboardLine class="h-5 w-5" />
-                            </Button>
-                            <pre><code innerHTML={hljs.highlight(v.data, { language: "json" }).value} class="hljs" /></pre>
-                          </div>
-                        </td>
-                      </tr>
+                      <JSONTableRow colspan={6} expanded={rowDataOpen()} data={v.data} />
                     </>
                   )
                 }}
@@ -272,10 +264,9 @@ export function EventsLive() {
 
   const dataOpen = () => Boolean(searchParams.data)
   const setDataOpen = (value: boolean) => setSearchParams({ data: value ? String(value) : "" })
+
   const [events, setEvents] = createSignal<DahuaEvent[]>([])
-  bus.dahuaEvent.listen((e) => {
-    setEvents((prev) => [e, ...prev])
-  })
+  bus.dahuaEvent.listen((e) => setEvents((prev) => [e, ...prev]))
 
   return (
     <LayoutNormal class="max-w-4xl">
@@ -315,7 +306,6 @@ export function EventsLive() {
                   const [rowDataOpen, setRowDataOpen] = createSignal(dataOpen())
                   createEffect(() => setRowDataOpen(dataOpen()))
 
-                  const data = JSON.stringify(v.data, null, 2)
                   const [createdAt] = createDate(() => v.created_at);
                   const [createdAtAgo] = createTimeAgo(createdAt);
 
@@ -351,16 +341,7 @@ export function EventsLive() {
                           </Button>
                         </Crud.LastTableCell>
                       </TableRow>
-                      <tr class="border-b">
-                        <td colspan={6} class="p-0">
-                          <div data-expanded={rowDataOpen()} class="relative h-0 overflow-y-hidden data-[expanded=true]:h-full">
-                            <Button size="icon" variant="ghost" onClick={() => writeClipboard(data)} class="absolute right-4 top-2" title="Copy">
-                              <RiDocumentClipboardLine class="h-5 w-5" />
-                            </Button>
-                            <pre><code innerHTML={hljs.highlight(data, { language: "json" }).value} class="hljs" /></pre>
-                          </div>
-                        </td>
-                      </tr>
+                      <JSONTableRow colspan={6} expanded={rowDataOpen()} data={JSON.stringify(v.data, null, 2)} />
                     </>
                   )
                 }}
@@ -370,5 +351,20 @@ export function EventsLive() {
         </Suspense>
       </ErrorBoundary>
     </LayoutNormal>
+  )
+}
+
+function JSONTableRow(props: { colspan?: number, expanded?: boolean, data: string }) {
+  return (
+    <tr class="border-b">
+      <td colspan={props.colspan} class="p-0">
+        <div data-expanded={props.expanded} class="relative h-0 overflow-y-hidden data-[expanded=true]:h-full">
+          <Button size="icon" variant="ghost" onClick={() => writeClipboard(props.data)} class="absolute right-4 top-2" title="Copy">
+            <RiDocumentClipboardLine class="size-5" />
+          </Button>
+          <pre><code innerHTML={hljs.highlight(props.data, { language: "json" }).value} class="hljs" /></pre>
+        </div>
+      </td>
+    </tr>
   )
 }

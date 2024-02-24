@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/combobox
+// https://ui.shadcn.com/docs/components/combobox
 import { Combobox } from "@kobalte/core";
 import { RiSystemCheckLine, RiSystemCloseLine, RiSystemSearchLine } from "solid-icons/ri";
 import { Accessor, For, Show, mergeProps, splitProps } from "solid-js";
@@ -6,6 +12,7 @@ import { cva } from "class-variance-authority";
 import { buttonVariants } from "./Button";
 import { cn } from "~/lib/utils";
 import { Seperator } from "./Seperator";
+import { labelVariants } from "./Label";
 
 export interface ComboboxControlState<T> {
   /** The selected options. */
@@ -35,6 +42,30 @@ export function ComboboxItem(props: Combobox.ComboboxItemProps) {
 }
 
 export const ComboboxControl = Combobox.Control
+
+
+export function ComboboxLabel(props: Combobox.ComboboxLabelProps) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Combobox.Label
+    class={cn(labelVariants(), props.class)}
+    {...rest}
+  />
+}
+export function ComboboxDescription(props: Combobox.ComboboxDescriptionProps) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Combobox.Description
+    class={cn("text-muted-foreground text-sm", props.class)}
+    {...rest}
+  />
+}
+
+export function ComboboxErrorMessage(props: Combobox.ComboboxErrorMessageProps) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Combobox.ErrorMessage
+    class={cn("text-destructive text-sm font-medium", props.class)}
+    {...rest}
+  />
+}
 
 export function ComboboxTrigger(props: Combobox.ComboboxTriggerProps) {
   const [_, rest] = splitProps(props, ["class", "children"])

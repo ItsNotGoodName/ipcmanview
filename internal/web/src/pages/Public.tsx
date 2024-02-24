@@ -69,6 +69,8 @@ type SignInForm = {
 }
 
 export function SignIn() {
+  const navigate = useNavigate()
+
   const config = createAsync(() => getConfig())
   const session = createAsync(() => getSession())
 
@@ -85,7 +87,8 @@ export function SignIn() {
         throw new Error(json.message)
       }
 
-      return revalidate(getSession.key)
+      await revalidate(getSession.key)
+      navigate('/', { replace: true })
     }).catch(throwAsFormError)
 
   return (

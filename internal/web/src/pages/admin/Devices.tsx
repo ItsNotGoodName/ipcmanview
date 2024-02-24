@@ -455,13 +455,16 @@ function CreateForm(props: { onSubmit?: () => void }) {
 
 function UpdateForm(props: { onSubmit: () => void | Promise<void>, id: bigint }) {
   const device = createAsync(() => getDevice(props.id))
-  const refetchDevice = () => revalidate(getDevice.key)
+  const refetchDevice = () => revalidate(getDevice.keyFor(props.id))
+  const onSubmit = () =>
+    revalidate([getAdminDevicesPage.key, getDevice.keyFor(props.id)])
+      .then(props.onSubmit)
 
   return (
     <ErrorBoundary fallback={(e) => <PageError error={e} />}>
       <Suspense fallback={<Skeleton class="h-32" />}>
         <Show when={device()}>
-          <UpdateFormForm onSubmit={props.onSubmit} device={device()!} refetchDevice={refetchDevice} />
+          <UpdateFormForm onSubmit={onSubmit} device={device()!} refetchDevice={refetchDevice} />
         </Show>
       </Suspense>
     </ErrorBoundary>

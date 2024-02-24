@@ -45,7 +45,7 @@ export function AlertDialogHeader(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col space-y-2 overflow-y-hidden text-center sm:text-left",
+      "flex flex-col gap-2 overflow-y-hidden text-center sm:text-left",
       props.class
     )}
     {...rest}
@@ -56,7 +56,7 @@ export function AlertDialogFooter(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col-reverse px-2 sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
       props.class
     )}
     {...rest}

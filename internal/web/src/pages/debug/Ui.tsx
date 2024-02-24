@@ -19,7 +19,7 @@ import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, To
 import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
-import { SelectContent, SelectDescription, SelectErrorMessage, SelectItem, SelectLabel, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
+import { SelectContent, SelectDescription, SelectErrorMessage, SelectHTML, SelectItem, SelectLabel, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
 import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine, RiSystemAddLine, RiSystemAlertLine } from "solid-icons/ri";
@@ -34,7 +34,7 @@ import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from
 import { createRowSelection } from "~/lib/utils";
 import { BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
 import { A } from "@solidjs/router";
-import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger, } from "~/ui/Combobox";
+import { ComboboxContent, ComboboxControl, ComboboxDescription, ComboboxErrorMessage, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger, } from "~/ui/Combobox";
 
 export function Ui() {
   const showToast = () => {
@@ -72,7 +72,10 @@ export function Ui() {
             <ComboboxItemLabel>{props.item.rawValue}</ComboboxItemLabel>
           </ComboboxItem>
         )}
+        class="space-y-2"
+        validationState="invalid"
       >
+        <ComboboxLabel>Combobox Label</ComboboxLabel>
         <ComboboxControl<string> aria-label="Fruits">
           {state => (
             <ComboboxTrigger>
@@ -83,6 +86,8 @@ export function Ui() {
             </ComboboxTrigger>
           )}
         </ComboboxControl>
+        <ComboboxDescription>Combobox Description</ComboboxDescription>
+        <ComboboxErrorMessage>Combobox Error Message</ComboboxErrorMessage>
         <ComboboxContent >
           <ComboboxInput />
           <ComboboxListbox />
@@ -339,6 +344,10 @@ export function Ui() {
         <PaginationItems />
         <PaginationNext />
       </PaginationRoot>
+      <SelectHTML>
+        <option>Apple</option>
+        <option>Banana</option>
+      </SelectHTML>
       <SelectRoot
         defaultValue="Apple"
         options={["Apple", "Banana", "Blueberry", "Grapes", "Pineapple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple",]}

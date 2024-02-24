@@ -1,5 +1,5 @@
 // # Changes
-// N/A
+// - Content overflows in the Y direction
 //
 // # URLs
 // https://kobalte.dev/docs/core/components/sheet
@@ -86,7 +86,7 @@ export function SheetFooter(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
       props.class
     )}
     {...rest}

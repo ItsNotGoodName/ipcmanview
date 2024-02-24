@@ -47,7 +47,7 @@ export function DialogHeader(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
+      "flex flex-col gap-1.5 text-center sm:text-left",
       props.class
     )}
     {...rest}
@@ -85,7 +85,7 @@ export function DialogFooter(props: JSX.HTMLAttributes<HTMLDivElement>) {
   const [_, rest] = splitProps(props, ["class"])
   return <div
     class={cn(
-      "flex flex-col-reverse px-2 sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
       props.class
     )}
     {...rest}

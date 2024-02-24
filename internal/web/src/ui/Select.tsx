@@ -13,6 +13,7 @@ import { labelVariants } from "./Label"
 
 export function SelectHTML(props: JSX.SelectHTMLAttributes<HTMLSelectElement>) {
   const [_, rest] = splitProps(props, ["class"])
+  // TODO: the dropdown arrow should be opacity-50 but the text should be normal
   return <select
     class={cn(
       "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
