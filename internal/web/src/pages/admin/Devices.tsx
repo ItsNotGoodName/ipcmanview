@@ -12,17 +12,18 @@ import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { LayoutNormal } from "~/ui/Layout";
-import { GetDeviceResp, SetDeviceDisableReq } from "~/twirp/rpc";
+import { GetDeviceResp, ListDeviceFeaturesResp_Item, SetDeviceDisableReq } from "~/twirp/rpc";
 import { Crud } from "~/components/Crud";
 import { RiSystemLockLine } from "solid-icons/ri";
 import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
 import { Button } from "~/ui/Button";
-import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form";
-import { createForm, required, reset } from "@modular-forms/solid";
+import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage, SelectFieldRoot } from "~/ui/Form";
+import { FieldElementProps, FieldStore, FormStore, createForm, required, reset, setValue } from "@modular-forms/solid";
 import { Input } from "~/ui/Input";
-import { SelectHTML } from "~/ui/Select";
+import { SelectContent, SelectHTML, SelectItem, SelectLabel, SelectListbox, SelectTrigger, SelectValue } from "~/ui/Select";
 import { getDevice, getListDeviceFeatures, getListLocations } from "./data";
 import { Shared } from "~/components/Shared";
+import { Badge } from "~/ui/Badge";
 
 const actionDeleteDevice = action((ids: bigint[]) => useClient()
   .admin.deleteDevice({ ids })
@@ -322,7 +323,6 @@ type CreateForm = {
 
 function CreateForm(props: { onSubmit?: () => void }) {
   const locations = createAsync(() => getListLocations())
-  const deviceFeatures = createAsync(() => getListDeviceFeatures())
 
   const [addMore, setAddMore] = createSignal(false)
 
@@ -432,24 +432,7 @@ function CreateForm(props: { onSubmit?: () => void }) {
             )}
           </Field>
           <Field name="features.array" type="string[]">
-            {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Features</FieldLabel>
-                <FieldControl field={field}>
-                  <SelectHTML
-                    {...props}
-                    class="h-32"
-                    multiple
-                  >
-                    <option value="">None</option>
-                    <For each={deviceFeatures()}>
-                      {v => <option value={v.value} selected={field.value?.includes(v.value)}>{v.name}</option>}
-                    </For>
-                  </SelectHTML>
-                </FieldControl>
-                <FieldMessage field={field} />
-              </FieldRoot>
-            )}
+            {(field, props) => <DeviceFeaturesField form={form} field={field} props={props} />}
           </Field>
           <Button type="submit" disabled={form.submitting}>
             <Show when={!form.submitting} fallback="Creating device">Create device</Show>
@@ -494,7 +477,6 @@ type UpdateForm = {
 
 function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: GetDeviceResp, refetchDevice: () => Promise<void> }) {
   const locations = createAsync(() => getListLocations())
-  const deviceFeatures = createAsync(() => getListDeviceFeatures())
 
   const formInitialValues = (): UpdateForm => ({
     ...props.device,
@@ -596,24 +578,7 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         )}
       </Field>
       <Field name="features.array" type="string[]">
-        {(field, props) => (
-          <FieldRoot>
-            <FieldLabel field={field}>Features</FieldLabel>
-            <FieldControl field={field}>
-              <SelectHTML
-                {...props}
-                class="h-32"
-                multiple
-              >
-                <option value="">None</option>
-                <For each={deviceFeatures()}>
-                  {v => <option value={v.value} selected={field.value?.includes(v.value)}>{v.name}</option>}
-                </For>
-              </SelectHTML>
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
+        {(field, props) => <DeviceFeaturesField form={form} field={field} props={props} />}
       </Field>
       <div class="flex flex-col gap-4 sm:flex-row-reverse">
         <Button type="submit" disabled={form.submitting} class="flex-1">
@@ -622,6 +587,50 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         <Button type="button" onClick={formReset} variant="destructive" disabled={form.submitting}>Reset</Button>
       </div>
       <FormMessage form={form} />
-    </Form>
+    </Form >
+  )
+}
+
+function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: FieldStore<any, any>, props: FieldElementProps<any, any> }) {
+  const deviceFeatures = createAsync(() => getListDeviceFeatures())
+
+  return (
+    <Show when={deviceFeatures()}>
+      <SelectFieldRoot<ListDeviceFeaturesResp_Item>
+        field={props.field}
+        selectProps={props.props}
+        options={deviceFeatures()!}
+        optionValue="value"
+        optionTextValue="name"
+        placeholder="Features"
+        itemComponent={props => (
+          <SelectItem item={props.item} >
+            <div class="flex gap-2">
+              {props.item.rawValue.name} <p class="text-muted-foreground" >{props.item.rawValue.description}</p>
+            </div>
+          </SelectItem>
+        )}
+        value={deviceFeatures()?.filter(v => props.field.value?.includes(v.value))}
+        onChange={(v) => setValue(props.form, props.field.name, v.map(v => v.value))}
+        multiple
+        class="space-y-2"
+      >
+        <SelectLabel>Features</SelectLabel>
+        <SelectTrigger aria-label="Feature">
+          <SelectValue<ListDeviceFeaturesResp_Item>>
+            {state =>
+              <div class="flex gap-2">
+                <For each={state.selectedOptions()}>
+                  {v => <Badge>{v.name}</Badge>}
+                </For>
+              </div>
+            }
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          <SelectListbox />
+        </SelectContent>
+      </SelectFieldRoot>
+    </Show >
   )
 }

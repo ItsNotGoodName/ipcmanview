@@ -19,7 +19,7 @@ import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, To
 import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
-import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
+import { SelectContent, SelectDescription, SelectErrorMessage, SelectItem, SelectLabel, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
 import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine, RiSystemAddLine, RiSystemAlertLine } from "solid-icons/ri";
@@ -88,11 +88,13 @@ export function Ui() {
           <ComboboxListbox />
         </ComboboxContent>
       </ComboboxRoot>
-      <SwitchRoot class="flex items-center gap-2">
-        <SwitchControl />
-        <SwitchLabel>Switch</SwitchLabel>
-        <SwitchDescription />
-        <SwitchErrorMessage />
+      <SwitchRoot class="space-y-2" validationState="invalid">
+        <div class="flex items-center gap-2">
+          <SwitchControl />
+          <SwitchLabel>Switch</SwitchLabel>
+        </div>
+        <SwitchDescription>Switch Description</SwitchDescription>
+        <SwitchErrorMessage>Switch Error Message</SwitchErrorMessage>
       </SwitchRoot>
       <Button onClick={toggleTheme} size="icon">
         <ThemeIcon class="h-6 w-6" />
@@ -323,12 +325,17 @@ export function Ui() {
             {props.item.rawValue}
           </SelectItem>
         )}
+        class="space-y-2"
+        validationState="invalid"
       >
+        <SelectLabel>Select Label</SelectLabel>
         <SelectTrigger aria-label="Fruit">
           <SelectValue<string>>
             {state => state.selectedOption()}
           </SelectValue>
         </SelectTrigger>
+        <SelectDescription>Select Description</SelectDescription>
+        <SelectErrorMessage>Select Error Message</SelectErrorMessage>
         <SelectContent>
           <SelectListbox />
         </SelectContent>

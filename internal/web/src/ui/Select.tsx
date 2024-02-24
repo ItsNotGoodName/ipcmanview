@@ -9,6 +9,7 @@ import { RiArrowsArrowDownSLine, RiSystemCheckLine } from "solid-icons/ri"
 import { ComponentProps, JSX, splitProps } from "solid-js"
 
 import { cn } from "~/lib/utils"
+import { labelVariants } from "./Label"
 
 export function SelectHTML(props: JSX.SelectHTMLAttributes<HTMLSelectElement>) {
   const [_, rest] = splitProps(props, ["class"])
@@ -27,9 +28,29 @@ export const SelectRoot = Select.Root
 
 export const SelectValue = Select.Value
 
-export const SelectHiddenSelect = Select.HiddenSelect
+export function SelectLabel(props: Select.SelectLabelProps) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Select.Label
+    class={cn(labelVariants(), props.class)}
+    {...rest}
+  />
+}
 
-export const SelectDescription = Select.Description
+export function SelectDescription(props: Select.SelectDescriptionProps) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Select.Description
+    class={cn("text-muted-foreground text-sm", props.class)}
+    {...rest}
+  />
+}
+
+export function SelectErrorMessage(props: ComponentProps<typeof Select.ErrorMessage>) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Select.ErrorMessage
+    class={cn("text-destructive text-sm font-medium")}
+    {...rest}
+  />
+}
 
 export function SelectTrigger(props: ComponentProps<typeof Select.Trigger>) {
   const [_, rest] = splitProps(props, ["class", "children"])
@@ -65,21 +86,10 @@ export function SelectListbox() {
   return <Select.Listbox class="max-h-96 overflow-y-auto p-1" />
 }
 
-export function SelectLabel(props: ComponentProps<typeof Select.Label>) {
-  const [_, rest] = splitProps(props, ["class"])
-  return <Select.Label
-    class={cn("py-1.5 pl-8 pr-2 text-sm font-semibold", props.class)}
-    {...rest}
-  />
-}
-
-export function SelectItem(props: ComponentProps<typeof Select.Item>) {
-  const [_, rest] = splitProps(props, ["class", "children"])
+export function SelectItem(props: Omit<Select.SelectItemProps, "class">) {
+  const [_, rest] = splitProps(props, ["children"])
   return <Select.Item
-    class={cn(
-      "focus:bg-accent focus:text-accent-foreground ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none",
-      props.class
-    )}
+    class="focus:bg-accent focus:text-accent-foreground ui-disabled:pointer-events-none ui-disabled:opacity-50 relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none"
     {...rest}
   >
     <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">

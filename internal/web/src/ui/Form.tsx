@@ -8,7 +8,7 @@ import { FieldStore, FormStore, setValue } from "@modular-forms/solid";
 
 import { cn } from "~/lib/utils"
 import { Label, LabelProps } from "./Label"
-import { Checkbox, Switch } from "@kobalte/core";
+import { Checkbox, Select, Switch } from "@kobalte/core";
 
 type FieldContextValue = {
   id: string
@@ -26,6 +26,23 @@ export function CheckboxFieldRoot(props: Checkbox.CheckboxRootProps & { field: F
     onChange={(value) => setValue(props.form, props.field.name, value)}
     {...rest}
   />
+}
+
+type SelectProps<Option, OptGroup> = Select.SelectRootProps<Option, OptGroup> & {
+  field: FieldStore<any, any>,
+  selectProps: Select.SelectHiddenSelectProps
+}
+
+export function SelectFieldRoot<Option, OptGroup = never>(props: SelectProps<Option, OptGroup>) {
+  const [_, rest] = splitProps(props, ["children", "field", "selectProps"])
+  return <Select.Root
+    validationState={props.field.error ? "invalid" : "valid"}
+    placeholder={props.placeholder}
+    {...rest}
+  >
+    <Select.HiddenSelect {...props.selectProps} />
+    {props.children}
+  </Select.Root>
 }
 
 export function SwitchFieldRoot(props: Switch.SwitchRootProps & { field: FieldStore<any, any>, form: FormStore<any, any> }) {
