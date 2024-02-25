@@ -24,9 +24,7 @@ var mainCmd struct {
 
 	Version CmdVersion `cmd:"" help:"Show version."`
 	Serve   CmdServe   `cmd:"" help:"Start application."`
-	// Scan    CmdScan    `cmd:"" help:"Scan files on devices."`
-	// RPC     CmdRPC     `cmd:"" help:"Run RPC on devices."`
-	Debug_ CmdDebug `name:"debug" cmd:"" help:"Debug."`
+	Debug_  CmdDebug   `name:"debug" cmd:""`
 }
 
 func main() {
@@ -52,7 +50,7 @@ func main() {
 }
 
 func initLogger(debug bool) {
-	// Get level
+	// Get levels
 	zerologLevel := zerolog.InfoLevel
 	slogLevel := slog.LevelInfo
 	if debug {
@@ -60,7 +58,7 @@ func initLogger(debug bool) {
 		slogLevel = slog.LevelDebug
 	}
 
-	// Set logger
+	// Set loggers
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(zerologLevel)
 	slog.SetDefault(slog.New(slogzerolog.Option{Level: slogLevel, Logger: &log.Logger}.NewZerologHandler()))
 }

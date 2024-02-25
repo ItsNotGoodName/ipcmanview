@@ -86,7 +86,7 @@ func (s *Server) Session(c echo.Context) error {
 func (s *Server) SessionPOST(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	// Parse request
+	// Parse
 	var req struct {
 		UsernameOrEmail string
 		Password        string
@@ -112,7 +112,7 @@ func (s *Server) SessionPOST(c echo.Context) error {
 		previousSession = cookie.Value
 	}
 
-	// Save session and delete previous session if it exists
+	// Create session
 	session, err := auth.CreateUserSession(ctx, s.db, auth.CreateUserSessionParams{
 		UserAgent:       c.Request().UserAgent(),
 		IP:              c.RealIP(),

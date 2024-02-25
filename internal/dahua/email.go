@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 )
@@ -53,6 +54,10 @@ type Email struct {
 }
 
 func CreateEmail(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateEmailMessageParams, args ...repo.DahuaCreateEmailAttachmentParams) (Email, error) {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return Email{}, err
+	}
+
 	tx, err := db.BeginTx(ctx, true)
 	if err != nil {
 		return Email{}, err

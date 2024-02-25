@@ -79,7 +79,7 @@ func (c Shared) useDB(ctx *Context) (sqlite.DB, error) {
 	return db, nil
 }
 
-func (c Shared) useConfigFile() string {
+func (c Shared) useConfigFilePath() string {
 	return filepath.Join(c.Dir, "config.toml")
 }
 
@@ -106,32 +106,3 @@ func (c Shared) useCert() (server.Certificate, error) {
 
 	return cert, nil
 }
-
-// type SharedDevices struct {
-// 	ID  []int64 `help:"Run on device by ID."`
-// 	All bool    `help:"Run on all devices."`
-// }
-
-// func (c SharedDevices) useDevices(ctx context.Context, db sqlite.DB) ([]models.DahuaDeviceConn, error) {
-// 	var devices []models.DahuaDeviceConn
-// 	if c.All {
-// 		dbDevices, err := db.DahuaListDevices(ctx)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-//
-// 		for _, dbDevice := range dbDevices {
-// 			devices = append(devices, dbDevice.Convert())
-// 		}
-// 	} else {
-// 		dbDevices, err := db.ListDahuaDevicesByIDs(ctx, c.ID)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-//
-// 		for _, dbDevice := range dbDevices {
-// 			devices = append(devices, dbDevice.Convert())
-// 		}
-// 	}
-// 	return devices, nil
-// }

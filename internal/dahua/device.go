@@ -140,20 +140,17 @@ func createDahuaDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg re
 		return 0, err
 	}
 
-	err = tx.C().DahuaAllocateSeed(ctx, core.NewNullInt64(id))
-	if err != nil {
+	if err := tx.C().DahuaAllocateSeed(ctx, core.NewNullInt64(id)); err != nil {
 		return 0, err
 	}
 
 	arg2 := NewFileCursor()
 	arg2.DeviceID = id
-	err = tx.C().DahuaCreateFileCursor(ctx, arg2)
-	if err != nil {
+	if err := tx.C().DahuaCreateFileCursor(ctx, arg2); err != nil {
 		return 0, err
 	}
 
-	err = event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceCreated, id)
-	if err != nil {
+	if err := event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceCreated, id); err != nil {
 		return 0, err
 	}
 
@@ -223,8 +220,7 @@ func updateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.Da
 	}
 	defer tx.Rollback()
 
-	_, err = tx.C().DahuaUpdateDevice(ctx, arg)
-	if err != nil {
+	if _, err := tx.C().DahuaUpdateDevice(ctx, arg); err != nil {
 		return err
 	}
 
@@ -277,8 +273,7 @@ func updateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, arg
 	}
 	defer tx.Rollback()
 
-	_, err = tx.C().DahuaUpdateDeviceDisabledAt(ctx, arg)
-	if err != nil {
+	if _, err := tx.C().DahuaUpdateDeviceDisabledAt(ctx, arg); err != nil {
 		return err
 	}
 

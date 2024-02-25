@@ -47,7 +47,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
-	configProvider, err := config.NewProvider(c.useConfigFile())
+	configProvider, err := config.NewProvider(c.useConfigFilePath())
 	if err != nil {
 		return err
 	}
@@ -63,10 +63,10 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
-	// Secret
-	if _, err := c.useSecret(); err != nil {
-		return err
-	}
+	// // Secret
+	// if _, err := c.useSecret(); err != nil {
+	// 	return err
+	// }
 
 	// Database
 	db, err := c.useDB(ctx)

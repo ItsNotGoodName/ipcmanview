@@ -16,7 +16,7 @@ https://github.com/ItsNotGoodName/ipcmanview/assets/35015993/f2c73450-ba61-4d39-
 - View live stream of cameras
 - View snapshot of cameras
 - Publish to MQTT with Home Assistant MQTT discovery
-- View files on devices (only local, SFTP, and FTP storage locations are supported)
+- View emails from devices
 
 1. Streaming requires [MediaMTX](https://github.com/bluenviron/mediamtx), and [MQTT](https://mqtt.org/) requires a [MQTT broker](https://mosquitto.org/).
 
@@ -33,6 +33,7 @@ ipcmanview serve
 | `DIR`                      | "ipcmanview_data" | Directory path for storing data.                                                                                                              |
 | `HTTP_HOST`                |                   | HTTP host to listen on (e.g. "127.0.0.1").                                                                                                    |
 | `HTTP_PORT`                | 8080              | HTTP port to listen on.                                                                                                                       |
+| `HTTPS_PORT`               | 8443              | HTTPS port to listen on.                                                                                                                      |
 | `MQTT_ADDRESS`             |                   | MQTT server address (e.g. "mqtt://192.168.1.20:1883").                                                                                        |
 | `MQTT_TOPIC`               | "ipcmanview"      | MQTT server topic to publish messages.                                                                                                        |
 | `MQTT_USERNAME`            |                   | MQTT server username for authentication.                                                                                                      |
@@ -51,6 +52,7 @@ ipcmanview serve
 
 Roadmap is in order of importance.
 
+- View files on devices
 - Support syncing the config `VideoInMode` (Camera > Conditions > Profile Management) with sunrise and sunset
 - Support editing the config `General` (System > General)
 - Support editing the config `Email` (Network > SMTP(Email))
