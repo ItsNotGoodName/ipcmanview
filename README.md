@@ -6,7 +6,7 @@ Application for managing and viewing Dahua devices.
 
 TODO: explain why this program exists
 
-https://github.com/ItsNotGoodName/ipcmanview/assets/35015993/f2c73450-ba61-4d39-b3c5-92eaa719fced
+https://github.com/ItsNotGoodName/ipcmanview/assets/35015993/5c9a5482-a031-49ae-a56d-5242bd471505
 
 # Features
 
