@@ -251,11 +251,11 @@ func (q *Queries) DahuaCreateEvent(ctx context.Context, arg DahuaCreateEventPara
 	return id, err
 }
 
-const dahuaCreateEventRule = `-- name: DahuaCreateEventRule :exec
+const dahuaCreateEventRule = `-- name: DahuaCreateEventRule :one
 INSERT INTO
   dahua_event_rules (code, ignore_db, ignore_live, ignore_mqtt)
 VALUES
-  (?, ?, ?, ?)
+  (?, ?, ?, ?) RETURNING id
 `
 
 type DahuaCreateEventRuleParams struct {
@@ -265,14 +265,16 @@ type DahuaCreateEventRuleParams struct {
 	IgnoreMqtt bool
 }
 
-func (q *Queries) DahuaCreateEventRule(ctx context.Context, arg DahuaCreateEventRuleParams) error {
-	_, err := q.db.ExecContext(ctx, dahuaCreateEventRule,
+func (q *Queries) DahuaCreateEventRule(ctx context.Context, arg DahuaCreateEventRuleParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, dahuaCreateEventRule,
 		arg.Code,
 		arg.IgnoreDb,
 		arg.IgnoreLive,
 		arg.IgnoreMqtt,
 	)
-	return err
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }
 
 const dahuaCreateEventWorkerState = `-- name: DahuaCreateEventWorkerState :exec

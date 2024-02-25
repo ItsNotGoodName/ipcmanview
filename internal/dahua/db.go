@@ -482,7 +482,7 @@ func ListEventCodes(ctx context.Context, db sqlite.DB) ([]string, error) {
 	return res, nil
 }
 
-func ListEventactions(ctx context.Context, db sqlite.DB) ([]string, error) {
+func ListEventActions(ctx context.Context, db sqlite.DB) ([]string, error) {
 	sb := sq.Select("DISTINCT action").From("dahua_events")
 
 	var res []string
@@ -506,4 +506,11 @@ func ListStreams(ctx context.Context, db sqlite.DB, deviceID int64) ([]repo.Dahu
 	}
 
 	return res, nil
+}
+
+func ListEventRules(ctx context.Context, db sqlite.DB) ([]repo.DahuaEventRule, error) {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return nil, err
+	}
+	return db.C().DahuaListEventRules(ctx)
 }

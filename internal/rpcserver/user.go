@@ -539,7 +539,7 @@ func (u *User) ListEventFilters(ctx context.Context, _ *emptypb.Empty) (*rpc.Lis
 		return nil, err
 	}
 
-	actions, err := dahua.ListEventactions(ctx, u.db)
+	actions, err := dahua.ListEventActions(ctx, u.db)
 	if err != nil {
 		return nil, err
 	}

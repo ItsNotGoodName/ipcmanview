@@ -141,7 +141,7 @@ export function AdminUsers() {
             <AlertDialogDescription class="max-h-32 overflow-y-auto">
               <For each={data()?.items}>
                 {(e, index) =>
-                  <Show when={rowSelection.rows[index()].checked}>
+                  <Show when={rowSelection.rows[index()]?.checked}>
                     <div>
                       {e.username}
                     </div>

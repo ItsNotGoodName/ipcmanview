@@ -374,11 +374,11 @@ SET
 WHERE
   id = ?;
 
--- name: DahuaCreateEventRule :exec
+-- name: DahuaCreateEventRule :one
 INSERT INTO
   dahua_event_rules (code, ignore_db, ignore_live, ignore_mqtt)
 VALUES
-  (?, ?, ?, ?);
+  (?, ?, ?, ?) RETURNING id;
 
 -- name: DahuaDeleteEventRule :exec
 DELETE FROM dahua_event_rules

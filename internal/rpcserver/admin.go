@@ -603,6 +603,70 @@ func (a *Admin) UpdateConfig(cfg context.Context, req *rpc.UpdateConfigReq) (*em
 	return &emptypb.Empty{}, nil
 }
 
+func (a *Admin) CreateEventRule(ctx context.Context, req *rpc.CreateEventRuleReq) (*rpc.CreateEventRuleResp, error) {
+	id, err := dahua.CreateEventRule(ctx, a.db, repo.DahuaCreateEventRuleParams{
+		Code:       req.Code,
+		IgnoreDb:   req.IgnoreDb,
+		IgnoreLive: req.IgnoreLive,
+		IgnoreMqtt: req.IgnoreMqtt,
+	})
+	if err != nil {
+		if errs, ok := core.AsFieldErrors(err); ok {
+			return nil, newInvalidArgument(errs,
+				keymap("code", "Code"),
+			)
+		}
+		return nil, err
+	}
+
+	return &rpc.CreateEventRuleResp{
+		Id: id,
+	}, nil
+}
+
+func (a *Admin) ListEventRules(ctx context.Context, _ *emptypb.Empty) (*rpc.ListEventRulesResp, error) {
+	v, err := dahua.ListEventRules(ctx, a.db)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*rpc.ListEventRulesResp_Item, 0, len(v))
+	for _, v := range v {
+		items = append(items, &rpc.ListEventRulesResp_Item{
+			Id:         v.ID,
+			Code:       v.Code,
+			IgnoreDb:   v.IgnoreDb,
+			IgnoreLive: v.IgnoreLive,
+			IgnoreMqtt: v.IgnoreMqtt,
+		})
+	}
+
+	return &rpc.ListEventRulesResp{
+		Items: items,
+	}, nil
+}
+
+func (a *Admin) DeleteEventRules(ctx context.Context, req *rpc.DeleteEventRulesReq) (*emptypb.Empty, error) {
+	for _, id := range req.Ids {
+		rule, err := a.db.C().DahuaGetEventRule(ctx, id)
+		if err != nil {
+			if core.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+		if rule.Code == "" {
+			continue
+		}
+
+		if err := dahua.DeleteEventRule(ctx, a.db, rule); err != nil {
+			return nil, err
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (*Admin) ListLocations(context.Context, *emptypb.Empty) (*rpc.ListLocationsResp, error) {
 	return &rpc.ListLocationsResp{
 		Locations: core.Locations,

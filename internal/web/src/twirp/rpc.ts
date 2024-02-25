@@ -1619,19 +1619,6 @@ export interface UpdateDeviceReq {
     features: string[];
 }
 /**
- * @generated from protobuf message UpdateConfigReq
- */
-export interface UpdateConfigReq {
-    /**
-     * @generated from protobuf field: string site_name = 1;
-     */
-    siteName: string;
-    /**
-     * @generated from protobuf field: bool enable_sign_up = 2;
-     */
-    enableSignUp: boolean;
-}
-/**
  * @generated from protobuf message DeleteDeviceReq
  */
 export interface DeleteDeviceReq {
@@ -1661,6 +1648,92 @@ export interface SetDeviceDisableReq_Item {
      * @generated from protobuf field: bool disable = 2;
      */
     disable: boolean;
+}
+/**
+ * @generated from protobuf message UpdateConfigReq
+ */
+export interface UpdateConfigReq {
+    /**
+     * @generated from protobuf field: string site_name = 1;
+     */
+    siteName: string;
+    /**
+     * @generated from protobuf field: bool enable_sign_up = 2;
+     */
+    enableSignUp: boolean;
+}
+/**
+ * @generated from protobuf message CreateEventRuleReq
+ */
+export interface CreateEventRuleReq {
+    /**
+     * @generated from protobuf field: string code = 1;
+     */
+    code: string;
+    /**
+     * @generated from protobuf field: bool ignore_db = 2;
+     */
+    ignoreDb: boolean;
+    /**
+     * @generated from protobuf field: bool ignore_live = 3;
+     */
+    ignoreLive: boolean;
+    /**
+     * @generated from protobuf field: bool ignore_mqtt = 4;
+     */
+    ignoreMqtt: boolean;
+}
+/**
+ * @generated from protobuf message CreateEventRuleResp
+ */
+export interface CreateEventRuleResp {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+}
+/**
+ * @generated from protobuf message ListEventRulesResp
+ */
+export interface ListEventRulesResp {
+    /**
+     * @generated from protobuf field: repeated ListEventRulesResp.Item items = 1;
+     */
+    items: ListEventRulesResp_Item[];
+}
+/**
+ * @generated from protobuf message ListEventRulesResp.Item
+ */
+export interface ListEventRulesResp_Item {
+    /**
+     * @generated from protobuf field: int64 id = 1;
+     */
+    id: bigint;
+    /**
+     * @generated from protobuf field: string code = 2;
+     */
+    code: string;
+    /**
+     * @generated from protobuf field: bool ignore_db = 3;
+     */
+    ignoreDb: boolean;
+    /**
+     * @generated from protobuf field: bool ignore_live = 4;
+     */
+    ignoreLive: boolean;
+    /**
+     * @generated from protobuf field: bool ignore_mqtt = 5;
+     */
+    ignoreMqtt: boolean;
+}
+/**
+ * @generated from protobuf message DeleteEventRulesReq
+ */
+export interface DeleteEventRulesReq {
+    /**
+     * @generated from protobuf field: repeated int64 ids = 1;
+     */
+    ids: bigint[];
 }
 /**
  * @generated from protobuf message ListLocationsResp
@@ -2985,19 +3058,6 @@ class UpdateDeviceReq$Type extends MessageType<UpdateDeviceReq> {
  */
 export const UpdateDeviceReq = new UpdateDeviceReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
-class UpdateConfigReq$Type extends MessageType<UpdateConfigReq> {
-    constructor() {
-        super("UpdateConfigReq", [
-            { no: 1, name: "site_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "enable_sign_up", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
-        ]);
-    }
-}
-/**
- * @generated MessageType for protobuf message UpdateConfigReq
- */
-export const UpdateConfigReq = new UpdateConfigReq$Type();
-// @generated message type with reflection information, may provide speed optimized methods
 class DeleteDeviceReq$Type extends MessageType<DeleteDeviceReq> {
     constructor() {
         super("DeleteDeviceReq", [
@@ -3034,6 +3094,86 @@ class SetDeviceDisableReq_Item$Type extends MessageType<SetDeviceDisableReq_Item
  * @generated MessageType for protobuf message SetDeviceDisableReq.Item
  */
 export const SetDeviceDisableReq_Item = new SetDeviceDisableReq_Item$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UpdateConfigReq$Type extends MessageType<UpdateConfigReq> {
+    constructor() {
+        super("UpdateConfigReq", [
+            { no: 1, name: "site_name", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "enable_sign_up", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UpdateConfigReq
+ */
+export const UpdateConfigReq = new UpdateConfigReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CreateEventRuleReq$Type extends MessageType<CreateEventRuleReq> {
+    constructor() {
+        super("CreateEventRuleReq", [
+            { no: 1, name: "code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "ignore_db", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "ignore_live", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "ignore_mqtt", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message CreateEventRuleReq
+ */
+export const CreateEventRuleReq = new CreateEventRuleReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class CreateEventRuleResp$Type extends MessageType<CreateEventRuleResp> {
+    constructor() {
+        super("CreateEventRuleResp", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message CreateEventRuleResp
+ */
+export const CreateEventRuleResp = new CreateEventRuleResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListEventRulesResp$Type extends MessageType<ListEventRulesResp> {
+    constructor() {
+        super("ListEventRulesResp", [
+            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => ListEventRulesResp_Item }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListEventRulesResp
+ */
+export const ListEventRulesResp = new ListEventRulesResp$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class ListEventRulesResp_Item$Type extends MessageType<ListEventRulesResp_Item> {
+    constructor() {
+        super("ListEventRulesResp.Item", [
+            { no: 1, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ },
+            { no: 2, name: "code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "ignore_db", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "ignore_live", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "ignore_mqtt", kind: "scalar", T: 8 /*ScalarType.BOOL*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message ListEventRulesResp.Item
+ */
+export const ListEventRulesResp_Item = new ListEventRulesResp_Item$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class DeleteEventRulesReq$Type extends MessageType<DeleteEventRulesReq> {
+    constructor() {
+        super("DeleteEventRulesReq", [
+            { no: 1, name: "ids", kind: "scalar", repeat: 1 /*RepeatType.PACKED*/, T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message DeleteEventRulesReq
+ */
+export const DeleteEventRulesReq = new DeleteEventRulesReq$Type();
 // @generated message type with reflection information, may provide speed optimized methods
 class ListLocationsResp$Type extends MessageType<ListLocationsResp> {
     constructor() {
@@ -3138,6 +3278,9 @@ export const Admin = new ServiceType("Admin", [
     { name: "SetDeviceDisable", options: {}, I: SetDeviceDisableReq, O: Empty },
     { name: "UpdateDevice", options: {}, I: UpdateDeviceReq, O: Empty },
     { name: "UpdateConfig", options: {}, I: UpdateConfigReq, O: Empty },
+    { name: "CreateEventRule", options: {}, I: CreateEventRuleReq, O: CreateEventRuleResp },
+    { name: "ListEventRules", options: {}, I: Empty, O: ListEventRulesResp },
+    { name: "DeleteEventRules", options: {}, I: DeleteEventRulesReq, O: Empty },
     { name: "ListLocations", options: {}, I: Empty, O: ListLocationsResp },
     { name: "ListDeviceFeatures", options: {}, I: Empty, O: ListDeviceFeaturesResp }
 ]);

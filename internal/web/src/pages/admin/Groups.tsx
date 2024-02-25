@@ -128,7 +128,7 @@ export function AdminGroups() {
               <ul>
                 <For each={data()?.items}>
                   {(e, index) =>
-                    <Show when={rowSelection.rows[index()].checked}>
+                    <Show when={rowSelection.rows[index()]?.checked}>
                       <li>{e.name}</li>
                     </Show>
                   }

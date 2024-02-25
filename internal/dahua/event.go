@@ -69,7 +69,7 @@ func (e DefaultEventHooks) Disconnect(ctx context.Context, deviceID int64, err e
 }
 
 func (e DefaultEventHooks) Event(ctx context.Context, deviceID int64, evt dahuacgi.Event) {
-	eventRule, err := GetEventRuleByEvent(ctx, e.db, deviceID, evt.Code)
+	eventRule, err := getEventRuleByEvent(ctx, e.db, deviceID, evt.Code)
 	if err != nil {
 		e.logError(err)
 		return

@@ -66,7 +66,7 @@ export function encodeOrder(o: Order): string {
 }
 
 export type CreateRowSelectionReturn<T> = {
-  rows: Array<{ id: T, checked: boolean }>
+  rows: Array<{ id: T, checked: boolean } | undefined>
   selections: Accessor<Array<T>>
   multiple: Accessor<boolean>
   indeterminate: Accessor<boolean>

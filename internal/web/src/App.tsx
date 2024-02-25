@@ -31,7 +31,7 @@ import { Emails } from "~/pages/Emails";
 import loadEmails from "~/pages/Emails.data";
 import { EmailsID } from "~/pages/EmailsID";
 import loadEmailsID from "~/pages/EmailsID.data";
-import { AdminSettings } from "~/pages/admin/Settings";
+import { AdminSettings } from "./pages/admin/Settings";
 import loadAdminSettings from "~/pages/admin/Settings.data";
 import { Files } from "~/pages/Files";
 import loadFiles from "~/pages/Files.data";

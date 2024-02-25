@@ -4,6 +4,10 @@
 import { Admin } from "./rpc";
 import type { ListDeviceFeaturesResp } from "./rpc";
 import type { ListLocationsResp } from "./rpc";
+import type { DeleteEventRulesReq } from "./rpc";
+import type { ListEventRulesResp } from "./rpc";
+import type { CreateEventRuleResp } from "./rpc";
+import type { CreateEventRuleReq } from "./rpc";
 import type { UpdateConfigReq } from "./rpc";
 import type { UpdateDeviceReq } from "./rpc";
 import type { SetDeviceDisableReq } from "./rpc";
@@ -520,6 +524,20 @@ export interface IAdminClient {
      */
     updateConfig(input: UpdateConfigReq, options?: RpcOptions): UnaryCall<UpdateConfigReq, Empty>;
     /**
+     * Event rule
+     *
+     * @generated from protobuf rpc: CreateEventRule(CreateEventRuleReq) returns (CreateEventRuleResp);
+     */
+    createEventRule(input: CreateEventRuleReq, options?: RpcOptions): UnaryCall<CreateEventRuleReq, CreateEventRuleResp>;
+    /**
+     * @generated from protobuf rpc: ListEventRules(google.protobuf.Empty) returns (ListEventRulesResp);
+     */
+    listEventRules(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListEventRulesResp>;
+    /**
+     * @generated from protobuf rpc: DeleteEventRules(DeleteEventRulesReq) returns (google.protobuf.Empty);
+     */
+    deleteEventRules(input: DeleteEventRulesReq, options?: RpcOptions): UnaryCall<DeleteEventRulesReq, Empty>;
+    /**
      * Misc
      *
      * @generated from protobuf rpc: ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
@@ -711,19 +729,42 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<UpdateConfigReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
+     * Event rule
+     *
+     * @generated from protobuf rpc: CreateEventRule(CreateEventRuleReq) returns (CreateEventRuleResp);
+     */
+    createEventRule(input: CreateEventRuleReq, options?: RpcOptions): UnaryCall<CreateEventRuleReq, CreateEventRuleResp> {
+        const method = this.methods[23], opt = this._transport.mergeOptions(options);
+        return stackIntercept<CreateEventRuleReq, CreateEventRuleResp>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: ListEventRules(google.protobuf.Empty) returns (ListEventRulesResp);
+     */
+    listEventRules(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListEventRulesResp> {
+        const method = this.methods[24], opt = this._transport.mergeOptions(options);
+        return stackIntercept<Empty, ListEventRulesResp>("unary", this._transport, method, opt, input);
+    }
+    /**
+     * @generated from protobuf rpc: DeleteEventRules(DeleteEventRulesReq) returns (google.protobuf.Empty);
+     */
+    deleteEventRules(input: DeleteEventRulesReq, options?: RpcOptions): UnaryCall<DeleteEventRulesReq, Empty> {
+        const method = this.methods[25], opt = this._transport.mergeOptions(options);
+        return stackIntercept<DeleteEventRulesReq, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
      * Misc
      *
      * @generated from protobuf rpc: ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
      */
     listLocations(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListLocationsResp> {
-        const method = this.methods[23], opt = this._transport.mergeOptions(options);
+        const method = this.methods[26], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, ListLocationsResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ListDeviceFeatures(google.protobuf.Empty) returns (ListDeviceFeaturesResp);
      */
     listDeviceFeatures(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListDeviceFeaturesResp> {
-        const method = this.methods[24], opt = this._transport.mergeOptions(options);
+        const method = this.methods[27], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, ListDeviceFeaturesResp>("unary", this._transport, method, opt, input);
     }
 }
