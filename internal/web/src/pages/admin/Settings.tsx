@@ -1,3 +1,4 @@
+import Humanize from "humanize-plus"
 import { createForm, reset } from "@modular-forms/solid";
 import { ErrorBoundary, For, Show, Suspense, batch, createSignal, } from "solid-js";
 import { Shared } from "~/components/Shared";
@@ -9,7 +10,7 @@ import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchLabel } fro
 import { useClient } from "~/providers/client";
 import { action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router";
 import { getConfig } from "../data";
-import { GetConfigResp, ListEventRulesResp_Item } from "~/twirp/rpc";
+import { GetConfigResp, ListEventRulesResp_Item, UpdateEventRuleReq_Item } from "~/twirp/rpc";
 import { Skeleton } from "~/ui/Skeleton";
 import { catchAsToast, createModal, createRowSelection, throwAsFormError } from "~/lib/utils";
 import { PageError } from "~/ui/Page";
@@ -20,6 +21,8 @@ import { DialogContent, DialogHeader, DialogOverflow, DialogOverlay, DialogPorta
 import { RiDeviceSaveLine, RiSystemAddLine, RiSystemDeleteBinLine, RiSystemRefreshLine } from "solid-icons/ri";
 import { Crud } from "~/components/Crud";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogModal, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
+import { createStore } from "solid-js/store";
+import { TextFieldInput, TextFieldRoot } from "~/ui/TextField";
 
 type UpdateForm = {
   siteName: string
@@ -48,7 +51,7 @@ export function AdminSettings() {
         <Shared.Title>Event rules</Shared.Title>
         <Suspense fallback={<Skeleton class="h-32" />}>
           <Show when={eventRules()}>
-            <Thing eventRules={eventRules()!} refetchEventRules={refetchEventRules} />
+            <EventRulesTable eventRules={eventRules()!} refetchEventRules={refetchEventRules} />
           </Show>
         </Suspense>
       </ErrorBoundary>
@@ -120,30 +123,53 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
 
 const actionDeleteEventRule = action((ids: bigint[]) => useClient()
   .admin.deleteEventRules({ ids })
-  .then(() => revalidate(getListEventRules.key))
+  .then(() => true)
   .catch(catchAsToast))
 
-function Thing(props: { eventRules: ListEventRulesResp_Item[], refetchEventRules: () => void }) {
-  const rowSelection = createRowSelection(() => props.eventRules?.map(v => v.id) || [])
+const actionUpdateEventRule = action((items: UpdateEventRuleReq_Item[]) => useClient()
+  .admin.updateEventRule({ items })
+  .then(() => true)
+  .catch(catchAsToast))
+
+function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetchEventRules: () => Promise<void> }) {
+  const [rows, setRows] = createStore<(ListEventRulesResp_Item & { _dirty: boolean })[]>(props.eventRules.map(v => ({ ...v, _dirty: false })))
+  const resetRows = () => setRows(props.eventRules.map(v => ({ ...v, _dirty: false })))
+  const rowsDirty = () => rows.filter(v => v._dirty)
+
+  const rowSelection = createRowSelection(
+    () => rows?.map(v => v.id) || [],
+    (index) => rows[index].code == "")
+
+  const refreshSubmit = () => props.refetchEventRules().then(resetRows)
 
   // Create
   const [createFormModal, setCreateFormModal] = createSignal(false)
+  const onCreateSubmit = () => { resetRows(), setCreateFormModal(false) }
+
+  // Update
+  const updateSubmission = useSubmission(actionUpdateEventRule)
+  const updateAction = useAction(actionUpdateEventRule)
+  const updateSubmit = () => updateAction(rowsDirty())
+    .then((value) => value === true && resetRows())
 
   // Delete
   const deleteSubmission = useSubmission(actionDeleteEventRule)
   const deleteAction = useAction(actionDeleteEventRule)
   // Single
   const deleteModal = createModal({ name: "", id: BigInt(0) })
-  const deleteSubmit = () =>
-    deleteAction([deleteModal.value().id])
-      .then(deleteModal.close)
+  const deleteSubmit = () => deleteAction([deleteModal.value().id])
+    .then((value) => value === true &&
+      batch(() => {
+        deleteModal.close()
+        resetRows()
+      }))
   // Multiple
-  const [deleteMultipleModal, setDeleteMultipleModal] = createSignal(false)
-  const deleteMultipleSubmit = () =>
-    deleteAction(rowSelection.selections())
-      .then(() => batch(() => {
-        rowSelection.setAll(false)
-        setDeleteMultipleModal(false)
+  const deleteMultipleModal = createModal<ListEventRulesResp_Item[]>([])
+  const deleteMultipleSubmit = () => deleteAction(rowSelection.selections())
+    .then((value) => value === true &&
+      batch(() => {
+        deleteMultipleModal.close()
+        resetRows()
       }))
 
   return (
@@ -156,7 +182,7 @@ function Thing(props: { eventRules: ListEventRulesResp_Item[], refetchEventRules
               <DialogTitle>Create event rule</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <CreateEventRuleForm onSubmit={() => setCreateFormModal(false)} />
+              <CreateEventRuleForm onSubmit={onCreateSubmit} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -176,17 +202,15 @@ function Thing(props: { eventRules: ListEventRulesResp_Item[], refetchEventRules
         </AlertDialogModal>
       </AlertDialogRoot>
 
-      <AlertDialogRoot open={deleteMultipleModal()} onOpenChange={setDeleteMultipleModal}>
+      <AlertDialogRoot open={deleteMultipleModal.open()} onOpenChange={deleteMultipleModal.close}>
         <AlertDialogModal>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you wish to delete {rowSelection.selections().length} devices?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you wish to delete {deleteMultipleModal.value().length} event {Humanize.pluralize(deleteMultipleModal.value().length, "rule")}?</AlertDialogTitle>
             <AlertDialogDescription>
               <ul>
-                <For each={props.eventRules}>
-                  {(e, index) =>
-                    <Show when={rowSelection.rows[index()]?.checked}>
-                      <li>{e.code}</li>
-                    </Show>
+                <For each={deleteMultipleModal.value()}>
+                  {(e) =>
+                    <li>{e.code}</li>
                   }
                 </For>
               </ul>
@@ -202,15 +226,28 @@ function Thing(props: { eventRules: ListEventRulesResp_Item[], refetchEventRules
       </AlertDialogRoot>
 
       <div class="flex justify-end gap-2">
-        <Button size="icon" title="Create" variant="secondary" onClick={() => setCreateFormModal(true)}>
+        <Button
+          size="icon"
+          variant="secondary"
+          title="Create"
+          onClick={() => setCreateFormModal(true)}
+        >
           <RiSystemAddLine class="size-5" />
         </Button>
-        <Button size="icon" title="Update">
+        <Button
+          size="icon"
+          title="Update"
+          disabled={!rows.some(v => v._dirty) || updateSubmission.pending}
+          onClick={updateSubmit}
+        >
           <RiDeviceSaveLine class="size-5" />
         </Button>
-        <Button size="icon" title="Delete" variant="destructive"
+        <Button
+          size="icon"
+          variant="destructive"
+          title="Delete"
           disabled={rowSelection.selections().length == 0 || deleteSubmission.pending}
-          onClick={() => setDeleteMultipleModal(true)}
+          onClick={() => deleteMultipleModal.setValue(rows.filter(v => rowSelection.selections().includes(v.id)))}
         >
           <RiSystemDeleteBinLine class="size-5" />
         </Button>
@@ -229,42 +266,70 @@ function Thing(props: { eventRules: ListEventRulesResp_Item[], refetchEventRules
               </CheckboxRoot>
             </TableHead>
             <TableHead>Code</TableHead>
-            <TableHead>DB</TableHead>
-            <TableHead>Live</TableHead>
-            <TableHead>MQTT</TableHead>
+            <TableHead>
+              <button onClick={() => {
+                const value = rows.some(v => v.ignoreDb)
+                setRows(() => true, (v) => ({ ...v, _dirty: true, ignoreDb: !value }))
+              }}>
+                DB
+              </button>
+            </TableHead>
+            <TableHead>
+              <button onClick={() => {
+                const value = rows.some(v => v.ignoreLive)
+                setRows(() => true, (v) => ({ ...v, _dirty: true, ignoreLive: !value }))
+              }}>
+                Live
+              </button>
+            </TableHead>
+            <TableHead>
+              <button onClick={() => {
+                const value = rows.some(v => v.ignoreMqtt)
+                setRows(() => true, (v) => ({ ...v, _dirty: true, ignoreMqtt: !value }))
+              }}>
+                MQTT
+              </button>
+            </TableHead>
             <Crud.LastTableHead>
-              <Button size="icon" title="Refresh" variant="ghost" onClick={props.refetchEventRules}>
+              <Button size="icon" title="Refresh" variant="ghost" onClick={refreshSubmit}>
                 <RiSystemRefreshLine class="size-5" />
               </Button>
             </Crud.LastTableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <For each={props.eventRules}>
+          <For each={rows}>
             {(item, index) =>
               <TableRow>
                 <TableCell>
-                  <Show when={item.code} fallback={
-                    <CheckboxRoot checked={false} disabled>
-                      <CheckboxControl />
-                    </CheckboxRoot>
-                  }>
-                    <CheckboxRoot
-                      checked={rowSelection.rows[index()]?.checked}
-                      onChange={(checked) => rowSelection.set(item.id, checked)}
-                    >
-                      <CheckboxControl />
-                    </CheckboxRoot>
-                  </Show>
+                  <CheckboxRoot
+                    disabled={!item.code}
+                    checked={rowSelection.rows[index()]?.checked}
+                    onChange={(checked) => rowSelection.set(item.id, checked)}
+                  >
+                    <CheckboxControl />
+                  </CheckboxRoot>
                 </TableCell>
                 <TableCell class="min-w-32 w-full py-0">
-                  <Show when={item.code}>
-                    <Input value={item.code} />
+                  <Show when={item.code} fallback="All" >
+                    <TextFieldRoot
+                      value={item.code}
+                      onChange={(value) => setRows(
+                        (todo) => todo.id === item.id,
+                        (v) => ({ ...v, _dirty: true, code: value })
+                      )}
+                    >
+                      <TextFieldInput />
+                    </TextFieldRoot>
                   </Show>
                 </TableCell>
                 <TableCell>
                   <CheckboxRoot
                     checked={!item.ignoreDb}
+                    onChange={(value) => setRows(
+                      (todo) => todo.id === item.id,
+                      (v) => ({ ...v, _dirty: true, ignoreDb: !value })
+                    )}
                   >
                     <CheckboxControl />
                   </CheckboxRoot>
@@ -272,6 +337,10 @@ function Thing(props: { eventRules: ListEventRulesResp_Item[], refetchEventRules
                 <TableCell>
                   <CheckboxRoot
                     checked={!item.ignoreLive}
+                    onChange={(value) => setRows(
+                      (todo) => todo.id === item.id,
+                      (v) => ({ ...v, _dirty: true, ignoreLive: !value })
+                    )}
                   >
                     <CheckboxControl />
                   </CheckboxRoot>
@@ -279,6 +348,10 @@ function Thing(props: { eventRules: ListEventRulesResp_Item[], refetchEventRules
                 <TableCell>
                   <CheckboxRoot
                     checked={!item.ignoreMqtt}
+                    onChange={(value) => setRows(
+                      (todo) => todo.id === item.id,
+                      (v) => ({ ...v, _dirty: true, ignoreMqtt: !value })
+                    )}
                   >
                     <CheckboxControl />
                   </CheckboxRoot>
@@ -289,10 +362,9 @@ function Thing(props: { eventRules: ListEventRulesResp_Item[], refetchEventRules
           </For>
         </TableBody>
       </TableRoot>
-    </div>
+    </div >
   )
 }
-
 
 type CreateEventRuleForm = {
   code: string

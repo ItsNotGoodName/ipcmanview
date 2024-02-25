@@ -406,6 +406,7 @@ service Admin {
 
   // Event rule
   rpc CreateEventRule(CreateEventRuleReq) returns (CreateEventRuleResp);
+  rpc UpdateEventRule(UpdateEventRuleReq) returns (google.protobuf.Empty);
   rpc ListEventRules(google.protobuf.Empty) returns (ListEventRulesResp);
   rpc DeleteEventRules(DeleteEventRulesReq) returns (google.protobuf.Empty);
 
@@ -652,6 +653,17 @@ message CreateEventRuleReq {
 }
 message CreateEventRuleResp {
   int64 id = 1;
+}
+
+message UpdateEventRuleReq {
+  message Item {
+    string code = 1;
+    bool ignore_db = 2;
+    bool ignore_live = 3;
+    bool ignore_mqtt = 4;
+    int64 id = 5;
+  }
+  repeated Item items = 1;
 }
 
 message ListEventRulesResp {

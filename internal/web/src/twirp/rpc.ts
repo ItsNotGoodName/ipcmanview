@@ -1693,6 +1693,40 @@ export interface CreateEventRuleResp {
     id: bigint;
 }
 /**
+ * @generated from protobuf message UpdateEventRuleReq
+ */
+export interface UpdateEventRuleReq {
+    /**
+     * @generated from protobuf field: repeated UpdateEventRuleReq.Item items = 1;
+     */
+    items: UpdateEventRuleReq_Item[];
+}
+/**
+ * @generated from protobuf message UpdateEventRuleReq.Item
+ */
+export interface UpdateEventRuleReq_Item {
+    /**
+     * @generated from protobuf field: string code = 1;
+     */
+    code: string;
+    /**
+     * @generated from protobuf field: bool ignore_db = 2;
+     */
+    ignoreDb: boolean;
+    /**
+     * @generated from protobuf field: bool ignore_live = 3;
+     */
+    ignoreLive: boolean;
+    /**
+     * @generated from protobuf field: bool ignore_mqtt = 4;
+     */
+    ignoreMqtt: boolean;
+    /**
+     * @generated from protobuf field: int64 id = 5;
+     */
+    id: bigint;
+}
+/**
  * @generated from protobuf message ListEventRulesResp
  */
 export interface ListEventRulesResp {
@@ -3135,6 +3169,34 @@ class CreateEventRuleResp$Type extends MessageType<CreateEventRuleResp> {
  */
 export const CreateEventRuleResp = new CreateEventRuleResp$Type();
 // @generated message type with reflection information, may provide speed optimized methods
+class UpdateEventRuleReq$Type extends MessageType<UpdateEventRuleReq> {
+    constructor() {
+        super("UpdateEventRuleReq", [
+            { no: 1, name: "items", kind: "message", repeat: 1 /*RepeatType.PACKED*/, T: () => UpdateEventRuleReq_Item }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UpdateEventRuleReq
+ */
+export const UpdateEventRuleReq = new UpdateEventRuleReq$Type();
+// @generated message type with reflection information, may provide speed optimized methods
+class UpdateEventRuleReq_Item$Type extends MessageType<UpdateEventRuleReq_Item> {
+    constructor() {
+        super("UpdateEventRuleReq.Item", [
+            { no: 1, name: "code", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 2, name: "ignore_db", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 3, name: "ignore_live", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 4, name: "ignore_mqtt", kind: "scalar", T: 8 /*ScalarType.BOOL*/ },
+            { no: 5, name: "id", kind: "scalar", T: 3 /*ScalarType.INT64*/, L: 0 /*LongType.BIGINT*/ }
+        ]);
+    }
+}
+/**
+ * @generated MessageType for protobuf message UpdateEventRuleReq.Item
+ */
+export const UpdateEventRuleReq_Item = new UpdateEventRuleReq_Item$Type();
+// @generated message type with reflection information, may provide speed optimized methods
 class ListEventRulesResp$Type extends MessageType<ListEventRulesResp> {
     constructor() {
         super("ListEventRulesResp", [
@@ -3279,6 +3341,7 @@ export const Admin = new ServiceType("Admin", [
     { name: "UpdateDevice", options: {}, I: UpdateDeviceReq, O: Empty },
     { name: "UpdateConfig", options: {}, I: UpdateConfigReq, O: Empty },
     { name: "CreateEventRule", options: {}, I: CreateEventRuleReq, O: CreateEventRuleResp },
+    { name: "UpdateEventRule", options: {}, I: UpdateEventRuleReq, O: Empty },
     { name: "ListEventRules", options: {}, I: Empty, O: ListEventRulesResp },
     { name: "DeleteEventRules", options: {}, I: DeleteEventRulesReq, O: Empty },
     { name: "ListLocations", options: {}, I: Empty, O: ListLocationsResp },

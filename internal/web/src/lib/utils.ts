@@ -67,40 +67,52 @@ export function encodeOrder(o: Order): string {
 
 export type CreateRowSelectionReturn<T> = {
   rows: Array<{ id: T, checked: boolean } | undefined>
-  selections: Accessor<Array<T>>
-  multiple: Accessor<boolean>
   indeterminate: Accessor<boolean>
+  multiple: Accessor<boolean>
+  selections: Accessor<Array<T>>
   set: (id: T, value: boolean) => void
   setAll: (value: boolean) => void
 }
 
-export function createRowSelection<T>(ids: Accessor<Array<T>>): CreateRowSelectionReturn<T> {
+export function createRowSelection<T>(ids: Accessor<Array<T>>, disabled = (_index: number) => false): CreateRowSelectionReturn<T> {
+  const calculateDisabledCount = () => {
+    const range = ids()
+    let i = 0
+    for (let index = 0; index < range.length; index++)
+      if (disabled(index)) i++
+    return i
+  }
+
+  const [disabledCount, setDisabledCount] = createSignal(calculateDisabledCount())
   const [rows, setRows] = createStore<Array<{ id: T, checked: boolean }>>(ids().map(v => ({ id: v, checked: false })))
-  createEffect(() => setRows((prev) => ids().map(v => ({ id: v, checked: prev.find(p => p.id == v)?.checked || false }))))
+  createEffect(() => batch(() => {
+    setDisabledCount(calculateDisabledCount())
+    setRows((prev) => ids().map(v => ({ id: v, checked: prev.find(p => p.id == v)?.checked || false })))
+  }))
 
   const selections = () => rows.filter(v => v.checked == true).map(v => v.id)
 
   return {
     rows,
-    selections,
-    multiple: () => {
-      const length = selections().length
-      return length != 0 && length == rows.length
-    },
     indeterminate: () => {
       const length = selections().length
-      return length != 0 && length != rows.length
+      return length != 0 && length != (rows.length - disabledCount())
     },
+    multiple: () => {
+      const length = selections().length
+      return length != 0 && length == (rows.length - disabledCount())
+    },
+    selections,
     set: (id, value) => {
       setRows(
-        (todo) => todo.id === id,
+        (todo, index) => todo.id === id && !disabled(index),
         "checked",
         value,
       );
     },
     setAll: (value) => {
       setRows(
-        () => true,
+        (_, index) => !disabled(index),
         "checked",
         value,
       );

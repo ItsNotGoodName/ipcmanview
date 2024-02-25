@@ -21,15 +21,20 @@ func CreateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateEven
 	return db.C().DahuaCreateEventRule(ctx, arg)
 }
 
-func UpdateEventRule(ctx context.Context, db sqlite.DB, rule repo.DahuaEventRule, arg repo.DahuaUpdateEventRuleParams) error {
+func UpdateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaUpdateEventRuleParams) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
+
+	rule, err := db.C().DahuaGetEventRule(ctx, arg.ID)
+	if err != nil {
+		return err
+	}
+
 	arg.Code = strings.TrimSpace(arg.Code)
 	if rule.Code == "" {
 		arg.Code = rule.Code
 	}
-
 	if arg.Code == "" && rule.Code != "" {
 		return core.NewFieldError("Code", "code cannot be empty")
 	}
@@ -37,13 +42,19 @@ func UpdateEventRule(ctx context.Context, db sqlite.DB, rule repo.DahuaEventRule
 	return db.C().DahuaUpdateEventRule(ctx, arg)
 }
 
-func DeleteEventRule(ctx context.Context, db sqlite.DB, rule repo.DahuaEventRule) error {
+func DeleteEventRule(ctx context.Context, db sqlite.DB, id int64) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
+		return err
+	}
+
+	rule, err := db.C().DahuaGetEventRule(ctx, id)
+	if err != nil {
 		return err
 	}
 	if rule.Code == "" {
 		return errors.New("code cannot be empty")
 	}
+
 	return db.C().DahuaDeleteEventRule(ctx, rule.ID)
 }
 

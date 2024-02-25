@@ -40,6 +40,8 @@ const actionSetAdmin = action((input: SetUserAdminReq) => useClient()
 export function AdminUsers() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams<AdminUsersPageSearchParams>()
+
+  const session = createAsync(() => getSession())
   const data = createAsync(() => getAdminUsersPage({
     page: {
       page: Number(searchParams.page) || 0,
@@ -50,7 +52,10 @@ export function AdminUsers() {
       order: parseOrder(searchParams.order)
     },
   }))
-  const rowSelection = createRowSelection(() => data()?.items.map(v => v.id) || [])
+
+  const rowSelection = createRowSelection(
+    () => data()?.items.map(v => v.id) || [],
+    (index) => data()?.items[index].id == session()?.user_id)
 
   // List
   const pagination = createPagePagination(() => data()?.pageResult)
@@ -86,8 +91,6 @@ export function AdminUsers() {
 
   // Reset password
   const [openResetPasswordForm, setOpenResetPasswordForm] = createSignal<bigint>(BigInt(0))
-
-  const session = createAsync(() => getSession())
 
   return (
     <LayoutNormal class="max-w-4xl">
@@ -269,10 +272,16 @@ export function AdminUsers() {
                   const toggleDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
                   const toggleAdmin = () => setAdminAction({ id: item.id, admin: !item.admin })
 
+                  const isMe = () => item.id == BigInt(session()?.user_id || 0)
+
                   return (
                     <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
                       <TableHead>
-                        <CheckboxRoot checked={rowSelection.rows[index()]?.checked} onChange={(v) => rowSelection.set(item.id, v)}>
+                        <CheckboxRoot
+                          disabled={isMe()}
+                          checked={rowSelection.rows[index()]?.checked}
+                          onChange={(v) => rowSelection.set(item.id, v)}
+                        >
                           <CheckboxControl />
                         </CheckboxRoot>
                       </TableHead>
@@ -280,7 +289,7 @@ export function AdminUsers() {
                       <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.email}</TableCell>
                       <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
                       <Crud.LastTableCell>
-                        <Show when={item.id == BigInt(session()?.user_id || 0)}>
+                        <Show when={isMe()}>
                           <TooltipRoot>
                             <TooltipTrigger>
                               <RiDesignFocus2Line class="h-5 w-5" />
@@ -323,7 +332,7 @@ export function AdminUsers() {
                               <DropdownMenuItem onSelect={() => setOpenResetPasswordForm(item.id)}>
                                 Reset password
                               </DropdownMenuItem>
-                              <Show when={item.id != BigInt(session()?.user_id || 0)}>
+                              <Show when={!isMe()}>
                                 <DropdownMenuItem disabled={setDisableSubmission.pending} onSelect={toggleDisable}>
                                   <Show when={item.disabled} fallback={<>Disable</>}>
                                     Enable

@@ -152,8 +152,12 @@ func UpdateUser(ctx context.Context, db sqlite.DB, arg UpdateUserParams) error {
 }
 
 func DeleteUser(ctx context.Context, db sqlite.DB, id int64) error {
-	if _, err := core.AssertAdminOrUser(ctx, id); err != nil {
+	actor, err := core.AssertAdminOrUser(ctx, id)
+	if err != nil {
 		return err
+	}
+	if actor.Admin && actor.UserID == id {
+		return core.ErrForbidden
 	}
 	return db.C().DeleteUser(ctx, id)
 }
@@ -249,8 +253,12 @@ func UpdateUserUsername(ctx context.Context, db sqlite.DB, userID int64, newUser
 }
 
 func UpdateUserDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, disable bool) error {
-	if _, err := core.AssertAdmin(ctx); err != nil {
+	actor, err := core.AssertAdmin(ctx)
+	if err != nil {
 		return err
+	}
+	if actor.UserID == id {
+		return core.ErrForbidden
 	}
 
 	tx, err := db.BeginTx(ctx, true)
@@ -281,8 +289,12 @@ func UpdateUserDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id in
 }
 
 func UpdateUserAdmin(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, admin bool) error {
-	if _, err := core.AssertAdmin(ctx); err != nil {
+	actor, err := core.AssertAdmin(ctx)
+	if err != nil {
 		return err
+	}
+	if actor.UserID == id {
+		return core.ErrForbidden
 	}
 
 	tx, err := db.BeginTx(ctx, true)

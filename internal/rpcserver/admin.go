@@ -2,7 +2,6 @@ package rpcserver
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"time"
 
@@ -363,13 +362,10 @@ func (a *Admin) UpdateUser(ctx context.Context, req *rpc.UpdateUserReq) (*emptyp
 }
 
 func (a *Admin) DeleteUser(ctx context.Context, req *rpc.DeleteUserReq) (*emptypb.Empty, error) {
-	session := useAuthSession(ctx)
 	for _, id := range req.Ids {
-		if id != session.UserID {
-			err := auth.DeleteUser(ctx, a.db, id)
-			if err != nil {
-				return nil, err
-			}
+		err := auth.DeleteUser(ctx, a.db, id)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -377,13 +373,10 @@ func (a *Admin) DeleteUser(ctx context.Context, req *rpc.DeleteUserReq) (*emptyp
 }
 
 func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) (*emptypb.Empty, error) {
-	session := useAuthSession(ctx)
 	for _, item := range req.Items {
-		if item.Id != session.UserID {
-			err := auth.UpdateUserDisabled(ctx, a.db, a.bus, item.Id, item.Disable)
-			if err != nil {
-				return nil, err
-			}
+		err := auth.UpdateUserDisabled(ctx, a.db, a.bus, item.Id, item.Disable)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -391,11 +384,6 @@ func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) 
 }
 
 func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*emptypb.Empty, error) {
-	session := useAuthSession(ctx)
-	if req.Id == session.UserID {
-		return nil, fmt.Errorf("Cannot modify current user.")
-	}
-
 	err := auth.UpdateUserAdmin(ctx, a.db, a.bus, req.Id, req.Admin)
 	if err != nil {
 		return nil, err
@@ -624,6 +612,26 @@ func (a *Admin) CreateEventRule(ctx context.Context, req *rpc.CreateEventRuleReq
 	}, nil
 }
 
+func (a *Admin) UpdateEventRule(ctx context.Context, req *rpc.UpdateEventRuleReq) (*emptypb.Empty, error) {
+	for _, v := range req.Items {
+		err := dahua.UpdateEventRule(ctx, a.db, repo.DahuaUpdateEventRuleParams{
+			Code:       v.Code,
+			IgnoreDb:   v.IgnoreDb,
+			IgnoreLive: v.IgnoreLive,
+			IgnoreMqtt: v.IgnoreMqtt,
+			ID:         v.Id,
+		})
+		if err != nil {
+			if core.IsNotFound(err) {
+				continue
+			}
+			return nil, err
+		}
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
 func (a *Admin) ListEventRules(ctx context.Context, _ *emptypb.Empty) (*rpc.ListEventRulesResp, error) {
 	v, err := dahua.ListEventRules(ctx, a.db)
 	if err != nil {
@@ -648,18 +656,10 @@ func (a *Admin) ListEventRules(ctx context.Context, _ *emptypb.Empty) (*rpc.List
 
 func (a *Admin) DeleteEventRules(ctx context.Context, req *rpc.DeleteEventRulesReq) (*emptypb.Empty, error) {
 	for _, id := range req.Ids {
-		rule, err := a.db.C().DahuaGetEventRule(ctx, id)
-		if err != nil {
+		if err := dahua.DeleteEventRule(ctx, a.db, id); err != nil {
 			if core.IsNotFound(err) {
 				continue
 			}
-			return nil, err
-		}
-		if rule.Code == "" {
-			continue
-		}
-
-		if err := dahua.DeleteEventRule(ctx, a.db, rule); err != nil {
 			return nil, err
 		}
 	}

@@ -6,6 +6,7 @@ import type { ListDeviceFeaturesResp } from "./rpc";
 import type { ListLocationsResp } from "./rpc";
 import type { DeleteEventRulesReq } from "./rpc";
 import type { ListEventRulesResp } from "./rpc";
+import type { UpdateEventRuleReq } from "./rpc";
 import type { CreateEventRuleResp } from "./rpc";
 import type { CreateEventRuleReq } from "./rpc";
 import type { UpdateConfigReq } from "./rpc";
@@ -530,6 +531,10 @@ export interface IAdminClient {
      */
     createEventRule(input: CreateEventRuleReq, options?: RpcOptions): UnaryCall<CreateEventRuleReq, CreateEventRuleResp>;
     /**
+     * @generated from protobuf rpc: UpdateEventRule(UpdateEventRuleReq) returns (google.protobuf.Empty);
+     */
+    updateEventRule(input: UpdateEventRuleReq, options?: RpcOptions): UnaryCall<UpdateEventRuleReq, Empty>;
+    /**
      * @generated from protobuf rpc: ListEventRules(google.protobuf.Empty) returns (ListEventRulesResp);
      */
     listEventRules(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListEventRulesResp>;
@@ -738,17 +743,24 @@ export class AdminClient implements IAdminClient, ServiceInfo {
         return stackIntercept<CreateEventRuleReq, CreateEventRuleResp>("unary", this._transport, method, opt, input);
     }
     /**
+     * @generated from protobuf rpc: UpdateEventRule(UpdateEventRuleReq) returns (google.protobuf.Empty);
+     */
+    updateEventRule(input: UpdateEventRuleReq, options?: RpcOptions): UnaryCall<UpdateEventRuleReq, Empty> {
+        const method = this.methods[24], opt = this._transport.mergeOptions(options);
+        return stackIntercept<UpdateEventRuleReq, Empty>("unary", this._transport, method, opt, input);
+    }
+    /**
      * @generated from protobuf rpc: ListEventRules(google.protobuf.Empty) returns (ListEventRulesResp);
      */
     listEventRules(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListEventRulesResp> {
-        const method = this.methods[24], opt = this._transport.mergeOptions(options);
+        const method = this.methods[25], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, ListEventRulesResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: DeleteEventRules(DeleteEventRulesReq) returns (google.protobuf.Empty);
      */
     deleteEventRules(input: DeleteEventRulesReq, options?: RpcOptions): UnaryCall<DeleteEventRulesReq, Empty> {
-        const method = this.methods[25], opt = this._transport.mergeOptions(options);
+        const method = this.methods[26], opt = this._transport.mergeOptions(options);
         return stackIntercept<DeleteEventRulesReq, Empty>("unary", this._transport, method, opt, input);
     }
     /**
@@ -757,14 +769,14 @@ export class AdminClient implements IAdminClient, ServiceInfo {
      * @generated from protobuf rpc: ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
      */
     listLocations(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListLocationsResp> {
-        const method = this.methods[26], opt = this._transport.mergeOptions(options);
+        const method = this.methods[27], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, ListLocationsResp>("unary", this._transport, method, opt, input);
     }
     /**
      * @generated from protobuf rpc: ListDeviceFeatures(google.protobuf.Empty) returns (ListDeviceFeaturesResp);
      */
     listDeviceFeatures(input: Empty, options?: RpcOptions): UnaryCall<Empty, ListDeviceFeaturesResp> {
-        const method = this.methods[27], opt = this._transport.mergeOptions(options);
+        const method = this.methods[28], opt = this._transport.mergeOptions(options);
         return stackIntercept<Empty, ListDeviceFeaturesResp>("unary", this._transport, method, opt, input);
     }
 }
