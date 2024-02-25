@@ -9,3 +9,4 @@ export function AdminHome() {
   )
 }
 
+export default AdminHome

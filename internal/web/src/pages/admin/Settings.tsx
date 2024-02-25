@@ -467,3 +467,4 @@ function CreateEventRuleForm(props: { onSubmit?: () => void }) {
     </ErrorBoundary>
   )
 }
+export default AdminSettings

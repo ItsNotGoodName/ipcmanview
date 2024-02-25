@@ -560,3 +560,5 @@ function DeviceNameCell(props: { device: { id: bigint, name: string } }) {
     </TableCell>
   )
 }
+
+export default Devices

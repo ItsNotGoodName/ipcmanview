@@ -637,3 +637,4 @@ function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: Fi
     </Show >
   )
 }
+export default AdminDevices

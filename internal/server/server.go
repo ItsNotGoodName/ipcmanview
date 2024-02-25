@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -83,7 +84,7 @@ func (s HTTPServer) Serve(ctx context.Context) error {
 
 // ---------- HTTP Router
 
-func NewHTTPRouter() *echo.Echo {
+func NewHTTPRouter(assetsPrefix string) *echo.Echo {
 	e := echo.New()
 	e.IPExtractor = echo.ExtractIPFromXFFHeader()
 
@@ -101,6 +102,9 @@ func NewHTTPRouter() *echo.Echo {
 	}))
 	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
 		LogErrorFunc: echoext.RecoverLogErrorFunc,
+	}))
+	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Skipper: func(c echo.Context) bool { return !strings.HasPrefix(c.Request().RequestURI, assetsPrefix) },
 	}))
 
 	return e

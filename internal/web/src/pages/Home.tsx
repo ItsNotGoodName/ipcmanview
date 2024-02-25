@@ -223,3 +223,5 @@ function StatTitle(props: ParentProps) {
 function StatValue(props: ParentProps) {
   return <p class="text-lg font-bold">{props.children}</p>
 }
+
+export default Home

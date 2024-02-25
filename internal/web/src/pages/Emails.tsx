@@ -224,3 +224,4 @@ export function Emails() {
     </LayoutNormal>
   )
 }
+export default Emails

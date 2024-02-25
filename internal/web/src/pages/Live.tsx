@@ -119,3 +119,5 @@ const useScaleRectangles = (original: Rectangles[]) => {
     resize,
   }
 }
+
+export default Live

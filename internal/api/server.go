@@ -56,44 +56,39 @@ func DahuaDeviceFileURI(deviceID int64, filePath string) string {
 	return fmt.Sprintf("%s/dahua/devices/%d/files/%s", Route, deviceID, filePath)
 }
 
-func (s *Server) RegisterSession(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
-	g := e.Group(Route, m...)
-
-	g.GET("/session", s.Session)
-	g.POST("/session", s.SessionPOST)
-	g.DELETE("/session", s.SessionDELETE)
-
+func (s *Server) RegisterSession(e *echo.Group) *Server {
+	e.GET("/session", s.Session)
+	e.POST("/session", s.SessionPOST)
+	e.DELETE("/session", s.SessionDELETE)
 	return s
 }
 
-func (s *Server) Register(e *echo.Echo, m ...echo.MiddlewareFunc) *Server {
-	g := e.Group(Route, m...)
+func (s *Server) Register(e *echo.Group) *Server {
+	e.GET("/ws", s.WS)
 
-	g.GET("/ws", s.WS)
+	e.Any("/mediamtx/*", s.Mediamtx(Route+"/mediamtx"))
 
-	g.Any("/mediamtx/*", s.Mediamtx(Route+"/mediamtx"))
+	e.GET("/dahua/afs/*", s.DahuaAfero(Route+"/dahua/afs"))
+	e.GET("/dahua/events", s.DahuaEvents)
 
-	g.GET("/dahua/afs/*", s.DahuaAfero(Route+"/dahua/afs"))
-	g.GET("/dahua/events", s.DahuaEvents)
+	e.GET("/dahua/devices", s.DahuaDevices)
+	e.GET("/dahua/devices/:id/audio", s.DahuaDevicesIDAudio)
+	e.GET("/dahua/devices/:id/coaxial/caps", s.DahuaDevicesIDCoaxialCaps)
+	e.GET("/dahua/devices/:id/coaxial/status", s.DahuaDevicesIDCoaxialStatus)
+	e.GET("/dahua/devices/:id/detail", s.DahuaDevicesIDDetail)
+	e.GET("/dahua/devices/:id/error", s.DahuaDevicesIDError)
+	e.GET("/dahua/devices/:id/events", s.DahuaDevicesIDEvents)
+	e.GET("/dahua/devices/:id/files", s.DahuaDevicesIDFiles)
+	e.GET("/dahua/devices/:id/files/*", s.DahuaDevicesIDFilesPath)
+	e.GET("/dahua/devices/:id/licenses", s.DahuaDevicesIDLicenses)
+	e.GET("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetGET)
+	e.GET("/dahua/devices/:id/snapshot", s.DahuaDevicesIDSnapshot)
+	e.GET("/dahua/devices/:id/software", s.DahuaDevicesIDSoftware)
+	e.GET("/dahua/devices/:id/storage", s.DahuaDevicesIDStorage)
+	e.GET("/dahua/devices/:id/users", s.DahuaDevicesIDUsers)
 
-	g.GET("/dahua/devices", s.DahuaDevices)
-	g.GET("/dahua/devices/:id/audio", s.DahuaDevicesIDAudio)
-	g.GET("/dahua/devices/:id/coaxial/caps", s.DahuaDevicesIDCoaxialCaps)
-	g.GET("/dahua/devices/:id/coaxial/status", s.DahuaDevicesIDCoaxialStatus)
-	g.GET("/dahua/devices/:id/detail", s.DahuaDevicesIDDetail)
-	g.GET("/dahua/devices/:id/error", s.DahuaDevicesIDError)
-	g.GET("/dahua/devices/:id/events", s.DahuaDevicesIDEvents)
-	g.GET("/dahua/devices/:id/files", s.DahuaDevicesIDFiles)
-	g.GET("/dahua/devices/:id/files/*", s.DahuaDevicesIDFilesPath)
-	g.GET("/dahua/devices/:id/licenses", s.DahuaDevicesIDLicenses)
-	g.GET("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetGET)
-	g.GET("/dahua/devices/:id/snapshot", s.DahuaDevicesIDSnapshot)
-	g.GET("/dahua/devices/:id/software", s.DahuaDevicesIDSoftware)
-	g.GET("/dahua/devices/:id/storage", s.DahuaDevicesIDStorage)
-	g.GET("/dahua/devices/:id/users", s.DahuaDevicesIDUsers)
-
-	g.POST("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetPOST)
-	g.POST("/dahua/devices/:id/rpc", s.DahuaDevicesIDRPCPOST)
+	e.POST("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetPOST)
+	e.POST("/dahua/devices/:id/rpc", s.DahuaDevicesIDRPCPOST)
 
 	return s
 }

@@ -33,3 +33,5 @@ export function AdminDevicesID(props: any) {
     </LayoutNormal>
   )
 }
+
+export default AdminDevicesID

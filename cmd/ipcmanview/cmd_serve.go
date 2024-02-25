@@ -130,7 +130,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 			NewBackend(dahuasmtp.NewApp(db, bus, dahuaAFS)), core.Address(c.SMTPHost, int(c.SMTPPort))))
 
 	// HTTP router
-	httpRouter := server.NewHTTPRouter()
+	httpRouter := server.NewHTTPRouter(web.RouteAssets)
 
 	// HTTP middleware
 	httpRouter.Use(web.FS(api.Route, rpcserver.Route))
@@ -138,11 +138,10 @@ func (c *CmdServe) Run(ctx *Context) error {
 	httpRouter.Use(api.ActorMiddleware())
 
 	// API
-	apiRequireAuthMiddleware := api.RequireAuthMiddleware()
 	api.
 		NewServer(pub, db, bus, dahuaStore, dahuaAFS, mediamtxConfig.URL()).
-		RegisterSession(httpRouter).
-		Register(httpRouter, apiRequireAuthMiddleware)
+		RegisterSession(httpRouter.Group(api.Route)).
+		Register(httpRouter.Group(api.Route, api.RequireAuthMiddleware()))
 
 	// RPC
 	rpcLogger := rpcserver.Logger()

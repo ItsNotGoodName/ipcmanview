@@ -671,3 +671,4 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
     </ErrorBoundary>
   )
 }
+export default AdminUsers

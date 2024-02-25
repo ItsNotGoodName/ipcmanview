@@ -17,3 +17,5 @@ export function AdminGroupsID(props: any) {
     </LayoutNormal>
   )
 }
+
+export default AdminGroupsID

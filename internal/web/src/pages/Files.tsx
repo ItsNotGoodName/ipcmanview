@@ -9,3 +9,4 @@ export function Files() {
   )
 }
 
+export default Files

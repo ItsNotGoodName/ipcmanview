@@ -327,3 +327,4 @@ function ChangePasswordForm() {
   )
 }
 
+export default Profile

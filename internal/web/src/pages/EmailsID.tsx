@@ -166,3 +166,5 @@ export function EmailsID(props: any) {
     </LayoutNormal>
   )
 }
+
+export default EmailsID
