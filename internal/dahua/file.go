@@ -2,7 +2,6 @@ package dahua
 
 import (
 	"context"
-	"database/sql"
 	"io"
 	"net"
 	"net/url"
@@ -11,6 +10,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
@@ -19,13 +19,13 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func FileFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (io.ReadCloser, error) {
+func FileFTPReadCloser(ctx context.Context, db sqlite.DB, fileFilePath string) (io.ReadCloser, error) {
 	u, err := url.Parse(fileFilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	dest, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
+	dest, err := db.C().DahuaGetStorageDestinationByServerAddressAndStorage(ctx, repo.DahuaGetStorageDestinationByServerAddressAndStorageParams{
 		ServerAddress: u.Hostname(),
 		Storage:       models.StorageFTP,
 	})
@@ -58,13 +58,13 @@ func FileFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (io
 	}, nil
 }
 
-func FileSFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (io.ReadCloser, error) {
+func FileSFTPReadCloser(ctx context.Context, db sqlite.DB, fileFilePath string) (io.ReadCloser, error) {
 	u, err := url.Parse(fileFilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	dest, err := db.GetDahuaStorageDestinationByServerAddressAndStorage(ctx, repo.GetDahuaStorageDestinationByServerAddressAndStorageParams{
+	dest, err := db.C().DahuaGetStorageDestinationByServerAddressAndStorage(ctx, repo.DahuaGetStorageDestinationByServerAddressAndStorageParams{
 		ServerAddress: u.Hostname(),
 		Storage:       models.StorageSFTP,
 	})
@@ -105,11 +105,11 @@ func FileSFTPReadCloser(ctx context.Context, db repo.DB, fileFilePath string) (i
 }
 
 func FileLocalReadCloser(ctx context.Context, client Client, filePath string) (io.ReadCloser, error) {
-	return client.File.Do(ctx, dahuarpc.LoadFileURL(client.Conn.Url, filePath), dahuarpc.Cookie(client.RPC.Session(ctx)))
+	return client.File.Do(ctx, dahuarpc.LoadFileURL(client.Conn.URL, filePath), dahuarpc.Cookie(client.RPC.Session(ctx)))
 }
 
 // FileLocalDownload downloads file from device and saves it to the afero file system.
-func FileLocalDownload(ctx context.Context, db repo.DB, afs afero.Fs, client Client, fileID int64, fileFilePath, fileType string) error {
+func FileLocalDownload(ctx context.Context, db sqlite.DB, afs afero.Fs, client Client, fileID int64, fileFilePath, fileType string) error {
 	rd, err := FileLocalReadCloser(ctx, client, fileFilePath)
 	if err != nil {
 		return err
@@ -131,54 +131,54 @@ func FileLocalDownload(ctx context.Context, db repo.DB, afs afero.Fs, client Cli
 	return ReadyAferoFile(ctx, db, aferoFile.ID, aferoFile.File)
 }
 
-func FileLocalDownloadByFilter(ctx context.Context, db repo.DB, afs afero.Fs, store *Store, filter repo.DahuaFileFilter) (int, error) {
-	filter.Storage = []models.Storage{models.StorageLocal}
-
-	downloaded := 0
-	for cursor := ""; ; {
-		files, err := db.CursorListDahuaFile(ctx, repo.CursorListDahuaFileParams{
-			PerPage:         100,
-			Cursor:          cursor,
-			DahuaFileFilter: filter,
-		})
-		if err != nil {
-			return downloaded, err
-		}
-		cursor = files.Cursor
-
-		for _, file := range files.Data {
-			aferoFile, err := db.GetDahuaAferoFileByFileID(ctx, sql.NullInt64{Valid: true, Int64: file.ID})
-			if err != nil {
-				err = SyncAferoFile(ctx, db, afs, aferoFile.ID, aferoFile.Name)
-			}
-
-			if repo.IsNotFound(err) {
-				// File does not exist
-			} else if err != nil {
-				// File error
-				return downloaded, err
-			} else {
-				// File exists
-				continue
-			}
-
-			device, err := db.GetDahuaDevice(ctx, file.DeviceID)
-			if err != nil {
-				return downloaded, err
-			}
-			client := store.Client(ctx, device.Convert().DahuaConn)
-
-			if err := FileLocalDownload(ctx, db, afs, client, file.ID, file.FilePath, file.Type); err != nil {
-				return downloaded, err
-			}
-
-			downloaded++
-		}
-
-		if !files.HasMore {
-			break
-		}
-	}
-
-	return downloaded, nil
-}
+// func FileLocalDownloadByFilter(ctx context.Context, db sqlite.DB, afs afero.Fs, store *Store, filter repo.DahuaFileFilter) (int, error) {
+// 	filter.Storage = []models.Storage{models.StorageLocal}
+//
+// 	downloaded := 0
+// 	for cursor := ""; ; {
+// 		files, err := db.CursorListDahuaFile(ctx, repo.CursorListDahuaFileParams{
+// 			PerPage:         100,
+// 			Cursor:          cursor,
+// 			DahuaFileFilter: filter,
+// 		})
+// 		if err != nil {
+// 			return downloaded, err
+// 		}
+// 		cursor = files.Cursor
+//
+// 		for _, file := range files.Data {
+// 			aferoFile, err := db.DahuaGetAferoFileByFileID(ctx, sql.NullInt64{Valid: true, Int64: file.ID})
+// 			if err != nil {
+// 				err = SyncAferoFile(ctx, db, afs, aferoFile.ID, aferoFile.Name)
+// 			}
+//
+// 			if core.IsNotFound(err) {
+// 				// File does not exist
+// 			} else if err != nil {
+// 				// File error
+// 				return downloaded, err
+// 			} else {
+// 				// File exists
+// 				continue
+// 			}
+//
+// 			conn, err := GetConn(ctx, db, file.DeviceID)
+// 			if err != nil {
+// 				return downloaded, err
+// 			}
+// 			client := store.Client(ctx, conn)
+//
+// 			if err := FileLocalDownload(ctx, db, afs, client, file.ID, file.FilePath, file.Type); err != nil {
+// 				return downloaded, err
+// 			}
+//
+// 			downloaded++
+// 		}
+//
+// 		if !files.HasMore {
+// 			break
+// 		}
+// 	}
+//
+// 	return downloaded, nil
+// }

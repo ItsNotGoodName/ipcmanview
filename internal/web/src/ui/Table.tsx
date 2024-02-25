@@ -1,3 +1,8 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://ui.shadcn.com/docs/components/table
 import { JSX, splitProps } from "solid-js"
 
 import { cn } from "~/lib/utils"

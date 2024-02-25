@@ -7,100 +7,205 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 )
 
-var sessionCtxKey contextKey = contextKey{"session"}
-
-const CookieKey = "session"
-
-const DefaultSessionDuration = 24 * time.Hour          // 1 Day
-const RememberMeSessionDuration = 365 * 24 * time.Hour // 1 Year
-
-func NewSession(ctx context.Context, db repo.DB, userAgent, ip string, userID int64, duration time.Duration) (repo.CreateUserSessionParams, error) {
+func generateSession() (string, error) {
 	b := make([]byte, 64)
 	_, err := rand.Read(b)
 	if err != nil {
-		return repo.CreateUserSessionParams{}, err
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+type Session struct {
+	SessionID int64
+	UserID    int64
+	Username  string
+	Admin     bool
+	Disabled  bool
+}
+
+type sessionCtxKey struct{}
+
+const defaultSessionDuration = 24 * time.Hour          // 1 Day
+const rememberMeSessionDuration = 365 * 24 * time.Hour // 1 Year
+
+type CreateUserSessionParams struct {
+	UserAgent       string
+	IP              string
+	UserID          int64
+	RememberMe      bool
+	PreviousSession string
+}
+
+func CreateUserSession(ctx context.Context, db sqlite.DB, arg CreateUserSessionParams) (string, error) {
+	session, err := generateSession()
+	if err != nil {
+		return "", err
 	}
 
-	session := base64.URLEncoding.EncodeToString(b)
-
+	sessionDuration := defaultSessionDuration
+	if arg.RememberMe {
+		sessionDuration = rememberMeSessionDuration
+	}
 	now := time.Now()
-
-	return repo.CreateUserSessionParams{
-		UserID:     userID,
+	dbArg := repo.AuthCreateUserSessionParams{
+		UserID:     arg.UserID,
 		Session:    session,
-		UserAgent:  userAgent,
-		Ip:         ip,
-		LastIp:     ip,
+		UserAgent:  arg.UserAgent,
+		Ip:         arg.IP,
+		LastIp:     arg.IP,
 		LastUsedAt: types.NewTime(now),
 		CreatedAt:  types.NewTime(now),
-		ExpiredAt:  types.NewTime(now.Add(duration)),
-	}, nil
-}
+		ExpiredAt:  types.NewTime(now.Add(sessionDuration)),
+	}
 
-func Session(db repo.DB) echo.MiddlewareFunc {
-	sessionUpdateLock := core.NewLockStore[string]()
-	sessionUpdateThrottle := time.Minute
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			ctx := c.Request().Context()
-
-			cookie, err := c.Cookie(CookieKey)
-			if err != nil {
-				return next(c)
-			}
-
-			// Get valid user
-			userSession, err := db.GetUserBySession(ctx, cookie.Value)
-			if err != nil {
-				if repo.IsNotFound(err) {
-					return next(c)
-				}
-				return err
-			}
-			if userSession.ExpiredAt.Time.Before(time.Now()) {
-				return next(c)
-			}
-
-			// Update last used at and last ip
-			realIP := c.RealIP()
-			now := time.Now()
-			if userSession.LastIp != realIP || userSession.LastUsedAt.Before(now.Add(-sessionUpdateThrottle)) {
-				unlock, err := sessionUpdateLock.TryLock(cookie.Value)
-				if err == nil {
-					err := db.UpdateUserSession(ctx, repo.UpdateUserSessionParams{
-						LastIp:     realIP,
-						LastUsedAt: types.NewTime(now),
-						Session:    cookie.Value,
-					})
-					if err != nil {
-						log.Err(err).Send()
-					}
-					unlock()
-				}
-			}
-
-			c.SetRequest(c.Request().WithContext(context.WithValue(ctx, sessionCtxKey, models.AuthSession{
-				SessionID: userSession.ID,
-				UserID:    userSession.UserID,
-				Username:  userSession.Username.String,
-				Session:   cookie.Value,
-				Admin:     userSession.Admin,
-			})))
-			return next(c)
+	if arg.PreviousSession != "" {
+		err := createUserSessionAndDeletePrevious(ctx, db, dbArg, arg.PreviousSession)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		err := db.C().AuthCreateUserSession(ctx, dbArg)
+		if err != nil {
+			return "", err
 		}
 	}
+
+	return session, nil
 }
 
-// UseSession gets user from context.
-// It fails when session does not exist or is invalid.
-func UseSession(ctx context.Context) (models.AuthSession, bool) {
-	user, ok := ctx.Value(sessionCtxKey).(models.AuthSession)
+func createUserSessionAndDeletePrevious(ctx context.Context, db sqlite.DB, arg repo.AuthCreateUserSessionParams, previousSession string) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := tx.C().AuthCreateUserSession(ctx, arg); err != nil {
+		return err
+	}
+
+	if _, err := tx.C().AuthDeleteUserSessionBySession(ctx, previousSession); err != nil && !core.IsNotFound(err) {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func DeleteUserSessionBySession(ctx context.Context, db sqlite.DB, bus *event.Bus, session string) error {
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	userID, err := tx.C().AuthDeleteUserSessionBySession(ctx, session)
+	if err != nil {
+		if core.IsNotFound(err) {
+			return tx.Commit()
+		}
+		return err
+	}
+
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, userID)
+}
+
+func DeleteUserSession(ctx context.Context, db sqlite.DB, bus *event.Bus, userID int64, sessionID int64) error {
+	if _, err := core.AssertAdminOrUser(ctx, userID); err != nil {
+		return err
+	}
+
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = tx.C().AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
+		UserID: userID,
+		ID:     sessionID,
+	})
+	if err != nil {
+		return err
+	}
+
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, userID)
+}
+
+func DeleteOtherUserSessions(ctx context.Context, db sqlite.DB, bus *event.Bus, userID int64, currentSessionID int64) error {
+	if _, err := core.AssertAdminOrUser(ctx, userID); err != nil {
+		return err
+	}
+
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = tx.C().AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
+		UserID: userID,
+		ID:     currentSessionID,
+	})
+	if err != nil {
+		return err
+	}
+
+	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, userID)
+}
+
+var touchSessionLock = core.NewLockStore[int64]()
+var touchSessionThrottle = time.Minute
+
+type TouchUserSessionParams struct {
+	CurrentSessionID int64
+	LastUsedAt       time.Time
+	LastIP           string
+	IP               string
+}
+
+func TouchUserSession(ctx context.Context, db sqlite.DB, arg TouchUserSessionParams) error {
+	now := time.Now()
+	if arg.LastIP == arg.IP && arg.LastUsedAt.After(now.Add(-touchSessionThrottle)) {
+		return nil
+	}
+
+	unlock, err := touchSessionLock.TryLock(arg.CurrentSessionID)
+	if err != nil {
+		return nil
+	}
+	defer unlock()
+
+	err = db.C().AuthUpdateUserSession(ctx, repo.AuthUpdateUserSessionParams{
+		LastIp:     arg.IP,
+		LastUsedAt: types.NewTime(now),
+		ID:         arg.CurrentSessionID,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetUserSessionForContext(ctx context.Context, db sqlite.DB, session string) (repo.AuthGetUserSessionForContextRow, error) {
+	return db.C().AuthGetUserSessionForContext(ctx, repo.AuthGetUserSessionForContextParams{
+		Session: session,
+		Now:     types.NewTime(time.Now()),
+	})
+}
+
+func WithSession(ctx context.Context, session Session) context.Context {
+	return context.WithValue(ctx, sessionCtxKey{}, session)
+}
+
+func UseSession(ctx context.Context) (Session, bool) {
+	user, ok := ctx.Value(sessionCtxKey{}).(Session)
 	return user, ok
 }

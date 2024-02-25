@@ -6,26 +6,35 @@
   "scripts": {
     "dev": "vite --host",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-pwa-assets": "pwa-assets-generator --preset minimal-2023 public/favicon.svg"
   },
   "dependencies": {
-    "@kobalte/core": "^0.12.0",
+    "@kobalte/core": "^0.12.1",
     "@modular-forms/solid": "^0.20.0",
     "@protobuf-ts/runtime": "^2.9.3",
     "@protobuf-ts/runtime-rpc": "^2.9.3",
     "@protobuf-ts/twirp-transport": "^2.9.3",
+    "@solid-primitives/clipboard": "^1.5.8",
+    "@solid-primitives/date": "^2.0.19",
+    "@solid-primitives/event-bus": "^1.0.9",
     "@solid-primitives/resize-observer": "^2.0.22",
     "@solid-primitives/storage": "^2.1.1",
-    "@solidjs/router": "^0.10.9",
+    "@solid-primitives/websocket": "^1.2.1",
+    "@solidjs/router": "^0.12.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "highlight.js": "^11.9.0",
+    "humanize-plus": "^1.8.2",
     "solid-icons": "^1.1.0",
-    "solid-js": "^1.8.7"
+    "solid-js": "^1.8.15"
   },
   "devDependencies": {
     "@kobalte/tailwindcss": "^0.9.0",
     "@protobuf-ts/plugin": "^2.9.3",
-    "@types/node": "^20.10.5",
+    "@types/humanize-plus": "^1.8.2",
+    "@types/node": "^20.11.19",
+    "@vite-pwa/assets-generator": "^0.2.4",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",

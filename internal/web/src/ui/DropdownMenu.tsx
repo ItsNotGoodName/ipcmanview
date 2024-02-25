@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/dropdown-menu
+// https://ui.shadcn.com/docs/components/dropdown-menu
 import { DropdownMenu } from "@kobalte/core";
 import { ComponentProps, JSX, splitProps } from "solid-js";
 import { RiArrowsArrowRightSLine, RiSystemCheckLine, RiSystemCheckboxBlankCircleFill } from "solid-icons/ri"
@@ -32,24 +38,22 @@ export function DropdownMenuSubTriggerIndicator() {
   return <RiArrowsArrowRightSLine class="ml-auto h-4 w-4" />
 }
 
-export function DropdownMenuSubContent(props: ComponentProps<typeof DropdownMenu.SubContent>) {
+export function DropdownMenuSubContent(props: DropdownMenu.DropdownMenuSubContentProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <DropdownMenu.SubContent
-    style={{ "max-width": "var(--kb-popper-content-available-width)", "transform-origin": "var(--kb-menu-content-transform-origin)" }}
     class={cn(
-      "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 z-50 min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-lg",
+      "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 z-50 min-w-[8rem] max-w-[var(--kb-popper-content-available-width)] origin-[var(--kb-menu-content-transform-origin)] overflow-hidden rounded-md border p-1 shadow-lg",
       props.class
     )}
     {...rest}
   />
 }
 
-export function DropdownMenuContent(props: ComponentProps<typeof DropdownMenu.Content>) {
+export function DropdownMenuContent(props: DropdownMenu.DropdownMenuContentProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <DropdownMenu.Content
-    style={{ "max-width": "var(--kb-popper-content-available-width)", "transform-origin": "var(--kb-menu-content-transform-origin)" }}
     class={cn(
-      "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 z-50 min-w-[8rem] rounded-md border p-1 shadow-md",
+      "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 z-50 min-w-[8rem] max-w-[var(--kb-popper-content-available-width)] origin-[var(--kb-menu-content-transform-origin)] rounded-md border p-1 shadow-md",
       props.class,
     )}
     {...rest}

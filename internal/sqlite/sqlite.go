@@ -4,48 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"slices"
-	"strings"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/rs/zerolog/log"
 )
 
-const (
-	CONSTRAINT_CHECK      = 275
-	CONSTRAINT_COMMITHOOK = 531
-	CONSTRAINT_DATATYPE   = 3091
-	CONSTRAINT_FOREIGNKEY = 787
-	CONSTRAINT_FUNCTION   = 1043
-	CONSTRAINT_NOTNULL    = 1299
-	CONSTRAINT_PINNED     = 2835
-	CONSTRAINT_PRIMARYKEY = 1555
-	CONSTRAINT_ROWID      = 2579
-	CONSTRAINT_TRIGGER    = 1811
-	CONSTRAINT_UNIQUE     = 2067
-	CONSTRAINT_VTAB       = 2323
-)
-
-type Error struct {
-	Code int
-	Msg  string
-}
-
-func AsConstraintError(err error, code int, codes ...int) (ConstraintError, bool) {
-	e, ok := AsError(err)
-	if !(ok || e.Code == code || slices.Contains(codes, e.Code)) {
-		return ConstraintError{}, false
-	}
-	return ConstraintError(e), true
-}
-
-type ConstraintError Error
-
-func (e ConstraintError) IsField(field string) bool {
-	return strings.Contains(string(e.Msg), field)
-}
-
-func beginTx(ctx context.Context, db *sql.DB, write bool) (*sql.Tx, error) {
+func BeginTx(ctx context.Context, db *sql.DB, write bool) (*sql.Tx, error) {
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -77,112 +40,104 @@ func New(dbPath string) (*sql.DB, error) {
 	return db, nil
 }
 
+func NewDB(db *sql.DB) DB {
+	return DB{
+		DB: db,
+	}
+}
+
 type DB struct {
 	*sql.DB
 }
 
-func NewDB(db *sql.DB) DB {
-	return DB{db}
+type Tx struct {
+	*sql.Tx
 }
 
-func (db DB) BeginTx(ctx context.Context, write bool) (repo.SQLiteTx, error) {
-	return beginTx(ctx, db.DB, write)
-}
-
-type DebugTx struct {
-	tx *sql.Tx
-}
-
-type DebugDB struct {
-	db *sql.DB
-}
-
-func NewDebugDB(db *sql.DB) DebugDB {
-	return DebugDB{db}
-}
-
-func (db DebugDB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+func (db DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	log.Debug().
 		Str("func", "PrepareContext").
 		Msg(query)
-	return db.db.PrepareContext(ctx, query)
+	return db.DB.PrepareContext(ctx, query)
 }
 
-func (tx DebugTx) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+func (tx Tx) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	log.Debug().
 		Str("func", "PrepareContext (Tx)").
 		Msg(query)
-	return tx.tx.PrepareContext(ctx, query)
+	return tx.Tx.PrepareContext(ctx, query)
 }
 
-func (db DebugDB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+func (db DB) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	log.Debug().
 		Str("func", "ExecContext").
 		Any("args", args).
 		Msg(query)
-	return db.db.ExecContext(ctx, query, args...)
+	return db.DB.ExecContext(ctx, query, args...)
 }
 
-func (tx DebugTx) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
+func (tx Tx) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {
 	log.Debug().
 		Str("func", "ExecContext (Tx)").
 		Any("args", args).
 		Msg(query)
-	return tx.tx.ExecContext(ctx, query, args...)
+	return tx.Tx.ExecContext(ctx, query, args...)
 }
 
-func (db DebugDB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+func (db DB) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	log.Debug().
 		Str("func", "QueryContext").
 		Any("args", args).
 		Msg(query)
-	return db.db.QueryContext(ctx, query, args...)
+	return db.DB.QueryContext(ctx, query, args...)
 }
 
-func (tx DebugTx) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
+func (tx Tx) QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error) {
 	log.Debug().
 		Str("func", "QueryContext (Tx)").
 		Any("args", args).
 		Msg(query)
-	return tx.tx.QueryContext(ctx, query, args...)
+	return tx.Tx.QueryContext(ctx, query, args...)
 }
 
-func (db DebugDB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
+func (db DB) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	log.Debug().
 		Str("func", "QueryRowContext").
 		Any("args", args).
 		Msg(query)
-	return db.db.QueryRowContext(ctx, query, args...)
+	return db.DB.QueryRowContext(ctx, query, args...)
 }
 
-func (tx DebugTx) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
+func (tx Tx) QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row {
 	log.Debug().
 		Str("func", "QueryRowContext (Tx)").
 		Any("args", args).
 		Msg(query)
-	return tx.tx.QueryRowContext(ctx, query, args...)
+	return tx.Tx.QueryRowContext(ctx, query, args...)
 }
 
-func (db DebugDB) BeginTx(ctx context.Context, write bool) (repo.SQLiteTx, error) {
+func (db DB) BeginTx(ctx context.Context, write bool) (Tx, error) {
 	log.Debug().
 		Msg("BeginTx (Tx)")
-	tx, err := beginTx(ctx, db.db, write)
+	tx, err := BeginTx(ctx, db.DB, write)
 	if err != nil {
-		return DebugTx{}, err
+		return Tx{}, err
 	}
-	return DebugTx{tx: tx}, nil
+	return Tx{
+		Tx: tx,
+	}, nil
 }
 
-func (tx DebugTx) Commit() error {
+func (tx Tx) Commit() error {
 	log.Debug().
 		Str("func", "Commit (Tx)").
 		Msg("")
-	return tx.tx.Commit()
+	return tx.Tx.Commit()
 }
 
-func (tx DebugTx) Rollback() error {
+func (tx Tx) Rollback() error {
 	log.Debug().
 		Str("func", "Rollback (Tx)").
 		Msg("")
-	return tx.tx.Rollback()
+	return tx.Tx.Rollback()
 }

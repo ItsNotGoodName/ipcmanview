@@ -51,8 +51,8 @@ const themeClass = () => {
   return useCurrentTheme() == Theme.Dark ? DARK_THEME_CLASS : LIGHT_THEME_CLASS;
 };
 
-export const useTheme = () => {
-  return createEffect(() => {
+export const provideTheme = () => {
+  createEffect(() => {
     document.getElementsByTagName("body")![0].className = themeClass()
   })
 }
@@ -60,10 +60,10 @@ export const useTheme = () => {
 export const useThemeTitle = () => {
   switch (useCurrentTheme()) {
     case Theme.System:
-      return "System Theme"
+      return "System theme"
     case Theme.Light:
-      return "Light Theme"
+      return "Light theme"
     case Theme.Dark:
-      return "Dark Theme"
+      return "Dark theme"
   }
 }

@@ -29,8 +29,12 @@ func (p Page) Result(totalItems int) PageResult {
 	if totalPage == 0 {
 		totalPage = 1
 	}
+	page := p.Page
+	if page > totalPage {
+		page = totalPage + 1
+	}
 	return PageResult{
-		Page:       p.Page,
+		Page:       page,
 		PerPage:    p.PerPage,
 		TotalPages: totalPage,
 		TotalItems: totalItems,
@@ -46,6 +50,9 @@ func (p PageResult) HasNext() bool {
 }
 
 func (p PageResult) Next() int {
+	if !p.HasNext() {
+		return p.Page
+	}
 	return p.Page + 1
 }
 
@@ -54,6 +61,9 @@ func (p PageResult) HasPrevious() bool {
 }
 
 func (p PageResult) Previous() int {
+	if !p.HasPrevious() {
+		return p.Page
+	}
 	return p.Page - 1
 }
 

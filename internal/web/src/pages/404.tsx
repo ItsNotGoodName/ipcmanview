@@ -1,3 +1,5 @@
+import { LayoutNormal } from "~/ui/Layout";
+
 export function NotFound() {
-  return <>Not Found</>
+  return <LayoutNormal>Not Found</LayoutNormal>
 }

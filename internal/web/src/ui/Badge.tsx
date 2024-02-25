@@ -1,3 +1,8 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://ui.shadcn.com/docs/components/badge
 import { cva, type VariantProps } from "class-variance-authority"
 import { JSX, splitProps } from "solid-js"
 
@@ -28,5 +33,4 @@ export type BadgeProps = JSX.HTMLAttributes<HTMLDivElement> & VariantProps<typeo
 export function Badge(props: BadgeProps) {
   const [_, rest] = splitProps(props, ["class", "variant"])
   return <div class={cn(badgeVariants({ variant: props.variant }), props.class)} {...rest} />
-
 }

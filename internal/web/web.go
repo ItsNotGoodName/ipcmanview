@@ -1,4 +1,4 @@
-// webnext contains the SPA.
+// Package web contains the SPA.
 package web
 
 import (
@@ -13,10 +13,13 @@ import (
 //go:generate pnpm install
 //go:generate pnpm run build
 
-//go:embed dist
+//go:embed all:dist
 var dist embed.FS
 
-const Route = "/"
+const (
+	Route       = "/"
+	RouteAssets = "/assets"
+)
 
 func FS(skipPrefix ...string) echo.MiddlewareFunc {
 	return middleware.StaticWithConfig(middleware.StaticConfig{

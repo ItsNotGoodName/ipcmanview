@@ -1,14 +1,11 @@
-// pubsub is a simple in-memory event pub sub.
+// Package pubsub is a simple in-memory pub sub.
 package pubsub
 
 import (
 	"context"
-	"errors"
 	"slices"
-	"time"
+	"sync"
 )
-
-var ErrPubSubClosed = errors.New("pub sub closed")
 
 type Event interface {
 	EventTopic() string
@@ -20,190 +17,234 @@ func (e EventTopic) EventTopic() string {
 	return string(e)
 }
 
-type HandleFunc func(ctx context.Context, event Event) error
+type HandleFunc func(ctx context.Context, evt Event) error
+
+type MiddlewareFunc func(next HandleFunc) HandleFunc
 
 type StateSubscriber struct {
+	ID     int
 	Topics []string
 }
 
 type State struct {
 	SubscriberCount int
 	Subscribers     []StateSubscriber
-	LastGC          time.Time
-}
-
-type Pub struct {
-	subscribeC   chan subscribe
-	unsubscribeC chan unsubscribe
-	stateC       chan state
-	eventC       chan Event
-	doneC        chan struct{}
-	subsGC       time.Duration
-}
-
-func NewPub() Pub {
-	return Pub{
-		subscribeC:   make(chan subscribe),
-		unsubscribeC: make(chan unsubscribe),
-		stateC:       make(chan state),
-		eventC:       make(chan Event),
-		doneC:        make(chan struct{}),
-		subsGC:       1 * time.Minute,
-	}
 }
 
 type sub struct {
-	id     int
 	topics []string
 	handle HandleFunc
 	doneC  chan<- struct{}
 	errC   chan<- error
-	closed bool
 }
 
-type subscribe struct {
+type Pub struct {
+	middleware []MiddlewareFunc
+
+	mu     sync.Mutex
+	lastID int
+	subs   map[int]sub
+}
+
+func NewPub(middleware ...MiddlewareFunc) *Pub {
+	return &Pub{
+		middleware: middleware,
+		mu:         sync.Mutex{},
+		lastID:     0,
+		subs:       make(map[int]sub),
+	}
+}
+
+func (p *Pub) Publish(ctx context.Context, event Event) error {
+	p.mu.Lock()
+	for i := range p.subs {
+		if !(len(p.subs[i].topics) == 0 || slices.Contains(p.subs[i].topics, event.EventTopic())) {
+			continue
+		}
+
+		if err := p.subs[i].handle(ctx, event); err != nil {
+			p.subs[i].errC <- err
+			close(p.subs[i].doneC)
+			delete(p.subs, i)
+		}
+	}
+	p.mu.Unlock()
+
+	return nil
+}
+
+type subscribeParams struct {
 	topics []string
 	handle HandleFunc
 	doneC  chan<- struct{}
 	errC   chan<- error
-
-	resC chan<- int
 }
 
-type unsubscribe struct {
-	id int
-}
-
-type state struct {
-	resC chan<- State
-}
-
-func (Pub) String() string {
-	return "pubsub.Pub"
-}
-
-// Serve starts the publisher and blocks until context is canceled.
-func (p Pub) Serve(ctx context.Context) error {
-	select {
-	case <-p.doneC:
-		return ErrPubSubClosed
-	default:
+func (p *Pub) subscribe(arg subscribeParams) int {
+	p.mu.Lock()
+	p.lastID++
+	id := p.lastID
+	p.subs[id] = sub{
+		topics: arg.topics,
+		handle: arg.handle,
+		doneC:  arg.doneC,
+		errC:   arg.errC,
 	}
-	defer close(p.doneC)
+	p.mu.Unlock()
 
-	t := time.NewTicker(p.subsGC)
-	defer t.Stop()
-
-	var lastID int
-	var subs []sub
-	defer func() {
-		for i := range subs {
-			if !subs[i].closed {
-				subs[i].errC <- ErrPubSubClosed
-				close(subs[i].doneC)
-				subs[i].closed = true
-			}
-		}
-	}()
-
-	var lastGC time.Time
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-t.C:
-			for i := range subs {
-				if subs[i].closed {
-					subs = slices.DeleteFunc(subs, func(s sub) bool { return s.closed })
-					break
-				}
-			}
-			lastGC = time.Now()
-		case command := <-p.subscribeC:
-			lastID++
-			sub := sub{
-				id:     lastID,
-				topics: command.topics,
-				handle: command.handle,
-				doneC:  command.doneC,
-				errC:   command.errC,
-				closed: false,
-			}
-			subs = append(subs, sub)
-			command.resC <- sub.id
-		case command := <-p.unsubscribeC:
-			for i := range subs {
-				if subs[i].id == command.id {
-					subs[i].errC <- nil
-					close(subs[i].doneC)
-					subs[i].closed = true
-				}
-			}
-		case command := <-p.stateC:
-			stateSubs := make([]StateSubscriber, 0, len(subs))
-			stateSubCount := 0
-			for i := range subs {
-				if subs[i].closed {
-					continue
-				}
-				stateSubCount++
-				stateSubs = append(stateSubs, StateSubscriber{
-					Topics: subs[i].topics,
-				})
-			}
-			s := State{
-				SubscriberCount: stateSubCount,
-				Subscribers:     stateSubs,
-				LastGC:          lastGC,
-			}
-			command.resC <- s
-		case command := <-p.eventC:
-			eventTopic := command.EventTopic()
-			for i := range subs {
-				if subs[i].closed || !slices.Contains(subs[i].topics, eventTopic) {
-					continue
-				}
-
-				err := subs[i].handle(ctx, command)
-				if err != nil {
-					subs[i].errC <- err
-					close(subs[i].doneC)
-					subs[i].closed = true
-				}
-			}
-		}
-	}
+	return id
 }
 
-func (p Pub) Publish(ctx context.Context, event Event) error {
+func (p *Pub) unsubscribe(id int, err error) {
+	p.mu.Lock()
+	sub, ok := p.subs[id]
+	if !ok {
+		p.mu.Unlock()
+		return
+	}
+
+	sub.errC <- err
+	close(sub.doneC)
+	delete(p.subs, id)
+	p.mu.Unlock()
+}
+
+func (p *Pub) State() (State, error) {
+	p.mu.Lock()
+	ss := make([]StateSubscriber, 0, len(p.subs))
+	ssc := 0
+	for i := range p.subs {
+		ssc++
+		ss = append(ss, StateSubscriber{
+			ID:     i,
+			Topics: p.subs[i].topics,
+		})
+	}
+	s := State{
+		SubscriberCount: ssc,
+		Subscribers:     ss,
+	}
+	p.mu.Unlock()
+
+	return s, nil
+}
+
+type Sub struct {
+	pub   *Pub
+	doneC <-chan struct{}
+	errC  chan error
+	id    int
+}
+
+// Wait blocks until the subscription is closed.
+func (s Sub) Wait(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case <-p.doneC:
-		return ErrPubSubClosed
-	case p.eventC <- event:
+	case <-s.doneC:
+		err := <-s.errC
+		s.errC <- err
+		return err
+	}
+}
+
+// Error should only be called after subscription is closed.
+func (s Sub) Error() error {
+	select {
+	case <-s.doneC:
+		err := <-s.errC
+		s.errC <- err
+		return err
+	default:
 		return nil
 	}
 }
 
-func (p Pub) State(ctx context.Context) (State, error) {
-	resC := make(chan State, 1)
+func (s Sub) Close() {
+	s.pub.unsubscribe(s.id, nil)
+}
 
-	select {
-	case <-ctx.Done():
-		return State{}, ctx.Err()
-	case <-p.doneC:
-		return State{}, ErrPubSubClosed
-	case p.stateC <- state{resC: resC}:
+type SubscribeBuilder struct {
+	pub        *Pub
+	topics     []string
+	middleware []MiddlewareFunc
+}
+
+func (p *Pub) Subscribe(events ...Event) SubscribeBuilder {
+	// Get topics
+	var topics []string
+	for _, e := range events {
+		topics = append(topics, e.EventTopic())
 	}
 
-	select {
-	case <-ctx.Done():
-		return State{}, ctx.Err()
-	case <-p.doneC:
-		return State{}, ErrPubSubClosed
-	case s := <-resC:
-		return s, nil
+	// Copy middleware
+	middleware := make([]MiddlewareFunc, 0, len(p.middleware))
+	copy(middleware, p.middleware)
+
+	return SubscribeBuilder{
+		pub:        p,
+		topics:     topics,
+		middleware: middleware,
 	}
+}
+
+// Middleware add a middleware between the handler and publisher.
+func (b SubscribeBuilder) Middleware(fn MiddlewareFunc) SubscribeBuilder {
+	b.middleware = append(b.middleware, fn)
+	return b
+}
+
+// Function creates a subscription with a function.
+func (b SubscribeBuilder) Function(fn HandleFunc) (Sub, error) {
+	handle := fn
+
+	// Attach middleware
+	for _, mw := range b.middleware {
+		handle = mw(handle)
+	}
+
+	// Subscribe
+	doneC := make(chan struct{})
+	errC := make(chan error, 1)
+	id := b.pub.subscribe(subscribeParams{
+		topics: b.topics,
+		handle: handle,
+		doneC:  doneC,
+		errC:   errC,
+	})
+
+	return Sub{
+		pub:   b.pub,
+		doneC: doneC,
+		errC:  errC,
+		id:    id,
+	}, nil
+}
+
+// Channel creates a subscription with a channel.
+func (b SubscribeBuilder) Channel(ctx context.Context, size int) (Sub, <-chan Event, error) {
+	evtC := make(chan Event, size)
+
+	// Subscribe
+	sub, err := b.Function(func(pubCtx context.Context, evt Event) error {
+		select {
+		case <-pubCtx.Done():
+			return pubCtx.Err()
+		case <-ctx.Done():
+			return ctx.Err()
+		case evtC <- evt:
+			return nil
+		}
+	})
+	if err != nil {
+		return Sub{}, nil, err
+	}
+
+	// Close event channel
+	go func() {
+		<-sub.doneC
+		close(evtC)
+	}()
+
+	return sub, evtC, nil
 }

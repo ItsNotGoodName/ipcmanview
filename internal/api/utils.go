@@ -5,35 +5,51 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/labstack/echo/v4"
 )
 
-func useDahuaClient(c echo.Context, db repo.DB, store *dahua.Store) (dahua.Client, error) {
-	ctx := c.Request().Context()
-
-	id, err := ParamID(c)
+func paramID(c echo.Context) (int64, error) {
+	number, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return dahua.Client{}, err
+		return 0, echo.ErrBadRequest.WithInternal(err)
 	}
+	return number, nil
+}
 
-	dbDevice, err := db.GetDahuaDevice(ctx, id)
+func assertDahuaLevel(c echo.Context, s *Server, deviceID int64, level models.DahuaPermissionLevel) error {
+	ok, err := dahua.Level(c.Request().Context(), s.db, deviceID, level)
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
+			return echo.ErrNotFound.WithInternal(err)
+		}
+		return err
+	}
+	if !ok {
+		return echo.ErrForbidden
+	}
+	return nil
+}
+
+func useDahuaClient(c echo.Context, s *Server, deviceID int64) (dahua.Client, error) {
+	client, err := s.dahuaStore.GetClient(c.Request().Context(), deviceID)
+	if err != nil {
+		if core.IsNotFound(err) {
 			return dahua.Client{}, echo.ErrNotFound.WithInternal(err)
 		}
 		return dahua.Client{}, err
 	}
-
-	return store.Client(ctx, dbDevice.Convert().DahuaConn), nil
+	return client, nil
 }
 
 // ---------- Stream
 
 func newStream(c echo.Context) *json.Encoder {
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	c.Response().Header().Set(echo.HeaderContentType, "application/x-ndjson")
 	c.Response().WriteHeader(http.StatusOK)
 	return json.NewEncoder(c.Response())
 }
@@ -73,6 +89,43 @@ func writeStream(c echo.Context, enc *json.Encoder, data any) error {
 }
 
 // ---------- Queries
+
+func queryTimeRange(c echo.Context) (models.TimeRange, error) {
+	var query struct {
+		Start string
+		End   string
+	}
+	if err := c.Bind(&query); err != nil {
+		return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+	}
+	start, end := query.Start, query.End
+
+	var startTime, endTime time.Time
+	if start != "" {
+		var err error
+		startTime, err = time.ParseInLocation("2006-01-02T15:04", start, time.Local)
+		if err != nil {
+			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+		}
+	}
+
+	if end != "" {
+		var err error
+		endTime, err = time.ParseInLocation("2006-01-02T15:04", end, time.Local)
+		if err != nil {
+			return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+		}
+	} else if start != "" {
+		endTime = time.Now()
+	}
+
+	r, err := core.NewTimeRange(startTime, endTime)
+	if err != nil {
+		return models.TimeRange{}, echo.ErrBadRequest.WithInternal(err)
+	}
+
+	return r, nil
+}
 
 func queryInts(c echo.Context, key string) ([]int64, error) {
 	ids := make([]int64, 0)

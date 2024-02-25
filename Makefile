@@ -1,18 +1,17 @@
 export DIR=ipcmanview_data
 export VITE_HOST=127.0.0.1
 export WEB_PATH=internal/web
-export WEBADMIN_PATH=internal/webadmin
 
 -include .env
 
 _:
-	mkdir "$(WEB_PATH)/dist" -p && touch "$(WEB_PATH)/dist/index.html"
-
-migrate:
-	goose -dir internal/migrations/sql sqlite3 "$(DIR)/sqlite.db" up
+	mkdir -p "$(WEB_PATH)/dist" "$(DIR)" && touch "$(WEB_PATH)/dist/index.html"
 
 clean:
 	rm -rf $(DIR)
+
+migrate:
+	goose -dir internal/sqlite/migrations sqlite3 "$(DIR)/sqlite.db" up
 
 build:
 	go generate ./...
@@ -42,32 +41,32 @@ dev:
 dev-proxy:
 	go run ./scripts/dev-proxy
 
-dev-webadmin:
-	cd "$(WEBADMIN_PATH)" && pnpm install && pnpm run dev
-
 dev-web:
 	cd "$(WEB_PATH)" && pnpm install && pnpm run dev
 
 # Gen
 
-gen: gen-sqlc gen-pubsub gen-bus gen-proto
+gen: gen-sqlc gen-pubsub gen-bus gen-proto gen-typescriptify
 
 gen-sqlc:
 	sqlc generate
 
 gen-pubsub:
-	sh ./scripts/generate-pubsub-events.sh ./internal/models/event.go
+	sh ./scripts/generate-pubsub-events.sh ./internal/event/models.go
 
 gen-bus:
-	go run ./scripts/generate-bus -input ./internal/models/event.go -output ./internal/core/bus.gen.go
+	go run ./scripts/generate-bus ./internal/event/models.go
 
 gen-proto:
 	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto
 	cd "$(WEB_PATH)" && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=../../rpc rpc.proto
 
+gen-typescriptify:
+	go run ./scripts/typescriptify ./internal/web/src/lib/models.gen.ts
+
 # Tooling
 
-tooling: tooling-air tooling-task tooling-goose tooling-atlas tooling-sqlc tooling-protoc-gen-go
+tooling: tooling-air tooling-task tooling-goose tooling-atlas tooling-sqlc tooling-twirp tooling-protoc-gen-go
 
 tooling-air:
 	go install github.com/cosmtrek/air@latest

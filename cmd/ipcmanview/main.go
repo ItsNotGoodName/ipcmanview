@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"os"
 	"os/signal"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	slogzerolog "github.com/samber/slog-zerolog/v2"
 )
 
 type Context struct {
@@ -22,9 +24,7 @@ var mainCmd struct {
 
 	Version CmdVersion `cmd:"" help:"Show version."`
 	Serve   CmdServe   `cmd:"" help:"Start application."`
-	Scan    CmdScan    `cmd:"" help:"Scan files on devices."`
-	RPC     CmdRPC     `cmd:"" help:"Run RPC on devices."`
-	Debug_  CmdDebug   `name:"debug" cmd:"" help:"Debug."`
+	Debug_  CmdDebug   `name:"debug" cmd:""`
 }
 
 func main() {
@@ -50,10 +50,15 @@ func main() {
 }
 
 func initLogger(debug bool) {
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	// Get levels
+	zerologLevel := zerolog.InfoLevel
+	slogLevel := slog.LevelInfo
 	if debug {
-		log.Logger = log.Logger.Level(zerolog.DebugLevel)
-	} else {
-		log.Logger = log.Logger.Level(zerolog.InfoLevel)
+		zerologLevel = zerolog.DebugLevel
+		slogLevel = slog.LevelDebug
 	}
+
+	// Set loggers
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(zerologLevel)
+	slog.SetDefault(slog.New(slogzerolog.Option{Level: slogLevel, Logger: &log.Logger}.NewZerologHandler()))
 }

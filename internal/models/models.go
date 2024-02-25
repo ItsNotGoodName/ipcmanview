@@ -2,6 +2,8 @@ package models
 
 import "time"
 
+type EventAction string
+
 // TimeRange is INCLUSIVE Start and EXCLUSIVE End.
 type TimeRange struct {
 	Start time.Time
@@ -26,18 +28,3 @@ const (
 	// StorageNFS   Storage = "nfs"
 	// StorageSMB   Storage = "smb"
 )
-
-type User struct {
-	ID       int64
-	Email    string `validate:"required,lte=128,email,excludes= "`
-	Username string `validate:"gte=3,lte=64,excludes=@,excludes= "`
-	Password string `validate:"gte=8"`
-}
-
-type AuthSession struct {
-	SessionID int64
-	UserID    int64
-	Username  string
-	Session   string
-	Admin     bool
-}

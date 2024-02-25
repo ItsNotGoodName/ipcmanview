@@ -1,4 +1,4 @@
-// dahuarpc is a client library for Dahua's RPC API.
+// Package dahuarpc is a client library for Dahua's RPC API.
 package dahuarpc
 
 import (

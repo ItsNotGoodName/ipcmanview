@@ -1,33 +1,30 @@
 import { makePersisted } from "@solid-primitives/storage"
-import { cache, createAsync } from "@solidjs/router"
-import { createEffect, createSignal } from "solid-js"
+import { cache } from "@solidjs/router"
+import { createStore } from "solid-js/store"
 
-// HACK: allow App.tsx access to the session
-export const [session, setSession] = makePersisted(createSignal(false), { name: "session" })
-export function useSession() {
-  const session = createAsync(getSession)
+export type Session = {
+  valid: boolean
+  username: string
+  admin: boolean
+  user_id: number
+  disabled: boolean
+}
 
-  createEffect(() => {
-    const value = session()
-    if (value != undefined) {
-      setSession(value)
+// HACK: this allows App.tsx to switch routes
+export const [lastSession, setLastSession] = makePersisted(createStore<Session>({ valid: false, username: "", admin: false, user_id: 0, disabled: false }), { name: "session" })
+
+export const getSession = cache(() =>
+  fetch("/v1/session", {
+    credentials: "include",
+    headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
+  }).then(async (resp) => {
+    if (resp.ok || resp.status == 401) {
+      return resp.json()
     }
-  })
-}
 
-export const getSession = cache(() => fetch("/v1/session", {
-  credentials: "include",
-  headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
-}).then((resp) => {
-  if (resp.ok) {
-    return true
-  }
-  if (resp.status == 401) {
-    return false
-  }
-  throw new Error(`Invalid status code ${resp.status}`)
-}), "session")
+    throw new Error(`Invalid status code ${resp.status}`)
+  }).then((data: Session) => {
+    setLastSession(data)
+    return data
+  }), "session")
 
-export default function() {
-  void getSession()
-}

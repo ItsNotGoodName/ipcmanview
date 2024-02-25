@@ -1,3 +1,9 @@
+// # Changes
+// N/A
+//
+// # URLs
+// https://kobalte.dev/docs/core/components/button
+// https://ui.shadcn.com/docs/components/button
 import { cva, type VariantProps } from "class-variance-authority"
 import { JSX, splitProps } from "solid-js"
 
@@ -38,3 +44,4 @@ export function Button(props: ButtonProps) {
   const [_, rest] = splitProps(props, ["class", "variant", "size"])
   return <button class={cn(buttonVariants({ variant: props.variant, size: props.size, class: props.class }))} {...rest} />
 }
+

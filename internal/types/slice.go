@@ -12,6 +12,7 @@ func NewStringSlice(slice []string) StringSlice {
 	}
 }
 
+// StringSlice cannot be nil.
 type StringSlice struct {
 	Slice []string
 }

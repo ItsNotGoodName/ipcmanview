@@ -1,8 +1,13 @@
 package dahua
 
 import (
+	"context"
 	"strconv"
 	"strings"
+
+	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 )
 
 type EmailContent struct {
@@ -41,4 +46,41 @@ func ParseEmailContent(text string) EmailContent {
 	}
 
 	return content
+}
+
+type Email struct {
+	Message     repo.DahuaEmailMessage
+	Attachments []repo.DahuaEmailAttachment
+}
+
+func CreateEmail(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateEmailMessageParams, args ...repo.DahuaCreateEmailAttachmentParams) (Email, error) {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return Email{}, err
+	}
+
+	tx, err := db.BeginTx(ctx, true)
+	if err != nil {
+		return Email{}, err
+	}
+	defer tx.Rollback()
+
+	msg, err := db.C().DahuaCreateEmailMessage(ctx, arg)
+	if err != nil {
+		return Email{}, err
+	}
+
+	atts := make([]repo.DahuaEmailAttachment, 0, len(args))
+	for _, a := range args {
+		a.MessageID = msg.ID
+		att, err := db.C().DahuaCreateEmailAttachment(ctx, a)
+		if err != nil {
+			return Email{}, err
+		}
+		atts = append(atts, att)
+	}
+
+	return Email{
+		Message:     msg,
+		Attachments: atts,
+	}, tx.Commit()
 }

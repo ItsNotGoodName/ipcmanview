@@ -11,7 +11,9 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/emersion/go-smtp"
 	"github.com/jhillyerd/enmime"
@@ -21,13 +23,15 @@ import (
 )
 
 type App struct {
-	db  repo.DB
+	db  sqlite.DB
+	bus *event.Bus
 	afs afero.Fs
 }
 
-func NewApp(db repo.DB, afs afero.Fs) App {
+func NewApp(db sqlite.DB, bus *event.Bus, afs afero.Fs) App {
 	return App{
 		db:  db,
+		bus: bus,
 		afs: afs,
 	}
 }
@@ -137,19 +141,23 @@ func (s *session) Data(r io.Reader) error {
 		log.Warn().Err(err).Str("date", e.GetHeader("Date")).Msg("Failed to parse date")
 	}
 
-	dbDevice, err := s.db.GetDahuaDeviceByIP(ctx, core.SplitAddress(s.address)[0])
+	host, _ := core.SplitAddress(s.address)
+
+	device, err := dahua.GetDevice(ctx, s.db, dahua.GetDeviceFilter{
+		IP: host,
+	})
 	if err != nil {
-		if repo.IsNotFound(err) {
+		if core.IsNotFound(err) {
 			return err
 		}
 		log.Err(err).Msg("Failed to get device")
 		return err
 	}
-	log = log.With().Str("device", dbDevice.Name).Logger()
+	log = log.With().Str("device", device.Name).Logger()
 
 	body := dahua.ParseEmailContent(e.Text)
-	arg := repo.CreateDahuaEmailMessageParams{
-		DeviceID:          dbDevice.ID,
+	arg := repo.DahuaCreateEmailMessageParams{
+		DeviceID:          device.ID,
 		Date:              types.NewTime(date),
 		From:              s.from,
 		To:                types.NewStringSlice(to),
@@ -161,14 +169,14 @@ func (s *session) Data(r io.Reader) error {
 		CreatedAt:         types.NewTime(time.Now()),
 	}
 
-	args := make([]repo.CreateDahuaEmailAttachmentParams, 0, len(e.Attachments))
+	args := make([]repo.DahuaCreateEmailAttachmentParams, 0, len(e.Attachments))
 	for _, a := range e.Attachments {
-		args = append(args, repo.CreateDahuaEmailAttachmentParams{
+		args = append(args, repo.DahuaCreateEmailAttachmentParams{
 			FileName: a.FileName,
 		})
 	}
 
-	email, err := s.db.CreateDahuaEmail(ctx, arg, args...)
+	email, err := dahua.CreateEmail(ctx, s.db, arg, args...)
 	if err != nil {
 		log.Err(err).Msg("Failed to create email")
 		return err
@@ -203,6 +211,11 @@ func (s *session) Data(r io.Reader) error {
 		}(); err != nil {
 			return err
 		}
+	}
+
+	err = event.CreateEvent(ctx, s.db, s.bus, event.ActionDahuaEmailCreated, email.Message.ID)
+	if err != nil {
+		return err
 	}
 
 	log.Info().Msg("Created email")

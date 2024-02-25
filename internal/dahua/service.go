@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -13,7 +13,7 @@ import (
 
 var ErrFileServiceConflict = fmt.Errorf("file service conflict")
 
-func NewAferoService(db repo.DB, afs afero.Fs) AferoService {
+func NewAferoService(db sqlite.DB, afs afero.Fs) AferoService {
 	return AferoService{
 		interval: 8 * time.Hour,
 		db:       db,
@@ -25,7 +25,7 @@ func NewAferoService(db repo.DB, afs afero.Fs) AferoService {
 // AferoService handles deleting orphan afero files.
 type AferoService struct {
 	interval time.Duration
-	db       repo.DB
+	db       sqlite.DB
 	afs      afero.Fs
 	queueC   chan struct{}
 }
@@ -89,8 +89,8 @@ type fileServiceRes struct {
 }
 
 type fileServiceFilterReq struct {
-	filter repo.DahuaFileFilter
-	resC   chan<- fileServiceFilterRes
+	// filter repo.DahuaFileFilter
+	resC chan<- fileServiceFilterRes
 }
 
 type fileServiceFilterRes struct {
@@ -98,7 +98,7 @@ type fileServiceFilterRes struct {
 	err        error
 }
 
-func NewFileService(db repo.DB, afs afero.Fs, store *Store) FileService {
+func NewFileService(db sqlite.DB, afs afero.Fs, store *Store) FileService {
 	return FileService{
 		db:        db,
 		afs:       afs,
@@ -110,7 +110,7 @@ func NewFileService(db repo.DB, afs afero.Fs, store *Store) FileService {
 
 // FileService handles downloading files.
 type FileService struct {
-	db        repo.DB
+	db        sqlite.DB
 	afs       afero.Fs
 	store     *Store
 	req       chan fileServiceReq
@@ -130,12 +130,12 @@ func (s FileService) serve(ctx context.Context) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case req := <-s.filterReq:
-			downloaded, err := FileLocalDownloadByFilter(ctx, s.db, s.afs, s.store, req.filter)
-			req.resC <- fileServiceFilterRes{
-				downloaded: downloaded,
-				err:        err,
-			}
+		// case req := <-s.filterReq:
+		// 	downloaded, err := FileLocalDownloadByFilter(ctx, s.db, s.afs, s.store, req.filter)
+		// 	req.resC <- fileServiceFilterRes{
+		// 		downloaded: downloaded,
+		// 		err:        err,
+		// 	}
 		case req := <-s.req:
 			downloaded := 0
 			var firstErr error
@@ -160,39 +160,38 @@ func (s FileService) serve(ctx context.Context) error {
 }
 
 func (s FileService) download(ctx context.Context, id int64) error {
-	file, err := s.db.GetDahuaFile(ctx, id)
+	file, err := s.db.C().DahuaGetFile(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	device, err := s.db.GetDahuaDevice(ctx, file.DeviceID)
+	client, err := s.store.GetClient(ctx, file.DeviceID)
 	if err != nil {
 		return err
 	}
-	client := s.store.Client(ctx, device.Convert().DahuaConn)
 
 	return FileLocalDownload(ctx, s.db, s.afs, client, file.ID, file.FilePath, file.Type)
 }
 
-func (s FileService) DownloadByFilter(ctx context.Context, filter repo.DahuaFileFilter) (int, error) {
-	resC := make(chan fileServiceFilterRes, 1)
-	select {
-	case <-ctx.Done():
-		return 0, ctx.Err()
-	case s.filterReq <- fileServiceFilterReq{
-		filter: filter,
-		resC:   resC,
-	}:
-		select {
-		case <-ctx.Done():
-			return 0, ctx.Err()
-		case res := <-resC:
-			return res.downloaded, res.err
-		}
-	default:
-		return 0, ErrFileServiceConflict
-	}
-}
+// func (s FileService) DownloadByFilter(ctx context.Context, filter repo.DahuaFileFilter) (int, error) {
+// 	resC := make(chan fileServiceFilterRes, 1)
+// 	select {
+// 	case <-ctx.Done():
+// 		return 0, ctx.Err()
+// 	case s.filterReq <- fileServiceFilterReq{
+// 		filter: filter,
+// 		resC:   resC,
+// 	}:
+// 		select {
+// 		case <-ctx.Done():
+// 			return 0, ctx.Err()
+// 		case res := <-resC:
+// 			return res.downloaded, res.err
+// 		}
+// 	default:
+// 		return 0, ErrFileServiceConflict
+// 	}
+// }
 
 func (s FileService) Download(ctx context.Context, fileIDs ...int64) (int, error) {
 	resC := make(chan fileServiceRes, 1)

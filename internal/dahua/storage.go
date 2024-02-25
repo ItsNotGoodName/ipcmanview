@@ -9,15 +9,42 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/validate"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/jlaffaye/ftp"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
-var Storage = []models.Storage{
+type StorageDestination struct {
+	ID              int64
+	Name            string `validate:"required,lte=64"`
+	Storage         models.Storage
+	ServerAddress   string `validate:"host"`
+	Port            int64
+	Username        string
+	Password        string
+	RemoteDirectory string
+}
+
+var ValidStorage = []models.Storage{
 	models.StorageFTP,
 	models.StorageSFTP,
+}
+
+func StorageFromFilePath(filePath string) models.Storage {
+	if strings.HasPrefix(filePath, "sftp://") {
+		return models.StorageSFTP
+	}
+	if strings.HasPrefix(filePath, "ftp://") {
+		return models.StorageFTP
+	}
+	// if strings.HasPrefix(filePath, "nfs://") {
+	// 	return models.StorageNFS
+	// }
+	// if strings.HasPrefix(filePath, "smb://") {
+	// 	return models.StorageSMB
+	// }
+	return models.StorageLocal
 }
 
 func ParseStorage(storage string) (models.Storage, error) {
@@ -30,7 +57,7 @@ func ParseStorage(storage string) (models.Storage, error) {
 	return "", fmt.Errorf("storage not supported: %s", storage)
 }
 
-func normalizeStorageDestination(arg models.DahuaStorageDestination, create bool) models.DahuaStorageDestination {
+func (arg *StorageDestination) normalize(create bool) {
 	arg.Name = strings.TrimSpace(arg.Name)
 	arg.ServerAddress = strings.TrimSpace(arg.ServerAddress)
 
@@ -48,19 +75,17 @@ func normalizeStorageDestination(arg models.DahuaStorageDestination, create bool
 			arg.Name = core.Address(arg.ServerAddress, int(arg.Port))
 		}
 	}
-
-	return arg
 }
 
-func CreateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaStorageDestination) (int64, error) {
-	arg = normalizeStorageDestination(arg, true)
+func CreateStorageDestination(ctx context.Context, db sqlite.DB, arg StorageDestination) (int64, error) {
+	arg.normalize(true)
 
-	err := validate.Validate.Struct(arg)
+	err := core.ValidateStruct(ctx, arg)
 	if err != nil {
 		return 0, err
 	}
 
-	return db.CreateDahuaStorageDestination(ctx, repo.CreateDahuaStorageDestinationParams{
+	return db.C().DahuaCreateStorageDestination(ctx, repo.DahuaCreateStorageDestinationParams{
 		Name:            arg.Name,
 		Storage:         arg.Storage,
 		ServerAddress:   arg.ServerAddress,
@@ -71,15 +96,15 @@ func CreateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaS
 	})
 }
 
-func UpdateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaStorageDestination) (models.DahuaStorageDestination, error) {
-	arg = normalizeStorageDestination(arg, false)
+func UpdateStorageDestination(ctx context.Context, db sqlite.DB, arg StorageDestination) error {
+	arg.normalize(false)
 
-	err := validate.Validate.Struct(arg)
+	err := core.ValidateStruct(ctx, arg)
 	if err != nil {
-		return models.DahuaStorageDestination{}, err
+		return err
 	}
 
-	res, err := db.UpdateDahuaStorageDestination(ctx, repo.UpdateDahuaStorageDestinationParams{
+	_, err = db.C().DahuaUpdateStorageDestination(ctx, repo.DahuaUpdateStorageDestinationParams{
 		Name:            arg.Name,
 		Storage:         arg.Storage,
 		ServerAddress:   arg.ServerAddress,
@@ -90,17 +115,17 @@ func UpdateStorageDestination(ctx context.Context, db repo.DB, arg models.DahuaS
 		ID:              arg.ID,
 	})
 	if err != nil {
-		return models.DahuaStorageDestination{}, err
+		return err
 	}
 
-	return res.Convert(), nil
+	return nil
 }
 
-func DeleteStorageDestination(ctx context.Context, db repo.DB, id int64) error {
-	return db.DeleteDahuaStorageDestination(ctx, id)
+func DeleteStorageDestination(ctx context.Context, db sqlite.DB, id int64) error {
+	return db.C().DahuaDeleteStorageDestination(ctx, id)
 }
 
-func TestStorageDestination(ctx context.Context, arg models.DahuaStorageDestination) error {
+func TestStorageDestination(ctx context.Context, arg StorageDestination) error {
 	switch arg.Storage {
 	case models.StorageFTP:
 		c, err := ftp.Dial(core.Address(arg.ServerAddress, int(arg.Port)), ftp.DialWithContext(ctx))

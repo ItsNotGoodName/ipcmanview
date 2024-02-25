@@ -9,6 +9,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/google/uuid"
 	"github.com/spf13/afero"
@@ -26,7 +27,7 @@ func NewAferoFileName(extension string) string {
 }
 
 // SyncAferoFile deletes the file from the database if it does not exist in the file system.
-func SyncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFileID int64, aferoFileName string) error {
+func SyncAferoFile(ctx context.Context, db sqlite.DB, afs afero.Fs, aferoFileID int64, aferoFileName string) error {
 	_, err := afs.Stat(aferoFileName)
 	if err == nil {
 		return nil
@@ -35,21 +36,21 @@ func SyncAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, aferoFileID in
 		return err
 	}
 
-	err = db.DeleteDahuaAferoFile(ctx, aferoFileID)
+	err = db.C().DahuaDeleteAferoFile(ctx, aferoFileID)
 	if err != nil {
 		return err
 	}
 
-	return repo.ErrNotFound
+	return core.ErrNotFound
 }
 
 // DeleteOrphanAferoFiles deletes unreferenced afero files.
-func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, afs afero.Fs) (int, error) {
+func DeleteOrphanAferoFiles(ctx context.Context, db sqlite.DB, afs afero.Fs) (int, error) {
 	deleted := 0
 
 	var first repo.DahuaAferoFile
 	for {
-		files, err := db.OrphanListDahuaAferoFile(ctx, 20)
+		files, err := db.C().DahuaOrphanListAferoFiles(ctx, 20)
 		if err != nil {
 			return deleted, err
 		}
@@ -67,7 +68,7 @@ func DeleteOrphanAferoFiles(ctx context.Context, db repo.DB, afs afero.Fs) (int,
 				return deleted, err
 			}
 
-			err = db.DeleteDahuaAferoFile(ctx, f.ID)
+			err = db.C().DahuaDeleteAferoFile(ctx, f.ID)
 			if err != nil {
 				return deleted, err
 			}
@@ -89,8 +90,8 @@ type AferoForeignKeys struct {
 }
 
 // CreateAferoFile creates an afero file in the database and in the file system.
-func CreateAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, key AferoForeignKeys, fileName string) (AferoFile, error) {
-	id, err := db.CreateDahuaAferoFile(ctx, repo.CreateDahuaAferoFileParams{
+func CreateAferoFile(ctx context.Context, db sqlite.DB, afs afero.Fs, key AferoForeignKeys, fileName string) (AferoFile, error) {
+	id, err := db.C().DahuaCreateAferoFile(ctx, repo.DahuaCreateAferoFileParams{
 		FileID:            core.Int64ToNullInt64(key.FileID),
 		ThumbnailID:       core.Int64ToNullInt64(key.ThumbnailID),
 		EmailAttachmentID: core.Int64ToNullInt64(key.EmailAttachmentID),
@@ -114,13 +115,13 @@ func CreateAferoFile(ctx context.Context, db repo.DB, afs afero.Fs, key AferoFor
 }
 
 // ReadyAferoFile sets the afero file to a ready state.
-func ReadyAferoFile(ctx context.Context, db repo.DB, id int64, file afero.File) error {
+func ReadyAferoFile(ctx context.Context, db sqlite.DB, id int64, file afero.File) error {
 	stat, err := file.Stat()
 	if err != nil {
 		return err
 	}
 
-	_, err = db.ReadyDahuaAferoFile(ctx, repo.ReadyDahuaAferoFileParams{
+	_, err = db.C().DahuaReadyAferoFile(ctx, repo.DahuaReadyAferoFileParams{
 		Size:      stat.Size(),
 		CreatedAt: types.NewTime(stat.ModTime()),
 		ID:        id,

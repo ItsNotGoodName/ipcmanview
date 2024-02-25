@@ -1,381 +1,24 @@
+import Humanize from "humanize-plus"
 import { action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router"
 import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
-import { ComponentProps, ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, resetErrorBoundaries, splitProps } from "solid-js"
-import { FormError, createForm, required, reset } from "@modular-forms/solid"
+import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, } from "solid-js"
+import { createForm, required, reset } from "@modular-forms/solid"
 
-import { formatDate, parseDate, createLoading, toastError, throwAsFormError } from "~/lib/utils"
-import { CardContent, CardHeader, CardRoot, CardTitle } from "~/ui/Card"
-import { getProfile, getListGroup } from "./Profile.data"
-import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert"
+import { formatDate, parseDate, catchAsToast, throwAsFormError, createModal } from "~/lib/utils"
+import { CardRoot, } from "~/ui/Card"
+import { getProfilePage } from "./Profile.data"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
-import { PopoverArrow, PopoverCloseButton, PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "~/ui/Popover"
-import { As } from "@kobalte/core"
 import { Badge } from "~/ui/Badge"
-import { UserRevokeSessionReq } from "~/twirp/rpc"
-import { Seperator } from "~/ui/Seperator"
-import { FieldControl, FieldLabel, FieldMessage, FieldRoot, FormMessage } from "~/ui/Form"
+import { FieldLabel, FieldMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form"
 import { Input } from "~/ui/Input"
-import { Loading } from "~/ui/Loading"
 import { Skeleton } from "~/ui/Skeleton"
-
-export const actionRevokeAllSessions = action(() => useClient()
-  .user.revokeAllSessions({})
-  .then(() => revalidate(getProfile.key)))
-export const actionRevokeSession = action((input: UserRevokeSessionReq) => useClient()
-  .user.revokeSession(input)
-  .then(() => revalidate(getProfile.key)))
-
-export function Profile() {
-  const data = createAsync(getProfile)
-  const [loading, refreshData] = createLoading(() => revalidate(getProfile.key).then(resetErrorBoundaries))
-
-  const revokeAllSessionsSubmission = useSubmission(actionRevokeAllSessions)
-  const revokeAllSessionsAction = useAction(actionRevokeAllSessions)
-  const revokeAllSessions = () => revokeAllSessionsAction().catch(toastError)
-
-  return (
-    <div class="p-4">
-      <ErrorBoundary fallback={(error) => (
-        <AlertRoot variant="destructive">
-          <AlertTitle>{error.message}</AlertTitle>
-          <AlertDescription>
-            <Button onClick={refreshData} disabled={loading()}>Retry</Button>
-          </AlertDescription>
-        </AlertRoot>
-      )}>
-        <Suspense fallback={<Loading />}>
-          <div class="mx-auto flex max-w-4xl flex-col gap-4">
-            <CardRoot>
-              <CardHeader>
-                <CardTitle>Profile</CardTitle>
-              </CardHeader>
-              <CardContent class="overflow-x-auto">
-                <table>
-                  <tbody>
-                    <tr>
-                      <td class="pr-2"><Badge class="flex w-full justify-center">Username</Badge></td>
-                      <td>{data()?.username}</td>
-                    </tr>
-                    <tr>
-                      <td class="pr-2"><Badge class="flex w-full justify-center">Email</Badge></td>
-                      <td>{data()?.email}</td>
-                    </tr>
-                    <tr>
-                      <td class="pr-2"><Badge class="flex w-full justify-center">Admin</Badge></td>
-                      <td>
-                        <Show when={data()?.admin} fallback={<RiSystemCloseLine class="h-6 w-6 text-red-500" />}>
-                          <RiSystemCheckLine class="h-6 w-6 text-green-500" />
-                        </Show>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="pr-2"><Badge class="flex w-full justify-center">Created At</Badge></td>
-                      <td>{formatDate(parseDate(data()?.createdAt))}</td>
-                    </tr>
-                    <tr>
-                      <td class="pr-2"><Badge class="w-full">Updated At</Badge></td>
-                      <td>{formatDate(parseDate(data()?.updatedAt))}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </CardContent>
-            </CardRoot>
-            <div class="flex flex-col gap-2">
-              <div class="text-xl">Change username</div>
-              <Seperator />
-            </div>
-            <Center>
-              <ChangeUsernameForm />
-            </Center>
-            <div class="flex flex-col gap-2">
-              <div class="text-xl">Change password</div>
-              <Seperator />
-            </div>
-            <Center>
-              <ChangePasswordForm />
-            </Center>
-            <div class="flex flex-col gap-2">
-              <div class="text-xl">Sessions</div>
-              <Seperator />
-            </div>
-            <div class="flex">
-              <ConfirmButton
-                message="Are you sure you wish to revoke all sessions?"
-                pending={revokeAllSessionsSubmission.pending}
-                onYes={revokeAllSessions}
-                variant="destructive"
-              >
-                Revoke all sessions
-              </ConfirmButton>
-            </div>
-            <TableRoot>
-              <TableCaption>{data()?.sessions.length} Session(s)</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Active</TableHead>
-                  <TableHead>User Agent</TableHead>
-                  <TableHead>IP</TableHead>
-                  <TableHead>Last IP</TableHead>
-                  <TableHead>Last Used At</TableHead>
-                  <TableHead>Created At</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <For each={data()?.sessions}>
-                  {
-                    (session) => {
-                      const revokeSessionSubmission = useSubmission(actionRevokeSession)
-                      const revokeSessionAction = useAction(actionRevokeSession)
-                      const revokeSession = (input: UserRevokeSessionReq) => revokeSessionAction(input).catch(toastError)
-
-                      return (
-                        <TableRow>
-                          <TableCell>
-                            <Show when={session.active} fallback={<div class="mx-auto h-4 w-4 rounded-full bg-gray-500" title="Inactive" />}>
-                              <div class="mx-auto h-4 w-4 rounded-full bg-green-500" title="Active" />
-                            </Show>
-                          </TableCell>
-                          <TableCell>{session.userAgent}</TableCell>
-                          <TableCell>{session.ip}</TableCell>
-                          <TableCell>{session.lastIp}</TableCell>
-                          <TableCell>{formatDate(parseDate(session.lastUsedAt))}</TableCell>
-                          <TableCell>{formatDate(parseDate(session.createdAt))}</TableCell>
-                          <TableCell>
-                            <Show when={!session.current} fallback={
-                              <Badge>Current</Badge>
-                            }>
-                              <ConfirmButton
-                                message="Are you sure you wish to revoke this session?"
-                                pending={revokeSessionSubmission.pending}
-                                onYes={() => revokeSession({ sessionId: session.id })}
-                                variant="destructive"
-                                size="sm"
-                              >
-                                Revoke
-                              </ConfirmButton>
-                            </Show>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    }
-                  }
-                </For>
-              </TableBody>
-            </TableRoot>
-            <div class="flex flex-col gap-2">
-              <div class="text-xl">Groups</div>
-              <Seperator />
-            </div>
-            <GroupTable />
-          </div>
-        </Suspense>
-      </ErrorBoundary>
-    </div>
-  )
-}
-
-
-function GroupTable() {
-  const data = createAsync(getListGroup)
-
-  return (
-    <ErrorBoundary fallback={(error: Error) =>
-      <AlertRoot variant="destructive">
-        <AlertTitle>{error.message}</AlertTitle>
-      </AlertRoot>
-    }>
-      <Suspense fallback={<Skeleton class="w-full h-32" />}>
-        <TableRoot>
-          <TableCaption>{data()?.groups.length} Groups(s)</TableCaption>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <For each={data()?.groups}>
-              {(group) =>
-                <TableRow>
-                  <TableCell>{group.name}</TableCell>
-                  <TableCell>{group.description}</TableCell>
-                </TableRow>
-              }
-            </For>
-          </TableBody>
-        </TableRoot>
-      </Suspense>
-    </ErrorBoundary>
-  )
-}
-
-type ChangeUsernameForm = {
-  newUsername: string
-}
-
-const actionChangeUsername = action((form: ChangeUsernameForm) => useClient()
-  .user.updateUsername(form)
-  .then(() => revalidate(getProfile.key))
-  .catch(throwAsFormError))
-
-function ChangeUsernameForm() {
-  const [changeUsernameForm, { Field, Form }] = createForm<ChangeUsernameForm>({ initialValues: { newUsername: "" } });
-  const changeUsername = useAction(actionChangeUsername)
-
-  return (
-    <Form class="flex w-full max-w-xs flex-col gap-4" onSubmit={(form) => changeUsername(form).then(() => reset(changeUsernameForm))}>
-      <Field name="newUsername" validate={required("Please enter a new username.")}>
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>New username</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                placeholder="New username"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Button type="submit" disabled={changeUsernameForm.submitting}>
-        <Show when={changeUsernameForm.submitting} fallback={<>Update username</>} >
-          Updating username
-        </Show>
-      </Button>
-      <FormMessage form={changeUsernameForm} />
-    </Form>
-  )
-}
-
-type ChangePasswordForm = {
-  oldPassword: string
-  newPassword: string
-  confirmPassword: string
-}
-
-const actionChangePassword = action((form: ChangePasswordForm) => {
-  if (form.newPassword != form.confirmPassword) {
-    throw new FormError<ChangePasswordForm>("", { confirmPassword: "Password does not match." })
-  }
-  return useClient()
-    .user.updatePassword(form)
-    .then(() => revalidate(getProfile.key))
-    .catch(throwAsFormError)
-})
-
-function ChangePasswordForm() {
-  const [changePasswordForm, { Field, Form }] = createForm<ChangePasswordForm>({ initialValues: { oldPassword: "", newPassword: "", confirmPassword: "" } });
-  const changePassword = useAction(actionChangePassword)
-
-  return (
-    <Form class="flex w-full max-w-xs flex-col gap-4" onSubmit={(form) => changePassword(form).then(() => reset(changePasswordForm))}>
-      <input class="hidden" type="text" name="username" autocomplete="username" />
-      <Field name="oldPassword" validate={required("Please enter your old password.")}>
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Old password</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="current-password"
-                placeholder="Old password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Field name="newPassword" validate={required("Please enter a new password.")}>
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>New password</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="new-password"
-                placeholder="New password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Field name="confirmPassword">
-        {(field, props) => (
-          <FieldRoot class="gap-1.5">
-            <FieldLabel field={field}>Confirm new password</FieldLabel>
-            <FieldControl field={field}>
-              <Input
-                {...props}
-                autocomplete="new-password"
-                placeholder="Confirm new password"
-                type="password"
-                value={field.value}
-              />
-            </FieldControl>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
-      </Field>
-      <Button type="submit" disabled={changePasswordForm.submitting}>
-        <Show when={changePasswordForm.submitting} fallback={<>Update password</>} >
-          Updating password
-        </Show>
-      </Button>
-      <FormMessage form={changePasswordForm} />
-    </Form>
-  )
-}
-
-type ConfirmButtonProps = {
-  message: string,
-  pending: boolean,
-  onYes: () => Promise<unknown>
-} & Omit<ComponentProps<typeof Button>, "disabled">
-
-function ConfirmButton(props: ConfirmButtonProps) {
-  const [_, rest] = splitProps(props, ["message", "pending", "onYes"])
-  const [open, setOpen] = createSignal(false);
-  const onYes = () => props.onYes().then(() => setOpen(false))
-
-  return (
-    <PopoverRoot open={open()} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <As component={Button} disabled={props.pending} {...rest}>
-          {props.children}
-        </As>
-      </PopoverTrigger>
-      <PopoverPortal>
-        <PopoverContent class="flex flex-col gap-2" >
-          <PopoverArrow />
-          <div>{props.message}</div>
-          <div class="flex gap-4">
-            <PopoverCloseButton asChild>
-              <As component={Button} size="sm" disabled={props.pending}>No</As>
-            </PopoverCloseButton>
-            <Button
-              onClick={onYes}
-              disabled={props.pending}
-              size="sm"
-              variant={props.variant}
-            >
-              Yes
-            </Button>
-          </div>
-        </PopoverContent>
-      </PopoverPortal>
-    </PopoverRoot>
-  )
-}
+import { getSession } from "~/providers/session"
+import { PageError } from "~/ui/Page"
+import { LayoutNormal } from "~/ui/Layout"
+import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog"
+import { Shared } from "~/components/Shared"
 
 function Center(props: ParentProps) {
   return (
@@ -385,3 +28,303 @@ function Center(props: ParentProps) {
   )
 }
 
+const actionRevokeAllMySessions = action(() => useClient()
+  .user.revokeAllMySessions({})
+  .then(() => revalidate(getProfilePage.key))
+  .catch(catchAsToast))
+
+const actionRevokeMySession = action((sessionId: bigint) => useClient()
+  .user.revokeMySession({ sessionId })
+  .then(() => revalidate(getProfilePage.key))
+  .catch(catchAsToast))
+
+export function Profile() {
+  const data = createAsync(() => getProfilePage())
+
+  const [revokeAllMySessionsModal, setRevokeAllMySessionsModal] = createSignal(false)
+  const revokeAllMySessionsSubmission = useSubmission(actionRevokeAllMySessions)
+  const revokeAllMySessionsAction = useAction(actionRevokeAllMySessions)
+  const revokeAllMySessions = () => revokeAllMySessionsAction()
+    .then(() => setRevokeAllMySessionsModal(false))
+
+  const revokeMySessionModal = createModal(BigInt(0))
+  const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
+  const revokeMySessionAction = useAction(actionRevokeMySession)
+  const revokeMySession = () => revokeMySessionAction(revokeMySessionModal.value())
+    .then(revokeMySessionModal.setClose)
+
+  return (
+    <LayoutNormal class="max-w-4xl">
+      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
+        <AlertDialogRoot open={revokeAllMySessionsModal()} onOpenChange={setRevokeAllMySessionsModal}>
+          <AlertDialogModal>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you wish to revoke all sessions?</AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction disabled={revokeAllMySessionsSubmission.pending} onClick={revokeAllMySessions} variant="destructive">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogModal>
+        </AlertDialogRoot>
+
+        <AlertDialogRoot open={revokeMySessionModal.open()} onOpenChange={revokeMySessionModal.setClose}>
+          <AlertDialogModal>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you wish to revoke this session?</AlertDialogTitle>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction disabled={revokeMySessionSubmission.pending} onClick={revokeMySession} variant="destructive">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogModal>
+        </AlertDialogRoot>
+
+        <Shared.Title>Profile</Shared.Title>
+
+        <CardRoot class="overflow-x-auto p-4">
+          <Suspense fallback={<Skeleton class="h-32" />}>
+            <table>
+              <tbody>
+                <tr>
+                  <th class="pr-2">Username</th>
+                  <td>{data()?.username}</td>
+                </tr>
+                <tr>
+                  <th class="pr-2">Email</th>
+                  <td>{data()?.email}</td>
+                </tr>
+                <tr>
+                  <th class="pr-2">Admin</th>
+                  <td>
+                    <Show when={data()?.admin} fallback={<RiSystemCloseLine class="h-6 w-6 text-red-500" />}>
+                      <RiSystemCheckLine class="h-6 w-6 text-green-500" />
+                    </Show>
+                  </td>
+                </tr>
+                <tr>
+                  <th class="pr-2">Created At</th>
+                  <td>{formatDate(parseDate(data()?.createdAtTime))}</td>
+                </tr>
+                <tr>
+                  <th class="pr-2">Updated At</th>
+                  <td>{formatDate(parseDate(data()?.updatedAtTime))}</td>
+                </tr>
+              </tbody>
+            </table>
+          </Suspense>
+        </CardRoot>
+
+        <Shared.Title>Change username</Shared.Title>
+        <ChangeUsernameForm />
+
+        <Shared.Title>Change password</Shared.Title>
+        <ChangePasswordForm />
+
+        <Shared.Title>Sessions</Shared.Title>
+        <div class="flex">
+          <Button variant="destructive" onClick={() => setRevokeAllMySessionsModal(true)}>
+            Revoke all sessions
+          </Button>
+        </div>
+        <Suspense fallback={<Skeleton class="h-32" />}>
+          <TableRoot>
+            <TableCaption>{data()?.sessions.length} {Humanize.pluralize(data()?.sessions.length || 0, "Session")}</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Active</TableHead>
+                <TableHead>User Agent</TableHead>
+                <TableHead>IP</TableHead>
+                <TableHead>Last IP</TableHead>
+                <TableHead>Last Used At</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={data()?.sessions}>
+                {(session) => (
+                  <TableRow>
+                    <TableCell>
+                      <Show when={session.active} fallback={<div class="mx-auto h-4 w-4 rounded-full bg-gray-500" title="Inactive" />}>
+                        <div class="mx-auto h-4 w-4 rounded-full bg-green-500" title="Active" />
+                      </Show>
+                    </TableCell>
+                    <TableCell>{session.userAgent}</TableCell>
+                    <TableCell>{session.ip}</TableCell>
+                    <TableCell>{session.lastIp}</TableCell>
+                    <TableCell>{formatDate(parseDate(session.lastUsedAtTime))}</TableCell>
+                    <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
+                    <TableCell class="py-0">
+                      <Show when={!session.current} fallback={<Badge>Current</Badge>}>
+                        <Button variant="destructive" size="sm" onClick={() => revokeMySessionModal.setValue(session.id)}>
+                          Revoke
+                        </Button>
+                      </Show>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </For>
+            </TableBody>
+          </TableRoot>
+        </Suspense>
+
+        <Shared.Title>Groups</Shared.Title>
+        <Suspense fallback={<Skeleton class="h-32" />}>
+          <TableRoot>
+            <TableCaption>{data()?.groups.length} {Humanize.pluralize(data()?.groups.length || 0, "Group")}</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Joined At</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <For each={data()?.groups}>
+                {(group) =>
+                  <TableRow>
+                    <TableCell>{group.name}</TableCell>
+                    <TableCell>{group.description}</TableCell>
+                    <TableCell>{formatDate(parseDate(group.joinedAtTime))}</TableCell>
+                  </TableRow>
+                }
+              </For>
+            </TableBody>
+          </TableRoot>
+        </Suspense>
+      </ErrorBoundary>
+    </LayoutNormal>
+  )
+}
+
+type ChangeUsernameForm = {
+  newUsername: string
+}
+
+function ChangeUsernameForm() {
+  const [form, { Field, Form }] = createForm<ChangeUsernameForm>({ initialValues: { newUsername: "" } });
+  const submit = (input: ChangeUsernameForm) => useClient()
+    .user.updateMyUsername(input)
+    .then(() => revalidate([getProfilePage.key, getSession.key]))
+    .then(() => reset(form))
+    .catch(throwAsFormError)
+
+  return (
+    <Center>
+      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={submit}>
+        <Field name="newUsername" validate={required("Please enter a new username.")}>
+          {(field, props) => (
+            <FieldRoot>
+              <FieldLabel field={field}>New username</FieldLabel>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                placeholder="New username"
+                value={field.value}
+              />
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Button type="submit" disabled={form.submitting}>
+          <Show when={!form.submitting} fallback="Updating username">Update username</Show>
+        </Button>
+        <FormMessage form={form} />
+      </Form>
+    </Center>
+  )
+}
+
+type ChangePasswordForm = {
+  oldPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
+function ChangePasswordForm() {
+  const [form, { Field, Form }] = createForm<ChangePasswordForm>({
+    initialValues: {
+      oldPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+    validate: (input) => {
+      if (input.newPassword != input.confirmPassword) {
+        return { confirmPassword: "Password does not match." }
+      }
+      return {}
+    }
+  });
+  const submit = (input: ChangePasswordForm) => useClient()
+    .user.updateMyPassword(input)
+    .then(() => revalidate(getProfilePage.key))
+    .then(() => reset(form))
+    .catch(throwAsFormError)
+
+  return (
+    <Center>
+      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={submit}>
+        <input class="hidden" type="text" name="username" autocomplete="username" />
+        <Field name="oldPassword" validate={required("Please enter your old password.")}>
+          {(field, props) => (
+            <FieldRoot>
+              <FieldLabel field={field}>Old password</FieldLabel>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                autocomplete="current-password"
+                placeholder="Old password"
+                type="password"
+                value={field.value}
+              />
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="newPassword" validate={required("Please enter a new password.")}>
+          {(field, props) => (
+            <FieldRoot>
+              <FieldLabel field={field}>New password</FieldLabel>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                autocomplete="new-password"
+                placeholder="New password"
+                type="password"
+                value={field.value}
+              />
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Field name="confirmPassword">
+          {(field, props) => (
+            <FieldRoot>
+              <FieldLabel field={field}>Confirm new password</FieldLabel>
+              <Input
+                {...props}
+                {...fieldControlProps(field)}
+                autocomplete="new-password"
+                placeholder="Confirm new password"
+                type="password"
+                value={field.value}
+              />
+              <FieldMessage field={field} />
+            </FieldRoot>
+          )}
+        </Field>
+        <Button type="submit" disabled={form.submitting}>
+          <Show when={form.submitting} fallback="Update password">Updating password</Show>
+        </Button>
+        <FormMessage form={form} />
+      </Form>
+    </Center>
+  )
+}
+
+export default Profile

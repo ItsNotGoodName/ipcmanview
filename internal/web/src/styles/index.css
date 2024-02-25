@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    /* Tokyo-night-light */
+    --hljs-comment: #9699a3;
+    --hljs-red: #8c4351;
+    --hljs-orange: #965027;
+    --hljs-yellow: #8f5e15;
+    --hljs-cyan: #166775;
+    --hljs-light-blue: #0f4b6e;
+    --hljs-green: #33635c;
+    --hljs-greener: #485e30;
+    --hljs-blue: #34548a;
+    --hljs-magenta: #5a4a78;
+    --hljs-white: #343b58;
+    --hljs-background: #d5d6db;
+    --hljs-foreground: #565a6e;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    /* Tokyo-night-Dark */
+    --hljs-comment: #565f89;
+    --hljs-red: #f7768e;
+    --hljs-orange: #ff9e64;
+    --hljs-yellow: #e0af68;
+    --hljs-cyan: #2ac3de;
+    --hljs-light-blue: #7dcfff;
+    --hljs-green: #73daca;
+    --hljs-greener: #9ece6a;
+    --hljs-blue: #7aa2f7;
+    --hljs-magenta: #bb9af7;
+    --hljs-white: #c0caf5;
+    --hljs-background: #1a1b26;
+    --hljs-foreground: #9aa5ce;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* img { */
+/*   filter: blur(3rem); */
+/* } */

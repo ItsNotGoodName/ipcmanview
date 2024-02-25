@@ -1,8 +1,14 @@
+// # Changes
+// - Replace React Hook Form with Modular Forms
+//
+// # URLs
+// https://ui.shadcn.com/docs/components/form
 import { JSX, Show, createUniqueId, splitProps, createContext, useContext, } from "solid-js";
-import { FieldStore, FormStore } from "@modular-forms/solid";
+import { FieldStore, FormStore, setValue } from "@modular-forms/solid";
 
 import { cn } from "~/lib/utils"
 import { Label, LabelProps } from "./Label"
+import { Checkbox, Select, Switch } from "@kobalte/core";
 
 type FieldContextValue = {
   id: string
@@ -11,6 +17,40 @@ type FieldContextValue = {
 const FormItemContext = createContext<FieldContextValue>(
   {} as FieldContextValue
 )
+
+export function CheckboxFieldRoot(props: Checkbox.CheckboxRootProps & { field: FieldStore<any, any>, form: FormStore<any, any> }) {
+  const [_, rest] = splitProps(props, ["field", "form"])
+  return <Checkbox.Root
+    validationState={props.field.error ? "invalid" : "valid"}
+    checked={props.field.value}
+    onChange={(value) => setValue(props.form, props.field.name, value)}
+    {...rest}
+  />
+}
+
+type SelectProps<Option, OptGroup> = Select.SelectRootProps<Option, OptGroup> & {
+  field: FieldStore<any, any>,
+  selectProps: Select.SelectHiddenSelectProps
+}
+
+export function SelectFieldRoot<Option, OptGroup = never>(props: SelectProps<Option, OptGroup>) {
+  const [_, rest] = splitProps(props, ["field", "selectProps"])
+  return <Select.Root
+    validationState={props.field.error ? "invalid" : "valid"}
+    placeholder={props.placeholder}
+    {...rest}
+  />
+}
+
+export function SwitchFieldRoot(props: Switch.SwitchRootProps & { field: FieldStore<any, any>, form: FormStore<any, any> }) {
+  const [_, rest] = splitProps(props, ["field", "form"])
+  return <Switch.Root
+    validationState={props.field.error ? "invalid" : "valid"}
+    checked={props.field.value}
+    onChange={(value) => setValue(props.form, props.field.name, value)}
+    {...rest}
+  />
+}
 
 export function FieldRoot(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "id">) {
   const [_, rest] = splitProps(props, ["class"])
@@ -50,23 +90,32 @@ export function FieldLabel(props: Omit<LabelProps, "for"> & { field: FieldStore<
   )
 }
 
-export function FieldControl(props: JSX.HTMLAttributes<HTMLDivElement> & { field: FieldStore<any, any> }) {
-  const [_, rest] = splitProps(props, ["field"])
+export function fieldControlProps(field: FieldStore<any, any>) {
   const { formFieldId, formDescriptionId, formMessageId } = useField()
-
-  return (
-    <div
-      id={formFieldId}
-      aria-describedby={
-        !props.field.error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!props.field.error}
-      {...rest}
-    />
-  )
+  return {
+    id: formFieldId,
+    "aria-describedby": !field.error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`,
+    "aria-invalid": !!field.error
+  }
 }
+
+// export function FieldControl(props: JSX.HTMLAttributes<HTMLDivElement> & { field: FieldStore<any, any> }) {
+//   const [_, rest] = splitProps(props, ["field"])
+//   const { formFieldId, formDescriptionId, formMessageId } = useField()
+//
+//   return (
+//     <div
+//       id={formFieldId}
+//       aria-describedby={
+//         !props.field.error
+//           ? `${formDescriptionId}`
+//           : `${formDescriptionId} ${formMessageId}`
+//       }
+//       aria-invalid={!!props.field.error}
+//       {...rest}
+//     />
+//   )
+// }
 
 export function FieldDescription(props: JSX.HTMLAttributes<HTMLParagraphElement>) {
   const [_, rest] = splitProps(props, ["class"])
@@ -75,7 +124,7 @@ export function FieldDescription(props: JSX.HTMLAttributes<HTMLParagraphElement>
   return (
     <p
       id={formDescriptionId}
-      class={cn("text-sm text-muted-foreground", props.class)}
+      class={cn("text-muted-foreground text-sm", props.class)}
       {...rest}
     />
   )
@@ -90,7 +139,7 @@ export function FieldMessage(props: JSX.HTMLAttributes<HTMLParagraphElement> & {
     <Show when={body()}>
       <p
         id={formMessageId}
-        class={cn("text-sm font-medium text-destructive", props.class)}
+        class={cn("text-destructive text-sm font-medium", props.class)}
         {...rest}
       >
         {body()}
@@ -106,7 +155,7 @@ export function FormMessage(props: JSX.HTMLAttributes<HTMLParagraphElement> & { 
   return (
     <Show when={body()}>
       <p
-        class={cn("text-sm font-medium text-destructive", props.class)}
+        class={cn("text-destructive text-sm font-medium", props.class)}
         {...rest}
       >
         {body()}

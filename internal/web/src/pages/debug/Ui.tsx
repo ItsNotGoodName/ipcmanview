@@ -6,18 +6,35 @@ import { Input } from "~/ui/Input";
 import { Seperator } from "~/ui/Seperator";
 import { Textarea } from "~/ui/Textarea";
 import { Label } from "~/ui/Label";
-import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchInput, SwitchLabel, SwitchRoot } from "~/ui/Switch";
+import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchLabel, SwitchRoot } from "~/ui/Switch";
 import { toggleTheme } from "~/ui/theme";
 import { CardRoot, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/ui/Card";
-import { For } from "solid-js";
+import { For, Show, createSignal, onCleanup, } from "solid-js";
 import { Badge } from "~/ui/Badge";
-import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxInput, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxDescription, CheckboxErrorMessage, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
 import { PopoverArrow, PopoverCloseButton, PopoverCloseIcon, PopoverContent, PopoverDescription, PopoverPortal, PopoverRoot, PopoverTitle, PopoverTrigger } from "~/ui/Popover";
-import { DialogCloseButton, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
+import { DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverflow, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, DialogTrigger } from "~/ui/Dialog";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
 import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, ToastProgressTrack, ToastTitle, toast } from "~/ui/Toast";
 import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
+import { PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
+import { SelectContent, SelectDescription, SelectErrorMessage, SelectHTML, SelectItem, SelectLabel, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
+import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
+import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
+import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine, RiSystemAddLine, RiSystemAlertLine } from "solid-icons/ri";
+import { AvatarFallback, AvatarImage, AvatarRoot } from "~/ui/Avatar";
+import { ProgressFill, ProgressLabel, ProgressRoot, ProgressTrack, ProgressValueLabel } from "~/ui/Progress";
+import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, AlertDialogTrigger } from "~/ui/AlertDialog";
+import { Toggle } from "~/ui/Toggle";
+import { SheetCloseButton, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetOverflow, SheetRoot, SheetTitle, SheetTrigger } from "~/ui/Sheet";
+import { HoverCardArrow, HoverCardContent, HoverCardRoot, HoverCardTrigger } from "~/ui/HoverCard";
+import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
+import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from "~/ui/Accordion";
+import { createRowSelection } from "~/lib/utils";
+import { BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
+import { A } from "@solidjs/router";
+import { ComboboxContent, ComboboxControl, ComboboxDescription, ComboboxErrorMessage, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger, } from "~/ui/Combobox";
 
 export function Ui() {
   const showToast = () => {
@@ -34,12 +51,66 @@ export function Ui() {
     toast.show("Hello World")
   }
 
+  const rowSelection = createRowSelection(() => [1, 2])
+
+  const [progress, setProgress] = createSignal(0)
+  const timer = setInterval(() => setProgress((prev) => (prev + 10) % 100), 200)
+  onCleanup(() => clearInterval(timer))
+
+  const [comboboxValue, setComboboxValue] = createSignal(["Blueberry", "Grapes"]);
+
   return (
     <div class="flex flex-col gap-4 p-4">
+      <ComboboxRoot<string>
+        multiple
+        options={["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50",]}
+        value={comboboxValue()}
+        onChange={setComboboxValue}
+        placeholder="Fruits"
+        itemComponent={props => (
+          <ComboboxItem item={props.item}>
+            <ComboboxItemLabel>{props.item.rawValue}</ComboboxItemLabel>
+          </ComboboxItem>
+        )}
+        class="space-y-2"
+        validationState="invalid"
+      >
+        <ComboboxLabel>Combobox Label</ComboboxLabel>
+        <ComboboxControl<string> aria-label="Fruits">
+          {state => (
+            <ComboboxTrigger>
+              <ComboboxIcon as={RiSystemAddLine} class="size-4" />
+              Fruits
+              <ComboboxState state={state} />
+              <ComboboxReset state={state} class="size-4" />
+            </ComboboxTrigger>
+          )}
+        </ComboboxControl>
+        <ComboboxDescription>Combobox Description</ComboboxDescription>
+        <ComboboxErrorMessage>Combobox Error Message</ComboboxErrorMessage>
+        <ComboboxContent >
+          <ComboboxInput />
+          <ComboboxListbox />
+        </ComboboxContent>
+      </ComboboxRoot>
+      <SwitchRoot class="space-y-2" validationState="invalid">
+        <div class="flex items-center gap-2">
+          <SwitchControl />
+          <SwitchLabel>Switch</SwitchLabel>
+        </div>
+        <SwitchDescription>Switch Description</SwitchDescription>
+        <SwitchErrorMessage>Switch Error Message</SwitchErrorMessage>
+      </SwitchRoot>
       <Button onClick={toggleTheme} size="icon">
         <ThemeIcon class="h-6 w-6" />
       </Button>
       <AlertRoot>
+        <RiMapRocketLine class="h-4 w-4" />
+        <AlertTitle>Alert Title</AlertTitle>
+        <AlertDescription>Alert Description</AlertDescription>
+      </AlertRoot>
+      <AlertRoot variant="destructive">
+        <RiSystemAlertLine class="h-4 w-4" />
         <AlertTitle>Alert Title</AlertTitle>
         <AlertDescription>Alert Description</AlertDescription>
       </AlertRoot>
@@ -58,13 +129,6 @@ export function Ui() {
         <Seperator orientation="vertical" />
         <div>Right Seperator</div>
       </div>
-      <SwitchRoot class="flex gap-2">
-        <SwitchLabel>Switch</SwitchLabel>
-        <SwitchDescription />
-        <SwitchErrorMessage />
-        <SwitchInput />
-        <SwitchControl />
-      </SwitchRoot>
       <DropdownMenuRoot>
         <DropdownMenuTrigger asChild>
           <As component={Button}>
@@ -151,10 +215,11 @@ export function Ui() {
           }
         </For>
       </div>
-      <CheckboxRoot>
-        <CheckboxInput />
-        <CheckboxControl />
-        <CheckboxLabel>Checkbox Label</CheckboxLabel>
+      <CheckboxRoot validationState="invalid" class="space-y-2">
+        <div class="flex items-center gap-2">
+          <CheckboxControl />
+          <CheckboxLabel>Checkbox Label</CheckboxLabel>
+        </div>
         <CheckboxDescription>Checkbox Description</CheckboxDescription>
         <CheckboxErrorMessage>Checkbox Error Message</CheckboxErrorMessage>
       </CheckboxRoot>
@@ -183,12 +248,37 @@ export function Ui() {
           <DialogOverlay />
           <DialogContent>
             <DialogHeader>
-              <DialogCloseButton />
               <DialogTitle>Header Title</DialogTitle>
               <DialogDescription>
                 Header Description
               </DialogDescription>
             </DialogHeader>
+            <DialogOverflow>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+              <div>I will overflow.</div>
+            </DialogOverflow>
             <DialogFooter>
               Footer
             </DialogFooter>
@@ -200,7 +290,11 @@ export function Ui() {
         <TableHeader>
           <TableRow>
             <TableHead>
-              <CheckboxRoot>
+              <CheckboxRoot
+                indeterminate={rowSelection.indeterminate()}
+                checked={rowSelection.multiple()}
+                onChange={(checked) => rowSelection.setAll(checked)}
+              >
                 <CheckboxControl />
               </CheckboxRoot>
             </TableHead>
@@ -210,7 +304,10 @@ export function Ui() {
         <TableBody>
           <TableRow>
             <TableCell>
-              <CheckboxRoot>
+              <CheckboxRoot
+                checked={rowSelection.rows[0]?.checked}
+                onChange={(checked) => rowSelection.set(rowSelection.rows[0]?.id || 0, checked)}
+              >
                 <CheckboxControl />
               </CheckboxRoot>
             </TableCell>
@@ -218,7 +315,10 @@ export function Ui() {
           </TableRow>
           <TableRow>
             <TableCell>
-              <CheckboxRoot>
+              <CheckboxRoot
+                checked={rowSelection.rows[1]?.checked}
+                onChange={(checked) => rowSelection.set(rowSelection.rows[1]?.id || 0, checked)}
+              >
                 <CheckboxControl />
               </CheckboxRoot>
             </TableCell>
@@ -227,7 +327,319 @@ export function Ui() {
         </TableBody>
       </TableRoot>
       <Button onClick={showToast}>Toast</Button>
-      <Skeleton class="h-32 rounded" />
-    </div>
+      <PaginationRoot
+        count={10}
+        itemComponent={props => (
+          <PaginationItem page={props.page}>
+            <PaginationLink>
+              {props.page}
+            </PaginationLink>
+          </PaginationItem>
+        )}
+        ellipsisComponent={() => (
+          <PaginationEllipsis />
+        )}
+      >
+        <PaginationPrevious />
+        <PaginationItems />
+        <PaginationNext />
+      </PaginationRoot>
+      <SelectHTML>
+        <option>Apple</option>
+        <option>Banana</option>
+      </SelectHTML>
+      <SelectRoot
+        defaultValue="Apple"
+        options={["Apple", "Banana", "Blueberry", "Grapes", "Pineapple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple",]}
+        placeholder="Select a fruit…"
+        itemComponent={props => (
+          <SelectItem item={props.item}>
+            {props.item.rawValue}
+          </SelectItem>
+        )}
+        class="space-y-2"
+        validationState="invalid"
+      >
+        <SelectLabel>Select Label</SelectLabel>
+        <SelectTrigger aria-label="Fruit">
+          <SelectValue<string>>
+            {state => state.selectedOption()}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectDescription>Select Description</SelectDescription>
+        <SelectErrorMessage>Select Error Message</SelectErrorMessage>
+        <SelectContent>
+          <SelectListbox />
+        </SelectContent>
+      </SelectRoot>
+      <MenubarRoot>
+        <MenubarMenu>
+          <MenubarTrigger>
+            Git
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem >
+              Commit <MenubarShortcut>⌘+K</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem>
+              Push <MenubarShortcut>⇧+⌘+K</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem disabled>
+              Update Project <MenubarShortcut>⌘+T</MenubarShortcut>
+            </MenubarItem>
+            <MenubarSub overlap gutter={4} shift={-8}>
+              <MenubarSubTrigger>
+                GitHub
+              </MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarItem>
+                  Create Pull Request…
+                </MenubarItem>
+                <MenubarItem>
+                  View Pull Requests
+                </MenubarItem>
+                <MenubarItem>Sync Fork</MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem>
+                  Open on GitHub
+                </MenubarItem>
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarCheckboxItem
+            >
+              Show Git Log
+            </MenubarCheckboxItem>
+            <MenubarCheckboxItem>
+              Show History
+            </MenubarCheckboxItem>
+            <MenubarSeparator />
+            <MenubarGroup>
+              <MenubarGroupLabel>
+                Branches
+              </MenubarGroupLabel>
+              <MenubarRadioGroup>
+                <MenubarRadioItem value="main">
+                  main
+                </MenubarRadioItem>
+                <MenubarRadioItem value="develop">
+                  develop
+                </MenubarRadioItem>
+              </MenubarRadioGroup>
+            </MenubarGroup>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>
+            File
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>
+              New Tab <MenubarShortcut>⌘+T</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem>
+              New Window <MenubarShortcut>⌘+N</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem disabled>
+              New Incognito Window
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarSub overlap gutter={4} shift={-8}>
+              <MenubarSubTrigger>
+                Share
+              </MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarItem>
+                  Email Link
+                </MenubarItem>
+                <MenubarItem>
+                  Messages
+                </MenubarItem>
+                <MenubarItem>
+                  Notes
+                </MenubarItem>
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarItem>
+              Print... <MenubarShortcut>⌘+P</MenubarShortcut>
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+        <MenubarMenu>
+          <MenubarTrigger>
+            Edit
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>
+              Undo <MenubarShortcut>⌘+Z</MenubarShortcut>
+            </MenubarItem>
+            <MenubarItem>
+              Redo <MenubarShortcut>⇧+⌘+Z</MenubarShortcut>
+            </MenubarItem>
+            <MenubarSeparator />
+            <MenubarSub overlap gutter={4} shift={-8}>
+              <MenubarSubTrigger>
+                Find
+              </MenubarSubTrigger>
+              <MenubarSubContent>
+                <MenubarItem>
+                  Search The Web
+                </MenubarItem>
+                <MenubarSeparator />
+                <MenubarItem>
+                  Find...
+                </MenubarItem>
+                <MenubarItem>
+                  Find Next
+                </MenubarItem>
+                <MenubarItem>
+                  Find Previous
+                </MenubarItem>
+              </MenubarSubContent>
+            </MenubarSub>
+            <MenubarSeparator />
+            <MenubarItem>
+              Cut
+            </MenubarItem>
+            <MenubarItem>
+              Copy
+            </MenubarItem>
+            <MenubarItem>
+              Paste
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </MenubarRoot>
+      <TabsRoot>
+        <TabsList>
+          <TabsTrigger value="account">Tabs 1 Trigger</TabsTrigger>
+          <TabsTrigger value="password">Tabs 2 Trigger</TabsTrigger>
+        </TabsList>
+        <TabsContent value="account">Tabs 1 Content</TabsContent>
+        <TabsContent value="password">Tabs 2 Content</TabsContent>
+      </TabsRoot>
+      <AvatarRoot fallbackDelay={600}>
+        <AvatarImage
+          class="image__img"
+          src="/vite.svg"
+          alt="Vite"
+        />
+        <AvatarFallback>VT</AvatarFallback>
+      </AvatarRoot>
+      <ProgressRoot value={progress()}>
+        <div class="flex justify-between">
+          <ProgressLabel>Loading</ProgressLabel>
+          <ProgressValueLabel>
+            {progress()}%
+          </ProgressValueLabel>
+        </div>
+        <ProgressTrack>
+          <ProgressFill />
+        </ProgressTrack>
+      </ProgressRoot>
+      <AlertDialogRoot>
+        <AlertDialogTrigger asChild>
+          <As component={Button} variant="outline">Show Alert Dialog</As>
+        </AlertDialogTrigger>
+        <AlertDialogModal>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction>Continue</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogModal>
+      </AlertDialogRoot>
+      <div>
+        <Toggle>
+          {state => (
+            <Show when={state.pressed()} fallback={<RiMediaVolumeUpLine class="h-6 w-6" />}>
+              <RiMediaVolumeDownLine class="h-6 w-6" />
+            </Show>
+          )}
+        </Toggle>
+      </div>
+      <SheetRoot>
+        <SheetTrigger asChild>
+          <As component={Button} variant="outline">Open Sheet</As>
+        </SheetTrigger>
+        <SheetContent class="p-4 sm:p-6">
+          <SheetHeader>
+            <SheetTitle>Edit profile</SheetTitle>
+            <SheetDescription>
+              Make changes to your profile here. Click save when you're done.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetOverflow>
+            <div class="grid gap-4 py-4">
+              <div class="grid grid-cols-4 items-center gap-4">
+                <Label for="name" class="text-right">
+                  Name
+                </Label>
+                <Input id="name" value="Pedro Duarte" class="col-span-3" />
+              </div>
+              <div class="grid grid-cols-4 items-center gap-4">
+                <Label for="username" class="text-right">
+                  Username
+                </Label>
+                <Input id="username" value="@peduarte" class="col-span-3" />
+              </div>
+            </div>
+          </SheetOverflow>
+          <SheetFooter>
+            <SheetCloseButton asChild>
+              <As component={Button} type="submit">Save changes</As>
+            </SheetCloseButton>
+          </SheetFooter>
+        </SheetContent>
+      </SheetRoot>
+      <HoverCardRoot>
+        <HoverCardTrigger asChild>
+          <As component={Button} variant="link">Hover Card</As>
+        </HoverCardTrigger>
+        <HoverCardContent class="w-80">
+          <HoverCardArrow />
+          Hover Card Content
+        </HoverCardContent>
+      </HoverCardRoot>
+      <TooltipRoot>
+        <TooltipTrigger>Tooltip</TooltipTrigger>
+        <TooltipContent>
+          <TooltipArrow />
+          <p>Add to library</p>
+        </TooltipContent>
+      </TooltipRoot>
+      <AccordionRoot collapsible>
+        <AccordionItem value="item-1">
+          <AccordionTrigger>Accordion</AccordionTrigger>
+          <AccordionContent>
+            Yes. It adheres to the WAI-ARIA design pattern.
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="item-2">
+          <AccordionTrigger>Is it accessible?</AccordionTrigger>
+          <AccordionContent>
+            Yes. It adheres to the WAI-ARIA design pattern.
+          </AccordionContent>
+        </AccordionItem>
+      </AccordionRoot>
+      <BreadcrumbsRoot>
+        <ol>
+          <li>
+            <BreadcrumbsLink as={A} href="/">
+              Home
+            </BreadcrumbsLink>
+            <BreadcrumbsSeparator />
+          </li>
+        </ol>
+      </BreadcrumbsRoot>
+      <Skeleton class="h-screen" />
+    </div >
   )
 }

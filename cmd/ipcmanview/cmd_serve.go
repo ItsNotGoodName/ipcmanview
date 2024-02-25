@@ -1,20 +1,20 @@
 package main
 
 import (
+	"strconv"
+
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
-	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuasmtp"
-	"github.com/ItsNotGoodName/ipcmanview/internal/http"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
+	"github.com/ItsNotGoodName/ipcmanview/internal/server"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
-	"github.com/ItsNotGoodName/ipcmanview/internal/webadmin"
-	webadminserver "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/server"
-	webadminview "github.com/ItsNotGoodName/ipcmanview/internal/webadmin/view"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
@@ -26,6 +26,7 @@ type CmdServe struct {
 	Shared
 	HTTPHost               string     `env:"HTTP_HOST" help:"HTTP host to listen on (e.g. \"127.0.0.1\")."`
 	HTTPPort               uint16     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
+	HTTPSPort              uint16     `env:"HTTPS_PORT" default:"8443" help:"HTTPS port to listen on."`
 	SMTPHost               string     `env:"SMTP_HOST" help:"SMTP host to listen on (e.g. \"127.0.0.1\")."`
 	SMTPPort               uint16     `env:"SMTP_PORT" default:"1025" help:"SMTP port to listen on."`
 	MQTTAddress            string     `env:"MQTT_ADDRESS" help:"MQTT server address (e.g. \"mqtt://192.168.1.20:1883\")."`
@@ -42,16 +43,30 @@ type CmdServe struct {
 }
 
 func (c *CmdServe) Run(ctx *Context) error {
+	if err := c.init(); err != nil {
+		return err
+	}
+
+	configProvider, err := config.NewProvider(c.useConfigFilePath())
+	if err != nil {
+		return err
+	}
+
 	// Supervisor
 	super := suture.New("root", suture.Spec{
 		EventHook: sutureext.EventHook(),
 	})
 
-	// Secret
-	_, err := c.useSecret()
+	// Certificate
+	cert, err := c.useCert()
 	if err != nil {
 		return err
 	}
+
+	// // Secret
+	// if _, err := c.useSecret(); err != nil {
+	// 	return err
+	// }
 
 	// Database
 	db, err := c.useDB(ctx)
@@ -61,11 +76,13 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// Pub sub
 	pub := pubsub.NewPub()
-	super.Add(pub)
 
-	// Bus
-	bus := core.NewBus().Register(pub)
+	// Event bus
+	bus := event.NewBus().Register(pub)
 	super.Add(bus)
+
+	// Event queue
+	super.Add(event.NewQueue(db, bus))
 
 	// MediaMTX
 	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))
@@ -81,17 +98,15 @@ func (c *CmdServe) Run(ctx *Context) error {
 	}
 
 	dahuaStore := dahua.
-		NewStore().
+		NewStore(db).
 		Register(bus)
 	defer dahuaStore.Close()
 	super.Add(dahuaStore)
 
-	dahuaScanLockStore := dahua.NewScanLockStore()
-
-	dahuaWorkerStore := dahua.
-		NewWorkerStore(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahuaScanLockStore, dahua.NewDefaultEventHooks(bus, db))).
-		Register(bus)
-	if err := dahuaWorkerStore.Bootstrap(ctx, db, dahuaStore); err != nil {
+	if err := dahua.
+		NewWorkerManager(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahua.NewScanLockStore(), dahua.NewDefaultEventHooks(bus, db))).
+		Register(bus, db).
+		Bootstrap(ctx, db, dahuaStore); err != nil {
 		return err
 	}
 
@@ -99,57 +114,57 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	super.Add(dahua.NewAferoService(db, dahuaAFS))
 
-	dahuaFileService := dahua.NewFileService(db, dahuaAFS, dahuaStore)
-	super.Add(dahuaFileService)
+	super.Add(dahua.NewFileService(db, dahuaAFS, dahuaStore))
 
 	// MQTT
 	if c.MQTTAddress != "" {
 		mqttConn := mqtt.NewConn(c.MQTTTopic, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
 		super.Add(mqttConn)
 
-		dahuaMQTTConn := dahuamqtt.NewConn(mqttConn, db, dahuaStore, c.MQTTHa, c.MQTTHaTopic)
-		dahuaMQTTConn.Register(bus)
-		super.Add(dahuaMQTTConn)
+		super.Add(dahuamqtt.NewConn(mqttConn, db, dahuaStore, c.MQTTHa, c.MQTTHaTopic).Register(bus))
 	}
 
 	// SMTP
-	dahuaSMTPApp := dahuasmtp.NewApp(db, dahuaAFS)
-	dahuaSMTPBackend := dahuasmtp.NewBackend(dahuaSMTPApp)
-	dahuaSMTPServer := dahuasmtp.NewServer(dahuaSMTPBackend, core.Address(c.SMTPHost, int(c.SMTPPort)))
-	super.Add(dahuaSMTPServer)
+	super.Add(dahuasmtp.
+		NewServer(dahuasmtp.
+			NewBackend(dahuasmtp.NewApp(db, bus, dahuaAFS)), core.Address(c.SMTPHost, int(c.SMTPPort))))
 
 	// HTTP router
-	httpRouter, err := webadminview.WithRenderer(http.NewRouter(), webadminview.Config{})
-	if err != nil {
-		return err
-	}
+	httpRouter := server.NewHTTPRouter(web.RouteAssets)
 
 	// HTTP middleware
-	httpRouter.Use(web.FS(api.Route, rpcserver.Route, webadmin.Route))
-	httpRouter.Use(auth.Session(db))
-
-	// WEB
-	webadminserver.
-		New(db, pub, bus, mediamtxConfig, dahuaStore, dahuaAFS, dahuaFileService, dahuaScanLockStore).
-		Register(httpRouter)
+	httpRouter.Use(web.FS(api.Route, rpcserver.Route))
+	httpRouter.Use(api.SessionMiddleware(db))
+	httpRouter.Use(api.ActorMiddleware())
 
 	// API
 	api.
-		NewServer(pub, db, dahuaStore, dahuaAFS).
-		Register(httpRouter)
+		NewServer(pub, db, bus, dahuaStore, dahuaAFS, mediamtxConfig.URL()).
+		RegisterSession(httpRouter.Group(api.Route)).
+		Register(httpRouter.Group(api.Route, api.RequireAuthMiddleware()))
 
 	// RPC
 	rpcLogger := rpcserver.Logger()
-	rpcAuthSession := rpcserver.AuthSession()
-	rpcserver.NewServer(httpRouter).
+	rpcserver.
+		NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
-		Register(rpc.NewAuthServer(&rpcserver.Auth{DB: db}, rpcLogger)).
-		Register(rpc.NewPageServer(&rpcserver.Page{DB: db}, rpcLogger, rpcAuthSession)).
-		Register(rpc.NewUserServer(&rpcserver.User{DB: db}, rpcLogger, rpcAuthSession))
+		Register(rpc.NewPublicServer(rpcserver.NewPublic(configProvider, db), rpcLogger)).
+		Register(rpc.NewUserServer(rpcserver.NewUser(configProvider, db, bus, dahuaStore, mediamtxConfig), rpcLogger, rpcserver.RequireAuthSession())).
+		Register(rpc.NewAdminServer(rpcserver.NewAdmin(configProvider, db, bus), rpcLogger, rpcserver.RequireAdminAuthSession()))
 
 	// HTTP server
-	httpServer := http.NewServer(httpRouter, core.Address(c.HTTPHost, int(c.HTTPPort)))
-	super.Add(httpServer)
+	super.Add(server.NewHTTPServer(
+		server.NewHTTPRedirect(strconv.Itoa(int(c.HTTPSPort))),
+		core.Address(c.HTTPHost, int(c.HTTPPort)),
+		nil,
+	))
+
+	// HTTPS server
+	super.Add(server.NewHTTPServer(
+		httpRouter,
+		core.Address(c.HTTPHost, int(c.HTTPSPort)),
+		&cert,
+	))
 
 	return super.Serve(ctx)
 }

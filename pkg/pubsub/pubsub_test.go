@@ -1,4 +1,3 @@
-// pubsub is a simple in-memory event pub sub.
 package pubsub
 
 import (
@@ -11,10 +10,7 @@ import (
 func noopEventHandler(ctx context.Context, event Event) error { return nil }
 
 func TestPub(t *testing.T) {
-	ctx := context.Background()
-
 	pub := NewPub()
-	go pub.Serve(ctx)
 
 	topics := []string{"Potato", "Thing"}
 	eventTopics := func() []Event {
@@ -25,24 +21,24 @@ func TestPub(t *testing.T) {
 		return eventTopics
 	}()
 
-	sub, err := pub.Subscribe(ctx, noopEventHandler, eventTopics...)
+	sub, err := pub.
+		Subscribe(eventTopics...).
+		Function(noopEventHandler)
 	if !assert.NoError(t, err) {
 		return
 	}
 	defer sub.Close()
 
-	s, err := pub.State(ctx)
+	s, err := pub.State()
 	if !assert.NoError(t, err) {
 		return
 	}
 	assert.Equal(t, 1, s.SubscriberCount)
 	assert.Equal(t, topics, s.Subscribers[0].Topics)
 
-	if !assert.NoError(t, sub.Close()) {
-		return
-	}
+	sub.Close()
 
-	s, err = pub.State(ctx)
+	s, err = pub.State()
 	if !assert.NoError(t, err) {
 		return
 	}

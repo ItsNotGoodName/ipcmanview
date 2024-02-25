@@ -45,11 +45,13 @@ func (c Client) Instance(ctx context.Context, channel int) (dahuarpc.Response[js
 	return res, err
 }
 
-func (c *Client) Seq(ctx context.Context, rb dahuarpc.RequestBuilder) dahuarpc.RequestBuilder {
+func (c Client) Seq(ctx context.Context, rb dahuarpc.RequestBuilder) dahuarpc.RequestBuilder {
 	c.client.Lock()
 	session := c.conn.Session(ctx)
 	if session != c.client.Session {
-		c.client = newClient(session)
+		c.client.Session = ""
+		c.client.ID = 0
+		c.client.Cache = dahuarpc.NewCache()
 	}
 
 	seq := nextSeq(session, c.client.ID)

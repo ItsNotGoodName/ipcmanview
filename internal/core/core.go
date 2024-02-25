@@ -4,19 +4,23 @@ import (
 	"database/sql"
 	"errors"
 	"io"
+	"net"
+	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 )
 
-func SplitAddress(address string) [2]string {
-	s := strings.SplitN(address, ":", 2)
-	if len(s) != 2 {
-		return [2]string{address}
+type contextKey string
+
+func SplitAddress(address string) (host string, port string) {
+	var err error
+	host, port, err = net.SplitHostPort(address)
+	if err != nil {
+		host = address
 	}
-	return [2]string{s[0], s[1]}
+	return
 }
 
 func Address(host string, port int) string {
@@ -32,22 +36,6 @@ func NewTimeRange(start, end time.Time) (models.TimeRange, error) {
 		Start: start,
 		End:   end,
 	}, nil
-}
-
-func StorageFromFilePath(filePath string) models.Storage {
-	if strings.HasPrefix(filePath, "sftp://") {
-		return models.StorageSFTP
-	}
-	if strings.HasPrefix(filePath, "ftp://") {
-		return models.StorageFTP
-	}
-	// if strings.HasPrefix(filePath, "nfs://") {
-	// 	return models.StorageNFS
-	// }
-	// if strings.HasPrefix(filePath, "smb://") {
-	// 	return models.StorageSMB
-	// }
-	return models.StorageLocal
 }
 
 type MultiReadCloser struct {
@@ -66,12 +54,45 @@ func (c MultiReadCloser) Close() error {
 	return multiErr
 }
 
-func Int64ToNullInt64(a int64) sql.NullInt64 {
-	if a == 0 {
-		return sql.NullInt64{}
-	}
+func NewNullInt64(i int64) sql.NullInt64 {
 	return sql.NullInt64{
-		Int64: a,
+		Int64: i,
 		Valid: true,
 	}
+}
+
+func Int64ToNullInt64(i int64) sql.NullInt64 {
+	if i == 0 {
+		return sql.NullInt64{}
+	}
+	return NewNullInt64(i)
+}
+
+func NewNullString(s string) sql.NullString {
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
+}
+
+func ErrorToNullString(err error) sql.NullString {
+	if err == nil {
+		return sql.NullString{}
+	}
+	return NewNullString(err.Error())
+}
+
+// https://stackoverflow.com/a/12518877
+func FileExists(filePath string) (bool, error) {
+	if _, err := os.Stat(filePath); err == nil {
+		return true, nil
+	} else if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	} else {
+		return false, err
+	}
+}
+
+func IgnoreError[T any](data T, err error) T {
+	return data
 }

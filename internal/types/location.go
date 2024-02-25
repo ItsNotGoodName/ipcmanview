@@ -6,10 +6,6 @@ import (
 	"time"
 )
 
-type Location struct {
-	*time.Location
-}
-
 func NewLocation(loc *time.Location) Location {
 	if loc == nil {
 		loc = time.Local
@@ -17,6 +13,11 @@ func NewLocation(loc *time.Location) Location {
 	return Location{
 		Location: loc,
 	}
+}
+
+// Location cannot be nil.
+type Location struct {
+	*time.Location
 }
 
 func (l *Location) MarshalJSON() ([]byte, error) {
@@ -30,6 +31,16 @@ func (l *Location) UnmarshalJSON(data []byte) error {
 	}
 	*l = Location{loc}
 	return nil
+}
+
+func (src Location) MarshalText() (text []byte, err error) {
+	return []byte(src.String()), nil
+}
+
+func (dst *Location) UnmarshalText(text []byte) error {
+	var err error
+	dst.Location, err = time.LoadLocation(string(text))
+	return err
 }
 
 func (dst *Location) Scan(src any) error {

@@ -18,7 +18,7 @@ function queryInt(str: string | undefined) {
 }
 
 export function Twirp() {
-  const data = createAsync(getHello)
+  const data = createAsync(() => getHello())
   const [loading, refreshData] = createLoading(() => revalidate(getHello.key).then(resetErrorBoundaries))
   const text = () => data() ? data()!.text + " " + Timestamp.toDate(Timestamp.create(data()!.currentTime)) : ""
 
