@@ -3,7 +3,6 @@ package dahua
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -17,16 +16,20 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const eventCodeEmptyMessage = "Code cannot be empty."
+const eventRuleCodeErrorMessage = "Code cannot be empty."
 
 func CreateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateEventRuleParams) (int64, error) {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return 0, err
 	}
+
+	// Mutate
 	arg.Code = strings.TrimSpace(arg.Code)
+
 	if arg.Code == "" {
-		return 0, core.NewFieldError("Code", eventCodeEmptyMessage)
+		return 0, core.NewFieldError("Code", eventRuleCodeErrorMessage)
 	}
+
 	return db.C().DahuaCreateEventRule(ctx, arg)
 }
 
@@ -35,17 +38,16 @@ func UpdateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaUpdateEven
 		return err
 	}
 
+	// Mutate
+	arg.Code = strings.TrimSpace(arg.Code)
+
 	model, err := db.C().DahuaGetEventRule(ctx, arg.ID)
 	if err != nil {
 		return err
 	}
 
-	arg.Code = strings.TrimSpace(arg.Code)
-	if model.Code == "" {
-		arg.Code = model.Code
-	}
-	if arg.Code == "" && model.Code != "" {
-		return core.NewFieldError("Code", eventCodeEmptyMessage)
+	if model.Code == "" && arg.Code != "" {
+		return core.NewFieldError("Code", eventRuleCodeErrorMessage)
 	}
 
 	return db.C().DahuaUpdateEventRule(ctx, arg)
@@ -61,7 +63,7 @@ func DeleteEventRule(ctx context.Context, db sqlite.DB, id int64) error {
 		return err
 	}
 	if model.Code == "" {
-		return fmt.Errorf("Cannot delete default event rule.")
+		return core.ErrForbidden
 	}
 
 	return db.C().DahuaDeleteEventRule(ctx, model.ID)
