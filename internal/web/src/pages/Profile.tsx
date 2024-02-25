@@ -51,7 +51,7 @@ export function Profile() {
   const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
   const revokeMySessionAction = useAction(actionRevokeMySession)
   const revokeMySession = () => revokeMySessionAction(revokeMySessionModal.value())
-    .then(revokeMySessionModal.close)
+    .then(revokeMySessionModal.setClose)
 
   return (
     <LayoutNormal class="max-w-4xl">
@@ -70,7 +70,7 @@ export function Profile() {
           </AlertDialogModal>
         </AlertDialogRoot>
 
-        <AlertDialogRoot open={revokeMySessionModal.open()} onOpenChange={revokeMySessionModal.close}>
+        <AlertDialogRoot open={revokeMySessionModal.open()} onOpenChange={revokeMySessionModal.setClose}>
           <AlertDialogModal>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure you wish to revoke this session?</AlertDialogTitle>

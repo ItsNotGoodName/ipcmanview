@@ -305,8 +305,8 @@ export function Ui() {
           <TableRow>
             <TableCell>
               <CheckboxRoot
-                checked={rowSelection.rows[0].checked}
-                onChange={(checked) => rowSelection.set(rowSelection.rows[0].id, checked)}
+                checked={rowSelection.rows[0]?.checked}
+                onChange={(checked) => rowSelection.set(rowSelection.rows[0]?.id || 0, checked)}
               >
                 <CheckboxControl />
               </CheckboxRoot>
@@ -316,8 +316,8 @@ export function Ui() {
           <TableRow>
             <TableCell>
               <CheckboxRoot
-                checked={rowSelection.rows[1].checked}
-                onChange={(checked) => rowSelection.set(rowSelection.rows[1].id, checked)}
+                checked={rowSelection.rows[1]?.checked}
+                onChange={(checked) => rowSelection.set(rowSelection.rows[1]?.id || 0, checked)}
               >
                 <CheckboxControl />
               </CheckboxRoot>

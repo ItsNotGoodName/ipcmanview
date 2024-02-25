@@ -69,7 +69,7 @@ export function AdminDevices() {
   const deleteModal = createModal({ name: "", id: BigInt(0) })
   const deleteSubmit = () =>
     deleteAction([deleteModal.value().id])
-      .then(deleteModal.close)
+      .then(deleteModal.setClose)
   // Multiple
   const [deleteMultipleModal, setDeleteMultipleModal] = createSignal(false)
   const deleteMultipleSubmit = () =>
@@ -99,7 +99,7 @@ export function AdminDevices() {
         </DialogPortal>
       </DialogRoot>
 
-      <DialogRoot open={updateFormModal.open()} onOpenChange={updateFormModal.close}>
+      <DialogRoot open={updateFormModal.open()} onOpenChange={updateFormModal.setClose}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -107,13 +107,13 @@ export function AdminDevices() {
               <DialogTitle>Update device</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <UpdateForm onSubmit={updateFormModal.close} id={updateFormModal.value()} />
+              <UpdateForm onSubmit={updateFormModal.setClose} id={updateFormModal.value()} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
       </DialogRoot>
 
-      <AlertDialogRoot open={deleteModal.open()} onOpenChange={deleteModal.close}>
+      <AlertDialogRoot open={deleteModal.open()} onOpenChange={deleteModal.setClose}>
         <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {deleteModal.value().name}?</AlertDialogTitle>
@@ -587,7 +587,7 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         <Button type="submit" disabled={form.submitting} class="sm:flex-1">
           <Show when={!form.submitting} fallback="Updating device">Update device</Show>
         </Button>
-        <Button type="button" onClick={formReset} variant="destructive" disabled={form.submitting}>Reset</Button>
+        <Button type="button" onClick={formReset} variant="secondary" disabled={form.submitting}>Reset</Button>
       </div>
       <FormMessage form={form} />
     </Form >

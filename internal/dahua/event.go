@@ -3,6 +3,8 @@ package dahua
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
@@ -14,6 +16,77 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/rs/zerolog/log"
 )
+
+const eventCodeEmptyMessage = "Code cannot be empty."
+
+func CreateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateEventRuleParams) (int64, error) {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return 0, err
+	}
+	arg.Code = strings.TrimSpace(arg.Code)
+	if arg.Code == "" {
+		return 0, core.NewFieldError("Code", eventCodeEmptyMessage)
+	}
+	return db.C().DahuaCreateEventRule(ctx, arg)
+}
+
+func UpdateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaUpdateEventRuleParams) error {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return err
+	}
+
+	model, err := db.C().DahuaGetEventRule(ctx, arg.ID)
+	if err != nil {
+		return err
+	}
+
+	arg.Code = strings.TrimSpace(arg.Code)
+	if model.Code == "" {
+		arg.Code = model.Code
+	}
+	if arg.Code == "" && model.Code != "" {
+		return core.NewFieldError("Code", eventCodeEmptyMessage)
+	}
+
+	return db.C().DahuaUpdateEventRule(ctx, arg)
+}
+
+func DeleteEventRule(ctx context.Context, db sqlite.DB, id int64) error {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return err
+	}
+
+	model, err := db.C().DahuaGetEventRule(ctx, id)
+	if err != nil {
+		return err
+	}
+	if model.Code == "" {
+		return fmt.Errorf("Cannot delete default event rule.")
+	}
+
+	return db.C().DahuaDeleteEventRule(ctx, model.ID)
+}
+
+func getEventRuleByEvent(ctx context.Context, db sqlite.DB, deviceID int64, code string) (repo.DahuaEventRule, error) {
+	res, err := db.C().DahuaGetEventRuleByEvent(ctx, repo.DahuaGetEventRuleByEventParams{
+		DeviceID: deviceID,
+		Code:     code,
+	})
+	if err != nil {
+		return repo.DahuaEventRule{}, err
+	}
+	if len(res) == 0 {
+		return repo.DahuaEventRule{}, nil
+	}
+
+	return repo.DahuaEventRule{
+		ID:         0,
+		Code:       code,
+		IgnoreDb:   res[0].IgnoreDb,
+		IgnoreLive: res[0].IgnoreLive,
+		IgnoreMqtt: res[0].IgnoreMqtt,
+	}, nil
+}
 
 func NewDefaultEventHooks(bus *event.Bus, db sqlite.DB) DefaultEventHooks {
 	return DefaultEventHooks{

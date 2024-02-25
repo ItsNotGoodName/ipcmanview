@@ -19,7 +19,6 @@ import { CheckboxControl, CheckboxErrorMessage, CheckboxLabel, CheckboxRoot } fr
 import { getListEventRules } from "./data";
 import { DialogContent, DialogHeader, DialogOverflow, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
 import { RiDeviceSaveLine, RiSystemAddLine, RiSystemDeleteBinLine, RiSystemRefreshLine } from "solid-icons/ri";
-import { Crud } from "~/components/Crud";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogModal, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
 import { createStore } from "solid-js/store";
 import { TextFieldInput, TextFieldRoot } from "~/ui/TextField";
@@ -113,7 +112,7 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
           <Button type="submit" disabled={updateForm.submitting} class="sm:flex-1">
             <Show when={!updateForm.submitting} fallback="Updating settings">Update settings</Show>
           </Button>
-          <Button type="button" onClick={formReset} variant="destructive" disabled={updateForm.submitting}>Reset</Button>
+          <Button type="button" onClick={formReset} variant="secondary" disabled={updateForm.submitting}>Reset</Button>
         </div>
         <FormMessage form={updateForm} />
       </Form>
@@ -160,7 +159,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
   const deleteSubmit = () => deleteAction([deleteModal.value().id])
     .then((value) => value === true &&
       batch(() => {
-        deleteModal.close()
+        deleteModal.setClose()
         resetRows()
       }))
   // Multiple
@@ -168,7 +167,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
   const deleteMultipleSubmit = () => deleteAction(rowSelection.selections())
     .then((value) => value === true &&
       batch(() => {
-        deleteMultipleModal.close()
+        deleteMultipleModal.setClose()
         resetRows()
       }))
 
@@ -188,7 +187,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
         </DialogPortal>
       </DialogRoot>
 
-      <AlertDialogRoot open={deleteModal.open()} onOpenChange={deleteModal.close}>
+      <AlertDialogRoot open={deleteModal.open()} onOpenChange={deleteModal.setClose}>
         <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {deleteModal.value().name}?</AlertDialogTitle>
@@ -202,7 +201,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
         </AlertDialogModal>
       </AlertDialogRoot>
 
-      <AlertDialogRoot open={deleteMultipleModal.open()} onOpenChange={deleteMultipleModal.close}>
+      <AlertDialogRoot open={deleteMultipleModal.open()} onOpenChange={deleteMultipleModal.setClose}>
         <AlertDialogModal>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure you wish to delete {deleteMultipleModal.value().length} event {Humanize.pluralize(deleteMultipleModal.value().length, "rule")}?</AlertDialogTitle>
@@ -228,11 +227,18 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
       <div class="flex justify-end gap-2">
         <Button
           size="icon"
-          variant="secondary"
-          title="Create"
+          variant="outline"
           onClick={() => setCreateFormModal(true)}
         >
           <RiSystemAddLine class="size-5" />
+        </Button>
+        <Button
+          size="icon"
+          title="Refresh"
+          variant="secondary"
+          onClick={refreshSubmit}
+        >
+          <RiSystemRefreshLine class="size-5" />
         </Button>
         <Button
           size="icon"
@@ -290,11 +296,6 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
                 MQTT
               </button>
             </TableHead>
-            <Crud.LastTableHead>
-              <Button size="icon" title="Refresh" variant="ghost" onClick={refreshSubmit}>
-                <RiSystemRefreshLine class="size-5" />
-              </Button>
-            </Crud.LastTableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -310,8 +311,8 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
                     <CheckboxControl />
                   </CheckboxRoot>
                 </TableCell>
-                <TableCell class="min-w-32 w-full py-0">
-                  <Show when={item.code} fallback="All" >
+                <Show when={item.code} fallback={<TableCell class="w-full">All</TableCell>} >
+                  <td class="min-w-32 w-full py-0 align-middle">
                     <TextFieldRoot
                       value={item.code}
                       onChange={(value) => setRows(
@@ -321,8 +322,8 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
                     >
                       <TextFieldInput />
                     </TextFieldRoot>
-                  </Show>
-                </TableCell>
+                  </td>
+                </Show>
                 <TableCell>
                   <CheckboxRoot
                     checked={!item.ignoreDb}
@@ -356,7 +357,6 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
                     <CheckboxControl />
                   </CheckboxRoot>
                 </TableCell>
-                <TableCell />
               </TableRow>
             }
           </For>
@@ -455,7 +455,7 @@ function CreateEventRuleForm(props: { onSubmit?: () => void }) {
             </Field>
           </div>
           <Button type="submit" disabled={form.submitting}>
-            <Show when={!form.submitting} fallback="Creating device">Create device</Show>
+            <Show when={!form.submitting} fallback="Creating event rule">Create event rule</Show>
           </Button>
           <FormMessage form={form} />
           <CheckboxRoot checked={addMore()} onChange={setAddMore} class="flex items-center gap-2">

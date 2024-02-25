@@ -136,7 +136,7 @@ export function isTableRowClick(t: MouseEvent) {
 type CreateValueModalReturn<T> = {
   open: Accessor<boolean>
   value: Accessor<T>
-  close: () => void
+  setClose: () => void
   setValue: Setter<T>
 }
 
@@ -146,7 +146,7 @@ export function createModal<T>(value: T): CreateValueModalReturn<T> {
   return {
     open: getOpen,
     value: getValue,
-    close: () => setOpen(false),
+    setClose: () => setOpen(false),
     setValue: (...args) => batch(() => {
       setOpen(true)
       // @ts-ignore
