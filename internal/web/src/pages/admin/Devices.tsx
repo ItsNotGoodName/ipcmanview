@@ -93,7 +93,7 @@ export function AdminDevices() {
               <DialogTitle>Create device</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <CreateForm onSubmit={() => setCreateFormModal(false)} />
+              <CreateForm onClose={() => setCreateFormModal(false)} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -107,7 +107,7 @@ export function AdminDevices() {
               <DialogTitle>Update device</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <UpdateForm onSubmit={updateFormModal.setClose} id={updateFormModal.value()} />
+              <UpdateForm onClose={updateFormModal.setClose} id={updateFormModal.value()} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -331,13 +331,22 @@ type CreateForm = {
   }
 }
 
-function CreateForm(props: { onSubmit?: () => void }) {
+function CreateForm(props: { onClose: () => void }) {
   const locations = createAsync(() => getListLocations())
 
   const [addMore, setAddMore] = createSignal(false)
 
-  const [form, { Field, Form }] = createForm<CreateForm>({});
-  const submit = async (data: CreateForm) => {
+  const [form, { Field, Form }] = createForm<CreateForm>({
+    initialValues: {
+      name: "",
+      url: "",
+      username: "",
+      password: "",
+      location: "",
+      features: { array: [] },
+    }
+  });
+  const submitForm = async (data: CreateForm) => {
     await useClient()
       .admin.createDevice({ ...data, features: data.features.array })
       .then(() => revalidate(getAdminDevicesPage.key))
@@ -352,7 +361,7 @@ function CreateForm(props: { onSubmit?: () => void }) {
             },
           })
         } else {
-          props.onSubmit && props.onSubmit()
+          props.onClose()
         }
       })
   }
@@ -360,7 +369,7 @@ function CreateForm(props: { onSubmit?: () => void }) {
   return (
     <ErrorBoundary fallback={(e) => <PageError error={e} />}>
       <Suspense fallback={<Skeleton class="h-32" />}>
-        <Form class="flex flex-col gap-4" onSubmit={submit}>
+        <Form class="flex flex-col gap-4" onSubmit={submitForm}>
           <Field name="name">
             {(field, props) => (
               <FieldRoot>
@@ -453,18 +462,15 @@ function CreateForm(props: { onSubmit?: () => void }) {
   )
 }
 
-function UpdateForm(props: { onSubmit: () => void | Promise<void>, id: bigint }) {
+function UpdateForm(props: { onClose: () => void, id: bigint }) {
   const device = createAsync(() => getDevice(props.id))
   const refetchDevice = () => revalidate(getDevice.keyFor(props.id))
-  const onSubmit = () =>
-    revalidate([getAdminDevicesPage.key, getDevice.keyFor(props.id)])
-      .then(props.onSubmit)
 
   return (
     <ErrorBoundary fallback={(e) => <PageError error={e} />}>
       <Suspense fallback={<Skeleton class="h-32" />}>
         <Show when={device()}>
-          <UpdateFormForm onSubmit={onSubmit} device={device()!} refetchDevice={refetchDevice} />
+          <UpdateFormForm onClose={props.onClose} device={device()!} refetchDevice={refetchDevice} />
         </Show>
       </Suspense>
     </ErrorBoundary>
@@ -483,7 +489,7 @@ type UpdateForm = {
   }
 }
 
-function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: GetDeviceResp, refetchDevice: () => Promise<void> }) {
+function UpdateFormForm(props: { onClose: () => void | Promise<void>, device: GetDeviceResp, refetchDevice: () => Promise<void> }) {
   const locations = createAsync(() => getListLocations())
 
   const formInitialValues = (): UpdateForm => ({
@@ -494,14 +500,16 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
   const [form, { Field, Form }] = createForm<UpdateForm>({
     initialValues: formInitialValues()
   });
-  const formReset = () => props.refetchDevice().then(() => reset(form, { initialValues: formInitialValues() }))
-  const submit = (data: UpdateForm) => useClient()
+  const resetForm = () => props.refetchDevice()
+    .then(() => reset(form, { initialValues: formInitialValues() }))
+  const submitForm = (data: UpdateForm) => useClient()
     .admin.updateDevice({ ...data, features: data.features.array })
-    .then(props.onSubmit)
+    .then(() => revalidate())
+    .then(props.onClose)
     .catch(throwAsFormError)
 
   return (
-    <Form class="flex flex-col gap-4" onSubmit={submit}>
+    <Form class="flex flex-col gap-4" onSubmit={submitForm}>
       <Field name="id" type="number">
         {(field, props) => <input {...props} type="hidden" value={field.value} />}
       </Field>
@@ -587,10 +595,10 @@ function UpdateFormForm(props: { onSubmit: () => void | Promise<void>, device: G
         <Button type="submit" disabled={form.submitting} class="sm:flex-1">
           <Show when={!form.submitting} fallback="Updating device">Update device</Show>
         </Button>
-        <Button type="button" onClick={formReset} variant="secondary" disabled={form.submitting}>Reset</Button>
+        <Button type="button" onClick={resetForm} variant="secondary" disabled={form.submitting}>Reset</Button>
       </div>
       <FormMessage form={form} />
-    </Form >
+    </Form>
   )
 }
 
@@ -634,7 +642,8 @@ function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: Fi
           <SelectListbox />
         </SelectContent>
       </SelectFieldRoot>
-    </Show >
+    </Show>
   )
 }
+
 export default AdminDevices

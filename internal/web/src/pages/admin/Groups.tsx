@@ -318,7 +318,12 @@ const actionCreateForm = action((data: CreateForm) => useClient()
 function CreateForm(props: { close: () => void }) {
   const [addMore, setAddMore] = createSignal(false)
 
-  const [form, { Field, Form }] = createForm<CreateForm>({ initialValues: { name: "", description: "" } });
+  const [form, { Field, Form }] = createForm<CreateForm>({
+    initialValues: {
+      name: "",
+      description: ""
+    }
+  });
   const action = useAction(actionCreateForm)
   const submit = async (data: CreateForm) => {
     await action(data)

@@ -25,7 +25,7 @@ var defaultConfig = Config{
 		Latitude:  0,
 		Longitude: 0,
 	},
-	EnableSignUp: false,
+	EnableSignUp: true,
 }
 
 func read(filePath string) (Config, error) {
@@ -48,8 +48,10 @@ func write(filePath string, cfg Config) error {
 	}
 
 	if err := toml.NewEncoder(file).Encode(cfg); err != nil {
+		file.Close()
 		return err
 	}
+	file.Close()
 
 	return os.Rename(filePathTmp, filePath)
 }
