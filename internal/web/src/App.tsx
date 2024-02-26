@@ -30,6 +30,7 @@ import loadFiles from "~/pages/Files.data";
 const Events = lazy(() => import("~/pages/Events"));
 import loadEvents from "~/pages/Events.data";
 const EventsLive = lazy(() => import("~/pages/EventsLive"));
+import loadEventsLive from "~/pages/EventsLive.data";
 const AdminSettings = lazy(() => import("./pages/admin/Settings"));
 import loadAdminSettings from "~/pages/admin/Settings.data";
 const AdminHome = lazy(() => import("./pages/admin/Home"));
@@ -78,7 +79,7 @@ function App() {
         <Route path="/emails" component={Emails} load={loadEmails} />
         <Route path="/emails/:id" component={EmailsID} load={loadEmailsID} />
         <Route path="/events" component={Events} load={loadEvents} />
-        <Route path="/events/live" component={EventsLive} />
+        <Route path="/events/live" component={EventsLive} load={loadEventsLive} />
         <Route path="/files" component={Files} load={loadFiles} />
         <Show when={isAdmin()} fallback={<Route path="/admin/*" component={NavigateHome} />}>
           <Route path="/admin" component={AdminHome} load={loadAdminHome} />

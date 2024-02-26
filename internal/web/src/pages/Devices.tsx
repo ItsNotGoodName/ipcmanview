@@ -21,10 +21,38 @@ import { RiMediaImageLine, RiSystemFilterLine, RiSystemLockLine, RiSystemRefresh
 import { Button } from "~/ui/Button"
 import { Crud } from "~/components/Crud"
 
+function LoadingTableCell(props: { colspan: number }) {
+  return (
+    <TableCell colspan={props.colspan} class="py-0">
+      <Skeleton class="h-8" />
+    </TableCell>
+  )
+}
+
+function ErrorTableCell(props: { colspan: number, error: Error }) {
+  return (
+    <TableCell colspan={props.colspan} class="py-0">
+      <div class="bg-destructive text-destructive-foreground rounded p-2">
+        {props.error.message}
+      </div>
+    </TableCell>
+  )
+}
+
+function DeviceNameCell(props: { device: { id: bigint, name: string } }) {
+  return (
+    <TableCell>
+      <A class={linkVariants()} href={`./${props.device.id}`}>{props.device.name}</A>
+    </TableCell>
+  )
+}
+
 export function Devices() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeBigInts(searchParams.device))
+
   const data = createAsync(() => getDevicesPage())
+
+  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeBigInts(searchParams.device))
   const filteredDevices = () => filterDeviceIDs().length > 0 ? data()?.devices.filter(v => !v.disabled && filterDeviceIDs().includes(v.id)) : data()?.devices.filter(v => !v.disabled)
 
   return (
@@ -67,7 +95,7 @@ export function Devices() {
                     <ComboboxTrigger>
                       <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
                       Device
-                      <ComboboxState state={state} optionToString={(option) => option.name} />
+                      <ComboboxState state={state} getOptionString={(option) => option.name} />
                       <ComboboxReset state={state} class="size-4" />
                     </ComboboxTrigger>
                   )}
@@ -237,9 +265,9 @@ function StreamGrid(props: { devices?: GetDevicesPageResp_Device[] }) {
                           {item =>
                             <Tabs.Content value={item.name}>
                               <iframe
-                                class="aspect-video h-full w-full"
                                 src={item.embedUrl}
                                 allow="fullscreen"
+                                class="aspect-video h-full w-full"
                               ></iframe>
                             </Tabs.Content>
                           }
@@ -532,32 +560,6 @@ function StorageTable(props: { devices?: GetDevicesPageResp_Device[] }) {
         </For>
       </TableBody>
     </TableRoot>
-  )
-}
-
-function LoadingTableCell(props: { colspan: number }) {
-  return (
-    <TableCell colspan={props.colspan} class="py-0">
-      <Skeleton class="h-8" />
-    </TableCell>
-  )
-}
-
-function ErrorTableCell(props: { colspan: number, error: Error }) {
-  return (
-    <TableCell colspan={props.colspan} class="py-0">
-      <div class="bg-destructive text-destructive-foreground rounded p-2">
-        {props.error.message}
-      </div>
-    </TableCell>
-  )
-}
-
-function DeviceNameCell(props: { device: { id: bigint, name: string } }) {
-  return (
-    <TableCell>
-      <A class={linkVariants()} href={`./${props.device.id}`}>{props.device.name}</A>
-    </TableCell>
   )
 }
 

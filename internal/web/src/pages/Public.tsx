@@ -74,8 +74,14 @@ export function SignIn() {
   const config = createAsync(() => getConfig())
   const session = createAsync(() => getSession())
 
-  const [form, { Field, Form }] = createForm<SignInForm>();
-  const submit = (input: SignInForm) =>
+  const [form, { Field, Form }] = createForm<SignInForm>({
+    initialValues: {
+      usernameOrEmail: "",
+      password: "",
+      rememberMe: false
+    }
+  });
+  const submitForm = (input: SignInForm) =>
     fetch("/v1/session", {
       credentials: "include",
       headers: [['Content-Type', 'application/json'], ['Accept', 'application/json']],
@@ -94,9 +100,17 @@ export function SignIn() {
   return (
     <Layout>
       <Header>{config()?.siteName}</Header>
+      <Show when={session()?.valid && session()?.disabled}>
+        <AlertRoot variant="destructive">
+          <AlertTitle>Account disabled</AlertTitle>
+          <AlertDescription>
+            Your account "{session()?.username}" is disabled.
+          </AlertDescription>
+        </AlertRoot>
+      </Show>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign in</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={submit}>
+        <Form class="flex flex-col gap-4" onSubmit={submitForm}>
           <Field name="usernameOrEmail" validate={required("Please enter your username or email.")}>
             {(field, props) => (
               <FieldRoot>
@@ -151,14 +165,6 @@ export function SignIn() {
           </Button>
           <FormMessage form={form} />
         </Form>
-        <Show when={session()?.valid && session()?.disabled}>
-          <AlertRoot variant="destructive">
-            <AlertTitle>Account disabled</AlertTitle>
-            <AlertDescription>
-              Your account "{session()?.username}" is disabled.
-            </AlertDescription>
-          </AlertRoot>
-        </Show>
       </CardRoot>
       <Show when={config()?.enableSignUp}>
         <Footer>
@@ -182,6 +188,12 @@ export function SignUp() {
   const config = createAsync(() => getConfig())
 
   const [form, { Field, Form }] = createForm<SignUpForm>({
+    initialValues: {
+      email: "",
+      username: "",
+      password: "",
+      confirmPassword: "",
+    },
     validate: (input) => {
       if (input.password != input.confirmPassword) {
         return {
@@ -191,7 +203,7 @@ export function SignUp() {
       return {}
     }
   });
-  const submit = (input: SignUpForm) => useClient()
+  const submitForm = (input: SignUpForm) => useClient()
     .public.signUp(input)
     .then()
     .catch(throwAsFormError)
@@ -202,7 +214,7 @@ export function SignUp() {
       <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign up</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={submit}>
+        <Form class="flex flex-col gap-4" onSubmit={submitForm}>
           <Field name="email" validate={required('Please enter your email.')}>
             {(field, props) => (
               <FieldRoot>
@@ -293,8 +305,12 @@ type ForgotForm = {
 export function Forgot() {
   const config = createAsync(() => getConfig())
 
-  const [form, { Field, Form }] = createForm<ForgotForm>({ initialValues: { email: "" } });
-  const submit = (input: ForgotForm) => useClient()
+  const [form, { Field, Form }] = createForm<ForgotForm>({
+    initialValues: {
+      email: "",
+    }
+  });
+  const submitForm = (input: ForgotForm) => useClient()
     .public.forgotPassword(input)
     .then(() => {
       toast.success("Sent password reset email.")
@@ -307,7 +323,7 @@ export function Forgot() {
       <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Forgot</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={submit}>
+        <Form class="flex flex-col gap-4" onSubmit={submitForm}>
           <Field name="email" validate={required('Please enter your email.')}>
             {(field, props) => (
               <FieldRoot>

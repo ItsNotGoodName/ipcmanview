@@ -54,7 +54,7 @@ export function AdminSettings() {
           </Show>
         </Suspense>
       </ErrorBoundary>
-    </LayoutNormal >
+    </LayoutNormal>
   )
 }
 
@@ -135,20 +135,18 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
   const resetRows = () => setRows(props.eventRules.map(v => ({ ...v, _dirty: false })))
   const rowsDirty = () => rows.filter(v => v._dirty)
 
-  const rowSelection = createRowSelection(
-    () => rows?.map(v => v.id) || [],
-    (index) => rows[index].code == "")
+  const rowSelection = createRowSelection(() => rows?.map(v => ({ id: v.id, disabled: v.code == "" })) || [])
 
-  const refreshSubmit = () => props.refetchEventRules().then(resetRows)
+  const submitRefresh = () => props.refetchEventRules().then(resetRows)
 
   // Create
   const [createFormModal, setCreateFormModal] = createSignal(false)
-  const onCreateSubmit = () => { resetRows(), setCreateFormModal(false) }
+  const submitCreate = () => { resetRows(), setCreateFormModal(false) }
 
   // Update
   const updateSubmission = useSubmission(actionUpdateEventRule)
   const updateAction = useAction(actionUpdateEventRule)
-  const updateSubmit = () => updateAction(rowsDirty())
+  const submitUpdate = () => updateAction(rowsDirty())
     .then((value) => value === true && resetRows())
 
   // Delete
@@ -181,7 +179,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
               <DialogTitle>Create event rule</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <CreateEventRuleForm onSubmit={onCreateSubmit} />
+              <CreateEventRuleForm onSubmit={submitCreate} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -236,7 +234,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
           size="icon"
           title="Refresh"
           variant="secondary"
-          onClick={refreshSubmit}
+          onClick={submitRefresh}
         >
           <RiSystemRefreshLine class="size-5" />
         </Button>
@@ -244,7 +242,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
           size="icon"
           title="Update"
           disabled={!rows.some(v => v._dirty) || updateSubmission.pending}
-          onClick={updateSubmit}
+          onClick={submitUpdate}
         >
           <RiDeviceSaveLine class="size-5" />
         </Button>
@@ -252,7 +250,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
           size="icon"
           variant="destructive"
           title="Delete"
-          disabled={rowSelection.selections().length == 0 || deleteSubmission.pending}
+          disabled={!rowSelection.multiple() || deleteSubmission.pending}
           onClick={() => deleteMultipleModal.setValue(rows.filter(v => rowSelection.selections().includes(v.id)))}
         >
           <RiSystemDeleteBinLine class="size-5" />
@@ -264,8 +262,8 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
           <TableRow>
             <TableHead>
               <CheckboxRoot
-                indeterminate={rowSelection.indeterminate()}
-                checked={rowSelection.multiple()}
+                indeterminate={rowSelection.multiple()}
+                checked={rowSelection.all()}
                 onChange={(checked) => rowSelection.setAll(checked)}
               >
                 <CheckboxControl />

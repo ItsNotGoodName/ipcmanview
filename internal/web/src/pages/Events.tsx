@@ -42,6 +42,7 @@ export function Events() {
   const listDevices = createAsync(() => getListDevices())
   const listEventFilters = createAsync(() => getListEventFilters())
 
+
   const toggleSort = createToggleSortField(() => data()?.sort)
   const pagination = createPagePagination(() => data()?.pageResult)
 
@@ -62,9 +63,9 @@ export function Events() {
           <div class="flex flex-col gap-2">
             <div class="flex flex-wrap gap-2">
               <Crud.PerPageSelect
-                class="hidden w-20 sm:block"
                 perPage={data()?.pageResult?.perPage}
                 onChange={(perPage) => setSearchParams({ perPage })}
+                class="hidden w-20 sm:block"
               />
               <ComboboxRoot<ListDevicesResp_Device>
                 multiple
@@ -86,7 +87,7 @@ export function Events() {
                     <ComboboxTrigger>
                       <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
                       Device
-                      <ComboboxState state={state} optionToString={(option) => option.name} />
+                      <ComboboxState state={state} getOptionString={(option) => option.name} />
                       <ComboboxReset state={state} class="size-4" />
                     </ComboboxTrigger>
                   )}
@@ -155,17 +156,17 @@ export function Events() {
 
             <div class="flex sm:hidden">
               <Crud.PerPageSelect
-                class="w-20"
                 perPage={data()?.pageResult?.perPage}
                 onChange={(perPage) => setSearchParams({ perPage })}
+                class="w-20"
               />
 
               <Crud.PageButtons
-                class="flex-1 justify-end"
                 previousPageDisabled={pagination.previousPageDisabled()}
                 previousPage={pagination.previousPage}
                 nextPageDisabled={pagination.nextPageDisabled()}
                 nextPage={pagination.nextPage}
+                class="flex-1 justify-end"
               />
             </div>
 
@@ -208,7 +209,7 @@ export function Events() {
                 <TableHead>Action</TableHead>
                 <TableHead>Index</TableHead>
                 <Crud.LastTableHead>
-                  <Button data-expanded={dataOpen()} size="icon" variant="ghost" onClick={() => setDataOpen(!dataOpen())} class="[&[data-expanded=true]>svg]:rotate-180" title="Data">
+                  <Button data-expanded={dataOpen()} onClick={() => setDataOpen(!dataOpen())} title="Data" size="icon" variant="ghost" class="[&[data-expanded=true]>svg]:rotate-180">
                     <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
                   </Button>
                 </Crud.LastTableHead>
@@ -241,7 +242,7 @@ export function Events() {
                           {v.index.toString()}
                         </TableCell>
                         <Crud.LastTableCell>
-                          <Button data-expanded={rowDataOpen()} size="icon" variant="ghost" onClick={() => setRowDataOpen(!rowDataOpen())} class="[&[data-expanded=true]>svg]:rotate-180" title="Data">
+                          <Button data-expanded={rowDataOpen()} onClick={() => setRowDataOpen(!rowDataOpen())} title="Data" size="icon" variant="ghost" class="[&[data-expanded=true]>svg]:rotate-180">
                             <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
                           </Button>
                         </Crud.LastTableCell>
@@ -267,7 +268,7 @@ export function JSONTableRow(props: { colspan?: number, expanded?: boolean, data
     <tr class="border-b">
       <td colspan={props.colspan} class="p-0">
         <div data-expanded={props.expanded} class="relative h-0 overflow-y-hidden data-[expanded=true]:h-full">
-          <Button size="icon" variant="ghost" onClick={() => writeClipboard(props.data)} class="absolute right-4 top-2" title="Copy">
+          <Button onClick={() => writeClipboard(props.data)} title="Copy" size="icon" variant="ghost" class="absolute right-4 top-2">
             <RiDocumentClipboardLine class="size-5" />
           </Button>
           <pre><code innerHTML={hljs.highlight(props.data, { language: "json" }).value} class="hljs" /></pre>

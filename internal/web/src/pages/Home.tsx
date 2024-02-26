@@ -17,10 +17,27 @@ import { linkVariants } from "~/ui/Link"
 import { useBus } from "~/providers/bus"
 import { getListLatestFiles } from "./data"
 
+function StatParent(props: ParentProps) {
+  return <div class="sm:max-w-48 flex-1">{props.children}</div>
+}
+
+function StatRoot(props: ParentProps) {
+  return <CardRoot class="flex gap-2 p-4">{props.children}</CardRoot>
+}
+
+function StatTitle(props: ParentProps) {
+  return <h2>{props.children}</h2>
+}
+
+function StatValue(props: ParentProps) {
+  return <p class="text-lg font-bold">{props.children}</p>
+}
+
 export function Home() {
+  const bus = useBus()
+
   const data = createAsync(() => getHomePage())
   const listLatestFiles = createAsync(() => getListLatestFiles())
-  const bus = useBus()
 
   bus.event.listen((e) => {
     if (e.action.startsWith("dahua-email:") || e.action.startsWith("dahua-device:"))
@@ -35,7 +52,7 @@ export function Home() {
           <div class="flex flex-col flex-wrap gap-4 sm:flex-row">
             <StatParent>
               <StatRoot>
-                <A class="flex items-center" href="/devices">
+                <A href="/devices" class="flex items-center">
                   <BiRegularCctv class="h-8 w-8" />
                 </A>
                 <div class="flex-1">
@@ -46,7 +63,7 @@ export function Home() {
             </StatParent>
             <StatParent>
               <StatRoot>
-                <A class="flex items-center" href="/emails">
+                <A href="/emails" class="flex items-center">
                   <RiBusinessMailLine class="h-8 w-8" />
                 </A>
                 <div class="flex-1">
@@ -57,7 +74,7 @@ export function Home() {
             </StatParent>
             <StatParent>
               <StatRoot>
-                <A class="flex items-center" href="/events">
+                <A href="/events" class="flex items-center">
                   <RiWeatherFlashlightLine class="h-8 w-8" />
                 </A>
                 <div class="flex-1">
@@ -68,7 +85,7 @@ export function Home() {
             </StatParent>
             <StatParent>
               <StatRoot>
-                <A class="flex items-center" href="/files">
+                <A href="/files" class="flex items-center">
                   <RiDocumentFile2Line class="h-8 w-8" />
                 </A>
                 <div class="flex-1">
@@ -206,22 +223,6 @@ export function Home() {
       </ErrorBoundary>
     </LayoutNormal >
   )
-}
-
-function StatParent(props: ParentProps) {
-  return <div class="sm:max-w-48 flex-1">{props.children}</div>
-}
-
-function StatRoot(props: ParentProps) {
-  return <CardRoot class="flex gap-2 p-4">{props.children}</CardRoot>
-}
-
-function StatTitle(props: ParentProps) {
-  return <h2>{props.children}</h2>
-}
-
-function StatValue(props: ParentProps) {
-  return <p class="text-lg font-bold">{props.children}</p>
 }
 
 export default Home

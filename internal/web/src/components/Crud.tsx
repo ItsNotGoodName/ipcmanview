@@ -3,7 +3,7 @@ import { ParentProps } from "solid-js"
 
 import { Order, PagePaginationResult, Sort } from "~/twirp/rpc"
 import { cn } from "~/lib/utils"
-import { SelectContent, SelectItem, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select"
+import { SelectContent, SelectItem, SelectListbox, SelectPortal, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select"
 import { TableCell, TableHead } from "~/ui/Table"
 import { Button, buttonVariants } from "~/ui/Button"
 import { DropdownMenuTrigger } from "~/ui/DropdownMenu"
@@ -56,9 +56,11 @@ function PerPageSelect(props: { class?: string, perPage?: number, onChange: (val
           {state => state.selectedOption()}
         </SelectValue>
       </SelectTrigger>
-      <SelectContent>
-        <SelectListbox />
-      </SelectContent>
+      <SelectPortal>
+        <SelectContent>
+          <SelectListbox />
+        </SelectContent>
+      </SelectPortal>
     </SelectRoot>
   )
 }

@@ -4,26 +4,12 @@
 // # URLs
 // https://kobalte.dev/docs/core/components/select
 // https://ui.shadcn.com/docs/components/select
-import { As, Select } from "@kobalte/core"
+import { Select } from "@kobalte/core"
 import { RiArrowsArrowDownSLine, RiSystemCheckLine } from "solid-icons/ri"
-import { ComponentProps, JSX, splitProps } from "solid-js"
+import { JSX, splitProps } from "solid-js"
 
 import { cn } from "~/lib/utils"
 import { labelVariants } from "./Label"
-
-export function SelectHTML(props: JSX.SelectHTMLAttributes<HTMLSelectElement>) {
-  const [_, rest] = splitProps(props, ["class"])
-  // TODO: the dropdown arrow should be opacity-50 but the text should be normal
-  return <select
-    class={cn(
-      "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-      props.class
-    )}
-    {...rest}
-  >
-    {props.children}
-  </select>
-}
 
 export const SelectRoot = Select.Root
 
@@ -45,7 +31,7 @@ export function SelectDescription(props: Select.SelectDescriptionProps) {
   />
 }
 
-export function SelectErrorMessage(props: ComponentProps<typeof Select.ErrorMessage>) {
+export function SelectErrorMessage(props: Select.SelectDescriptionProps) {
   const [_, rest] = splitProps(props, ["class"])
   return <Select.ErrorMessage
     class={cn("text-destructive text-sm font-medium")}
@@ -53,38 +39,39 @@ export function SelectErrorMessage(props: ComponentProps<typeof Select.ErrorMess
   />
 }
 
-export function SelectTrigger(props: ComponentProps<typeof Select.Trigger>) {
-  const [_, rest] = splitProps(props, ["class", "children"])
-  return <Select.Trigger
-    class={cn(
-      "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-      props.class
-    )}
-    {...rest}
-  >
-    {props.children}
-    <Select.Icon asChild>
-      <As component={RiArrowsArrowDownSLine} class="h-4 w-4 opacity-50" />
-    </Select.Icon>
-  </Select.Trigger>
-}
-
-export function SelectContent(props: Select.SelectContentProps) {
-  const [_, rest] = splitProps(props, ["class"])
-  return <Select.Portal>
-    <Select.Content
+export function SelectTrigger(props: Select.SelectTriggerProps & { hiddenSelectProps?: Select.SelectHiddenSelectProps }) {
+  const [_, rest] = splitProps(props, ["class", "children", "hiddenSelectProps"])
+  return <>
+    <Select.HiddenSelect {...props.hiddenSelectProps} />
+    <Select.Trigger
       class={cn(
-        "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 relative z-50 min-w-[8rem] max-w-[var(--kb-popper-content-available-width)] origin-[var(--kb-select-content-transform-origin)] overflow-hidden rounded-md border shadow-md",
+        "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
         props.class
       )}
       {...rest}
     >
-    </Select.Content>
-  </Select.Portal>
+      {props.children}
+      <Select.Icon as={RiArrowsArrowDownSLine} class="h-4 w-4 opacity-50" />
+    </Select.Trigger>
+  </>
 }
 
-export function SelectListbox() {
-  return <Select.Listbox class="max-h-96 overflow-y-auto p-1" />
+export const SelectPortal = Select.Portal
+
+export function SelectContent(props: Select.SelectContentProps) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Select.Content
+    class={cn(
+      "bg-popover text-popover-foreground ui-expanded:animate-in ui-not-expanded:animate-out ui-not-expanded:fade-out-0 ui-expanded:fade-in-0 ui-not-expanded:zoom-out-95 ui-expanded:zoom-in-95 relative z-50 min-w-[8rem] max-w-[var(--kb-popper-content-available-width)] origin-[var(--kb-select-content-transform-origin)] overflow-hidden rounded-md border shadow-md",
+      props.class
+    )}
+    {...rest}
+  />
+}
+
+export function SelectListbox<Option, OptGroup = never>(props: Select.SelectListboxProps<Option, OptGroup>) {
+  const [_, rest] = splitProps(props, ["class"])
+  return <Select.Listbox class={cn("max-h-96 overflow-y-auto p-1", props.class)} {...rest} />
 }
 
 export function SelectItem(props: Omit<Select.SelectItemProps, "class">) {

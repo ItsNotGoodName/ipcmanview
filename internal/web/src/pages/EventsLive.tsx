@@ -56,7 +56,7 @@ export function EventsLive() {
                 <TableHead>Action</TableHead>
                 <TableHead>Index</TableHead>
                 <Crud.LastTableHead>
-                  <Button data-expanded={dataOpen()} size="icon" variant="ghost" onClick={() => setDataOpen(!dataOpen())} class="[&[data-expanded=true]>svg]:rotate-180" title="Data">
+                  <Button data-expanded={dataOpen()} onClick={() => setDataOpen(!dataOpen())} title="Data" size="icon" variant="ghost" class="[&[data-expanded=true]>svg]:rotate-180">
                     <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
                   </Button>
                 </Crud.LastTableHead>
@@ -98,7 +98,7 @@ export function EventsLive() {
                           {v.index.toString()}
                         </TableCell>
                         <Crud.LastTableCell>
-                          <Button data-expanded={rowDataOpen()} size="icon" variant="ghost" onClick={() => setRowDataOpen(!rowDataOpen())} class="[&[data-expanded=true]>svg]:rotate-180" title="Data">
+                          <Button data-expanded={rowDataOpen()} onClick={() => setRowDataOpen(!rowDataOpen())} title="Data" size="icon" variant="ghost" class="[&[data-expanded=true]>svg]:rotate-180">
                             <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
                           </Button>
                         </Crud.LastTableCell>

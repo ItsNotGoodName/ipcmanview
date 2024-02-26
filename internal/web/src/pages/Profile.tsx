@@ -44,13 +44,13 @@ export function Profile() {
   const [revokeAllMySessionsModal, setRevokeAllMySessionsModal] = createSignal(false)
   const revokeAllMySessionsSubmission = useSubmission(actionRevokeAllMySessions)
   const revokeAllMySessionsAction = useAction(actionRevokeAllMySessions)
-  const revokeAllMySessions = () => revokeAllMySessionsAction()
+  const submitRevokeAllMySessions = () => revokeAllMySessionsAction()
     .then(() => setRevokeAllMySessionsModal(false))
 
   const revokeMySessionModal = createModal(BigInt(0))
   const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
   const revokeMySessionAction = useAction(actionRevokeMySession)
-  const revokeMySession = () => revokeMySessionAction(revokeMySessionModal.value())
+  const submitRevokeMySession = () => revokeMySessionAction(revokeMySessionModal.value())
     .then(revokeMySessionModal.setClose)
 
   return (
@@ -63,7 +63,7 @@ export function Profile() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction disabled={revokeAllMySessionsSubmission.pending} onClick={revokeAllMySessions} variant="destructive">
+              <AlertDialogAction disabled={revokeAllMySessionsSubmission.pending} onClick={submitRevokeAllMySessions} variant="destructive">
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -77,7 +77,7 @@ export function Profile() {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction disabled={revokeMySessionSubmission.pending} onClick={revokeMySession} variant="destructive">
+              <AlertDialogAction disabled={revokeMySessionSubmission.pending} onClick={submitRevokeMySession} variant="destructive">
                 Delete
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -127,7 +127,7 @@ export function Profile() {
 
         <Shared.Title>Sessions</Shared.Title>
         <div class="flex">
-          <Button variant="destructive" onClick={() => setRevokeAllMySessionsModal(true)}>
+          <Button onClick={() => setRevokeAllMySessionsModal(true)} variant="destructive">
             Revoke all sessions
           </Button>
         </div>
@@ -150,8 +150,8 @@ export function Profile() {
                 {(session) => (
                   <TableRow>
                     <TableCell>
-                      <Show when={session.active} fallback={<div class="mx-auto h-4 w-4 rounded-full bg-gray-500" title="Inactive" />}>
-                        <div class="mx-auto h-4 w-4 rounded-full bg-green-500" title="Active" />
+                      <Show when={session.active} fallback={<div title="Inactive" class="mx-auto h-4 w-4 rounded-full bg-gray-500" />}>
+                        <div title="Active" class="mx-auto h-4 w-4 rounded-full bg-green-500" />
                       </Show>
                     </TableCell>
                     <TableCell>{session.userAgent}</TableCell>
@@ -161,7 +161,7 @@ export function Profile() {
                     <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
                     <TableCell class="py-0">
                       <Show when={!session.current} fallback={<Badge>Current</Badge>}>
-                        <Button variant="destructive" size="sm" onClick={() => revokeMySessionModal.setValue(session.id)}>
+                        <Button onClick={() => revokeMySessionModal.setValue(session.id)} variant="destructive" size="sm">
                           Revoke
                         </Button>
                       </Show>
@@ -207,7 +207,11 @@ type ChangeUsernameForm = {
 }
 
 function ChangeUsernameForm() {
-  const [form, { Field, Form }] = createForm<ChangeUsernameForm>({ initialValues: { newUsername: "" } });
+  const [form, { Field, Form }] = createForm<ChangeUsernameForm>({
+    initialValues: {
+      newUsername: ""
+    }
+  });
   const submit = (input: ChangeUsernameForm) => useClient()
     .user.updateMyUsername(input)
     .then(() => revalidate([getProfilePage.key, getSession.key]))
@@ -216,7 +220,7 @@ function ChangeUsernameForm() {
 
   return (
     <Center>
-      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={submit}>
+      <Form onSubmit={submit} class="flex w-full max-w-sm flex-col gap-4">
         <Field name="newUsername" validate={required("Please enter a new username.")}>
           {(field, props) => (
             <FieldRoot>
@@ -268,7 +272,7 @@ function ChangePasswordForm() {
 
   return (
     <Center>
-      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={submit}>
+      <Form onSubmit={submit} class="flex w-full max-w-sm flex-col gap-4">
         <input class="hidden" type="text" name="username" autocomplete="username" />
         <Field name="oldPassword" validate={required("Please enter your old password.")}>
           {(field, props) => (

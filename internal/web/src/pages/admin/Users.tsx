@@ -53,10 +53,7 @@ export function AdminUsers() {
     },
   }))
 
-  const rowSelection = createRowSelection(
-    () => data()?.items.map(v => v.id) || [],
-    (index) => data()?.items[index].id == session()?.user_id)
-
+  const rowSelection = createRowSelection(() => data()?.items.map(v => ({ id: v.id, disabled: v.id == BigInt(session()?.user_id || 0) })) || [])
   // List
   const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = createToggleSortField(() => data()?.sort)
@@ -198,8 +195,8 @@ export function AdminUsers() {
               <TableRow>
                 <TableHead>
                   <CheckboxRoot
-                    checked={rowSelection.multiple()}
-                    indeterminate={rowSelection.indeterminate()}
+                    checked={rowSelection.all()}
+                    indeterminate={rowSelection.multiple()}
                     onChange={(v) => rowSelection.setAll(v)}
                   >
                     <CheckboxControl />

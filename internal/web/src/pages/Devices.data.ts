@@ -3,6 +3,6 @@ import { useClient } from "~/providers/client";
 
 export const getDevicesPage = cache(() => useClient().user.getDevicesPage({}).then((req) => req.response), "getDevicesPage")
 
-export default function({ params }: any) {
+export default function() {
   void getDevicesPage()
 }

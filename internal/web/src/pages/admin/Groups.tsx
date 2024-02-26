@@ -46,7 +46,7 @@ export function AdminGroups() {
       order: parseOrder(searchParams.order)
     },
   }))
-  const rowSelection = createRowSelection(() => data()?.items.map(v => v.id) || [])
+  const rowSelection = createRowSelection(() => data()?.items.map(v => ({ id: v.id })) || [])
 
   // List
   const pagination = createPagePagination(() => data()?.pageResult)
@@ -167,8 +167,8 @@ export function AdminGroups() {
               <TableRow>
                 <TableHead>
                   <CheckboxRoot
-                    checked={rowSelection.multiple()}
-                    indeterminate={rowSelection.indeterminate()}
+                    checked={rowSelection.all()}
+                    indeterminate={rowSelection.multiple()}
                     onChange={(v) => rowSelection.setAll(v)}
                   >
                     <CheckboxControl />

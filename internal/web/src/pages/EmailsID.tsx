@@ -2,7 +2,7 @@ import Humanize from "humanize-plus"
 import { A, createAsync, useNavigate, useSearchParams } from "@solidjs/router"
 import { Crud } from "~/components/Crud"
 import { Shared } from "~/components/Shared"
-import { encodeQuery, formatDate, parseDate } from "~/lib/utils"
+import { decodeBigInts, encodeQuery, formatDate, parseDate } from "~/lib/utils"
 import { buttonVariants } from "~/ui/Button"
 import { CardRoot } from "~/ui/Card"
 import { RiArrowsArrowLeftLine, RiDeviceHardDrive2Line, RiMediaImageLine, RiSystemDownloadLine } from "solid-icons/ri"
@@ -22,16 +22,17 @@ import { withEmailPageQuery } from "./Emails.data"
 export function EmailsID(props: any) {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+
   const data = createAsync(() => getEmailsIDPage({
     id: BigInt(props.params.id ?? 0),
-    filterAlarmEvents: searchParams.alarmEvents ? JSON.parse(searchParams.alarmEvents) : [],
-    filterDeviceIDs: searchParams.device ? searchParams.device.split('.').map((v: any) => BigInt(v)) : [],
+    filterAlarmEvents: searchParams.alarmEvent ? JSON.parse(searchParams.alarmEvent) : [],
+    filterDeviceIDs: decodeBigInts(searchParams.device),
   }))
+
   const query = () => {
     const q = new URLSearchParams()
 
-    if (searchParams.tab)
-      q.set('tab', searchParams.tab);
+    if (searchParams.tab) q.set('tab', searchParams.tab);
 
     return encodeQuery(withEmailPageQuery(q, searchParams))
   }
@@ -39,8 +40,7 @@ export function EmailsID(props: any) {
     const q = new URLSearchParams()
 
     const page = Math.ceil(Number(data()?.emailSeen) / 10)
-    if (page != 1)
-      q.set('page', page.toString());
+    if (page != 1) q.set('page', page.toString());
 
     return encodeQuery(withEmailPageQuery(q, searchParams))
   }

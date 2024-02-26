@@ -21,8 +21,10 @@ import { ListDevicesResp_Device } from "~/twirp/rpc";
 export function Emails() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+
   const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeBigInts(searchParams.device))
   const filterAlarmEvents: Accessor<string[]> = createMemo(() => searchParams.alarmEvent ? JSON.parse(searchParams.alarmEvent) : [])
+
   const data = createAsync(() => getEmailsPage({
     page: {
       page: Number(searchParams.page) || 0,
@@ -37,6 +39,7 @@ export function Emails() {
   }))
   const listDevices = createAsync(() => getListDevices())
   const listEmailAlarmEvents = createAsync(() => getListEmailAlarmEvents())
+
   const toggleSort = createToggleSortField(() => data()?.sort)
   const pagination = createPagePagination(() => data()?.pageResult)
   const query = (init?: string) => encodeQuery(withEmailPageQuery(new URLSearchParams(init), searchParams))
@@ -55,9 +58,9 @@ export function Emails() {
           <div class="flex flex-col gap-2">
             <div class="flex flex-wrap gap-2">
               <Crud.PerPageSelect
-                class="hidden w-20 sm:block"
                 perPage={data()?.pageResult?.perPage}
                 onChange={(perPage) => setSearchParams({ perPage })}
+                class="hidden w-20 sm:block"
               />
               <ComboboxRoot<ListDevicesResp_Device>
                 multiple
@@ -79,7 +82,7 @@ export function Emails() {
                     <ComboboxTrigger>
                       <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
                       Device
-                      <ComboboxState state={state} optionToString={(option) => option.name} />
+                      <ComboboxState state={state} getOptionString={(option) => option.name} />
                       <ComboboxReset state={state} class="size-4" />
                     </ComboboxTrigger>
                   )}
@@ -120,17 +123,17 @@ export function Emails() {
 
             <div class="flex sm:hidden">
               <Crud.PerPageSelect
-                class="w-20"
                 perPage={data()?.pageResult?.perPage}
                 onChange={(perPage) => setSearchParams({ perPage })}
+                class="w-20"
               />
 
               <Crud.PageButtons
-                class="flex-1 justify-end"
                 previousPageDisabled={pagination.previousPageDisabled()}
                 previousPage={pagination.previousPage}
                 nextPageDisabled={pagination.nextPageDisabled()}
                 nextPage={pagination.nextPage}
+                class="flex-1 justify-end"
               />
             </div>
 

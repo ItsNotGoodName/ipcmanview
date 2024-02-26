@@ -19,7 +19,7 @@ import { ToastCloseButton, ToastContent, ToastDescription, ToastProgressFill, To
 import { Skeleton } from "~/ui/Skeleton";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { PaginationEllipsis, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
-import { SelectContent, SelectDescription, SelectErrorMessage, SelectHTML, SelectItem, SelectLabel, SelectListbox, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
+import { SelectContent, SelectDescription, SelectErrorMessage, SelectItem, SelectLabel, SelectListbox, SelectPortal, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { MenubarCheckboxItem, MenubarContent, MenubarGroup, MenubarGroupLabel, MenubarItem, MenubarMenu, MenubarRadioGroup, MenubarRadioItem, MenubarRoot, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "~/ui/Menubar";
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs";
 import { RiMapRocketLine, RiMediaVolumeDownLine, RiMediaVolumeUpLine, RiSystemAddLine, RiSystemAlertLine } from "solid-icons/ri";
@@ -51,7 +51,7 @@ export function Ui() {
     toast.show("Hello World")
   }
 
-  const rowSelection = createRowSelection(() => [1, 2])
+  const rowSelection = createRowSelection(() => [{ id: 1 }, { id: 2 }])
 
   const [progress, setProgress] = createSignal(0)
   const timer = setInterval(() => setProgress((prev) => (prev + 10) % 100), 200)
@@ -291,8 +291,8 @@ export function Ui() {
           <TableRow>
             <TableHead>
               <CheckboxRoot
-                indeterminate={rowSelection.indeterminate()}
-                checked={rowSelection.multiple()}
+                indeterminate={rowSelection.multiple()}
+                checked={rowSelection.all()}
                 onChange={(checked) => rowSelection.setAll(checked)}
               >
                 <CheckboxControl />
@@ -344,10 +344,6 @@ export function Ui() {
         <PaginationItems />
         <PaginationNext />
       </PaginationRoot>
-      <SelectHTML>
-        <option>Apple</option>
-        <option>Banana</option>
-      </SelectHTML>
       <SelectRoot
         defaultValue="Apple"
         options={["Apple", "Banana", "Blueberry", "Grapes", "Pineapple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple",]}
@@ -368,9 +364,11 @@ export function Ui() {
         </SelectTrigger>
         <SelectDescription>Select Description</SelectDescription>
         <SelectErrorMessage>Select Error Message</SelectErrorMessage>
-        <SelectContent>
-          <SelectListbox />
-        </SelectContent>
+        <SelectPortal>
+          <SelectContent>
+            <SelectListbox />
+          </SelectContent>
+        </SelectPortal>
       </SelectRoot>
       <MenubarRoot>
         <MenubarMenu>

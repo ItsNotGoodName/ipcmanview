@@ -67,52 +67,47 @@ export function encodeOrder(o: Order): string {
 
 export type CreateRowSelectionReturn<T> = {
   rows: Array<{ id: T, checked: boolean } | undefined>
-  indeterminate: Accessor<boolean>
   multiple: Accessor<boolean>
+  all: Accessor<boolean>
   selections: Accessor<Array<T>>
   set: (id: T, value: boolean) => void
   setAll: (value: boolean) => void
 }
 
-export function createRowSelection<T>(ids: Accessor<Array<T>>, disabled = (_index: number) => false): CreateRowSelectionReturn<T> {
-  const calculateDisabledCount = () => {
-    const range = ids()
-    let i = 0
-    for (let index = 0; index < range.length; index++)
-      if (disabled(index)) i++
-    return i
-  }
-
-  const [disabledCount, setDisabledCount] = createSignal(calculateDisabledCount())
-  const [rows, setRows] = createStore<Array<{ id: T, checked: boolean }>>(ids().map(v => ({ id: v, checked: false })))
-  createEffect(() => batch(() => {
-    setDisabledCount(calculateDisabledCount())
-    setRows((prev) => ids().map(v => ({ id: v, checked: prev.find(p => p.id == v)?.checked || false })))
-  }))
-
-  const selections = () => rows.filter(v => v.checked == true).map(v => v.id)
+export function createRowSelection<T>(ids: Accessor<Array<{ id: T, disabled?: boolean }>>): CreateRowSelectionReturn<T> {
+  const [rows, setRows] = createStore<Array<{ id: T, checked: boolean, disabled: boolean }>>(ids().map(v => ({ id: v.id, checked: false, disabled: v.disabled || false })))
+  createEffect(() =>
+    setRows((prev) => ids().map(v => ({ id: v.id, disabled: v.disabled || false, checked: prev.find(p => p.id == v.id)?.checked || false })))
+  )
 
   return {
     rows,
-    indeterminate: () => {
-      const length = selections().length
-      return length != 0 && length != (rows.length - disabledCount())
-    },
     multiple: () => {
-      const length = selections().length
-      return length != 0 && length == (rows.length - disabledCount())
+      for (let index = 0; index < rows.length; index++) {
+        if (rows[index].checked) return true
+      }
+      return false
     },
-    selections,
+    all: () => {
+      let disabled = 0
+      for (let index = 0; index < rows.length; index++) {
+        if (rows[index].disabled) disabled++
+        else if (!rows[index].checked) return false
+      }
+      if (rows.length - disabled == 0) return false
+      return true
+    },
+    selections: () => rows.filter(v => v.checked == true).map(v => v.id),
     set: (id, value) => {
       setRows(
-        (todo, index) => todo.id === id && !disabled(index),
+        (v) => v.id === id && !v.disabled,
         "checked",
         value,
       );
     },
     setAll: (value) => {
       setRows(
-        (_, index) => !disabled(index),
+        (v) => !v.disabled,
         "checked",
         value,
       );
@@ -219,4 +214,8 @@ export function useHiddenScrollbar(): void {
   if (html.style.getPropertyValue("scrollbar-width") == "none") return
   html.style.setProperty("scrollbar-width", "none")
   onCleanup(() => html.style.removeProperty("scrollbar-width"))
+}
+
+export function validationState(error?: string): "invalid" | "valid" {
+  return error ? "invalid" : "valid"
 }

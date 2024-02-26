@@ -3,7 +3,7 @@ import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDesc
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot } from "~/ui/DropdownMenu";
 import { AdminDevicesPageSearchParams, getAdminDevicesPage } from "./Devices.data";
 import { ErrorBoundary, For, Show, Suspense, createSignal } from "solid-js";
-import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, createModal, formatDate, isTableRowClick, parseDate, throwAsFormError, } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, createModal, formatDate, isTableRowClick, parseDate, throwAsFormError, validationState, } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { useClient } from "~/providers/client";
@@ -17,23 +17,24 @@ import { Crud } from "~/components/Crud";
 import { RiSystemLockLine } from "solid-icons/ri";
 import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
 import { Button } from "~/ui/Button";
-import { FieldLabel, FieldMessage, FieldRoot, FormMessage, SelectFieldRoot, fieldControlProps } from "~/ui/Form";
+import { FieldLabel, FieldMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form";
 import { FieldElementProps, FieldStore, FormStore, createForm, required, reset, setValue } from "@modular-forms/solid";
 import { Input } from "~/ui/Input";
-import { SelectContent, SelectHTML, SelectItem, SelectLabel, SelectListbox, SelectTrigger, SelectValue } from "~/ui/Select";
+import { SelectContent, SelectErrorMessage, SelectItem, SelectLabel, SelectListbox, SelectPortal, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { getDevice, getListDeviceFeatures, getListLocations } from "./data";
 import { Shared } from "~/components/Shared";
 import { Badge } from "~/ui/Badge";
 import { BreadcrumbsItem, BreadcrumbsRoot } from "~/ui/Breadcrumbs";
+import { createVirtualizer } from "@tanstack/solid-virtual";
 
 const actionDeleteDevice = action((ids: bigint[]) => useClient()
   .admin.deleteDevice({ ids })
-  .then(() => revalidate(getAdminDevicesPage.key))
+  .then()
   .catch(catchAsToast))
 
 const actionSetDisable = action((input: SetDeviceDisableReq) => useClient()
   .admin.setDeviceDisable(input)
-  .then(() => revalidate(getAdminDevicesPage.key))
+  .then()
   .catch(catchAsToast))
 
 export function AdminDevices() {
@@ -50,7 +51,7 @@ export function AdminDevices() {
       order: parseOrder(searchParams.order)
     },
   }))
-  const rowSelection = createRowSelection(() => data()?.items.map(v => v.id) || [])
+  const rowSelection = createRowSelection(() => data()?.items.map((v) => ({ id: v.id })) || [])
 
   // List
   const pagination = createPagePagination(() => data()?.pageResult)
@@ -67,20 +68,20 @@ export function AdminDevices() {
   const deleteAction = useAction(actionDeleteDevice)
   // Single
   const deleteModal = createModal({ name: "", id: BigInt(0) })
-  const deleteSubmit = () =>
+  const submitDelete = () =>
     deleteAction([deleteModal.value().id])
       .then(deleteModal.setClose)
   // Multiple
   const [deleteMultipleModal, setDeleteMultipleModal] = createSignal(false)
-  const deleteMultipleSubmit = () =>
+  const submitDeleteMultiple = () =>
     deleteAction(rowSelection.selections())
       .then(() => setDeleteMultipleModal(false))
 
   // Disable/Enable
   const setDisableSubmission = useSubmission(actionSetDisable)
   const setDisableAction = useAction(actionSetDisable)
-  const setDisableSubmit = (disable: boolean) =>
-    setDisableAction({ items: rowSelection.selections().map(v => ({ id: v, disable })) })
+  const submitSetDisable = (disable: boolean) =>
+    setDisableAction({ items: rowSelection.selections().map(id => ({ id, disable })) })
       .then(() => rowSelection.setAll(false))
 
   return (
@@ -120,7 +121,7 @@ export function AdminDevices() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteSubmission.pending} onClick={deleteSubmit}>
+            <AlertDialogAction variant="destructive" disabled={deleteSubmission.pending} onClick={submitDelete}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -145,7 +146,7 @@ export function AdminDevices() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" disabled={deleteSubmission.pending} onClick={deleteMultipleSubmit}>
+            <AlertDialogAction variant="destructive" disabled={deleteSubmission.pending} onClick={submitDeleteMultiple}>
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -180,8 +181,8 @@ export function AdminDevices() {
               <TableRow>
                 <TableHead>
                   <CheckboxRoot
-                    checked={rowSelection.multiple()}
-                    indeterminate={rowSelection.indeterminate()}
+                    checked={rowSelection.all()}
+                    indeterminate={rowSelection.multiple()}
                     onChange={(v) => rowSelection.setAll(v)}
                   >
                     <CheckboxControl />
@@ -223,19 +224,19 @@ export function AdminDevices() {
                           Create
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
-                          onSelect={() => setDisableSubmit(true)}
+                          disabled={!rowSelection.multiple() || setDisableSubmission.pending}
+                          onSelect={() => submitSetDisable(true)}
                         >
                           Disable
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
-                          onSelect={() => setDisableSubmit(false)}
+                          disabled={!rowSelection.multiple() || setDisableSubmission.pending}
+                          onSelect={() => submitSetDisable(false)}
                         >
                           Enable
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || deleteSubmission.pending}
+                          disabled={!rowSelection.multiple() || deleteSubmission.pending}
                           onSelect={() => setDeleteMultipleModal(true)}
                         >
                           Delete
@@ -250,7 +251,7 @@ export function AdminDevices() {
             <TableBody>
               <For each={data()?.items}>
                 {(item, index) => {
-                  const toggleDisableSubmit = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
+                  const submitToggleDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
 
                   return (
                     <TableRow
@@ -290,7 +291,7 @@ export function AdminDevices() {
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={setDisableSubmission.pending}
-                                onSelect={toggleDisableSubmit}
+                                onSelect={submitToggleDisable}
                               >
                                 <Show when={item.disabled} fallback="Disable">Enable</Show>
                               </DropdownMenuItem>
@@ -332,8 +333,6 @@ type CreateForm = {
 }
 
 function CreateForm(props: { onClose: () => void }) {
-  const locations = createAsync(() => getListLocations())
-
   const [addMore, setAddMore] = createSignal(false)
 
   const [form, { Field, Form }] = createForm<CreateForm>({
@@ -429,21 +428,7 @@ function CreateForm(props: { onClose: () => void }) {
             )}
           </Field>
           <Field name="location">
-            {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Location</FieldLabel>
-                <SelectHTML
-                  {...props}
-                  {...fieldControlProps(field)}
-                  value={field.value}
-                >
-                  <For each={locations()}>
-                    {v => <option value={v}>{v}</option>}
-                  </For>
-                </SelectHTML>
-                <FieldMessage field={field} />
-              </FieldRoot>
-            )}
+            {(field, props) => <DeviceLocationsField form={form} field={field} props={props} />}
           </Field>
           <Field name="features.array" type="string[]">
             {(field, props) => <DeviceFeaturesField form={form} field={field} props={props} />}
@@ -490,8 +475,6 @@ type UpdateForm = {
 }
 
 function UpdateFormForm(props: { onClose: () => void | Promise<void>, device: GetDeviceResp, refetchDevice: () => Promise<void> }) {
-  const locations = createAsync(() => getListLocations())
-
   const formInitialValues = (): UpdateForm => ({
     ...props.device,
     features: { array: props.device.features || [] },
@@ -572,21 +555,7 @@ function UpdateFormForm(props: { onClose: () => void | Promise<void>, device: Ge
         )}
       </Field>
       <Field name="location">
-        {(field, props) => (
-          <FieldRoot>
-            <FieldLabel field={field}>Location</FieldLabel>
-            <SelectHTML
-              {...props}
-              {...fieldControlProps(field)}
-              value={field.value}
-            >
-              <For each={locations()}>
-                {v => <option value={v}>{v}</option>}
-              </For>
-            </SelectHTML>
-            <FieldMessage field={field} />
-          </FieldRoot>
-        )}
+        {(field, props) => <DeviceLocationsField form={form} field={field} props={props} />}
       </Field>
       <Field name="features.array" type="string[]">
         {(field, props) => <DeviceFeaturesField form={form} field={field} props={props} />}
@@ -595,11 +564,98 @@ function UpdateFormForm(props: { onClose: () => void | Promise<void>, device: Ge
         <Button type="submit" disabled={form.submitting} class="sm:flex-1">
           <Show when={!form.submitting} fallback="Updating device">Update device</Show>
         </Button>
-        <Button type="button" onClick={resetForm} variant="secondary" disabled={form.submitting}>Reset</Button>
+        <Button type="button" onClick={resetForm} disabled={form.submitting} variant="secondary">Reset</Button>
       </div>
       <FormMessage form={form} />
     </Form>
   )
+}
+
+function DeviceLocationsField(props: { form: FormStore<any, undefined>, field: FieldStore<any, any>, props: FieldElementProps<any, any> }) {
+  const locations = createAsync(() => getListLocations())
+
+  return (
+    <Show when={locations()}>
+      <SelectRoot<string>
+        validationState={validationState(props.field.error)}
+        value={props.field.value}
+        onChange={(v) => setValue(props.form, props.field.name, v)}
+        options={locations()!}
+        placeholder="Location"
+        itemComponent={props => (
+          <SelectItem item={props.item}>
+            {props.item.rawValue}
+          </SelectItem>
+        )}
+        virtualized
+        class="space-y-2"
+      >
+        <SelectLabel>Location</SelectLabel>
+        <SelectTrigger hiddenSelectProps={props.props}>
+          <SelectValue<string>>
+            {state => state.selectedOption()}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectErrorMessage>{props.field.error}</SelectErrorMessage>
+        <SelectPortal>
+          <SelectContentVirtual options={locations()!} />
+        </SelectPortal>
+      </SelectRoot>
+    </Show>
+  )
+}
+
+function SelectContentVirtual(props: { options: string[] }) {
+  let ref: HTMLUListElement | null;
+  const virtualizer = createVirtualizer({
+    count: props.options.length,
+    getScrollElement: () => ref,
+    getItemKey: (index) => props.options[index],
+    estimateSize: () => 32,
+    overscan: 5,
+  });
+
+  return (
+    <SelectContent>
+      <SelectListbox<string>
+        ref={ref!}
+        scrollToItem={(item) => virtualizer.scrollToIndex(props.options.indexOf(item))}
+      >
+        {items => (
+          <div
+            style={{
+              height: `${virtualizer.getTotalSize()}px`,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            <For each={virtualizer.getVirtualItems()}>
+              {virtualRow => {
+                const item = items().getItem(virtualRow.key as string);
+                if (item) {
+                  return (
+                    <SelectItem
+                      item={item}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      {item.rawValue}
+                    </SelectItem>
+                  );
+                }
+              }}
+            </For>
+          </div>
+        )}
+      </SelectListbox>
+    </SelectContent>
+  );
 }
 
 function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: FieldStore<any, any>, props: FieldElementProps<any, any> }) {
@@ -607,9 +663,10 @@ function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: Fi
 
   return (
     <Show when={deviceFeatures()}>
-      <SelectFieldRoot<ListDeviceFeaturesResp_Item>
-        field={props.field}
-        selectProps={props.props}
+      <SelectRoot<ListDeviceFeaturesResp_Item>
+        validationState={validationState(props.field.error)}
+        value={deviceFeatures()?.filter(v => props.field.value?.includes(v.value))}
+        onChange={(v) => setValue(props.form, props.field.name, v.map(v => v.value))}
         options={deviceFeatures()!}
         optionValue="value"
         optionTextValue="name"
@@ -621,13 +678,11 @@ function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: Fi
             </div>
           </SelectItem>
         )}
-        value={deviceFeatures()?.filter(v => props.field.value?.includes(v.value))}
-        onChange={(v) => setValue(props.form, props.field.name, v.map(v => v.value))}
         multiple
         class="space-y-2"
       >
         <SelectLabel>Features</SelectLabel>
-        <SelectTrigger aria-label="Feature">
+        <SelectTrigger hiddenSelectProps={props.props}>
           <SelectValue<ListDeviceFeaturesResp_Item>>
             {state =>
               <div class="flex gap-2">
@@ -638,10 +693,13 @@ function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: Fi
             }
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
-          <SelectListbox />
-        </SelectContent>
-      </SelectFieldRoot>
+        <SelectErrorMessage>{props.field.error}</SelectErrorMessage>
+        <SelectPortal>
+          <SelectContent>
+            <SelectListbox />
+          </SelectContent>
+        </SelectPortal>
+      </SelectRoot>
     </Show>
   )
 }

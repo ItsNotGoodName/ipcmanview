@@ -76,8 +76,8 @@ export function ComboboxTrigger(props: Combobox.ComboboxTriggerProps) {
 
 export const ComboboxIcon = Combobox.Icon
 
-export function ComboboxState<Option>(props: { state: ComboboxControlState<Option>, optionToString?: (option: Option) => string }) {
-  const mergedProps = mergeProps({ optionToString: (option: any) => (option as string) }, props)
+export function ComboboxState<Option>(props: { state: ComboboxControlState<Option>, getOptionString?: (option: Option) => string }) {
+  const mergedProps = mergeProps({ getOptionString: (option: any) => (option as string) }, props)
   return <Show when={mergedProps.state.selectedOptions().length > 0}>
     <Seperator orientation="vertical" class="h-4" />
     <div class={cn(tagVariants(), "lg:hidden")}>
@@ -88,7 +88,7 @@ export function ComboboxState<Option>(props: { state: ComboboxControlState<Optio
         <span class={tagVariants()}>{mergedProps.state.selectedOptions().length} selected</span>
       }>
         <For each={mergedProps.state.selectedOptions()}>
-          {option => <span class={tagVariants()}>{mergedProps.optionToString(option)}</span>}
+          {option => <span class={tagVariants()}>{mergedProps.getOptionString(option)}</span>}
         </For>
       </Show>
     </div>

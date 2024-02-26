@@ -8,7 +8,7 @@ import { FieldStore, FormStore, setValue } from "@modular-forms/solid";
 
 import { cn } from "~/lib/utils"
 import { Label, LabelProps } from "./Label"
-import { Checkbox, Select, Switch } from "@kobalte/core";
+import { Checkbox, Switch } from "@kobalte/core";
 
 type FieldContextValue = {
   id: string
@@ -24,20 +24,6 @@ export function CheckboxFieldRoot(props: Checkbox.CheckboxRootProps & { field: F
     validationState={props.field.error ? "invalid" : "valid"}
     checked={props.field.value}
     onChange={(value) => setValue(props.form, props.field.name, value)}
-    {...rest}
-  />
-}
-
-type SelectProps<Option, OptGroup> = Select.SelectRootProps<Option, OptGroup> & {
-  field: FieldStore<any, any>,
-  selectProps: Select.SelectHiddenSelectProps
-}
-
-export function SelectFieldRoot<Option, OptGroup = never>(props: SelectProps<Option, OptGroup>) {
-  const [_, rest] = splitProps(props, ["field", "selectProps"])
-  return <Select.Root
-    validationState={props.field.error ? "invalid" : "valid"}
-    placeholder={props.placeholder}
     {...rest}
   />
 }
@@ -98,24 +84,6 @@ export function fieldControlProps(field: FieldStore<any, any>) {
     "aria-invalid": !!field.error
   }
 }
-
-// export function FieldControl(props: JSX.HTMLAttributes<HTMLDivElement> & { field: FieldStore<any, any> }) {
-//   const [_, rest] = splitProps(props, ["field"])
-//   const { formFieldId, formDescriptionId, formMessageId } = useField()
-//
-//   return (
-//     <div
-//       id={formFieldId}
-//       aria-describedby={
-//         !props.field.error
-//           ? `${formDescriptionId}`
-//           : `${formDescriptionId} ${formMessageId}`
-//       }
-//       aria-invalid={!!props.field.error}
-//       {...rest}
-//     />
-//   )
-// }
 
 export function FieldDescription(props: JSX.HTMLAttributes<HTMLParagraphElement>) {
   const [_, rest] = splitProps(props, ["class"])
