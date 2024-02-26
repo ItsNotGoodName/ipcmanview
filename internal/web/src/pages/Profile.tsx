@@ -126,52 +126,54 @@ export function Profile() {
         <ChangePasswordForm />
 
         <Shared.Title>Sessions</Shared.Title>
-        <div class="flex">
-          <Button onClick={() => setRevokeAllMySessionsModal(true)} variant="destructive">
-            Revoke all sessions
-          </Button>
+        <div class="flex flex-col gap-2">
+          <div class="flex">
+            <Button onClick={() => setRevokeAllMySessionsModal(true)} variant="destructive">
+              Revoke all sessions
+            </Button>
+          </div>
+          <Suspense fallback={<Skeleton class="h-32" />}>
+            <TableRoot>
+              <TableCaption>{data()?.sessions.length} {Humanize.pluralize(data()?.sessions.length || 0, "Session")}</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Active</TableHead>
+                  <TableHead>User Agent</TableHead>
+                  <TableHead>IP</TableHead>
+                  <TableHead>Last IP</TableHead>
+                  <TableHead>Last Used At</TableHead>
+                  <TableHead>Created At</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <For each={data()?.sessions}>
+                  {(session) => (
+                    <TableRow>
+                      <TableCell>
+                        <Show when={session.active} fallback={<div title="Inactive" class="mx-auto h-4 w-4 rounded-full bg-gray-500" />}>
+                          <div title="Active" class="mx-auto h-4 w-4 rounded-full bg-green-500" />
+                        </Show>
+                      </TableCell>
+                      <TableCell>{session.userAgent}</TableCell>
+                      <TableCell>{session.ip}</TableCell>
+                      <TableCell>{session.lastIp}</TableCell>
+                      <TableCell>{formatDate(parseDate(session.lastUsedAtTime))}</TableCell>
+                      <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
+                      <TableCell class="py-0">
+                        <Show when={!session.current} fallback={<Badge>Current</Badge>}>
+                          <Button onClick={() => revokeMySessionModal.setValue(session.id)} variant="destructive" size="sm">
+                            Revoke
+                          </Button>
+                        </Show>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </For>
+              </TableBody>
+            </TableRoot>
+          </Suspense>
         </div>
-        <Suspense fallback={<Skeleton class="h-32" />}>
-          <TableRoot>
-            <TableCaption>{data()?.sessions.length} {Humanize.pluralize(data()?.sessions.length || 0, "Session")}</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Active</TableHead>
-                <TableHead>User Agent</TableHead>
-                <TableHead>IP</TableHead>
-                <TableHead>Last IP</TableHead>
-                <TableHead>Last Used At</TableHead>
-                <TableHead>Created At</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={data()?.sessions}>
-                {(session) => (
-                  <TableRow>
-                    <TableCell>
-                      <Show when={session.active} fallback={<div title="Inactive" class="mx-auto h-4 w-4 rounded-full bg-gray-500" />}>
-                        <div title="Active" class="mx-auto h-4 w-4 rounded-full bg-green-500" />
-                      </Show>
-                    </TableCell>
-                    <TableCell>{session.userAgent}</TableCell>
-                    <TableCell>{session.ip}</TableCell>
-                    <TableCell>{session.lastIp}</TableCell>
-                    <TableCell>{formatDate(parseDate(session.lastUsedAtTime))}</TableCell>
-                    <TableCell>{formatDate(parseDate(session.createdAtTime))}</TableCell>
-                    <TableCell class="py-0">
-                      <Show when={!session.current} fallback={<Badge>Current</Badge>}>
-                        <Button onClick={() => revokeMySessionModal.setValue(session.id)} variant="destructive" size="sm">
-                          Revoke
-                        </Button>
-                      </Show>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </For>
-            </TableBody>
-          </TableRoot>
-        </Suspense>
 
         <Shared.Title>Groups</Shared.Title>
         <Suspense fallback={<Skeleton class="h-32" />}>

@@ -175,197 +175,199 @@ export function AdminUsers() {
 
       <Shared.Title>Users</Shared.Title>
 
-      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-        <Suspense fallback={<Skeleton class="h-32" />}>
-          <div class="flex justify-between gap-2">
-            <Crud.PerPageSelect
-              class="w-20"
-              perPage={data()?.pageResult?.perPage}
-              onChange={pagination.setPerPage}
-            />
-            <Crud.PageButtons
-              previousPageDisabled={pagination.previousPageDisabled()}
-              previousPage={pagination.previousPage}
-              nextPageDisabled={pagination.nextPageDisabled()}
-              nextPage={pagination.nextPage}
-            />
-          </div>
-          <TableRoot>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <CheckboxRoot
-                    checked={rowSelection.all()}
-                    indeterminate={rowSelection.multiple()}
-                    onChange={(v) => rowSelection.setAll(v)}
-                  >
-                    <CheckboxControl />
-                  </CheckboxRoot>
-                </TableHead>
-                <TableHead>
-                  <Crud.SortButton
-                    name="username"
-                    onClick={toggleSort}
-                    sort={data()?.sort}
-                  >
-                    Username
-                  </Crud.SortButton>
-                </TableHead>
-                <TableHead>
-                  <Crud.SortButton
-                    name="email"
-                    onClick={toggleSort}
-                    sort={data()?.sort}
-                  >
-                    Email
-                  </Crud.SortButton>
-                </TableHead>
-                <TableHead>
-                  <Crud.SortButton
-                    name="createdAt"
-                    onClick={toggleSort}
-                    sort={data()?.sort}
-                  >
-                    Created At
-                  </Crud.SortButton>
-                </TableHead>
-                <Crud.LastTableHead>
-                  <DropdownMenuRoot placement="bottom-end">
-                    <Crud.MoreDropdownMenuTrigger />
-                    <DropdownMenuPortal>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={() => setOpenCreateForm(true)}>
-                          Create
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
-                          onClick={() => setDisableMultipleSubmit(false)}
-                        >
-                          Enable
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
-                          onClick={() => setDisableMultipleSubmit(true)}
-                        >
-                          Disable
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || deleteSubmission.pending}
-                          onClick={() => setOpenDeleteMultipleConfirm(true)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                        <DropdownMenuArrow />
-                      </DropdownMenuContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuRoot>
-                </Crud.LastTableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={data()?.items}>
-                {(item, index) => {
-                  const onClick = () => navigate(`./${item.id}`)
-                  const toggleDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
-                  const toggleAdmin = () => setAdminAction({ id: item.id, admin: !item.admin })
+      <div class="flex flex-col gap-2">
+        <ErrorBoundary fallback={(e) => <PageError error={e} />}>
+          <Suspense fallback={<Skeleton class="h-32" />}>
+            <div class="flex justify-between gap-2">
+              <Crud.PerPageSelect
+                class="w-20"
+                perPage={data()?.pageResult?.perPage}
+                onChange={pagination.setPerPage}
+              />
+              <Crud.PageButtons
+                previousPageDisabled={pagination.previousPageDisabled()}
+                previousPage={pagination.previousPage}
+                nextPageDisabled={pagination.nextPageDisabled()}
+                nextPage={pagination.nextPage}
+              />
+            </div>
+            <TableRoot>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <CheckboxRoot
+                      checked={rowSelection.all()}
+                      indeterminate={rowSelection.multiple()}
+                      onChange={(v) => rowSelection.setAll(v)}
+                    >
+                      <CheckboxControl />
+                    </CheckboxRoot>
+                  </TableHead>
+                  <TableHead>
+                    <Crud.SortButton
+                      name="username"
+                      onClick={toggleSort}
+                      sort={data()?.sort}
+                    >
+                      Username
+                    </Crud.SortButton>
+                  </TableHead>
+                  <TableHead>
+                    <Crud.SortButton
+                      name="email"
+                      onClick={toggleSort}
+                      sort={data()?.sort}
+                    >
+                      Email
+                    </Crud.SortButton>
+                  </TableHead>
+                  <TableHead>
+                    <Crud.SortButton
+                      name="createdAt"
+                      onClick={toggleSort}
+                      sort={data()?.sort}
+                    >
+                      Created At
+                    </Crud.SortButton>
+                  </TableHead>
+                  <Crud.LastTableHead>
+                    <DropdownMenuRoot placement="bottom-end">
+                      <Crud.MoreDropdownMenuTrigger />
+                      <DropdownMenuPortal>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onSelect={() => setOpenCreateForm(true)}>
+                            Create
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                            onClick={() => setDisableMultipleSubmit(false)}
+                          >
+                            Enable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                            onClick={() => setDisableMultipleSubmit(true)}
+                          >
+                            Disable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0 || deleteSubmission.pending}
+                            onClick={() => setOpenDeleteMultipleConfirm(true)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                          <DropdownMenuArrow />
+                        </DropdownMenuContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuRoot>
+                  </Crud.LastTableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <For each={data()?.items}>
+                  {(item, index) => {
+                    const onClick = () => navigate(`./${item.id}`)
+                    const toggleDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
+                    const toggleAdmin = () => setAdminAction({ id: item.id, admin: !item.admin })
 
-                  const isMe = () => item.id == BigInt(session()?.user_id || 0)
+                    const isMe = () => item.id == BigInt(session()?.user_id || 0)
 
-                  return (
-                    <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
-                      <TableHead>
-                        <CheckboxRoot
-                          disabled={isMe()}
-                          checked={rowSelection.rows[index()]?.checked}
-                          onChange={(v) => rowSelection.set(item.id, v)}
-                        >
-                          <CheckboxControl />
-                        </CheckboxRoot>
-                      </TableHead>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.username}</TableCell>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.email}</TableCell>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
-                      <Crud.LastTableCell>
-                        <Show when={isMe()}>
-                          <TooltipRoot>
-                            <TooltipTrigger>
-                              <RiDesignFocus2Line class="h-5 w-5" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <TooltipArrow />
-                              You
-                            </TooltipContent>
-                          </TooltipRoot>
-                        </Show>
-                        <Show when={item.admin}>
-                          <TooltipRoot>
-                            <TooltipTrigger>
-                              <RiUserFacesAdminLine class="h-5 w-5" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <TooltipArrow />
-                              Admin
-                            </TooltipContent>
-                          </TooltipRoot>
-                        </Show>
-                        <Show when={item.disabled}>
-                          <TooltipRoot>
-                            <TooltipTrigger>
-                              <RiSystemLockLine class="h-5 w-5" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <TooltipArrow />
-                              Disabled since {formatDate(parseDate(item.disabledAtTime))}
-                            </TooltipContent>
-                          </TooltipRoot>
-                        </Show>
-                        <DropdownMenuRoot placement="bottom-end">
-                          <Crud.MoreDropdownMenuTrigger />
-                          <DropdownMenuPortal>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem onSelect={() => setOpenUpdateForm(item.id)}>
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => setOpenResetPasswordForm(item.id)}>
-                                Reset password
-                              </DropdownMenuItem>
-                              <Show when={!isMe()}>
-                                <DropdownMenuItem disabled={setDisableSubmission.pending} onSelect={toggleDisable}>
-                                  <Show when={item.disabled} fallback={<>Disable</>}>
-                                    Enable
-                                  </Show>
+                    return (
+                      <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
+                        <TableHead>
+                          <CheckboxRoot
+                            disabled={isMe()}
+                            checked={rowSelection.rows[index()]?.checked}
+                            onChange={(v) => rowSelection.set(item.id, v)}
+                          >
+                            <CheckboxControl />
+                          </CheckboxRoot>
+                        </TableHead>
+                        <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.username}</TableCell>
+                        <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.email}</TableCell>
+                        <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
+                        <Crud.LastTableCell>
+                          <Show when={isMe()}>
+                            <TooltipRoot>
+                              <TooltipTrigger>
+                                <RiDesignFocus2Line class="h-5 w-5" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <TooltipArrow />
+                                You
+                              </TooltipContent>
+                            </TooltipRoot>
+                          </Show>
+                          <Show when={item.admin}>
+                            <TooltipRoot>
+                              <TooltipTrigger>
+                                <RiUserFacesAdminLine class="h-5 w-5" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <TooltipArrow />
+                                Admin
+                              </TooltipContent>
+                            </TooltipRoot>
+                          </Show>
+                          <Show when={item.disabled}>
+                            <TooltipRoot>
+                              <TooltipTrigger>
+                                <RiSystemLockLine class="h-5 w-5" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <TooltipArrow />
+                                Disabled since {formatDate(parseDate(item.disabledAtTime))}
+                              </TooltipContent>
+                            </TooltipRoot>
+                          </Show>
+                          <DropdownMenuRoot placement="bottom-end">
+                            <Crud.MoreDropdownMenuTrigger />
+                            <DropdownMenuPortal>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={() => setOpenUpdateForm(item.id)}>
+                                  Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  disabled={setAdminSubmission.pending}
-                                  onClick={toggleAdmin}
-                                >
-                                  <Show when={!item.admin} fallback={<>Demote</>}>
-                                    Promote
-                                  </Show>
+                                <DropdownMenuItem onSelect={() => setOpenResetPasswordForm(item.id)}>
+                                  Reset password
                                 </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  disabled={deleteSubmission.pending}
-                                  onClick={() => setOpenDeleteConfirm(item)}
-                                >
-                                  Delete
-                                </DropdownMenuItem>
-                              </Show>
-                              <DropdownMenuArrow />
-                            </DropdownMenuContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuRoot>
-                      </Crud.LastTableCell>
-                    </TableRow>
-                  )
-                }}
-              </For>
-            </TableBody>
-            <TableCaption>
-              <Crud.PageMetadata pageResult={data()?.pageResult} />
-            </TableCaption>
-          </TableRoot>
-        </Suspense>
-      </ErrorBoundary>
+                                <Show when={!isMe()}>
+                                  <DropdownMenuItem disabled={setDisableSubmission.pending} onSelect={toggleDisable}>
+                                    <Show when={item.disabled} fallback={<>Disable</>}>
+                                      Enable
+                                    </Show>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    disabled={setAdminSubmission.pending}
+                                    onClick={toggleAdmin}
+                                  >
+                                    <Show when={!item.admin} fallback={<>Demote</>}>
+                                      Promote
+                                    </Show>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    disabled={deleteSubmission.pending}
+                                    onClick={() => setOpenDeleteConfirm(item)}
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
+                                </Show>
+                                <DropdownMenuArrow />
+                              </DropdownMenuContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuRoot>
+                        </Crud.LastTableCell>
+                      </TableRow>
+                    )
+                  }}
+                </For>
+              </TableBody>
+              <TableCaption>
+                <Crud.PageMetadata pageResult={data()?.pageResult} />
+              </TableCaption>
+            </TableRoot>
+          </Suspense>
+        </ErrorBoundary>
+      </div>
     </LayoutNormal>
   )
 }

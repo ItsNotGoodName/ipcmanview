@@ -147,162 +147,165 @@ export function AdminGroups() {
 
       <Shared.Title>Groups</Shared.Title>
 
-      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-        <Suspense fallback={<Skeleton class="h-32" />}>
-          <div class="flex justify-between gap-2">
-            <Crud.PerPageSelect
-              class="w-20"
-              perPage={data()?.pageResult?.perPage}
-              onChange={pagination.setPerPage}
-            />
-            <Crud.PageButtons
-              previousPageDisabled={pagination.previousPageDisabled()}
-              previousPage={pagination.previousPage}
-              nextPageDisabled={pagination.nextPageDisabled()}
-              nextPage={pagination.nextPage}
-            />
-          </div>
-          <TableRoot>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <CheckboxRoot
-                    checked={rowSelection.all()}
-                    indeterminate={rowSelection.multiple()}
-                    onChange={(v) => rowSelection.setAll(v)}
-                  >
-                    <CheckboxControl />
-                  </CheckboxRoot>
-                </TableHead>
-                <TableHead>
-                  <Crud.SortButton
-                    name="name"
-                    onClick={toggleSort}
-                    sort={data()?.sort}
-                  >
-                    Name
-                  </Crud.SortButton>
-                </TableHead>
-                <TableHead>
-                  <Crud.SortButton
-                    name="userCount"
-                    onClick={toggleSort}
-                    sort={data()?.sort}
-                  >
-                    Users
-                  </Crud.SortButton>
-                </TableHead>
-                <TableHead>
-                  <Crud.SortButton
-                    name="createdAt"
-                    onClick={toggleSort}
-                    sort={data()?.sort}
-                  >
-                    Created At
-                  </Crud.SortButton>
-                </TableHead>
-                <Crud.LastTableHead>
-                  <DropdownMenuRoot placement="bottom-end">
-                    <Crud.MoreDropdownMenuTrigger />
-                    <DropdownMenuPortal>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={() => setOpenCreateForm(true)}>
-                          Create
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
-                          onSelect={() => setDisableMultipleSubmit(true)}
-                        >
-                          Disable
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
-                          onSelect={() => setDisableMultipleSubmit(false)}
-                        >
-                          Enable
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          disabled={rowSelection.selections().length == 0 || deleteGroupSubmission.pending}
-                          onSelect={() => setDeleteMultipleConfirm(true)}
-                        >
-                          Delete
-                        </DropdownMenuItem>
-                        <DropdownMenuArrow />
-                      </DropdownMenuContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuRoot>
-                </Crud.LastTableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={data()?.items}>
-                {(item, index) => {
-                  const onClick = () => navigate(`./${item.id}`)
-                  const toggleGroupDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
+      <div class="flex flex-col gap-2">
+        <ErrorBoundary fallback={(e) => <PageError error={e} />}>
+          <Suspense fallback={<Skeleton class="h-32" />}>
+            <div class="flex justify-between gap-2">
+              <Crud.PerPageSelect
+                class="w-20"
+                perPage={data()?.pageResult?.perPage}
+                onChange={pagination.setPerPage}
+              />
+              <Crud.PageButtons
+                previousPageDisabled={pagination.previousPageDisabled()}
+                previousPage={pagination.previousPage}
+                nextPageDisabled={pagination.nextPageDisabled()}
+                nextPage={pagination.nextPage}
+              />
+            </div>
+            <TableRoot>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <CheckboxRoot
+                      checked={rowSelection.all()}
+                      indeterminate={rowSelection.multiple()}
+                      onChange={(v) => rowSelection.setAll(v)}
+                    >
+                      <CheckboxControl />
+                    </CheckboxRoot>
+                  </TableHead>
+                  <TableHead>
+                    <Crud.SortButton
+                      name="name"
+                      onClick={toggleSort}
+                      sort={data()?.sort}
+                    >
+                      Name
+                    </Crud.SortButton>
+                  </TableHead>
+                  <TableHead>
+                    <Crud.SortButton
+                      name="userCount"
+                      onClick={toggleSort}
+                      sort={data()?.sort}
+                    >
+                      Users
+                    </Crud.SortButton>
+                  </TableHead>
+                  <TableHead>
+                    <Crud.SortButton
+                      name="createdAt"
+                      onClick={toggleSort}
+                      sort={data()?.sort}
+                    >
+                      Created At
+                    </Crud.SortButton>
+                  </TableHead>
+                  <Crud.LastTableHead>
+                    <DropdownMenuRoot placement="bottom-end">
+                      <Crud.MoreDropdownMenuTrigger />
+                      <DropdownMenuPortal>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onSelect={() => setOpenCreateForm(true)}>
+                            Create
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                            onSelect={() => setDisableMultipleSubmit(true)}
+                          >
+                            Disable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0 || setDisableSubmission.pending}
+                            onSelect={() => setDisableMultipleSubmit(false)}
+                          >
+                            Enable
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={rowSelection.selections().length == 0 || deleteGroupSubmission.pending}
+                            onSelect={() => setDeleteMultipleConfirm(true)}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                          <DropdownMenuArrow />
+                        </DropdownMenuContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuRoot>
+                  </Crud.LastTableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <For each={data()?.items}>
+                  {(item, index) => {
+                    const onClick = () => navigate(`./${item.id}`)
+                    const toggleGroupDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
 
-                  return (
-                    <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
-                      <TableHead>
-                        <CheckboxRoot
-                          checked={rowSelection.rows[index()]?.checked}
-                          onChange={(v) => rowSelection.set(item.id, v)}
-                        >
-                          <CheckboxControl />
-                        </CheckboxRoot>
-                      </TableHead>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.name}</TableCell>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.userCount.toString()}</TableCell>
-                      <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
-                      <Crud.LastTableCell>
-                        <Show when={item.disabled}>
-                          <TooltipRoot>
-                            <TooltipTrigger>
-                              <RiSystemLockLine class="h-5 w-5" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <TooltipArrow />
-                              Disabled since {formatDate(parseDate(item.disabledAtTime))}
-                            </TooltipContent>
-                          </TooltipRoot>
-                        </Show>
-                        <DropdownMenuRoot placement="bottom-end">
-                          <Crud.MoreDropdownMenuTrigger />
-                          <DropdownMenuPortal>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem onSelect={() => setOpenUpdateForm(item.id)}>
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                disabled={setDisableSubmission.pending}
-                                onSelect={toggleGroupDisable}
-                              >
-                                <Show when={item.disabled} fallback={<>Disable</>}>
-                                  Enable
-                                </Show>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                disabled={deleteGroupSubmission.pending}
-                                onSelect={() => setOpenDeleteConfirm(item)}
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                              <DropdownMenuArrow />
-                            </DropdownMenuContent>
-                          </DropdownMenuPortal>
-                        </DropdownMenuRoot>
-                      </Crud.LastTableCell>
-                    </TableRow>
-                  )
-                }}
-              </For>
-            </TableBody>
-            <TableCaption>
-              <Crud.PageMetadata pageResult={data()?.pageResult} />
-            </TableCaption>
-          </TableRoot>
-        </Suspense>
-      </ErrorBoundary>
-    </LayoutNormal>)
+                    return (
+                      <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
+                        <TableHead>
+                          <CheckboxRoot
+                            checked={rowSelection.rows[index()]?.checked}
+                            onChange={(v) => rowSelection.set(item.id, v)}
+                          >
+                            <CheckboxControl />
+                          </CheckboxRoot>
+                        </TableHead>
+                        <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.name}</TableCell>
+                        <TableCell class="cursor-pointer select-none" onClick={onClick}>{item.userCount.toString()}</TableCell>
+                        <TableCell class="cursor-pointer select-none" onClick={onClick}>{formatDate(parseDate(item.createdAtTime))}</TableCell>
+                        <Crud.LastTableCell>
+                          <Show when={item.disabled}>
+                            <TooltipRoot>
+                              <TooltipTrigger>
+                                <RiSystemLockLine class="h-5 w-5" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <TooltipArrow />
+                                Disabled since {formatDate(parseDate(item.disabledAtTime))}
+                              </TooltipContent>
+                            </TooltipRoot>
+                          </Show>
+                          <DropdownMenuRoot placement="bottom-end">
+                            <Crud.MoreDropdownMenuTrigger />
+                            <DropdownMenuPortal>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={() => setOpenUpdateForm(item.id)}>
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled={setDisableSubmission.pending}
+                                  onSelect={toggleGroupDisable}
+                                >
+                                  <Show when={item.disabled} fallback={<>Disable</>}>
+                                    Enable
+                                  </Show>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  disabled={deleteGroupSubmission.pending}
+                                  onSelect={() => setOpenDeleteConfirm(item)}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                                <DropdownMenuArrow />
+                              </DropdownMenuContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenuRoot>
+                        </Crud.LastTableCell>
+                      </TableRow>
+                    )
+                  }}
+                </For>
+              </TableBody>
+              <TableCaption>
+                <Crud.PageMetadata pageResult={data()?.pageResult} />
+              </TableCaption>
+            </TableRoot>
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    </LayoutNormal>
+  )
 }
 
 type CreateForm = {

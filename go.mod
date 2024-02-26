@@ -35,7 +35,7 @@ require (
 	github.com/twitchtv/twirp v8.1.3+incompatible
 	golang.org/x/crypto v0.19.0
 	google.golang.org/protobuf v1.32.0
-	modernc.org/sqlite v1.29.1
+	modernc.org/sqlite v1.29.2
 )
 
 require (

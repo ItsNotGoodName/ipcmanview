@@ -58,9 +58,9 @@ export function Events() {
           </BreadcrumbsItem>
         </BreadcrumbsRoot>
       </Shared.Title>
-      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-        <Suspense fallback={<Skeleton class="h-32" />}>
-          <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
+        <ErrorBoundary fallback={(e) => <PageError error={e} />}>
+          <Suspense fallback={<Skeleton class="h-32" />}>
             <div class="flex flex-wrap gap-2">
               <Crud.PerPageSelect
                 perPage={data()?.pageResult?.perPage}
@@ -191,74 +191,74 @@ export function Events() {
                 <PaginationNext />
               </PaginationEnd>
             </PaginationRoot>
-          </div>
 
-          <TableRoot>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <Crud.SortButton
-                    onClick={toggleSort}
-                    sort={data()?.sort}
-                  >
-                    Created At
-                  </Crud.SortButton>
-                </TableHead>
-                <TableHead>Device</TableHead>
-                <TableHead>Code</TableHead>
-                <TableHead>Action</TableHead>
-                <TableHead>Index</TableHead>
-                <Crud.LastTableHead>
-                  <Button data-expanded={dataOpen()} onClick={() => setDataOpen(!dataOpen())} title="Data" size="icon" variant="ghost" class="[&[data-expanded=true]>svg]:rotate-180">
-                    <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
-                  </Button>
-                </Crud.LastTableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={data()?.events}>
-                {v => {
-                  const [rowDataOpen, setRowDataOpen] = createSignal(dataOpen())
-                  createEffect(() => setRowDataOpen(dataOpen()))
+            <TableRoot>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <Crud.SortButton
+                      onClick={toggleSort}
+                      sort={data()?.sort}
+                    >
+                      Created At
+                    </Crud.SortButton>
+                  </TableHead>
+                  <TableHead>Device</TableHead>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Action</TableHead>
+                  <TableHead>Index</TableHead>
+                  <Crud.LastTableHead>
+                    <Button data-expanded={dataOpen()} onClick={() => setDataOpen(!dataOpen())} title="Data" size="icon" variant="ghost" class="[&[data-expanded=true]>svg]:rotate-180">
+                      <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
+                    </Button>
+                  </Crud.LastTableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <For each={data()?.events}>
+                  {v => {
+                    const [rowDataOpen, setRowDataOpen] = createSignal(dataOpen())
+                    createEffect(() => setRowDataOpen(dataOpen()))
 
-                  return (
-                    <>
-                      <TableRow class="border-b-0">
-                        <TableCell>
-                          {formatDate(parseDate(v.createdAtTime))}
-                        </TableCell>
-                        <TableCell>
-                          <A href={`/devices/${v.deviceId}`} class={linkVariants()}>
-                            {v.deviceName}
-                          </A>
-                        </TableCell>
-                        <TableCell>
-                          {v.code}
-                        </TableCell>
-                        <TableCell>
-                          {v.action}
-                        </TableCell>
-                        <TableCell>
-                          {v.index.toString()}
-                        </TableCell>
-                        <Crud.LastTableCell>
-                          <Button data-expanded={rowDataOpen()} onClick={() => setRowDataOpen(!rowDataOpen())} title="Data" size="icon" variant="ghost" class="[&[data-expanded=true]>svg]:rotate-180">
-                            <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
-                          </Button>
-                        </Crud.LastTableCell>
-                      </TableRow>
-                      <JSONTableRow colspan={6} expanded={rowDataOpen()} data={v.data} />
-                    </>
-                  )
-                }}
-              </For>
-            </TableBody>
-            <TableCaption>
-              <Crud.PageMetadata pageResult={data()?.pageResult} />
-            </TableCaption>
-          </TableRoot>
-        </Suspense>
-      </ErrorBoundary>
+                    return (
+                      <>
+                        <TableRow class="border-b-0">
+                          <TableCell>
+                            {formatDate(parseDate(v.createdAtTime))}
+                          </TableCell>
+                          <TableCell>
+                            <A href={`/devices/${v.deviceId}`} class={linkVariants()}>
+                              {v.deviceName}
+                            </A>
+                          </TableCell>
+                          <TableCell>
+                            {v.code}
+                          </TableCell>
+                          <TableCell>
+                            {v.action}
+                          </TableCell>
+                          <TableCell>
+                            {v.index.toString()}
+                          </TableCell>
+                          <Crud.LastTableCell>
+                            <Button data-expanded={rowDataOpen()} onClick={() => setRowDataOpen(!rowDataOpen())} title="Data" size="icon" variant="ghost" class="[&[data-expanded=true]>svg]:rotate-180">
+                              <RiArrowsArrowDownSLine class="h-5 w-5 shrink-0 transition-transform duration-200" />
+                            </Button>
+                          </Crud.LastTableCell>
+                        </TableRow>
+                        <JSONTableRow colspan={6} expanded={rowDataOpen()} data={v.data} />
+                      </>
+                    )
+                  }}
+                </For>
+              </TableBody>
+              <TableCaption>
+                <Crud.PageMetadata pageResult={data()?.pageResult} />
+              </TableCaption>
+            </TableRoot>
+          </Suspense>
+        </ErrorBoundary>
+      </div>
     </LayoutNormal>
   )
 }

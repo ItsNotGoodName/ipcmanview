@@ -53,9 +53,9 @@ export function Emails() {
           </BreadcrumbsItem>
         </BreadcrumbsRoot>
       </Shared.Title>
-      <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-        <Suspense fallback={<Skeleton class="h-32" />}>
-          <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2">
+        <ErrorBoundary fallback={(e) => <PageError error={e} />}>
+          <Suspense fallback={<Skeleton class="h-32" />}>
             <div class="flex flex-wrap gap-2">
               <Crud.PerPageSelect
                 perPage={data()?.pageResult?.perPage}
@@ -158,72 +158,72 @@ export function Emails() {
                 <PaginationNext />
               </PaginationEnd>
             </PaginationRoot>
-          </div>
 
-          <TableRoot>
-            <TableHeader>
-              <TableRow>
-                <TableHead>
-                  <Crud.SortButton
-                    onClick={toggleSort}
-                    sort={data()?.sort}
-                  >
-                    Created At
-                  </Crud.SortButton>
-                </TableHead>
-                <TableHead>Device</TableHead>
-                <TableHead>Alarm Event</TableHead>
-                <TableHead>From</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <For each={data()?.emails}>
-                {v =>
-                  <TableRow onClick={(t) => isTableRowClick(t) && navigate(`/emails/${v.id}${query()}`)} class="cursor-pointer">
-                    <TableCell class="truncate">
-                      {formatDate(parseDate(v.createdAtTime))}
-                    </TableCell>
-                    <TableCell class="truncate">
-                      <A href={`/devices/${v.deviceId}`} class={linkVariants()}>
-                        {v.deviceName}
-                      </A>
-                    </TableCell>
-                    <TableCell class="truncate">
-                      {v.alarmEvent}
-                    </TableCell>
-                    <TableCell class="truncate">
-                      {v.from}
-                    </TableCell>
-                    <TableCell class="truncate">
-                      {v.subject}
-                    </TableCell>
-                    <Crud.LastTableCell>
-                      <Show when={v.attachmentCount > 0}>
-                        <A href={`/emails/${v.id}${query("?tab=attachments")}`}>
-                          <TooltipRoot>
-                            <TooltipTrigger class="flex h-full items-center">
-                              <RiEditorAttachment2 class="h-4 w-4" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <TooltipArrow />
-                              {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
-                            </TooltipContent>
-                          </TooltipRoot>
+            <TableRoot>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <Crud.SortButton
+                      onClick={toggleSort}
+                      sort={data()?.sort}
+                    >
+                      Created At
+                    </Crud.SortButton>
+                  </TableHead>
+                  <TableHead>Device</TableHead>
+                  <TableHead>Alarm Event</TableHead>
+                  <TableHead>From</TableHead>
+                  <TableHead>Subject</TableHead>
+                  <TableHead></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <For each={data()?.emails}>
+                  {v =>
+                    <TableRow onClick={(t) => isTableRowClick(t) && navigate(`/emails/${v.id}${query()}`)} class="cursor-pointer">
+                      <TableCell class="truncate">
+                        {formatDate(parseDate(v.createdAtTime))}
+                      </TableCell>
+                      <TableCell class="truncate">
+                        <A href={`/devices/${v.deviceId}`} class={linkVariants()}>
+                          {v.deviceName}
                         </A>
-                      </Show>
-                    </Crud.LastTableCell>
-                  </TableRow>
-                }
-              </For>
-            </TableBody>
-            <TableCaption>
-              <Crud.PageMetadata pageResult={data()?.pageResult} />
-            </TableCaption>
-          </TableRoot>
-        </Suspense>
-      </ErrorBoundary>
+                      </TableCell>
+                      <TableCell class="truncate">
+                        {v.alarmEvent}
+                      </TableCell>
+                      <TableCell class="truncate">
+                        {v.from}
+                      </TableCell>
+                      <TableCell class="truncate">
+                        {v.subject}
+                      </TableCell>
+                      <Crud.LastTableCell>
+                        <Show when={v.attachmentCount > 0}>
+                          <A href={`/emails/${v.id}${query("?tab=attachments")}`}>
+                            <TooltipRoot>
+                              <TooltipTrigger class="flex h-full items-center">
+                                <RiEditorAttachment2 class="h-4 w-4" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <TooltipArrow />
+                                {v.attachmentCount} {Humanize.pluralize(v.attachmentCount, "attachment")}
+                              </TooltipContent>
+                            </TooltipRoot>
+                          </A>
+                        </Show>
+                      </Crud.LastTableCell>
+                    </TableRow>
+                  }
+                </For>
+              </TableBody>
+              <TableCaption>
+                <Crud.PageMetadata pageResult={data()?.pageResult} />
+              </TableCaption>
+            </TableRoot>
+          </Suspense>
+        </ErrorBoundary>
+      </div>
     </LayoutNormal>
   )
 }
