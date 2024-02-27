@@ -30,3 +30,11 @@ fixtures
 *.db-shm
 *.db-wal
 ipcmanview_data
+
+# Generated code
+*.pb.go
+*.twirp.go
+*.sql.go
+*.gen.go
+*.gen.ts
+internal/web/src/twirp

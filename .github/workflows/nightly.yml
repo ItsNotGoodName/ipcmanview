@@ -47,11 +47,13 @@ jobs:
         with:
           go-version: "1.21"
 
-      - name: Set up Task
-        uses: arduino/setup-task@v1
+      - name: Set up Protoc
+        uses: arduino/setup-protoc@v3
         with:
-          version: 3.x
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          version: "25.1"
+
+      - name: Set up tooling
+        run: make tooling-task tooling-sqlc tooling-twirp tooling-protoc-gen-go
 
       - name: Build nightly
         run: task nightly
