@@ -229,6 +229,7 @@ export function SignUp() {
                 <TextFieldLabel>Email</TextFieldLabel>
                 <TextFieldInput
                   {...props}
+                  autocomplete="email"
                   placeholder="Email"
                   type="email"
                   value={field.value}
@@ -339,6 +340,7 @@ export function Forgot() {
                 <TextFieldLabel>Email</TextFieldLabel>
                 <TextFieldInput
                   {...props}
+                  autocomplete="email"
                   placeholder="Email"
                   type="email"
                 />

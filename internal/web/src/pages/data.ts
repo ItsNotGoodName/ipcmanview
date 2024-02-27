@@ -13,6 +13,7 @@ export const getConfig = cache(() => useClient().public.getConfig({}).then(res =
 
 export const getListDevices = cache(() => useClient().user.listDevices({}).then(res => res.response.devices), "listDevices")
 export const getDeviceRPCStatus = cache((id: bigint) => useClient().user.getDeviceRPCStatus({ id }).then(res => res.response), "getDeviceRPCStatus")
+export const getDeviceUptime = cache((id: bigint) => useClient().user.getDeviceUptime({ id }).then(res => res.response), "getDeviceUptime")
 export const getDeviceDetail = cache((id: bigint) => useClient().user.getDeviceDetail({ id }).then(res => res.response), "getDeviceDetail")
 export const getListDeviceStorage = cache((id: bigint) => useClient().user.listDeviceStorage({ id }).then(res => res.response.items), "listDeviceStorage")
 export const getDeviceSoftwareVersion = cache((id: bigint) => useClient().user.getDeviceSoftwareVersion({ id }).then(res => res.response), "getDeviceSoftwareVersion")

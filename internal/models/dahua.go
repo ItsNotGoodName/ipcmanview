@@ -196,3 +196,9 @@ type DahuaEvent struct {
 	Data      json.RawMessage `json:"data"`
 	CreatedAt time.Time       `json:"created_at"`
 }
+
+type DahuaUptime struct {
+	Last      int64 `json:"last"`
+	Total     int64 `json:"total"`
+	Supported bool  `json:"supported"`
+}

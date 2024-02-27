@@ -590,3 +590,24 @@ func (s *Server) DahuaDevicesIDUsers(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, res)
 }
+
+func (s *Server) DahuaDevicesIDUptime(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := paramID(c)
+	if err != nil {
+		return err
+	}
+
+	client, err := useDahuaClient(c, s, id)
+	if err != nil {
+		return err
+	}
+
+	res, err := dahua.GetUptime(ctx, client.RPC)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, res)
+}

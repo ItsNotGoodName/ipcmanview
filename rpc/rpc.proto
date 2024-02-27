@@ -91,6 +91,7 @@ service User {
   // Device
   rpc ListDevices(google.protobuf.Empty) returns (ListDevicesResp);
   rpc GetDeviceRPCStatus(GetDeviceRPCStatusReq) returns (GetDeviceRPCStatusResp);
+  rpc GetDeviceUptime(GetDeviceUptimeReq) returns (GetDeviceUptimeResp);
   rpc GetDeviceDetail(GetDeviceDetailReq) returns (GetDeviceDetailResp);
   rpc GetDeviceSoftwareVersion(GetDeviceSoftwareVersionReq) returns (GetDeviceSoftwareVersionResp);
   rpc ListDeviceLicenses(ListDeviceLicensesReq) returns (ListDeviceLicensesResp);
@@ -276,6 +277,15 @@ message GetDeviceRPCStatusResp {
   string error = 1;
   string state = 2;
   google.protobuf.Timestamp last_login_time = 3;
+}
+
+message GetDeviceUptimeReq {
+  int64 id = 1;
+}
+message GetDeviceUptimeResp {
+  int64 last = 1;
+  int64 total = 2;
+  bool supported = 3;
 }
 
 message GetDeviceDetailReq {

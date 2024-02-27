@@ -1,16 +1,16 @@
 import { Image, Tabs } from "@kobalte/core"
 import Humanize from "humanize-plus"
 import { A, createAsync, useSearchParams } from "@solidjs/router"
-import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo, createSignal } from "solid-js"
+import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo, createSignal, } from "solid-js"
 import { PageError } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from "~/ui/Tabs"
 import { TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { GetDevicesPageResp_Device } from "~/twirp/rpc"
-import { getDeviceDetail, getDeviceRPCStatus, getDeviceSoftwareVersion, getListDeviceLicenses, getListDeviceStorage, getListDeviceStreams, } from "./data"
+import { getDeviceDetail, getDeviceRPCStatus, getDeviceSoftwareVersion, getDeviceUptime, getListDeviceLicenses, getListDeviceStorage, getListDeviceStreams, } from "./data"
 import { Skeleton } from "~/ui/Skeleton"
 import { ToggleButton } from "@kobalte/core"
-import { decodeBigInts, encodeBigInts, formatDate, parseDate, useHiddenScrollbar } from "~/lib/utils"
+import { createUptime, decodeBigInts, encodeBigInts, formatDate, parseDate, useHiddenScrollbar } from "~/lib/utils"
 import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
 import { Shared } from "~/components/Shared"
@@ -20,6 +20,10 @@ import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, Combobox
 import { RiMediaImageLine, RiSystemFilterLine, RiSystemLockLine, RiSystemRefreshLine } from "solid-icons/ri"
 import { Button } from "~/ui/Button"
 import { Crud } from "~/components/Crud"
+
+function EmptyTableCell(props: { colspan: number }) {
+  return <TableCell colspan={props.colspan}>N/A</TableCell>
+}
 
 function LoadingTableCell(props: { colspan: number }) {
   return (
@@ -65,6 +69,7 @@ export function Devices() {
               <TabsList>
                 <TabsTrigger value="device">Device</TabsTrigger>
                 <TabsTrigger value="rpc-status">RPC Status</TabsTrigger>
+                <TabsTrigger value="uptime">Uptime</TabsTrigger>
                 <TabsTrigger value="stream">Stream</TabsTrigger>
                 <TabsTrigger value="snapshot">Snapshot</TabsTrigger>
                 <TabsTrigger value="detail">Detail</TabsTrigger>
@@ -115,6 +120,11 @@ export function Devices() {
           <TabsContent value="rpc-status">
             <Suspense fallback={<Skeleton class="h-32" />}>
               <RPCStatusTable devices={filteredDevices()} />
+            </Suspense>
+          </TabsContent>
+          <TabsContent value="uptime">
+            <Suspense fallback={<Skeleton class="h-32" />}>
+              <UptimeTable devices={filteredDevices()} />
             </Suspense>
           </TabsContent>
           <TabsContent value="stream">
@@ -228,6 +238,64 @@ function RPCStatusTable(props: { devices?: GetDevicesPageResp_Device[] }) {
         </For>
       </TableBody>
     </TableRoot>
+  )
+}
+
+function UptimeTable(props: { devices?: GetDevicesPageResp_Device[] }) {
+  const colspan = 2
+
+  return (
+    <TableRoot>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Device</TableHead>
+          <TableHead>Last</TableHead>
+          <TableHead>Total</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <For each={props.devices}>
+          {item => {
+            const data = createAsync(() => getDeviceUptime(item.id))
+
+            return (
+              <TableRow>
+                <DeviceNameCell device={item} />
+                <ErrorBoundary fallback={e => <ErrorTableCell colspan={colspan} error={e} />}>
+                  <Suspense fallback={<LoadingTableCell colspan={colspan} />}>
+                    <Show when={data()?.supported} fallback={
+                      <EmptyTableCell colspan={colspan} />
+                    }>
+                      <UptimeTableCell unix={Number(data()?.last)} />
+                      <UptimeTableCell unix={Number(data()?.total)} />
+                    </Show>
+                  </Suspense>
+                </ErrorBoundary>
+              </TableRow>
+            )
+          }}
+        </For>
+      </TableBody>
+    </TableRoot>
+  )
+}
+
+function UptimeTableCell(props: { unix: number }) {
+  const uptime = createUptime(() => props.unix)
+
+  return (
+    <TableCell>
+      <Show when={uptime().hasDays}>
+        {uptime().days} days &nbsp
+      </Show>
+      <Show when={uptime().hasHours}>
+        {uptime().hours} hours &nbsp
+      </Show>
+      <Show when={uptime().hasMinutes}>
+        {uptime().minutes} minutes &nbsp
+      </Show>
+      {uptime().seconds} seconds
+    </TableCell>
   )
 }
 
@@ -458,7 +526,7 @@ function LicenseTable(props: { devices?: GetDevicesPageResp_Device[] }) {
                   <For each={data()} fallback={
                     <TableRow>
                       <DeviceNameCell device={item} />
-                      <TableCell colspan={colspan}>N/A</TableCell>
+                      <EmptyTableCell colspan={colspan} />
                     </TableRow>
                   }>
                     {v => {
@@ -537,7 +605,7 @@ function StorageTable(props: { devices?: GetDevicesPageResp_Device[] }) {
                   <For each={data()} fallback={
                     <TableRow>
                       <DeviceNameCell device={item} />
-                      <TableCell colspan={colspan}>N/A</TableCell>
+                      <EmptyTableCell colspan={colspan} />
                     </TableRow>
                   }>
                     {v => (

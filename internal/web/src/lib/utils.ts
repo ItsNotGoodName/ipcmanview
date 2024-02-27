@@ -1,5 +1,5 @@
 import { PartialMessage } from "@protobuf-ts/runtime";
-import { Accessor, Resource, Setter, batch, createEffect, createSignal, onCleanup } from "solid-js";
+import { Accessor, Resource, Setter, batch, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
 import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
@@ -230,4 +230,28 @@ export function validationState(error?: string | boolean): "invalid" | "valid" {
 
 export function setFormValue(form: FormStore<any, any>, field: FieldStore<any, any>) {
   return (value: any) => setValue(form, field.name, value)
+}
+
+export function createUptime(unix: Accessor<number>) {
+  const [since, setSince] = createSignal(0)
+  createEffect(on(unix, () => setSince(0)))
+  const interval = setInterval(() => setSince(since() + 1), 1000)
+  onCleanup(() => clearInterval(interval))
+
+  return createMemo(() => {
+    const total = unix() + since()
+    const days = Math.floor(total / 86400)
+    const hours = Math.floor((total % 86400) / 3600)
+    const minutes = Math.floor((total % 3600) / 60)
+    const seconds = (total % 60)
+    return {
+      days,
+      hasDays: days > 0,
+      hours,
+      hasHours: hours > 0 || days > 0,
+      minutes,
+      hasMinutes: minutes > 0 || hours > 0 || days > 0,
+      seconds,
+    }
+  })
 }

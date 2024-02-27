@@ -86,6 +86,7 @@ func (s *Server) Register(e *echo.Group) *Server {
 	e.GET("/dahua/devices/:id/software", s.DahuaDevicesIDSoftware)
 	e.GET("/dahua/devices/:id/storage", s.DahuaDevicesIDStorage)
 	e.GET("/dahua/devices/:id/users", s.DahuaDevicesIDUsers)
+	e.GET("/dahua/devices/:id/uptime", s.DahuaDevicesIDUptime)
 
 	e.POST("/dahua/devices/:id/ptz/preset", s.DahuaDevicesIDPTZPresetPOST)
 	e.POST("/dahua/devices/:id/rpc", s.DahuaDevicesIDRPCPOST)

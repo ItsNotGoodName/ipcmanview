@@ -474,6 +474,24 @@ func (u *User) GetDeviceRPCStatus(ctx context.Context, req *rpc.GetDeviceRPCStat
 	}, nil
 }
 
+func (u *User) GetDeviceUptime(ctx context.Context, req *rpc.GetDeviceUptimeReq) (*rpc.GetDeviceUptimeResp, error) {
+	client, err := u.dahuaStore.GetClient(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	v, err := dahua.GetUptime(ctx, client.RPC)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.GetDeviceUptimeResp{
+		Last:      v.Last,
+		Total:     v.Total,
+		Supported: v.Supported,
+	}, nil
+}
+
 func (u *User) ListDeviceStorage(ctx context.Context, req *rpc.ListDeviceStorageReq) (*rpc.ListDeviceStorageResp, error) {
 	client, err := u.dahuaStore.GetClient(ctx, req.Id)
 	if err != nil {

@@ -32,7 +32,7 @@ func NewScanLockStore() ScanLockStore {
 
 type ScanLockStore struct{ *core.LockStore[int64] }
 
-func ignorableError(err error) bool {
+func isFatalError(err error) bool {
 	res := &dahuarpc.ResponseError{}
 	if errors.As(err, &res) && slices.Contains([]dahuarpc.ErrorType{
 		dahuarpc.ErrorTypeInvalidRequest,
@@ -41,10 +41,17 @@ func ignorableError(err error) bool {
 		dahuarpc.ErrorTypeUnknown,
 	}, res.Type) {
 		log.Err(err).Str("method", res.Method).Int("code", res.Code).Str("type", string(res.Type)).Msg("Ignoring RPC ResponseError")
-		return true
+		return false
 	}
 
-	return false
+	return true
+}
+
+func checkFatalError(err error) error {
+	if isFatalError(err) {
+		return err
+	}
+	return nil
 }
 
 func Normalize(ctx context.Context, db sqlite.DB) error {
@@ -81,49 +88,49 @@ INSERT OR IGNORE INTO dahua_event_rules (code) VALUES ('');
 
 func GetDahuaDetail(ctx context.Context, rpcClient dahuarpc.Conn) (models.DahuaDetail, error) {
 	sn, err := magicbox.GetSerialNo(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaDetail{}, err
 	}
 
 	deviceClass, err := magicbox.GetDeviceClass(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaDetail{}, err
 	}
 
 	deviceType, err := magicbox.GetDeviceType(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaDetail{}, err
 	}
 
 	hardwareVersion, err := magicbox.GetHardwareVersion(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaDetail{}, err
 	}
 
 	marketArea, err := magicbox.GetMarketArea(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaDetail{}, err
 	}
 
 	processInfo, err := magicbox.GetProcessInfo(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaDetail{}, err
 	}
 
 	vendor, err := magicbox.GetVendor(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaDetail{}, err
 	}
 
 	onvifVersion, err := intervideo.ManagerGetVersion(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaDetail{}, err
 	}
 
 	var algorithmVersion string
 	{
 		res, err := peripheralchip.GetVersion(ctx, rpcClient, peripheralchip.TypeBLOB)
-		if err != nil && !ignorableError(err) {
+		if err != nil && isFatalError(err) {
 			return models.DahuaDetail{}, err
 		}
 		if len(res) > 0 {
@@ -146,7 +153,7 @@ func GetDahuaDetail(ctx context.Context, rpcClient dahuarpc.Conn) (models.DahuaD
 
 func GetSoftwareVersion(ctx context.Context, rpcClient dahuarpc.Conn) (models.DahuaSoftwareVersion, error) {
 	res, err := magicbox.GetSoftwareVersion(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaSoftwareVersion{}, err
 	}
 
@@ -161,7 +168,7 @@ func GetSoftwareVersion(ctx context.Context, rpcClient dahuarpc.Conn) (models.Da
 
 func GetLicenseList(ctx context.Context, rpcClient dahuarpc.Conn) ([]models.DahuaLicense, error) {
 	licenses, err := license.GetLicenseInfo(ctx, rpcClient)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return nil, err
 	}
 
@@ -188,10 +195,7 @@ func GetLicenseList(ctx context.Context, rpcClient dahuarpc.Conn) ([]models.Dahu
 func GetStorage(ctx context.Context, rpcClient dahuarpc.Conn) ([]models.DahuaStorage, error) {
 	devices, err := storage.GetDeviceAllInfo(ctx, rpcClient)
 	if err != nil {
-		if ignorableError(err) {
-			return []models.DahuaStorage{}, nil
-		}
-		return nil, err
+		return []models.DahuaStorage{}, checkFatalError(err)
 	}
 
 	var res []models.DahuaStorage
@@ -225,7 +229,7 @@ func GetError(ctx context.Context, conn dahuarpc.Client) models.DahuaError {
 
 func GetCoaxialStatus(ctx context.Context, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialStatus, error) {
 	status, err := coaxialcontrolio.GetStatus(ctx, rpcClient, channel)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaCoaxialStatus{}, err
 	}
 
@@ -237,7 +241,7 @@ func GetCoaxialStatus(ctx context.Context, rpcClient dahuarpc.Conn, channel int)
 
 func GetCoaxialCaps(ctx context.Context, rpcClient dahuarpc.Conn, channel int) (models.DahuaCoaxialCaps, error) {
 	caps, err := coaxialcontrolio.GetCaps(ctx, rpcClient, channel)
-	if err != nil && !ignorableError(err) {
+	if err != nil && isFatalError(err) {
 		return models.DahuaCoaxialCaps{}, err
 	}
 
@@ -361,6 +365,19 @@ func SetPreset(ctx context.Context, clientPTZ ptz.Client, channel, index int) er
 		Code: "GotoPreset",
 		Arg1: index,
 	})
+}
+
+func GetUptime(ctx context.Context, c dahuarpc.Conn) (models.DahuaUptime, error) {
+	uptime, err := magicbox.GetUpTime(ctx, c)
+	if err != nil {
+		return models.DahuaUptime{}, checkFatalError(err)
+	}
+
+	return models.DahuaUptime{
+		Last:      uptime.Last,
+		Total:     uptime.Total,
+		Supported: true,
+	}, nil
 }
 
 func GetSunriseSunset(ctx context.Context, c dahuarpc.Conn) (models.DahuaSunriseSunset, error) {

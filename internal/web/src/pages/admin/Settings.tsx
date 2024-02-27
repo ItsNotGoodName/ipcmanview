@@ -86,7 +86,10 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
               class="space-y-2"
             >
               <TextFieldLabel>Site name</TextFieldLabel>
-              <TextFieldInput {...props} />
+              <TextFieldInput
+                {...props}
+                placeholder="Site name"
+              />
               <TextFieldDescription>Name of site.</TextFieldDescription>
               <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
             </TextFieldRoot>
