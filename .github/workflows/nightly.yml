@@ -53,7 +53,7 @@ jobs:
           version: "25.1"
 
       - name: Set up tooling
-        run: make tooling-task tooling-sqlc tooling-twirp tooling-protoc-gen-go
+        run: make build-tooling
 
       - name: Build nightly
         run: task nightly

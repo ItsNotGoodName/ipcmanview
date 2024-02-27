@@ -66,7 +66,9 @@ gen-typescriptify:
 
 # Tooling
 
-tooling: tooling-air tooling-task tooling-goose tooling-atlas tooling-sqlc tooling-twirp tooling-protoc-gen-go
+build-tooling: tooling-task tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts
+
+tooling: tooling-air tooling-task tooling-goose tooling-atlas tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts
 
 tooling-air:
 	go install github.com/cosmtrek/air@latest
@@ -88,6 +90,9 @@ tooling-twirp:
 
 tooling-protoc-gen-go:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+
+tooling-protoc-gen-ts:
+	cd "$(WEB_PATH)" && pnpm install
 
 # Install
 
