@@ -3,12 +3,12 @@
 //
 // # URLs
 // https://ui.shadcn.com/docs/components/form
-import { JSX, Show, createUniqueId, splitProps, createContext, useContext, } from "solid-js";
+import { JSX, Show, createUniqueId, splitProps, createContext, useContext, ParentProps, } from "solid-js";
 import { FieldStore, FormStore, setValue } from "@modular-forms/solid";
+import { Checkbox } from "@kobalte/core";
 
 import { cn } from "~/lib/utils"
 import { Label, LabelProps } from "./Label"
-import { Checkbox, Switch } from "@kobalte/core";
 
 type FieldContextValue = {
   id: string
@@ -28,14 +28,14 @@ export function CheckboxFieldRoot(props: Checkbox.CheckboxRootProps & { field: F
   />
 }
 
-export function SwitchFieldRoot(props: Switch.SwitchRootProps & { field: FieldStore<any, any>, form: FormStore<any, any> }) {
-  const [_, rest] = splitProps(props, ["field", "form"])
-  return <Switch.Root
-    validationState={props.field.error ? "invalid" : "valid"}
-    checked={props.field.value}
-    onChange={(value) => setValue(props.form, props.field.name, value)}
-    {...rest}
-  />
+export function FieldRoot2(props: ParentProps) {
+  const id = createUniqueId()
+
+  return (
+    <FormItemContext.Provider value={{ id }}>
+      {props.children}
+    </FormItemContext.Provider>
+  )
 }
 
 export function FieldRoot(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "id">) {
@@ -44,7 +44,7 @@ export function FieldRoot(props: Omit<JSX.HTMLAttributes<HTMLDivElement>, "id">)
 
   return (
     <FormItemContext.Provider value={{ id }}>
-      <div class={cn("space-y-2", props.class)} {...rest} />
+      <div {...rest} />
     </FormItemContext.Provider>
   )
 }
@@ -98,7 +98,7 @@ export function FieldDescription(props: JSX.HTMLAttributes<HTMLParagraphElement>
   )
 }
 
-export function FieldMessage(props: JSX.HTMLAttributes<HTMLParagraphElement> & { field: FieldStore<any, any> }) {
+export function FieldErrorMessage(props: JSX.HTMLAttributes<HTMLParagraphElement> & { field: FieldStore<any, any> }) {
   const [_, rest] = splitProps(props, ["class", "field", "children"])
   const { formMessageId } = useField()
   const body = () => props.field.error ? props.field.error : props.children

@@ -10,7 +10,7 @@ import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { useClient } from "~/providers/client";
 import { createForm, required, reset } from "@modular-forms/solid";
-import { FieldLabel, FieldMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form";
+import { FieldLabel, FieldErrorMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form";
 import { Input } from "~/ui/Input";
 import { Textarea } from "~/ui/Textarea";
 import { DialogContent, DialogHeader, DialogOverflow, DialogOverlay, DialogPortal, DialogRoot, DialogTitle, } from "~/ui/Dialog";
@@ -128,7 +128,7 @@ export function AdminGroups() {
               <ul>
                 <For each={data()?.items}>
                   {(e, index) =>
-                    <Show when={rowSelection.rows[index()]?.checked}>
+                    <Show when={rowSelection.items[index()]?.checked}>
                       <li>{e.name}</li>
                     </Show>
                   }
@@ -170,7 +170,7 @@ export function AdminGroups() {
                     <CheckboxRoot
                       checked={rowSelection.all()}
                       indeterminate={rowSelection.multiple()}
-                      onChange={(v) => rowSelection.setAll(v)}
+                      onChange={rowSelection.setAll}
                     >
                       <CheckboxControl />
                     </CheckboxRoot>
@@ -242,10 +242,10 @@ export function AdminGroups() {
                     const toggleGroupDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
 
                     return (
-                      <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
+                      <TableRow data-state={rowSelection.items[index()]?.checked ? "selected" : ""}>
                         <TableHead>
                           <CheckboxRoot
-                            checked={rowSelection.rows[index()]?.checked}
+                            checked={rowSelection.items[index()]?.checked}
                             onChange={(v) => rowSelection.set(item.id, v)}
                           >
                             <CheckboxControl />
@@ -350,7 +350,7 @@ function CreateForm(props: { close: () => void }) {
               placeholder="Name"
               value={field.value}
             />
-            <FieldMessage field={field} />
+            <FieldErrorMessage field={field} />
           </FieldRoot>
         )}
       </Field>
@@ -364,7 +364,7 @@ function CreateForm(props: { close: () => void }) {
               value={field.value}
               placeholder="Description"
             />
-            <FieldMessage field={field} />
+            <FieldErrorMessage field={field} />
           </FieldRoot>
         )}
       </Field>
@@ -421,7 +421,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                 value={field.value}
                 disabled={disabled()}
               />
-              <FieldMessage field={field} />
+              <FieldErrorMessage field={field} />
             </FieldRoot>
           )}
         </Field>
@@ -437,7 +437,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
               >
                 {field.value}
               </Textarea>
-              <FieldMessage field={field} />
+              <FieldErrorMessage field={field} />
             </FieldRoot>
           )}
         </Field>

@@ -1,21 +1,20 @@
 import { createForm, required, reset } from "@modular-forms/solid";
 import { A, createAsync, revalidate, useNavigate } from "@solidjs/router";
 import { ParentProps, Show, } from "solid-js";
-
 import { useClient } from "~/providers/client";
 import { Button } from "~/ui/Button";
 import { CardRoot } from "~/ui/Card";
-import { FieldRoot, FieldLabel, FieldMessage, FormMessage, CheckboxFieldRoot, fieldControlProps } from "~/ui/Form";
-import { Input } from "~/ui/Input";
+import { FormMessage, } from "~/ui/Form";
 import { linkVariants } from "~/ui/Link";
 import { ThemeIcon } from "~/ui/ThemeIcon";
 import { toggleTheme, useThemeTitle } from "~/ui/theme";
-import { CheckboxControl, CheckboxErrorMessage, CheckboxLabel } from "~/ui/Checkbox";
-import { throwAsFormError } from "~/lib/utils";
+import { CheckboxControl, CheckboxErrorMessage, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { setFormValue, throwAsFormError, validationState } from "~/lib/utils";
 import { toast } from "~/ui/Toast";
 import { getSession } from "~/providers/session";
 import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert";
 import { getConfig } from "./data";
+import { TextFieldErrorMessage, TextFieldInput, TextFieldLabel, TextFieldRoot } from "~/ui/TextField";
 
 function Layout(props: ParentProps) {
   return (
@@ -110,54 +109,59 @@ export function SignIn() {
       </Show>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign in</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={submitForm}>
+        <Form onSubmit={submitForm} class="flex flex-col gap-4">
           <Field name="usernameOrEmail" validate={required("Please enter your username or email.")}>
             {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Username or email</FieldLabel>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Username or email</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
-                  autocomplete="username"
                   placeholder="Username or email"
-                  value={field.value}
+                  autocomplete="username"
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Field name="password">
             {(field, props) => (
-              <FieldRoot>
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
                 <div class="flex items-center justify-between gap-2">
-                  <FieldLabel field={field}>
-                    Password
-                  </FieldLabel>
-                  <A href="/forgot" class={linkVariants()}>
-                    Forgot password?
-                  </A>
+                  <TextFieldLabel>Password</TextFieldLabel>
+                  <A href="/forgot" class={linkVariants()}>Forgot password?</A>
                 </div>
-                <Input
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   autocomplete="current-password"
                   placeholder="Password"
                   type="password"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Field name="rememberMe" type="boolean">
-            {(field, props) => (
-              <CheckboxFieldRoot form={form} field={field} class="space-y-2">
+            {(field) => (
+              <CheckboxRoot
+                validationState={validationState(field.error)}
+                checked={field.value}
+                onChange={setFormValue(form, field)}
+                class="space-y-2"
+              >
                 <div class="flex items-center gap-2">
-                  <CheckboxControl inputProps={props} />
+                  <CheckboxControl />
                   <CheckboxLabel>Remember me</CheckboxLabel>
                 </div>
                 <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
-              </CheckboxFieldRoot>
+              </CheckboxRoot>
             )}
           </Field>
           <Button type="submit" disabled={form.submitting}>
@@ -214,75 +218,76 @@ export function SignUp() {
       <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Sign up</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={submitForm}>
+        <Form onSubmit={submitForm} class="flex flex-col gap-4">
           <Field name="email" validate={required('Please enter your email.')}>
             {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Email</FieldLabel>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Email</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   placeholder="Email"
                   type="email"
                   value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Field name="username" validate={required('Please enter a username.')}>
             {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Username</FieldLabel>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Username</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   autocomplete="username"
                   placeholder="Username"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Field name="password" validate={required('Please enter a password.')}>
             {(field, props) => (
-              <FieldRoot>
-                <div class="flex items-center justify-between gap-2">
-                  <FieldLabel field={field}>
-                    Password
-                  </FieldLabel>
-                </div>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Password</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   autocomplete="new-password"
                   placeholder="Password"
                   type="password"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Field name="confirmPassword" validate={required('Please confirm your password.')}>
             {(field, props) => (
-              <FieldRoot>
-                <div class="flex items-center justify-between gap-2">
-                  <FieldLabel field={field}>
-                    Confirm password
-                  </FieldLabel>
-                </div>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Confirm password</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   autocomplete="new-password"
                   placeholder="Confirm password"
                   type="password"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Button type="submit" disabled={form.submitting}>
@@ -323,20 +328,22 @@ export function Forgot() {
       <Header>{config()?.siteName}</Header>
       <CardRoot class="flex flex-col gap-4 p-4">
         <CardHeader>Forgot</CardHeader>
-        <Form class="flex flex-col gap-4" onSubmit={submitForm}>
+        <Form onSubmit={submitForm} class="flex flex-col gap-4">
           <Field name="email" validate={required('Please enter your email.')}>
             {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Email</FieldLabel>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Email</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   placeholder="Email"
                   type="email"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Button type="submit" disabled={form.submitting}>

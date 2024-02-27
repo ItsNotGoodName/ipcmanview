@@ -9,7 +9,6 @@ import { ComponentProps, splitProps } from "solid-js"
 
 import { cn } from "~/lib/utils"
 
-
 export const ProgressRoot = Progress.Root;
 export const ProgressLabel = Progress.Label;
 export const ProgressValueLabel = Progress.ValueLabel;

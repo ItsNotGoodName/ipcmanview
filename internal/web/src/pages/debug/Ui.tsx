@@ -1,11 +1,7 @@
-import { As } from "@kobalte/core";
 import { AlertDescription, AlertRoot, AlertTitle } from "~/ui/Alert";
 import { Button } from "~/ui/Button";
 import { DropdownMenuArrow, DropdownMenuCheckboxItem, DropdownMenuCheckboxItemIndicator, DropdownMenuContent, DropdownMenuGroup, DropdownMenuGroupLabel, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuRadioItemIndicator, DropdownMenuRoot, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuSubTriggerIndicator, DropdownMenuTrigger } from "~/ui/DropdownMenu";
-import { Input } from "~/ui/Input";
 import { Seperator } from "~/ui/Seperator";
-import { Textarea } from "~/ui/Textarea";
-import { Label } from "~/ui/Label";
 import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchLabel, SwitchRoot } from "~/ui/Switch";
 import { toggleTheme } from "~/ui/theme";
 import { CardRoot, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "~/ui/Card";
@@ -31,10 +27,14 @@ import { SheetCloseButton, SheetContent, SheetDescription, SheetFooter, SheetHea
 import { HoverCardArrow, HoverCardContent, HoverCardRoot, HoverCardTrigger } from "~/ui/HoverCard";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
 import { AccordionContent, AccordionItem, AccordionRoot, AccordionTrigger } from "~/ui/Accordion";
-import { createRowSelection } from "~/lib/utils";
+import { createRowSelection, validationState } from "~/lib/utils";
 import { BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
 import { A } from "@solidjs/router";
 import { ComboboxContent, ComboboxControl, ComboboxDescription, ComboboxErrorMessage, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger, } from "~/ui/Combobox";
+import { As } from "@kobalte/core";
+import { TextFieldDescription, TextFieldErrorMessage, TextFieldInput, TextFieldLabel, TextFieldRoot, TextFieldTextArea } from "~/ui/TextField";
+import { FieldRoot2, } from "~/ui/Form";
+import { Input } from "~/ui/Input";
 
 export function Ui() {
   const showToast = () => {
@@ -58,9 +58,26 @@ export function Ui() {
   onCleanup(() => clearInterval(timer))
 
   const [comboboxValue, setComboboxValue] = createSignal(["Blueberry", "Grapes"]);
+  const [errorMessage, setErrorMessage] = createSignal(false)
 
   return (
     <div class="flex flex-col gap-4 p-4">
+      <SwitchRoot class="space-y-2" validationState={validationState(errorMessage())} onChange={setErrorMessage}>
+        <div class="flex items-center gap-2">
+          <SwitchControl />
+          <SwitchLabel>Switch</SwitchLabel>
+        </div>
+        <SwitchDescription>Switch Description</SwitchDescription>
+        <SwitchErrorMessage>Switch Error Message</SwitchErrorMessage>
+      </SwitchRoot>
+      <CheckboxRoot validationState={validationState(errorMessage())} class="space-y-2">
+        <div class="flex items-center gap-2">
+          <CheckboxControl />
+          <CheckboxLabel>Checkbox Label</CheckboxLabel>
+        </div>
+        <CheckboxDescription>Checkbox Description</CheckboxDescription>
+        <CheckboxErrorMessage>Checkbox Error Message</CheckboxErrorMessage>
+      </CheckboxRoot>
       <ComboboxRoot<string>
         multiple
         options={["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50",]}
@@ -73,7 +90,7 @@ export function Ui() {
           </ComboboxItem>
         )}
         class="space-y-2"
-        validationState="invalid"
+        validationState={validationState(errorMessage())}
       >
         <ComboboxLabel>Combobox Label</ComboboxLabel>
         <ComboboxControl<string> aria-label="Fruits">
@@ -93,14 +110,47 @@ export function Ui() {
           <ComboboxListbox />
         </ComboboxContent>
       </ComboboxRoot>
-      <SwitchRoot class="space-y-2" validationState="invalid">
-        <div class="flex items-center gap-2">
-          <SwitchControl />
-          <SwitchLabel>Switch</SwitchLabel>
-        </div>
-        <SwitchDescription>Switch Description</SwitchDescription>
-        <SwitchErrorMessage>Switch Error Message</SwitchErrorMessage>
-      </SwitchRoot>
+      <TextFieldRoot class="space-y-2" validationState={validationState(errorMessage())}>
+        <TextFieldLabel>Text Field Label</TextFieldLabel>
+        <TextFieldInput placeholder="Text Field Input" />
+        <TextFieldDescription>Text Field Description</TextFieldDescription>
+        <TextFieldErrorMessage>Text Field Error Message</TextFieldErrorMessage>
+      </TextFieldRoot>
+      <TextFieldRoot class="space-y-2" validationState={validationState(errorMessage())}>
+        <TextFieldLabel>Text Field Label</TextFieldLabel>
+        <TextFieldTextArea placeholder="Text Field Text Area" />
+        <TextFieldDescription>Text Field Description</TextFieldDescription>
+        <TextFieldErrorMessage>Text Field Error Message</TextFieldErrorMessage>
+      </TextFieldRoot>
+      <FieldRoot2>
+        <Input type="file"></Input>
+      </FieldRoot2>
+      <SelectRoot
+        defaultValue="Apple"
+        options={["Apple", "Banana", "Blueberry", "Grapes", "Pineapple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple",]}
+        placeholder="Select a fruit…"
+        itemComponent={props => (
+          <SelectItem item={props.item}>
+            {props.item.rawValue}
+          </SelectItem>
+        )}
+        class="space-y-2"
+        validationState={validationState(errorMessage())}
+      >
+        <SelectLabel>Select Label</SelectLabel>
+        <SelectTrigger aria-label="Fruit">
+          <SelectValue<string>>
+            {state => state.selectedOption()}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectDescription>Select Description</SelectDescription>
+        <SelectErrorMessage>Select Error Message</SelectErrorMessage>
+        <SelectPortal>
+          <SelectContent>
+            <SelectListbox />
+          </SelectContent>
+        </SelectPortal>
+      </SelectRoot>
       <Button onClick={toggleTheme} size="icon">
         <ThemeIcon class="h-6 w-6" />
       </Button>
@@ -114,11 +164,6 @@ export function Ui() {
         <AlertTitle>Alert Title</AlertTitle>
         <AlertDescription>Alert Description</AlertDescription>
       </AlertRoot>
-      <div class="flex flex-col gap-1.5">
-        <Label for="input">Label</Label>
-        <Input id="input" type="text" placeholder="Input" />
-      </div>
-      <Textarea placeholder="Textarea"></Textarea>
       <div>
         <div>Top Seperator</div>
         <Seperator />
@@ -130,10 +175,8 @@ export function Ui() {
         <div>Right Seperator</div>
       </div>
       <DropdownMenuRoot>
-        <DropdownMenuTrigger asChild>
-          <As component={Button}>
-            DropdownMenu
-          </As>
+        <DropdownMenuTrigger as={Button}>
+          DropdownMenu
         </DropdownMenuTrigger>
         <DropdownMenuPortal>
           <DropdownMenuContent>
@@ -215,17 +258,9 @@ export function Ui() {
           }
         </For>
       </div>
-      <CheckboxRoot validationState="invalid" class="space-y-2">
-        <div class="flex items-center gap-2">
-          <CheckboxControl />
-          <CheckboxLabel>Checkbox Label</CheckboxLabel>
-        </div>
-        <CheckboxDescription>Checkbox Description</CheckboxDescription>
-        <CheckboxErrorMessage>Checkbox Error Message</CheckboxErrorMessage>
-      </CheckboxRoot>
       <PopoverRoot>
-        <PopoverTrigger asChild>
-          <As component={Button}>Popover</As>
+        <PopoverTrigger as={Button}>
+          Popover
         </PopoverTrigger>
         <PopoverPortal>
           <PopoverContent>
@@ -241,8 +276,8 @@ export function Ui() {
         </PopoverPortal>
       </PopoverRoot>
       <DialogRoot>
-        <DialogTrigger asChild>
-          <As component={Button}>Dialog</As>
+        <DialogTrigger as={Button}>
+          Dialog
         </DialogTrigger>
         <DialogPortal>
           <DialogOverlay />
@@ -254,30 +289,9 @@ export function Ui() {
               </DialogDescription>
             </DialogHeader>
             <DialogOverflow>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
-              <div>I will overflow.</div>
+              <For each={Array(100)}>
+                {() => <div>I will overflow.</div>}
+              </For>
             </DialogOverflow>
             <DialogFooter>
               Footer
@@ -293,7 +307,7 @@ export function Ui() {
               <CheckboxRoot
                 indeterminate={rowSelection.multiple()}
                 checked={rowSelection.all()}
-                onChange={(checked) => rowSelection.setAll(checked)}
+                onChange={rowSelection.setAll}
               >
                 <CheckboxControl />
               </CheckboxRoot>
@@ -305,8 +319,8 @@ export function Ui() {
           <TableRow>
             <TableCell>
               <CheckboxRoot
-                checked={rowSelection.rows[0]?.checked}
-                onChange={(checked) => rowSelection.set(rowSelection.rows[0]?.id || 0, checked)}
+                checked={rowSelection.items[0]?.checked}
+                onChange={(checked) => rowSelection.set(rowSelection.items[0]?.id || 0, checked)}
               >
                 <CheckboxControl />
               </CheckboxRoot>
@@ -316,8 +330,8 @@ export function Ui() {
           <TableRow>
             <TableCell>
               <CheckboxRoot
-                checked={rowSelection.rows[1]?.checked}
-                onChange={(checked) => rowSelection.set(rowSelection.rows[1]?.id || 0, checked)}
+                checked={rowSelection.items[1]?.checked}
+                onChange={(checked) => rowSelection.set(rowSelection.items[1]?.id || 0, checked)}
               >
                 <CheckboxControl />
               </CheckboxRoot>
@@ -344,32 +358,6 @@ export function Ui() {
         <PaginationItems />
         <PaginationNext />
       </PaginationRoot>
-      <SelectRoot
-        defaultValue="Apple"
-        options={["Apple", "Banana", "Blueberry", "Grapes", "Pineapple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple", "Apple",]}
-        placeholder="Select a fruit…"
-        itemComponent={props => (
-          <SelectItem item={props.item}>
-            {props.item.rawValue}
-          </SelectItem>
-        )}
-        class="space-y-2"
-        validationState="invalid"
-      >
-        <SelectLabel>Select Label</SelectLabel>
-        <SelectTrigger aria-label="Fruit">
-          <SelectValue<string>>
-            {state => state.selectedOption()}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectDescription>Select Description</SelectDescription>
-        <SelectErrorMessage>Select Error Message</SelectErrorMessage>
-        <SelectPortal>
-          <SelectContent>
-            <SelectListbox />
-          </SelectContent>
-        </SelectPortal>
-      </SelectRoot>
       <MenubarRoot>
         <MenubarMenu>
           <MenubarTrigger>
@@ -520,7 +508,7 @@ export function Ui() {
       <AvatarRoot fallbackDelay={600}>
         <AvatarImage
           class="image__img"
-          src="/vite.svg"
+          src="/favicon.svg"
           alt="Vite"
         />
         <AvatarFallback>VT</AvatarFallback>
@@ -537,8 +525,8 @@ export function Ui() {
         </ProgressTrack>
       </ProgressRoot>
       <AlertDialogRoot>
-        <AlertDialogTrigger asChild>
-          <As component={Button} variant="outline">Show Alert Dialog</As>
+        <AlertDialogTrigger as={Button}>
+          Show Alert Dialog
         </AlertDialogTrigger>
         <AlertDialogModal>
           <AlertDialogHeader>
@@ -564,8 +552,8 @@ export function Ui() {
         </Toggle>
       </div>
       <SheetRoot>
-        <SheetTrigger asChild>
-          <As component={Button} variant="outline">Open Sheet</As>
+        <SheetTrigger as={Button}>
+          Open Sheet
         </SheetTrigger>
         <SheetContent class="p-4 sm:p-6">
           <SheetHeader>
@@ -575,24 +563,13 @@ export function Ui() {
             </SheetDescription>
           </SheetHeader>
           <SheetOverflow>
-            <div class="grid gap-4 py-4">
-              <div class="grid grid-cols-4 items-center gap-4">
-                <Label for="name" class="text-right">
-                  Name
-                </Label>
-                <Input id="name" value="Pedro Duarte" class="col-span-3" />
-              </div>
-              <div class="grid grid-cols-4 items-center gap-4">
-                <Label for="username" class="text-right">
-                  Username
-                </Label>
-                <Input id="username" value="@peduarte" class="col-span-3" />
-              </div>
-            </div>
+            <For each={Array(100)}>
+              {() => <div>I will overflow.</div>}
+            </For>
           </SheetOverflow>
           <SheetFooter>
-            <SheetCloseButton asChild>
-              <As component={Button} type="submit">Save changes</As>
+            <SheetCloseButton as={Button}>
+              Save changes
             </SheetCloseButton>
           </SheetFooter>
         </SheetContent>
@@ -637,7 +614,7 @@ export function Ui() {
           </li>
         </ol>
       </BreadcrumbsRoot>
-      <Skeleton class="h-screen" />
+      <Skeleton class="h-32" />
     </div >
   )
 }

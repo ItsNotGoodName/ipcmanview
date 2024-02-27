@@ -3,16 +3,15 @@ import { createForm, reset } from "@modular-forms/solid";
 import { ErrorBoundary, For, Show, Suspense, batch, createSignal, } from "solid-js";
 import { Shared } from "~/components/Shared";
 import { Button } from "~/ui/Button";
-import { FieldDescription, FieldLabel, FieldMessage, FieldRoot, SwitchFieldRoot, FormMessage, fieldControlProps, CheckboxFieldRoot } from "~/ui/Form";
-import { Input } from "~/ui/Input";
+import { FormMessage } from "~/ui/Form";
 import { LayoutNormal } from "~/ui/Layout";
-import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchLabel } from "~/ui/Switch";
+import { SwitchControl, SwitchDescription, SwitchErrorMessage, SwitchLabel, SwitchRoot } from "~/ui/Switch";
 import { useClient } from "~/providers/client";
 import { action, createAsync, revalidate, useAction, useSubmission } from "@solidjs/router";
 import { getConfig } from "../data";
 import { GetConfigResp, ListEventRulesResp_Item, UpdateEventRuleReq_Item } from "~/twirp/rpc";
 import { Skeleton } from "~/ui/Skeleton";
-import { catchAsToast, createModal, createRowSelection, throwAsFormError } from "~/lib/utils";
+import { catchAsToast, createLoading, createModal, createRowSelection, setFormValue, throwAsFormError, validationState } from "~/lib/utils";
 import { PageError } from "~/ui/Page";
 import { TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
 import { CheckboxControl, CheckboxErrorMessage, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
@@ -21,7 +20,7 @@ import { DialogContent, DialogHeader, DialogOverflow, DialogOverlay, DialogPorta
 import { RiDeviceSaveLine, RiSystemAddLine, RiSystemDeleteBinLine, RiSystemRefreshLine } from "solid-icons/ri";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogModal, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
 import { createStore } from "solid-js/store";
-import { TextFieldInput, TextFieldRoot } from "~/ui/TextField";
+import { TextFieldDescription, TextFieldErrorMessage, TextFieldInput, TextFieldLabel, TextFieldRoot } from "~/ui/TextField";
 
 type UpdateForm = {
   siteName: string
@@ -65,38 +64,40 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
       boolean: props.config.enableSignUp
     }
   })
-  const [updateForm, { Field, Form }] = createForm<UpdateForm>({ initialValues: formInitialValues() });
-  const formReset = () => props.refetchConfig().then(() => reset(updateForm, { initialValues: formInitialValues() }))
-  const formSubmit = (form: UpdateForm) => useClient()
+  const [form, { Field, Form }] = createForm<UpdateForm>({ initialValues: formInitialValues() });
+  const [refreshFormLoading, refreshForm] = createLoading(() => props.refetchConfig().then(() => reset(form, { initialValues: formInitialValues() })))
+  const submitForm = (form: UpdateForm) => useClient()
     .admin.updateConfig({
       enableSignUp: form.enableSignUp.boolean,
       siteName: form.siteName,
     })
-    .then(formReset)
+    .then(refreshForm)
     .catch(throwAsFormError)
+  const formDisabled = () => refreshFormLoading() || form.submitting
 
   return (
     <div class="flex justify-center">
-      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={formSubmit}>
+      <Form class="flex w-full max-w-sm flex-col gap-4" onSubmit={submitForm}>
         <Field name="siteName">
           {(field, props) => (
-            <FieldRoot>
-              <FieldLabel field={field}>Site name</FieldLabel>
-              <Input
-                {...props}
-                {...fieldControlProps(field)}
-                value={field.value}
-              />
-              <FieldDescription>Name of site.</FieldDescription>
-              <FieldMessage field={field} />
-            </FieldRoot>
+            <TextFieldRoot
+              validationState={validationState(field.error)}
+              value={field.value}
+              class="space-y-2"
+            >
+              <TextFieldLabel>Site name</TextFieldLabel>
+              <TextFieldInput {...props} />
+              <TextFieldDescription>Name of site.</TextFieldDescription>
+              <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+            </TextFieldRoot>
           )}
         </Field>
         <Field name="enableSignUp.boolean" type="boolean">
           {(field, props) => (
-            <SwitchFieldRoot
-              form={updateForm}
-              field={field}
+            <SwitchRoot
+              validationState={validationState(field.error)}
+              checked={field.value}
+              onChange={setFormValue(form, field)}
               class="flex items-center justify-between gap-2"
             >
               <div>
@@ -105,16 +106,16 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
                 <SwitchErrorMessage>{field.error}</SwitchErrorMessage>
               </div>
               <SwitchControl inputProps={props} />
-            </SwitchFieldRoot>
+            </SwitchRoot>
           )}
         </Field>
         <div class="flex flex-col gap-4 sm:flex-row-reverse">
-          <Button type="submit" disabled={updateForm.submitting} class="sm:flex-1">
-            <Show when={!updateForm.submitting} fallback="Updating settings">Update settings</Show>
+          <Button type="submit" disabled={formDisabled()} class="sm:flex-1">
+            <Show when={!form.submitting} fallback="Updating settings">Update settings</Show>
           </Button>
-          <Button type="button" onClick={formReset} variant="secondary" disabled={updateForm.submitting}>Reset</Button>
+          <Button type="button" onClick={refreshForm} variant="secondary" disabled={formDisabled()}>Refresh</Button>
         </div>
-        <FormMessage form={updateForm} />
+        <FormMessage form={form} />
       </Form>
     </div>
   )
@@ -141,7 +142,6 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
 
   // Create
   const [createFormModal, setCreateFormModal] = createSignal(false)
-  const submitCreate = () => { resetRows(), setCreateFormModal(false) }
 
   // Update
   const updateSubmission = useSubmission(actionUpdateEventRule)
@@ -179,7 +179,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
               <DialogTitle>Create event rule</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <CreateEventRuleForm onSubmit={submitCreate} />
+              <CreateEventRuleForm onSubmit={submitRefresh} onClose={() => setCreateFormModal(false)} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -264,7 +264,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
               <CheckboxRoot
                 indeterminate={rowSelection.multiple()}
                 checked={rowSelection.all()}
-                onChange={(checked) => rowSelection.setAll(checked)}
+                onChange={rowSelection.setAll}
               >
                 <CheckboxControl />
               </CheckboxRoot>
@@ -303,7 +303,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
                 <TableCell>
                   <CheckboxRoot
                     disabled={!item.code}
-                    checked={rowSelection.rows[index()]?.checked}
+                    checked={rowSelection.items[index()]?.checked}
                     onChange={(checked) => rowSelection.set(item.id, checked)}
                   >
                     <CheckboxControl />
@@ -377,7 +377,7 @@ type CreateEventRuleForm = {
   }
 }
 
-function CreateEventRuleForm(props: { onSubmit?: () => void }) {
+function CreateEventRuleForm(props: { onSubmit: () => void, onClose: () => void }) {
   const [addMore, setAddMore] = createSignal(false)
 
   const [form, { Field, Form }] = createForm<CreateEventRuleForm>();
@@ -389,7 +389,7 @@ function CreateEventRuleForm(props: { onSubmit?: () => void }) {
         ignoreLive: !data.live.boolean,
         ignoreMqtt: !data.mqtt.boolean,
       })
-      .then(() => revalidate(getListEventRules.key))
+      .then(props.onSubmit)
       .catch(throwAsFormError)
       .then(() => {
         if (addMore()) {
@@ -400,7 +400,7 @@ function CreateEventRuleForm(props: { onSubmit?: () => void }) {
             }
           })
         } else {
-          props.onSubmit && props.onSubmit()
+          props.onClose()
         }
       })
   }
@@ -411,44 +411,62 @@ function CreateEventRuleForm(props: { onSubmit?: () => void }) {
         <Form class="flex flex-col gap-4" onSubmit={submit}>
           <Field name="code">
             {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Code</FieldLabel>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Code</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   placeholder="Code"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldDescription>Name of site.</TextFieldDescription>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <div class="flex flex-wrap gap-4">
             <Field name="db.boolean" type="boolean">
-              {(field, props) => (
-                <CheckboxFieldRoot form={form} field={field} class="flex items-center gap-2">
-                  <CheckboxControl inputProps={props} />
+              {(field) => (
+                <CheckboxRoot
+                  validationState={validationState(field.error)}
+                  checked={field.value}
+                  onChange={setFormValue(form, field)}
+                  class="flex items-center gap-2"
+                >
+                  <CheckboxControl />
                   <CheckboxLabel>DB</CheckboxLabel>
                   <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
-                </CheckboxFieldRoot>
+                </CheckboxRoot>
               )}
             </Field>
             <Field name="live.boolean" type="boolean">
-              {(field, props) => (
-                <CheckboxFieldRoot form={form} field={field} class="flex items-center gap-2">
-                  <CheckboxControl inputProps={props} />
+              {(field) => (
+                <CheckboxRoot
+                  validationState={validationState(field.error)}
+                  checked={field.value}
+                  onChange={setFormValue(form, field)}
+                  class="flex items-center gap-2"
+                >
+                  <CheckboxControl />
                   <CheckboxLabel>Live</CheckboxLabel>
                   <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
-                </CheckboxFieldRoot>
+                </CheckboxRoot>
               )}
             </Field>
             <Field name="mqtt.boolean" type="boolean">
-              {(field, props) => (
-                <CheckboxFieldRoot form={form} field={field} class="flex items-center gap-2">
-                  <CheckboxControl inputProps={props} />
+              {(field) => (
+                <CheckboxRoot
+                  validationState={validationState(field.error)}
+                  checked={field.value}
+                  onChange={setFormValue(form, field)}
+                  class="flex items-center gap-2"
+                >
+                  <CheckboxControl />
                   <CheckboxLabel>MQTT</CheckboxLabel>
                   <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
-                </CheckboxFieldRoot>
+                </CheckboxRoot>
               )}
             </Field>
           </div>
@@ -465,4 +483,5 @@ function CreateEventRuleForm(props: { onSubmit?: () => void }) {
     </ErrorBoundary>
   )
 }
+
 export default AdminSettings

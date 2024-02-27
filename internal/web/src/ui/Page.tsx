@@ -1,9 +1,9 @@
 import { RiSystemLoader4Line } from "solid-icons/ri"
 import { ComponentProps, JSX, splitProps } from "solid-js"
+import { Alert } from "@kobalte/core"
 
 import { cn } from "~/lib/utils"
 import { AlertDescription, AlertRoot, AlertTitle } from "./Alert"
-import { Alert } from "@kobalte/core"
 
 export function PageError(props: ComponentProps<typeof Alert.Root> & { error: Error }) {
   const [_, rest] = splitProps(props, ["error"])

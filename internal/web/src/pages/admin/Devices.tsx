@@ -3,7 +3,7 @@ import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDesc
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot } from "~/ui/DropdownMenu";
 import { AdminDevicesPageSearchParams, getAdminDevicesPage } from "./Devices.data";
 import { ErrorBoundary, For, Show, Suspense, createSignal } from "solid-js";
-import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, createModal, formatDate, isTableRowClick, parseDate, throwAsFormError, validationState, } from "~/lib/utils";
+import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, createModal, formatDate, isTableDataClick, parseDate, throwAsFormError, validationState, setFormValue, createLoading, } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { useClient } from "~/providers/client";
@@ -17,15 +17,14 @@ import { Crud } from "~/components/Crud";
 import { RiSystemLockLine } from "solid-icons/ri";
 import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
 import { Button } from "~/ui/Button";
-import { FieldLabel, FieldMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form";
-import { FieldElementProps, FieldStore, FormStore, createForm, required, reset, setValue } from "@modular-forms/solid";
-import { Input } from "~/ui/Input";
-import { SelectContent, SelectErrorMessage, SelectItem, SelectLabel, SelectListbox, SelectPortal, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
+import { FormMessage } from "~/ui/Form";
+import { FieldStore, FormStore, createForm, required, reset, setValue } from "@modular-forms/solid";
+import { SelectContent, SelectErrorMessage, SelectItem, SelectLabel, SelectListBoxVirtual, SelectListbox, SelectPortal, SelectRoot, SelectTrigger, SelectValue } from "~/ui/Select";
 import { getDevice, getListDeviceFeatures, getListLocations } from "./data";
 import { Shared } from "~/components/Shared";
 import { Badge } from "~/ui/Badge";
 import { BreadcrumbsItem, BreadcrumbsRoot } from "~/ui/Breadcrumbs";
-import { createVirtualizer } from "@tanstack/solid-virtual";
+import { TextFieldErrorMessage, TextFieldInput, TextFieldLabel, TextFieldRoot } from "~/ui/TextField";
 
 const actionDeleteDevice = action((ids: bigint[]) => useClient()
   .admin.deleteDevice({ ids })
@@ -136,7 +135,7 @@ export function AdminDevices() {
               <ul>
                 <For each={data()?.items}>
                   {(e, index) =>
-                    <Show when={rowSelection.rows[index()]?.checked}>
+                    <Show when={rowSelection.items[index()]?.checked}>
                       <li>{e.name}</li>
                     </Show>
                   }
@@ -184,7 +183,7 @@ export function AdminDevices() {
                     <CheckboxRoot
                       checked={rowSelection.all()}
                       indeterminate={rowSelection.multiple()}
-                      onChange={(v) => rowSelection.setAll(v)}
+                      onChange={rowSelection.setAll}
                     >
                       <CheckboxControl />
                     </CheckboxRoot>
@@ -256,13 +255,13 @@ export function AdminDevices() {
 
                     return (
                       <TableRow
-                        data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}
-                        onClick={(t) => isTableRowClick(t) && navigate(`./${item.id}`)}
-                        class="cursor-pointer"
+                        data-state={rowSelection.items[index()]?.checked ? "selected" : ""}
+                        onClick={(t) => isTableDataClick(t) && navigate(`./${item.id}`)}
+                        class="[&>td]:cursor-pointer"
                       >
                         <TableHead>
                           <CheckboxRoot
-                            checked={rowSelection.rows[index()]?.checked}
+                            checked={rowSelection.items[index()]?.checked}
                             onChange={(v) => rowSelection.set(item.id, v)}
                           >
                             <CheckboxControl />
@@ -373,67 +372,74 @@ function CreateForm(props: { onClose: () => void }) {
         <Form class="flex flex-col gap-4" onSubmit={submitForm}>
           <Field name="name">
             {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Name</FieldLabel>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Name</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   placeholder="Name"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Field name="url" validate={required("Please enter a URL.")}>
             {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>URL</FieldLabel>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>URL</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   placeholder="URL"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Field name="username">
             {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Username</FieldLabel>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Username</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
                   placeholder="Username"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Field name="password">
             {(field, props) => (
-              <FieldRoot>
-                <FieldLabel field={field}>Password</FieldLabel>
-                <Input
+              <TextFieldRoot
+                validationState={validationState(field.error)}
+                value={field.value}
+                class="space-y-2"
+              >
+                <TextFieldLabel>Password</TextFieldLabel>
+                <TextFieldInput
                   {...props}
-                  {...fieldControlProps(field)}
-                  autocomplete="off"
                   placeholder="Password"
                   type="password"
-                  value={field.value}
                 />
-                <FieldMessage field={field} />
-              </FieldRoot>
+                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+              </TextFieldRoot>
             )}
           </Field>
           <Field name="location">
-            {(field, props) => <DeviceLocationsField form={form} field={field} props={props} />}
+            {(field) => <LocationsField form={form} field={field} />}
           </Field>
           <Field name="features.array" type="string[]">
-            {(field, props) => <DeviceFeaturesField form={form} field={field} props={props} />}
+            {(field) => <FeaturesField form={form} field={field} />}
           </Field>
           <Button type="submit" disabled={form.submitting}>
             <Show when={!form.submitting} fallback="Creating device">Create device</Show>
@@ -485,13 +491,14 @@ function UpdateFormForm(props: { onClose: () => void | Promise<void>, device: Ge
   const [form, { Field, Form }] = createForm<UpdateForm>({
     initialValues: formInitialValues()
   });
-  const resetForm = () => props.refetchDevice()
-    .then(() => reset(form, { initialValues: formInitialValues() }))
+  const [refreshFormLoading, refreshForm] = createLoading(() => props.refetchDevice()
+    .then(() => reset(form, { initialValues: formInitialValues() })))
   const submitForm = (data: UpdateForm) => useClient()
     .admin.updateDevice({ ...data, features: data.features.array })
     .then(() => revalidate())
     .then(props.onClose)
     .catch(throwAsFormError)
+  const formDisabled = () => refreshFormLoading() || form.submitting
 
   return (
     <Form class="flex flex-col gap-4" onSubmit={submitForm}>
@@ -500,80 +507,87 @@ function UpdateFormForm(props: { onClose: () => void | Promise<void>, device: Ge
       </Field>
       <Field name="name">
         {(field, props) => (
-          <FieldRoot>
-            <FieldLabel field={field}>Name</FieldLabel>
-            <Input
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>Name</TextFieldLabel>
+            <TextFieldInput
               {...props}
-              {...fieldControlProps(field)}
               placeholder="Name"
-              value={field.value}
             />
-            <FieldMessage field={field} />
-          </FieldRoot>
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
         )}
       </Field>
       <Field name="url" validate={required("Please enter a URL.")}>
         {(field, props) => (
-          <FieldRoot>
-            <FieldLabel field={field}>URL</FieldLabel>
-            <Input
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>URL</TextFieldLabel>
+            <TextFieldInput
               {...props}
-              {...fieldControlProps(field)}
               placeholder="URL"
-              value={field.value}
             />
-            <FieldMessage field={field} />
-          </FieldRoot>
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
         )}
       </Field>
       <Field name="username">
         {(field, props) => (
-          <FieldRoot>
-            <FieldLabel field={field}>Username</FieldLabel>
-            <Input
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>Username</TextFieldLabel>
+            <TextFieldInput
               {...props}
-              {...fieldControlProps(field)}
               placeholder="Username"
-              value={field.value}
             />
-            <FieldMessage field={field} />
-          </FieldRoot>
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
         )}
       </Field>
       <Field name="newPassword">
         {(field, props) => (
-          <FieldRoot>
-            <FieldLabel field={field}>New password</FieldLabel>
-            <Input
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>New password</TextFieldLabel>
+            <TextFieldInput
               {...props}
-              {...fieldControlProps(field)}
-              autocomplete="off"
               placeholder="New password"
               type="password"
-              value={field.value}
             />
-            <FieldMessage field={field} />
-          </FieldRoot>
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
         )}
       </Field>
       <Field name="location">
-        {(field, props) => <DeviceLocationsField form={form} field={field} props={props} />}
+        {(field) => <LocationsField form={form} field={field} />}
       </Field>
       <Field name="features.array" type="string[]">
-        {(field, props) => <DeviceFeaturesField form={form} field={field} props={props} />}
+        {(field) => <FeaturesField form={form} field={field} />}
       </Field>
       <div class="flex flex-col gap-4 sm:flex-row-reverse">
-        <Button type="submit" disabled={form.submitting} class="sm:flex-1">
+        <Button type="submit" disabled={formDisabled()} class="sm:flex-1">
           <Show when={!form.submitting} fallback="Updating device">Update device</Show>
         </Button>
-        <Button type="button" onClick={resetForm} disabled={form.submitting} variant="secondary">Reset</Button>
+        <Button type="button" onClick={refreshForm} disabled={formDisabled()} variant="secondary">Refresh</Button>
       </div>
       <FormMessage form={form} />
     </Form>
   )
 }
 
-function DeviceLocationsField(props: { form: FormStore<any, undefined>, field: FieldStore<any, any>, props: FieldElementProps<any, any> }) {
+function LocationsField(props: { form: FormStore<any, undefined>, field: FieldStore<any, any> }) {
   const locations = createAsync(() => getListLocations())
 
   return (
@@ -581,7 +595,7 @@ function DeviceLocationsField(props: { form: FormStore<any, undefined>, field: F
       <SelectRoot<string>
         validationState={validationState(props.field.error)}
         value={props.field.value}
-        onChange={(v) => setValue(props.form, props.field.name, v)}
+        onChange={setFormValue(props.form, props.field)}
         options={locations()!}
         placeholder="Location"
         itemComponent={props => (
@@ -593,74 +607,23 @@ function DeviceLocationsField(props: { form: FormStore<any, undefined>, field: F
         class="space-y-2"
       >
         <SelectLabel>Location</SelectLabel>
-        <SelectTrigger hiddenSelectProps={props.props}>
+        <SelectTrigger>
           <SelectValue<string>>
             {state => state.selectedOption()}
           </SelectValue>
         </SelectTrigger>
         <SelectErrorMessage>{props.field.error}</SelectErrorMessage>
         <SelectPortal>
-          <SelectContentVirtual options={locations()!} />
+          <SelectContent>
+            <SelectListBoxVirtual options={locations()!} />
+          </SelectContent>
         </SelectPortal>
       </SelectRoot>
     </Show>
   )
 }
 
-function SelectContentVirtual(props: { options: string[] }) {
-  let ref: HTMLUListElement | null;
-  const virtualizer = createVirtualizer({
-    count: props.options.length,
-    getScrollElement: () => ref,
-    getItemKey: (index) => props.options[index],
-    estimateSize: () => 32,
-    overscan: 5,
-  });
-
-  return (
-    <SelectContent>
-      <SelectListbox<string>
-        ref={ref!}
-        scrollToItem={(item) => virtualizer.scrollToIndex(props.options.indexOf(item))}
-      >
-        {items => (
-          <div
-            style={{
-              height: `${virtualizer.getTotalSize()}px`,
-              width: "100%",
-              position: "relative",
-            }}
-          >
-            <For each={virtualizer.getVirtualItems()}>
-              {virtualRow => {
-                const item = items().getItem(virtualRow.key as string);
-                if (item) {
-                  return (
-                    <SelectItem
-                      item={item}
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: `${virtualRow.size}px`,
-                        transform: `translateY(${virtualRow.start}px)`,
-                      }}
-                    >
-                      {item.rawValue}
-                    </SelectItem>
-                  );
-                }
-              }}
-            </For>
-          </div>
-        )}
-      </SelectListbox>
-    </SelectContent>
-  );
-}
-
-function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: FieldStore<any, any>, props: FieldElementProps<any, any> }) {
+function FeaturesField(props: { form: FormStore<any, undefined>, field: FieldStore<any, any> }) {
   const deviceFeatures = createAsync(() => getListDeviceFeatures())
 
   return (
@@ -676,7 +639,7 @@ function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: Fi
         itemComponent={props => (
           <SelectItem item={props.item} >
             <div class="flex gap-2">
-              {props.item.rawValue.name} <p class="text-muted-foreground" >{props.item.rawValue.description}</p>
+              {props.item.rawValue.name} <p class="text-muted-foreground">{props.item.rawValue.description}</p>
             </div>
           </SelectItem>
         )}
@@ -684,7 +647,7 @@ function DeviceFeaturesField(props: { form: FormStore<any, undefined>, field: Fi
         class="space-y-2"
       >
         <SelectLabel>Features</SelectLabel>
-        <SelectTrigger hiddenSelectProps={props.props}>
+        <SelectTrigger>
           <SelectValue<ListDeviceFeaturesResp_Item>>
             {state =>
               <div class="flex gap-2">

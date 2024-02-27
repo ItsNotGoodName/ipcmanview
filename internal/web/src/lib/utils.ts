@@ -4,7 +4,7 @@ import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
 import { RpcError } from "@protobuf-ts/runtime-rpc";
-import { FieldValues, FormError, FormStore, PartialValues, reset } from "@modular-forms/solid";
+import { FieldStore, FieldValues, FormError, FormStore, PartialValues, reset, setValue } from "@modular-forms/solid";
 import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
 import { createStore } from "solid-js/store";
 import { useSearchParams } from "@solidjs/router";
@@ -65,8 +65,14 @@ export function encodeOrder(o: Order): string {
   return ""
 }
 
+type RowSelectionItem<T> = {
+  id: T,
+  checked: boolean,
+  disabled: boolean
+}
+
 export type CreateRowSelectionReturn<T> = {
-  rows: Array<{ id: T, checked: boolean } | undefined>
+  items: Array<RowSelectionItem<T> | undefined>
   multiple: Accessor<boolean>
   all: Accessor<boolean>
   selections: Accessor<Array<T>>
@@ -75,38 +81,40 @@ export type CreateRowSelectionReturn<T> = {
 }
 
 export function createRowSelection<T>(ids: Accessor<Array<{ id: T, disabled?: boolean }>>): CreateRowSelectionReturn<T> {
-  const [rows, setRows] = createStore<Array<{ id: T, checked: boolean, disabled: boolean }>>(ids().map(v => ({ id: v.id, checked: false, disabled: v.disabled || false })))
+  const [items, setItems] = createStore<Array<RowSelectionItem<T>>>(
+    ids().map(v => ({ id: v.id, checked: false, disabled: v.disabled || false }))
+  )
   createEffect(() =>
-    setRows((prev) => ids().map(v => ({ id: v.id, disabled: v.disabled || false, checked: prev.find(p => p.id == v.id)?.checked || false })))
+    setItems((prev) => ids().map(v => ({ id: v.id, disabled: v.disabled || false, checked: prev.find(p => p.id == v.id)?.checked || false })))
   )
 
   return {
-    rows,
+    items,
     multiple: () => {
-      for (let index = 0; index < rows.length; index++) {
-        if (rows[index].checked) return true
+      for (let index = 0; index < items.length; index++) {
+        if (items[index].checked) return true
       }
       return false
     },
     all: () => {
       let disabled = 0
-      for (let index = 0; index < rows.length; index++) {
-        if (rows[index].disabled) disabled++
-        else if (!rows[index].checked) return false
+      for (let index = 0; index < items.length; index++) {
+        if (items[index].disabled) disabled++
+        else if (!items[index].checked) return false
       }
-      if (rows.length - disabled == 0) return false
+      if (items.length - disabled == 0) return false
       return true
     },
-    selections: () => rows.filter(v => v.checked == true).map(v => v.id),
+    selections: () => items.filter(v => v.checked == true).map(v => v.id),
     set: (id, value) => {
-      setRows(
+      setItems(
         (v) => v.id === id && !v.disabled,
         "checked",
         value,
       );
     },
     setAll: (value) => {
-      setRows(
+      setItems(
         (v) => !v.disabled,
         "checked",
         value,
@@ -124,7 +132,7 @@ export function syncForm<TFieldValues extends FieldValues>(form: FormStore<TFiel
   return () => data.loading || !!data.error
 }
 
-export function isTableRowClick(t: MouseEvent) {
+export function isTableDataClick(t: MouseEvent) {
   return t.target && (t.target as any).tagName == "TD"
 }
 
@@ -216,6 +224,10 @@ export function useHiddenScrollbar(): void {
   onCleanup(() => html.style.removeProperty("scrollbar-width"))
 }
 
-export function validationState(error?: string): "invalid" | "valid" {
+export function validationState(error?: string | boolean): "invalid" | "valid" {
   return error ? "invalid" : "valid"
+}
+
+export function setFormValue(form: FormStore<any, any>, field: FieldStore<any, any>) {
+  return (value: any) => setValue(form, field.name, value)
 }

@@ -3,22 +3,21 @@ import { action, createAsync, revalidate, useAction, useSubmission } from "@soli
 import { RiSystemCheckLine, RiSystemCloseLine } from "solid-icons/ri"
 import { ErrorBoundary, For, ParentProps, Show, Suspense, createSignal, } from "solid-js"
 import { createForm, required, reset } from "@modular-forms/solid"
-
-import { formatDate, parseDate, catchAsToast, throwAsFormError, createModal } from "~/lib/utils"
+import { formatDate, parseDate, catchAsToast, throwAsFormError, createModal, validationState } from "~/lib/utils"
 import { CardRoot, } from "~/ui/Card"
 import { getProfilePage } from "./Profile.data"
 import { Button } from "~/ui/Button"
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table"
 import { useClient } from "~/providers/client"
 import { Badge } from "~/ui/Badge"
-import { FieldLabel, FieldMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form"
-import { Input } from "~/ui/Input"
+import { FormMessage } from "~/ui/Form"
 import { Skeleton } from "~/ui/Skeleton"
 import { getSession } from "~/providers/session"
 import { PageError } from "~/ui/Page"
 import { LayoutNormal } from "~/ui/Layout"
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog"
 import { Shared } from "~/components/Shared"
+import { TextFieldErrorMessage, TextFieldInput, TextFieldLabel, TextFieldRoot } from "~/ui/TextField"
 
 function Center(props: ParentProps) {
   return (
@@ -214,7 +213,7 @@ function ChangeUsernameForm() {
       newUsername: ""
     }
   });
-  const submit = (input: ChangeUsernameForm) => useClient()
+  const submitForm = (input: ChangeUsernameForm) => useClient()
     .user.updateMyUsername(input)
     .then(() => revalidate([getProfilePage.key, getSession.key]))
     .then(() => reset(form))
@@ -222,19 +221,21 @@ function ChangeUsernameForm() {
 
   return (
     <Center>
-      <Form onSubmit={submit} class="flex w-full max-w-sm flex-col gap-4">
+      <Form onSubmit={submitForm} class="flex w-full max-w-sm flex-col gap-4">
         <Field name="newUsername" validate={required("Please enter a new username.")}>
           {(field, props) => (
-            <FieldRoot>
-              <FieldLabel field={field}>New username</FieldLabel>
-              <Input
+            <TextFieldRoot
+              validationState={validationState(field.error)}
+              value={field.value}
+              class="space-y-2"
+            >
+              <TextFieldLabel>New username</TextFieldLabel>
+              <TextFieldInput
                 {...props}
-                {...fieldControlProps(field)}
                 placeholder="New username"
-                value={field.value}
               />
-              <FieldMessage field={field} />
-            </FieldRoot>
+              <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+            </TextFieldRoot>
           )}
         </Field>
         <Button type="submit" disabled={form.submitting}>
@@ -266,7 +267,7 @@ function ChangePasswordForm() {
       return {}
     }
   });
-  const submit = (input: ChangePasswordForm) => useClient()
+  const submitForm = (input: ChangePasswordForm) => useClient()
     .user.updateMyPassword(input)
     .then(() => revalidate(getProfilePage.key))
     .then(() => reset(form))
@@ -274,54 +275,60 @@ function ChangePasswordForm() {
 
   return (
     <Center>
-      <Form onSubmit={submit} class="flex w-full max-w-sm flex-col gap-4">
+      <Form onSubmit={submitForm} class="flex w-full max-w-sm flex-col gap-4">
         <input class="hidden" type="text" name="username" autocomplete="username" />
         <Field name="oldPassword" validate={required("Please enter your old password.")}>
           {(field, props) => (
-            <FieldRoot>
-              <FieldLabel field={field}>Old password</FieldLabel>
-              <Input
+            <TextFieldRoot
+              validationState={validationState(field.error)}
+              value={field.value}
+              class="space-y-2"
+            >
+              <TextFieldLabel>Old password</TextFieldLabel>
+              <TextFieldInput
                 {...props}
-                {...fieldControlProps(field)}
                 autocomplete="current-password"
                 placeholder="Old password"
                 type="password"
-                value={field.value}
               />
-              <FieldMessage field={field} />
-            </FieldRoot>
+              <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+            </TextFieldRoot>
           )}
         </Field>
         <Field name="newPassword" validate={required("Please enter a new password.")}>
           {(field, props) => (
-            <FieldRoot>
-              <FieldLabel field={field}>New password</FieldLabel>
-              <Input
+            <TextFieldRoot
+              validationState={validationState(field.error)}
+              value={field.value}
+              class="space-y-2"
+            >
+              <TextFieldLabel>New password</TextFieldLabel>
+              <TextFieldInput
                 {...props}
-                {...fieldControlProps(field)}
                 autocomplete="new-password"
                 placeholder="New password"
                 type="password"
-                value={field.value}
               />
-              <FieldMessage field={field} />
-            </FieldRoot>
+              <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+            </TextFieldRoot>
           )}
         </Field>
         <Field name="confirmPassword">
           {(field, props) => (
-            <FieldRoot>
-              <FieldLabel field={field}>Confirm new password</FieldLabel>
-              <Input
+            <TextFieldRoot
+              validationState={validationState(field.error)}
+              value={field.value}
+              class="space-y-2"
+            >
+              <TextFieldLabel>Confirm new password</TextFieldLabel>
+              <TextFieldInput
                 {...props}
-                {...fieldControlProps(field)}
                 autocomplete="new-password"
                 placeholder="Confirm new password"
                 type="password"
-                value={field.value}
               />
-              <FieldMessage field={field} />
-            </FieldRoot>
+              <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+            </TextFieldRoot>
           )}
         </Field>
         <Button type="submit" disabled={form.submitting}>

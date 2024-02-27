@@ -6,10 +6,11 @@
 // https://ui.shadcn.com/docs/components/select
 import { Select } from "@kobalte/core"
 import { RiArrowsArrowDownSLine, RiSystemCheckLine } from "solid-icons/ri"
-import { JSX, splitProps } from "solid-js"
+import { For, JSX, splitProps } from "solid-js"
 
 import { cn } from "~/lib/utils"
 import { labelVariants } from "./Label"
+import { createVirtualizer } from "@tanstack/solid-virtual"
 
 export const SelectRoot = Select.Root
 
@@ -39,21 +40,18 @@ export function SelectErrorMessage(props: Select.SelectDescriptionProps) {
   />
 }
 
-export function SelectTrigger(props: Select.SelectTriggerProps & { hiddenSelectProps?: Select.SelectHiddenSelectProps }) {
-  const [_, rest] = splitProps(props, ["class", "children", "hiddenSelectProps"])
-  return <>
-    <Select.HiddenSelect {...props.hiddenSelectProps} />
-    <Select.Trigger
-      class={cn(
-        "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
-        props.class
-      )}
-      {...rest}
-    >
-      {props.children}
-      <Select.Icon as={RiArrowsArrowDownSLine} class="h-4 w-4 opacity-50" />
-    </Select.Trigger>
-  </>
+export function SelectTrigger(props: Select.SelectTriggerProps) {
+  const [_, rest] = splitProps(props, ["class", "children"])
+  return <Select.Trigger
+    class={cn(
+      "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      props.class
+    )}
+    {...rest}
+  >
+    {props.children}
+    <Select.Icon as={RiArrowsArrowDownSLine} class="h-4 w-4 opacity-50" />
+  </Select.Trigger>
 }
 
 export const SelectPortal = Select.Portal
@@ -96,3 +94,55 @@ export function SelectSeparator(props: JSX.HTMLAttributes<HTMLDivElement>) {
     {...rest}
   />
 }
+
+export function SelectListBoxVirtual(props: { options: string[] }) {
+  let ref: HTMLUListElement | null;
+  const virtualizer = createVirtualizer({
+    count: props.options.length,
+    getScrollElement: () => ref,
+    getItemKey: (index) => props.options[index],
+    estimateSize: () => 32,
+    overscan: 5,
+  });
+
+  return (
+    <SelectListbox<string>
+      ref={ref!}
+      scrollToItem={(item) => virtualizer.scrollToIndex(props.options.indexOf(item))}
+    >
+      {items => (
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          <For each={virtualizer.getVirtualItems()}>
+            {virtualRow => {
+              const item = items().getItem(virtualRow.key as string);
+              if (item) {
+                return (
+                  <SelectItem
+                    item={item}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      height: `${virtualRow.size}px`,
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    {item.rawValue}
+                  </SelectItem>
+                );
+              }
+            }}
+          </For>
+        </div>
+      )}
+    </SelectListbox>
+  );
+}
+

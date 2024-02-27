@@ -4,7 +4,7 @@ import { RiEditorAttachment2, RiSystemFilterLine } from "solid-icons/ri";
 import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo } from "solid-js";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
-import { encodeQuery, createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder, decodeBigInts, encodeBigInts, isTableRowClick } from "~/lib/utils";
+import { encodeQuery, createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder, decodeBigInts, encodeBigInts, isTableDataClick } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { PaginationEllipsis, PaginationEnd, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
@@ -180,22 +180,25 @@ export function Emails() {
               <TableBody>
                 <For each={data()?.emails}>
                   {v =>
-                    <TableRow onClick={(t) => isTableRowClick(t) && navigate(`/emails/${v.id}${query()}`)} class="cursor-pointer">
-                      <TableCell class="truncate">
+                    <TableRow
+                      onClick={(t) => isTableDataClick(t) && navigate(`/emails/${v.id}${query()}`)}
+                      class="[&>td]:cursor-pointer"
+                    >
+                      <TableCell>
                         {formatDate(parseDate(v.createdAtTime))}
                       </TableCell>
-                      <TableCell class="truncate">
+                      <TableCell>
                         <A href={`/devices/${v.deviceId}`} class={linkVariants()}>
                           {v.deviceName}
                         </A>
                       </TableCell>
-                      <TableCell class="truncate">
+                      <TableCell>
                         {v.alarmEvent}
                       </TableCell>
-                      <TableCell class="truncate">
+                      <TableCell>
                         {v.from}
                       </TableCell>
-                      <TableCell class="truncate">
+                      <TableCell>
                         {v.subject}
                       </TableCell>
                       <Crud.LastTableCell>
@@ -227,4 +230,5 @@ export function Emails() {
     </LayoutNormal>
   )
 }
+
 export default Emails

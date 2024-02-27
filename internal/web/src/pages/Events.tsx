@@ -1,7 +1,7 @@
 import { writeClipboard } from "@solid-primitives/clipboard";
 import hljs from "~/lib/hljs"
 import { A, createAsync, useSearchParams } from "@solidjs/router";
-import { Accessor, ErrorBoundary, For, Suspense, createEffect, createMemo, createSignal, } from "solid-js";
+import { Accessor, ErrorBoundary, For, Show, Suspense, createEffect, createMemo, createSignal, } from "solid-js";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
 import { createPagePagination, createToggleSortField, decodeBigInts, encodeBigInts, formatDate, parseDate, parseOrder } from "~/lib/utils";
@@ -267,11 +267,15 @@ export function JSONTableRow(props: { colspan?: number, expanded?: boolean, data
   return (
     <tr class="border-b">
       <td colspan={props.colspan} class="p-0">
-        <div data-expanded={props.expanded} class="relative h-0 overflow-y-hidden data-[expanded=true]:h-full">
+        <div class="relative overflow-y-hidden">
           <Button onClick={() => writeClipboard(props.data)} title="Copy" size="icon" variant="ghost" class="absolute right-4 top-2">
             <RiDocumentClipboardLine class="size-5" />
           </Button>
-          <pre><code innerHTML={hljs.highlight(props.data, { language: "json" }).value} class="hljs" /></pre>
+          <pre>
+            <Show when={props.expanded}>
+              <code innerHTML={hljs.highlight(props.data, { language: "json" }).value} class="hljs" />
+            </Show>
+          </pre>
         </div>
       </td>
     </tr>

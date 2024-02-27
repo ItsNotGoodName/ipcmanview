@@ -13,10 +13,10 @@ import { labelVariants } from "./Label";
 
 export const CheckboxRoot = Checkbox.Root
 
-export function CheckboxControl(props: Omit<Checkbox.CheckboxControlProps, "children"> & { inputProps?: Omit<Checkbox.CheckboxInputProps, "class"> }) {
-  const [_, rest] = splitProps(props, ["class", "inputProps"])
+export function CheckboxControl(props: Omit<Checkbox.CheckboxControlProps, "children">) {
+  const [_, rest] = splitProps(props, ["class"])
   return <>
-    <Checkbox.Input class="peer" {...props.inputProps} />
+    <Checkbox.Input class="peer" />
     <Checkbox.Control
       class={cn(
         "border-primary peer-focus-visible:ring-ring ui-checked:bg-primary ui-checked:text-primary-foreground ui-disabled:cursor-not-allowed ui-disabled:opacity-50 peer h-4 w-4 shrink-0 cursor-pointer rounded-sm border shadow peer-focus-visible:outline-none peer-focus-visible:ring-1",

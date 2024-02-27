@@ -16,7 +16,7 @@ import { useClient } from "~/providers/client";
 import { SetUserAdminReq, SetUserDisableReq } from "~/twirp/rpc";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle } from "~/ui/AlertDialog";
 import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
-import { CheckboxFieldRoot, FieldLabel, FieldMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form";
+import { CheckboxFieldRoot, FieldLabel, FieldErrorMessage, FieldRoot, FormMessage, fieldControlProps } from "~/ui/Form";
 import { Button } from "~/ui/Button";
 import { createForm, required, reset } from "@modular-forms/solid";
 import { Input } from "~/ui/Input";
@@ -141,7 +141,7 @@ export function AdminUsers() {
             <AlertDialogDescription class="max-h-32 overflow-y-auto">
               <For each={data()?.items}>
                 {(e, index) =>
-                  <Show when={rowSelection.rows[index()]?.checked}>
+                  <Show when={rowSelection.items[index()]?.checked}>
                     <div>
                       {e.username}
                     </div>
@@ -198,7 +198,7 @@ export function AdminUsers() {
                     <CheckboxRoot
                       checked={rowSelection.all()}
                       indeterminate={rowSelection.multiple()}
-                      onChange={(v) => rowSelection.setAll(v)}
+                      onChange={rowSelection.setAll}
                     >
                       <CheckboxControl />
                     </CheckboxRoot>
@@ -273,11 +273,11 @@ export function AdminUsers() {
                     const isMe = () => item.id == BigInt(session()?.user_id || 0)
 
                     return (
-                      <TableRow data-state={rowSelection.rows[index()]?.checked ? "selected" : ""}>
+                      <TableRow data-state={rowSelection.items[index()]?.checked ? "selected" : ""}>
                         <TableHead>
                           <CheckboxRoot
                             disabled={isMe()}
-                            checked={rowSelection.rows[index()]?.checked}
+                            checked={rowSelection.items[index()]?.checked}
                             onChange={(v) => rowSelection.set(item.id, v)}
                           >
                             <CheckboxControl />
@@ -419,7 +419,7 @@ function ResetPasswordForm(props: { close: () => void, id: bigint }) {
               type="password"
               value={field.value}
             />
-            <FieldMessage field={field} />
+            <FieldErrorMessage field={field} />
           </FieldRoot>
         )}
       </Field>
@@ -435,7 +435,7 @@ function ResetPasswordForm(props: { close: () => void, id: bigint }) {
               type="password"
               value={field.value}
             />
-            <FieldMessage field={field} />
+            <FieldErrorMessage field={field} />
           </FieldRoot>
         )}
       </Field>
@@ -506,7 +506,7 @@ function CreateForm(props: { close: () => void }) {
               type="email"
               value={field.value}
             />
-            <FieldMessage field={field} />
+            <FieldErrorMessage field={field} />
           </FieldRoot>
         )}
       </Field>
@@ -521,7 +521,7 @@ function CreateForm(props: { close: () => void }) {
               placeholder="Username"
               value={field.value}
             />
-            <FieldMessage field={field} />
+            <FieldErrorMessage field={field} />
           </FieldRoot>
         )}
       </Field>
@@ -541,7 +541,7 @@ function CreateForm(props: { close: () => void }) {
               type="password"
               value={field.value}
             />
-            <FieldMessage field={field} />
+            <FieldErrorMessage field={field} />
           </FieldRoot>
         )}
       </Field>
@@ -561,24 +561,24 @@ function CreateForm(props: { close: () => void }) {
               type="password"
               value={field.value}
             />
-            <FieldMessage field={field} />
+            <FieldErrorMessage field={field} />
           </FieldRoot>
         )}
       </Field>
       <div class="flex flex-wrap gap-4">
         <Field name="admin" type="boolean">
-          {(field, props) => (
+          {(field) => (
             <CheckboxFieldRoot form={form} field={field} class="flex items-center gap-2">
-              <CheckboxControl inputProps={props} />
+              <CheckboxControl />
               <CheckboxLabel>Admin</CheckboxLabel>
               <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
             </CheckboxFieldRoot>
           )}
         </Field>
         <Field name="disabled" type="boolean">
-          {(field, props) => (
+          {(field) => (
             <CheckboxFieldRoot form={form} field={field} class="flex items-center gap-2">
-              <CheckboxControl inputProps={props} />
+              <CheckboxControl />
               <CheckboxLabel>Disabled</CheckboxLabel>
               <CheckboxErrorMessage>{field.error}</CheckboxErrorMessage>
             </CheckboxFieldRoot>
@@ -640,7 +640,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                 value={field.value}
                 disabled={disabled()}
               />
-              <FieldMessage field={field} />
+              <FieldErrorMessage field={field} />
             </FieldRoot>
           )}
         </Field>
@@ -656,7 +656,7 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
                 value={field.value}
                 disabled={disabled()}
               />
-              <FieldMessage field={field} />
+              <FieldErrorMessage field={field} />
             </FieldRoot>
           )}
         </Field>
@@ -670,4 +670,5 @@ function UpdateForm(props: { close: () => void, id: bigint }) {
     </ErrorBoundary>
   )
 }
+
 export default AdminUsers
