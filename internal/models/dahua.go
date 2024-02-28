@@ -198,7 +198,7 @@ type DahuaEvent struct {
 }
 
 type DahuaUptime struct {
-	Last      int64 `json:"last"`
-	Total     int64 `json:"total"`
-	Supported bool  `json:"supported"`
+	Last      time.Time `json:"last"`
+	Total     time.Time `json:"total"`
+	Supported bool      `json:"supported"`
 }

@@ -283,8 +283,8 @@ message GetDeviceUptimeReq {
   int64 id = 1;
 }
 message GetDeviceUptimeResp {
-  int64 last = 1;
-  int64 total = 2;
+  google.protobuf.Timestamp last = 1;
+  google.protobuf.Timestamp total = 2;
   bool supported = 3;
 }
 

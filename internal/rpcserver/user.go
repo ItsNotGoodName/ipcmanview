@@ -486,8 +486,8 @@ func (u *User) GetDeviceUptime(ctx context.Context, req *rpc.GetDeviceUptimeReq)
 	}
 
 	return &rpc.GetDeviceUptimeResp{
-		Last:      v.Last,
-		Total:     v.Total,
+		Last:      timestamppb.New(v.Last),
+		Total:     timestamppb.New(v.Total),
 		Supported: v.Supported,
 	}, nil
 }

@@ -2,17 +2,17 @@ export DIR=ipcmanview_data
 export VITE_HOST=127.0.0.1
 export WEB_PATH=internal/web
 
-export CMD_AIR=github.com/cosmtrek/air@v1.49.0
-export CMD_TASK=github.com/go-task/task/v3/cmd/task@v3.34.1
-export CMD_GOOSE=github.com/pressly/goose/v3/cmd/goose@v3.18.0
-export CMD_SQLC=github.com/sqlc-dev/sqlc/cmd/sqlc@v1.25.0
-export CMD_TWIRP=github.com/twitchtv/twirp/protoc-gen-twirp@v8.1.3
-export CMD_PROTOC_GEN_GO=google.golang.org/protobuf/cmd/protoc-gen-go@v1.32.0
-
-export PROTOC_VERSION=25.1
-export PROTOC_ZIP=protoc-$(PROTOC_VERSION)-linux-x86_64.zip
-
 -include .env
+
+TOOL_AIR=github.com/cosmtrek/air@v1.49.0
+TOOL_TASK=github.com/go-task/task/v3/cmd/task@v3.34.1
+TOOL_GOOSE=github.com/pressly/goose/v3/cmd/goose@v3.18.0
+TOOL_SQLC=github.com/sqlc-dev/sqlc/cmd/sqlc@v1.25.0
+TOOL_TWIRP=github.com/twitchtv/twirp/protoc-gen-twirp@v8.1.3
+TOOL_PROTOC_GEN_GO=google.golang.org/protobuf/cmd/protoc-gen-go@v1.32.0
+
+PROTOC_VERSION=25.1
+PROTOC_ZIP=protoc-$(PROTOC_VERSION)-linux-x86_64.zip
 
 _:
 	mkdir -p $(WEB_PATH)/dist $(DIR) && touch $(WEB_PATH)/dist/index.html
@@ -44,7 +44,7 @@ hash:
 
 # Start backend
 dev:
-	go run $(CMD_AIR)
+	air
 
 # Start frontend
 dev-web:
@@ -60,7 +60,7 @@ dev-proxy:
 gen: gen-sqlc gen-pubsub gen-bus gen-proto gen-typescriptify
 
 gen-sqlc:
-	go run $(CMD_SQLC) generate
+	sqlc generate
 
 gen-pubsub:
 	sh ./scripts/generate-pubsub-events.sh ./internal/event/models.go
@@ -81,22 +81,22 @@ gen-typescriptify:
 tooling: tooling-air tooling-task tooling-goose tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts
 
 tooling-air:
-	go install $(CMD_AIR)
+	go install $(TOOL_AIR)
 
 tooling-task:
-	go install $(CMD_TASK)
+	go install $(TOOL_TASK)
 
 tooling-goose:
-	go install $(CMD_GOOSE)
+	go install $(TOOL_GOOSE)
 
 tooling-sqlc:
-	go install $(CMD_SQLC)
+	go install $(TOOL_SQLC)
 
 tooling-twirp:
-	go install $(CMD_TWIRP)
+	go install $(TOOL_TWIRP)
 
 tooling-protoc-gen-go:
-	go install $(CMD_PROTOC_GEN_GO)
+	go install $(TOOL_PROTOC_GEN_GO)
 
 tooling-protoc-gen-ts:
 	cd $(WEB_PATH) && pnpm install
@@ -115,9 +115,9 @@ install-atlas:
 	chmod +x atlas-community-linux-amd64-latest
 	mv atlas-community-linux-amd64-latest ~/.local/bin/atlas
 
-# Workflow
+# ---------- Workflow
 
 workflow-tooling: tooling-task tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts
 
 workflow-nightly:
-	go run $(CMD_TASK) nightly
+	task nightly

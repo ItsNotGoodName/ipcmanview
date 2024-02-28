@@ -266,8 +266,8 @@ function UptimeTable(props: { devices?: GetDevicesPageResp_Device[] }) {
                     <Show when={data()?.supported} fallback={
                       <EmptyTableCell colspan={colspan} />
                     }>
-                      <UptimeTableCell unix={Number(data()?.last)} />
-                      <UptimeTableCell unix={Number(data()?.total)} />
+                      <UptimeTableCell date={parseDate(data()?.last)} />
+                      <UptimeTableCell date={parseDate(data()?.total)} />
                     </Show>
                   </Suspense>
                 </ErrorBoundary>
@@ -280,8 +280,8 @@ function UptimeTable(props: { devices?: GetDevicesPageResp_Device[] }) {
   )
 }
 
-function UptimeTableCell(props: { unix: number }) {
-  const uptime = createUptime(() => props.unix)
+function UptimeTableCell(props: { date: Date }) {
+  const uptime = createUptime(() => props.date)
 
   return (
     <TableCell>

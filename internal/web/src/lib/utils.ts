@@ -1,5 +1,5 @@
 import { PartialMessage } from "@protobuf-ts/runtime";
-import { Accessor, Resource, Setter, batch, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
+import { Accessor, Resource, Setter, batch, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { Timestamp } from "~/twirp/google/protobuf/timestamp";
 import { type ClassValue, clsx } from "clsx"
 import { toast } from "~/ui/Toast";
@@ -8,6 +8,7 @@ import { FieldStore, FieldValues, FormError, FormStore, PartialValues, reset, se
 import { Order, PagePaginationResult, Sort } from "~/twirp/rpc";
 import { createStore } from "solid-js/store";
 import { useSearchParams } from "@solidjs/router";
+import { createDateNow, createTimeDifference } from "@solid-primitives/date";
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs)
@@ -232,18 +233,18 @@ export function setFormValue(form: FormStore<any, any>, field: FieldStore<any, a
   return (value: any) => setValue(form, field.name, value)
 }
 
-export function createUptime(unix: Accessor<number>) {
-  const [since, setSince] = createSignal(0)
-  createEffect(on(unix, () => setSince(0)))
-  const interval = setInterval(() => setSince(since() + 1), 1000)
-  onCleanup(() => clearInterval(interval))
+export function createUptime(date: Accessor<Date>) {
+  const [now, update] = createDateNow(() => false);
+  const [difference] = createTimeDifference(date, now)
+  const timer = setInterval(update, 1000)
+  onCleanup(() => clearInterval(timer))
 
   return createMemo(() => {
-    const total = unix() + since()
+    const total = difference() / 1000
     const days = Math.floor(total / 86400)
     const hours = Math.floor((total % 86400) / 3600)
     const minutes = Math.floor((total % 3600) / 60)
-    const seconds = (total % 60)
+    const seconds = Math.floor(total % 60)
     return {
       days,
       hasDays: days > 0,

@@ -373,9 +373,11 @@ func GetUptime(ctx context.Context, c dahuarpc.Conn) (models.DahuaUptime, error)
 		return models.DahuaUptime{}, checkFatalError(err)
 	}
 
+	now := time.Now()
+
 	return models.DahuaUptime{
-		Last:      uptime.Last,
-		Total:     uptime.Total,
+		Last:      now.Add(-time.Duration(uptime.Last) * time.Second),
+		Total:     now.Add(-time.Duration(uptime.Total) * time.Second),
 		Supported: true,
 	}, nil
 }
