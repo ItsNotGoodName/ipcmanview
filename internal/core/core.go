@@ -96,3 +96,10 @@ func FileExists(filePath string) (bool, error) {
 func IgnoreError[T any](data T, err error) T {
 	return data
 }
+
+func FlagChannel(c chan<- struct{}) {
+	select {
+	case c <- struct{}{}:
+	default:
+	}
+}

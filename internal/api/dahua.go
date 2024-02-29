@@ -203,7 +203,7 @@ func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 	}
 
 	sub, eventsC, err := s.pub.
-		Subscribe(event.DahuaEvent{}).
+		Subscribe().
 		Middleware(dahua.PubSubMiddleware(ctx, s.db)).
 		Channel(ctx, 10)
 	if err != nil {
@@ -241,7 +241,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 	}
 
 	sub, eventsC, err := s.pub.
-		Subscribe(event.DahuaEvent{}).
+		Subscribe().
 		Middleware(dahua.PubSubMiddleware(ctx, s.db)).
 		Channel(ctx, 100)
 	if err != nil {

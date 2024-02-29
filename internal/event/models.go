@@ -5,11 +5,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
-type EventQueued struct {
-}
-
-type Event struct {
-	Event repo.Event
+type UserSecurityUpdated struct {
+	UserID int64
 }
 
 type DahuaEvent struct {
@@ -17,17 +14,46 @@ type DahuaEvent struct {
 	EventRule repo.DahuaEventRule
 }
 
-type DahuaEventWorkerConnecting struct {
+type DahuaDeviceCreated struct {
 	DeviceID int64
 }
 
-type DahuaEventWorkerConnect struct {
+type DahuaDeviceUpdated struct {
 	DeviceID int64
 }
 
-type DahuaEventWorkerDisconnect struct {
+type DahuaDeviceDeleted struct {
 	DeviceID int64
-	Error    error
+}
+
+type DahuaEmailCreated struct {
+	DeviceID int64
+	EmailID  int64
+}
+
+type DahuaFileCreated struct {
+	DeviceID  int64
+	TimeRange models.TimeRange
+	Count     int64
+}
+
+type DahuaFileCursorUpdated struct {
+	Cursor repo.DahuaFileCursor
+}
+
+type DahuaWorkerConnecting struct {
+	DeviceID int64
+	Type     models.DahuaWorkerType
+}
+
+type DahuaWorkerConnected struct {
+	DeviceID int64
+	Type     models.DahuaWorkerType
+}
+
+type DahuaWorkerDisconnected struct {
+	DeviceID int64
+	Type     models.DahuaWorkerType
 }
 
 type DahuaCoaxialStatus struct {

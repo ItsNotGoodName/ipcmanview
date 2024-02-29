@@ -99,21 +99,19 @@ func createUserSessionAndDeletePrevious(ctx context.Context, db sqlite.DB, arg r
 }
 
 func DeleteUserSessionBySession(ctx context.Context, db sqlite.DB, bus *event.Bus, session string) error {
-	tx, err := db.BeginTx(ctx, true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	userID, err := tx.C().AuthDeleteUserSessionBySession(ctx, session)
+	userID, err := db.C().AuthDeleteUserSessionBySession(ctx, session)
 	if err != nil {
 		if core.IsNotFound(err) {
-			return tx.Commit()
+			return nil
 		}
 		return err
 	}
 
-	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, userID)
+	bus.UserSecurityUpdated(event.UserSecurityUpdated{
+		UserID: userID,
+	})
+
+	return nil
 }
 
 func DeleteUserSession(ctx context.Context, db sqlite.DB, bus *event.Bus, userID int64, sessionID int64) error {
@@ -121,13 +119,7 @@ func DeleteUserSession(ctx context.Context, db sqlite.DB, bus *event.Bus, userID
 		return err
 	}
 
-	tx, err := db.BeginTx(ctx, true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	err = tx.C().AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
+	err := db.C().AuthDeleteUserSessionForUser(ctx, repo.AuthDeleteUserSessionForUserParams{
 		UserID: userID,
 		ID:     sessionID,
 	})
@@ -135,7 +127,11 @@ func DeleteUserSession(ctx context.Context, db sqlite.DB, bus *event.Bus, userID
 		return err
 	}
 
-	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, userID)
+	bus.UserSecurityUpdated(event.UserSecurityUpdated{
+		UserID: userID,
+	})
+
+	return nil
 }
 
 func DeleteOtherUserSessions(ctx context.Context, db sqlite.DB, bus *event.Bus, userID int64, currentSessionID int64) error {
@@ -143,13 +139,7 @@ func DeleteOtherUserSessions(ctx context.Context, db sqlite.DB, bus *event.Bus, 
 		return err
 	}
 
-	tx, err := db.BeginTx(ctx, true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	err = tx.C().AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
+	err := db.C().AuthDeleteUserSessionForUserAndNotSession(ctx, repo.AuthDeleteUserSessionForUserAndNotSessionParams{
 		UserID: userID,
 		ID:     currentSessionID,
 	})
@@ -157,7 +147,11 @@ func DeleteOtherUserSessions(ctx context.Context, db sqlite.DB, bus *event.Bus, 
 		return err
 	}
 
-	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, userID)
+	bus.UserSecurityUpdated(event.UserSecurityUpdated{
+		UserID: userID,
+	})
+
+	return nil
 }
 
 var touchSessionLock = core.NewLockStore[int64]()

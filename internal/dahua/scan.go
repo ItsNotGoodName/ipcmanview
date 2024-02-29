@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
@@ -26,7 +27,7 @@ var scanEpoch time.Time
 
 const scanVolatileDuration = 8 * time.Hour
 
-func NewFileCursor() repo.DahuaCreateFileCursorParams {
+func newFileCursor() repo.DahuaCreateFileCursorParams {
 	now := time.Now()
 	return repo.DahuaCreateFileCursorParams{
 		QuickCursor: types.NewTime(now.Add(-scanVolatileDuration)),
@@ -91,9 +92,9 @@ func getScanRange(ctx context.Context, db sqlite.DB, fileCursor repo.DahuaFileCu
 	}
 }
 
-// ScanReset cannot be called concurrently for the same device.
-func ScanReset(ctx context.Context, db sqlite.DB, deviceID int64) error {
-	fileCursor := NewFileCursor()
+// scanReset cannot be called concurrently for the same device.
+func scanReset(ctx context.Context, db sqlite.DB, deviceID int64) error {
+	fileCursor := newFileCursor()
 	_, err := db.C().DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
 		FullCursor:  fileCursor.FullCursor,
@@ -106,8 +107,8 @@ func ScanReset(ctx context.Context, db sqlite.DB, deviceID int64) error {
 	return err
 }
 
-// Scan cannot be called concurrently for the same device.
-func Scan(ctx context.Context, db sqlite.DB, rpcClient dahuarpc.Conn, device Conn, scanType models.DahuaScanType) error {
+// scan cannot be called concurrently for the same device.
+func scan(ctx context.Context, db sqlite.DB, bus *event.Bus, rpcClient dahuarpc.Conn, device Conn, scanType models.DahuaScanType) error {
 	fileCursor, err := db.C().DahuaUpdateFileCursorScanPercent(ctx, repo.DahuaUpdateFileCursorScanPercentParams{
 		DeviceID:    device.ID,
 		ScanPercent: 0,
@@ -139,56 +140,62 @@ func Scan(ctx context.Context, db sqlite.DB, rpcClient dahuarpc.Conn, device Con
 	}
 
 	for scannerPeriod, ok := iterator.Next(); ok; scannerPeriod, ok = iterator.Next() {
-		cancel, errC := ScannerScan(ctx, rpcClient, scannerPeriod, device.Location, mediaFilesC)
-		defer cancel()
+		createdCount, err := func() (int, error) {
+			cancel, errC := ScannerScan(ctx, rpcClient, scannerPeriod, device.Location, mediaFilesC)
+			defer cancel()
 
-	inner:
-		for {
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case err := <-errC:
-				if err != nil {
-					return err
-				}
-				break inner
-			case mediaFiles := <-mediaFilesC:
-				files, err := NewDahuaFiles(mediaFiles, int(device.Seed), device.Location)
-				if err != nil {
-					return err
-				}
+			var createdCount int
 
-				for _, f := range files {
-					_, err := UpsertDahuaFiles(ctx, db, repo.DahuaCreateFileParams{
-						DeviceID:    device.ID,
-						Channel:     int64(f.Channel),
-						StartTime:   types.NewTime(f.StartTime),
-						EndTime:     types.NewTime(f.EndTime),
-						Length:      int64(f.Length),
-						Type:        f.Type,
-						FilePath:    f.FilePath,
-						Duration:    int64(f.Duration),
-						Disk:        int64(f.Disk),
-						VideoStream: f.VideoStream,
-						Flags:       types.StringSlice{Slice: f.Flags},
-						Events:      types.StringSlice{Slice: f.Events},
-						Cluster:     int64(f.Cluster),
-						Partition:   int64(f.Partition),
-						PicIndex:    int64(f.PicIndex),
-						Repeat:      int64(f.Repeat),
-						WorkDir:     f.WorkDir,
-						WorkDirSn:   f.WorkDirSN,
-						UpdatedAt:   updated_at,
-						Storage:     StorageFromFilePath(f.FilePath),
-					})
+			for {
+				select {
+				case <-ctx.Done():
+					return 0, ctx.Err()
+				case err := <-errC:
+					return createdCount, err
+				case mediaFiles := <-mediaFilesC:
+					files, err := NewDahuaFiles(mediaFiles, int(device.Seed), device.Location)
 					if err != nil {
-						return err
+						return createdCount, err
+					}
+
+					for _, f := range files {
+						created, err := upsertDahuaFiles(ctx, db, repo.DahuaCreateFileParams{
+							DeviceID:    device.ID,
+							Channel:     int64(f.Channel),
+							StartTime:   types.NewTime(f.StartTime),
+							EndTime:     types.NewTime(f.EndTime),
+							Length:      int64(f.Length),
+							Type:        f.Type,
+							FilePath:    f.FilePath,
+							Duration:    int64(f.Duration),
+							Disk:        int64(f.Disk),
+							VideoStream: f.VideoStream,
+							Flags:       types.StringSlice{Slice: f.Flags},
+							Events:      types.StringSlice{Slice: f.Events},
+							Cluster:     int64(f.Cluster),
+							Partition:   int64(f.Partition),
+							PicIndex:    int64(f.PicIndex),
+							Repeat:      int64(f.Repeat),
+							WorkDir:     f.WorkDir,
+							WorkDirSn:   f.WorkDirSN,
+							UpdatedAt:   updated_at,
+							Storage:     StorageFromFilePath(f.FilePath),
+						})
+						if err != nil {
+							return createdCount, err
+						}
+						if created {
+							createdCount++
+						}
 					}
 				}
 			}
+		}()
+		if err != nil {
+			return err
 		}
 
-		err := db.C().DahuaDeleteFile(ctx, repo.DahuaDeleteFileParams{
+		err = db.C().DahuaDeleteFile(ctx, repo.DahuaDeleteFileParams{
 			UpdatedAt: updated_at,
 			DeviceID:  device.ID,
 			Start:     types.NewTime(scannerPeriod.Start.UTC()),
@@ -212,6 +219,20 @@ func Scan(ctx context.Context, db sqlite.DB, rpcClient dahuarpc.Conn, device Con
 		if err != nil {
 			return err
 		}
+		bus.DahuaFileCursorUpdated(event.DahuaFileCursorUpdated{
+			Cursor: fileCursor,
+		})
+
+		if createdCount > 0 {
+			bus.DahuaFileCreated(event.DahuaFileCreated{
+				DeviceID: device.ID,
+				TimeRange: models.TimeRange{
+					Start: scannerPeriod.Start,
+					End:   scanRange.End,
+				},
+				Count: int64(createdCount),
+			})
+		}
 	}
 	fileCursor, err = db.C().DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
 		QuickCursor: fileCursor.QuickCursor,
@@ -229,8 +250,8 @@ func Scan(ctx context.Context, db sqlite.DB, rpcClient dahuarpc.Conn, device Con
 	return nil
 }
 
-func UpsertDahuaFiles(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateFileParams) (int64, error) {
-	id, err := db.C().DahuaUpdateFile(ctx, repo.DahuaUpdateFileParams{
+func upsertDahuaFiles(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateFileParams) (bool, error) {
+	_, err := db.C().DahuaUpdateFile(ctx, repo.DahuaUpdateFileParams{
 		DeviceID:    arg.DeviceID,
 		Channel:     arg.Channel,
 		StartTime:   arg.StartTime,
@@ -253,11 +274,15 @@ func UpsertDahuaFiles(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateFil
 		Storage:     arg.Storage,
 	})
 	if err == nil {
-		return id, nil
+		return false, nil
 	}
 	if !core.IsNotFound(err) {
-		return 0, err
+		return false, err
 	}
 
-	return db.C().DahuaCreateFile(ctx, arg)
+	if _, err := db.C().DahuaCreateFile(ctx, arg); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

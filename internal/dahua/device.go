@@ -10,6 +10,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event/action"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
@@ -144,15 +145,18 @@ func createDahuaDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg re
 		return 0, err
 	}
 
-	arg2 := NewFileCursor()
+	arg2 := newFileCursor()
 	arg2.DeviceID = id
 	if err := tx.C().DahuaCreateFileCursor(ctx, arg2); err != nil {
 		return 0, err
 	}
 
-	if err := event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceCreated, id); err != nil {
+	if err := event.CreateEventAndCommit(ctx, tx, action.DahuaDeviceCreated.Create(id)); err != nil {
 		return 0, err
 	}
+	bus.DahuaDeviceCreated(event.DahuaDeviceCreated{
+		DeviceID: id,
+	})
 
 	return id, nil
 }
@@ -224,7 +228,14 @@ func updateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.Da
 		return err
 	}
 
-	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceUpdated, arg.ID)
+	if err := event.CreateEventAndCommit(ctx, tx, action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
+		return err
+	}
+	bus.DahuaDeviceUpdated(event.DahuaDeviceUpdated{
+		DeviceID: arg.ID,
+	})
+
+	return nil
 }
 
 func DeleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) error {
@@ -246,7 +257,14 @@ func deleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) e
 		return err
 	}
 
-	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceDeleted, id)
+	if err := event.CreateEventAndCommit(ctx, tx, action.DahuaDeviceDeleted.Create(id)); err != nil {
+		return err
+	}
+	bus.DahuaDeviceDeleted(event.DahuaDeviceDeleted{
+		DeviceID: id,
+	})
+
+	return err
 }
 
 func UpdateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, disable bool) error {
@@ -277,5 +295,12 @@ func updateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, arg
 		return err
 	}
 
-	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionDahuaDeviceUpdated, arg.ID)
+	if err := event.CreateEventAndCommit(ctx, tx, action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
+		return err
+	}
+	bus.DahuaDeviceUpdated(event.DahuaDeviceUpdated{
+		DeviceID: arg.ID,
+	})
+
+	return nil
 }

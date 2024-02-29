@@ -12,17 +12,8 @@ func noopEventHandler(ctx context.Context, event Event) error { return nil }
 func TestPub(t *testing.T) {
 	pub := NewPub()
 
-	topics := []string{"Potato", "Thing"}
-	eventTopics := func() []Event {
-		eventTopics := make([]Event, 0, len(topics))
-		for _, t := range topics {
-			eventTopics = append(eventTopics, EventTopic(t))
-		}
-		return eventTopics
-	}()
-
 	sub, err := pub.
-		Subscribe(eventTopics...).
+		Subscribe().
 		Function(noopEventHandler)
 	if !assert.NoError(t, err) {
 		return
@@ -34,7 +25,6 @@ func TestPub(t *testing.T) {
 		return
 	}
 	assert.Equal(t, 1, s.SubscriberCount)
-	assert.Equal(t, topics, s.Subscribers[0].Topics)
 
 	sub.Close()
 

@@ -20,8 +20,8 @@ type WSData struct {
 }
 
 type WSEvent struct {
-	Action string          `json:"action"`
-	Data   json.RawMessage `json:"data"`
+	Action string `json:"action"`
+	Data   any    `json:"data"`
 }
 
 func (s Server) WS(c echo.Context) error {
@@ -48,7 +48,7 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 	log := apiws.Logger(conn)
 
 	sub, eventC, err := pub.
-		Subscribe(event.Event{}, event.DahuaEvent{}).
+		Subscribe().
 		Middleware(dahua.PubSubMiddleware(ctx, db)).
 		Channel(ctx, 1)
 	if err != nil {
@@ -103,17 +103,41 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 			var isFinal bool
 			var payload WSData
 			switch evt := evt.(type) {
-			case event.Event:
+			case event.DahuaEmailCreated:
 				payload = WSData{
 					Type: "event",
 					Data: WSEvent{
-						Action: string(evt.Event.Action),
-						Data:   evt.Event.Data.RawMessage,
+						Action: "dahua-email:created",
+						Data:   evt.EmailID,
+					},
+				}
+			case event.UserSecurityUpdated:
+				payload = WSData{
+					Type: "event",
+					Data: WSEvent{
+						Action: "user-security:updated",
+						Data:   evt.UserID,
 					},
 				}
 
-				if evt.Event.Action == event.ActionUserSecurityUpdated && event.DataAsInt64(evt.Event) == actor.UserID {
+				if evt.UserID == actor.UserID {
 					isFinal = true
+				}
+			case event.DahuaFileCreated:
+				payload = WSData{
+					Type: "event",
+					Data: WSEvent{
+						Action: "dahua-scan-file:created",
+						Data:   evt.Count,
+					},
+				}
+			case event.DahuaFileCursorUpdated:
+				payload = WSData{
+					Type: "event",
+					Data: WSEvent{
+						Action: "dahua-file-cursor:updated",
+						Data:   evt.Cursor,
+					},
 				}
 			case event.DahuaEvent:
 				if evt.EventRule.IgnoreLive {

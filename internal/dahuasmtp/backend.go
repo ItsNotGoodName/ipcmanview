@@ -12,6 +12,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/event"
+	"github.com/ItsNotGoodName/ipcmanview/internal/event/action"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
@@ -213,10 +214,13 @@ func (s *session) Data(r io.Reader) error {
 		}
 	}
 
-	err = event.CreateEvent(ctx, s.db, s.bus, event.ActionDahuaEmailCreated, email.Message.ID)
-	if err != nil {
+	if err = event.CreateEvent(ctx, s.db, action.DahuaEmailCreated.Create(email.Message.ID)); err != nil {
 		return err
 	}
+	s.bus.DahuaEmailCreated(event.DahuaEmailCreated{
+		DeviceID: email.Message.DeviceID,
+		EmailID:  email.Message.ID,
+	})
 
 	log.Info().Msg("Created email")
 

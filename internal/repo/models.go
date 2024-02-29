@@ -88,14 +88,6 @@ type DahuaEventRule struct {
 	IgnoreMqtt bool
 }
 
-type DahuaEventWorkerState struct {
-	ID        int64
-	DeviceID  int64
-	State     models.DahuaEventWorkerState
-	Error     sql.NullString
-	CreatedAt types.Time
-}
-
 type DahuaFile struct {
 	ID          int64
 	DeviceID    int64
@@ -172,9 +164,18 @@ type DahuaThumbnail struct {
 	Height            int64
 }
 
+type DahuaWorkerEvent struct {
+	ID        int64
+	DeviceID  int64
+	Type      models.DahuaWorkerType
+	State     models.DahuaWorkerState
+	Error     sql.NullString
+	CreatedAt types.Time
+}
+
 type Event struct {
 	ID        int64
-	Action    models.EventAction
+	Action    string
 	Data      types.JSON
 	Actor     core.ActorType
 	UserID    sql.NullInt64

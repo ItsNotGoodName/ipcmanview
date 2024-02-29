@@ -125,23 +125,25 @@ func (s *Store) deleteClient(ctx context.Context, deviceID int64) error {
 }
 
 func (s *Store) Register(bus *event.Bus) *Store {
-	bus.OnEvent(s.String(), func(ctx context.Context, evt event.Event) error {
-		switch evt.Event.Action {
-		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
-			deviceID := event.DataAsInt64(evt.Event)
-
-			if _, err := s.GetClient(ctx, deviceID); err != nil {
-				if core.IsNotFound(err) {
-					return s.deleteClient(ctx, deviceID)
-				}
-				return err
+	upsert := func(ctx context.Context, deviceID int64) error {
+		if _, err := s.GetClient(ctx, deviceID); err != nil {
+			if core.IsNotFound(err) {
+				return s.deleteClient(ctx, deviceID)
 			}
-		case event.ActionDahuaDeviceDeleted:
-			deviceID := event.DataAsInt64(evt.Event)
-
-			return s.deleteClient(ctx, deviceID)
+			return err
 		}
 		return nil
+	}
+
+	bus.OnDahuaDeviceCreated(s.String(), func(ctx context.Context, evt event.DahuaDeviceCreated) error {
+		return upsert(ctx, evt.DeviceID)
 	})
+	bus.OnDahuaDeviceUpdated(s.String(), func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
+		return upsert(ctx, evt.DeviceID)
+	})
+	bus.OnDahuaDeviceDeleted(s.String(), func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
+		return s.deleteClient(ctx, evt.DeviceID)
+	})
+
 	return s
 }

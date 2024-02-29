@@ -3,7 +3,6 @@ package pubsub
 
 import (
 	"context"
-	"slices"
 	"sync"
 )
 
@@ -22,8 +21,7 @@ type HandleFunc func(ctx context.Context, evt Event) error
 type MiddlewareFunc func(next HandleFunc) HandleFunc
 
 type StateSubscriber struct {
-	ID     int
-	Topics []string
+	ID int
 }
 
 type State struct {
@@ -32,7 +30,6 @@ type State struct {
 }
 
 type sub struct {
-	topics []string
 	handle HandleFunc
 	doneC  chan<- struct{}
 	errC   chan<- error
@@ -55,14 +52,11 @@ func NewPub(middleware ...MiddlewareFunc) *Pub {
 	}
 }
 
-func (p *Pub) Publish(ctx context.Context, event Event) error {
+func (p *Pub) Broadcast(ctx context.Context, event Event) error {
 	p.mu.Lock()
 	for i := range p.subs {
-		if !(len(p.subs[i].topics) == 0 || slices.Contains(p.subs[i].topics, event.EventTopic())) {
-			continue
-		}
-
 		if err := p.subs[i].handle(ctx, event); err != nil {
+			// Remove subscriber
 			p.subs[i].errC <- err
 			close(p.subs[i].doneC)
 			delete(p.subs, i)
@@ -73,8 +67,22 @@ func (p *Pub) Publish(ctx context.Context, event Event) error {
 	return nil
 }
 
+func (p *Pub) unsubscribe(id int, err error) {
+	p.mu.Lock()
+	sub, ok := p.subs[id]
+	if !ok {
+		p.mu.Unlock()
+		return
+	}
+
+	// Remove subscriber
+	sub.errC <- err
+	close(sub.doneC)
+	delete(p.subs, id)
+	p.mu.Unlock()
+}
+
 type subscribeParams struct {
-	topics []string
 	handle HandleFunc
 	doneC  chan<- struct{}
 	errC   chan<- error
@@ -85,7 +93,6 @@ func (p *Pub) subscribe(arg subscribeParams) int {
 	p.lastID++
 	id := p.lastID
 	p.subs[id] = sub{
-		topics: arg.topics,
 		handle: arg.handle,
 		doneC:  arg.doneC,
 		errC:   arg.errC,
@@ -95,20 +102,6 @@ func (p *Pub) subscribe(arg subscribeParams) int {
 	return id
 }
 
-func (p *Pub) unsubscribe(id int, err error) {
-	p.mu.Lock()
-	sub, ok := p.subs[id]
-	if !ok {
-		p.mu.Unlock()
-		return
-	}
-
-	sub.errC <- err
-	close(sub.doneC)
-	delete(p.subs, id)
-	p.mu.Unlock()
-}
-
 func (p *Pub) State() (State, error) {
 	p.mu.Lock()
 	ss := make([]StateSubscriber, 0, len(p.subs))
@@ -116,8 +109,7 @@ func (p *Pub) State() (State, error) {
 	for i := range p.subs {
 		ssc++
 		ss = append(ss, StateSubscriber{
-			ID:     i,
-			Topics: p.subs[i].topics,
+			ID: i,
 		})
 	}
 	s := State{
@@ -166,24 +158,16 @@ func (s Sub) Close() {
 
 type SubscribeBuilder struct {
 	pub        *Pub
-	topics     []string
 	middleware []MiddlewareFunc
 }
 
-func (p *Pub) Subscribe(events ...Event) SubscribeBuilder {
-	// Get topics
-	var topics []string
-	for _, e := range events {
-		topics = append(topics, e.EventTopic())
-	}
-
+func (p *Pub) Subscribe() SubscribeBuilder {
 	// Copy middleware
 	middleware := make([]MiddlewareFunc, 0, len(p.middleware))
 	copy(middleware, p.middleware)
 
 	return SubscribeBuilder{
 		pub:        p,
-		topics:     topics,
 		middleware: middleware,
 	}
 }
@@ -207,7 +191,6 @@ func (b SubscribeBuilder) Function(fn HandleFunc) (Sub, error) {
 	doneC := make(chan struct{})
 	errC := make(chan error, 1)
 	id := b.pub.subscribe(subscribeParams{
-		topics: b.topics,
 		handle: handle,
 		doneC:  doneC,
 		errC:   errC,

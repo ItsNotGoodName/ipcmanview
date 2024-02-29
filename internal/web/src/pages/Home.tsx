@@ -42,6 +42,8 @@ export function Home() {
   bus.event.listen((e) => {
     if (e.action.startsWith("dahua-email:") || e.action.startsWith("dahua-device:"))
       revalidate(getHomePage.key)
+    if (e.action == "dahua-scan-file:created")
+      revalidate(getListLatestFiles.key)
   })
   bus.dahuaEvent.listen(() => revalidate(getHomePage.key))
 

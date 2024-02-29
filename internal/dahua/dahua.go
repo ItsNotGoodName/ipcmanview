@@ -69,7 +69,7 @@ INSERT OR IGNORE INTO dahua_event_rules (code) VALUES ('');
 	}
 
 	{
-		c := NewFileCursor()
+		c := newFileCursor()
 		err := db.C().DahuaNormalizeFileCursors(context.Background(), repo.DahuaNormalizeFileCursorsParams{
 			QuickCursor: c.QuickCursor,
 			FullCursor:  c.FullCursor,

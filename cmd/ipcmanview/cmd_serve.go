@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
@@ -81,9 +82,6 @@ func (c *CmdServe) Run(ctx *Context) error {
 	bus := event.NewBus().Register(pub)
 	super.Add(bus)
 
-	// Event queue
-	super.Add(event.NewQueue(db, bus))
-
 	// MediaMTX
 	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))
 	if err != nil {
@@ -97,14 +95,24 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
+	dahuaScanLockStore := dahua.NewScanLockStore()
+
 	dahuaStore := dahua.
 		NewStore(db).
 		Register(bus)
 	defer dahuaStore.Close()
 	super.Add(dahuaStore)
 
+	dahuaWorkerHooks := dahua.NewDefaultWorkerHooks(db, bus)
+
 	if err := dahua.
-		NewWorkerManager(super, dahua.DefaultWorkerFactory(bus, pub, db, dahuaStore, dahua.NewScanLockStore(), dahua.NewDefaultEventHooks(bus, db))).
+		NewWorkerManager(super, func(ctx context.Context, super *suture.Supervisor, conn dahua.Conn) []suture.ServiceToken {
+			return []suture.ServiceToken{
+				super.Add(dahua.NewQuickScanWorker(dahuaWorkerHooks, pub, bus, db, dahuaStore, dahuaScanLockStore, conn.ID)),
+				super.Add(dahua.NewCoaxialWorker(dahuaWorkerHooks, db, bus, dahuaStore, conn.ID)),
+				super.Add(dahua.NewEventWorker(dahuaWorkerHooks, db, bus, conn)),
+			}
+		}).
 		Register(bus, db).
 		Bootstrap(ctx, db, dahuaStore); err != nil {
 		return err

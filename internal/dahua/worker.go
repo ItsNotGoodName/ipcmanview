@@ -21,7 +21,7 @@ import (
 	"github.com/thejerf/suture/v4"
 )
 
-type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device Conn) ([]suture.ServiceToken, error)
+type WorkerFactory = func(ctx context.Context, super *suture.Supervisor, device Conn) []suture.ServiceToken
 
 // WorkerManager manages devices workers.
 type WorkerManager struct {
@@ -65,14 +65,9 @@ func (m *WorkerManager) Upsert(ctx context.Context, conn Conn) error {
 		}
 	}
 
-	tokens, err := m.factory(ctx, m.super, conn)
-	if err != nil {
-		return err
-	}
-
 	m.workers[conn.ID] = workerData{
 		conn:   conn,
-		tokens: tokens,
+		tokens: m.factory(ctx, m.super, conn),
 	}
 
 	return nil
@@ -95,27 +90,28 @@ func (m *WorkerManager) Delete(id int64) error {
 }
 
 func (m *WorkerManager) Register(bus *event.Bus, db sqlite.DB) *WorkerManager {
-	bus.OnEvent(m.String(), func(ctx context.Context, evt event.Event) error {
-		switch evt.Event.Action {
-		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
-			deviceID := event.DataAsInt64(evt.Event)
-
-			conn, err := GetConn(ctx, db, deviceID)
-			if err != nil {
-				if core.IsNotFound(err) {
-					return m.Delete(deviceID)
-				}
-				return err
+	upsert := func(ctx context.Context, deviceID int64) error {
+		conn, err := GetConn(ctx, db, deviceID)
+		if err != nil {
+			if core.IsNotFound(err) {
+				return m.Delete(deviceID)
 			}
-
-			return m.Upsert(ctx, conn)
-		case event.ActionDahuaDeviceDeleted:
-			deviceID := event.DataAsInt64(evt.Event)
-
-			return m.Delete(deviceID)
+			return err
 		}
-		return nil
+
+		return m.Upsert(ctx, conn)
+	}
+
+	bus.OnDahuaDeviceCreated(m.String(), func(ctx context.Context, evt event.DahuaDeviceCreated) error {
+		return upsert(ctx, evt.DeviceID)
 	})
+	bus.OnDahuaDeviceUpdated(m.String(), func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
+		return upsert(ctx, evt.DeviceID)
+	})
+	bus.OnDahuaDeviceDeleted(m.String(), func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
+		return m.Delete(evt.DeviceID)
+	})
+
 	return m
 }
 
@@ -134,50 +130,154 @@ func (m *WorkerManager) Bootstrap(ctx context.Context, db sqlite.DB, store *Stor
 	return err
 }
 
-func DefaultWorkerFactory(bus *event.Bus, pub *pubsub.Pub, db sqlite.DB, store *Store, scanLockStore ScanLockStore, hooks DefaultEventHooks) WorkerFactory {
-	return func(ctx context.Context, super *suture.Supervisor, device Conn) ([]suture.ServiceToken, error) {
-		var tokens []suture.ServiceToken
+type Worker struct {
+	DeviceID int64
+	Type     models.DahuaWorkerType
+}
 
-		{
-			worker := NewEventWorker(device, hooks)
-			token := super.Add(worker)
-			tokens = append(tokens, token)
-		}
+type WorkerHooks interface {
+	Serve(ctx context.Context, w Worker, connected bool, fn func(ctx context.Context) error) error
+	Connected(ctx context.Context, w Worker)
+}
 
-		{
-			worker := NewCoaxialWorker(bus, db, store, device.ID)
-			token := super.Add(worker)
-			tokens = append(tokens, token)
-		}
-
-		{
-			worker := NewQuickScanWorker(pub, db, store, scanLockStore, device.ID)
-			token := super.Add(worker)
-			tokens = append(tokens, token)
-		}
-
-		return tokens, nil
+func NewQuickScanWorker(hooks WorkerHooks, pub *pubsub.Pub, bus *event.Bus, db sqlite.DB, store *Store, scanLockStore ScanLockStore, deviceID int64) QuickScanWorker {
+	return QuickScanWorker{
+		hooks:         hooks,
+		worker:        Worker{DeviceID: deviceID, Type: models.DahuaWorkerTypeQuickScan},
+		pub:           pub,
+		bus:           bus,
+		db:            db,
+		store:         store,
+		scanLockStore: scanLockStore,
+		deviceID:      deviceID,
 	}
 }
 
-type EventHooks interface {
-	Connecting(ctx context.Context, deviceID int64)
-	Connect(ctx context.Context, deviceID int64)
-	Disconnect(ctx context.Context, deviceID int64, err error)
-	Event(ctx context.Context, deviceID int64, event dahuacgi.Event)
+// QuickScanWorker scans devices for files.
+type QuickScanWorker struct {
+	hooks         WorkerHooks
+	worker        Worker
+	pub           *pubsub.Pub
+	bus           *event.Bus
+	db            sqlite.DB
+	store         *Store
+	scanLockStore ScanLockStore
+	deviceID      int64
 }
 
-func NewEventWorker(device Conn, hooks EventHooks) EventWorker {
+func (w QuickScanWorker) String() string {
+	return fmt.Sprintf("dahua.QuickScanWorker(id=%d)", w.deviceID)
+}
+
+func (w QuickScanWorker) Serve(ctx context.Context) error {
+	err := w.hooks.Serve(ctx, w.worker, true, w.serve)
+	return sutureext.SanitizeError(ctx, err)
+}
+
+func (w QuickScanWorker) serve(ctx context.Context) error {
+	// New file was created
+	newFileC := make(chan struct{}, 1)
+
+	// Subscribe
+	sub, err := w.pub.
+		Subscribe().
+		Function(func(ctx context.Context, evt pubsub.Event) error {
+			switch e := evt.(type) {
+			case event.DahuaEvent:
+				if e.Event.DeviceID != w.deviceID {
+					return nil
+				}
+
+				switch e.Event.Code {
+				case dahuaevents.CodeNewFile:
+					core.FlagChannel(newFileC)
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		return err
+	}
+	defer sub.Close()
+
+	// Scan after a duration
+	timer := time.NewTimer(0)
+	const timerDuration = 10 * time.Second
+	var timerEnd time.Time
+	timerActive := false
+
+	// Scan every 30 minutes
+	ticker := time.NewTicker(30 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case fired := <-timer.C:
+			if err := w.scan(ctx); err != nil {
+				return err
+			}
+
+			if fired.Before(timerEnd) {
+				// Start timer
+				timer.Reset(timerDuration)
+				timerActive = true
+			} else {
+				timerActive = false
+			}
+		case <-ticker.C:
+			// Start timer
+			timer.Reset(0)
+			timerActive = true
+		case <-newFileC:
+			timerEnd = time.Now().Add(timerDuration / 2)
+			if timerActive {
+				continue
+			}
+
+			// Start timer
+			timer.Reset(timerDuration)
+			timerActive = true
+		}
+	}
+}
+
+func (w QuickScanWorker) scan(ctx context.Context) error {
+	unlock, err := w.scanLockStore.Lock(ctx, w.deviceID)
+	if err != nil {
+		return err
+	}
+	defer unlock()
+
+	client, err := w.store.GetClient(ctx, w.deviceID)
+	if err != nil {
+		return err
+	}
+
+	return scan(ctx, w.db, w.bus, client.RPC, client.Conn, models.DahuaScanTypeQuick)
+}
+
+func NewEventWorker(hooks WorkerHooks, db sqlite.DB, bus *event.Bus, conn Conn) EventWorker {
 	return EventWorker{
-		device: device,
-		hooks:  hooks,
+		hooks: hooks,
+		worker: Worker{
+			DeviceID: conn.ID,
+			Type:     models.DahuaWorkerTypeEvent,
+		},
+		db:     db,
+		bus:    bus,
+		device: conn,
 	}
 }
 
-// EventWorker subscribes to events.
+// EventWorker publishes events to bus.
 type EventWorker struct {
+	hooks  WorkerHooks
+	worker Worker
+	db     sqlite.DB
+	bus    *event.Bus
 	device Conn
-	hooks  EventHooks
 }
 
 func (w EventWorker) String() string {
@@ -185,9 +285,7 @@ func (w EventWorker) String() string {
 }
 
 func (w EventWorker) Serve(ctx context.Context) error {
-	w.hooks.Connecting(ctx, w.device.ID)
-	err := w.serve(ctx)
-	w.hooks.Disconnect(context.Background(), w.device.ID, err)
+	err := w.hooks.Serve(ctx, w.worker, false, w.serve)
 	return sutureext.SanitizeError(ctx, err)
 }
 
@@ -210,26 +308,33 @@ func (w EventWorker) serve(ctx context.Context) error {
 	}
 	defer manager.Close()
 
-	w.hooks.Connect(ctx, w.device.ID)
+	w.hooks.Connected(ctx, w.worker)
 
 	for reader := manager.Reader(); ; {
 		if err := reader.Poll(); err != nil {
 			return err
 		}
 
-		rawEvent, err := reader.ReadEvent()
+		evt, err := reader.ReadEvent()
 		if err != nil {
 			return err
 		}
 
-		w.hooks.Event(ctx, w.device.ID, rawEvent)
+		if err = publishEvent(ctx, w.db, w.bus, w.device.ID, evt); err != nil {
+			return err
+		}
 	}
 }
 
-func NewCoaxialWorker(bus *event.Bus, db sqlite.DB, store *Store, deviceID int64) CoaxialWorker {
+func NewCoaxialWorker(hooks WorkerHooks, db sqlite.DB, bus *event.Bus, store *Store, deviceID int64) CoaxialWorker {
 	return CoaxialWorker{
-		bus:      bus,
+		hooks: hooks,
+		worker: Worker{
+			DeviceID: deviceID,
+			Type:     models.DahuaWorkerTypeCoaxial,
+		},
 		db:       db,
+		bus:      bus,
 		store:    store,
 		deviceID: deviceID,
 	}
@@ -237,8 +342,10 @@ func NewCoaxialWorker(bus *event.Bus, db sqlite.DB, store *Store, deviceID int64
 
 // CoaxialWorker publishes coaxial status to the bus.
 type CoaxialWorker struct {
-	bus      *event.Bus
+	hooks    WorkerHooks
+	worker   Worker
 	db       sqlite.DB
+	bus      *event.Bus
 	store    *Store
 	deviceID int64
 }
@@ -248,15 +355,13 @@ func (w CoaxialWorker) String() string {
 }
 
 func (w CoaxialWorker) Serve(ctx context.Context) error {
-	return sutureext.SanitizeError(ctx, w.serve(ctx))
+	err := w.hooks.Serve(ctx, w.worker, true, w.serve)
+	return sutureext.SanitizeError(ctx, err)
 }
 
 func (w CoaxialWorker) serve(ctx context.Context) error {
 	client, err := w.store.GetClient(ctx, w.deviceID)
 	if err != nil {
-		if core.IsNotFound(err) {
-			return suture.ErrDoNotRestart
-		}
 		return err
 	}
 
@@ -271,7 +376,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 		return suture.ErrDoNotRestart
 	}
 
-	// Get and send initial coaxial status
+	// Get and publish initial coaxial status
 	coaxialStatus, err := GetCoaxialStatus(ctx, client.RPC, channel)
 	if err != nil {
 		return err
@@ -307,88 +412,4 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 			CoaxialStatus: coaxialStatus,
 		})
 	}
-}
-
-func NewQuickScanWorker(pub *pubsub.Pub, db sqlite.DB, store *Store, scanLockStore ScanLockStore, deviceID int64) QuickScanWorker {
-	return QuickScanWorker{
-		pub:           pub,
-		db:            db,
-		store:         store,
-		scanLockStore: scanLockStore,
-		deviceID:      deviceID,
-	}
-}
-
-type QuickScanWorker struct {
-	pub           *pubsub.Pub
-	db            sqlite.DB
-	store         *Store
-	scanLockStore ScanLockStore
-	deviceID      int64
-}
-
-func (w QuickScanWorker) String() string {
-	return fmt.Sprintf("dahua.QuickScanWorker(id=%d)", w.deviceID)
-}
-
-func (w QuickScanWorker) Serve(ctx context.Context) error {
-	return sutureext.SanitizeError(ctx, w.serve(ctx))
-}
-
-func (w QuickScanWorker) serve(ctx context.Context) error {
-	quickScanC := make(chan struct{}, 1)
-
-	sub, err := w.pub.
-		Subscribe(event.DahuaEvent{}).
-		Function(func(ctx context.Context, evt pubsub.Event) error {
-			switch e := evt.(type) {
-			// case event.DahuaQuickScanQueue:
-			// 	if !(e.DeviceID == 0 || e.DeviceID == w.deviceID) {
-			// 		return nil
-			// 	}
-			case event.DahuaEvent:
-				if e.Event.DeviceID != w.deviceID || e.Event.Code != dahuaevents.CodeNewFile {
-					return nil
-				}
-			default:
-				return nil
-			}
-
-			select {
-			case quickScanC <- struct{}{}:
-			default:
-			}
-
-			return nil
-		})
-	if err != nil {
-		return err
-	}
-	defer sub.Close()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-quickScanC:
-			if err := w.scan(ctx); err != nil {
-				return err
-			}
-		}
-	}
-}
-
-func (w QuickScanWorker) scan(ctx context.Context) error {
-	unlock, err := w.scanLockStore.Lock(ctx, w.deviceID)
-	if err != nil {
-		return err
-	}
-	defer unlock()
-
-	client, err := w.store.GetClient(ctx, w.deviceID)
-	if err != nil {
-		return err
-	}
-
-	return Scan(ctx, w.db, client.RPC, client.Conn, models.DahuaScanTypeQuick)
 }

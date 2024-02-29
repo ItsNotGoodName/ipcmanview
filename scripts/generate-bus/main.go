@@ -47,7 +47,7 @@ type Bus struct {
 func (b *Bus) Register(pub *pubsub.Pub) (*Bus) {
 {{- range .Events }}
 	b.On{{ . }}("pubsub", func(ctx context.Context, evt {{ . }}) error {
-		err := pub.Publish(ctx, evt)
+		err := pub.Broadcast(ctx, evt)
 		if err == nil {
 			return nil
 		}

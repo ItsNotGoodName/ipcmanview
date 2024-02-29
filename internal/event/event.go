@@ -7,23 +7,46 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
+	"github.com/rs/zerolog/log"
 )
 
-func createEvent(ctx context.Context, db sqlite.DBTx, bus *Bus, action models.EventAction, data any) error {
+func NewEventBuilder[T any](action string) EventBuilder[T] {
+	return EventBuilder[T]{
+		action: action,
+	}
+}
+
+type EventBuilder[T any] struct {
+	action string
+	data   T
+}
+
+func (e EventBuilder[T]) Create(data T) Event {
 	b, err := json.Marshal(data)
 	if err != nil {
-		return err
+		log.Err(err).Msg("This should not have happend")
 	}
 
+	return Event{
+		Action: e.action,
+		Data:   b,
+	}
+}
+
+type Event struct {
+	Action string
+	Data   []byte
+}
+
+func createEvent(ctx context.Context, db sqlite.DBTx, evt Event) error {
 	actor := core.UseActor(ctx)
 
-	_, err = db.CreateEvent(ctx, repo.CreateEventParams{
-		Action: action,
-		Data:   types.NewJSON(b),
+	_, err := db.CreateEvent(ctx, repo.CreateEventParams{
+		Action: evt.Action,
+		Data:   types.NewJSON(evt.Data),
 		UserID: sql.NullInt64{
 			Int64: actor.UserID,
 			Valid: actor.Type == core.ActorTypeUser,
@@ -34,26 +57,15 @@ func createEvent(ctx context.Context, db sqlite.DBTx, bus *Bus, action models.Ev
 	return err
 }
 
-func CreateEvent(ctx context.Context, db sqlite.DB, bus *Bus, action models.EventAction, data any) error {
-	err := createEvent(ctx, db.C(), bus, action, data)
-	if err != nil {
-		return err
-	}
-
-	bus.EventQueued(EventQueued{})
-	return nil
+func CreateEvent(ctx context.Context, db sqlite.DB, evt Event) error {
+	return createEvent(ctx, db.C(), evt)
 }
 
-func CreateEventAndCommit(ctx context.Context, tx sqlite.Tx, bus *Bus, action models.EventAction, data any) error {
-	err := createEvent(ctx, tx.C(), bus, action, data)
+func CreateEventAndCommit(ctx context.Context, tx sqlite.Tx, evt Event) error {
+	err := createEvent(ctx, tx.C(), evt)
 	if err != nil {
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	bus.EventQueued(EventQueued{})
-	return nil
+	return tx.Commit()
 }

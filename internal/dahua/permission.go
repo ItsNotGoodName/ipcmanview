@@ -55,7 +55,22 @@ func PubSubMiddleware(ctx context.Context, db sqlite.DB) pubsub.MiddlewareFunc {
 				if skip(ctx, e.Event.DeviceID, levelDefault) {
 					return nil
 				}
-			case event.Event:
+			case event.DahuaFileCreated:
+				if skip(ctx, e.DeviceID, levelDefault) {
+					return nil
+				}
+			case event.DahuaFileCursorUpdated:
+				if skip(ctx, e.Cursor.DeviceID, levelDefault) {
+					return nil
+				}
+			case event.DahuaEmailCreated:
+				if skip(ctx, e.DeviceID, levelEmail) {
+					return nil
+				}
+			case event.UserSecurityUpdated:
+				if e.UserID != actor.UserID {
+					return nil
+				}
 			default:
 				return nil
 			}

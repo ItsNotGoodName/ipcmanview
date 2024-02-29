@@ -118,10 +118,10 @@ CREATE TABLE dahua_event_device_rules (
   FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
--- TODO: move this to a logs table
-CREATE TABLE dahua_event_worker_states (
+CREATE TABLE dahua_worker_events (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   device_id INTEGER NOT NULL,
+  type TEXT NOT NULL,
   state TEXT NOT NULL,
   error TEXT,
   created_at DATETIME NOT NULL,

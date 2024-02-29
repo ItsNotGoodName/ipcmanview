@@ -385,20 +385,11 @@ DELETE FROM dahua_event_rules
 WHERE
   id = ?;
 
--- name: DahuaCreateEventWorkerState :exec
+-- name: DahuaCreateWorkerEvent :exec
 INSERT INTO
-  dahua_event_worker_states (device_id, state, error, created_at)
+  dahua_worker_events (device_id, type, state, error, created_at)
 VALUES
-  (?, ?, ?, ?);
-
--- name: DahuaListEventWorkerStates :many
-SELECT
-  *,
-  max(created_at)
-FROM
-  dahua_event_worker_states
-GROUP BY
-  device_id;
+  (?, ?, ?, ?, ?);
 
 -- name: DahuaGetStorageDestination :one
 SELECT

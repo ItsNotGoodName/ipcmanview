@@ -19,6 +19,22 @@ const (
 	DahuaEventWorkerStateDisconnected DahuaEventWorkerState = "disconnected"
 )
 
+type DahuaWorkerType string
+
+const (
+	DahuaWorkerTypeEvent     DahuaWorkerType = "event"
+	DahuaWorkerTypeCoaxial   DahuaWorkerType = "coaxial"
+	DahuaWorkerTypeQuickScan DahuaWorkerType = "quick-scan"
+)
+
+type DahuaWorkerState string
+
+const (
+	DahuaWorkerStateConnecting   DahuaWorkerState = "connecting"
+	DahuaWorkerStateConnected    DahuaWorkerState = "connected"
+	DahuaWorkerStateDisconnected DahuaWorkerState = "disconnected"
+)
+
 type DahuaFeature int
 
 func (f DahuaFeature) EQ(feature DahuaFeature) bool {

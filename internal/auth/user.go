@@ -222,7 +222,15 @@ func UpdateUserPassword(ctx context.Context, db sqlite.DB, bus *event.Bus, arg U
 		return err
 	}
 
-	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, dbModel.ID)
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	bus.UserSecurityUpdated(event.UserSecurityUpdated{
+		UserID: dbModel.ID,
+	})
+
+	return nil
 }
 
 func UpdateUserUsername(ctx context.Context, db sqlite.DB, userID int64, newUsername string) error {
@@ -261,14 +269,8 @@ func UpdateUserDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id in
 		return core.ErrForbidden
 	}
 
-	tx, err := db.BeginTx(ctx, true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
 	if disable {
-		_, err := tx.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
+		_, err := db.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 			DisabledAt: types.NewNullTime(time.Now()),
 			ID:         id,
 		})
@@ -276,7 +278,7 @@ func UpdateUserDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id in
 			return err
 		}
 	} else {
-		_, err := tx.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
+		_, err := db.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
 			DisabledAt: types.NullTime{},
 			ID:         id,
 		})
@@ -285,7 +287,11 @@ func UpdateUserDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id in
 		}
 	}
 
-	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, id)
+	bus.UserSecurityUpdated(event.UserSecurityUpdated{
+		UserID: id,
+	})
+
+	return nil
 }
 
 func UpdateUserAdmin(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, admin bool) error {
@@ -297,14 +303,8 @@ func UpdateUserAdmin(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64
 		return core.ErrForbidden
 	}
 
-	tx, err := db.BeginTx(ctx, true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
 	if admin {
-		_, err := tx.C().AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
+		_, err := db.C().AuthUpsertAdmin(ctx, repo.AuthUpsertAdminParams{
 			UserID:    id,
 			CreatedAt: types.NewTime(time.Now()),
 		})
@@ -312,13 +312,17 @@ func UpdateUserAdmin(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64
 			return err
 		}
 	} else {
-		err := tx.C().AuthDeleteAdmin(ctx, id)
+		err := db.C().AuthDeleteAdmin(ctx, id)
 		if err != nil {
 			return err
 		}
 	}
 
-	return event.CreateEventAndCommit(ctx, tx, bus, event.ActionUserSecurityUpdated, id)
+	bus.UserSecurityUpdated(event.UserSecurityUpdated{
+		UserID: id,
+	})
+
+	return nil
 }
 
 func CheckUserPassword(hash, password string) error {

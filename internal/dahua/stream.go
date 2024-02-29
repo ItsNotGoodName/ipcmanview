@@ -104,24 +104,26 @@ func syncStreams(ctx context.Context, db sqlite.DB, deviceID int64, args []syncS
 }
 
 func RegisterStreams(bus *event.Bus, db sqlite.DB, store *Store) {
-	bus.OnEvent("dahua.SyncStreams", func(ctx context.Context, evt event.Event) error {
-		switch evt.Event.Action {
-		case event.ActionDahuaDeviceCreated, event.ActionDahuaDeviceUpdated:
-			deviceID := event.DataAsInt64(evt.Event)
-
-			client, err := store.GetClient(ctx, deviceID)
-			if err != nil {
-				if core.IsNotFound(err) {
-					return nil
-				}
-				return err
+	sync := func(ctx context.Context, deviceID int64) error {
+		client, err := store.GetClient(ctx, deviceID)
+		if err != nil {
+			if core.IsNotFound(err) {
+				return nil
 			}
-
-			if SupportStreams(client.Conn.Feature) {
-				// TODO: this should just schedula a background job
-				return SyncStreams(ctx, db, deviceID, client.RPC)
-			}
+			return err
 		}
+
+		if SupportStreams(client.Conn.Feature) {
+			// TODO: this should just schedula a background job
+			return SyncStreams(ctx, db, deviceID, client.RPC)
+		}
+
 		return nil
+	}
+	bus.OnDahuaDeviceCreated("dahua.SyncStreams", func(ctx context.Context, evt event.DahuaDeviceCreated) error {
+		return sync(ctx, evt.DeviceID)
+	})
+	bus.OnDahuaDeviceUpdated("dahua.SyncStreams", func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
+		return sync(ctx, evt.DeviceID)
 	})
 }
