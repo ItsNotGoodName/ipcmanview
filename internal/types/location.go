@@ -20,6 +20,24 @@ type Location struct {
 	*time.Location
 }
 
+func (dst *Location) Scan(src any) error {
+	switch src := src.(type) {
+	case string:
+		loc, err := time.LoadLocation(string(src))
+		if err != nil {
+			return err
+		}
+		*dst = Location{loc}
+		return nil
+	}
+
+	return fmt.Errorf("cannot scan %T", src)
+}
+
+func (src Location) Value() (driver.Value, error) {
+	return src.Location.String(), nil
+}
+
 func (l *Location) MarshalJSON() ([]byte, error) {
 	return []byte(l.Location.String()), nil
 }
@@ -41,26 +59,4 @@ func (dst *Location) UnmarshalText(text []byte) error {
 	var err error
 	dst.Location, err = time.LoadLocation(string(text))
 	return err
-}
-
-func (dst *Location) Scan(src any) error {
-	if src == nil {
-		return fmt.Errorf("cannot scan nil")
-	}
-
-	switch src := src.(type) {
-	case string:
-		loc, err := time.LoadLocation(string(src))
-		if err != nil {
-			return err
-		}
-		*dst = Location{loc}
-		return nil
-	}
-
-	return fmt.Errorf("cannot scan %T", src)
-}
-
-func (src Location) Value() (driver.Value, error) {
-	return src.Location.String(), nil
 }

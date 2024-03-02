@@ -93,7 +93,7 @@ func CreateUser(ctx context.Context, cfg config.Config, db sqlite.DB, arg Create
 		CreatedAt: now,
 		UpdatedAt: now,
 		DisabledAt: types.NullTime{
-			Time:  now.Time,
+			Time:  types.NewTime(now.Time),
 			Valid: disabled,
 		},
 	})
@@ -269,22 +269,15 @@ func UpdateUserDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id in
 		return core.ErrForbidden
 	}
 
-	if disable {
-		_, err := db.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
-			DisabledAt: types.NewNullTime(time.Now()),
-			ID:         id,
-		})
-		if err != nil {
-			return err
-		}
-	} else {
-		_, err := db.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
-			DisabledAt: types.NullTime{},
-			ID:         id,
-		})
-		if err != nil {
-			return err
-		}
+	_, err = db.C().AuthUpdateUserDisabledAt(ctx, repo.AuthUpdateUserDisabledAtParams{
+		DisabledAt: types.NullTime{
+			Time:  types.NewTime(time.Now()),
+			Valid: disable,
+		},
+		ID: id,
+	})
+	if err != nil {
+		return err
 	}
 
 	bus.UserSecurityUpdated(event.UserSecurityUpdated{

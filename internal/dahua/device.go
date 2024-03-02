@@ -272,15 +272,12 @@ func UpdateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id 
 		return err
 	}
 
-	if disable {
-		return updateDeviceDisabled(ctx, db, bus, repo.DahuaUpdateDeviceDisabledAtParams{
-			DisabledAt: types.NewNullTime(time.Now()),
-			ID:         id,
-		})
-	}
 	return updateDeviceDisabled(ctx, db, bus, repo.DahuaUpdateDeviceDisabledAtParams{
-		DisabledAt: types.NullTime{},
-		ID:         id,
+		DisabledAt: types.NullTime{
+			Time:  types.NewTime(time.Now()),
+			Valid: disable,
+		},
+		ID: id,
 	})
 }
 

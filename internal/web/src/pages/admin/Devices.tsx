@@ -26,7 +26,7 @@ import { Badge } from "~/ui/Badge";
 import { BreadcrumbsItem, BreadcrumbsRoot } from "~/ui/Breadcrumbs";
 import { TextFieldErrorMessage, TextFieldInput, TextFieldLabel, TextFieldRoot } from "~/ui/TextField";
 
-const actionDeleteDevice = action((ids: bigint[]) => useClient()
+const actionDeleteDevice = action((ids: string[]) => useClient()
   .admin.deleteDevice({ ids })
   .then()
   .catch(catchAsToast))
@@ -60,13 +60,13 @@ export function AdminDevices() {
   const [createFormModal, setCreateFormModal] = createSignal(false);
 
   // Update
-  const updateFormModal = createModal(BigInt(0))
+  const updateFormModal = createModal("")
 
   // Delete
   const deleteSubmission = useSubmission(actionDeleteDevice)
   const deleteAction = useAction(actionDeleteDevice)
   // Single
-  const deleteModal = createModal({ name: "", id: BigInt(0) })
+  const deleteModal = createModal({ name: "", id: "" })
   const submitDelete = () =>
     deleteAction([deleteModal.value().id])
       .then(deleteModal.setClose)
@@ -455,7 +455,7 @@ function CreateForm(props: { onClose: () => void }) {
   )
 }
 
-function UpdateForm(props: { onClose: () => void, id: bigint }) {
+function UpdateForm(props: { onClose: () => void, id: string }) {
   const device = createAsync(() => getDevice(props.id))
   const refetchDevice = () => revalidate(getDevice.keyFor(props.id))
 

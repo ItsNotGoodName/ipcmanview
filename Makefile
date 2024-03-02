@@ -70,7 +70,7 @@ gen-bus:
 
 gen-proto:
 	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto
-	cd $(WEB_PATH) && mkdir -p ./src/twirp && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=$(shell readlink -f rpc) rpc.proto
+	cd $(WEB_PATH) && mkdir -p ./src/twirp && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=$(shell readlink -f rpc) --ts_opt long_type_string rpc.proto
 
 gen-typescriptify:
 	go run ./scripts/typescriptify $(WEB_PATH)/src/lib/models.gen.ts

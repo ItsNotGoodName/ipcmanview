@@ -5,7 +5,7 @@ import { PageError } from "~/ui/Page";
 import { LayoutNormal } from "~/ui/Layout";
 
 export function AdminGroupsID(props: any) {
-  const data = createAsync(() => getAdminGroupsIDPage(BigInt(props.params.id || 0)))
+  const data = createAsync(() => getAdminGroupsIDPage(props.params.id || 0))
 
   return (
     <LayoutNormal>

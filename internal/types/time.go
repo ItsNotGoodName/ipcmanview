@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+var timeFormats = []string{
+	"2006-01-02 15:04:05.000000",
+	"2006-01-02 15:04:05.000000 +0000 UTC",
+	"2006-01-02 15:04:05",
+}
+
 func NewTime(t time.Time) Time {
 	return Time{Time: t}
 }
@@ -15,57 +21,57 @@ type Time struct {
 	time.Time
 }
 
-func (src Time) Value() (driver.Value, error) {
-	return src.Time.UTC(), nil
-}
-
 func (dst *Time) Scan(src any) error {
-	if dst == nil {
-		return fmt.Errorf("cannot scan nil")
-	}
-
 	switch src := src.(type) {
 	case time.Time:
 		dst.Time = src.UTC()
 		return nil
+	case string:
+		for _, f := range timeFormats {
+			t, err := time.ParseInLocation(f, src, time.UTC)
+			if err != nil {
+				continue
+			}
+			dst.Time = t
+			return nil
+		}
+
+		return fmt.Errorf("parsing time %s", src)
 	}
 
-	return fmt.Errorf("cannot scan %T", dst)
+	return fmt.Errorf("cannot scan %T", src)
 }
 
-func NewNullTime(t time.Time) NullTime {
-	return NullTime{
-		Time:  t,
-		Valid: true,
-	}
+func (src Time) Value() (driver.Value, error) {
+	return src.Time.UTC().Format(timeFormats[0]), nil
 }
 
 // NullTime will always UTC.
-// TODO: replace this with sql.Null[T] type when Go 1.22 comes out
 type NullTime struct {
-	Time  time.Time
+	Time
 	Valid bool // Valid is true if Time is not NULL
 }
 
 func (dst *NullTime) Scan(src any) error {
 	if src == nil {
-		dst.Time, dst.Valid = time.Time{}, false
+		dst.Time, dst.Valid = Time{}, false
 		return nil
 	}
+
+	t := &Time{}
+	err := t.Scan(src)
+	if err != nil {
+		return err
+	}
+	dst.Time = *t
 	dst.Valid = true
 
-	switch src := src.(type) {
-	case time.Time:
-		dst.Time = src.UTC()
-		return nil
-	}
-
-	return fmt.Errorf("cannot scan %T", dst)
+	return nil
 }
 
 func (src NullTime) Value() (driver.Value, error) {
 	if !src.Valid {
 		return nil, nil
 	}
-	return src.Time.UTC(), nil
+	return src.Time.Value()
 }

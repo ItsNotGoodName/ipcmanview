@@ -32,7 +32,7 @@ const actionRevokeAllMySessions = action(() => useClient()
   .then(() => revalidate(getProfilePage.key))
   .catch(catchAsToast))
 
-const actionRevokeMySession = action((sessionId: bigint) => useClient()
+const actionRevokeMySession = action((sessionId: string) => useClient()
   .user.revokeMySession({ sessionId })
   .then(() => revalidate(getProfilePage.key))
   .catch(catchAsToast))
@@ -46,7 +46,7 @@ export function Profile() {
   const submitRevokeAllMySessions = () => revokeAllMySessionsAction()
     .then(() => setRevokeAllMySessionsModal(false))
 
-  const revokeMySessionModal = createModal(BigInt(0))
+  const revokeMySessionModal = createModal("")
   const revokeMySessionSubmission = useSubmission(actionRevokeMySession)
   const revokeMySessionAction = useAction(actionRevokeMySession)
   const submitRevokeMySession = () => revokeMySessionAction(revokeMySessionModal.value())

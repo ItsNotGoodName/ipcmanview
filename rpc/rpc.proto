@@ -81,6 +81,7 @@ service User {
   rpc GetEmailsPage(GetEmailsPageReq) returns (GetEmailsPageResp);
   rpc GetEmailsIDPage(GetEmailsIDPageReq) returns (GetEmailsIDPageResp);
   rpc GetEventsPage(GetEventsPageReq) returns (GetEventsPageResp);
+  rpc GetFilesPage(GetFilesPageReq) returns (GetFilesPageResp);
 
   // User
   rpc UpdateMyUsername(UpdateMyUsernameReq) returns (google.protobuf.Empty);
@@ -98,9 +99,11 @@ service User {
   rpc ListDeviceStorage(ListDeviceStorageReq) returns (ListDeviceStorageResp);
   rpc ListDeviceStreams(ListDeviceStreamsReq) returns (ListDeviceStreamsResp);
 
+  // Misc
   rpc ListEmailAlarmEvents(google.protobuf.Empty) returns (ListEmailAlarmEventsResp);
   rpc ListEventFilters(google.protobuf.Empty) returns (ListEventFiltersResp);
   rpc ListLatestFiles(google.protobuf.Empty) returns (ListLatestFilesResp);
+  rpc GetFileMonthCount(GetFileMonthCountReq) returns (GetFileMonthCountResp);
 }
 
 message GetHomePageResp {
@@ -219,6 +222,33 @@ message GetEventsPageResp {
   repeated Event events = 1;
   PagePaginationResult pageResult = 2;
   Sort sort = 3;
+}
+
+message GetFilesPageReq {
+  PagePagination page = 1;
+  repeated int64 filterDeviceIDs = 2;
+  string filterMonthID = 3;
+  Order order = 4;
+}
+message GetFilesPageResp {
+  message File {
+    int64 id = 1;
+    int64 device_id = 2;
+    google.protobuf.Timestamp start_time = 3;
+    google.protobuf.Timestamp end_time = 4;
+    int64 length = 5;
+    string type = 6;
+    string file_path = 7;
+    int64 duration = 8;
+    repeated string flags = 9;
+    repeated string events = 10;
+    string storage = 11;
+    string device_name = 12;
+    string thumbnail_url = 13;
+    string url = 14;
+  }
+  repeated File files = 1;
+  PagePaginationResult pageResult = 2;
 }
 
 message GetProfilePageResp {
@@ -377,6 +407,18 @@ message ListLatestFilesResp {
     google.protobuf.Timestamp start_time = 5;
   }
   repeated File files = 6;
+}
+
+message GetFileMonthCountReq {
+  repeated int64 filterDeviceIDs = 2;
+}
+message GetFileMonthCountResp {
+  message Month {
+    google.protobuf.Timestamp month_time = 1;
+    string month_id = 2;
+    int32 count = 3;
+  }
+  repeated Month months = 1;
 }
 
 // ---------- Admin

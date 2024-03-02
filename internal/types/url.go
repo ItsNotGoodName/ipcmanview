@@ -17,15 +17,7 @@ type URL struct {
 	*url.URL
 }
 
-func (u URL) Value() (driver.Value, error) {
-	return u.String(), nil
-}
-
 func (dst *URL) Scan(src any) error {
-	if dst == nil {
-		return fmt.Errorf("cannot scan nil")
-	}
-
 	switch src := src.(type) {
 	case string:
 		u, err := url.Parse(src)
@@ -36,5 +28,9 @@ func (dst *URL) Scan(src any) error {
 		return nil
 	}
 
-	return fmt.Errorf("cannot scan %T", dst)
+	return fmt.Errorf("cannot scan %T", src)
+}
+
+func (u URL) Value() (driver.Value, error) {
+	return u.String(), nil
 }

@@ -2,7 +2,7 @@ import Humanize from "humanize-plus"
 import { A, createAsync, useNavigate, useSearchParams } from "@solidjs/router"
 import { Crud } from "~/components/Crud"
 import { Shared } from "~/components/Shared"
-import { decodeBigInts, encodeQuery, formatDate, parseDate } from "~/lib/utils"
+import { dotDecode, encodeQuery, formatDate, parseDate } from "~/lib/utils"
 import { buttonVariants } from "~/ui/Button"
 import { CardRoot } from "~/ui/Card"
 import { RiArrowsArrowLeftLine, RiDeviceHardDrive2Line, RiMediaImageLine, RiSystemDownloadLine } from "solid-icons/ri"
@@ -24,9 +24,9 @@ export function EmailsID(props: any) {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const data = createAsync(() => getEmailsIDPage({
-    id: BigInt(props.params.id ?? 0),
+    id: props.params.id ?? 0,
     filterAlarmEvents: searchParams.alarmEvent ? JSON.parse(searchParams.alarmEvent) : [],
-    filterDeviceIDs: decodeBigInts(searchParams.device),
+    filterDeviceIDs: dotDecode(searchParams.device),
   }))
 
   const query = () => {

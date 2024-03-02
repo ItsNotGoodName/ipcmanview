@@ -30,14 +30,14 @@ func busLogError(name string, err error) {
 	}
 }
 
-func NewBus() *Bus {
+func NewBus(ctx context.Context) *Bus {
 	return &Bus{
-		ServiceContext: sutureext.NewServiceContext("{{ .Package }}.Bus"),
+		ctx: ctx,
 	}
 }
 
 type Bus struct {
-	sutureext.ServiceContext
+	ctx context.Context
 {{- range .Events }}
 	on{{.}} []func(ctx context.Context, event {{ . }}) error
 	names{{.}} []string
@@ -67,7 +67,7 @@ func (b *Bus) On{{ . }}(name string, h func(ctx context.Context, evt {{ . }}) er
 {{ range .Events }}
 func (b *Bus) {{ . }}(evt {{ . }}) {
 	for i, v := range b.on{{ . }} {
-		busLogError(b.names{{ . }}[i],v(b.Context(), evt))
+		busLogError(b.names{{ . }}[i],v(b.ctx, evt))
 	}
 }
 {{ end }}
@@ -98,7 +98,6 @@ func main() {
 			Imports: []string{
 				"context",
 				"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub",
-				"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext",
 				"github.com/rs/zerolog/log",
 			},
 			Events: events(args.InputFilePath),

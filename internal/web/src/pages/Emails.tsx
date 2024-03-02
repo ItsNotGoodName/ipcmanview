@@ -4,7 +4,7 @@ import { RiEditorAttachment2, RiSystemFilterLine } from "solid-icons/ri";
 import { Accessor, ErrorBoundary, For, Show, Suspense, createMemo } from "solid-js";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
-import { encodeQuery, createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder, decodeBigInts, encodeBigInts, isTableDataClick } from "~/lib/utils";
+import { encodeQuery, createPagePagination, createToggleSortField, formatDate, parseDate, parseOrder, dotDecode, dotEncode, isTableDataClick } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { PaginationEllipsis, PaginationEnd, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
@@ -14,15 +14,16 @@ import { linkVariants } from "~/ui/Link";
 import { PageError } from "~/ui/Page";
 import { Skeleton } from "~/ui/Skeleton";
 import { BreadcrumbsItem, BreadcrumbsRoot } from "~/ui/Breadcrumbs";
-import { getListDevices, getListEmailAlarmEvents } from "./data";
+import { getListEmailAlarmEvents } from "./data";
 import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox";
-import { ListDevicesResp_Device } from "~/twirp/rpc";
+import { DeviceFilterCombobox } from "~/components/DeviceFilterCombobox"
 
 export function Emails() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeBigInts(searchParams.device))
+  const filterDeviceIDs: Accessor<string[]> = createMemo(() => dotDecode(searchParams.device))
+  const setFilterDeviceIDs = (value: string[]) => setSearchParams({ device: dotEncode(value) })
   const filterAlarmEvents: Accessor<string[]> = createMemo(() => searchParams.alarmEvent ? JSON.parse(searchParams.alarmEvent) : [])
 
   const data = createAsync(() => getEmailsPage({
@@ -37,7 +38,6 @@ export function Emails() {
     filterDeviceIDs: filterDeviceIDs(),
     filterAlarmEvents: filterAlarmEvents()
   }))
-  const listDevices = createAsync(() => getListDevices())
   const listEmailAlarmEvents = createAsync(() => getListEmailAlarmEvents())
 
   const toggleSort = createToggleSortField(() => data()?.sort)
@@ -62,36 +62,7 @@ export function Emails() {
                 onChange={(perPage) => setSearchParams({ perPage })}
                 class="hidden w-20 sm:block"
               />
-              <ComboboxRoot<ListDevicesResp_Device>
-                multiple
-                optionValue="id"
-                optionTextValue="name"
-                optionLabel="name"
-                options={listDevices() || []}
-                placeholder="Device"
-                value={listDevices()?.filter(v => filterDeviceIDs().includes(v.id))}
-                onChange={(value) => setSearchParams({ device: encodeBigInts(value.map(v => v.id)) })}
-                itemComponent={props => (
-                  <ComboboxItem item={props.item}>
-                    <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>
-                  </ComboboxItem>
-                )}
-              >
-                <ComboboxControl<ListDevicesResp_Device> aria-label="Device">
-                  {state => (
-                    <ComboboxTrigger>
-                      <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
-                      Device
-                      <ComboboxState state={state} getOptionString={(option) => option.name} />
-                      <ComboboxReset state={state} class="size-4" />
-                    </ComboboxTrigger>
-                  )}
-                </ComboboxControl>
-                <ComboboxContent>
-                  <ComboboxInput />
-                  <ComboboxListbox />
-                </ComboboxContent>
-              </ComboboxRoot>
+              <DeviceFilterCombobox deviceIDs={filterDeviceIDs()} setDeviceIDs={setFilterDeviceIDs} />
               <ComboboxRoot<string>
                 multiple
                 options={listEmailAlarmEvents() || []}

@@ -23,7 +23,7 @@ import { SetGroupDisableReq } from "~/twirp/rpc";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
 
-const actionDelete = action((ids: bigint[]) => useClient()
+const actionDelete = action((ids: string[]) => useClient()
   .admin.deleteGroup({ ids })
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(catchAsToast))
@@ -56,13 +56,13 @@ export function AdminGroups() {
   const [openCreateForm, setOpenCreateForm] = createSignal(false);
 
   // Update
-  const [openUpdateForm, setOpenUpdateForm] = createSignal<bigint>(BigInt(0))
+  const [openUpdateForm, setOpenUpdateForm] = createSignal("")
 
   // Delete
   const deleteGroupSubmission = useSubmission(actionDelete)
   const deleteGroupAction = useAction(actionDelete)
   // Single
-  const [openDeleteConfirm, setOpenDeleteConfirm] = createSignal<{ name: string, id: bigint } | undefined>()
+  const [openDeleteConfirm, setOpenDeleteConfirm] = createSignal<{ name: string, id: string } | undefined>()
   const deleteSubmit = () => deleteGroupAction([openDeleteConfirm()!.id])
     .then(() => setOpenDeleteConfirm(undefined))
   // Multiple
@@ -92,7 +92,7 @@ export function AdminGroups() {
         </DialogPortal>
       </DialogRoot>
 
-      <DialogRoot open={openUpdateForm() != BigInt(0)} onOpenChange={() => setOpenUpdateForm(BigInt(0))}>
+      <DialogRoot open={openUpdateForm() != ""} onOpenChange={() => setOpenUpdateForm("")}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -100,7 +100,7 @@ export function AdminGroups() {
               <DialogTitle>Update group</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <UpdateForm close={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
+              <UpdateForm close={() => setOpenUpdateForm("")} id={openUpdateForm()} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -393,13 +393,13 @@ const actionUpdateForm = action((data: UpdateForm) => useClient()
   .then(() => revalidate(getAdminGroupsPage.key))
   .catch(throwAsFormError))
 
-function UpdateForm(props: { close: () => void, id: bigint }) {
+function UpdateForm(props: { close: () => void, id: string }) {
   const [form, { Field, Form }] = createForm<UpdateForm>();
   const action = useAction(actionUpdateForm)
   const submit = (data: UpdateForm) => action(data)
     .then(() => props.close())
 
-  const [data] = createResource(() => props.id != BigInt(0),
+  const [data] = createResource(() => props.id != "",
     () => useClient().admin.getGroup({ id: props.id })
       .then((data) => data.response satisfies UpdateForm))
   const disabled = syncForm(form, data)

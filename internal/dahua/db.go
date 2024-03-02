@@ -3,19 +3,17 @@ package dahua
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
+	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
 	sq "github.com/Masterminds/squirrel"
 )
-
-type dbCountRow struct {
-	Count int64
-}
 
 // dbSelectFilter applies an authorization filter to a select query.
 func dbSelectFilter(ctx context.Context, sb sq.SelectBuilder, deviceIDField string, level models.DahuaPermissionLevel) sq.SelectBuilder {
@@ -106,14 +104,10 @@ func ListDeviceIDs(ctx context.Context, db sqlite.DB) ([]int64, error) {
 	return res, err
 }
 
-func CountFiles(ctx context.Context, db sqlite.DB) (int64, error) {
-	sb := sq.
-		Select("COUNT(*) AS count").
-		From("dahua_files")
+// ---------- Count
 
-	var res dbCountRow
-	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", levelDefault))
-	return res.Count, err
+type dbCountRow struct {
+	Count int64
 }
 
 func CountEvents(ctx context.Context, db sqlite.DB) (int64, error) {
@@ -513,4 +507,118 @@ func ListEventRules(ctx context.Context, db sqlite.DB) ([]repo.DahuaEventRule, e
 		return nil, err
 	}
 	return db.C().DahuaListEventRules(ctx)
+}
+
+type FileFilter struct {
+	FilterDeviceIDs []int64
+	FilterMonth     time.Time
+}
+
+func (arg FileFilter) where() sq.And {
+	and := sq.And{}
+
+	if !arg.FilterMonth.IsZero() {
+		month := types.NewTime(arg.FilterMonth)
+		and = append(and, sq.Expr(`(start_time >= datetime(?, 'start of month') AND start_time < datetime( ?, 'start of month', '+1 month'))`, month, month))
+	}
+
+	eq := sq.Eq{}
+
+	if len(arg.FilterDeviceIDs) != 0 {
+		eq["dahua_files.device_id"] = arg.FilterDeviceIDs
+	}
+
+	return append(and, eq)
+}
+
+func CountFiles(ctx context.Context, db sqlite.DB) (int64, error) {
+	sb := sq.
+		Select("COUNT(*) AS count").
+		From("dahua_files")
+
+	var res dbCountRow
+	err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", levelDefault))
+	return res.Count, err
+}
+
+type CountFilesByMonthResult struct {
+	Month types.Time
+	Count int64
+}
+
+func CountFilesByMonth(ctx context.Context, db sqlite.DB, filter FileFilter) ([]CountFilesByMonthResult, error) {
+	sb := sq.
+		Select(
+			"datetime(start_time, 'start of month') AS month",
+			"count(id) as count",
+		).
+		From("dahua_files").
+		Where(filter.where()).
+		GroupBy("strftime('%Y-%m', substr(start_time, 1, 10))")
+
+	var res []CountFilesByMonthResult
+	err := ssq.Query(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", levelDefault))
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+type ListFilesParams struct {
+	pagination.Page
+	Ascending bool
+	Filter    FileFilter
+}
+
+type ListFilesResult struct {
+	pagination.PageResult
+	Items []ListFilesResultItems
+}
+
+type ListFilesResultItems struct {
+	repo.DahuaFile
+	DeviceName string
+}
+
+func ListFiles(ctx context.Context, db sqlite.DB, arg ListFilesParams) (ListFilesResult, error) {
+	where := arg.Filter.where()
+
+	order := "dahua_files.start_time"
+	if arg.Ascending {
+		order += " ASC"
+	} else {
+		order += " DESC"
+	}
+	sb := sq.
+		Select(
+			"dahua_files.*",
+			"dahua_devices.name AS device_name",
+		).
+		From("dahua_files").
+		LeftJoin("dahua_devices ON dahua_devices.id = dahua_files.device_id").
+		Where(where).
+		OrderBy(order).
+		Offset(uint64(arg.Offset())).
+		Limit(uint64(arg.Limit()))
+
+	var items []ListFilesResultItems
+	if err := ssq.Query(ctx, db, &items, dbSelectFilter(ctx, sb, "dahua_files.device_id", levelDefault)); err != nil {
+		return ListFilesResult{}, err
+	}
+
+	sb = sq.
+		Select("COUNT(*) AS count").
+		From("dahua_files").
+		Where(where)
+
+	var res dbCountRow
+	if err := ssq.QueryOne(ctx, db, &res, dbSelectFilter(ctx, sb, "dahua_files.device_id", levelDefault)); err != nil {
+		return ListFilesResult{}, err
+	}
+
+	return ListFilesResult{
+		PageResult: arg.Result(int(res.Count)),
+		Items:      items,
+	}, nil
 }

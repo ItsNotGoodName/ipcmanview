@@ -210,12 +210,12 @@ export function encodeQuery(q: URLSearchParams): string {
   return "?" + q.toString()
 }
 
-export function encodeBigInts(q: bigint[]): string {
+export function dotEncode(q: string[]): string {
   return q.join('.')
 }
 
-export function decodeBigInts(q?: string): bigint[] {
-  return q ? q.split('.').map((v: any) => BigInt(v)) : []
+export function dotDecode(q?: string): string[] {
+  return q ? q.split('.').map((v: any) => v) : []
 }
 
 export function useHiddenScrollbar(): void {

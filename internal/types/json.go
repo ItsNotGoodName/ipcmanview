@@ -3,6 +3,7 @@ package types
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 )
 
 func NewJSON(data json.RawMessage) JSON {
@@ -16,17 +17,18 @@ type JSON struct {
 }
 
 func (dst *JSON) Scan(src any) error {
+	if src == nil {
+		dst.RawMessage = []byte{}
+		return nil
+	}
+
 	switch src := src.(type) {
 	case string:
 		dst.RawMessage = []byte(src)
-	default:
-		b, err := json.Marshal(src)
-		if err != nil {
-			return err
-		}
-		dst.RawMessage = b
+		return nil
 	}
-	return nil
+
+	return fmt.Errorf("cannot scan %T", src)
 }
 
 func (src JSON) Value() (driver.Value, error) {

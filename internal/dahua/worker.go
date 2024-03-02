@@ -255,7 +255,7 @@ func (w QuickScanWorker) scan(ctx context.Context) error {
 		return err
 	}
 
-	return scan(ctx, w.db, w.bus, client.RPC, client.Conn, models.DahuaScanTypeQuick)
+	return Scan(ctx, w.db, w.bus, client.RPC, client.Conn, models.DahuaScanTypeQuick)
 }
 
 func NewEventWorker(hooks WorkerHooks, db sqlite.DB, bus *event.Bus, conn Conn) EventWorker {

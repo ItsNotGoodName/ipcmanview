@@ -1,5 +1,5 @@
 import { cache } from "@solidjs/router";
-import { decodeBigInts } from "~/lib/utils";
+import { dotDecode } from "~/lib/utils";
 import { useClient } from "~/providers/client";
 import { GetEmailsIDPageReq } from "~/twirp/rpc";
 
@@ -7,8 +7,8 @@ export const getEmailsIDPage = cache((input: GetEmailsIDPageReq) => useClient().
 
 export default function({ params }: any) {
   void getEmailsIDPage({
-    id: BigInt(params.id ?? 0),
+    id: params.id ?? 0,
     filterAlarmEvents: params.alarmEvent ? JSON.parse(params.alarmEvent) : [],
-    filterDeviceIDs: decodeBigInts(params.device),
+    filterDeviceIDs: dotDecode(params.device),
   })
 }

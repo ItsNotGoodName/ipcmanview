@@ -18,6 +18,7 @@
     "@solid-primitives/clipboard": "^1.5.8",
     "@solid-primitives/date": "^2.0.19",
     "@solid-primitives/event-bus": "^1.0.9",
+    "@solid-primitives/mouse": "^2.0.18",
     "@solid-primitives/resize-observer": "^2.0.22",
     "@solid-primitives/storage": "^2.1.1",
     "@solid-primitives/websocket": "^1.2.1",

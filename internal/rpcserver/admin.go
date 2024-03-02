@@ -81,7 +81,7 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 				Url:            row.Url.String(),
 				Username:       row.Username,
 				Disabled:       row.DisabledAt.Valid,
-				DisabledAtTime: timestamppb.New(row.DisabledAt.Time),
+				DisabledAtTime: timestamppb.New(row.DisabledAt.Time.Time),
 				CreatedAtTime:  timestamppb.New(row.CreatedAt.Time),
 			})
 		}
@@ -125,7 +125,7 @@ func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevi
 			Location:       v.Location.String(),
 			CreatedAtTime:  timestamppb.New(v.CreatedAt.Time),
 			UpdatedAtTime:  timestamppb.New(v.UpdatedAt.Time),
-			DisabledAtTime: timestamppb.New(v.DisabledAt.Time),
+			DisabledAtTime: timestamppb.New(v.DisabledAt.Time.Time),
 			Features:       dahua.FeatureToStrings(v.Feature),
 		},
 	}, nil
@@ -286,7 +286,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 				Email:          row.Email,
 				Disabled:       row.DisabledAt.Valid,
 				Admin:          row.Admin,
-				DisabledAtTime: timestamppb.New(row.DisabledAt.Time),
+				DisabledAtTime: timestamppb.New(row.DisabledAt.Time.Time),
 				CreatedAtTime:  timestamppb.New(row.CreatedAt.Time),
 			})
 		}
@@ -457,8 +457,8 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 				Id:             row.ID,
 				Name:           row.Name,
 				UserCount:      row.UserCount,
-				Disabled:       row.DisabledAt.Valid,
-				DisabledAtTime: timestamppb.New(row.DisabledAt.Time),
+				Disabled:       !row.DisabledAt.Valid,
+				DisabledAtTime: timestamppb.New(row.DisabledAt.Time.Time),
 				CreatedAtTime:  timestamppb.New(row.CreatedAt.Time),
 			})
 		}
@@ -511,7 +511,7 @@ func (a *Admin) GetAdminGroupsIDPage(ctx context.Context, req *rpc.GetAdminGroup
 			Name:           v.Name,
 			Description:    v.Description,
 			Disabled:       v.DisabledAt.Valid,
-			DisabledAtTime: timestamppb.New(v.DisabledAt.Time),
+			DisabledAtTime: timestamppb.New(v.DisabledAt.Time.Time),
 			CreatedAtTime:  timestamppb.New(v.CreatedAt.Time),
 			UpdatedAtTime:  timestamppb.New(v.UpdatedAt.Time),
 		},

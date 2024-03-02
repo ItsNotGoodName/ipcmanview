@@ -1,6 +1,9 @@
 package rpcserver
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 )
@@ -34,6 +37,19 @@ func parseSort(v *rpc.Sort) Sort {
 		Field: v.Field,
 		Order: v.Order,
 	}
+}
+
+func encodeMonthID(month time.Time) string {
+	month = month.UTC()
+	return fmt.Sprintf("%02d-%02d", month.Year(), month.Month())
+}
+
+func parseMonthID(month string) time.Time {
+	t, err := time.ParseInLocation("2006-01", month, time.UTC)
+	if err != nil {
+		return time.Time{}
+	}
+	return t
 }
 
 // ---------- Order

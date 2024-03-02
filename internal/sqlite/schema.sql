@@ -171,6 +171,9 @@ CREATE TABLE dahua_files (
   FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+-- Filter by device_id and ordering by start_time
+CREATE INDEX dahua_files_device_id_start_time_idx ON dahua_files (device_id, start_time);
+
 CREATE TABLE dahua_thumbnails (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   file_id INTEGER,

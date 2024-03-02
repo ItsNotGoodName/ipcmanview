@@ -22,7 +22,7 @@ import { createForm, required, reset } from "@modular-forms/solid";
 import { Input } from "~/ui/Input";
 import { Shared } from "~/components/Shared";
 
-const actionDelete = action((ids: bigint[]) => useClient()
+const actionDelete = action((ids: string[]) => useClient()
   .admin.deleteUser({ ids })
   .then(() => revalidate(getAdminUsersPage.key))
   .catch(catchAsToast))
@@ -53,7 +53,7 @@ export function AdminUsers() {
     },
   }))
 
-  const rowSelection = createRowSelection(() => data()?.items.map(v => ({ id: v.id, disabled: v.id == BigInt(session()?.user_id || 0) })) || [])
+  const rowSelection = createRowSelection(() => data()?.items.map(v => ({ id: v.id, disabled: v.id == String(session()?.user_id) })) || [])
   // List
   const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = createToggleSortField(() => data()?.sort)
@@ -62,14 +62,14 @@ export function AdminUsers() {
   const [openCreateForm, setOpenCreateForm] = createSignal(false);
 
   // Update
-  const [openUpdateForm, setOpenUpdateForm] = createSignal<bigint>(BigInt(0))
+  const [openUpdateForm, setOpenUpdateForm] = createSignal("")
 
   // Delete
   const deleteSubmission = useSubmission(actionDelete)
   const deleteAction = useAction(actionDelete)
   // Single
-  const [openDeleteConfirm, setOpenDeleteConfirm] = createSignal<{ username: string, id: bigint } | undefined>()
-  const deleteSubmit = () => deleteAction([openDeleteConfirm()?.id || BigInt(0)])
+  const [openDeleteConfirm, setOpenDeleteConfirm] = createSignal<{ username: string, id: string } | undefined>()
+  const deleteSubmit = () => deleteAction([openDeleteConfirm()?.id || ""])
     .then(() => setOpenDeleteConfirm(undefined))
   // Multiple
   const [openDeleteMultipleConfirm, setOpenDeleteMultipleConfirm] = createSignal(false)
@@ -87,7 +87,7 @@ export function AdminUsers() {
   const setAdminAction = useAction(actionSetAdmin)
 
   // Reset password
-  const [openResetPasswordForm, setOpenResetPasswordForm] = createSignal<bigint>(BigInt(0))
+  const [openResetPasswordForm, setOpenResetPasswordForm] = createSignal("")
 
   return (
     <LayoutNormal class="max-w-4xl">
@@ -106,7 +106,7 @@ export function AdminUsers() {
         </DialogPortal>
       </DialogRoot>
 
-      <DialogRoot open={openUpdateForm() != BigInt(0)} onOpenChange={() => setOpenUpdateForm(BigInt(0))}>
+      <DialogRoot open={openUpdateForm() != ""} onOpenChange={() => setOpenUpdateForm("")}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -114,7 +114,7 @@ export function AdminUsers() {
               <DialogTitle>Update user</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <UpdateForm close={() => setOpenUpdateForm(BigInt(0))} id={openUpdateForm()} />
+              <UpdateForm close={() => setOpenUpdateForm("")} id={openUpdateForm()} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -159,7 +159,7 @@ export function AdminUsers() {
         </AlertDialogModal>
       </AlertDialogRoot>
 
-      <DialogRoot open={openResetPasswordForm() != BigInt(0)} onOpenChange={() => setOpenResetPasswordForm(BigInt(0))}>
+      <DialogRoot open={openResetPasswordForm() != ""} onOpenChange={() => setOpenResetPasswordForm("")}>
         <DialogPortal>
           <DialogOverlay />
           <DialogContent>
@@ -167,7 +167,7 @@ export function AdminUsers() {
               <DialogTitle>Reset password</DialogTitle>
             </DialogHeader>
             <DialogOverflow>
-              <ResetPasswordForm close={() => setOpenResetPasswordForm(BigInt(0))} id={openResetPasswordForm()} />
+              <ResetPasswordForm close={() => setOpenResetPasswordForm("")} id={openResetPasswordForm()} />
             </DialogOverflow>
           </DialogContent>
         </DialogPortal>
@@ -270,7 +270,7 @@ export function AdminUsers() {
                     const toggleDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
                     const toggleAdmin = () => setAdminAction({ id: item.id, admin: !item.admin })
 
-                    const isMe = () => item.id == BigInt(session()?.user_id || 0)
+                    const isMe = () => item.id == String(session()?.user_id)
 
                     return (
                       <TableRow data-state={rowSelection.items[index()]?.checked ? "selected" : ""}>
@@ -382,7 +382,7 @@ const actionResetPasswordForm = action((data: ResetPasswordForm) => useClient()
   .admin.resetUserPassword(data).then()
   .catch(throwAsFormError))
 
-function ResetPasswordForm(props: { close: () => void, id: bigint }) {
+function ResetPasswordForm(props: { close: () => void, id: string }) {
   const [form, { Field, Form }] = createForm<ResetPasswordForm>({
     validate: (form) => {
       if (form.newPassword != form.confirmPassword) {
@@ -611,13 +611,13 @@ const actionUpdateForm = action((data: UpdateForm) => useClient()
   .then(() => revalidate(getAdminUsersPage.key))
   .catch(throwAsFormError))
 
-function UpdateForm(props: { close: () => void, id: bigint }) {
+function UpdateForm(props: { close: () => void, id: string }) {
   const [form, { Field, Form }] = createForm<UpdateForm>();
   const action = useAction(actionUpdateForm)
   const submit = (data: UpdateForm) => action(data)
     .then(() => props.close())
 
-  const [data] = createResource(() => props.id != BigInt(0),
+  const [data] = createResource(() => props.id != "",
     () => useClient().admin.getUser({ id: props.id })
       .then((data) => data.response satisfies UpdateForm))
   const disabled = syncForm(form, data)

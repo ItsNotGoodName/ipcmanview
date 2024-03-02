@@ -85,7 +85,7 @@ export function EventsLive() {
                         </TableCell>
                         <TableCell>
                           <A href={`/devices/${v.device_id}`} class={linkVariants()}>
-                            {listDevices()?.find((d) => d.id == BigInt(v.device_id))?.name}
+                            {listDevices()?.find((d) => d.id == String(v.device_id))?.name}
                           </A>
                         </TableCell>
                         <TableCell>

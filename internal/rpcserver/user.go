@@ -308,6 +308,49 @@ func (u *User) GetEventsPage(ctx context.Context, req *rpc.GetEventsPageReq) (*r
 	}, nil
 }
 
+func (u *User) GetFilesPage(ctx context.Context, req *rpc.GetFilesPageReq) (*rpc.GetFilesPageResp, error) {
+	page := parsePagePagination(req.Page)
+	filter := dahua.FileFilter{
+		FilterDeviceIDs: req.FilterDeviceIDs,
+		FilterMonth:     parseMonthID(req.FilterMonthID),
+	}
+
+	dbFiles, err := dahua.ListFiles(ctx, u.db, dahua.ListFilesParams{
+		Page:      page,
+		Ascending: req.Order == rpc.Order_ASC,
+		Filter:    filter,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	files := make([]*rpc.GetFilesPageResp_File, 0, len(dbFiles.Items))
+	for _, v := range dbFiles.Items {
+		files = append(files, &rpc.GetFilesPageResp_File{
+			Id:           v.ID,
+			DeviceId:     v.DeviceID,
+			StartTime:    timestamppb.New(v.StartTime.Time),
+			EndTime:      timestamppb.New(v.EndTime.Time),
+			Length:       v.Length,
+			Type:         v.Type,
+			FilePath:     v.FilePath,
+			Duration:     v.Duration,
+			Flags:        v.Flags.Slice,
+			Events:       v.Events.Slice,
+			Storage:      string(v.Storage),
+			DeviceName:   v.DeviceName,
+			ThumbnailUrl: "",
+			Url:          api.DahuaDeviceFileURI(v.DeviceID, v.FilePath),
+		})
+	}
+
+	return &rpc.GetFilesPageResp{
+		PageResult: encodePagePaginationResult(dbFiles.PageResult),
+		// Months:     months,
+		Files: files,
+	}, nil
+}
+
 func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
@@ -591,5 +634,27 @@ func (u *User) ListLatestFiles(ctx context.Context, _ *emptypb.Empty) (*rpc.List
 
 	return &rpc.ListLatestFilesResp{
 		Files: files,
+	}, nil
+}
+
+func (u *User) GetFileMonthCount(ctx context.Context, req *rpc.GetFileMonthCountReq) (*rpc.GetFileMonthCountResp, error) {
+	dbMonths, err := dahua.CountFilesByMonth(ctx, u.db, dahua.FileFilter{
+		FilterDeviceIDs: req.FilterDeviceIDs,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	months := make([]*rpc.GetFileMonthCountResp_Month, 0, len(dbMonths))
+	for _, v := range dbMonths {
+		months = append(months, &rpc.GetFileMonthCountResp_Month{
+			MonthTime: timestamppb.New(v.Month.Time),
+			MonthId:   encodeMonthID(v.Month.Time),
+			Count:     int32(v.Count),
+		})
+	}
+
+	return &rpc.GetFileMonthCountResp{
+		Months: months,
 	}, nil
 }

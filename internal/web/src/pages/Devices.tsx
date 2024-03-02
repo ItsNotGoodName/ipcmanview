@@ -10,16 +10,16 @@ import { GetDevicesPageResp_Device } from "~/twirp/rpc"
 import { getDeviceDetail, getDeviceRPCStatus, getDeviceSoftwareVersion, getDeviceUptime, getListDeviceLicenses, getListDeviceStorage, getListDeviceStreams, } from "./data"
 import { Skeleton } from "~/ui/Skeleton"
 import { ToggleButton } from "@kobalte/core"
-import { createUptime, decodeBigInts, encodeBigInts, formatDate, parseDate, useHiddenScrollbar } from "~/lib/utils"
+import { createUptime, dotDecode, dotEncode, formatDate, parseDate, useHiddenScrollbar } from "~/lib/utils"
 import { getDevicesPage } from "./Devices.data"
 import { linkVariants } from "~/ui/Link"
 import { Shared } from "~/components/Shared"
 import { createDate, createTimeAgo } from "@solid-primitives/date"
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip"
-import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox"
-import { RiMediaImageLine, RiSystemFilterLine, RiSystemLockLine, RiSystemRefreshLine } from "solid-icons/ri"
+import { RiMediaImageLine, RiSystemLockLine, RiSystemRefreshLine } from "solid-icons/ri"
 import { Button } from "~/ui/Button"
 import { Crud } from "~/components/Crud"
+import { DeviceFilterCombobox } from "~/components/DeviceFilterCombobox"
 
 function EmptyTableCell(props: { colspan: number }) {
   return <TableCell colspan={props.colspan}>N/A</TableCell>
@@ -43,7 +43,7 @@ function ErrorTableCell(props: { colspan: number, error: Error }) {
   )
 }
 
-function DeviceNameCell(props: { device: { id: bigint, name: string } }) {
+function DeviceNameCell(props: { device: { id: string, name: string } }) {
   return (
     <TableCell>
       <A class={linkVariants()} href={`./${props.device.id}`}>{props.device.name}</A>
@@ -56,7 +56,8 @@ export function Devices() {
 
   const data = createAsync(() => getDevicesPage())
 
-  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeBigInts(searchParams.device))
+  const filterDeviceIDs: Accessor<string[]> = createMemo(() => dotDecode(searchParams.device))
+  const setFilterDeviceIDs = (value: string[]) => setSearchParams({ device: dotEncode(value) })
   const filteredDevices = () => filterDeviceIDs().length > 0 ? data()?.devices.filter(v => !v.disabled && filterDeviceIDs().includes(v.id)) : data()?.devices.filter(v => !v.disabled)
 
   return (
@@ -79,37 +80,7 @@ export function Devices() {
               </TabsList>
             </div>
             <Suspense fallback={<Skeleton />}>
-              <ComboboxRoot<GetDevicesPageResp_Device>
-                multiple
-                optionValue="id"
-                optionTextValue="name"
-                optionLabel="name"
-                optionDisabled="disabled"
-                options={data()?.devices || []}
-                placeholder="Device"
-                value={data()?.devices.filter(v => filterDeviceIDs().includes(v.id))}
-                onChange={(value) => setSearchParams({ device: encodeBigInts(value.map(v => v.id)) })}
-                itemComponent={props => (
-                  <ComboboxItem item={props.item}>
-                    <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>
-                  </ComboboxItem>
-                )}
-              >
-                <ComboboxControl<GetDevicesPageResp_Device> aria-label="Device">
-                  {state => (
-                    <ComboboxTrigger>
-                      <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
-                      Device
-                      <ComboboxState state={state} getOptionString={(option) => option.name} />
-                      <ComboboxReset state={state} class="size-4" />
-                    </ComboboxTrigger>
-                  )}
-                </ComboboxControl>
-                <ComboboxContent>
-                  <ComboboxInput />
-                  <ComboboxListbox />
-                </ComboboxContent>
-              </ComboboxRoot>
+              <DeviceFilterCombobox deviceIDs={filterDeviceIDs()} setDeviceIDs={setFilterDeviceIDs} />
             </Suspense>
           </div>
           <TabsContent value="device">

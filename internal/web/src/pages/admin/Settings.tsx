@@ -105,7 +105,7 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
             >
               <div>
                 <SwitchLabel>Enable sign up</SwitchLabel>
-                <SwitchDescription>Allow public sign up.</SwitchDescription>
+                <SwitchDescription>Allow public to sign up.</SwitchDescription>
                 <SwitchErrorMessage>{field.error}</SwitchErrorMessage>
               </div>
               <SwitchControl inputProps={props} />
@@ -124,7 +124,7 @@ function UpdateSettingsForm(props: { config: GetConfigResp, refetchConfig: () =>
   )
 }
 
-const actionDeleteEventRule = action((ids: bigint[]) => useClient()
+const actionDeleteEventRule = action((ids: string[]) => useClient()
   .admin.deleteEventRules({ ids })
   .then(() => true)
   .catch(catchAsToast))
@@ -156,7 +156,7 @@ function EventRulesTable(props: { eventRules: ListEventRulesResp_Item[], refetch
   const deleteSubmission = useSubmission(actionDeleteEventRule)
   const deleteAction = useAction(actionDeleteEventRule)
   // Single
-  const deleteModal = createModal({ name: "", id: BigInt(0) })
+  const deleteModal = createModal({ name: "", id: "" })
   const deleteSubmit = () => deleteAction([deleteModal.value().id])
     .then((value) => value === true &&
       batch(() => {
@@ -424,7 +424,7 @@ function CreateEventRuleForm(props: { onSubmit: () => void, onClose: () => void 
                   {...props}
                   placeholder="Code"
                 />
-                <TextFieldDescription>Name of site.</TextFieldDescription>
+                <TextFieldDescription>Match by code.</TextFieldDescription>
                 <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
               </TextFieldRoot>
             )}

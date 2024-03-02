@@ -4,7 +4,7 @@ import { A, createAsync, useSearchParams } from "@solidjs/router";
 import { Accessor, ErrorBoundary, For, Show, Suspense, createEffect, createMemo, createSignal, } from "solid-js";
 import { Crud } from "~/components/Crud";
 import { Shared } from "~/components/Shared";
-import { createPagePagination, createToggleSortField, decodeBigInts, encodeBigInts, formatDate, parseDate, parseOrder } from "~/lib/utils";
+import { createPagePagination, createToggleSortField, dotDecode, dotEncode, formatDate, parseDate, parseOrder } from "~/lib/utils";
 import { LayoutNormal } from "~/ui/Layout";
 import { PaginationEllipsis, PaginationEnd, PaginationItem, PaginationItems, PaginationLink, PaginationNext, PaginationPrevious, PaginationRoot } from "~/ui/Pagination";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "~/ui/Table";
@@ -15,14 +15,15 @@ import { getEventsPage } from "./Events.data";
 import { RiArrowsArrowDownSLine, RiDocumentClipboardLine, RiSystemFilterLine } from "solid-icons/ri";
 import { Button, buttonVariants } from "~/ui/Button";
 import { ComboboxContent, ComboboxControl, ComboboxIcon, ComboboxInput, ComboboxItem, ComboboxItemLabel, ComboboxListbox, ComboboxReset, ComboboxRoot, ComboboxState, ComboboxTrigger } from "~/ui/Combobox";
-import { getListDevices, getListEventFilters } from "./data";
-import { ListDevicesResp_Device } from "~/twirp/rpc";
+import { getListEventFilters } from "./data";
 import { BreadcrumbsItem, BreadcrumbsRoot, } from "~/ui/Breadcrumbs";
+import { DeviceFilterCombobox } from "~/components/DeviceFilterCombobox"
 
 export function Events() {
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const filterDeviceIDs: Accessor<bigint[]> = createMemo(() => decodeBigInts(searchParams.device))
+  const filterDeviceIDs: Accessor<string[]> = createMemo(() => dotDecode(searchParams.device))
+  const setFilterDeviceIDs = (value: string[]) => setSearchParams({ device: dotEncode(value) })
   const filterCodes: Accessor<string[]> = createMemo(() => searchParams.code ? JSON.parse(searchParams.code) : [])
   const filterActions: Accessor<string[]> = createMemo(() => searchParams.action ? JSON.parse(searchParams.action) : [])
 
@@ -39,7 +40,6 @@ export function Events() {
     filterCodes: filterCodes(),
     filterActions: filterActions(),
   }))
-  const listDevices = createAsync(() => getListDevices())
   const listEventFilters = createAsync(() => getListEventFilters())
 
 
@@ -67,36 +67,7 @@ export function Events() {
                 onChange={(perPage) => setSearchParams({ perPage })}
                 class="hidden w-20 sm:block"
               />
-              <ComboboxRoot<ListDevicesResp_Device>
-                multiple
-                optionValue="id"
-                optionTextValue="name"
-                optionLabel="name"
-                options={listDevices() || []}
-                placeholder="Device"
-                value={listDevices()?.filter(v => filterDeviceIDs().includes(v.id))}
-                onChange={(value) => setSearchParams({ device: encodeBigInts(value.map(v => v.id)) })}
-                itemComponent={props => (
-                  <ComboboxItem item={props.item}>
-                    <ComboboxItemLabel>{props.item.rawValue.name}</ComboboxItemLabel>
-                  </ComboboxItem>
-                )}
-              >
-                <ComboboxControl<ListDevicesResp_Device> aria-label="Device">
-                  {state => (
-                    <ComboboxTrigger>
-                      <ComboboxIcon as={RiSystemFilterLine} class="size-4" />
-                      Device
-                      <ComboboxState state={state} getOptionString={(option) => option.name} />
-                      <ComboboxReset state={state} class="size-4" />
-                    </ComboboxTrigger>
-                  )}
-                </ComboboxControl>
-                <ComboboxContent>
-                  <ComboboxInput />
-                  <ComboboxListbox />
-                </ComboboxContent>
-              </ComboboxRoot>
+              <DeviceFilterCombobox deviceIDs={filterDeviceIDs()} setDeviceIDs={setFilterDeviceIDs} />
               <ComboboxRoot<string>
                 multiple
                 options={listEventFilters()?.codes || []}

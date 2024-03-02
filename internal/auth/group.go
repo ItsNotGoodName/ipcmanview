@@ -104,16 +104,12 @@ func UpdateGroupDisable(ctx context.Context, db sqlite.DB, userID int64, disable
 		return err
 	}
 
-	if disable {
-		_, err := db.C().AuthUpdateGroupDisabledAt(ctx, repo.AuthUpdateGroupDisabledAtParams{
-			DisabledAt: types.NewNullTime(time.Now()),
-			ID:         userID,
-		})
-		return err
-	}
 	_, err := db.C().AuthUpdateGroupDisabledAt(ctx, repo.AuthUpdateGroupDisabledAtParams{
-		DisabledAt: types.NullTime{},
-		ID:         userID,
+		DisabledAt: types.NullTime{
+			Time:  types.NewTime(time.Now()),
+			Valid: disable,
+		},
+		ID: userID,
 	})
 	return err
 }

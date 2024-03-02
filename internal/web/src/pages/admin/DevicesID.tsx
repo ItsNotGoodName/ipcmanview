@@ -8,7 +8,7 @@ import { BreadcrumbsItem, BreadcrumbsLink, BreadcrumbsRoot, BreadcrumbsSeparator
 
 export function AdminDevicesID(props: any) {
   const id = () => props.params.id || 0
-  const data = createAsync(() => getAdminDevicesIDPage(BigInt(id())))
+  const data = createAsync(() => getAdminDevicesIDPage(id()))
 
   return (
     <LayoutNormal class="max-w-4xl">
