@@ -1,4 +1,4 @@
-package event
+package system
 
 import (
 	"context"
@@ -41,12 +41,12 @@ type Event struct {
 	Data   []byte
 }
 
-func createEvent(ctx context.Context, db sqlite.DBTx, evt Event) error {
+func createEvent(ctx context.Context, db sqlite.DBTx, event Event) error {
 	actor := core.UseActor(ctx)
 
 	_, err := db.CreateEvent(ctx, repo.CreateEventParams{
-		Action: evt.Action,
-		Data:   types.NewJSON(evt.Data),
+		Action: event.Action,
+		Data:   types.NewJSON(event.Data),
 		UserID: sql.NullInt64{
 			Int64: actor.UserID,
 			Valid: actor.Type == core.ActorTypeUser,
@@ -57,12 +57,12 @@ func createEvent(ctx context.Context, db sqlite.DBTx, evt Event) error {
 	return err
 }
 
-func CreateEvent(ctx context.Context, db sqlite.DB, evt Event) error {
-	return createEvent(ctx, db.C(), evt)
+func CreateEvent(ctx context.Context, db sqlite.DB, event Event) error {
+	return createEvent(ctx, db.C(), event)
 }
 
-func CreateEventAndCommit(ctx context.Context, tx sqlite.Tx, evt Event) error {
-	err := createEvent(ctx, tx.C(), evt)
+func CreateEventAndCommit(ctx context.Context, tx sqlite.Tx, event Event) error {
+	err := createEvent(ctx, tx.C(), event)
 	if err != nil {
 		return err
 	}

@@ -10,9 +10,9 @@ import (
 	"slices"
 	"strconv"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
@@ -23,13 +23,13 @@ import (
 )
 
 func (s *Server) DahuaAfero(prefix string) echo.HandlerFunc {
-	return echo.WrapHandler(http.StripPrefix(prefix, http.FileServer(afero.NewHttpFs(s.dahuaFileFS))))
+	return echo.WrapHandler(http.StripPrefix(prefix, http.FileServer(afero.NewHttpFs(s.dahuaAFS))))
 }
 
 func (s *Server) DahuaDevices(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	clients, err := s.dahuaStore.ListClient(ctx)
+	clients, err := dahua.ListClient(ctx)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (s *Server) DahuaDevicesIDRPCPOST(c echo.Context) error {
 		return err
 	}
 
-	if err := assertDahuaLevel(c, s, id, models.DahuaPermissionLevelAdmin); err != nil {
+	if err := assertDahuaLevel(c, s, id, models.DahuaPermissionLevel_Admin); err != nil {
 		return err
 	}
 
@@ -204,7 +204,7 @@ func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 
 	sub, eventsC, err := s.pub.
 		Subscribe().
-		Middleware(dahua.PubSubMiddleware(ctx, s.db)).
+		Middleware(dahua.PubSubMiddleware(ctx)).
 		Channel(ctx, 10)
 	if err != nil {
 		return err
@@ -214,7 +214,7 @@ func (s *Server) DahuaDevicesIDEvents(c echo.Context) error {
 	stream := newStream(c)
 
 	for e := range eventsC {
-		evt, ok := e.(event.DahuaEvent)
+		evt, ok := e.(bus.DahuaEvent)
 		if !ok || evt.Event.DeviceID != id {
 			continue
 		}
@@ -242,7 +242,7 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 
 	sub, eventsC, err := s.pub.
 		Subscribe().
-		Middleware(dahua.PubSubMiddleware(ctx, s.db)).
+		Middleware(dahua.PubSubMiddleware(ctx)).
 		Channel(ctx, 100)
 	if err != nil {
 		return err
@@ -251,8 +251,8 @@ func (s *Server) DahuaEvents(c echo.Context) error {
 
 	stream := newStream(c)
 
-	for evt := range eventsC {
-		e, ok := evt.(event.DahuaEvent)
+	for event := range eventsC {
+		e, ok := event.(bus.DahuaEvent)
 		if !ok || !slices.Contains(ids, e.Event.DeviceID) {
 			continue
 		}
@@ -359,7 +359,7 @@ func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 
 		if aferoFileFound {
 			// File from cache
-			rd, err := s.dahuaFileFS.Open(aferoFile.Name)
+			rd, err := s.dahuaAFS.Open(aferoFile.Name)
 			if err != nil {
 				if os.IsNotExist(err) {
 					// File from device
@@ -378,10 +378,10 @@ func (s *Server) DahuaDevicesIDFilesPath(c echo.Context) error {
 			return dahua.FileLocalReadCloser(ctx, client, dbFile.FilePath)
 		case models.StorageFTP:
 			// File from FTP
-			return dahua.FileFTPReadCloser(ctx, s.db, dbFile.FilePath)
+			return dahua.FileFTPReadCloser(ctx, dbFile.FilePath)
 		case models.StorageSFTP:
 			// File from SFTP
-			return dahua.FileSFTPReadCloser(ctx, s.db, dbFile.FilePath)
+			return dahua.FileSFTPReadCloser(ctx, dbFile.FilePath)
 		}
 
 		return nil, echo.ErrInternalServerError.WithInternal(fmt.Errorf("storage not supported: %s", dbFile.FilePath))
@@ -492,7 +492,7 @@ func (s *Server) DahuaDevicesIDPTZPresetGET(c echo.Context) error {
 		return err
 	}
 
-	if err := assertDahuaLevel(c, s, id, models.DahuaPermissionLevelOperator); err != nil {
+	if err := assertDahuaLevel(c, s, id, models.DahuaPermissionLevel_Operator); err != nil {
 		return err
 	}
 
@@ -522,7 +522,7 @@ func (s *Server) DahuaDevicesIDPTZPresetPOST(c echo.Context) error {
 		return err
 	}
 
-	if err := assertDahuaLevel(c, s, id, models.DahuaPermissionLevelOperator); err != nil {
+	if err := assertDahuaLevel(c, s, id, models.DahuaPermissionLevel_Operator); err != nil {
 		return err
 	}
 

@@ -10,32 +10,32 @@ import (
 
 // ---------- Sort
 
-type Sort struct {
+func decodeSort(v *rpc.Sort) _Sort {
+	if v == nil {
+		return _Sort{}
+	}
+	return _Sort{
+		Field: v.Field,
+		Order: v.Order,
+	}
+}
+
+type _Sort struct {
 	Field string
 	Order rpc.Order
 }
 
-func (s Sort) defaultOrder(order rpc.Order) Sort {
+func (s _Sort) defaultOrder(order rpc.Order) _Sort {
 	if s.Order == rpc.Order_ORDER_UNSPECIFIED {
 		s.Order = order
 	}
 	return s
 }
 
-func (s Sort) Encode() *rpc.Sort {
+func (s _Sort) encode() *rpc.Sort {
 	return &rpc.Sort{
 		Field: s.Field,
 		Order: s.Order,
-	}
-}
-
-func parseSort(v *rpc.Sort) Sort {
-	if v == nil {
-		return Sort{}
-	}
-	return Sort{
-		Field: v.Field,
-		Order: v.Order,
 	}
 }
 
@@ -44,7 +44,7 @@ func encodeMonthID(month time.Time) string {
 	return fmt.Sprintf("%02d-%02d", month.Year(), month.Month())
 }
 
-func parseMonthID(month string) time.Time {
+func decodeMonthID(month string) time.Time {
 	t, err := time.ParseInLocation("2006-01", month, time.UTC)
 	if err != nil {
 		return time.Time{}
@@ -54,7 +54,7 @@ func parseMonthID(month string) time.Time {
 
 // ---------- Order
 
-func parseOrderSQL(sql string, o rpc.Order) string {
+func decodeOrderSQL(sql string, o rpc.Order) string {
 	switch o {
 	case rpc.Order_DESC:
 		return sql + " DESC"
@@ -67,7 +67,7 @@ func parseOrderSQL(sql string, o rpc.Order) string {
 
 // ---------- Page
 
-func parsePagePagination(v *rpc.PagePagination) pagination.Page {
+func decodePagePagination(v *rpc.PagePagination) pagination.Page {
 	var (
 		page    int
 		perPage int

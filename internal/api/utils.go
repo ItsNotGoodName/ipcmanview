@@ -22,7 +22,7 @@ func paramID(c echo.Context) (int64, error) {
 }
 
 func assertDahuaLevel(c echo.Context, s *Server, deviceID int64, level models.DahuaPermissionLevel) error {
-	ok, err := dahua.Level(c.Request().Context(), s.db, deviceID, level)
+	ok, err := dahua.Level(c.Request().Context(), deviceID, level)
 	if err != nil {
 		if core.IsNotFound(err) {
 			return echo.ErrNotFound.WithInternal(err)
@@ -36,7 +36,7 @@ func assertDahuaLevel(c echo.Context, s *Server, deviceID int64, level models.Da
 }
 
 func useDahuaClient(c echo.Context, s *Server, deviceID int64) (dahua.Client, error) {
-	client, err := s.dahuaStore.GetClient(c.Request().Context(), deviceID)
+	client, err := dahua.GetClient(c.Request().Context(), deviceID)
 	if err != nil {
 		if core.IsNotFound(err) {
 			return dahua.Client{}, echo.ErrNotFound.WithInternal(err)

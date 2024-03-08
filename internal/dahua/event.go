@@ -6,17 +6,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 )
 
 const eventRuleCodeErrorMessage = "Code cannot be empty."
 
-func CreateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateEventRuleParams) (int64, error) {
+func CreateEventRule(ctx context.Context, arg repo.DahuaCreateEventRuleParams) (int64, error) {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return 0, err
 	}
@@ -28,10 +27,10 @@ func CreateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaCreateEven
 		return 0, core.NewFieldError("Code", eventRuleCodeErrorMessage)
 	}
 
-	return db.C().DahuaCreateEventRule(ctx, arg)
+	return app.DB.C().DahuaCreateEventRule(ctx, arg)
 }
 
-func UpdateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaUpdateEventRuleParams) error {
+func UpdateEventRule(ctx context.Context, arg repo.DahuaUpdateEventRuleParams) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
@@ -39,7 +38,7 @@ func UpdateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaUpdateEven
 	// Mutate
 	arg.Code = strings.TrimSpace(arg.Code)
 
-	model, err := db.C().DahuaGetEventRule(ctx, arg.ID)
+	model, err := app.DB.C().DahuaGetEventRule(ctx, arg.ID)
 	if err != nil {
 		return err
 	}
@@ -48,15 +47,15 @@ func UpdateEventRule(ctx context.Context, db sqlite.DB, arg repo.DahuaUpdateEven
 		return core.NewFieldError("Code", eventRuleCodeErrorMessage)
 	}
 
-	return db.C().DahuaUpdateEventRule(ctx, arg)
+	return app.DB.C().DahuaUpdateEventRule(ctx, arg)
 }
 
-func DeleteEventRule(ctx context.Context, db sqlite.DB, id int64) error {
+func DeleteEventRule(ctx context.Context, id int64) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
-	model, err := db.C().DahuaGetEventRule(ctx, id)
+	model, err := app.DB.C().DahuaGetEventRule(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -64,11 +63,11 @@ func DeleteEventRule(ctx context.Context, db sqlite.DB, id int64) error {
 		return core.ErrForbidden
 	}
 
-	return db.C().DahuaDeleteEventRule(ctx, model.ID)
+	return app.DB.C().DahuaDeleteEventRule(ctx, model.ID)
 }
 
-func getEventRuleByEvent(ctx context.Context, db sqlite.DB, deviceID int64, code string) (repo.DahuaEventRule, error) {
-	res, err := db.C().DahuaGetEventRuleByEvent(ctx, repo.DahuaGetEventRuleByEventParams{
+func getEventRuleByEvent(ctx context.Context, deviceID int64, code string) (repo.DahuaEventRule, error) {
+	res, err := app.DB.C().DahuaGetEventRuleByEvent(ctx, repo.DahuaGetEventRuleByEventParams{
 		DeviceID: deviceID,
 		Code:     code,
 	})
@@ -88,8 +87,8 @@ func getEventRuleByEvent(ctx context.Context, db sqlite.DB, deviceID int64, code
 	}, nil
 }
 
-func publishEvent(ctx context.Context, db sqlite.DB, bus *event.Bus, deviceID int64, evt dahuacgi.Event) error {
-	eventRule, err := getEventRuleByEvent(ctx, db, deviceID, evt.Code)
+func publishEvent(ctx context.Context, deviceID int64, event dahuacgi.Event) error {
+	eventRule, err := getEventRuleByEvent(ctx, deviceID, event.Code)
 	if err != nil {
 		return err
 	}
@@ -97,14 +96,14 @@ func publishEvent(ctx context.Context, db sqlite.DB, bus *event.Bus, deviceID in
 	v := repo.DahuaEvent{
 		ID:        0,
 		DeviceID:  deviceID,
-		Code:      evt.Code,
-		Action:    evt.Action,
-		Index:     int64(evt.Index),
-		Data:      types.NewJSON(core.IgnoreError(json.MarshalIndent(evt.Data, "", "  "))),
+		Code:      event.Code,
+		Action:    event.Action,
+		Index:     int64(event.Index),
+		Data:      types.NewJSON(core.IgnoreError(json.MarshalIndent(event.Data, "", "  "))),
 		CreatedAt: types.NewTime(time.Now()),
 	}
 	if !eventRule.IgnoreDb {
-		id, err := db.C().DahuaCreateEvent(ctx, repo.DahuaCreateEventParams{
+		id, err := app.DB.C().DahuaCreateEvent(ctx, repo.DahuaCreateEventParams{
 			DeviceID:  v.DeviceID,
 			Code:      v.Code,
 			Action:    v.Action,
@@ -118,7 +117,7 @@ func publishEvent(ctx context.Context, db sqlite.DB, bus *event.Bus, deviceID in
 		v.ID = id
 	}
 
-	bus.DahuaEvent(event.DahuaEvent{
+	app.Hub.DahuaEvent(bus.DahuaEvent{
 		Event:     v,
 		EventRule: eventRule,
 	})

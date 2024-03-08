@@ -9,10 +9,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuaevents"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
@@ -89,9 +88,9 @@ func (m *WorkerManager) Delete(id int64) error {
 	return nil
 }
 
-func (m *WorkerManager) Register(bus *event.Bus, db sqlite.DB) *WorkerManager {
+func (m *WorkerManager) Register() *WorkerManager {
 	upsert := func(ctx context.Context, deviceID int64) error {
-		conn, err := GetConn(ctx, db, deviceID)
+		conn, err := GetConn(ctx, deviceID)
 		if err != nil {
 			if core.IsNotFound(err) {
 				return m.Delete(deviceID)
@@ -102,21 +101,21 @@ func (m *WorkerManager) Register(bus *event.Bus, db sqlite.DB) *WorkerManager {
 		return m.Upsert(ctx, conn)
 	}
 
-	bus.OnDahuaDeviceCreated(m.String(), func(ctx context.Context, evt event.DahuaDeviceCreated) error {
-		return upsert(ctx, evt.DeviceID)
+	app.Hub.OnDahuaDeviceCreated(m.String(), func(ctx context.Context, event bus.DahuaDeviceCreated) error {
+		return upsert(ctx, event.DeviceID)
 	})
-	bus.OnDahuaDeviceUpdated(m.String(), func(ctx context.Context, evt event.DahuaDeviceUpdated) error {
-		return upsert(ctx, evt.DeviceID)
+	app.Hub.OnDahuaDeviceUpdated(m.String(), func(ctx context.Context, event bus.DahuaDeviceUpdated) error {
+		return upsert(ctx, event.DeviceID)
 	})
-	bus.OnDahuaDeviceDeleted(m.String(), func(ctx context.Context, evt event.DahuaDeviceDeleted) error {
-		return m.Delete(evt.DeviceID)
+	app.Hub.OnDahuaDeviceDeleted(m.String(), func(ctx context.Context, event bus.DahuaDeviceDeleted) error {
+		return m.Delete(event.DeviceID)
 	})
 
 	return m
 }
 
-func (m *WorkerManager) Bootstrap(ctx context.Context, db sqlite.DB, store *Store) error {
-	conns, err := ListConn(ctx, db)
+func (m *WorkerManager) Bootstrap(ctx context.Context) error {
+	conns, err := ListConn(ctx)
 	if err != nil {
 		return err
 	}
@@ -140,29 +139,21 @@ type WorkerHooks interface {
 	Connected(ctx context.Context, w Worker)
 }
 
-func NewQuickScanWorker(hooks WorkerHooks, pub *pubsub.Pub, bus *event.Bus, db sqlite.DB, store *Store, scanLockStore ScanLockStore, deviceID int64) QuickScanWorker {
+func NewQuickScanWorker(hooks WorkerHooks, pub *pubsub.Pub, deviceID int64) QuickScanWorker {
 	return QuickScanWorker{
-		hooks:         hooks,
-		worker:        Worker{DeviceID: deviceID, Type: models.DahuaWorkerTypeQuickScan},
-		pub:           pub,
-		bus:           bus,
-		db:            db,
-		store:         store,
-		scanLockStore: scanLockStore,
-		deviceID:      deviceID,
+		hooks:    hooks,
+		worker:   Worker{DeviceID: deviceID, Type: models.DahuaWorkerType_QuickScan},
+		pub:      pub,
+		deviceID: deviceID,
 	}
 }
 
 // QuickScanWorker scans devices for files.
 type QuickScanWorker struct {
-	hooks         WorkerHooks
-	worker        Worker
-	pub           *pubsub.Pub
-	bus           *event.Bus
-	db            sqlite.DB
-	store         *Store
-	scanLockStore ScanLockStore
-	deviceID      int64
+	hooks    WorkerHooks
+	worker   Worker
+	pub      *pubsub.Pub
+	deviceID int64
 }
 
 func (w QuickScanWorker) String() string {
@@ -181,9 +172,9 @@ func (w QuickScanWorker) serve(ctx context.Context) error {
 	// Subscribe
 	sub, err := w.pub.
 		Subscribe().
-		Function(func(ctx context.Context, evt pubsub.Event) error {
-			switch e := evt.(type) {
-			case event.DahuaEvent:
+		Function(func(ctx context.Context, event pubsub.Event) error {
+			switch e := event.(type) {
+			case bus.DahuaEvent:
 				if e.Event.DeviceID != w.deviceID {
 					return nil
 				}
@@ -244,29 +235,27 @@ func (w QuickScanWorker) serve(ctx context.Context) error {
 }
 
 func (w QuickScanWorker) scan(ctx context.Context) error {
-	unlock, err := w.scanLockStore.Lock(ctx, w.deviceID)
+	unlock, err := app.ScanLocker.Lock(ctx, w.deviceID)
 	if err != nil {
 		return err
 	}
 	defer unlock()
 
-	client, err := w.store.GetClient(ctx, w.deviceID)
+	client, err := app.Store.GetClient(ctx, w.deviceID)
 	if err != nil {
 		return err
 	}
 
-	return Scan(ctx, w.db, w.bus, client.RPC, client.Conn, models.DahuaScanTypeQuick)
+	return Scan(ctx, client.RPC, client.Conn, models.DahuaScanType_Quick)
 }
 
-func NewEventWorker(hooks WorkerHooks, db sqlite.DB, bus *event.Bus, conn Conn) EventWorker {
+func NewEventWorker(hooks WorkerHooks, conn Conn) EventWorker {
 	return EventWorker{
 		hooks: hooks,
 		worker: Worker{
 			DeviceID: conn.ID,
-			Type:     models.DahuaWorkerTypeEvent,
+			Type:     models.DahuaWorkerType_Event,
 		},
-		db:     db,
-		bus:    bus,
 		device: conn,
 	}
 }
@@ -275,8 +264,6 @@ func NewEventWorker(hooks WorkerHooks, db sqlite.DB, bus *event.Bus, conn Conn) 
 type EventWorker struct {
 	hooks  WorkerHooks
 	worker Worker
-	db     sqlite.DB
-	bus    *event.Bus
 	device Conn
 }
 
@@ -320,22 +307,19 @@ func (w EventWorker) serve(ctx context.Context) error {
 			return err
 		}
 
-		if err = publishEvent(ctx, w.db, w.bus, w.device.ID, evt); err != nil {
+		if err = publishEvent(ctx, w.device.ID, evt); err != nil {
 			return err
 		}
 	}
 }
 
-func NewCoaxialWorker(hooks WorkerHooks, db sqlite.DB, bus *event.Bus, store *Store, deviceID int64) CoaxialWorker {
+func NewCoaxialWorker(hooks WorkerHooks, deviceID int64) CoaxialWorker {
 	return CoaxialWorker{
 		hooks: hooks,
 		worker: Worker{
 			DeviceID: deviceID,
-			Type:     models.DahuaWorkerTypeCoaxial,
+			Type:     models.DahuaWorkerType_Coaxial,
 		},
-		db:       db,
-		bus:      bus,
-		store:    store,
 		deviceID: deviceID,
 	}
 }
@@ -344,9 +328,6 @@ func NewCoaxialWorker(hooks WorkerHooks, db sqlite.DB, bus *event.Bus, store *St
 type CoaxialWorker struct {
 	hooks    WorkerHooks
 	worker   Worker
-	db       sqlite.DB
-	bus      *event.Bus
-	store    *Store
 	deviceID int64
 }
 
@@ -360,7 +341,7 @@ func (w CoaxialWorker) Serve(ctx context.Context) error {
 }
 
 func (w CoaxialWorker) serve(ctx context.Context) error {
-	client, err := w.store.GetClient(ctx, w.deviceID)
+	client, err := app.Store.GetClient(ctx, w.deviceID)
 	if err != nil {
 		return err
 	}
@@ -381,7 +362,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	w.bus.DahuaCoaxialStatus(event.DahuaCoaxialStatus{
+	app.Hub.DahuaCoaxialStatus(bus.DahuaCoaxialStatus{
 		DeviceID:      w.deviceID,
 		Channel:       channel,
 		CoaxialStatus: coaxialStatus,
@@ -406,7 +387,7 @@ func (w CoaxialWorker) serve(ctx context.Context) error {
 		}
 		coaxialStatus = s
 
-		w.bus.DahuaCoaxialStatus(event.DahuaCoaxialStatus{
+		app.Hub.DahuaCoaxialStatus(bus.DahuaCoaxialStatus{
 			DeviceID:      w.deviceID,
 			Channel:       channel,
 			CoaxialStatus: coaxialStatus,

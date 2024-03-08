@@ -16,7 +16,7 @@ func (e EventTopic) EventTopic() string {
 	return string(e)
 }
 
-type HandleFunc func(ctx context.Context, evt Event) error
+type HandleFunc func(ctx context.Context, event Event) error
 
 type MiddlewareFunc func(next HandleFunc) HandleFunc
 
@@ -209,13 +209,13 @@ func (b SubscribeBuilder) Channel(ctx context.Context, size int) (Sub, <-chan Ev
 	evtC := make(chan Event, size)
 
 	// Subscribe
-	sub, err := b.Function(func(pubCtx context.Context, evt Event) error {
+	sub, err := b.Function(func(pubCtx context.Context, event Event) error {
 		select {
 		case <-pubCtx.Done():
 			return pubCtx.Err()
 		case <-ctx.Done():
 			return ctx.Err()
-		case evtC <- evt:
+		case evtC <- event:
 			return nil
 		}
 	})

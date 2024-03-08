@@ -8,31 +8,23 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
 )
 
-const DahuaFileTypeJPG = "jpg"
-const DahuaFileTypeDAV = "dav"
-
-type DahuaEventWorkerState string
-
-const (
-	DahuaEventWorkerStateConnecting   DahuaEventWorkerState = "connecting"
-	DahuaEventWorkerStateConnected    DahuaEventWorkerState = "connected"
-	DahuaEventWorkerStateDisconnected DahuaEventWorkerState = "disconnected"
-)
+const DahuaFileType_JPG = "jpg"
+const DahuaFileType_DAV = "dav"
 
 type DahuaWorkerType string
 
 const (
-	DahuaWorkerTypeEvent     DahuaWorkerType = "event"
-	DahuaWorkerTypeCoaxial   DahuaWorkerType = "coaxial"
-	DahuaWorkerTypeQuickScan DahuaWorkerType = "quick-scan"
+	DahuaWorkerType_Event     DahuaWorkerType = "event"
+	DahuaWorkerType_Coaxial   DahuaWorkerType = "coaxial"
+	DahuaWorkerType_QuickScan DahuaWorkerType = "quick-scan"
 )
 
 type DahuaWorkerState string
 
 const (
-	DahuaWorkerStateConnecting   DahuaWorkerState = "connecting"
-	DahuaWorkerStateConnected    DahuaWorkerState = "connected"
-	DahuaWorkerStateDisconnected DahuaWorkerState = "disconnected"
+	DahuaWorkerState_Connecting   DahuaWorkerState = "connecting"
+	DahuaWorkerState_Connected    DahuaWorkerState = "connected"
+	DahuaWorkerState_Disconnected DahuaWorkerState = "disconnected"
 )
 
 type DahuaFeature int
@@ -42,34 +34,34 @@ func (f DahuaFeature) EQ(feature DahuaFeature) bool {
 }
 
 const (
-	// DahuaFeatureCamera means the device is a camera.
-	DahuaFeatureCamera DahuaFeature = 1 << iota
+	// DahuaFeature_Camera means the device is a camera.
+	DahuaFeature_Camera DahuaFeature = 1 << iota
 )
 
 type DahuaScanType string
 
 var (
-	DahuaScanTypeUnknown DahuaScanType = ""
-	DahuaScanTypeFull    DahuaScanType = "full"
-	DahuaScanTypeQuick   DahuaScanType = "quick"
-	DahuaScanTypeReverse DahuaScanType = "reverse"
+	DahuaScanType_Unknown DahuaScanType = ""
+	DahuaScanType_Full    DahuaScanType = "full"
+	DahuaScanType_Quick   DahuaScanType = "quick"
+	DahuaScanType_Reverse DahuaScanType = "reverse"
 )
 
 type DahuaPermissionLevel int
 
 const (
-	DahuaPermissionLevelUser DahuaPermissionLevel = iota
-	DahuaPermissionLevelOperator
-	DahuaPermissionLevelAdmin
+	DahuaPermissionLevel_User DahuaPermissionLevel = iota
+	DahuaPermissionLevel_Operator
+	DahuaPermissionLevel_Admin
 )
 
 func (l DahuaPermissionLevel) String() string {
 	switch l {
-	case DahuaPermissionLevelUser:
+	case DahuaPermissionLevel_User:
 		return "user"
-	case DahuaPermissionLevelOperator:
+	case DahuaPermissionLevel_Operator:
 		return "operator"
-	case DahuaPermissionLevelAdmin:
+	case DahuaPermissionLevel_Admin:
 		return "admin"
 	default:
 		return "unknown"

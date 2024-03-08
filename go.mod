@@ -19,6 +19,7 @@ require (
 	github.com/jhillyerd/enmime v1.2.0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/joho/godotenv v1.5.1
+	github.com/k0kubun/pp/v3 v3.2.0
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/nathan-osman/go-sunrise v1.1.0

@@ -7,8 +7,6 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	echo "github.com/labstack/echo/v4"
@@ -18,17 +16,13 @@ import (
 func NewServer(
 	pub *pubsub.Pub,
 	db sqlite.DB,
-	bus *event.Bus,
-	dahuaStore *dahua.Store,
-	dahuaFileFS afero.Fs,
+	dahuaAFS afero.Fs,
 	mediamtxURL *url.URL,
 ) *Server {
 	return &Server{
 		pub:         pub,
 		db:          db,
-		bus:         bus,
-		dahuaStore:  dahuaStore,
-		dahuaFileFS: dahuaFileFS,
+		dahuaAFS:    dahuaAFS,
 		mediamtxURL: mediamtxURL,
 	}
 }
@@ -36,9 +30,7 @@ func NewServer(
 type Server struct {
 	pub         *pubsub.Pub
 	db          sqlite.DB
-	bus         *event.Bus
-	dahuaStore  *dahua.Store
-	dahuaFileFS afero.Fs
+	dahuaAFS    afero.Fs
 	mediamtxURL *url.URL
 }
 

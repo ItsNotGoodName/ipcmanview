@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/apiws"
+	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/gorilla/websocket"
 	echo "github.com/labstack/echo/v4"
@@ -34,12 +33,12 @@ func (s Server) WS(c echo.Context) error {
 		return err
 	}
 
-	WS(ctx, conn, s.db, s.pub)
+	WS(ctx, conn, s.pub)
 
 	return nil
 }
 
-func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub) {
+func WS(ctx context.Context, conn *websocket.Conn, pub *pubsub.Pub) {
 	actor := core.UseActor(ctx)
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -49,7 +48,7 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 
 	sub, eventC, err := pub.
 		Subscribe().
-		Middleware(dahua.PubSubMiddleware(ctx, db)).
+		Middleware(dahua.PubSubMiddleware(ctx)).
 		Channel(ctx, 1)
 	if err != nil {
 		log.Err(err).Send()
@@ -94,7 +93,7 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 			if final.Done {
 				return
 			}
-		case evt, ok := <-eventC:
+		case event, ok := <-eventC:
 			// Pub sub
 			if !ok {
 				return
@@ -102,51 +101,51 @@ func WS(ctx context.Context, conn *websocket.Conn, db sqlite.DB, pub *pubsub.Pub
 
 			var isFinal bool
 			var payload WSData
-			switch evt := evt.(type) {
-			case event.DahuaEmailCreated:
+			switch event := event.(type) {
+			case bus.DahuaEmailCreated:
 				payload = WSData{
 					Type: "event",
 					Data: WSEvent{
 						Action: "dahua-email:created",
-						Data:   evt.EmailID,
+						Data:   event.MessageID,
 					},
 				}
-			case event.UserSecurityUpdated:
+			case bus.UserSecurityUpdated:
 				payload = WSData{
 					Type: "event",
 					Data: WSEvent{
 						Action: "user-security:updated",
-						Data:   evt.UserID,
+						Data:   event.UserID,
 					},
 				}
 
-				if evt.UserID == actor.UserID {
+				if event.UserID == actor.UserID {
 					isFinal = true
 				}
-			case event.DahuaFileCreated:
+			case bus.DahuaFileCreated:
 				payload = WSData{
 					Type: "event",
 					Data: WSEvent{
 						Action: "dahua-scan-file:created",
-						Data:   evt.Count,
+						Data:   event.Count,
 					},
 				}
-			case event.DahuaFileCursorUpdated:
+			case bus.DahuaFileCursorUpdated:
 				payload = WSData{
 					Type: "event",
 					Data: WSEvent{
 						Action: "dahua-file-cursor:updated",
-						Data:   evt.Cursor,
+						Data:   event.Cursor,
 					},
 				}
-			case event.DahuaEvent:
-				if evt.EventRule.IgnoreLive {
+			case bus.DahuaEvent:
+				if event.EventRule.IgnoreLive {
 					continue
 				}
 
 				payload = WSData{
 					Type: "dahua-event",
-					Data: dahua.NewDahuaEvent(evt.Event),
+					Data: dahua.NewDahuaEvent(event.Event),
 				}
 			}
 

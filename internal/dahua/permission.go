@@ -3,24 +3,23 @@ package dahua
 import (
 	"context"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 )
 
-const levelDefault = models.DahuaPermissionLevelUser
-const levelEmail = models.DahuaPermissionLevelUser
+const levelDefault = models.DahuaPermissionLevel_User
+const levelEmail = models.DahuaPermissionLevel_User
 
-func Level(ctx context.Context, db sqlite.DB, deviceID int64, level models.DahuaPermissionLevel) (bool, error) {
+func Level(ctx context.Context, deviceID int64, level models.DahuaPermissionLevel) (bool, error) {
 	actor := core.UseActor(ctx)
 	if actor.Admin {
 		return true, nil
 	}
 
-	dbLevel, err := db.C().DahuaGetPermissionLevel(ctx, repo.DahuaGetPermissionLevelParams{
+	dbLevel, err := app.DB.C().DahuaGetPermissionLevel(ctx, repo.DahuaGetPermissionLevelParams{
 		DeviceID: deviceID,
 		UserID:   core.Int64ToNullInt64(actor.UserID),
 	})
@@ -30,11 +29,11 @@ func Level(ctx context.Context, db sqlite.DB, deviceID int64, level models.Dahua
 	return dbLevel >= level, nil
 }
 
-func PubSubMiddleware(ctx context.Context, db sqlite.DB) pubsub.MiddlewareFunc {
+func PubSubMiddleware(ctx context.Context) pubsub.MiddlewareFunc {
 	actor := core.UseActor(ctx)
 
 	skip := func(ctx context.Context, deviceID int64, level models.DahuaPermissionLevel) bool {
-		dbLevel, err := db.C().DahuaGetPermissionLevel(ctx, repo.DahuaGetPermissionLevelParams{
+		dbLevel, err := app.DB.C().DahuaGetPermissionLevel(ctx, repo.DahuaGetPermissionLevelParams{
 			DeviceID: deviceID,
 			UserID:   core.Int64ToNullInt64(actor.UserID),
 		})
@@ -45,29 +44,29 @@ func PubSubMiddleware(ctx context.Context, db sqlite.DB) pubsub.MiddlewareFunc {
 	}
 
 	return func(next pubsub.HandleFunc) pubsub.HandleFunc {
-		return func(ctx context.Context, evt pubsub.Event) error {
+		return func(ctx context.Context, event pubsub.Event) error {
 			if actor.Admin {
-				return next(ctx, evt)
+				return next(ctx, event)
 			}
 
-			switch e := evt.(type) {
-			case event.DahuaEvent:
+			switch e := event.(type) {
+			case bus.DahuaEvent:
 				if skip(ctx, e.Event.DeviceID, levelDefault) {
 					return nil
 				}
-			case event.DahuaFileCreated:
+			case bus.DahuaFileCreated:
 				if skip(ctx, e.DeviceID, levelDefault) {
 					return nil
 				}
-			case event.DahuaFileCursorUpdated:
+			case bus.DahuaFileCursorUpdated:
 				if skip(ctx, e.Cursor.DeviceID, levelDefault) {
 					return nil
 				}
-			case event.DahuaEmailCreated:
+			case bus.DahuaEmailCreated:
 				if skip(ctx, e.DeviceID, levelEmail) {
 					return nil
 				}
-			case event.UserSecurityUpdated:
+			case bus.UserSecurityUpdated:
 				if e.UserID != actor.UserID {
 					return nil
 				}
@@ -75,7 +74,7 @@ func PubSubMiddleware(ctx context.Context, db sqlite.DB) pubsub.MiddlewareFunc {
 				return nil
 			}
 
-			return next(ctx, evt)
+			return next(ctx, event)
 		}
 	}
 }

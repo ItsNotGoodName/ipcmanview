@@ -9,7 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
@@ -26,11 +25,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func NewScanLockStore() ScanLockStore {
-	return ScanLockStore{core.NewLockStore[int64]()}
+func NewScanLocker() ScanLocker {
+	return ScanLocker{core.NewLockStore[int64]()}
 }
 
-type ScanLockStore struct{ *core.LockStore[int64] }
+type ScanLocker struct{ *core.LockStore[int64] }
 
 func isFatalError(err error) bool {
 	res := &dahuarpc.ResponseError{}
@@ -51,38 +50,6 @@ func checkFatalError(err error) error {
 	if isFatalError(err) {
 		return err
 	}
-	return nil
-}
-
-func Normalize(ctx context.Context, db sqlite.DB) error {
-	_, err := db.ExecContext(ctx, `
-WITH RECURSIVE generate_series(value) AS (
-  SELECT 1
-  UNION ALL
-  SELECT value+1 FROM generate_series WHERE value+1<=999
-)
-INSERT OR IGNORE INTO dahua_seeds (seed) SELECT value from generate_series;
-INSERT OR IGNORE INTO dahua_event_rules (code) VALUES ('');
-	`)
-	if err != nil {
-		return err
-	}
-
-	{
-		c := newFileCursor()
-		err := db.C().DahuaNormalizeFileCursors(context.Background(), repo.DahuaNormalizeFileCursorsParams{
-			QuickCursor: c.QuickCursor,
-			FullCursor:  c.FullCursor,
-			FullEpoch:   c.FullEpoch,
-			Scan:        c.Scan,
-			ScanPercent: c.ScanPercent,
-			ScanType:    c.ScanType,
-		})
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -430,4 +397,44 @@ func SyncSunriseSunset(ctx context.Context, c dahuarpc.Conn, loc *time.Location,
 		SwitchMode:  cfg.Tables[0].Data.SwitchMode(),
 		TimeSection: cfg.Tables[0].Data.TimeSection[0][0],
 	}, nil
+}
+
+func GetClient(ctx context.Context, deviceID int64) (Client, error) {
+	return app.Store.GetClient(ctx, deviceID)
+}
+
+func ListClient(ctx context.Context) ([]Client, error) {
+	return app.Store.ListClient(ctx)
+}
+
+func Normalize(ctx context.Context) error {
+	_, err := app.DB.ExecContext(ctx, `
+WITH RECURSIVE generate_series(value) AS (
+  SELECT 1
+  UNION ALL
+  SELECT value+1 FROM generate_series WHERE value+1<=999
+)
+INSERT OR IGNORE INTO dahua_seeds (seed) SELECT value from generate_series;
+INSERT OR IGNORE INTO dahua_event_rules (code) VALUES ('');
+	`)
+	if err != nil {
+		return err
+	}
+
+	{
+		c := newFileCursor()
+		err := app.DB.C().DahuaNormalizeFileCursors(ctx, repo.DahuaNormalizeFileCursorsParams{
+			QuickCursor: c.QuickCursor,
+			FullCursor:  c.FullCursor,
+			FullEpoch:   c.FullEpoch,
+			Scan:        c.Scan,
+			ScanPercent: c.ScanPercent,
+			ScanType:    c.ScanType,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

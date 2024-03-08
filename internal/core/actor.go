@@ -15,13 +15,26 @@ const (
 	ActorTypePublic = "public"
 )
 
+func newSystemActor() Actor {
+	return Actor{
+		Type:   ActorTypeSystem,
+		UserID: 0,
+		Admin:  true,
+	}
+}
+
 type Actor struct {
 	Type   ActorType
 	UserID int64
 	Admin  bool
 }
 
-// WithPublicActor downcasts actor to public.
+// WithSystemActor sets actor to system.
+func WithSystemActor(ctx context.Context) context.Context {
+	return context.WithValue(ctx, actorCtxKey, newSystemActor())
+}
+
+// WithPublicActor sets actor to public.
 func WithPublicActor(ctx context.Context) context.Context {
 	return context.WithValue(ctx, actorCtxKey, Actor{
 		Type:   ActorTypePublic,
@@ -30,7 +43,7 @@ func WithPublicActor(ctx context.Context) context.Context {
 	})
 }
 
-// WithUserActor downcasts actor to user.
+// WithUserActor sets actor to user.
 func WithUserActor(ctx context.Context, userID int64, admin bool) context.Context {
 	return context.WithValue(ctx, actorCtxKey, Actor{
 		Type:   ActorTypeUser,
@@ -42,11 +55,7 @@ func WithUserActor(ctx context.Context, userID int64, admin bool) context.Contex
 func UseActor(ctx context.Context) Actor {
 	actor, ok := ctx.Value(actorCtxKey).(Actor)
 	if !ok {
-		return Actor{
-			Type:   ActorTypeSystem,
-			UserID: 0,
-			Admin:  true,
-		}
+		return newSystemActor()
 	}
 	return actor
 }

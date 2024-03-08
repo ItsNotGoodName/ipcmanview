@@ -10,37 +10,27 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
-	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
-	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewUser(configProvider config.Provider, db sqlite.DB, bus *event.Bus, dahuaStore *dahua.Store, mediamtxConfig mediamtx.Config) *User {
+func NewUser(configProvider config.Provider, mediamtxConfig mediamtx.Config) *User {
 	return &User{
 		configProvider: configProvider,
-		db:             db,
-		bus:            bus,
-		dahuaStore:     dahuaStore,
 		mediamtxConfig: mediamtxConfig,
 	}
 }
 
 type User struct {
 	configProvider config.Provider
-	db             sqlite.DB
-	bus            *event.Bus
-	dahuaStore     *dahua.Store
 	mediamtxConfig mediamtx.Config
 }
 
 func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomePageResp, error) {
-	dbDevices, err := dahua.ListDevices(ctx, u.db)
+	dbDevices, err := dahua.ListDevices(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -53,22 +43,22 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 		})
 	}
 
-	fileCount, err := dahua.CountFiles(ctx, u.db)
+	fileCount, err := dahua.CountFiles(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	eventCount, err := dahua.CountEvents(ctx, u.db)
+	eventCount, err := dahua.CountEvents(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	emailCount, err := dahua.CountEmails(ctx, u.db)
+	emailCount, err := dahua.CountEmails(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	latestEmailsDTO, err := dahua.ListLatestEmails(ctx, u.db, 5)
+	latestEmailsDTO, err := dahua.ListLatestEmails(ctx, 5)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +94,7 @@ func (u *User) GetHomePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetHomeP
 }
 
 func (u *User) GetDevicesPage(ctx context.Context, req *rpc.GetDevicesPageReq) (*rpc.GetDevicesPageResp, error) {
-	dbDevices, err := dahua.ListDevices(ctx, u.db)
+	dbDevices, err := dahua.ListDevices(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -129,15 +119,12 @@ func (u *User) GetDevicesPage(ctx context.Context, req *rpc.GetDevicesPageReq) (
 func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetProfilePageResp, error) {
 	session := useAuthSession(ctx)
 
-	user, err := u.db.C().AuthGetUser(ctx, session.UserID)
+	user, err := auth.GetUser(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	dbSessions, err := u.db.C().AuthListUserSessionsForUserAndNotExpired(ctx, repo.AuthListUserSessionsForUserAndNotExpiredParams{
-		UserID: session.UserID,
-		Now:    types.NewTime(time.Now()),
-	})
+	dbSessions, err := auth.ListUserSessions(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +144,7 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 		})
 	}
 
-	dbGroups, err := u.db.C().AuthListGroupsForUser(ctx, session.UserID)
+	dbGroups, err := auth.ListGroups(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -184,10 +171,10 @@ func (u *User) GetProfilePage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetPr
 }
 
 func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*rpc.GetEmailsPageResp, error) {
-	page := parsePagePagination(req.Page)
-	sort := parseSort(req.Sort).defaultOrder(rpc.Order_DESC)
+	page := decodePagePagination(req.Page)
+	sort := decodeSort(req.Sort).defaultOrder(rpc.Order_DESC)
 
-	v, err := dahua.ListEmails(ctx, u.db, dahua.ListEmailsParams{
+	v, err := dahua.ListEmails(ctx, dahua.ListEmailsParams{
 		Page:      page,
 		Ascending: sort.Order == rpc.Order_ASC,
 		EmailFilter: dahua.EmailFilter{
@@ -216,7 +203,7 @@ func (u *User) GetEmailsPage(ctx context.Context, req *rpc.GetEmailsPageReq) (*r
 	return &rpc.GetEmailsPageResp{
 		Emails:     emails,
 		PageResult: encodePagePaginationResult(v.PageResult),
-		Sort:       sort.Encode(),
+		Sort:       sort.encode(),
 	}, nil
 }
 
@@ -226,7 +213,7 @@ func (u *User) GetEmailsIDPage(ctx context.Context, req *rpc.GetEmailsIDPageReq)
 		FilterAlarmEvents: req.FilterAlarmEvents,
 	}
 
-	email, err := dahua.GetEmail(ctx, u.db, dahua.GetEmailParams{
+	email, err := dahua.GetEmail(ctx, dahua.GetEmailParams{
 		ID:          req.Id,
 		EmailFilter: emailFilter,
 	})
@@ -234,7 +221,7 @@ func (u *User) GetEmailsIDPage(ctx context.Context, req *rpc.GetEmailsIDPageReq)
 		return nil, err
 	}
 
-	emailAround, err := dahua.GetEmailAround(ctx, u.db, dahua.GetEmailAroundParams{
+	emailAround, err := dahua.GetEmailAround(ctx, dahua.GetEmailAroundParams{
 		ID:          req.Id,
 		EmailFilter: emailFilter,
 	})
@@ -271,10 +258,10 @@ func (u *User) GetEmailsIDPage(ctx context.Context, req *rpc.GetEmailsIDPageReq)
 }
 
 func (u *User) GetEventsPage(ctx context.Context, req *rpc.GetEventsPageReq) (*rpc.GetEventsPageResp, error) {
-	page := parsePagePagination(req.Page)
-	sort := parseSort(req.Sort).defaultOrder(rpc.Order_DESC)
+	page := decodePagePagination(req.Page)
+	sort := decodeSort(req.Sort).defaultOrder(rpc.Order_DESC)
 
-	v, err := dahua.ListEvents(ctx, u.db, dahua.ListEventsParams{
+	v, err := dahua.ListEvents(ctx, dahua.ListEventsParams{
 		Page:      page,
 		Ascending: sort.Order == rpc.Order_ASC,
 		EventFilter: dahua.EventFilter{
@@ -304,18 +291,18 @@ func (u *User) GetEventsPage(ctx context.Context, req *rpc.GetEventsPageReq) (*r
 	return &rpc.GetEventsPageResp{
 		Events:     events,
 		PageResult: encodePagePaginationResult(v.PageResult),
-		Sort:       sort.Encode(),
+		Sort:       sort.encode(),
 	}, nil
 }
 
 func (u *User) GetFilesPage(ctx context.Context, req *rpc.GetFilesPageReq) (*rpc.GetFilesPageResp, error) {
-	page := parsePagePagination(req.Page)
+	page := decodePagePagination(req.Page)
 	filter := dahua.FileFilter{
 		FilterDeviceIDs: req.FilterDeviceIDs,
-		FilterMonth:     parseMonthID(req.FilterMonthID),
+		FilterMonth:     decodeMonthID(req.FilterMonthID),
 	}
 
-	dbFiles, err := dahua.ListFiles(ctx, u.db, dahua.ListFilesParams{
+	dbFiles, err := dahua.ListFiles(ctx, dahua.ListFilesParams{
 		Page:      page,
 		Ascending: req.Order == rpc.Order_ASC,
 		Filter:    filter,
@@ -354,7 +341,7 @@ func (u *User) GetFilesPage(ctx context.Context, req *rpc.GetFilesPageReq) (*rpc
 func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	if err := auth.UpdateUserPassword(ctx, u.db, u.bus, auth.UpdateUserPasswordParams{
+	if err := auth.UpdateUserPassword(ctx, auth.UpdateUserPasswordParams{
 		UserID:           session.UserID,
 		OldPassword:      req.OldPassword,
 		NewPassword:      req.NewPassword,
@@ -375,7 +362,7 @@ func (u *User) UpdateMyPassword(ctx context.Context, req *rpc.UpdateMyPasswordRe
 func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	if err := auth.UpdateUserUsername(ctx, u.db, session.UserID, req.NewUsername); err != nil {
+	if err := auth.UpdateUserUsername(ctx, session.UserID, req.NewUsername); err != nil {
 		if errs, ok := core.AsFieldErrors(err); ok {
 			return nil, newInvalidArgument(errs,
 				keymap("newUsername", "Username"),
@@ -390,7 +377,7 @@ func (u *User) UpdateMyUsername(ctx context.Context, req *rpc.UpdateMyUsernameRe
 func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *emptypb.Empty) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	err := auth.DeleteOtherUserSessions(ctx, u.db, u.bus, session.UserID, session.SessionID)
+	err := auth.DeleteOtherUserSessions(ctx, session.UserID, session.SessionID)
 	if err != nil {
 		return nil, err
 	}
@@ -401,7 +388,7 @@ func (u *User) RevokeAllMySessions(ctx context.Context, rCreateUpdateGroupeq *em
 func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	if err := auth.DeleteUserSession(ctx, u.db, u.bus, session.UserID, req.SessionId); err != nil {
+	if err := auth.DeleteUserSession(ctx, session.UserID, req.SessionId); err != nil {
 		return nil, err
 	}
 
@@ -409,7 +396,7 @@ func (u *User) RevokeMySession(ctx context.Context, req *rpc.RevokeMySessionReq)
 }
 
 func (u *User) ListDevices(ctx context.Context, _ *emptypb.Empty) (*rpc.ListDevicesResp, error) {
-	dbDevices, err := dahua.ListDevices(ctx, u.db)
+	dbDevices, err := dahua.ListDevices(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -428,7 +415,7 @@ func (u *User) ListDevices(ctx context.Context, _ *emptypb.Empty) (*rpc.ListDevi
 }
 
 func (u *User) GetDeviceDetail(ctx context.Context, req *rpc.GetDeviceDetailReq) (*rpc.GetDeviceDetailResp, error) {
-	client, err := u.dahuaStore.GetClient(ctx, req.Id)
+	client, err := dahua.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -452,7 +439,7 @@ func (u *User) GetDeviceDetail(ctx context.Context, req *rpc.GetDeviceDetailReq)
 }
 
 func (u *User) ListDeviceLicenses(ctx context.Context, req *rpc.ListDeviceLicensesReq) (*rpc.ListDeviceLicensesResp, error) {
-	client, err := u.dahuaStore.GetClient(ctx, req.Id)
+	client, err := dahua.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -483,7 +470,7 @@ func (u *User) ListDeviceLicenses(ctx context.Context, req *rpc.ListDeviceLicens
 }
 
 func (u *User) GetDeviceSoftwareVersion(ctx context.Context, req *rpc.GetDeviceSoftwareVersionReq) (*rpc.GetDeviceSoftwareVersionResp, error) {
-	client, err := u.dahuaStore.GetClient(ctx, req.Id)
+	client, err := dahua.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -503,7 +490,7 @@ func (u *User) GetDeviceSoftwareVersion(ctx context.Context, req *rpc.GetDeviceS
 }
 
 func (u *User) GetDeviceRPCStatus(ctx context.Context, req *rpc.GetDeviceRPCStatusReq) (*rpc.GetDeviceRPCStatusResp, error) {
-	client, err := u.dahuaStore.GetClient(ctx, req.Id)
+	client, err := dahua.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -518,7 +505,7 @@ func (u *User) GetDeviceRPCStatus(ctx context.Context, req *rpc.GetDeviceRPCStat
 }
 
 func (u *User) GetDeviceUptime(ctx context.Context, req *rpc.GetDeviceUptimeReq) (*rpc.GetDeviceUptimeResp, error) {
-	client, err := u.dahuaStore.GetClient(ctx, req.Id)
+	client, err := dahua.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +523,7 @@ func (u *User) GetDeviceUptime(ctx context.Context, req *rpc.GetDeviceUptimeReq)
 }
 
 func (u *User) ListDeviceStorage(ctx context.Context, req *rpc.ListDeviceStorageReq) (*rpc.ListDeviceStorageResp, error) {
-	client, err := u.dahuaStore.GetClient(ctx, req.Id)
+	client, err := dahua.GetClient(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -565,7 +552,7 @@ func (u *User) ListDeviceStorage(ctx context.Context, req *rpc.ListDeviceStorage
 }
 
 func (u *User) ListDeviceStreams(ctx context.Context, req *rpc.ListDeviceStreamsReq) (*rpc.ListDeviceStreamsResp, error) {
-	res, err := dahua.ListStreams(ctx, u.db, req.Id)
+	res, err := dahua.ListStreams(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -584,7 +571,7 @@ func (u *User) ListDeviceStreams(ctx context.Context, req *rpc.ListDeviceStreams
 }
 
 func (u *User) ListEmailAlarmEvents(ctx context.Context, _ *emptypb.Empty) (*rpc.ListEmailAlarmEventsResp, error) {
-	alarmEvents, err := dahua.ListEmailAlarmEvents(ctx, u.db)
+	alarmEvents, err := dahua.ListEmailAlarmEvents(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -595,12 +582,12 @@ func (u *User) ListEmailAlarmEvents(ctx context.Context, _ *emptypb.Empty) (*rpc
 }
 
 func (u *User) ListEventFilters(ctx context.Context, _ *emptypb.Empty) (*rpc.ListEventFiltersResp, error) {
-	codes, err := dahua.ListEventCodes(ctx, u.db)
+	codes, err := dahua.ListEventCodes(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	actions, err := dahua.ListEventActions(ctx, u.db)
+	actions, err := dahua.ListEventActions(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -612,7 +599,7 @@ func (u *User) ListEventFilters(ctx context.Context, _ *emptypb.Empty) (*rpc.Lis
 }
 
 func (u *User) ListLatestFiles(ctx context.Context, _ *emptypb.Empty) (*rpc.ListLatestFilesResp, error) {
-	latestFilesDTO, err := dahua.ListLatestFiles(ctx, u.db, 8)
+	latestFilesDTO, err := dahua.ListLatestFiles(ctx, 8)
 	if err != nil {
 		return nil, err
 	}
@@ -620,7 +607,7 @@ func (u *User) ListLatestFiles(ctx context.Context, _ *emptypb.Empty) (*rpc.List
 	files := make([]*rpc.ListLatestFilesResp_File, 0, len(latestFilesDTO))
 	for _, v := range latestFilesDTO {
 		var thumbnailURL string
-		if v.Type == models.DahuaFileTypeJPG {
+		if v.Type == models.DahuaFileType_JPG {
 			thumbnailURL = api.DahuaDeviceFileURI(v.DeviceID, v.FilePath)
 		}
 		files = append(files, &rpc.ListLatestFilesResp_File{
@@ -638,7 +625,7 @@ func (u *User) ListLatestFiles(ctx context.Context, _ *emptypb.Empty) (*rpc.List
 }
 
 func (u *User) GetFileMonthCount(ctx context.Context, req *rpc.GetFileMonthCountReq) (*rpc.GetFileMonthCountResp, error) {
-	dbMonths, err := dahua.CountFilesByMonth(ctx, u.db, dahua.FileFilter{
+	dbMonths, err := dahua.CountFilesByMonth(ctx, dahua.FileFilter{
 		FilterDeviceIDs: req.FilterDeviceIDs,
 	})
 	if err != nil {

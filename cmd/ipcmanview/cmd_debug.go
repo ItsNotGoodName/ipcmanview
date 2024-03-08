@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/rs/zerolog/log"
 )
@@ -22,14 +22,22 @@ func (c *CmdDebug) Run(ctx *Context) error {
 		return err
 	}
 
-	bus := event.NewBus(ctx)
+	hub := bus.NewHub(ctx)
 
-	bus.OnDahuaFileCreated("DEBUG", func(ctx context.Context, evt event.DahuaFileCreated) error {
-		fmt.Println("DEVICE:", evt.DeviceID, "COUNT", evt.Count)
+	dahua.Init(dahua.App{
+		DB:         db,
+		Hub:        hub,
+		AFS:        nil,
+		Store:      nil,
+		ScanLocker: dahua.ScanLocker{},
+	})
+
+	hub.OnDahuaFileCreated("DEBUG", func(ctx context.Context, event bus.DahuaFileCreated) error {
+		fmt.Println("DEVICE:", event.DeviceID, "COUNT", event.Count)
 		return nil
 	})
 
-	store := dahua.NewStore(db)
+	store := dahua.NewStore()
 
 	start := time.Now()
 
@@ -41,7 +49,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 		wg.Add(1)
 		go func(c dahua.Client) {
 			defer wg.Done()
-			err := dahua.Scan(ctx, db, bus, c.RPC, c.Conn, models.DahuaScanTypeFull)
+			err := dahua.Scan(ctx, c.RPC, c.Conn, models.DahuaScanType_Full)
 			if err != nil {
 				log.Err(err).Send()
 			}

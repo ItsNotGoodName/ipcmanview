@@ -7,23 +7,22 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-func groupFrom(v repo.Group) group {
-	return group{
+func groupFrom(v repo.Group) _Group {
+	return _Group{
 		Name:        v.Name,
 		Description: v.Description,
 	}
 }
 
-type group struct {
+type _Group struct {
 	Name        string `validate:"gte=3,lte=64"`
 	Description string `validate:"lte=1024"`
 }
 
-func (g *group) normalize() {
+func (g *_Group) normalize() {
 	g.Name = strings.TrimSpace(g.Name)
 	g.Description = strings.TrimSpace(g.Description)
 }
@@ -33,12 +32,12 @@ type CreateGroupParams struct {
 	Description string
 }
 
-func CreateGroup(ctx context.Context, db sqlite.DB, arg CreateGroupParams) (int64, error) {
+func CreateGroup(ctx context.Context, arg CreateGroupParams) (int64, error) {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return 0, err
 	}
 
-	model := group{
+	model := _Group{
 		Name:        arg.Name,
 		Description: arg.Description,
 	}
@@ -49,7 +48,7 @@ func CreateGroup(ctx context.Context, db sqlite.DB, arg CreateGroupParams) (int6
 	}
 
 	now := types.NewTime(time.Now())
-	return db.C().AuthCreateGroup(ctx, repo.AuthCreateGroupParams{
+	return app.DB.C().AuthCreateGroup(ctx, repo.AuthCreateGroupParams{
 		Name:        arg.Name,
 		Description: arg.Description,
 		CreatedAt:   now,
@@ -63,12 +62,12 @@ type UpdateGroupParams struct {
 	Description string
 }
 
-func UpdateGroup(ctx context.Context, db sqlite.DB, arg UpdateGroupParams) error {
+func UpdateGroup(ctx context.Context, arg UpdateGroupParams) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
-	dbModel, err := db.C().AuthGetGroup(ctx, arg.ID)
+	dbModel, err := app.DB.C().AuthGetGroup(ctx, arg.ID)
 	if err != nil {
 		return err
 	}
@@ -83,7 +82,7 @@ func UpdateGroup(ctx context.Context, db sqlite.DB, arg UpdateGroupParams) error
 		return err
 	}
 
-	_, err = db.C().AuthUpdateGroup(ctx, repo.AuthUpdateGroupParams{
+	_, err = app.DB.C().AuthUpdateGroup(ctx, repo.AuthUpdateGroupParams{
 		Name:        arg.Name,
 		Description: arg.Description,
 		UpdatedAt:   types.NewTime(time.Now()),
@@ -92,19 +91,19 @@ func UpdateGroup(ctx context.Context, db sqlite.DB, arg UpdateGroupParams) error
 	return err
 }
 
-func DeleteGroup(ctx context.Context, db sqlite.DB, id int64) error {
+func DeleteGroup(ctx context.Context, id int64) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
-	return db.C().AuthDeleteGroup(ctx, id)
+	return app.DB.C().AuthDeleteGroup(ctx, id)
 }
 
-func UpdateGroupDisable(ctx context.Context, db sqlite.DB, userID int64, disable bool) error {
+func UpdateGroupDisable(ctx context.Context, userID int64, disable bool) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
-	_, err := db.C().AuthUpdateGroupDisabledAt(ctx, repo.AuthUpdateGroupDisabledAtParams{
+	_, err := app.DB.C().AuthUpdateGroupDisabledAt(ctx, repo.AuthUpdateGroupDisabledAtParams{
 		DisabledAt: types.NullTime{
 			Time:  types.NewTime(time.Now()),
 			Valid: disable,

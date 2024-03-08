@@ -57,16 +57,16 @@ dev-proxy:
 # ---------- Gen
 
 # Generate code
-gen: gen-sqlc gen-pubsub gen-bus gen-proto gen-typescriptify
+gen: gen-sqlc gen-pubsub gen-hub gen-proto gen-typescriptify
 
 gen-sqlc:
 	sqlc generate
 
 gen-pubsub:
-	sh ./scripts/generate-pubsub-events.sh ./internal/event/models.go
+	sh ./scripts/generate-pubsub-events.sh ./internal/bus/models.go
 
-gen-bus:
-	go run ./scripts/generate-bus ./internal/event/models.go
+gen-hub:
+	go run ./scripts/generate-hub ./internal/bus/models.go
 
 gen-proto:
 	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto

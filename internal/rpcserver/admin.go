@@ -9,7 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
@@ -19,24 +18,22 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewAdmin(configProvider config.Provider, db sqlite.DB, bus *event.Bus) *Admin {
+func NewAdmin(configProvider config.Provider, db sqlite.DB) *Admin {
 	return &Admin{
 		configProvider: configProvider,
 		db:             db,
-		bus:            bus,
 	}
 }
 
 type Admin struct {
 	configProvider config.Provider
 	db             sqlite.DB
-	bus            *event.Bus
 }
 
 // ---------- Device
 
 func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevicesPageReq) (*rpc.GetAdminDevicesPageResp, error) {
-	page := parsePagePagination(req.Page)
+	page := decodePagePagination(req.Page)
 
 	items, err := func() ([]*rpc.GetAdminDevicesPageResp_Device, error) {
 		var row struct {
@@ -51,11 +48,11 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 		// ORDER BY
 		switch req.Sort.GetField() {
 		case "name":
-			sb = sb.OrderBy(parseOrderSQL("name", req.Sort.GetOrder()))
+			sb = sb.OrderBy(decodeOrderSQL("name", req.Sort.GetOrder()))
 		case "url":
-			sb = sb.OrderBy(parseOrderSQL("url", req.Sort.GetOrder()))
+			sb = sb.OrderBy(decodeOrderSQL("url", req.Sort.GetOrder()))
 		case "createdAt":
-			sb = sb.OrderBy(parseOrderSQL("created_at", req.Sort.GetOrder()))
+			sb = sb.OrderBy(decodeOrderSQL("created_at", req.Sort.GetOrder()))
 		}
 		// OFFSET ...
 		sb = sb.
@@ -110,7 +107,7 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 }
 
 func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevicesIDPageReq) (*rpc.GetAdminDevicesIDPageResp, error) {
-	v, err := dahua.GetDevice(ctx, a.db, dahua.GetDeviceFilter{ID: req.Id})
+	v, err := dahua.GetDevice(ctx, dahua.GetDeviceFilter{ID: req.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +130,7 @@ func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevi
 }
 
 func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
-	v, err := dahua.GetDevice(ctx, a.db, dahua.GetDeviceFilter{ID: req.Id})
+	v, err := dahua.GetDevice(ctx, dahua.GetDeviceFilter{ID: req.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +155,7 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 		return nil, err
 	}
 
-	id, err := dahua.CreateDevice(ctx, a.db, a.bus, dahua.CreateDeviceParams{
+	id, err := dahua.CreateDevice(ctx, dahua.CreateDeviceParams{
 		Name:     req.Name,
 		URL:      urL,
 		Username: req.Username,
@@ -191,7 +188,7 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 		return nil, err
 	}
 
-	err = dahua.UpdateDevice(ctx, a.db, a.bus, dahua.UpdateDeviceParams{
+	err = dahua.UpdateDevice(ctx, dahua.UpdateDeviceParams{
 		ID:          req.Id,
 		Name:        req.Name,
 		URL:         urL,
@@ -215,7 +212,7 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 
 func (a *Admin) DeleteDevice(ctx context.Context, req *rpc.DeleteDeviceReq) (*emptypb.Empty, error) {
 	for _, id := range req.Ids {
-		err := dahua.DeleteDevice(ctx, a.db, a.bus, id)
+		err := dahua.DeleteDevice(ctx, id)
 		if err != nil {
 			return nil, err
 		}
@@ -225,7 +222,7 @@ func (a *Admin) DeleteDevice(ctx context.Context, req *rpc.DeleteDeviceReq) (*em
 
 func (a *Admin) SetDeviceDisable(ctx context.Context, req *rpc.SetDeviceDisableReq) (*emptypb.Empty, error) {
 	for _, v := range req.Items {
-		err := dahua.UpdateDeviceDisabled(ctx, a.db, a.bus, v.Id, v.Disable)
+		err := dahua.UpdateDeviceDisabled(ctx, v.Id, v.Disable)
 		if err != nil {
 			return nil, err
 		}
@@ -236,7 +233,7 @@ func (a *Admin) SetDeviceDisable(ctx context.Context, req *rpc.SetDeviceDisableR
 // ---------- User
 
 func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPageReq) (*rpc.GetAdminUsersPageResp, error) {
-	page := parsePagePagination(req.Page)
+	page := decodePagePagination(req.Page)
 
 	items, err := func() ([]*rpc.GetAdminUsersPageResp_User, error) {
 		var row struct {
@@ -254,11 +251,11 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 		// ORDER BY
 		switch req.Sort.GetField() {
 		case "username":
-			sb = sb.OrderBy(parseOrderSQL("username", req.Sort.GetOrder()))
+			sb = sb.OrderBy(decodeOrderSQL("username", req.Sort.GetOrder()))
 		case "email":
-			sb = sb.OrderBy(parseOrderSQL("email", req.Sort.GetOrder()))
+			sb = sb.OrderBy(decodeOrderSQL("email", req.Sort.GetOrder()))
 		case "createdAt":
-			sb = sb.OrderBy(parseOrderSQL("users.created_at", req.Sort.GetOrder()))
+			sb = sb.OrderBy(decodeOrderSQL("users.created_at", req.Sort.GetOrder()))
 		default:
 			sb = sb.OrderBy("admin DESC")
 		}
@@ -321,7 +318,7 @@ func (a *Admin) CreateUser(ctx context.Context, req *rpc.CreateUserReq) (*emptyp
 		return nil, err
 	}
 
-	_, err = auth.CreateUser(ctx, cfg, a.db, auth.CreateUserParams{
+	_, err = auth.CreateUser(ctx, cfg, auth.CreateUserParams{
 		Email:    req.Email,
 		Username: req.Username,
 		Password: req.Password,
@@ -349,7 +346,7 @@ func (a *Admin) GetUser(ctx context.Context, req *rpc.GetUserReq) (*rpc.GetUserR
 }
 
 func (a *Admin) UpdateUser(ctx context.Context, req *rpc.UpdateUserReq) (*emptypb.Empty, error) {
-	err := auth.UpdateUser(ctx, a.db, auth.UpdateUserParams{
+	err := auth.UpdateUser(ctx, auth.UpdateUserParams{
 		ID:       req.Id,
 		Email:    req.Email,
 		Username: req.Username,
@@ -363,7 +360,7 @@ func (a *Admin) UpdateUser(ctx context.Context, req *rpc.UpdateUserReq) (*emptyp
 
 func (a *Admin) DeleteUser(ctx context.Context, req *rpc.DeleteUserReq) (*emptypb.Empty, error) {
 	for _, id := range req.Ids {
-		err := auth.DeleteUser(ctx, a.db, id)
+		err := auth.DeleteUser(ctx, id)
 		if err != nil {
 			return nil, err
 		}
@@ -374,7 +371,7 @@ func (a *Admin) DeleteUser(ctx context.Context, req *rpc.DeleteUserReq) (*emptyp
 
 func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) (*emptypb.Empty, error) {
 	for _, item := range req.Items {
-		err := auth.UpdateUserDisabled(ctx, a.db, a.bus, item.Id, item.Disable)
+		err := auth.UpdateUserDisabled(ctx, item.Id, item.Disable)
 		if err != nil {
 			return nil, err
 		}
@@ -384,7 +381,7 @@ func (a *Admin) SetUserDisable(ctx context.Context, req *rpc.SetUserDisableReq) 
 }
 
 func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*emptypb.Empty, error) {
-	err := auth.UpdateUserAdmin(ctx, a.db, a.bus, req.Id, req.Admin)
+	err := auth.UpdateUserAdmin(ctx, req.Id, req.Admin)
 	if err != nil {
 		return nil, err
 	}
@@ -395,7 +392,7 @@ func (a *Admin) SetUserAdmin(ctx context.Context, req *rpc.SetUserAdminReq) (*em
 func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswordReq) (*emptypb.Empty, error) {
 	session := useAuthSession(ctx)
 
-	if err := auth.UpdateUserPassword(ctx, a.db, a.bus, auth.UpdateUserPasswordParams{
+	if err := auth.UpdateUserPassword(ctx, auth.UpdateUserPasswordParams{
 		UserID:           req.Id,
 		OldPasswordSkip:  true,
 		NewPassword:      req.NewPassword,
@@ -410,7 +407,7 @@ func (a *Admin) ResetUserPassword(ctx context.Context, req *rpc.ResetUserPasswor
 // ---------- Group
 
 func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsPageReq) (*rpc.GetAdminGroupsPageResp, error) {
-	page := parsePagePagination(req.Page)
+	page := decodePagePagination(req.Page)
 
 	items, err := func() ([]*rpc.GetAdminGroupsPageResp_Group, error) {
 		var row struct {
@@ -429,11 +426,11 @@ func (a *Admin) GetAdminGroupsPage(ctx context.Context, req *rpc.GetAdminGroupsP
 		// ORDER BY
 		switch req.Sort.GetField() {
 		case "name":
-			sb = sb.OrderBy(parseOrderSQL("name", req.Sort.GetOrder()))
+			sb = sb.OrderBy(decodeOrderSQL("name", req.Sort.GetOrder()))
 		case "userCount":
-			sb = sb.OrderBy(parseOrderSQL("user_count", req.Sort.GetOrder()))
+			sb = sb.OrderBy(decodeOrderSQL("user_count", req.Sort.GetOrder()))
 		case "createdAt":
-			sb = sb.OrderBy(parseOrderSQL("groups.created_at", req.Sort.GetOrder()))
+			sb = sb.OrderBy(decodeOrderSQL("groups.created_at", req.Sort.GetOrder()))
 		}
 		// OFFSET ...
 		sb = sb.
@@ -532,7 +529,7 @@ func (a *Admin) GetGroup(ctx context.Context, req *rpc.GetGroupReq) (*rpc.GetGro
 }
 
 func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.CreateGroupResp, error) {
-	id, err := auth.CreateGroup(ctx, a.db, auth.CreateGroupParams{
+	id, err := auth.CreateGroup(ctx, auth.CreateGroupParams{
 		Name:        req.Name,
 		Description: req.Description,
 	})
@@ -546,7 +543,7 @@ func (a *Admin) CreateGroup(ctx context.Context, req *rpc.CreateGroupReq) (*rpc.
 }
 
 func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*emptypb.Empty, error) {
-	err := auth.UpdateGroup(ctx, a.db, auth.UpdateGroupParams{
+	err := auth.UpdateGroup(ctx, auth.UpdateGroupParams{
 		ID:          req.Id,
 		Name:        req.Name,
 		Description: req.Description,
@@ -560,7 +557,7 @@ func (a *Admin) UpdateGroup(ctx context.Context, req *rpc.UpdateGroupReq) (*empt
 
 func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*emptypb.Empty, error) {
 	for _, id := range req.Ids {
-		err := auth.DeleteGroup(ctx, a.db, id)
+		err := auth.DeleteGroup(ctx, id)
 		if err != nil {
 			return nil, err
 		}
@@ -570,7 +567,7 @@ func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*empt
 
 func (a *Admin) SetGroupDisable(ctx context.Context, req *rpc.SetGroupDisableReq) (*emptypb.Empty, error) {
 	for _, item := range req.Items {
-		err := auth.UpdateGroupDisable(ctx, a.db, item.Id, item.Disable)
+		err := auth.UpdateGroupDisable(ctx, item.Id, item.Disable)
 		if err != nil {
 			return nil, err
 		}
@@ -592,7 +589,7 @@ func (a *Admin) UpdateConfig(cfg context.Context, req *rpc.UpdateConfigReq) (*em
 }
 
 func (a *Admin) CreateEventRule(ctx context.Context, req *rpc.CreateEventRuleReq) (*rpc.CreateEventRuleResp, error) {
-	id, err := dahua.CreateEventRule(ctx, a.db, repo.DahuaCreateEventRuleParams{
+	id, err := dahua.CreateEventRule(ctx, repo.DahuaCreateEventRuleParams{
 		Code:       req.Code,
 		IgnoreDb:   req.IgnoreDb,
 		IgnoreLive: req.IgnoreLive,
@@ -614,7 +611,7 @@ func (a *Admin) CreateEventRule(ctx context.Context, req *rpc.CreateEventRuleReq
 
 func (a *Admin) UpdateEventRule(ctx context.Context, req *rpc.UpdateEventRuleReq) (*emptypb.Empty, error) {
 	for _, v := range req.Items {
-		err := dahua.UpdateEventRule(ctx, a.db, repo.DahuaUpdateEventRuleParams{
+		err := dahua.UpdateEventRule(ctx, repo.DahuaUpdateEventRuleParams{
 			Code:       v.Code,
 			IgnoreDb:   v.IgnoreDb,
 			IgnoreLive: v.IgnoreLive,
@@ -633,7 +630,7 @@ func (a *Admin) UpdateEventRule(ctx context.Context, req *rpc.UpdateEventRuleReq
 }
 
 func (a *Admin) ListEventRules(ctx context.Context, _ *emptypb.Empty) (*rpc.ListEventRulesResp, error) {
-	v, err := dahua.ListEventRules(ctx, a.db)
+	v, err := dahua.ListEventRules(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -656,7 +653,7 @@ func (a *Admin) ListEventRules(ctx context.Context, _ *emptypb.Empty) (*rpc.List
 
 func (a *Admin) DeleteEventRules(ctx context.Context, req *rpc.DeleteEventRulesReq) (*emptypb.Empty, error) {
 	for _, id := range req.Ids {
-		if err := dahua.DeleteEventRule(ctx, a.db, id); err != nil {
+		if err := dahua.DeleteEventRule(ctx, id); err != nil {
 			if core.IsNotFound(err) {
 				continue
 			}

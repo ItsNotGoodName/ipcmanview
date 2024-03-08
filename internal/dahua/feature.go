@@ -16,7 +16,7 @@ func init() {
 }
 
 var FeatureList []Feature = []Feature{
-	{models.DahuaFeatureCamera, "camera", "Camera", "The device has a camera."},
+	{models.DahuaFeature_Camera, "camera", "Camera", "The device has a camera."},
 }
 
 type Feature struct {

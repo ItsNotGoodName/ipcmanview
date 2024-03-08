@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/server"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	"github.com/spf13/afero"
@@ -70,11 +69,6 @@ func (c Shared) useDB(ctx *Context) (sqlite.DB, error) {
 	}
 
 	db := sqlite.NewDB(sqlDB)
-
-	err = dahua.Normalize(ctx, db)
-	if err != nil {
-		return sqlite.DB{}, err
-	}
 
 	return db, nil
 }

@@ -1,4 +1,4 @@
-package event
+package bus
 
 import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
@@ -27,8 +27,8 @@ type DahuaDeviceDeleted struct {
 }
 
 type DahuaEmailCreated struct {
-	DeviceID int64
-	EmailID  int64
+	DeviceID  int64
+	MessageID int64
 }
 
 type DahuaFileCreated struct {
@@ -54,6 +54,7 @@ type DahuaWorkerConnected struct {
 type DahuaWorkerDisconnected struct {
 	DeviceID int64
 	Type     models.DahuaWorkerType
+	Error    error
 }
 
 type DahuaCoaxialStatus struct {

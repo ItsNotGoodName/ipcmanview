@@ -8,30 +8,30 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event/action"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
+	"github.com/ItsNotGoodName/ipcmanview/internal/system"
+	"github.com/ItsNotGoodName/ipcmanview/internal/system/action"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 )
 
-func deviceFrom(v repo.DahuaDevice) device {
-	return device{
+func deviceFrom(v repo.DahuaDevice) _Device {
+	return _Device{
 		Name:     v.Name,
 		URL:      v.Url.URL,
 		Username: v.Username,
 	}
 }
 
-type device struct {
+type _Device struct {
 	Name     string `validate:"required,lte=64"`
 	URL      *url.URL
 	Username string
 }
 
-func (d *device) normalize(create bool) {
+func (d *_Device) normalize(create bool) {
 	// Name
 	d.Name = strings.TrimSpace(d.Name)
 	// URL
@@ -61,7 +61,7 @@ func (d *device) normalize(create bool) {
 	}
 }
 
-func (d *device) getIP() (string, error) {
+func (d *_Device) getIP() (string, error) {
 	ip := d.URL.Hostname()
 
 	ips, err := net.LookupIP(ip)
@@ -88,12 +88,12 @@ type CreateDeviceParams struct {
 	Feature  models.DahuaFeature
 }
 
-func CreateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg CreateDeviceParams) (int64, error) {
+func CreateDevice(ctx context.Context, arg CreateDeviceParams) (int64, error) {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return 0, err
 	}
 
-	model := device{
+	model := _Device{
 		Name:     arg.Name,
 		URL:      arg.URL,
 		Username: arg.Username,
@@ -111,7 +111,7 @@ func CreateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg CreateD
 	}
 
 	now := types.NewTime(time.Now())
-	id, err := createDahuaDevice(ctx, db, bus, repo.DahuaCreateDeviceParams{
+	id, err := createDahuaDevice(ctx, repo.DahuaCreateDeviceParams{
 		Name:      model.Name,
 		Url:       types.NewURL(model.URL),
 		Ip:        ip,
@@ -129,8 +129,8 @@ func CreateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg CreateD
 	return id, err
 }
 
-func createDahuaDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.DahuaCreateDeviceParams) (int64, error) {
-	tx, err := db.BeginTx(ctx, true)
+func createDahuaDevice(ctx context.Context, arg repo.DahuaCreateDeviceParams) (int64, error) {
+	tx, err := app.DB.BeginTx(ctx, true)
 	if err != nil {
 		return 0, err
 	}
@@ -151,10 +151,10 @@ func createDahuaDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg re
 		return 0, err
 	}
 
-	if err := event.CreateEventAndCommit(ctx, tx, action.DahuaDeviceCreated.Create(id)); err != nil {
+	if err := system.CreateEventAndCommit(ctx, tx, action.DahuaDeviceCreated.Create(id)); err != nil {
 		return 0, err
 	}
-	bus.DahuaDeviceCreated(event.DahuaDeviceCreated{
+	app.Hub.DahuaDeviceCreated(bus.DahuaDeviceCreated{
 		DeviceID: id,
 	})
 
@@ -171,12 +171,12 @@ type UpdateDeviceParams struct {
 	Feature     models.DahuaFeature
 }
 
-func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg UpdateDeviceParams) error {
+func UpdateDevice(ctx context.Context, arg UpdateDeviceParams) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
-	dbModel, err := GetDevice(ctx, db, GetDeviceFilter{
+	dbModel, err := GetDevice(ctx, GetDeviceFilter{
 		ID: arg.ID,
 	})
 	if err != nil {
@@ -204,7 +204,7 @@ func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg UpdateD
 		password = arg.NewPassword
 	}
 
-	return updateDevice(ctx, db, bus, repo.DahuaUpdateDeviceParams{
+	return updateDevice(ctx, repo.DahuaUpdateDeviceParams{
 		Name:      model.Name,
 		Url:       types.NewURL(model.URL),
 		Ip:        ip,
@@ -217,8 +217,8 @@ func UpdateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg UpdateD
 	})
 }
 
-func updateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceParams) error {
-	tx, err := db.BeginTx(ctx, true)
+func updateDevice(ctx context.Context, arg repo.DahuaUpdateDeviceParams) error {
+	tx, err := app.DB.BeginTx(ctx, true)
 	if err != nil {
 		return err
 	}
@@ -228,26 +228,26 @@ func updateDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.Da
 		return err
 	}
 
-	if err := event.CreateEventAndCommit(ctx, tx, action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
+	if err := system.CreateEventAndCommit(ctx, tx, action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
 		return err
 	}
-	bus.DahuaDeviceUpdated(event.DahuaDeviceUpdated{
+	app.Hub.DahuaDeviceUpdated(bus.DahuaDeviceUpdated{
 		DeviceID: arg.ID,
 	})
 
 	return nil
 }
 
-func DeleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) error {
+func DeleteDevice(ctx context.Context, id int64) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
-	return deleteDevice(ctx, db, bus, id)
+	return deleteDevice(ctx, id)
 }
 
-func deleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) error {
-	tx, err := db.BeginTx(ctx, true)
+func deleteDevice(ctx context.Context, id int64) error {
+	tx, err := app.DB.BeginTx(ctx, true)
 	if err != nil {
 		return err
 	}
@@ -257,22 +257,22 @@ func deleteDevice(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64) e
 		return err
 	}
 
-	if err := event.CreateEventAndCommit(ctx, tx, action.DahuaDeviceDeleted.Create(id)); err != nil {
+	if err := system.CreateEventAndCommit(ctx, tx, action.DahuaDeviceDeleted.Create(id)); err != nil {
 		return err
 	}
-	bus.DahuaDeviceDeleted(event.DahuaDeviceDeleted{
+	app.Hub.DahuaDeviceDeleted(bus.DahuaDeviceDeleted{
 		DeviceID: id,
 	})
 
 	return err
 }
 
-func UpdateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id int64, disable bool) error {
+func UpdateDeviceDisabled(ctx context.Context, id int64, disable bool) error {
 	if _, err := core.AssertAdmin(ctx); err != nil {
 		return err
 	}
 
-	return updateDeviceDisabled(ctx, db, bus, repo.DahuaUpdateDeviceDisabledAtParams{
+	return updateDeviceDisabled(ctx, repo.DahuaUpdateDeviceDisabledAtParams{
 		DisabledAt: types.NullTime{
 			Time:  types.NewTime(time.Now()),
 			Valid: disable,
@@ -281,8 +281,8 @@ func UpdateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, id 
 	})
 }
 
-func updateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, arg repo.DahuaUpdateDeviceDisabledAtParams) error {
-	tx, err := db.BeginTx(ctx, true)
+func updateDeviceDisabled(ctx context.Context, arg repo.DahuaUpdateDeviceDisabledAtParams) error {
+	tx, err := app.DB.BeginTx(ctx, true)
 	if err != nil {
 		return err
 	}
@@ -292,10 +292,10 @@ func updateDeviceDisabled(ctx context.Context, db sqlite.DB, bus *event.Bus, arg
 		return err
 	}
 
-	if err := event.CreateEventAndCommit(ctx, tx, action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
+	if err := system.CreateEventAndCommit(ctx, tx, action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
 		return err
 	}
-	bus.DahuaDeviceUpdated(event.DahuaDeviceUpdated{
+	app.Hub.DahuaDeviceUpdated(bus.DahuaDeviceUpdated{
 		DeviceID: arg.ID,
 	})
 

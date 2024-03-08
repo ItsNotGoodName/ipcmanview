@@ -5,14 +5,13 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
 	echo "github.com/labstack/echo/v4"
 )
 
 const cookieKey = "session"
 
 // SessionMiddleware sets the session context.
-func SessionMiddleware(db sqlite.DB) echo.MiddlewareFunc {
+func SessionMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			r := c.Request()
@@ -24,7 +23,7 @@ func SessionMiddleware(db sqlite.DB) echo.MiddlewareFunc {
 			}
 
 			// Get session
-			session, err := auth.GetUserSessionForContext(ctx, db, cookie.Value)
+			session, err := auth.GetUserSessionForContext(ctx, cookie.Value)
 			if err != nil {
 				if core.IsNotFound(err) {
 					return next(c)
@@ -33,7 +32,7 @@ func SessionMiddleware(db sqlite.DB) echo.MiddlewareFunc {
 			}
 
 			// Touch session
-			if err := auth.TouchUserSession(ctx, db, auth.TouchUserSessionParams{
+			if err := auth.TouchUserSession(ctx, auth.TouchUserSessionParams{
 				CurrentSessionID: session.ID,
 				LastUsedAt:       session.LastUsedAt.Time,
 				LastIP:           session.LastIp,
@@ -97,7 +96,7 @@ func (s *Server) SessionPOST(c echo.Context) error {
 	}
 
 	// Get user
-	user, err := auth.GetUserByUsernameOrEmail(ctx, s.db, req.UsernameOrEmail)
+	user, err := auth.GetUserByUsernameOrEmail(ctx, req.UsernameOrEmail)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Incorrect credentials.").WithInternal(err)
 	}
@@ -113,7 +112,7 @@ func (s *Server) SessionPOST(c echo.Context) error {
 	}
 
 	// Create session
-	session, err := auth.CreateUserSession(ctx, s.db, auth.CreateUserSessionParams{
+	session, err := auth.CreateUserSession(ctx, auth.CreateUserSessionParams{
 		UserAgent:       c.Request().UserAgent(),
 		IP:              c.RealIP(),
 		UserID:          user.ID,
@@ -145,7 +144,7 @@ func (s *Server) SessionDELETE(c echo.Context) error {
 	}
 
 	// Delete session
-	if err := auth.DeleteUserSessionBySession(ctx, s.db, s.bus, cookie.Value); err != nil {
+	if err := auth.DeleteUserSessionBySession(ctx, cookie.Value); err != nil {
 		return err
 	}
 

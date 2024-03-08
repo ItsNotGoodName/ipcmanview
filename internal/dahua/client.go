@@ -50,3 +50,8 @@ func (c Client) Close(ctx context.Context) error {
 	c.File.Close()
 	return c.RPC.Close(ctx)
 }
+
+func (c Client) CloseNoWait(ctx context.Context) error {
+	c.File.Close()
+	return c.RPC.CloseNoWait(ctx)
+}

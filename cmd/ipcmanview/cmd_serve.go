@@ -5,12 +5,13 @@ import (
 	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
+	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
+	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuasmtp"
-	"github.com/ItsNotGoodName/ipcmanview/internal/event"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
@@ -78,8 +79,32 @@ func (c *CmdServe) Run(ctx *Context) error {
 	// Pub sub
 	pub := pubsub.NewPub()
 
-	// Event bus
-	bus := event.NewBus(ctx).Register(pub)
+	// Bus hub
+	hub := bus.NewHub(ctx).Register(pub)
+
+	// Dahua AFS
+	dahuaAFS, err := c.useDahuaAFS()
+	if err != nil {
+		return err
+	}
+
+	// Dahua store
+	dahuaStore := dahua.NewStore().Register(hub)
+	defer dahuaStore.Close()
+
+	// Init
+	auth.Init(auth.App{
+		DB:                   db,
+		Hub:                  hub,
+		TouchSessionThrottle: auth.NewTouchSessionThrottle(),
+	})
+	dahua.Init(dahua.App{
+		DB:         db,
+		Hub:        hub,
+		AFS:        dahuaAFS,
+		Store:      dahuaStore,
+		ScanLocker: dahua.NewScanLocker(),
+	})
 
 	// MediaMTX
 	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))
@@ -88,65 +113,53 @@ func (c *CmdServe) Run(ctx *Context) error {
 	}
 
 	// Dahua
-
-	dahuaAFS, err := c.useDahuaAFS()
-	if err != nil {
+	if err := dahua.Normalize(ctx); err != nil {
 		return err
 	}
 
-	dahuaScanLockStore := dahua.NewScanLockStore()
-
-	dahuaStore := dahua.
-		NewStore(db).
-		Register(bus)
-	defer dahuaStore.Close()
-	super.Add(dahuaStore)
-
-	dahuaWorkerHooks := dahua.NewDefaultWorkerHooks(db, bus)
+	dahuaWorkerHooks := dahua.NewDefaultWorkerHooks()
 
 	if err := dahua.
 		NewWorkerManager(super, func(ctx context.Context, super *suture.Supervisor, conn dahua.Conn) []suture.ServiceToken {
 			return []suture.ServiceToken{
-				super.Add(dahua.NewQuickScanWorker(dahuaWorkerHooks, pub, bus, db, dahuaStore, dahuaScanLockStore, conn.ID)),
-				super.Add(dahua.NewCoaxialWorker(dahuaWorkerHooks, db, bus, dahuaStore, conn.ID)),
-				super.Add(dahua.NewEventWorker(dahuaWorkerHooks, db, bus, conn)),
+				super.Add(dahua.NewQuickScanWorker(dahuaWorkerHooks, pub, conn.ID)),
+				super.Add(dahua.NewCoaxialWorker(dahuaWorkerHooks, conn.ID)),
+				super.Add(dahua.NewEventWorker(dahuaWorkerHooks, conn)),
 			}
 		}).
-		Register(bus, db).
-		Bootstrap(ctx, db, dahuaStore); err != nil {
+		Register().
+		Bootstrap(ctx); err != nil {
 		return err
 	}
 
-	dahua.RegisterStreams(bus, db, dahuaStore)
+	dahua.RegisterStreams()
 
-	super.Add(dahua.NewAferoService(db, dahuaAFS))
-
-	super.Add(dahua.NewFileService(db, dahuaAFS, dahuaStore))
+	// super.Add(dahua.NewAferoService(db, dahuaAFS))
+	//
+	// super.Add(dahua.NewFileService(db, dahuaAFS, dahuaStore))
 
 	// MQTT
 	if c.MQTTAddress != "" {
 		mqttConn := mqtt.NewConn(c.MQTTTopic, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
 		super.Add(mqttConn)
 
-		super.Add(dahuamqtt.NewConn(mqttConn, db, dahuaStore, c.MQTTHa, c.MQTTHaTopic).Register(bus))
+		super.Add(dahuamqtt.NewConn(mqttConn, c.MQTTHa, c.MQTTHaTopic).Register(hub))
 	}
 
 	// SMTP
-	super.Add(dahuasmtp.
-		NewServer(dahuasmtp.
-			NewBackend(dahuasmtp.NewApp(db, bus, dahuaAFS)), core.Address(c.SMTPHost, int(c.SMTPPort))))
+	super.Add(dahuasmtp.NewServer(dahuasmtp.NewBackend(), core.Address(c.SMTPHost, int(c.SMTPPort))))
 
 	// HTTP router
 	httpRouter := server.NewHTTPRouter(web.RouteAssets)
 
 	// HTTP middleware
 	httpRouter.Use(web.FS(api.Route, rpcserver.Route))
-	httpRouter.Use(api.SessionMiddleware(db))
+	httpRouter.Use(api.SessionMiddleware())
 	httpRouter.Use(api.ActorMiddleware())
 
 	// API
 	api.
-		NewServer(pub, db, bus, dahuaStore, dahuaAFS, mediamtxConfig.URL()).
+		NewServer(pub, db, dahuaAFS, mediamtxConfig.URL()).
 		RegisterSession(httpRouter.Group(api.Route)).
 		Register(httpRouter.Group(api.Route, api.RequireAuthMiddleware()))
 
@@ -155,9 +168,9 @@ func (c *CmdServe) Run(ctx *Context) error {
 	rpcserver.
 		NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
-		Register(rpc.NewPublicServer(rpcserver.NewPublic(configProvider, db), rpcLogger)).
-		Register(rpc.NewUserServer(rpcserver.NewUser(configProvider, db, bus, dahuaStore, mediamtxConfig), rpcLogger, rpcserver.RequireAuthSession())).
-		Register(rpc.NewAdminServer(rpcserver.NewAdmin(configProvider, db, bus), rpcLogger, rpcserver.RequireAdminAuthSession()))
+		Register(rpc.NewPublicServer(rpcserver.NewPublic(configProvider), rpcLogger)).
+		Register(rpc.NewUserServer(rpcserver.NewUser(configProvider, mediamtxConfig), rpcLogger, rpcserver.RequireAuthSession())).
+		Register(rpc.NewAdminServer(rpcserver.NewAdmin(configProvider, db), rpcLogger, rpcserver.RequireAdminAuthSession()))
 
 	// HTTP server
 	super.Add(server.NewHTTPServer(
