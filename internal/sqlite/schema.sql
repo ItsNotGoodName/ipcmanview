@@ -153,6 +153,7 @@ CREATE TABLE dahua_afero_files (
 CREATE TABLE dahua_files (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   device_id INTEGER NOT NULL,
+  --
   channel INTEGER NOT NULL,
   start_time DATETIME NOT NULL UNIQUE,
   end_time DATETIME NOT NULL,
@@ -170,13 +171,14 @@ CREATE TABLE dahua_files (
   repeat INTEGER NOT NULL,
   work_dir TEXT NOT NULL,
   work_dir_sn BOOLEAN NOT NULL,
-  updated_at DATETIME NOT NULL,
+  --
   storage TEXT NOT NULL,
+  source TEXT NOT NULL,
+  updated_at DATETIME NOT NULL,
   UNIQUE (device_id, file_path),
   FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
--- Filter by device_id and ordering by start_time
 CREATE INDEX dahua_files_device_id_start_time_idx ON dahua_files (device_id, start_time);
 
 CREATE TABLE dahua_thumbnails (
@@ -197,7 +199,7 @@ CREATE TABLE dahua_file_cursors (
   full_cursor DATETIME NOT NULL, -- (not scanned) <- full_cursor -> (scanned)
   full_epoch DATETIME NOT NULL,
   full_complete BOOLEAN NOT NULL GENERATED ALWAYS AS (full_cursor <= full_epoch) STORED, -- TODO: this is cool but am I going to use it?
-  scan BOOLEAN NOT NULL,
+  scanning BOOLEAN NOT NULL,
   scan_percent REAL NOT NULL,
   scan_type TEXT NOT NULL,
   FOREIGN KEY (device_id) REFERENCES dahua_devices (id) ON UPDATE CASCADE ON DELETE CASCADE

@@ -28,6 +28,8 @@ sql:
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.DahuaFeature"
           - column: "dahua_files.storage"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.Storage"
+          - column: "dahua_files.source"
+            go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.DahuaFileSource"
           - column: "dahua_storage_destinations.storage"
             go_type: "github.com/ItsNotGoodName/ipcmanview/internal/models.Storage"
           - column: "dahua_storage_destinations.storage"

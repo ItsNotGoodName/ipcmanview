@@ -17,8 +17,8 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func FileFTPReadCloser(ctx context.Context, fileFilePath string) (io.ReadCloser, error) {
-	u, err := url.Parse(fileFilePath)
+func FileFTPReadCloser(ctx context.Context, filePath string) (io.ReadCloser, error) {
+	u, err := url.Parse(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -56,8 +56,8 @@ func FileFTPReadCloser(ctx context.Context, fileFilePath string) (io.ReadCloser,
 	}, nil
 }
 
-func FileSFTPReadCloser(ctx context.Context, fileFilePath string) (io.ReadCloser, error) {
-	u, err := url.Parse(fileFilePath)
+func FileSFTPReadCloser(ctx context.Context, filePath string) (io.ReadCloser, error) {
+	u, err := url.Parse(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -180,3 +180,41 @@ func FileLocalDownload(ctx context.Context, client Client, fileID int64, fileFil
 //
 // 	return downloaded, nil
 // }
+
+func upsertFile(ctx context.Context, arg repo.DahuaCreateFileParams) (bool, error) {
+	_, err := app.DB.C().DahuaUpdateFile(ctx, repo.DahuaUpdateFileParams{
+		Channel:     arg.Channel,
+		StartTime:   arg.StartTime,
+		EndTime:     arg.EndTime,
+		Length:      arg.Length,
+		Type:        arg.Type,
+		Duration:    arg.Duration,
+		Disk:        arg.Disk,
+		VideoStream: arg.VideoStream,
+		Flags:       arg.Flags,
+		Events:      arg.Events,
+		Cluster:     arg.Cluster,
+		Partition:   arg.Partition,
+		PicIndex:    arg.PicIndex,
+		Repeat:      arg.Repeat,
+		WorkDir:     arg.WorkDir,
+		WorkDirSn:   arg.WorkDirSn,
+		Storage:     arg.Storage,
+		Source:      arg.Source,
+		UpdatedAt:   arg.UpdatedAt,
+		DeviceID:    arg.DeviceID,
+		FilePath:    arg.FilePath,
+	})
+	if err == nil {
+		return false, nil
+	}
+	if !core.IsNotFound(err) {
+		return false, err
+	}
+
+	if _, err := app.DB.C().DahuaCreateFile(ctx, arg); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}

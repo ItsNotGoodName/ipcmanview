@@ -119,7 +119,7 @@ func (s *session) Data(r io.Reader) error {
 	for _, a := range e.Attachments {
 		attachments = append(attachments, dahua.CreateEmailParamsAttachment{
 			FileName: a.FileName,
-			Data:     a.Content,
+			Content:  a.Content,
 		})
 	}
 	arg := dahua.CreateEmailParams{

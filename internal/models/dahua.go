@@ -8,8 +8,17 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
 )
 
-const DahuaFileType_JPG = "jpg"
-const DahuaFileType_DAV = "dav"
+const (
+	DahuaFileType_JPG = "jpg"
+	DahuaFileType_DAV = "dav"
+)
+
+type DahuaFileSource string
+
+const (
+	DahuaFileSource_Device DahuaFileSource = "device"
+	DahuaFileSource_Email  DahuaFileSource = "email"
+)
 
 type DahuaWorkerType string
 
@@ -66,30 +75,6 @@ func (l DahuaPermissionLevel) String() string {
 	default:
 		return "unknown"
 	}
-}
-
-type DahuaDevicePermission struct {
-	DeviceID int64
-	Level    DahuaPermissionLevel
-}
-
-type DahuaDevicePermissions []DahuaDevicePermission
-
-func (p DahuaDevicePermissions) DeviceIDs() []int64 {
-	ids := make([]int64, 0, len(p))
-	for i := range p {
-		ids = append(ids, p[i].DeviceID)
-	}
-	return ids
-}
-
-func (p DahuaDevicePermissions) Get(deviceID int64) (DahuaDevicePermission, bool) {
-	for i := range p {
-		if p[i].DeviceID == deviceID {
-			return p[i], true
-		}
-	}
-	return DahuaDevicePermission{}, false
 }
 
 type DahuaError struct {

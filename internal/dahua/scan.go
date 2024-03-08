@@ -100,7 +100,7 @@ func ScanReset(ctx context.Context, deviceID int64) error {
 		FullEpoch:   fileCursor.FullEpoch,
 		DeviceID:    deviceID,
 		ScanPercent: 0,
-		Scan:        false,
+		Scanning:    false,
 		ScanType:    models.DahuaScanType_Unknown,
 	})
 	return err
@@ -122,7 +122,7 @@ func Scan(ctx context.Context, rpcClient dahuarpc.Conn, device Conn, scanType mo
 	}
 	iterator := NewScannerPeriodIterator(scanRange)
 
-	updated_at := types.NewTime(time.Now())
+	updatedAt := types.NewTime(time.Now())
 	mediaFilesC := make(chan []mediafilefind.FindNextFileInfo)
 
 	fileCursor, err = app.DB.C().DahuaUpdateFileCursor(ctx, repo.DahuaUpdateFileCursorParams{
@@ -131,7 +131,7 @@ func Scan(ctx context.Context, rpcClient dahuarpc.Conn, device Conn, scanType mo
 		FullEpoch:   fileCursor.FullEpoch,
 		DeviceID:    device.ID,
 		ScanPercent: iterator.Percent(),
-		Scan:        true,
+		Scanning:    true,
 		ScanType:    scanType,
 	})
 	if err != nil {
@@ -158,7 +158,7 @@ func Scan(ctx context.Context, rpcClient dahuarpc.Conn, device Conn, scanType mo
 					}
 
 					for _, f := range files {
-						created, err := upsertDahuaFiles(ctx, repo.DahuaCreateFileParams{
+						created, err := upsertFile(ctx, repo.DahuaCreateFileParams{
 							DeviceID:    device.ID,
 							Channel:     int64(f.Channel),
 							StartTime:   types.NewTime(f.StartTime),
@@ -177,8 +177,9 @@ func Scan(ctx context.Context, rpcClient dahuarpc.Conn, device Conn, scanType mo
 							Repeat:      int64(f.Repeat),
 							WorkDir:     f.WorkDir,
 							WorkDirSn:   f.WorkDirSN,
-							UpdatedAt:   updated_at,
 							Storage:     StorageFromFilePath(f.FilePath),
+							Source:      models.DahuaFileSource_Device,
+							UpdatedAt:   updatedAt,
 						})
 						if err != nil {
 							return createdCount, err
@@ -195,10 +196,11 @@ func Scan(ctx context.Context, rpcClient dahuarpc.Conn, device Conn, scanType mo
 		}
 
 		err = app.DB.C().DahuaDeleteFile(ctx, repo.DahuaDeleteFileParams{
-			UpdatedAt: updated_at,
 			DeviceID:  device.ID,
 			Start:     types.NewTime(scannerPeriod.Start.UTC()),
 			End:       types.NewTime(scannerPeriod.End.UTC()),
+			UpdatedAt: updatedAt,
+			Source:    models.DahuaFileSource_Device,
 		})
 		if err != nil {
 			return err
@@ -212,7 +214,7 @@ func Scan(ctx context.Context, rpcClient dahuarpc.Conn, device Conn, scanType mo
 			FullEpoch:   fileCursor.FullEpoch,
 			DeviceID:    device.ID,
 			ScanPercent: iterator.Percent(),
-			Scan:        true,
+			Scanning:    true,
 			ScanType:    scanType,
 		})
 		if err != nil {
@@ -239,7 +241,7 @@ func Scan(ctx context.Context, rpcClient dahuarpc.Conn, device Conn, scanType mo
 		FullEpoch:   fileCursor.FullEpoch,
 		DeviceID:    device.ID,
 		ScanPercent: iterator.Percent(),
-		Scan:        false,
+		Scanning:    false,
 		ScanType:    scanType,
 	})
 	if err != nil {
@@ -247,41 +249,4 @@ func Scan(ctx context.Context, rpcClient dahuarpc.Conn, device Conn, scanType mo
 	}
 
 	return nil
-}
-
-func upsertDahuaFiles(ctx context.Context, arg repo.DahuaCreateFileParams) (bool, error) {
-	_, err := app.DB.C().DahuaUpdateFile(ctx, repo.DahuaUpdateFileParams{
-		DeviceID:    arg.DeviceID,
-		Channel:     arg.Channel,
-		StartTime:   arg.StartTime,
-		EndTime:     arg.EndTime,
-		Length:      arg.Length,
-		Type:        arg.Type,
-		FilePath:    arg.FilePath,
-		Duration:    arg.Duration,
-		Disk:        arg.Disk,
-		VideoStream: arg.VideoStream,
-		Flags:       arg.Flags,
-		Events:      arg.Events,
-		Cluster:     arg.Cluster,
-		Partition:   arg.Partition,
-		PicIndex:    arg.PicIndex,
-		Repeat:      arg.Repeat,
-		WorkDir:     arg.WorkDir,
-		WorkDirSn:   arg.WorkDirSn,
-		UpdatedAt:   arg.UpdatedAt,
-		Storage:     arg.Storage,
-	})
-	if err == nil {
-		return false, nil
-	}
-	if !core.IsNotFound(err) {
-		return false, err
-	}
-
-	if _, err := app.DB.C().DahuaCreateFile(ctx, arg); err != nil {
-		return false, err
-	}
-
-	return true, nil
 }

@@ -20,7 +20,7 @@ type storeClient struct {
 	Client
 }
 
-func (c storeClient) LogError(err error) {
+func (c storeClient) logError(err error) {
 	if err != nil {
 		log.Err(err).Int64("id", c.Client.Conn.ID).Msg("Failed to close Client connection")
 	}
@@ -57,7 +57,7 @@ func (s *Store) Close() {
 		wg.Add(1)
 		go func(client storeClient) {
 			defer wg.Done()
-			client.LogError(client.Client.Close(ctx))
+			client.logError(client.Client.Close(ctx))
 		}(client)
 	}
 
@@ -74,7 +74,7 @@ func (s *Store) getOrCreateClient(ctx context.Context, conn Conn) Client {
 	} else if !client.Client.Conn.EQ(conn) {
 		// Found but not equal
 
-		client.LogError(client.Client.CloseNoWait(ctx))
+		client.logError(client.Client.CloseNoWait(ctx))
 
 		client = newStoreClient(conn)
 		s.clients[conn.ID] = client
@@ -123,7 +123,7 @@ func (s *Store) deleteClient(ctx context.Context, deviceID int64) {
 	s.clientsMu.Unlock()
 
 	if found {
-		client.LogError(client.Client.Close(ctx))
+		client.logError(client.Client.Close(ctx))
 	}
 }
 

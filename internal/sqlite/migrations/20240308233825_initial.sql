@@ -1,6 +1,6 @@
 -- +goose Up
--- create "settings" table
-CREATE TABLE `settings` (`setup` boolean NOT NULL, `site_name` text NOT NULL, `location` text NOT NULL, `coordinates` text NOT NULL);
+-- create "events" table
+CREATE TABLE `events` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `action` text NOT NULL, `data` json NOT NULL, `actor` text NOT NULL, `user_id` integer NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE SET NULL);
 -- create "users" table
 CREATE TABLE `users` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `email` text NOT NULL, `username` text NOT NULL, `password` text NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL, `disabled_at` datetime NULL);
 -- create index "users_email" to table: "users"
@@ -19,8 +19,6 @@ CREATE UNIQUE INDEX `groups_name` ON `groups` (`name`);
 CREATE TABLE `group_users` (`user_id` integer NOT NULL, `group_id` integer NOT NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`group_id`) REFERENCES `groups` (`id`) ON UPDATE CASCADE ON DELETE CASCADE, CONSTRAINT `1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "group_users_user_id_group_id" to table: "group_users"
 CREATE UNIQUE INDEX `group_users_user_id_group_id` ON `group_users` (`user_id`, `group_id`);
--- create "events" table
-CREATE TABLE `events` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `action` text NOT NULL, `data` json NOT NULL, `actor` text NOT NULL, `user_id` integer NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON UPDATE CASCADE ON DELETE SET NULL);
 -- create "dahua_devices" table
 CREATE TABLE `dahua_devices` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `name` text NOT NULL, `ip` text NOT NULL, `url` text NOT NULL, `username` text NOT NULL, `password` text NOT NULL, `location` text NOT NULL, `feature` integer NOT NULL, `created_at` datetime NOT NULL, `updated_at` datetime NOT NULL, `disabled_at` datetime NULL);
 -- create index "dahua_devices_name" to table: "dahua_devices"
@@ -47,8 +45,8 @@ CREATE UNIQUE INDEX `dahua_event_rules_code` ON `dahua_event_rules` (`code`);
 CREATE TABLE `dahua_event_device_rules` (`device_id` integer NOT NULL, `code` text NOT NULL, `ignore_db` boolean NOT NULL DEFAULT false, `ignore_live` boolean NOT NULL DEFAULT false, `ignore_mqtt` boolean NOT NULL DEFAULT false, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "dahua_event_device_rules_device_id_code" to table: "dahua_event_device_rules"
 CREATE UNIQUE INDEX `dahua_event_device_rules_device_id_code` ON `dahua_event_device_rules` (`device_id`, `code`);
--- create "dahua_event_worker_states" table
-CREATE TABLE `dahua_event_worker_states` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `device_id` integer NOT NULL, `state` text NOT NULL, `error` text NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+-- create "dahua_worker_events" table
+CREATE TABLE `dahua_worker_events` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `device_id` integer NOT NULL, `type` text NOT NULL, `state` text NOT NULL, `error` text NULL, `created_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create "dahua_afero_files" table
 CREATE TABLE `dahua_afero_files` (`id` integer NOT NULL, `file_id` integer NULL, `thumbnail_id` integer NULL, `email_attachment_id` integer NULL, `name` text NOT NULL, `ready` boolean NOT NULL DEFAULT false, `size` integer NOT NULL DEFAULT 0, `created_at` datetime NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `0` FOREIGN KEY (`email_attachment_id`) REFERENCES `dahua_email_attachments` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `1` FOREIGN KEY (`thumbnail_id`) REFERENCES `dahua_thumbnails` (`id`) ON UPDATE CASCADE ON DELETE SET NULL, CONSTRAINT `2` FOREIGN KEY (`file_id`) REFERENCES `dahua_files` (`id`) ON UPDATE CASCADE ON DELETE SET NULL);
 -- create index "dahua_afero_files_file_id" to table: "dahua_afero_files"
@@ -60,11 +58,13 @@ CREATE UNIQUE INDEX `dahua_afero_files_email_attachment_id` ON `dahua_afero_file
 -- create index "dahua_afero_files_name" to table: "dahua_afero_files"
 CREATE UNIQUE INDEX `dahua_afero_files_name` ON `dahua_afero_files` (`name`);
 -- create "dahua_files" table
-CREATE TABLE `dahua_files` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `device_id` integer NOT NULL, `channel` integer NOT NULL, `start_time` datetime NOT NULL, `end_time` datetime NOT NULL, `length` integer NOT NULL, `type` text NOT NULL, `file_path` text NOT NULL, `duration` integer NOT NULL, `disk` integer NOT NULL, `video_stream` text NOT NULL, `flags` json NOT NULL, `events` json NOT NULL, `cluster` integer NOT NULL, `partition` integer NOT NULL, `pic_index` integer NOT NULL, `repeat` integer NOT NULL, `work_dir` text NOT NULL, `work_dir_sn` boolean NOT NULL, `updated_at` datetime NOT NULL, `storage` text NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+CREATE TABLE `dahua_files` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `device_id` integer NOT NULL, `channel` integer NOT NULL, `start_time` datetime NOT NULL, `end_time` datetime NOT NULL, `length` integer NOT NULL, `type` text NOT NULL, `file_path` text NOT NULL, `duration` integer NOT NULL, `disk` integer NOT NULL, `video_stream` text NOT NULL, `flags` json NOT NULL, `events` json NOT NULL, `cluster` integer NOT NULL, `partition` integer NOT NULL, `pic_index` integer NOT NULL, `repeat` integer NOT NULL, `work_dir` text NOT NULL, `work_dir_sn` boolean NOT NULL, `storage` text NOT NULL, `source` text NOT NULL, `updated_at` datetime NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "dahua_files_start_time" to table: "dahua_files"
 CREATE UNIQUE INDEX `dahua_files_start_time` ON `dahua_files` (`start_time`);
 -- create index "dahua_files_device_id_file_path" to table: "dahua_files"
 CREATE UNIQUE INDEX `dahua_files_device_id_file_path` ON `dahua_files` (`device_id`, `file_path`);
+-- create index "dahua_files_device_id_start_time_idx" to table: "dahua_files"
+CREATE INDEX `dahua_files_device_id_start_time_idx` ON `dahua_files` (`device_id`, `start_time`);
 -- create "dahua_thumbnails" table
 CREATE TABLE `dahua_thumbnails` (`id` integer NOT NULL PRIMARY KEY AUTOINCREMENT, `file_id` integer NULL, `email_attachment_id` integer NULL, `width` integer NOT NULL, `height` integer NOT NULL, CONSTRAINT `0` FOREIGN KEY (`email_attachment_id`) REFERENCES `dahua_email_attachments` (`id`) ON UPDATE CASCADE ON DELETE CASCADE, CONSTRAINT `1` FOREIGN KEY (`file_id`) REFERENCES `dahua_files` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "dahua_thumbnails_file_id_width_height" to table: "dahua_thumbnails"
@@ -72,7 +72,7 @@ CREATE UNIQUE INDEX `dahua_thumbnails_file_id_width_height` ON `dahua_thumbnails
 -- create index "dahua_thumbnails_email_attachment_id_width_height" to table: "dahua_thumbnails"
 CREATE UNIQUE INDEX `dahua_thumbnails_email_attachment_id_width_height` ON `dahua_thumbnails` (`email_attachment_id`, `width`, `height`);
 -- create "dahua_file_cursors" table
-CREATE TABLE `dahua_file_cursors` (`device_id` integer NOT NULL, `quick_cursor` datetime NOT NULL, `full_cursor` datetime NOT NULL, `full_epoch` datetime NOT NULL, `full_complete` boolean NOT NULL AS (full_cursor <= full_epoch) STORED, `scan` boolean NOT NULL, `scan_percent` real NOT NULL, `scan_type` text NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
+CREATE TABLE `dahua_file_cursors` (`device_id` integer NOT NULL, `quick_cursor` datetime NOT NULL, `full_cursor` datetime NOT NULL, `full_epoch` datetime NOT NULL, `full_complete` boolean NOT NULL AS (full_cursor <= full_epoch) STORED, `scanning` boolean NOT NULL, `scan_percent` real NOT NULL, `scan_type` text NOT NULL, CONSTRAINT `0` FOREIGN KEY (`device_id`) REFERENCES `dahua_devices` (`id`) ON UPDATE CASCADE ON DELETE CASCADE);
 -- create index "dahua_file_cursors_device_id" to table: "dahua_file_cursors"
 CREATE UNIQUE INDEX `dahua_file_cursors_device_id` ON `dahua_file_cursors` (`device_id`);
 -- create "dahua_storage_destinations" table
@@ -111,6 +111,8 @@ DROP INDEX `dahua_thumbnails_email_attachment_id_width_height`;
 DROP INDEX `dahua_thumbnails_file_id_width_height`;
 -- reverse: create "dahua_thumbnails" table
 DROP TABLE `dahua_thumbnails`;
+-- reverse: create index "dahua_files_device_id_start_time_idx" to table: "dahua_files"
+DROP INDEX `dahua_files_device_id_start_time_idx`;
 -- reverse: create index "dahua_files_device_id_file_path" to table: "dahua_files"
 DROP INDEX `dahua_files_device_id_file_path`;
 -- reverse: create index "dahua_files_start_time" to table: "dahua_files"
@@ -127,8 +129,8 @@ DROP INDEX `dahua_afero_files_thumbnail_id`;
 DROP INDEX `dahua_afero_files_file_id`;
 -- reverse: create "dahua_afero_files" table
 DROP TABLE `dahua_afero_files`;
--- reverse: create "dahua_event_worker_states" table
-DROP TABLE `dahua_event_worker_states`;
+-- reverse: create "dahua_worker_events" table
+DROP TABLE `dahua_worker_events`;
 -- reverse: create index "dahua_event_device_rules_device_id_code" to table: "dahua_event_device_rules"
 DROP INDEX `dahua_event_device_rules_device_id_code`;
 -- reverse: create "dahua_event_device_rules" table
@@ -155,8 +157,6 @@ DROP INDEX `dahua_devices_ip`;
 DROP INDEX `dahua_devices_name`;
 -- reverse: create "dahua_devices" table
 DROP TABLE `dahua_devices`;
--- reverse: create "events" table
-DROP TABLE `events`;
 -- reverse: create index "group_users_user_id_group_id" to table: "group_users"
 DROP INDEX `group_users_user_id_group_id`;
 -- reverse: create "group_users" table
@@ -175,5 +175,5 @@ DROP INDEX `users_username`;
 DROP INDEX `users_email`;
 -- reverse: create "users" table
 DROP TABLE `users`;
--- reverse: create "settings" table
-DROP TABLE `settings`;
+-- reverse: create "events" table
+DROP TABLE `events`;

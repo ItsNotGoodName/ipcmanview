@@ -427,7 +427,7 @@ INSERT OR IGNORE INTO dahua_event_rules (code) VALUES ('');
 			QuickCursor: c.QuickCursor,
 			FullCursor:  c.FullCursor,
 			FullEpoch:   c.FullEpoch,
-			Scan:        c.Scan,
+			Scanning:    c.Scanning,
 			ScanPercent: c.ScanPercent,
 			ScanType:    c.ScanType,
 		})

@@ -74,7 +74,7 @@ INSERT OR IGNORE INTO
     quick_cursor,
     full_cursor,
     full_epoch,
-    scan,
+    scanning,
     scan_percent,
     scan_type
   )
@@ -112,7 +112,7 @@ SET
   quick_cursor = ?,
   full_cursor = ?,
   full_epoch = ?,
-  scan = ?,
+  scanning = ?,
   scan_percent = ?,
   scan_type = ?
 WHERE
@@ -125,7 +125,7 @@ INSERT INTO
     quick_cursor,
     full_cursor,
     full_epoch,
-    scan,
+    scanning,
     scan_percent,
     scan_type
   )
@@ -159,11 +159,13 @@ INSERT INTO
     repeat,
     work_dir,
     work_dir_sn,
-    updated_at,
-    storage
+    storage,
+    source,
+    updated_at
   )
 VALUES
   (
+    ?,
     ?,
     ?,
     ?,
@@ -253,8 +255,9 @@ SET
   repeat = ?,
   work_dir = ?,
   work_dir_sn = ?,
-  updated_at = ?,
-  storage = ?
+  storage = ?,
+  source = ?,
+  updated_at = ?
 WHERE
   device_id = ?
   AND file_path = ? RETURNING id;
@@ -262,10 +265,11 @@ WHERE
 -- name: DahuaDeleteFile :exec
 DELETE FROM dahua_files
 WHERE
-  updated_at < sqlc.arg ('updated_at')
-  AND device_id = sqlc.arg ('device_id')
+  device_id = sqlc.arg ('device_id')
+  AND sqlc.arg ('start') < start_time
   AND start_time <= sqlc.arg ('end')
-  AND sqlc.arg ('start') < start_time;
+  AND updated_at < sqlc.arg ('updated_at')
+  AND source = sqlc.arg ('source');
 
 -- name: DahuaCreateThumbnail :one
 INSERT INTO
@@ -522,13 +526,13 @@ INSERT INTO
     created_at
   )
 VALUES
-  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
 
 -- name: DahuaCreateEmailAttachment :one
 INSERT INTO
   dahua_email_attachments (message_id, file_name)
 VALUES
-  (?, ?) RETURNING *;
+  (?, ?) RETURNING id;
 
 -- name: DahuaCreateAferoFile :one
 INSERT INTO

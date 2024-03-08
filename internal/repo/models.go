@@ -108,8 +108,9 @@ type DahuaFile struct {
 	Repeat      int64
 	WorkDir     string
 	WorkDirSn   bool
-	UpdatedAt   types.Time
 	Storage     models.Storage
+	Source      models.DahuaFileSource
+	UpdatedAt   types.Time
 }
 
 type DahuaFileCursor struct {
@@ -118,7 +119,7 @@ type DahuaFileCursor struct {
 	FullCursor   types.Time
 	FullEpoch    types.Time
 	FullComplete bool
-	Scan         bool
+	Scanning     bool
 	ScanPercent  float64
 	ScanType     models.DahuaScanType
 }

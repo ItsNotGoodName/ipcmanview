@@ -285,6 +285,20 @@ func (c Conn) Register(hub *bus.Hub) Conn {
 
 		return nil
 	})
+	hub.OnDahuaFileCursorUpdated(c.String(), func(ctx context.Context, event bus.DahuaFileCursorUpdated) error {
+		c.conn.Ready()
+
+		payload, err := json.Marshal(event.Cursor)
+		if err != nil {
+			return err
+		}
+
+		if err := mqtt.Wait(c.conn.Client.Publish(c.conn.Topic.Join("dahua", mqtt.Int(event.Cursor.DeviceID), "cursor"), 0, true, payload)); err != nil {
+			return err
+		}
+
+		return nil
+	})
 	return c
 }
 

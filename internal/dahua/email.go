@@ -2,6 +2,7 @@ package dahua
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/system"
 	"github.com/ItsNotGoodName/ipcmanview/internal/system/action"
@@ -73,7 +75,7 @@ type CreateEmailParams struct {
 
 type CreateEmailParamsAttachment struct {
 	FileName string
-	Data     []byte
+	Content  []byte
 }
 
 func CreateEmail(ctx context.Context, arg CreateEmailParams) (int64, error) {
@@ -82,41 +84,55 @@ func CreateEmail(ctx context.Context, arg CreateEmailParams) (int64, error) {
 	}
 
 	// Create message and attachments
-	msg, atts, err := createEmail(ctx, &arg)
+	res, err := createEmail(ctx, &arg)
 	if err != nil {
 		return 0, err
 	}
 
 	// Save attachment files
-	for i := range atts {
-		err := createEmailAttachmentFile(ctx, atts[i].ID, arg.Attachments[i].FileName, arg.Attachments[i].Data)
+	for i := range arg.Attachments {
+		err := createEmailAttachmentFile(ctx, createEmailAttachmentFileParams{
+			AttachmentID: res.AttachmentIDs[i],
+			FileID:       res.FileIDs[i],
+			FileName:     arg.Attachments[i].FileName,
+			Content:      arg.Attachments[i].Content,
+		})
 		if err != nil {
 			return 0, err
 		}
 	}
 
 	// Publish email created event
-	if err := system.CreateEvent(ctx, app.DB, action.DahuaEmailCreated.Create(msg.ID)); err != nil {
+	if err := system.CreateEvent(ctx, app.DB, action.DahuaEmailCreated.Create(res.MessageID)); err != nil {
 		return 0, err
 	}
 	app.Hub.DahuaEmailCreated(bus.DahuaEmailCreated{
 		DeviceID:  arg.DeviceID,
-		MessageID: msg.ID,
+		MessageID: res.MessageID,
 	})
 
-	return msg.ID, nil
+	return res.MessageID, nil
 }
 
-func createEmail(ctx context.Context, arg *CreateEmailParams) (repo.DahuaEmailMessage, []repo.DahuaEmailAttachment, error) {
+type createEmailResult struct {
+	MessageID     int64
+	AttachmentIDs []int64
+	FileIDs       []int64
+}
+
+func createEmail(ctx context.Context, arg *CreateEmailParams) (createEmailResult, error) {
 	tx, err := app.DB.BeginTx(ctx, true)
 	if err != nil {
-		return repo.DahuaEmailMessage{}, nil, err
+		return createEmailResult{}, err
 	}
 	defer tx.Rollback()
 
-	msg, err := app.DB.C().DahuaCreateEmailMessage(ctx, repo.DahuaCreateEmailMessageParams{
+	now := types.NewTime(time.Now())
+	date := types.NewTime(arg.Date)
+
+	msgID, err := app.DB.C().DahuaCreateEmailMessage(ctx, repo.DahuaCreateEmailMessageParams{
 		DeviceID:          arg.DeviceID,
-		Date:              types.NewTime(arg.Date),
+		Date:              date,
 		From:              arg.From,
 		To:                types.NewStringSlice(arg.To),
 		Subject:           arg.Subject,
@@ -124,43 +140,72 @@ func createEmail(ctx context.Context, arg *CreateEmailParams) (repo.DahuaEmailMe
 		AlarmEvent:        arg.AlarmEvent,
 		AlarmInputChannel: int64(arg.AlarmInputChannel),
 		AlarmName:         arg.AlarmName,
-		CreatedAt:         types.NewTime(time.Now()),
+		CreatedAt:         now,
 	})
 	if err != nil {
-		return repo.DahuaEmailMessage{}, nil, err
+		return createEmailResult{}, err
 	}
 
-	atts := make([]repo.DahuaEmailAttachment, 0, len(arg.Attachments))
-	for _, a := range arg.Attachments {
+	attachmentIDs := make([]int64, len(arg.Attachments))
+	fileIDs := make([]int64, len(arg.Attachments))
+	for i, v := range arg.Attachments {
 		att, err := app.DB.C().DahuaCreateEmailAttachment(ctx, repo.DahuaCreateEmailAttachmentParams{
-			MessageID: msg.ID,
-			FileName:  a.FileName,
+			MessageID: msgID,
+			FileName:  v.FileName,
 		})
 		if err != nil {
-			return repo.DahuaEmailMessage{}, nil, err
+			return createEmailResult{}, err
 		}
-		atts = append(atts, att)
+		attachmentIDs[i] = att
+
+		fileID, err := app.DB.C().DahuaCreateFile(ctx, repo.DahuaCreateFileParams{
+			DeviceID:  arg.DeviceID,
+			Channel:   0,
+			StartTime: date,
+			EndTime:   date,
+			Length:    int64(len(v.Content)),
+			Type:      models.DahuaFileType_JPG,
+			FilePath:  fmt.Sprintf("ipcmanview+email://%d", att),
+			Storage:   models.StorageLocal,
+			Source:    models.DahuaFileSource_Email,
+			UpdatedAt: now,
+		})
+		if err != nil {
+			return createEmailResult{}, err
+		}
+		fileIDs[i] = fileID
 	}
 
 	if err := tx.Commit(); err != nil {
-		return repo.DahuaEmailMessage{}, nil, err
+		return createEmailResult{}, err
 	}
 
-	return msg, atts, nil
+	return createEmailResult{
+		MessageID:     msgID,
+		AttachmentIDs: attachmentIDs,
+		FileIDs:       fileIDs,
+	}, nil
 }
 
-func createEmailAttachmentFile(ctx context.Context, attachmentID int64, fileName string, content []byte) error {
+type createEmailAttachmentFileParams struct {
+	AttachmentID int64
+	FileID       int64
+	FileName     string
+	Content      []byte
+}
+
+func createEmailAttachmentFile(ctx context.Context, arg createEmailAttachmentFileParams) error {
 	aferoFile, err := createAferoFile(
 		ctx,
-		aferoForeignKeys{EmailAttachmentID: attachmentID},
-		newAferoFileName(parseFileExtension(fileName, http.DetectContentType(content))),
+		aferoForeignKeys{EmailAttachmentID: arg.AttachmentID, FileID: arg.FileID},
+		newAferoFileName(parseFileExtension(arg.FileName, http.DetectContentType(arg.Content))),
 	)
 	if err != nil {
 		return err
 	}
 	defer aferoFile.Close()
 
-	if _, err = aferoFile.Write(content); err != nil {
+	if _, err = aferoFile.Write(arg.Content); err != nil {
 		return err
 	}
 
