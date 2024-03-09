@@ -4,12 +4,12 @@ export WEB_PATH=internal/web
 
 -include .env
 
-TOOL_AIR=github.com/cosmtrek/air@v1.49.0
-TOOL_TASK=github.com/go-task/task/v3/cmd/task@v3.34.1
+TOOL_AIR=github.com/cosmtrek/air@v1.51.0
+TOOL_TASK=github.com/go-task/task/v3/cmd/task@v3.35.1
 TOOL_GOOSE=github.com/pressly/goose/v3/cmd/goose@v3.18.0
 TOOL_SQLC=github.com/sqlc-dev/sqlc/cmd/sqlc@v1.25.0
 TOOL_TWIRP=github.com/twitchtv/twirp/protoc-gen-twirp@v8.1.3
-TOOL_PROTOC_GEN_GO=google.golang.org/protobuf/cmd/protoc-gen-go@v1.32.0
+TOOL_PROTOC_GEN_GO=google.golang.org/protobuf/cmd/protoc-gen-go@v1.33.0
 TOOL_OAPI_CODEGEN=github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@v2.1.0
 
 PROTOC_VERSION=25.1
