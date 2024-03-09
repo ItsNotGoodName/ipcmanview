@@ -11,6 +11,8 @@ export type AdminDevicesPageSearchParams = {
   perPage: string
   sort: string
   order: string
+  panel: string
+  slug: string
 }
 
 export default function({ params }: PageProps<AdminDevicesPageSearchParams>) {

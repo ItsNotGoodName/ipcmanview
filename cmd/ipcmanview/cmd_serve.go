@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"net/http"
 	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
@@ -20,7 +22,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
-
 	"github.com/thejerf/suture/v4"
 )
 
@@ -29,6 +30,7 @@ type CmdServe struct {
 	HTTPHost               string     `env:"HTTP_HOST" help:"HTTP host to listen on (e.g. \"127.0.0.1\")."`
 	HTTPPort               uint16     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
 	HTTPSPort              uint16     `env:"HTTPS_PORT" default:"8443" help:"HTTPS port to listen on."`
+	HTTPRedirect           bool       `env:"HTTP_REDIRECT" default:"true" help:"Redirect HTTP to HTTPS."`
 	SMTPHost               string     `env:"SMTP_HOST" help:"SMTP host to listen on (e.g. \"127.0.0.1\")."`
 	SMTPPort               uint16     `env:"SMTP_PORT" default:"1025" help:"SMTP port to listen on."`
 	MQTTAddress            string     `env:"MQTT_ADDRESS" help:"MQTT server address (e.g. \"mqtt://192.168.1.20:1883\")."`
@@ -40,7 +42,7 @@ type CmdServe struct {
 	MediamtxHost           string     `env:"MEDIAMTX_HOST" help:"MediaMTX host address (e.g. \"192.168.1.20\")."`
 	MediamtxWebrtcPort     uint16     `env:"MEDIAMTX_WEBRTC_PORT" default:"8889" help:"MediaMTX WebRTC port."`
 	MediamtxHLSPort        uint16     `env:"MEDIAMTX_HLS_PORT" default:"8888" help:"MediaMTX HLS port."`
-	MediamtxPathTemplate   string     `env:"MEDIAMTX_PATH_TEMPLATE" help:"Template for generating MediaMTX paths (e.g. \"ipcmanview_dahua_{{.DeviceID}}_{{.Channel}}_{{.Subtype}}\")."`
+	MediamtxPathTemplate   string     `env:"MEDIAMTX_PATH_TEMPLATE" default:"ipcmanview_dahua_{{.DeviceID}}_{{.Channel}}_{{.Subtype}}" help:"Template for generating MediaMTX paths."`
 	MediamtxStreamProtocol string     `env:"MEDIAMTX_STREAM_PROTOCOL" default:"webrtc" enum:"webrtc,hls" help:"MediaMTX stream protocol."`
 }
 
@@ -112,6 +114,69 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
+	// TODO: move this
+	hub.OnDahuaDeviceUpdated("DEBUG", func(ctx context.Context, event bus.DahuaDeviceUpdated) error {
+		client, err := mediamtx.NewClient("http://" + c.MediamtxHost + ":9997")
+		if err != nil {
+			return err
+		}
+
+		device, err := dahua.GetDevice(ctx, dahua.GetDeviceFilter{ID: event.DeviceID})
+		if err != nil {
+			return err
+		}
+
+		streams, err := db.C().DahuaListStreamsByDevice(ctx, event.DeviceID)
+		if err != nil {
+			return err
+		}
+
+		for _, stream := range streams {
+			name := mediamtxConfig.DahuaEmbedPath(stream)
+			rtspURL := dahua.GetLiveRTSPURL(dahua.GetLiveRTSPURLParams{
+				Username: device.Username,
+				Password: device.Password,
+				Host:     device.Ip,
+				Port:     554,
+				Channel:  int(stream.Channel),
+				Subtype:  int(stream.Subtype),
+			})
+			rtspTransport := "tcp"
+			pathConf := mediamtx.PathConf{
+				Source:        &rtspURL,
+				RtspTransport: &rtspTransport,
+			}
+
+			rsp, err := client.ConfigPathsGet(ctx, name)
+			if err != nil {
+				return err
+			}
+			res, err := mediamtx.ParseConfigPathsGetResponse(rsp)
+			if err != nil {
+				return err
+			}
+
+			switch res.StatusCode() {
+			case http.StatusOK:
+				rsp, err := client.ConfigPathsPatch(ctx, name, pathConf)
+				if err != nil {
+					return err
+				}
+				rsp.Body.Close()
+			case http.StatusNotFound, http.StatusInternalServerError:
+				rsp, err := client.ConfigPathsAdd(ctx, name, pathConf)
+				if err != nil {
+					return err
+				}
+				rsp.Body.Close()
+			default:
+				return errors.New(string(res.Body))
+			}
+		}
+
+		return nil
+	})
+
 	// Dahua
 	if err := dahua.Normalize(ctx); err != nil {
 		return err
@@ -173,8 +238,12 @@ func (c *CmdServe) Run(ctx *Context) error {
 		Register(rpc.NewAdminServer(rpcserver.NewAdmin(configProvider, db), rpcLogger, rpcserver.RequireAdminAuthSession()))
 
 	// HTTP server
+	httpServer := httpRouter
+	if c.HTTPRedirect {
+		httpServer = server.NewHTTPRedirect(strconv.Itoa(int(c.HTTPSPort)))
+	}
 	super.Add(server.NewHTTPServer(
-		server.NewHTTPRedirect(strconv.Itoa(int(c.HTTPSPort))),
+		httpServer,
 		core.Address(c.HTTPHost, int(c.HTTPPort)),
 		nil,
 	))

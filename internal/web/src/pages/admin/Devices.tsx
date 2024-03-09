@@ -1,21 +1,19 @@
-import { action, createAsync, revalidate, useAction, useNavigate, useSearchParams, useSubmission } from "@solidjs/router";
+import { action, createAsync, revalidate, useAction, useSearchParams, useSubmission } from "@solidjs/router";
 import { AlertDialogAction, AlertDialogCancel, AlertDialogModal, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogRoot, AlertDialogTitle, } from "~/ui/AlertDialog";
 import { DropdownMenuArrow, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot } from "~/ui/DropdownMenu";
 import { AdminDevicesPageSearchParams, getAdminDevicesPage } from "./Devices.data";
-import { ErrorBoundary, For, Show, Suspense, createSignal } from "solid-js";
+import { ErrorBoundary, For, Match, Show, Suspense, Switch, createSignal } from "solid-js";
 import { catchAsToast, createPagePagination, createRowSelection, createToggleSortField, createModal, formatDate, isTableDataClick, parseDate, throwAsFormError, validationState, setFormValue, createLoading, } from "~/lib/utils";
 import { parseOrder } from "~/lib/utils";
 import { TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRoot, TableRow, } from "~/ui/Table";
 import { useClient } from "~/providers/client";
-import { CheckboxControl, CheckboxLabel, CheckboxRoot } from "~/ui/Checkbox";
+import { CheckboxControl, CheckboxRoot } from "~/ui/Checkbox";
 import { Skeleton } from "~/ui/Skeleton";
 import { PageError } from "~/ui/Page";
 import { TooltipArrow, TooltipContent, TooltipRoot, TooltipTrigger } from "~/ui/Tooltip";
-import { LayoutNormal } from "~/ui/Layout";
 import { GetDeviceResp, ListDeviceFeaturesResp_Item, SetDeviceDisableReq } from "~/twirp/rpc";
 import { Crud } from "~/components/Crud";
 import { RiSystemLockLine } from "solid-icons/ri";
-import { DialogOverflow, DialogHeader, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from "~/ui/Dialog";
 import { Button } from "~/ui/Button";
 import { FormMessage } from "~/ui/Form";
 import { FieldStore, FormStore, createForm, required, reset, setValue } from "@modular-forms/solid";
@@ -23,7 +21,7 @@ import { SelectContent, SelectErrorMessage, SelectItem, SelectLabel, SelectListB
 import { getDevice, getListDeviceFeatures, getListLocations } from "./data";
 import { Shared } from "~/components/Shared";
 import { Badge } from "~/ui/Badge";
-import { BreadcrumbsItem, BreadcrumbsRoot } from "~/ui/Breadcrumbs";
+import { BreadcrumbsItem, BreadcrumbsRoot, BreadcrumbsSeparator } from "~/ui/Breadcrumbs";
 import { TextFieldErrorMessage, TextFieldInput, TextFieldLabel, TextFieldRoot } from "~/ui/TextField";
 
 const actionDeleteDevice = action((ids: string[]) => useClient()
@@ -37,8 +35,7 @@ const actionSetDisable = action((input: SetDeviceDisableReq) => useClient()
   .catch(catchAsToast))
 
 export function AdminDevices() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams<AdminDevicesPageSearchParams>()
+  const [searchParams, setSearchParams] = useSearchParams<AdminDevicesPageSearchParams>()
 
   const data = createAsync(() => getAdminDevicesPage({
     page: {
@@ -51,16 +48,17 @@ export function AdminDevices() {
     },
   }))
   const rowSelection = createRowSelection(() => data()?.items.map((v) => ({ id: v.id })) || [])
-
-  // List
   const pagination = createPagePagination(() => data()?.pageResult)
   const toggleSort = createToggleSortField(() => data()?.sort)
 
   // Create
-  const [createFormModal, setCreateFormModal] = createSignal(false);
+  const createFormPanel = () => searchParams.panel == "create"
+  const setCreateFormPanel = () => setSearchParams({ panel: "create", slug: "" })
 
   // Update
-  const updateFormModal = createModal("")
+  const updateFormPanel = () => searchParams.panel == "update"
+  const updateFormPanelSlug = () => searchParams.slug || "0"
+  const setUpdateFormPanel = (slug: string) => setSearchParams({ panel: "update", slug })
 
   // Delete
   const deleteSubmission = useSubmission(actionDeleteDevice)
@@ -79,40 +77,15 @@ export function AdminDevices() {
   // Disable/Enable
   const setDisableSubmission = useSubmission(actionSetDisable)
   const setDisableAction = useAction(actionSetDisable)
-  const submitSetDisable = (disable: boolean) =>
+  // Single
+  const submitSetDisable = (id: string, disable: boolean) => setDisableAction({ items: [{ id, disable }] })
+  // Multiple
+  const submitSetDisableMultiple = (disable: boolean) =>
     setDisableAction({ items: rowSelection.selections().map(id => ({ id, disable })) })
       .then(() => rowSelection.setAll(false))
 
   return (
-    <LayoutNormal class="max-w-4xl">
-      <DialogRoot open={createFormModal()} onOpenChange={setCreateFormModal}>
-        <DialogPortal>
-          <DialogOverlay />
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create device</DialogTitle>
-            </DialogHeader>
-            <DialogOverflow>
-              <CreateForm onClose={() => setCreateFormModal(false)} />
-            </DialogOverflow>
-          </DialogContent>
-        </DialogPortal>
-      </DialogRoot>
-
-      <DialogRoot open={updateFormModal.open()} onOpenChange={updateFormModal.setClose}>
-        <DialogPortal>
-          <DialogOverlay />
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Update device</DialogTitle>
-            </DialogHeader>
-            <DialogOverflow>
-              <UpdateForm onClose={updateFormModal.setClose} id={updateFormModal.value()} />
-            </DialogOverflow>
-          </DialogContent>
-        </DialogPortal>
-      </DialogRoot>
-
+    <div class="flex h-full">
       <AlertDialogRoot open={deleteModal.open()} onOpenChange={deleteModal.setClose}>
         <AlertDialogModal>
           <AlertDialogHeader>
@@ -152,111 +125,109 @@ export function AdminDevices() {
         </AlertDialogModal>
       </AlertDialogRoot>
 
-      <Shared.Title>
-        <BreadcrumbsRoot>
-          <BreadcrumbsItem>
-            Devices
-          </BreadcrumbsItem>
-        </BreadcrumbsRoot>
-      </Shared.Title>
+      <div class="flex flex-1 flex-col gap-4 overflow-x-clip p-4">
+        <Shared.Title>
+          <BreadcrumbsRoot>
+            <BreadcrumbsItem>
+              Devices
+            </BreadcrumbsItem>
+          </BreadcrumbsRoot>
+        </Shared.Title>
 
-      <div class="flex flex-col gap-2">
-        <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-          <Suspense fallback={<Skeleton class="h-32" />}>
-            <div class="flex justify-between gap-2">
-              <Crud.PerPageSelect
-                class="w-20"
-                perPage={data()?.pageResult?.perPage}
-                onChange={pagination.setPerPage}
-              />
-              <Crud.PageButtons
-                previousPageDisabled={pagination.previousPageDisabled()}
-                previousPage={pagination.previousPage}
-                nextPageDisabled={pagination.nextPageDisabled()}
-                nextPage={pagination.nextPage}
-              />
-            </div>
-            <TableRoot>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>
-                    <CheckboxRoot
-                      checked={rowSelection.all()}
-                      indeterminate={rowSelection.multiple()}
-                      onChange={rowSelection.setAll}
-                    >
-                      <CheckboxControl />
-                    </CheckboxRoot>
-                  </TableHead>
-                  <TableHead>
-                    <Crud.SortButton
-                      name="name"
-                      onClick={toggleSort}
-                      sort={data()?.sort}
-                    >
-                      Name
-                    </Crud.SortButton>
-                  </TableHead>
-                  <TableHead>
-                    <Crud.SortButton
-                      name="url"
-                      onClick={toggleSort}
-                      sort={data()?.sort}
-                    >
-                      URL
-                    </Crud.SortButton>
-                  </TableHead>
-                  <TableHead>
-                    <Crud.SortButton
-                      name="createdAt"
-                      onClick={toggleSort}
-                      sort={data()?.sort}
-                    >
-                      Created At
-                    </Crud.SortButton>
-                  </TableHead>
-                  <Crud.LastTableHead>
-                    <DropdownMenuRoot placement="bottom-end">
-                      <Crud.MoreDropdownMenuTrigger />
-                      <DropdownMenuPortal>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem onSelect={() => setCreateFormModal(true)}>
-                            Create
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={!rowSelection.multiple() || setDisableSubmission.pending}
-                            onSelect={() => submitSetDisable(true)}
-                          >
-                            Disable
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={!rowSelection.multiple() || setDisableSubmission.pending}
-                            onSelect={() => submitSetDisable(false)}
-                          >
-                            Enable
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={!rowSelection.multiple() || deleteSubmission.pending}
-                            onSelect={() => setDeleteMultipleModal(true)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                          <DropdownMenuArrow />
-                        </DropdownMenuContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuRoot>
-                  </Crud.LastTableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <For each={data()?.items}>
-                  {(item, index) => {
-                    const submitToggleDisable = () => setDisableAction({ items: [{ id: item.id, disable: !item.disabled }] })
-
-                    return (
+        <div class="flex flex-col gap-2">
+          <ErrorBoundary fallback={(e) => <PageError error={e} />}>
+            <Suspense fallback={<Skeleton class="h-32" />}>
+              <div class="flex justify-between gap-2">
+                <Crud.PerPageSelect
+                  class="w-20"
+                  perPage={data()?.pageResult?.perPage}
+                  onChange={pagination.setPerPage}
+                />
+                <Crud.PageButtons
+                  previousPageDisabled={pagination.previousPageDisabled()}
+                  previousPage={pagination.previousPage}
+                  nextPageDisabled={pagination.nextPageDisabled()}
+                  nextPage={pagination.nextPage}
+                />
+              </div>
+              <TableRoot>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      <CheckboxRoot
+                        checked={rowSelection.all()}
+                        indeterminate={rowSelection.multiple()}
+                        onChange={rowSelection.setAll}
+                      >
+                        <CheckboxControl />
+                      </CheckboxRoot>
+                    </TableHead>
+                    <TableHead>
+                      <Crud.SortButton
+                        name="name"
+                        onClick={toggleSort}
+                        sort={data()?.sort}
+                      >
+                        Name
+                      </Crud.SortButton>
+                    </TableHead>
+                    <TableHead>
+                      <Crud.SortButton
+                        name="url"
+                        onClick={toggleSort}
+                        sort={data()?.sort}
+                      >
+                        URL
+                      </Crud.SortButton>
+                    </TableHead>
+                    <TableHead>
+                      <Crud.SortButton
+                        name="createdAt"
+                        onClick={toggleSort}
+                        sort={data()?.sort}
+                      >
+                        Created At
+                      </Crud.SortButton>
+                    </TableHead>
+                    <Crud.LastTableHead>
+                      <DropdownMenuRoot placement="bottom-end">
+                        <Crud.MoreDropdownMenuTrigger />
+                        <DropdownMenuPortal>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onSelect={() => setCreateFormPanel()}>
+                              Create
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={!rowSelection.multiple() || setDisableSubmission.pending}
+                              onSelect={() => submitSetDisableMultiple(true)}
+                            >
+                              Disable
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={!rowSelection.multiple() || setDisableSubmission.pending}
+                              onSelect={() => submitSetDisableMultiple(false)}
+                            >
+                              Enable
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              disabled={!rowSelection.multiple() || deleteSubmission.pending}
+                              onSelect={() => setDeleteMultipleModal(true)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                            <DropdownMenuArrow />
+                          </DropdownMenuContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuRoot>
+                    </Crud.LastTableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <For each={data()?.items}>
+                    {(item, index) => (
                       <TableRow
-                        data-state={rowSelection.items[index()]?.checked ? "selected" : ""}
-                        onClick={(t) => isTableDataClick(t) && navigate(`./${item.id}`)}
+                        data-state={rowSelection.items[index()]?.checked || updateFormPanelSlug() == item.id ? "selected" : ""}
+                        onClick={(t) => isTableDataClick(t) && setUpdateFormPanel(item.id)}
                         class="[&>td]:cursor-pointer"
                       >
                         <TableHead>
@@ -286,12 +257,9 @@ export function AdminDevices() {
                             <Crud.MoreDropdownMenuTrigger />
                             <DropdownMenuPortal>
                               <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={() => updateFormModal.setValue(item.id)}>
-                                  Edit
-                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   disabled={setDisableSubmission.pending}
-                                  onSelect={submitToggleDisable}
+                                  onSelect={() => submitSetDisable(item.id, !item.disabled)}
                                 >
                                   <Show when={item.disabled} fallback="Disable">Enable</Show>
                                 </DropdownMenuItem>
@@ -307,18 +275,50 @@ export function AdminDevices() {
                           </DropdownMenuRoot>
                         </Crud.LastTableCell>
                       </TableRow>
-                    )
-                  }}
-                </For>
-              </TableBody>
-              <TableCaption>
-                <Crud.PageMetadata pageResult={data()?.pageResult} />
-              </TableCaption>
-            </TableRoot>
-          </Suspense>
-        </ErrorBoundary>
+                    )}
+                  </For>
+                </TableBody>
+                <TableCaption>
+                  <Crud.PageMetadata pageResult={data()?.pageResult} />
+                </TableCaption>
+              </TableRoot>
+            </Suspense>
+          </ErrorBoundary>
+        </div>
       </div>
-    </LayoutNormal>
+      <div class="max-w-sm flex-1 border-l">
+        <div class="sticky top-0 flex max-h-screen flex-col gap-4 overflow-y-auto overflow-x-clip p-4">
+          <ErrorBoundary fallback={(e) => <PageError error={e} />}>
+            <Switch>
+              <Match when={createFormPanel()}>
+                <Shared.Title>
+                  <BreadcrumbsRoot>
+                    <BreadcrumbsItem>
+                      Create
+                    </BreadcrumbsItem>
+                  </BreadcrumbsRoot>
+                </Shared.Title>
+                <CreateForm />
+              </Match>
+              <Match when={updateFormPanel()}>
+                <Shared.Title>
+                  <BreadcrumbsRoot>
+                    <BreadcrumbsItem>
+                      {updateFormPanelSlug()}
+                      <BreadcrumbsSeparator />
+                    </BreadcrumbsItem>
+                    <BreadcrumbsItem>
+                      Update
+                    </BreadcrumbsItem>
+                  </BreadcrumbsRoot>
+                </Shared.Title>
+                <UpdateForm id={updateFormPanelSlug()} />
+              </Match>
+            </Switch>
+          </ErrorBoundary>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -333,9 +333,7 @@ type CreateForm = {
   }
 }
 
-function CreateForm(props: { onClose: () => void }) {
-  const [addMore, setAddMore] = createSignal(false)
-
+function CreateForm() {
   const [form, { Field, Form }] = createForm<CreateForm>({
     initialValues: {
       name: "",
@@ -351,122 +349,105 @@ function CreateForm(props: { onClose: () => void }) {
       .admin.createDevice({ ...data, features: data.features.array })
       .then(() => revalidate(getAdminDevicesPage.key))
       .catch(throwAsFormError)
-      .then(() => {
-        if (addMore()) {
-          reset(form, {
-            initialValues: {
-              ...data,
-              name: "",
-              url: ""
-            },
-          })
-        } else {
-          props.onClose()
-        }
-      })
+      .then(() => reset(form, {
+        initialValues: {
+          ...data,
+          name: "",
+          url: ""
+        },
+      }))
   }
 
   return (
-    <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-      <Suspense fallback={<Skeleton class="h-32" />}>
-        <Form class="flex flex-col gap-4" onSubmit={submitForm}>
-          <Field name="name">
-            {(field, props) => (
-              <TextFieldRoot
-                validationState={validationState(field.error)}
-                value={field.value}
-                class="space-y-2"
-              >
-                <TextFieldLabel>Name</TextFieldLabel>
-                <TextFieldInput
-                  {...props}
-                  placeholder="Name"
-                />
-                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
-              </TextFieldRoot>
-            )}
-          </Field>
-          <Field name="url" validate={required("Please enter a URL.")}>
-            {(field, props) => (
-              <TextFieldRoot
-                validationState={validationState(field.error)}
-                value={field.value}
-                class="space-y-2"
-              >
-                <TextFieldLabel>URL</TextFieldLabel>
-                <TextFieldInput
-                  {...props}
-                  placeholder="URL"
-                />
-                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
-              </TextFieldRoot>
-            )}
-          </Field>
-          <Field name="username">
-            {(field, props) => (
-              <TextFieldRoot
-                validationState={validationState(field.error)}
-                value={field.value}
-                class="space-y-2"
-              >
-                <TextFieldLabel>Username</TextFieldLabel>
-                <TextFieldInput
-                  {...props}
-                  placeholder="Username"
-                />
-                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
-              </TextFieldRoot>
-            )}
-          </Field>
-          <Field name="password">
-            {(field, props) => (
-              <TextFieldRoot
-                validationState={validationState(field.error)}
-                value={field.value}
-                class="space-y-2"
-              >
-                <TextFieldLabel>Password</TextFieldLabel>
-                <TextFieldInput
-                  {...props}
-                  placeholder="Password"
-                  type="password"
-                />
-                <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
-              </TextFieldRoot>
-            )}
-          </Field>
-          <Field name="location">
-            {(field) => <LocationsField form={form} field={field} />}
-          </Field>
-          <Field name="features.array" type="string[]">
-            {(field) => <FeaturesField form={form} field={field} />}
-          </Field>
-          <Button type="submit" disabled={form.submitting}>
-            <Show when={!form.submitting} fallback="Creating device">Create device</Show>
-          </Button>
-          <FormMessage form={form} />
-          <CheckboxRoot checked={addMore()} onChange={setAddMore} class="flex items-center gap-2">
-            <CheckboxControl />
-            <CheckboxLabel>Add more</CheckboxLabel>
-          </CheckboxRoot>
-        </Form>
-      </Suspense>
-    </ErrorBoundary>
+    <Form class="flex flex-col gap-4" onSubmit={submitForm}>
+      <Field name="name">
+        {(field, props) => (
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>Name</TextFieldLabel>
+            <TextFieldInput
+              {...props}
+              placeholder="Name"
+            />
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
+        )}
+      </Field>
+      <Field name="url" validate={required("Please enter a URL.")}>
+        {(field, props) => (
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>URL</TextFieldLabel>
+            <TextFieldInput
+              {...props}
+              placeholder="URL"
+            />
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
+        )}
+      </Field>
+      <Field name="username">
+        {(field, props) => (
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>Username</TextFieldLabel>
+            <TextFieldInput
+              {...props}
+              placeholder="Username"
+            />
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
+        )}
+      </Field>
+      <Field name="password">
+        {(field, props) => (
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>Password</TextFieldLabel>
+            <TextFieldInput
+              {...props}
+              placeholder="Password"
+              type="password"
+              autocomplete="off"
+            />
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
+        )}
+      </Field>
+      <Field name="location">
+        {(field) => <LocationsField form={form} field={field} />}
+      </Field>
+      <Field name="features.array" type="string[]">
+        {(field) => <FeaturesField form={form} field={field} />}
+      </Field>
+      <Button type="submit" disabled={form.submitting}>
+        <Show when={!form.submitting} fallback="Creating device">Create device</Show>
+      </Button>
+      <FormMessage form={form} />
+    </Form>
   )
 }
 
-function UpdateForm(props: { onClose: () => void, id: string }) {
+function UpdateForm(props: { id: string }) {
   const device = createAsync(() => getDevice(props.id))
   const refetchDevice = () => revalidate(getDevice.keyFor(props.id))
 
   return (
-    <ErrorBoundary fallback={(e) => <PageError error={e} />}>
-      <Suspense fallback={<Skeleton class="h-32" />}>
-        <Show when={device()}>
-          <UpdateFormForm onClose={props.onClose} device={device()!} refetchDevice={refetchDevice} />
-        </Show>
-      </Suspense>
-    </ErrorBoundary>
+    <Show when={device()?.id == props.id}>
+      <UpdateFormForm device={device()!} refetchDevice={refetchDevice} />
+    </Show>
   )
 }
 
@@ -482,7 +463,7 @@ type UpdateForm = {
   }
 }
 
-function UpdateFormForm(props: { onClose: () => void | Promise<void>, device: GetDeviceResp, refetchDevice: () => Promise<void> }) {
+function UpdateFormForm(props: { device: GetDeviceResp, refetchDevice: () => Promise<void> }) {
   const formInitialValues = (): UpdateForm => ({
     ...props.device,
     features: { array: props.device.features || [] },
@@ -496,7 +477,6 @@ function UpdateFormForm(props: { onClose: () => void | Promise<void>, device: Ge
   const submitForm = (data: UpdateForm) => useClient()
     .admin.updateDevice({ ...data, features: data.features.array })
     .then(() => revalidate())
-    .then(props.onClose)
     .catch(throwAsFormError)
   const formDisabled = () => refreshFormLoading() || form.submitting
 
@@ -565,6 +545,7 @@ function UpdateFormForm(props: { onClose: () => void | Promise<void>, device: Ge
               {...props}
               placeholder="New password"
               type="password"
+              autocomplete="off"
             />
             <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
           </TextFieldRoot>

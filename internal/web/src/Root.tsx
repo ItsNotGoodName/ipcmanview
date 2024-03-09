@@ -280,26 +280,23 @@ export function Root(props: RouteSectionProps) {
             siteName={config()?.siteName}
           />
           <div class="flex">
-            <div data-open={menu.open()} class="border-border w-0 shrink-0 border-r-0 transition-all duration-200 md:data-[open=true]:w-48 md:data-[open=true]:border-r">
-              <div class="sticky top-0 h-screen overflow-y-auto overflow-x-hidden">
-                <div class="flex h-full flex-col justify-between p-2">
-                  <Show when={!isAdminPage()} fallback={<AdminMenuLinks />}>
+            <div data-open={menu.open()} class="border-border w-0 shrink-0 border-r-0 transition-all duration-300 md:data-[open=true]:w-48 md:data-[open=true]:border-r">
+              <div class="sticky top-0 max-h-screen overflow-y-auto overflow-x-clip">
+                <div class="p-2">
+                  <Show when={!isAdminPage()} fallback={
+                    <AdminMenuLinks />
+                  }>
                     <MenuLinks />
                   </Show>
-                  <div class="flex flex-col">
-                    <button class={menuLinkVariants()} onClick={menu.toggleOpen}>
-                      <RiSystemMenuLine class="size-5" />Menu
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
-            <div class="w-full overflow-x-auto">
+            <div class="min-h-[calc(100vh-3rem)] w-full overflow-x-clip">
               {props.children}
             </div>
           </div>
         </Show>
       </Suspense>
-    </ErrorBoundary >
+    </ErrorBoundary>
   )
 }

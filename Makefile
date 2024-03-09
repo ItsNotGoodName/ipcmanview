@@ -10,6 +10,8 @@ TOOL_GOOSE=github.com/pressly/goose/v3/cmd/goose@v3.18.0
 TOOL_SQLC=github.com/sqlc-dev/sqlc/cmd/sqlc@v1.25.0
 TOOL_TWIRP=github.com/twitchtv/twirp/protoc-gen-twirp@v8.1.3
 TOOL_PROTOC_GEN_GO=google.golang.org/protobuf/cmd/protoc-gen-go@v1.32.0
+TOOL_OAPI_CODEGEN=github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@v2.1.0
+
 
 PROTOC_VERSION=25.1
 PROTOC_ZIP=protoc-$(PROTOC_VERSION)-linux-x86_64.zip
@@ -57,7 +59,7 @@ dev-proxy:
 # ---------- Gen
 
 # Generate code
-gen: gen-sqlc gen-pubsub gen-hub gen-proto gen-typescriptify
+gen: gen-sqlc gen-pubsub gen-hub gen-proto gen-typescriptify gen-mediamtx
 
 gen-sqlc:
 	sqlc generate
@@ -75,10 +77,13 @@ gen-proto:
 gen-typescriptify:
 	go run ./scripts/typescriptify $(WEB_PATH)/src/lib/models.gen.ts
 
+gen-mediamtx:
+	oapi-codegen -package mediamtx ./internal/mediamtx/swagger.json > ./internal/mediamtx/mediamtx.gen.go
+
 # ---------- Tooling
 
 # Install tooling
-tooling: tooling-air tooling-task tooling-goose tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts
+tooling: tooling-air tooling-task tooling-goose tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts tooling-oapi-codegen
 
 tooling-air:
 	go install $(TOOL_AIR)
@@ -101,6 +106,9 @@ tooling-protoc-gen-go:
 tooling-protoc-gen-ts:
 	cd $(WEB_PATH) && pnpm install
 
+tooling-oapi-codegen:
+	go install $(TOOL_OAPI_CODEGEN)
+
 # ---------- Install
 
 install-protoc:
@@ -117,7 +125,7 @@ install-atlas:
 
 # ---------- Workflow
 
-workflow-tooling: tooling-task tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts
+build-tooling: tooling-task tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts tooling-oapi-codegen
 
-workflow-nightly:
+build-nightly:
 	task nightly

@@ -94,7 +94,7 @@ function PageButtons(props: { class?: string, previousPageDisabled?: boolean, pr
 
 function LastTableCell(props: ParentProps) {
   return (
-    <TableCell class="py-0">
+    <TableCell class="py-0 w-0">
       <div class="flex items-center justify-end gap-2">
         {props.children}
       </div>

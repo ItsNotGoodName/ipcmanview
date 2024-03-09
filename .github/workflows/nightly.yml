@@ -54,10 +54,10 @@ jobs:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up tooling
-        run: make workflow-tooling
+        run: make build-tooling
 
       - name: Build nightly
-        run: make workflow-nightly
+        run: make build-nightly
 
       - name: Publish nightly
         env:

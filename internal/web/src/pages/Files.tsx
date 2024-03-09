@@ -141,7 +141,7 @@ export function Files() {
 
         <Crud.PageMetadata pageResult={data()?.pageResult} />
 
-        <div class="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8">
           <For each={data()?.files}>
             {v => {
               const [url, setUrl] = createSignal<string>()

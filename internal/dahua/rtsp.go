@@ -2,18 +2,18 @@ package dahua
 
 import "fmt"
 
-type RTSP struct {
+type GetLiveRTSPURLParams struct {
 	Username string
 	Password string
-	Address  string
+	Host     string
 	Port     int
 	Channel  int
 	Subtype  int
 }
 
-func (r RTSP) URL() string {
+func GetLiveRTSPURL(arg GetLiveRTSPURLParams) string {
 	return fmt.Sprintf(
 		"rtsp://%s:%s@%s:%d/cam/realmonitor?channel=%d&subtype=%d&unicast=true&proto=Onvif",
-		r.Username, r.Password, r.Address, r.Port, r.Channel, r.Subtype,
+		arg.Username, arg.Password, arg.Host, arg.Port, arg.Channel, arg.Subtype,
 	)
 }
