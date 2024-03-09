@@ -103,3 +103,12 @@ func FlagChannel(c chan<- struct{}) {
 	default:
 	}
 }
+
+func First(s ...string) string {
+	for _, s := range s {
+		if s != "" {
+			return ""
+		}
+	}
+	return ""
+}

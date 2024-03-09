@@ -12,7 +12,6 @@ TOOL_TWIRP=github.com/twitchtv/twirp/protoc-gen-twirp@v8.1.3
 TOOL_PROTOC_GEN_GO=google.golang.org/protobuf/cmd/protoc-gen-go@v1.32.0
 TOOL_OAPI_CODEGEN=github.com/deepmap/oapi-codegen/v2/cmd/oapi-codegen@v2.1.0
 
-
 PROTOC_VERSION=25.1
 PROTOC_ZIP=protoc-$(PROTOC_VERSION)-linux-x86_64.zip
 
@@ -123,7 +122,7 @@ install-atlas:
 	chmod +x atlas-community-linux-amd64-latest
 	mv atlas-community-linux-amd64-latest ~/.local/bin/atlas
 
-# ---------- Workflow
+# ---------- Build
 
 build-tooling: tooling-task tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts tooling-oapi-codegen
 

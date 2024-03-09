@@ -27,23 +27,28 @@ import (
 
 type CmdServe struct {
 	Shared
-	HTTPHost               string     `env:"HTTP_HOST" help:"HTTP host to listen on (e.g. \"127.0.0.1\")."`
-	HTTPPort               uint16     `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
-	HTTPSPort              uint16     `env:"HTTPS_PORT" default:"8443" help:"HTTPS port to listen on."`
-	HTTPRedirect           bool       `env:"HTTP_REDIRECT" default:"true" help:"Redirect HTTP to HTTPS."`
-	SMTPHost               string     `env:"SMTP_HOST" help:"SMTP host to listen on (e.g. \"127.0.0.1\")."`
-	SMTPPort               uint16     `env:"SMTP_PORT" default:"1025" help:"SMTP port to listen on."`
-	MQTTAddress            string     `env:"MQTT_ADDRESS" help:"MQTT server address (e.g. \"mqtt://192.168.1.20:1883\")."`
-	MQTTTopic              mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT server topic to publish messages."`
-	MQTTUsername           string     `env:"MQTT_USERNAME" help:"MQTT server username for authentication."`
-	MQTTPassword           string     `env:"MQTT_PASSWORD" help:"MQTT server password for authentication."`
-	MQTTHa                 bool       `env:"MQTT_HA" help:"Enable Home Assistant MQTT discovery."`
-	MQTTHaTopic            mqtt.Topic `env:"MQTT_HA_TOPIC" default:"homeassistant" help:"Home Assistant MQTT discover topic."`
-	MediamtxHost           string     `env:"MEDIAMTX_HOST" help:"MediaMTX host address (e.g. \"192.168.1.20\")."`
-	MediamtxWebrtcPort     uint16     `env:"MEDIAMTX_WEBRTC_PORT" default:"8889" help:"MediaMTX WebRTC port."`
-	MediamtxHLSPort        uint16     `env:"MEDIAMTX_HLS_PORT" default:"8888" help:"MediaMTX HLS port."`
-	MediamtxPathTemplate   string     `env:"MEDIAMTX_PATH_TEMPLATE" default:"ipcmanview_dahua_{{.DeviceID}}_{{.Channel}}_{{.Subtype}}" help:"Template for generating MediaMTX paths."`
-	MediamtxStreamProtocol string     `env:"MEDIAMTX_STREAM_PROTOCOL" default:"webrtc" enum:"webrtc,hls" help:"MediaMTX stream protocol."`
+
+	HttpHost            string `env:"HTTP_HOST" help:"HTTP(S) host to listen on (e.g. \"127.0.0.1\")."`
+	HttpPort            uint16 `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
+	HttpsPort           uint16 `env:"HTTPS_PORT" default:"8443" help:"HTTPS port to listen on."`
+	HttpDisableRedirect bool   `env:"HTTP_DISABLE_REDIRECT" help:"Disable HTTP redirect to HTTPS."`
+
+	SmtpHost string `env:"SMTP_HOST" help:"SMTP host to listen on (e.g. \"127.0.0.1\")."`
+	SmtpPort uint16 `env:"SMTP_PORT" default:"1025" help:"SMTP port to listen on."`
+
+	MqttAddress   string     `env:"MQTT_ADDRESS" help:"MQTT server address (e.g. \"mqtt://192.168.1.20:1883\")."`
+	MqttTopic     mqtt.Topic `env:"MQTT_PREFIX" default:"ipcmanview" help:"MQTT server topic to publish messages."`
+	MqttUsername  string     `env:"MQTT_USERNAME" help:"MQTT server username for authentication."`
+	MqttPassword  string     `env:"MQTT_PASSWORD" help:"MQTT server password for authentication."`
+	MqttHass      bool       `env:"MQTT_HASS" help:"Enable Home Assistant MQTT discovery."`
+	MqttHassTopic mqtt.Topic `env:"MQTT_HASS_TOPIC" default:"homeassistant" help:"Home Assistant MQTT discover topic."`
+
+	MediamtxHost           string `env:"MEDIAMTX_HOST" help:"MediaMTX host address (e.g. \"192.168.1.20\")."`
+	MediamtxApiHost        string `env:"MEDIAMTX_API_HOST" help:"MediaMTX API host (e.g. \"192.168.1.20\")."`
+	MediamtxApiPort        uint16 `env:"MEDIAMTX_API_PORT" default:"9997" help:"MediaMTX API port."`
+	MediamtxWebrtcPort     uint16 `env:"MEDIAMTX_WEBRTC_PORT" default:"8889" help:"MediaMTX WebRTC port."`
+	MediamtxHlsPort        uint16 `env:"MEDIAMTX_HLS_PORT" default:"8888" help:"MediaMTX HLS port."`
+	MediamtxStreamProtocol string `env:"MEDIAMTX_STREAM_PROTOCOL" default:"webrtc" enum:"webrtc,hls" help:"MediaMTX stream protocol (webrtc,hls)."`
 }
 
 func (c *CmdServe) Run(ctx *Context) error {
@@ -109,14 +114,13 @@ func (c *CmdServe) Run(ctx *Context) error {
 	})
 
 	// MediaMTX
-	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxPathTemplate, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHLSPort))
+	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, "ipcmanview_dahua_{{.DeviceID}}_{{.Channel}}_{{.Subtype}}", c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHlsPort))
 	if err != nil {
 		return err
 	}
 
-	// TODO: move this
 	hub.OnDahuaDeviceUpdated("DEBUG", func(ctx context.Context, event bus.DahuaDeviceUpdated) error {
-		client, err := mediamtx.NewClient("http://" + c.MediamtxHost + ":9997")
+		client, err := mediamtx.NewClient("http://" + core.Address(core.First(c.MediamtxApiHost, c.MediamtxHost), int(c.MediamtxApiPort)))
 		if err != nil {
 			return err
 		}
@@ -204,15 +208,15 @@ func (c *CmdServe) Run(ctx *Context) error {
 	// super.Add(dahua.NewFileService(db, dahuaAFS, dahuaStore))
 
 	// MQTT
-	if c.MQTTAddress != "" {
-		mqttConn := mqtt.NewConn(c.MQTTTopic, c.MQTTAddress, c.MQTTUsername, c.MQTTPassword)
+	if c.MqttAddress != "" {
+		mqttConn := mqtt.NewConn(c.MqttTopic, c.MqttAddress, c.MqttUsername, c.MqttPassword)
 		super.Add(mqttConn)
 
-		super.Add(dahuamqtt.NewConn(mqttConn, c.MQTTHa, c.MQTTHaTopic).Register(hub))
+		super.Add(dahuamqtt.NewConn(mqttConn, c.MqttHass, c.MqttHassTopic).Register(hub))
 	}
 
 	// SMTP
-	super.Add(dahuasmtp.NewServer(dahuasmtp.NewBackend(), core.Address(c.SMTPHost, int(c.SMTPPort))))
+	super.Add(dahuasmtp.NewServer(dahuasmtp.NewBackend(), core.Address(c.SmtpHost, int(c.SmtpPort))))
 
 	// HTTP router
 	httpRouter := server.NewHTTPRouter(web.RouteAssets)
@@ -239,19 +243,19 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 	// HTTP server
 	httpServer := httpRouter
-	if c.HTTPRedirect {
-		httpServer = server.NewHTTPRedirect(strconv.Itoa(int(c.HTTPSPort)))
+	if !c.HttpDisableRedirect {
+		httpServer = server.NewHTTPRedirect(strconv.Itoa(int(c.HttpsPort)))
 	}
 	super.Add(server.NewHTTPServer(
 		httpServer,
-		core.Address(c.HTTPHost, int(c.HTTPPort)),
+		core.Address(c.HttpHost, int(c.HttpPort)),
 		nil,
 	))
 
 	// HTTPS server
 	super.Add(server.NewHTTPServer(
 		httpRouter,
-		core.Address(c.HTTPHost, int(c.HTTPSPort)),
+		core.Address(c.HttpHost, int(c.HttpsPort)),
 		&cert,
 	))
 

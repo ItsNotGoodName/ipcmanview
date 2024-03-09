@@ -17,6 +17,10 @@ type CmdDebug struct {
 }
 
 func (c *CmdDebug) Run(ctx *Context) error {
+	if err := c.init(); err != nil {
+		return err
+	}
+
 	db, err := c.useDB(ctx)
 	if err != nil {
 		return err

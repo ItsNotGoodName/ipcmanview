@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -16,49 +17,64 @@ import (
 
 type Context struct {
 	context.Context
-	Debug bool
 }
 
 var mainCmd struct {
-	Debug bool `env:"DEBUG" help:"Enable debug mode."`
+	LoggingLevel string `enum:"debug,info,warn,error" default:"info"`
+	LoggingType  string `enum:"json,console" default:"console"`
 
-	Version CmdVersion `cmd:"" help:"Show version."`
-	Serve   CmdServe   `cmd:"" help:"Start application."`
 	Debug_  CmdDebug   `name:"debug" cmd:""`
+	Serve   CmdServe   `cmd:"" help:"Start application." default:"1"`
+	Version CmdVersion `cmd:"" help:"Show version."`
 }
 
 func main() {
-	err := godotenv.Load()
-	if err != nil && !os.IsNotExist(err) {
-		log.Fatal().Err(err).Send()
-	}
+	godotenv.Load()
+
+	ktx := kong.Parse(&mainCmd, kong.Description("Application for managing and viewing Dahua devices."))
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	ktx := kong.Parse(&mainCmd, kong.Description("Application for managing and viewing Dahua devices."))
+	initLogger(mainCmd.LoggingLevel, mainCmd.LoggingType)
 
-	initLogger(mainCmd.Debug)
-
-	err = ktx.Run(&Context{
+	err := ktx.Run(&Context{
 		Context: ctx,
-		Debug:   mainCmd.Debug,
 	})
 	if err != nil && !errors.Is(err, context.Canceled) {
 		log.Fatal().Err(err).Send()
 	}
 }
 
-func initLogger(debug bool) {
+func initLogger(level string, typ string) {
 	// Get levels
-	zerologLevel := zerolog.InfoLevel
-	slogLevel := slog.LevelInfo
-	if debug {
+	var zerologLevel zerolog.Level
+	var slogLevel slog.Level
+	switch level {
+	case "debug":
 		zerologLevel = zerolog.DebugLevel
 		slogLevel = slog.LevelDebug
+	case "info":
+		zerologLevel = zerolog.InfoLevel
+		slogLevel = slog.LevelInfo
+	case "warn":
+		zerologLevel = zerolog.WarnLevel
+		slogLevel = slog.LevelWarn
+	case "error":
+		zerologLevel = zerolog.ErrorLevel
+		slogLevel = slog.LevelError
+	default:
+		panic(fmt.Sprintf("invalid logging level: '%s'", level))
 	}
 
-	// Set loggers
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(zerologLevel)
+	// Set logger
+	switch typ {
+	case "console":
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(zerologLevel)
+	case "json":
+		log.Logger = log.Level(zerologLevel)
+	default:
+		panic(fmt.Sprintf("invalid logging type: '%s'", level))
+	}
 	slog.SetDefault(slog.New(slogzerolog.Option{Level: slogLevel, Logger: &log.Logger}.NewZerologHandler()))
 }
