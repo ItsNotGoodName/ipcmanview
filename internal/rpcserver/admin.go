@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/internal/sqlite"
+	"github.com/ItsNotGoodName/ipcmanview/internal/system"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/ssq"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	sq "github.com/Masterminds/squirrel"
@@ -18,16 +18,14 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewAdmin(configProvider config.Provider, db sqlite.DB) *Admin {
+func NewAdmin(db sqlite.DB) *Admin {
 	return &Admin{
-		configProvider: configProvider,
-		db:             db,
+		db: db,
 	}
 }
 
 type Admin struct {
-	configProvider config.Provider
-	db             sqlite.DB
+	db sqlite.DB
 }
 
 // ---------- Device
@@ -313,7 +311,7 @@ func (a *Admin) GetAdminUsersPage(ctx context.Context, req *rpc.GetAdminUsersPag
 }
 
 func (a *Admin) CreateUser(ctx context.Context, req *rpc.CreateUserReq) (*emptypb.Empty, error) {
-	cfg, err := a.configProvider.GetConfig()
+	cfg, err := system.GetConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -565,6 +563,17 @@ func (a *Admin) DeleteGroup(ctx context.Context, req *rpc.DeleteGroupReq) (*empt
 	return &emptypb.Empty{}, nil
 }
 
+func (a *Admin) GetAdminEventsPage(ctx context.Context, _ *emptypb.Empty) (*rpc.GetAdminEventsPageResp, error) {
+	eventCount, err := dahua.CountEvents(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpc.GetAdminEventsPageResp{
+		EventCount: eventCount,
+	}, nil
+}
+
 func (a *Admin) SetGroupDisable(ctx context.Context, req *rpc.SetGroupDisableReq) (*emptypb.Empty, error) {
 	for _, item := range req.Items {
 		err := auth.UpdateGroupDisable(ctx, item.Id, item.Disable)
@@ -572,19 +581,6 @@ func (a *Admin) SetGroupDisable(ctx context.Context, req *rpc.SetGroupDisableReq
 			return nil, err
 		}
 	}
-	return &emptypb.Empty{}, nil
-}
-
-func (a *Admin) UpdateConfig(cfg context.Context, req *rpc.UpdateConfigReq) (*emptypb.Empty, error) {
-	err := a.configProvider.UpdateConfig(func(cfg config.Config) (config.Config, error) {
-		cfg.SiteName = req.SiteName
-		cfg.EnableSignUp = req.EnableSignUp
-		return cfg, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	return &emptypb.Empty{}, nil
 }
 
@@ -686,4 +682,25 @@ func init() {
 
 func (*Admin) ListDeviceFeatures(context.Context, *emptypb.Empty) (*rpc.ListDeviceFeaturesResp, error) {
 	return listDeviceFeaturesResp, nil
+}
+
+func (a *Admin) UpdateConfig(cfg context.Context, req *rpc.UpdateConfigReq) (*emptypb.Empty, error) {
+	err := system.UpdateConfig(system.UpdateConfigParams{
+		SiteName:     req.SiteName,
+		EnableSignUp: req.EnableSignUp,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
+}
+
+func (a *Admin) DeleteEvents(ctx context.Context, _ *emptypb.Empty) (*emptypb.Empty, error) {
+	err := dahua.DeleteEvents(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
 }

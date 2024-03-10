@@ -7,7 +7,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
-	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
@@ -17,15 +16,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewUser(configProvider config.Provider, mediamtxConfig mediamtx.Config) *User {
+func NewUser(mediamtxConfig mediamtx.Config) *User {
 	return &User{
-		configProvider: configProvider,
 		mediamtxConfig: mediamtxConfig,
 	}
 }
 
 type User struct {
-	configProvider config.Provider
 	mediamtxConfig mediamtx.Config
 }
 

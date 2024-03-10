@@ -4,24 +4,21 @@ import (
 	"context"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
-	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/system"
 	"github.com/ItsNotGoodName/ipcmanview/rpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func NewPublic(configProvider config.Provider) *Public {
-	return &Public{
-		configProvider: configProvider,
-	}
+func NewPublic() *Public {
+	return &Public{}
 }
 
 type Public struct {
-	configProvider config.Provider
 }
 
 func (p *Public) GetConfig(context.Context, *emptypb.Empty) (*rpc.GetConfigResp, error) {
-	cfg, err := p.configProvider.GetConfig()
+	cfg, err := system.GetConfig()
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +30,7 @@ func (p *Public) GetConfig(context.Context, *emptypb.Empty) (*rpc.GetConfigResp,
 }
 
 func (p *Public) SignUp(ctx context.Context, req *rpc.SignUpReq) (*emptypb.Empty, error) {
-	cfg, err := p.configProvider.GetConfig()
+	cfg, err := system.GetConfig()
 	if err != nil {
 		return nil, err
 	}

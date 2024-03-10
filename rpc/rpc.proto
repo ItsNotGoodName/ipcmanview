@@ -425,11 +425,12 @@ message GetFileMonthCountResp {
 
 service Admin {
   // Pages
-  rpc GetAdminDevicesIDPage(GetAdminDevicesIDPageReq) returns (GetAdminDevicesIDPageResp);
   rpc GetAdminDevicesPage(GetAdminDevicesPageReq) returns (GetAdminDevicesPageResp);
-  rpc GetAdminGroupsIDPage(GetAdminGroupsIDPageReq) returns (GetAdminGroupsIDPageResp);
+  rpc GetAdminDevicesIDPage(GetAdminDevicesIDPageReq) returns (GetAdminDevicesIDPageResp);
   rpc GetAdminGroupsPage(GetAdminGroupsPageReq) returns (GetAdminGroupsPageResp);
+  rpc GetAdminGroupsIDPage(GetAdminGroupsIDPageReq) returns (GetAdminGroupsIDPageResp);
   rpc GetAdminUsersPage(GetAdminUsersPageReq) returns (GetAdminUsersPageResp);
+  rpc GetAdminEventsPage(google.protobuf.Empty) returns (GetAdminEventsPageResp);
 
   // User
   rpc CreateUser(CreateUserReq) returns (google.protobuf.Empty);
@@ -454,8 +455,6 @@ service Admin {
   rpc SetDeviceDisable(SetDeviceDisableReq) returns (google.protobuf.Empty);
   rpc UpdateDevice(UpdateDeviceReq) returns (google.protobuf.Empty);
 
-  rpc UpdateConfig(UpdateConfigReq) returns (google.protobuf.Empty);
-
   // Event rule
   rpc CreateEventRule(CreateEventRuleReq) returns (CreateEventRuleResp);
   rpc UpdateEventRule(UpdateEventRuleReq) returns (google.protobuf.Empty);
@@ -465,13 +464,33 @@ service Admin {
   // Misc
   rpc ListLocations(google.protobuf.Empty) returns (ListLocationsResp);
   rpc ListDeviceFeatures(google.protobuf.Empty) returns (ListDeviceFeaturesResp);
+  rpc UpdateConfig(UpdateConfigReq) returns (google.protobuf.Empty);
+  rpc DeleteEvents(google.protobuf.Empty) returns (google.protobuf.Empty);
+}
+
+message GetAdminDevicesPageReq {
+  PagePagination page = 1;
+  Sort sort = 2;
+}
+message GetAdminDevicesPageResp {
+  message Device {
+    int64 id = 1;
+    string name = 2;
+    string url = 3;
+    string username = 4;
+    bool disabled = 5;
+    google.protobuf.Timestamp disabled_at_time = 6;
+    google.protobuf.Timestamp created_at_time = 7;
+  }
+  repeated Device items = 1;
+  PagePaginationResult pageResult = 2;
+  Sort sort = 3;
 }
 
 message GetAdminGroupsPageReq {
   PagePagination page = 1;
   Sort sort = 2;
 }
-
 message GetAdminGroupsPageResp {
   message Group {
     int64 id = 1;
@@ -489,7 +508,6 @@ message GetAdminGroupsPageResp {
 message GetAdminGroupsIDPageReq {
   int64 id = 1;
 }
-
 message GetAdminGroupsIDPageResp {
   message Group {
     int64 id = 1;
@@ -547,23 +565,8 @@ message GetAdminUsersPageResp {
   Sort sort = 3;
 }
 
-message GetAdminDevicesPageReq {
-  PagePagination page = 1;
-  Sort sort = 2;
-}
-message GetAdminDevicesPageResp {
-  message Device {
-    int64 id = 1;
-    string name = 2;
-    string url = 3;
-    string username = 4;
-    bool disabled = 5;
-    google.protobuf.Timestamp disabled_at_time = 6;
-    google.protobuf.Timestamp created_at_time = 7;
-  }
-  repeated Device items = 1;
-  PagePaginationResult pageResult = 2;
-  Sort sort = 3;
+message GetAdminEventsPageResp {
+  int64 event_count = 1;
 }
 
 message CreateUserReq {

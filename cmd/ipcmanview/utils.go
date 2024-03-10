@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
 	"os"
 	"path/filepath"
 
@@ -36,41 +35,17 @@ func (c Shared) useDahuaAFS() (afero.Fs, error) {
 	return afero.NewBasePathFs(afero.NewOsFs(), dir), nil
 }
 
-func (c Shared) useSecret() ([]byte, error) {
-	dir := filepath.Join(c.Dir, "secret")
-
-	b, err := os.ReadFile(dir)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return nil, err
-		}
-		b = make([]byte, 64)
-
-		_, err := rand.Read(b)
-		if err != nil {
-			return nil, err
-		}
-
-		if err := os.WriteFile(dir, b, 0600); err != nil {
-			return nil, err
-		}
-	}
-
-	return b, nil
-}
-
 func (c Shared) useDB(ctx *Context) (sqlite.DB, error) {
 	sqlDB, err := sqlite.New(filepath.Join(c.Dir, "sqlite.db"))
 	if err != nil {
 		return sqlite.DB{}, err
 	}
+
 	if err := sqlite.Migrate(sqlDB); err != nil {
 		return sqlite.DB{}, err
 	}
 
-	db := sqlite.NewDB(sqlDB)
-
-	return db, nil
+	return sqlite.NewDB(sqlDB), nil
 }
 
 func (c Shared) useConfigFilePath() string {

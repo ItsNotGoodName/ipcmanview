@@ -33,6 +33,8 @@ const EventsLive = lazy(() => import("~/pages/EventsLive"));
 import loadEventsLive from "~/pages/EventsLive.data";
 const AdminSettings = lazy(() => import("./pages/admin/Settings"));
 import loadAdminSettings from "~/pages/admin/Settings.data";
+const AdminEvents = lazy(() => import("./pages/admin/Events"));
+import loadAdminEvents from "~/pages/admin/Events.data";
 const AdminHome = lazy(() => import("./pages/admin/Home"));
 import loadAdminHome from "./pages/admin/Home.data";
 const AdminGroups = lazy(() => import("~/pages/admin/Groups"));
@@ -89,6 +91,7 @@ function App() {
           <Route path="/admin/groups/:id" component={AdminGroupsID} load={loadAdminGroupsID} />
           <Route path="/admin/devices" component={AdminDevices} load={loadAdminDevices} />
           <Route path="/admin/devices/:id" component={AdminDevicesID} load={loadAdminDevicesID} />
+          <Route path="/admin/events" component={AdminEvents} load={loadAdminEvents} />
         </Show>
         <Route path={["/signin", "/signup", "/forgot"]} component={NavigateHome} />
         <Route path="*404" component={NotFound} />

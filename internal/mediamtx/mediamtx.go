@@ -10,7 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func NewConfig(host, pathTemplate, streamProtocol string, webrtcPort, hlsPort int) (Config, error) {
+func NewConfig(host, streamProtocol string, webrtcPort, hlsPort int) (Config, error) {
+	pathTemplate := "ipcmanview_dahua_{{.DeviceID}}_{{.Channel}}_{{.Subtype}}"
+
 	var tmpl *template.Template
 	if pathTemplate != "" {
 		var err error

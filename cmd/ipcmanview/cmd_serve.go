@@ -9,7 +9,6 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
 	"github.com/ItsNotGoodName/ipcmanview/internal/auth"
 	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
-	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
@@ -18,6 +17,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	"github.com/ItsNotGoodName/ipcmanview/internal/server"
+	"github.com/ItsNotGoodName/ipcmanview/internal/system"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/sutureext"
@@ -28,10 +28,10 @@ import (
 type CmdServe struct {
 	Shared
 
-	HttpHost            string `env:"HTTP_HOST" help:"HTTP(S) host to listen on (e.g. \"127.0.0.1\")."`
-	HttpPort            uint16 `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
-	HttpsPort           uint16 `env:"HTTPS_PORT" default:"8443" help:"HTTPS port to listen on."`
-	HttpDisableRedirect bool   `env:"HTTP_DISABLE_REDIRECT" help:"Disable HTTP redirect to HTTPS."`
+	HttpHost     string `env:"HTTP_HOST" help:"HTTP(S) host to listen on (e.g. \"127.0.0.1\")."`
+	HttpPort     uint16 `env:"HTTP_PORT" default:"8080" help:"HTTP port to listen on."`
+	HttpsPort    uint16 `env:"HTTPS_PORT" default:"8443" help:"HTTPS port to listen on."`
+	HttpRedirect bool   `env:"HTTP_REDIRECT" default:"true" negatable:"" help:"Redirect HTTP to HTTPS."`
 
 	SmtpHost string `env:"SMTP_HOST" help:"SMTP host to listen on (e.g. \"127.0.0.1\")."`
 	SmtpPort uint16 `env:"SMTP_PORT" default:"1025" help:"SMTP port to listen on."`
@@ -56,26 +56,21 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
-	configProvider, err := config.NewProvider(c.useConfigFilePath())
-	if err != nil {
-		return err
-	}
-
 	// Supervisor
 	super := suture.New("root", suture.Spec{
 		EventHook: sutureext.EventHook(),
 	})
+
+	configProvider, err := system.NewConfigProvider(c.useConfigFilePath())
+	if err != nil {
+		return err
+	}
 
 	// Certificate
 	cert, err := c.useCert()
 	if err != nil {
 		return err
 	}
-
-	// // Secret
-	// if _, err := c.useSecret(); err != nil {
-	// 	return err
-	// }
 
 	// Database
 	db, err := c.useDB(ctx)
@@ -100,6 +95,9 @@ func (c *CmdServe) Run(ctx *Context) error {
 	defer dahuaStore.Close()
 
 	// Init
+	system.Init(system.App{
+		CP: configProvider,
+	})
 	auth.Init(auth.App{
 		DB:                   db,
 		Hub:                  hub,
@@ -114,17 +112,17 @@ func (c *CmdServe) Run(ctx *Context) error {
 	})
 
 	// MediaMTX
-	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, "ipcmanview_dahua_{{.DeviceID}}_{{.Channel}}_{{.Subtype}}", c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHlsPort))
+	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHlsPort))
+	if err != nil {
+		return err
+	}
+
+	mediamtxClient, err := mediamtx.NewClient("http://" + core.Address(core.First(c.MediamtxApiHost, c.MediamtxHost), int(c.MediamtxApiPort)))
 	if err != nil {
 		return err
 	}
 
 	hub.OnDahuaDeviceUpdated("DEBUG", func(ctx context.Context, event bus.DahuaDeviceUpdated) error {
-		client, err := mediamtx.NewClient("http://" + core.Address(core.First(c.MediamtxApiHost, c.MediamtxHost), int(c.MediamtxApiPort)))
-		if err != nil {
-			return err
-		}
-
 		device, err := dahua.GetDevice(ctx, dahua.GetDeviceFilter{ID: event.DeviceID})
 		if err != nil {
 			return err
@@ -151,7 +149,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 				RtspTransport: &rtspTransport,
 			}
 
-			rsp, err := client.ConfigPathsGet(ctx, name)
+			rsp, err := mediamtxClient.ConfigPathsGet(ctx, name)
 			if err != nil {
 				return err
 			}
@@ -162,13 +160,13 @@ func (c *CmdServe) Run(ctx *Context) error {
 
 			switch res.StatusCode() {
 			case http.StatusOK:
-				rsp, err := client.ConfigPathsPatch(ctx, name, pathConf)
+				rsp, err := mediamtxClient.ConfigPathsPatch(ctx, name, pathConf)
 				if err != nil {
 					return err
 				}
 				rsp.Body.Close()
 			case http.StatusNotFound, http.StatusInternalServerError:
-				rsp, err := client.ConfigPathsAdd(ctx, name, pathConf)
+				rsp, err := mediamtxClient.ConfigPathsAdd(ctx, name, pathConf)
 				if err != nil {
 					return err
 				}
@@ -237,13 +235,13 @@ func (c *CmdServe) Run(ctx *Context) error {
 	rpcserver.
 		NewServer(httpRouter).
 		Register(rpc.NewHelloWorldServer(&rpcserver.HelloWorld{}, rpcLogger)).
-		Register(rpc.NewPublicServer(rpcserver.NewPublic(configProvider), rpcLogger)).
-		Register(rpc.NewUserServer(rpcserver.NewUser(configProvider, mediamtxConfig), rpcLogger, rpcserver.RequireAuthSession())).
-		Register(rpc.NewAdminServer(rpcserver.NewAdmin(configProvider, db), rpcLogger, rpcserver.RequireAdminAuthSession()))
+		Register(rpc.NewPublicServer(rpcserver.NewPublic(), rpcLogger)).
+		Register(rpc.NewUserServer(rpcserver.NewUser(mediamtxConfig), rpcLogger, rpcserver.RequireAuthSession())).
+		Register(rpc.NewAdminServer(rpcserver.NewAdmin(db), rpcLogger, rpcserver.RequireAdminAuthSession()))
 
 	// HTTP server
 	httpServer := httpRouter
-	if !c.HttpDisableRedirect {
+	if c.HttpRedirect {
 		httpServer = server.NewHTTPRedirect(strconv.Itoa(int(c.HttpsPort)))
 	}
 	super.Add(server.NewHTTPServer(

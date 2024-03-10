@@ -13,6 +13,13 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 )
 
+func DeleteEvents(ctx context.Context) error {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return err
+	}
+	return app.DB.C().DahuaDeleteEvents(ctx)
+}
+
 const eventRuleCodeErrorMessage = "Code cannot be empty."
 
 func CreateEventRule(ctx context.Context, arg repo.DahuaCreateEventRuleParams) (int64, error) {

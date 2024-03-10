@@ -91,6 +91,10 @@ function AdminMenuLinks(props: { onClick?: () => void }) {
         href="/admin/devices" noScroll>
         <BiRegularCctv class="size-5" />Devices
       </A>
+      <A class={menuLinkVariants()} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants()} onClick={props.onClick}
+        href="/admin/events" noScroll>
+        <RiWeatherFlashlightLine class="size-5" />Events
+      </A>
     </div>
   )
 }
@@ -115,6 +119,12 @@ type HeaderProps = {
   siteName?: string
 }
 
+const adminUrlMaps: Array<[string, string]> = [
+  ["/devices", "/admin/devices"],
+  ["/events", "/admin/events"],
+  ["/", "/admin"],
+]
+
 function Header(props: HeaderProps) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -135,6 +145,14 @@ function Header(props: HeaderProps) {
       case WSState.Disconnected:
         return "disconnected"
     }
+  }
+
+  const adminPageURL = () => {
+    const j = props.isAdminPage ? 1 : 0
+    for (let i = 0; i < adminUrlMaps.length; i++)
+      if (location.pathname.startsWith(adminUrlMaps[i][j]))
+        return adminUrlMaps[i][(j + 1) % 2]
+    return ""
   }
 
   return (
@@ -169,8 +187,8 @@ function Header(props: HeaderProps) {
             </A>
           </Show>
           <Show when={session()?.admin}>
-            <A class={menuLinkVariants({ size: "icon" })} activeClass={menuLinkVariants({ variant: "active" })} inactiveClass={menuLinkVariants({ size: "icon" })}
-              href={props.isAdminPage ? "/" : "/admin"} title="Toggle admin">
+            <A class={menuLinkVariants({ size: "icon", variant: props.isAdminPage ? "active" : null })}
+              href={adminPageURL()} title="Toggle admin">
               <RiUserFacesAdminLine class="size-6" />
             </A>
           </Show>

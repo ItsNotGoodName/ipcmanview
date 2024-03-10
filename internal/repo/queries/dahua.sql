@@ -323,7 +323,7 @@ FROM
 WHERE
   id = ?;
 
--- name: DahuaDeleteEvent :exec
+-- name: DahuaDeleteEvents :exec
 DELETE FROM dahua_events;
 
 -- name: DahuaGetEventRuleByEvent :many
@@ -680,3 +680,4 @@ WHERE
   )
 ORDER BY
   level DESC;
+

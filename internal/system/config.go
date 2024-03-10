@@ -1,4 +1,4 @@
-package config
+package system
 
 import (
 	"errors"
@@ -28,7 +28,7 @@ var defaultConfig = Config{
 	EnableSignUp: true,
 }
 
-func read(filePath string) (Config, error) {
+func readConfig(filePath string) (Config, error) {
 	var cfg Config
 	_, err := toml.DecodeFile(filePath, &cfg)
 	if err != nil {
@@ -40,7 +40,7 @@ func read(filePath string) (Config, error) {
 	return cfg, nil
 }
 
-func write(filePath string, cfg Config) error {
+func writeConfig(filePath string, cfg Config) error {
 	filePathTmp := filePath + ".tmp"
 	file, err := os.OpenFile(filePathTmp, os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -56,24 +56,24 @@ func write(filePath string, cfg Config) error {
 	return os.Rename(filePathTmp, filePath)
 }
 
-func NewProvider(filePath string) (Provider, error) {
+func NewConfigProvider(filePath string) (ConfigProvider, error) {
 	if exist, err := core.FileExists(filePath); err != nil {
-		return Provider{}, err
+		return ConfigProvider{}, err
 	} else if !exist {
-		if err := write(filePath, defaultConfig); err != nil {
-			return Provider{}, err
+		if err := writeConfig(filePath, defaultConfig); err != nil {
+			return ConfigProvider{}, err
 		}
 	}
-	return Provider{
+	return ConfigProvider{
 		filePath: filePath,
 	}, nil
 }
 
-type Provider struct {
+type ConfigProvider struct {
 	filePath string
 }
 
-func (p Provider) GetConfig() (Config, error) {
+func (p ConfigProvider) GetConfig() (Config, error) {
 	var cfg Config
 	_, err := toml.DecodeFile(p.filePath, &cfg)
 	if err != nil {
@@ -85,7 +85,7 @@ func (p Provider) GetConfig() (Config, error) {
 	return cfg, err
 }
 
-func (p Provider) UpdateConfig(fn func(cfg Config) (Config, error)) error {
+func (p ConfigProvider) UpdateConfig(fn func(cfg Config) (Config, error)) error {
 	cfg, err := p.GetConfig()
 	if err != nil {
 		return err
@@ -96,5 +96,5 @@ func (p Provider) UpdateConfig(fn func(cfg Config) (Config, error)) error {
 		return err
 	}
 
-	return write(p.filePath, cfg)
+	return writeConfig(p.filePath, cfg)
 }

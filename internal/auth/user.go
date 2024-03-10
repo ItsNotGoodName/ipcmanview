@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
-	"github.com/ItsNotGoodName/ipcmanview/internal/config"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
+	"github.com/ItsNotGoodName/ipcmanview/internal/system"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -47,7 +47,7 @@ type CreateUserParams struct {
 	Disabled bool
 }
 
-func CreateUser(ctx context.Context, cfg config.Config, arg CreateUserParams) (int64, error) {
+func CreateUser(ctx context.Context, cfg system.Config, arg CreateUserParams) (int64, error) {
 	actor := core.UseActor(ctx)
 	if !actor.Admin && !cfg.EnableSignUp {
 		return 0, core.ErrForbidden
