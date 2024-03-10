@@ -20,8 +20,8 @@ type Context struct {
 }
 
 var mainCmd struct {
-	LoggingLevel string `enum:"debug,info,warn,error" default:"info"`
-	LoggingType  string `enum:"json,console" default:"console"`
+	LoggingLevel string `env:"LOGGING_LEVEL" enum:"debug,info,warn,error" default:"info"`
+	LoggingType  string `env:"LOGGING_TYPE" enum:"json,console" default:"console"`
 
 	Debug_  CmdDebug   `name:"debug" cmd:""`
 	Serve   CmdServe   `cmd:"" help:"Start application." default:"1"`

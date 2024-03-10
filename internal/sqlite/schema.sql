@@ -8,6 +8,20 @@ CREATE TABLE events (
   FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
+CREATE TABLE squeuel (
+  id TEXT PRIMARY KEY,
+  task_id TEXT UNIQUE,
+  queue TEXT NOT NULL,
+  payload BLOB NOT NULL,
+  timeout DATETIME NOT NULL,
+  received INTEGER NOT NULL,
+  max_received INTEGER NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL
+);
+
+CREATE INDEX squeuel_queue_created_idx on squeuel (queue, created_at);
+
 ------------
 -- Auth
 ------------
@@ -251,28 +265,3 @@ CREATE TABLE dahua_email_attachments (
   file_name TEXT NOT NULL,
   FOREIGN KEY (message_id) REFERENCES dahua_email_messages (id) ON UPDATE CASCADE ON DELETE CASCADE
 );
-
--- ------------
--- -- goqite - https://github.com/maragudk/goqite/blob/main/schema.sql
--- ------------
--- create table goqite (
---   id text primary key default ('m_' || lower(hex(randomblob(16)))),
---   created text not null default (strftime('%Y-%m-%dT%H:%M:%fZ')),
---   updated text not null default (strftime('%Y-%m-%dT%H:%M:%fZ')),
---   queue text not null,
---   body blob not null,
---   timeout text not null default (strftime('%Y-%m-%dT%H:%M:%fZ')),
---   received integer not null default 0
--- ) strict;
---
--- create trigger goqite_updated_timestamp after
--- update on goqite begin
--- update goqite
--- set
---   updated = strftime('%Y-%m-%dT%H:%M:%fZ')
--- where
---   id = old.id;
---
--- end;
---
--- create index goqite_queue_created_idx on goqite (queue, created);

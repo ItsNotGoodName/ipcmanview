@@ -2,10 +2,12 @@ package dahua
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 
-	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/models"
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
@@ -13,10 +15,17 @@ import (
 )
 
 func UpdateStream(ctx context.Context, stream repo.DahuaStream, arg repo.DahuaUpdateStreamParams) (repo.DahuaStream, error) {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return repo.DahuaStream{}, err
+	}
 	return app.DB.C().DahuaUpdateStream(ctx, arg)
 }
 
 func DeleteStream(ctx context.Context, stream repo.DahuaStream) error {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return err
+	}
+
 	if stream.Internal {
 		return fmt.Errorf("cannot delete internal stream")
 	}
@@ -24,13 +33,16 @@ func DeleteStream(ctx context.Context, stream repo.DahuaStream) error {
 	return app.DB.C().DahuaDeleteStream(ctx, stream.ID)
 }
 
-func SupportStreams(feature models.DahuaFeature) bool {
+func SupportStream(feature models.DahuaFeature) bool {
 	return feature.EQ(models.DahuaFeature_Camera)
 }
 
-// SyncStreams fetches streams from device and upserts them into the database.
-// SupportStreams should be called to check if sync streams is possible.
+// SyncStreams fetches streams from device and sync them with database.
 func SyncStreams(ctx context.Context, deviceID int64, conn dahuarpc.Conn) error {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return err
+	}
+
 	caps, err := encode.GetCaps(ctx, conn, 1)
 	if err != nil {
 		return err
@@ -49,16 +61,16 @@ func SyncStreams(ctx context.Context, deviceID int64, conn dahuarpc.Conn) error 
 			}
 		}
 
-		args := []syncStreamsParams{}
+		args := []upsertStreamsParams{}
 		for i := 0; i < subtypes; i++ {
-			arg := syncStreamsParams{
+			arg := upsertStreamsParams{
 				Channel: int64(channelIndex + 1),
 				Subtype: int64(i),
 				Name:    names[i],
 			}
 			args = append(args, arg)
 		}
-		err := syncStreams(ctx, deviceID, args)
+		err := upsertStreams(ctx, deviceID, args)
 		if err != nil {
 			return err
 		}
@@ -67,13 +79,13 @@ func SyncStreams(ctx context.Context, deviceID int64, conn dahuarpc.Conn) error 
 	return nil
 }
 
-type syncStreamsParams struct {
+type upsertStreamsParams struct {
 	Channel int64
 	Subtype int64
 	Name    string
 }
 
-func syncStreams(ctx context.Context, deviceID int64, args []syncStreamsParams) error {
+func upsertStreams(ctx context.Context, deviceID int64, arg []upsertStreamsParams) error {
 	tx, err := app.DB.BeginTx(ctx, true)
 	if err != nil {
 		return err
@@ -85,8 +97,8 @@ func syncStreams(ctx context.Context, deviceID int64, args []syncStreamsParams) 
 		return err
 	}
 
-	ids := make([]int64, 0, len(args))
-	for _, arg := range args {
+	ids := make([]int64, 0, len(arg))
+	for _, arg := range arg {
 		id, err := tx.C().DahuaCreateStreamForInternal(ctx, repo.DahuaCreateStreamForInternalParams{
 			DeviceID: deviceID,
 			Channel:  arg.Channel,
@@ -102,27 +114,64 @@ func syncStreams(ctx context.Context, deviceID int64, args []syncStreamsParams) 
 	return tx.Commit()
 }
 
-func RegisterStreams() {
-	sync := func(ctx context.Context, deviceID int64) error {
-		client, err := app.Store.GetClient(ctx, deviceID)
+// PushStreams pushes streams to mediamtx
+func PushStreams(ctx context.Context, deviceID int64) error {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return err
+	}
+
+	device, err := GetDevice(ctx, GetDeviceFilter{ID: deviceID})
+	if err != nil {
+		return err
+	}
+
+	streams, err := app.DB.C().DahuaListStreamsByDevice(ctx, deviceID)
+	if err != nil {
+		return err
+	}
+
+	for _, stream := range streams {
+		name := app.MediamtxConfig.DahuaEmbedPath(stream)
+		rtspURL := GetLiveRTSPURL(GetLiveRTSPURLParams{
+			Username: device.Username,
+			Password: device.Password,
+			Host:     device.Ip,
+			Port:     554,
+			Channel:  int(stream.Channel),
+			Subtype:  int(stream.Subtype),
+		})
+		rtspTransport := "tcp"
+		pathConf := mediamtx.PathConf{
+			Source:        &rtspURL,
+			RtspTransport: &rtspTransport,
+		}
+
+		rsp, err := app.MediamtxClient.ConfigPathsGet(ctx, name)
 		if err != nil {
-			if core.IsNotFound(err) {
-				return nil
-			}
+			return err
+		}
+		res, err := mediamtx.ParseConfigPathsGetResponse(rsp)
+		if err != nil {
 			return err
 		}
 
-		if SupportStreams(client.Conn.Feature) {
-			// TODO: this should just schedula a background job
-			return SyncStreams(ctx, deviceID, client.RPC)
+		switch res.StatusCode() {
+		case http.StatusOK:
+			rsp, err := app.MediamtxClient.ConfigPathsPatch(ctx, name, pathConf)
+			if err != nil {
+				return err
+			}
+			rsp.Body.Close()
+		case http.StatusNotFound, http.StatusInternalServerError:
+			rsp, err := app.MediamtxClient.ConfigPathsAdd(ctx, name, pathConf)
+			if err != nil {
+				return err
+			}
+			rsp.Body.Close()
+		default:
+			return errors.New(string(res.Body))
 		}
-
-		return nil
 	}
-	app.Hub.OnDahuaDeviceCreated("dahua.SyncStreams", func(ctx context.Context, event bus.DahuaDeviceCreated) error {
-		return sync(ctx, event.DeviceID)
-	})
-	app.Hub.OnDahuaDeviceUpdated("dahua.SyncStreams", func(ctx context.Context, event bus.DahuaDeviceUpdated) error {
-		return sync(ctx, event.DeviceID)
-	})
+
+	return nil
 }

@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"strconv"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/api"
@@ -13,10 +11,12 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuamqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahuasmtp"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahuatasks"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mediamtx"
 	"github.com/ItsNotGoodName/ipcmanview/internal/mqtt"
 	"github.com/ItsNotGoodName/ipcmanview/internal/rpcserver"
 	"github.com/ItsNotGoodName/ipcmanview/internal/server"
+	"github.com/ItsNotGoodName/ipcmanview/internal/squeuel"
 	"github.com/ItsNotGoodName/ipcmanview/internal/system"
 	"github.com/ItsNotGoodName/ipcmanview/internal/web"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pubsub"
@@ -94,23 +94,6 @@ func (c *CmdServe) Run(ctx *Context) error {
 	dahuaStore := dahua.NewStore().Register(hub)
 	defer dahuaStore.Close()
 
-	// Init
-	system.Init(system.App{
-		CP: configProvider,
-	})
-	auth.Init(auth.App{
-		DB:                   db,
-		Hub:                  hub,
-		TouchSessionThrottle: auth.NewTouchSessionThrottle(),
-	})
-	dahua.Init(dahua.App{
-		DB:         db,
-		Hub:        hub,
-		AFS:        dahuaAFS,
-		Store:      dahuaStore,
-		ScanLocker: dahua.NewScanLocker(),
-	})
-
 	// MediaMTX
 	mediamtxConfig, err := mediamtx.NewConfig(c.MediamtxHost, c.MediamtxStreamProtocol, int(c.MediamtxWebrtcPort), int(c.MediamtxHlsPort))
 	if err != nil {
@@ -122,67 +105,40 @@ func (c *CmdServe) Run(ctx *Context) error {
 		return err
 	}
 
-	hub.OnDahuaDeviceUpdated("DEBUG", func(ctx context.Context, event bus.DahuaDeviceUpdated) error {
-		device, err := dahua.GetDevice(ctx, dahua.GetDeviceFilter{ID: event.DeviceID})
-		if err != nil {
-			return err
-		}
-
-		streams, err := db.C().DahuaListStreamsByDevice(ctx, event.DeviceID)
-		if err != nil {
-			return err
-		}
-
-		for _, stream := range streams {
-			name := mediamtxConfig.DahuaEmbedPath(stream)
-			rtspURL := dahua.GetLiveRTSPURL(dahua.GetLiveRTSPURLParams{
-				Username: device.Username,
-				Password: device.Password,
-				Host:     device.Ip,
-				Port:     554,
-				Channel:  int(stream.Channel),
-				Subtype:  int(stream.Subtype),
-			})
-			rtspTransport := "tcp"
-			pathConf := mediamtx.PathConf{
-				Source:        &rtspURL,
-				RtspTransport: &rtspTransport,
-			}
-
-			rsp, err := mediamtxClient.ConfigPathsGet(ctx, name)
-			if err != nil {
-				return err
-			}
-			res, err := mediamtx.ParseConfigPathsGetResponse(rsp)
-			if err != nil {
-				return err
-			}
-
-			switch res.StatusCode() {
-			case http.StatusOK:
-				rsp, err := mediamtxClient.ConfigPathsPatch(ctx, name, pathConf)
-				if err != nil {
-					return err
-				}
-				rsp.Body.Close()
-			case http.StatusNotFound, http.StatusInternalServerError:
-				rsp, err := mediamtxClient.ConfigPathsAdd(ctx, name, pathConf)
-				if err != nil {
-					return err
-				}
-				rsp.Body.Close()
-			default:
-				return errors.New(string(res.Body))
-			}
-		}
-
-		return nil
+	// Init
+	system.Init(system.App{
+		CP: configProvider,
+	})
+	auth.Init(auth.App{
+		DB:                   db,
+		Hub:                  hub,
+		TouchSessionThrottle: auth.NewTouchSessionThrottle(),
+	})
+	dahua.Init(dahua.App{
+		DB:             db,
+		Hub:            hub,
+		AFS:            dahuaAFS,
+		Store:          dahuaStore,
+		ScanLocker:     dahua.NewScanLocker(),
+		MediamtxClient: mediamtxClient,
+		MediamtxConfig: mediamtxConfig,
+	})
+	dahuatasks.Init(dahuatasks.App{
+		DB:  db,
+		Hub: hub,
 	})
 
 	// Dahua
 	if err := dahua.Normalize(ctx); err != nil {
 		return err
 	}
+
+	// Sync stream queue
+	super.Add(squeuel.NewWorker(db, dahuatasks.SyncStreamTask.Queue, dahuatasks.HandleSyncStreamTask).Register(hub))
+	// Push stream queue
+	super.Add(squeuel.NewWorker(db, dahuatasks.PushStreamTask.Queue, dahuatasks.HandlePushStreamTask).Register(hub))
+
+	dahuatasks.RegisterStreams()
 
 	dahuaWorkerHooks := dahua.NewDefaultWorkerHooks()
 
@@ -198,8 +154,6 @@ func (c *CmdServe) Run(ctx *Context) error {
 		Bootstrap(ctx); err != nil {
 		return err
 	}
-
-	dahua.RegisterStreams()
 
 	// super.Add(dahua.NewAferoService(db, dahuaAFS))
 	//

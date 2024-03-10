@@ -107,7 +107,7 @@ func FlagChannel(c chan<- struct{}) {
 func First(s ...string) string {
 	for _, s := range s {
 		if s != "" {
-			return ""
+			return s
 		}
 	}
 	return ""

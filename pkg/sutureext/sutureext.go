@@ -12,7 +12,6 @@ import (
 )
 
 func EventHook() suture.EventHook {
-	var prevTerminate suture.EventServiceTerminate
 	return func(ei suture.Event) {
 		switch e := ei.(type) {
 		case suture.EventStopTimeout:
@@ -21,12 +20,7 @@ func EventHook() suture.EventHook {
 			log.Warn().Msg("Caught a service panic, which shouldn't happen")
 			log.Info().Str("panic", e.PanicMsg).Msg(e.Stacktrace)
 		case suture.EventServiceTerminate:
-			if e.ServiceName == prevTerminate.ServiceName && e.Err == prevTerminate.Err {
-				log.Debug().Str("supervisor", e.SupervisorName).Str("service", e.ServiceName).Str("err", fmt.Sprint(e.Err)).Msg("Service failed")
-			} else {
-				log.Info().Str("supervisor", e.SupervisorName).Str("service", e.ServiceName).Str("err", fmt.Sprint(e.Err)).Msg("Service failed")
-			}
-			prevTerminate = e
+			log.Err(fmt.Errorf("%s", e.Err)).Str("supervisor", e.SupervisorName).Str("service", e.ServiceName).Msg("Service failed")
 			logJSON(log.Debug(), e)
 		case suture.EventBackoff:
 			log.Debug().Str("supervisor", e.SupervisorName).Msg("Too many service failures - entering the backoff state")

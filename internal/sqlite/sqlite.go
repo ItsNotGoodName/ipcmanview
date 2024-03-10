@@ -52,6 +52,9 @@ type DB struct {
 
 type Tx struct {
 	*sql.Tx
+	hooks *struct {
+		post []func()
+	}
 }
 
 func (db DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
@@ -124,7 +127,8 @@ func (db DB) BeginTx(ctx context.Context, write bool) (Tx, error) {
 		return Tx{}, err
 	}
 	return Tx{
-		Tx: tx,
+		Tx:    tx,
+		hooks: &struct{ post []func() }{},
 	}, nil
 }
 
@@ -132,7 +136,20 @@ func (tx Tx) Commit() error {
 	log.Debug().
 		Str("func", "Commit (Tx)").
 		Msg("")
-	return tx.Tx.Commit()
+
+	if err := tx.Tx.Commit(); err != nil {
+		return err
+	}
+
+	for _, fn := range tx.hooks.post {
+		fn()
+	}
+
+	return nil
+}
+
+func (tx Tx) CommitHook(fn func()) {
+	tx.hooks.post = append(tx.hooks.post, fn)
 }
 
 func (tx Tx) Rollback() error {

@@ -102,10 +102,10 @@ func CreateEmail(ctx context.Context, arg CreateEmailParams) (int64, error) {
 		}
 	}
 
-	// Publish email created event
-	if err := system.CreateEvent(ctx, app.DB, action.DahuaEmailCreated.Create(res.MessageID)); err != nil {
+	if err := system.CreateEvent(ctx, app.DB.C(), action.DahuaEmailCreated.Create(res.MessageID)); err != nil {
 		return 0, err
 	}
+
 	app.Hub.DahuaEmailCreated(bus.DahuaEmailCreated{
 		DeviceID:  arg.DeviceID,
 		MessageID: res.MessageID,

@@ -198,6 +198,18 @@ type GroupUser struct {
 	CreatedAt types.Time
 }
 
+type Squeuel struct {
+	ID          string
+	TaskID      sql.NullString
+	Queue       string
+	Payload     []byte
+	Timeout     types.Time
+	Received    int64
+	MaxReceived int64
+	CreatedAt   types.Time
+	UpdatedAt   types.Time
+}
+
 type User struct {
 	ID         int64
 	Email      string

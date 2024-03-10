@@ -41,7 +41,7 @@ type Event struct {
 	Data   []byte
 }
 
-func createEvent(ctx context.Context, db sqlite.DBTx, event Event) error {
+func CreateEvent(ctx context.Context, db sqlite.DBTx, event Event) error {
 	actor := core.UseActor(ctx)
 
 	_, err := db.CreateEvent(ctx, repo.CreateEventParams{
@@ -55,17 +55,4 @@ func createEvent(ctx context.Context, db sqlite.DBTx, event Event) error {
 		CreatedAt: types.NewTime(time.Now()),
 	})
 	return err
-}
-
-func CreateEvent(ctx context.Context, db sqlite.DB, event Event) error {
-	return createEvent(ctx, db.C(), event)
-}
-
-func CreateEventAndCommit(ctx context.Context, tx sqlite.Tx, event Event) error {
-	err := createEvent(ctx, tx.C(), event)
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit()
 }

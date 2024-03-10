@@ -151,9 +151,14 @@ func createDahuaDevice(ctx context.Context, arg repo.DahuaCreateDeviceParams) (i
 		return 0, err
 	}
 
-	if err := system.CreateEventAndCommit(ctx, tx, action.DahuaDeviceCreated.Create(id)); err != nil {
+	if err := system.CreateEvent(ctx, tx.C(), action.DahuaDeviceCreated.Create(id)); err != nil {
 		return 0, err
 	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+
 	app.Hub.DahuaDeviceCreated(bus.DahuaDeviceCreated{
 		DeviceID: id,
 	})
@@ -228,9 +233,14 @@ func updateDevice(ctx context.Context, arg repo.DahuaUpdateDeviceParams) error {
 		return err
 	}
 
-	if err := system.CreateEventAndCommit(ctx, tx, action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
+	if err := system.CreateEvent(ctx, tx.C(), action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
 		return err
 	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
 	app.Hub.DahuaDeviceUpdated(bus.DahuaDeviceUpdated{
 		DeviceID: arg.ID,
 	})
@@ -257,9 +267,14 @@ func deleteDevice(ctx context.Context, id int64) error {
 		return err
 	}
 
-	if err := system.CreateEventAndCommit(ctx, tx, action.DahuaDeviceDeleted.Create(id)); err != nil {
+	if err := system.CreateEvent(ctx, tx.C(), action.DahuaDeviceDeleted.Create(id)); err != nil {
 		return err
 	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
 	app.Hub.DahuaDeviceDeleted(bus.DahuaDeviceDeleted{
 		DeviceID: id,
 	})
@@ -292,9 +307,14 @@ func updateDeviceDisabled(ctx context.Context, arg repo.DahuaUpdateDeviceDisable
 		return err
 	}
 
-	if err := system.CreateEventAndCommit(ctx, tx, action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
+	if err := system.CreateEvent(ctx, tx.C(), action.DahuaDeviceUpdated.Create(arg.ID)); err != nil {
 		return err
 	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
 	app.Hub.DahuaDeviceUpdated(bus.DahuaDeviceUpdated{
 		DeviceID: arg.ID,
 	})

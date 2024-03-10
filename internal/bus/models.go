@@ -5,6 +5,10 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/repo"
 )
 
+type SqueuelEnqueued struct {
+	Queue string
+}
+
 type UserSecurityUpdated struct {
 	UserID int64
 }
