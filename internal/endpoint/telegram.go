@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -67,14 +66,14 @@ func (t Telegram) Send(ctx context.Context, msg Message) error {
 			// TODO: use sendMediaGroup when more than 1 attachment
 
 			// Send with 1 image
-			if err := t.sendPhoto(ctx, chatID, body, images[0].Name, images[0].Reader); err != nil {
+			if err := t.sendPhoto(ctx, chatID, body, images[0].Name, images[0].Data); err != nil {
 				errs = append(errs, err)
 				continue
 			}
 
 			// Send rest of images
 			for i := 1; i < imagesLength; i++ {
-				if err := t.sendPhoto(ctx, chatID, "", images[i].Name, images[i].Reader); err != nil {
+				if err := t.sendPhoto(ctx, chatID, "", images[i].Name, images[i].Data); err != nil {
 					errs = append(errs, err)
 					break
 				}
@@ -128,7 +127,7 @@ func (t Telegram) sendMessage(ctx context.Context, text string, chatID string) e
 	return nil
 }
 
-func (t Telegram) sendPhoto(ctx context.Context, chatID string, caption, name string, file io.Reader) error {
+func (t Telegram) sendPhoto(ctx context.Context, chatID string, caption, name string, data []byte) error {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
@@ -137,8 +136,8 @@ func (t Telegram) sendPhoto(ctx context.Context, chatID string, caption, name st
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(w, file)
-	if err != nil {
+
+	if _, err := w.Write(data); err != nil {
 		return err
 	}
 

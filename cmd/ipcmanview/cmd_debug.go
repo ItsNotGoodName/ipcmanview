@@ -1,8 +1,11 @@
 package main
 
 import (
+	"io"
 	"os"
 
+	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
+	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/endpoint"
 )
 
@@ -11,6 +14,34 @@ type CmdDebug struct {
 }
 
 func (c *CmdDebug) Run(ctx *Context) error {
+	if err := c.init(); err != nil {
+		return err
+	}
+
+	db, err := c.useDB(ctx)
+	if err != nil {
+		return err
+	}
+
+	hub := bus.NewHub(ctx)
+
+	afs, err := c.useDahuaAFS()
+	if err != nil {
+		return err
+	}
+
+	store := dahua.NewStore().Register(hub)
+
+	scanLocker := dahua.NewScanLocker()
+
+	dahua.Init(dahua.App{
+		DB:         db,
+		Hub:        hub,
+		AFS:        afs,
+		Store:      store,
+		ScanLocker: scanLocker,
+	})
+
 	urL, _ := os.LookupEnv("SENDER_URL")
 
 	sender, err := endpoint.Build(urL)
@@ -18,33 +49,30 @@ func (c *CmdDebug) Run(ctx *Context) error {
 		return err
 	}
 
+	f, err := afs.Open("8154a5ae-fcfd-41e4-be66-edacea89d255.jpg")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
 	return sender.Send(ctx, endpoint.Message{
-		Title:       "Test title",
-		Body:        "Test body.",
-		Attachments: []endpoint.Attachment{},
+		Title: "Test title",
+		Body:  "Test body.",
+		Attachments: []endpoint.Attachment{
+			{
+				Name: "Test",
+				Mime: "image/jpeg",
+				Data: data,
+			},
+		},
 	})
 }
 
-// func (c *CmdDebug) Run(ctx *Context) error {
-// 	if err := c.init(); err != nil {
-// 		return err
-// 	}
-//
-// 	db, err := c.useDB(ctx)
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	hub := bus.NewHub(ctx)
-//
-// 	dahua.Init(dahua.App{
-// 		DB:         db,
-// 		Hub:        hub,
-// 		AFS:        nil,
-// 		Store:      nil,
-// 		ScanLocker: dahua.ScanLocker{},
-// 	})
-//
 // 	hub.OnDahuaFileCreated("DEBUG", func(ctx context.Context, event bus.DahuaFileCreated) error {
 // 		fmt.Println("DEVICE:", event.DeviceID, "COUNT", event.Count)
 // 		return nil
@@ -74,4 +102,3 @@ func (c *CmdDebug) Run(ctx *Context) error {
 // 	fmt.Println("DURATION:", time.Now().Sub(start))
 //
 // 	return nil
-// }

@@ -3,7 +3,6 @@ package endpoint
 import (
 	"context"
 	"fmt"
-	"io"
 	"strings"
 )
 
@@ -20,7 +19,7 @@ type Message struct {
 type Attachment struct {
 	Name string
 	Mime string
-	io.Reader
+	Data []byte
 }
 
 func (a Attachment) IsImage() bool {
