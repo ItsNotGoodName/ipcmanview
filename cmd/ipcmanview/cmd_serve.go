@@ -168,7 +168,7 @@ func (c *CmdServe) Run(ctx *Context) error {
 	}
 
 	// SMTP
-	super.Add(dahuasmtp.NewServer(dahuasmtp.NewBackend(), core.Address(c.SmtpHost, int(c.SmtpPort))))
+	super.Add(dahuasmtp.NewServer(dahuasmtp.NewBackend(ctx), core.Address(c.SmtpHost, int(c.SmtpPort))))
 
 	// HTTP router
 	httpRouter := server.NewHTTPRouter(web.RouteAssets)

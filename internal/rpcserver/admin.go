@@ -105,7 +105,7 @@ func (a *Admin) GetAdminDevicesPage(ctx context.Context, req *rpc.GetAdminDevice
 }
 
 func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevicesIDPageReq) (*rpc.GetAdminDevicesIDPageResp, error) {
-	v, err := dahua.GetDevice(ctx, dahua.GetDeviceFilter{ID: req.Id})
+	v, err := dahua.GetDevice(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (a *Admin) GetAdminDevicesIDPage(ctx context.Context, req *rpc.GetAdminDevi
 }
 
 func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetDeviceResp, error) {
-	v, err := dahua.GetDevice(ctx, dahua.GetDeviceFilter{ID: req.Id})
+	v, err := dahua.GetDevice(ctx, req.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +140,7 @@ func (a *Admin) GetDevice(ctx context.Context, req *rpc.GetDeviceReq) (*rpc.GetD
 		Username: v.Username,
 		Location: v.Location.String(),
 		Features: dahua.FeatureToStrings(v.Feature),
+		Email:    v.Email.String,
 	}, nil
 }
 
@@ -160,12 +161,14 @@ func (a *Admin) CreateDevice(ctx context.Context, req *rpc.CreateDeviceReq) (*rp
 		Password: req.Password,
 		Location: loc,
 		Feature:  dahua.FeatureFromStrings(req.Features),
+		Email:    req.Email,
 	})
 	if err != nil {
 		if errs, ok := core.AsFieldErrors(err); ok {
 			return nil, newInvalidArgument(errs,
 				keymap("name", "Name"),
 				keymap("url", "URL"),
+				keymap("email", "Email"),
 			)
 		}
 		return nil, err
@@ -194,12 +197,14 @@ func (a *Admin) UpdateDevice(ctx context.Context, req *rpc.UpdateDeviceReq) (*em
 		NewPassword: req.NewPassword,
 		Location:    loc,
 		Feature:     dahua.FeatureFromStrings(req.Features),
+		Email:       req.Email,
 	})
 	if err != nil {
 		if errs, ok := core.AsFieldErrors(err); ok {
 			return nil, newInvalidArgument(errs,
 				keymap("name", "Name"),
 				keymap("url", "URL"),
+				keymap("email", "Email"),
 			)
 		}
 		return nil, err

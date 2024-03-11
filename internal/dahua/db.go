@@ -160,24 +160,11 @@ func ListLatestFiles(ctx context.Context, count int) ([]repo.DahuaFile, error) {
 	return res, err
 }
 
-type GetDeviceFilter struct {
-	ID int64
-	IP string
-}
-
-func GetDevice(ctx context.Context, filter GetDeviceFilter) (repo.DahuaDevice, error) {
-	eq := sq.Eq{}
-	if filter.ID != 0 {
-		eq["id"] = filter.ID
-	}
-	if filter.IP != "" {
-		eq["ip"] = filter.IP
-	}
-
+func GetDevice(ctx context.Context, id int64) (repo.DahuaDevice, error) {
 	sb := sq.
 		Select("*").
 		From("dahua_devices").
-		Where(eq)
+		Where("id = ?", id)
 
 	var res repo.DahuaDevice
 	err := ssq.QueryOne(ctx, app.DB, &res, authFilter(ctx, sb, "dahua_devices.id", levelDefault))

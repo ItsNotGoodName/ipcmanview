@@ -331,6 +331,7 @@ type CreateForm = {
   features: {
     array: string[]
   }
+  email: string
 }
 
 function CreateForm() {
@@ -342,6 +343,7 @@ function CreateForm() {
       password: "",
       location: "",
       features: { array: [] },
+      email: ""
     }
   });
   const submitForm = async (data: CreateForm) => {
@@ -353,7 +355,8 @@ function CreateForm() {
         initialValues: {
           ...data,
           name: "",
-          url: ""
+          url: "",
+          email: ""
         },
       }))
   }
@@ -432,6 +435,22 @@ function CreateForm() {
       <Field name="features.array" type="string[]">
         {(field) => <FeaturesField form={form} field={field} />}
       </Field>
+      <Field name="email">
+        {(field, props) => (
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>Email</TextFieldLabel>
+            <TextFieldInput
+              {...props}
+              placeholder="Email"
+            />
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
+        )}
+      </Field>
       <Button type="submit" disabled={form.submitting}>
         <Show when={!form.submitting} fallback="Creating device">Create device</Show>
       </Button>
@@ -452,7 +471,7 @@ function UpdateForm(props: { id: string }) {
 }
 
 type UpdateForm = {
-  id: any
+  id: string
   name: string
   url: string
   username: string
@@ -461,6 +480,7 @@ type UpdateForm = {
   features: {
     array: string[]
   }
+  email: string
 }
 
 function UpdateFormForm(props: { device: GetDeviceResp, refetchDevice: () => Promise<void> }) {
@@ -482,7 +502,7 @@ function UpdateFormForm(props: { device: GetDeviceResp, refetchDevice: () => Pro
 
   return (
     <Form class="flex flex-col gap-4" onSubmit={submitForm}>
-      <Field name="id" type="number">
+      <Field name="id">
         {(field, props) => <input {...props} type="hidden" value={field.value} />}
       </Field>
       <Field name="name">
@@ -556,6 +576,22 @@ function UpdateFormForm(props: { device: GetDeviceResp, refetchDevice: () => Pro
       </Field>
       <Field name="features.array" type="string[]">
         {(field) => <FeaturesField form={form} field={field} />}
+      </Field>
+      <Field name="email">
+        {(field, props) => (
+          <TextFieldRoot
+            validationState={validationState(field.error)}
+            value={field.value}
+            class="space-y-2"
+          >
+            <TextFieldLabel>Email</TextFieldLabel>
+            <TextFieldInput
+              {...props}
+              placeholder="Email"
+            />
+            <TextFieldErrorMessage>{field.error}</TextFieldErrorMessage>
+          </TextFieldRoot>
+        )}
       </Field>
       <div class="flex flex-col gap-4 sm:flex-row-reverse">
         <Button type="submit" disabled={formDisabled()} class="sm:flex-1">

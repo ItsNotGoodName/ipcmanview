@@ -656,6 +656,7 @@ message CreateDeviceReq {
   string password = 4;
   string location = 5;
   repeated string features = 6;
+  string email = 7;
 }
 message CreateDeviceResp {
   int64 id = 1;
@@ -671,6 +672,7 @@ message GetDeviceResp {
   string username = 4;
   string location = 5;
   repeated string features = 6;
+  string email = 7;
 }
 
 message UpdateDeviceReq {
@@ -681,6 +683,7 @@ message UpdateDeviceReq {
   string new_password = 5;
   string location = 6;
   repeated string features = 7;
+  string email = 8;
 }
 
 message DeleteDeviceReq {

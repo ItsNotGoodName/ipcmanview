@@ -22,6 +22,7 @@ func deviceFrom(v repo.DahuaDevice) _Device {
 		Name:     v.Name,
 		URL:      v.Url.URL,
 		Username: v.Username,
+		Email:    v.Email.String,
 	}
 }
 
@@ -29,11 +30,14 @@ type _Device struct {
 	Name     string `validate:"required,lte=64"`
 	URL      *url.URL
 	Username string
+	Email    string `validate:"omitempty,lte=128,email"`
 }
 
 func (d *_Device) normalize(create bool) {
 	// Name
 	d.Name = strings.TrimSpace(d.Name)
+	// Email
+	d.Email = strings.TrimSpace(d.Email)
 	// URL
 	if !slices.Contains([]string{"http", "https"}, d.URL.Scheme) {
 		switch d.URL.Port() {
@@ -86,6 +90,7 @@ type CreateDeviceParams struct {
 	Password string
 	Location *time.Location
 	Feature  models.DahuaFeature
+	Email    string
 }
 
 func CreateDevice(ctx context.Context, arg CreateDeviceParams) (int64, error) {
@@ -97,6 +102,7 @@ func CreateDevice(ctx context.Context, arg CreateDeviceParams) (int64, error) {
 		Name:     arg.Name,
 		URL:      arg.URL,
 		Username: arg.Username,
+		Email:    arg.Email,
 	}
 	model.normalize(true)
 
@@ -119,6 +125,7 @@ func CreateDevice(ctx context.Context, arg CreateDeviceParams) (int64, error) {
 		Password:  arg.Password,
 		Location:  types.NewLocation(arg.Location),
 		Feature:   arg.Feature,
+		Email:     core.StringToNullString(model.Email),
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
@@ -174,6 +181,7 @@ type UpdateDeviceParams struct {
 	NewPassword string
 	Location    *time.Location
 	Feature     models.DahuaFeature
+	Email       string
 }
 
 func UpdateDevice(ctx context.Context, arg UpdateDeviceParams) error {
@@ -181,9 +189,7 @@ func UpdateDevice(ctx context.Context, arg UpdateDeviceParams) error {
 		return err
 	}
 
-	dbModel, err := GetDevice(ctx, GetDeviceFilter{
-		ID: arg.ID,
-	})
+	dbModel, err := GetDevice(ctx, arg.ID)
 	if err != nil {
 		return err
 	}
@@ -193,6 +199,7 @@ func UpdateDevice(ctx context.Context, arg UpdateDeviceParams) error {
 	model.Name = arg.Name
 	model.URL = arg.URL
 	model.Username = arg.Username
+	model.Email = arg.Email
 	model.normalize(false)
 
 	if err := core.ValidateStruct(ctx, model); err != nil {
@@ -217,6 +224,7 @@ func UpdateDevice(ctx context.Context, arg UpdateDeviceParams) error {
 		Password:  password,
 		Location:  types.NewLocation(arg.Location),
 		Feature:   arg.Feature,
+		Email:     core.StringToNullString(model.Email),
 		UpdatedAt: types.NewTime(time.Now()),
 		ID:        dbModel.ID,
 	})

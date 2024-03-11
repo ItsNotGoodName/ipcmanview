@@ -8,9 +8,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type Config func(s *smtp.Server)
+type Option func(s *smtp.Server)
 
-func WithMaxMessageBytes(maxMessageBytes int64) Config {
+func MaxMessageBytes(maxMessageBytes int64) Option {
 	return func(s *smtp.Server) {
 		s.MaxMessageBytes = maxMessageBytes
 	}
@@ -20,7 +20,7 @@ type Server struct {
 	server *smtp.Server
 }
 
-func NewServer(backend smtp.Backend, address string, cfg ...Config) Server {
+func NewServer(backend smtp.Backend, address string, options ...Option) Server {
 	server := smtp.NewServer(backend)
 
 	server.Addr = address
@@ -31,8 +31,8 @@ func NewServer(backend smtp.Backend, address string, cfg ...Config) Server {
 	server.MaxRecipients = 50
 	server.AllowInsecureAuth = true
 
-	for _, c := range cfg {
-		c(server)
+	for _, option := range options {
+		option(server)
 	}
 
 	enableMechLogin(backend, server)
@@ -43,7 +43,7 @@ func NewServer(backend smtp.Backend, address string, cfg ...Config) Server {
 }
 
 func (Server) String() string {
-	return "smtp.Server"
+	return "dahuasmtp.Server"
 }
 
 func (s Server) Serve(ctx context.Context) error {

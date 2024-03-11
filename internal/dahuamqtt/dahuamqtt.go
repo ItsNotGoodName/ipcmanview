@@ -82,7 +82,7 @@ func (c Conn) haSync(ctx context.Context) error {
 }
 
 func (c Conn) haSyncDevice(ctx context.Context, id int64) error {
-	device, err := dahua.GetDevice(ctx, dahua.GetDeviceFilter{ID: id})
+	device, err := dahua.GetDevice(ctx, id)
 	if err != nil {
 		return err
 	}

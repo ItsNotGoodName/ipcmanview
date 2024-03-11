@@ -37,6 +37,7 @@ type DahuaDevice struct {
 	Password   string
 	Location   types.Location
 	Feature    models.DahuaFeature
+	Email      sql.NullString
 	CreatedAt  types.Time
 	UpdatedAt  types.Time
 	DisabledAt types.NullTime

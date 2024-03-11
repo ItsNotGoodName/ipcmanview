@@ -8,11 +8,12 @@ INSERT INTO
     password,
     location,
     feature,
+    email,
     created_at,
     updated_at
   )
 VALUES
-  (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
+  (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id;
 
 -- name: DahuaCheckDevice :one
 SELECT
@@ -21,6 +22,15 @@ FROM
   dahua_devices
 WHERE
   id = ?;
+
+-- name: DahuaGetDeviceForSMTP :one
+SELECT
+  *
+FROM
+  dahua_devices
+WHERE
+  ip = ?
+  OR email = ?;
 
 -- name: DahuaUpdateDevice :one
 UPDATE dahua_devices
@@ -32,6 +42,7 @@ SET
   password = ?,
   location = ?,
   feature = ?,
+  email = ?,
   updated_at = ?
 WHERE
   id = ? RETURNING id;
@@ -680,4 +691,3 @@ WHERE
   )
 ORDER BY
   level DESC;
-

@@ -211,3 +211,19 @@ func createEmailAttachmentFile(ctx context.Context, arg createEmailAttachmentFil
 
 	return aferoFile.Ready(ctx)
 }
+
+type LoginSMTPParams struct {
+	IP   string
+	From string
+}
+
+func LoginSMTP(ctx context.Context, arg LoginSMTPParams) (repo.DahuaDevice, error) {
+	if _, err := core.AssertAdmin(ctx); err != nil {
+		return repo.DahuaDevice{}, err
+	}
+
+	return app.DB.C().DahuaGetDeviceForSMTP(ctx, repo.DahuaGetDeviceForSMTPParams{
+		Ip:    arg.IP,
+		Email: core.NewNullString(arg.From),
+	})
+}

@@ -17,12 +17,14 @@ import (
 
 // The Backend implements SMTP server methods.
 type Backend struct {
+	ctx context.Context
 	log zerolog.Logger
 }
 
-func NewBackend() *Backend {
+func NewBackend(ctx context.Context) *Backend {
 	log := log.With().Str("package", "dahuasmtp").Logger()
 	return &Backend{
+		ctx: ctx,
 		log: log,
 	}
 }
@@ -34,13 +36,17 @@ func (b *Backend) NewSession(state *smtp.Conn) (smtp.Session, error) {
 	// log.Debug().Msg("NewSession")
 
 	return &session{
+		ctx:     b.ctx,
 		log:     log,
 		address: address,
+		from:    "",
+		to:      "",
 	}, nil
 }
 
 // A Session is returned after EHLO.
 type session struct {
+	ctx     context.Context
 	log     zerolog.Logger
 	address string
 	from    string
@@ -72,13 +78,14 @@ func (s *session) Rcpt(to string, opts *smtp.RcptOptions) error {
 func (s *session) Data(r io.Reader) error {
 	// s.log.Debug().Msg("Data")
 
-	ctx := context.Background()
+	ctx := s.ctx
 	log := s.log.With().Logger()
 
 	// Get device by IP
 	host, _ := core.SplitAddress(s.address)
-	device, err := dahua.GetDevice(ctx, dahua.GetDeviceFilter{
-		IP: host,
+	device, err := dahua.LoginSMTP(ctx, dahua.LoginSMTPParams{
+		IP:   host,
+		From: s.from,
 	})
 	if err != nil {
 		if core.IsNotFound(err) {
@@ -109,12 +116,17 @@ func (s *session) Data(r io.Reader) error {
 
 	// Parse date
 	date, err := e.Date()
-	if err != nil && errors.Is(err, mail.ErrHeaderNotPresent) {
+	if err != nil && !errors.Is(err, mail.ErrHeaderNotPresent) {
 		log.Warn().Err(err).Str("date", e.GetHeader("Date")).Msg("Failed to parse date")
 	}
 
+	// Parse subject
+	subject := e.GetHeader("Subject")
+
+	// Parse content
+	content := dahua.ParseEmailContent(e.Text)
+
 	// Create email
-	body := dahua.ParseEmailContent(e.Text)
 	attachments := make([]dahua.CreateEmailParamsAttachment, 0, len(e.Attachments))
 	for _, a := range e.Attachments {
 		attachments = append(attachments, dahua.CreateEmailParamsAttachment{
@@ -127,11 +139,11 @@ func (s *session) Data(r io.Reader) error {
 		Date:              date,
 		From:              s.from,
 		To:                to,
-		Subject:           e.GetHeader("Subject"),
+		Subject:           subject,
 		Text:              e.Text,
-		AlarmEvent:        body.AlarmEvent,
-		AlarmInputChannel: body.AlarmInputChannel,
-		AlarmName:         body.AlarmName,
+		AlarmEvent:        content.AlarmEvent,
+		AlarmInputChannel: content.AlarmInputChannel,
+		AlarmName:         content.AlarmName,
 		Attachments:       attachments,
 	}
 	messageID, err := dahua.CreateEmail(ctx, arg)

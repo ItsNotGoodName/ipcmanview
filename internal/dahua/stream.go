@@ -120,7 +120,7 @@ func PushStreams(ctx context.Context, deviceID int64) error {
 		return err
 	}
 
-	device, err := GetDevice(ctx, GetDeviceFilter{ID: deviceID})
+	device, err := GetDevice(ctx, deviceID)
 	if err != nil {
 		return err
 	}

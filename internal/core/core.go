@@ -75,6 +75,13 @@ func NewNullString(s string) sql.NullString {
 	}
 }
 
+func StringToNullString(s string) sql.NullString {
+	if s == "" {
+		return sql.NullString{}
+	}
+	return NewNullString(s)
+}
+
 func ErrorToNullString(err error) sql.NullString {
 	if err == nil {
 		return sql.NullString{}

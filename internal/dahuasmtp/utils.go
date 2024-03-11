@@ -1,10 +1,6 @@
 package dahuasmtp
 
 import (
-	"mime"
-	"path/filepath"
-	"strings"
-
 	"github.com/emersion/go-sasl"
 	"github.com/emersion/go-smtp"
 )
@@ -22,25 +18,4 @@ func enableMechLogin(be smtp.Backend, s *smtp.Server) {
 			return sess.AuthPlain(username, password)
 		})
 	})
-}
-
-func parseFileExtension(fileName, contentType string) string {
-	originalExt := strings.ToLower(filepath.Ext(fileName))
-
-	ext, err := mime.ExtensionsByType(contentType)
-	if err != nil || len(ext) == 0 {
-		if originalExt == "" {
-			return ""
-		}
-
-		return originalExt
-	}
-
-	for _, e := range ext {
-		if e == originalExt {
-			return originalExt
-		}
-	}
-
-	return ext[0]
 }
