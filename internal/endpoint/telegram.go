@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
-	"github.com/k0kubun/pp/v3"
 )
 
 func BuildTelegram(urL string) (Sender, error) {
@@ -21,7 +20,7 @@ func BuildTelegram(urL string) (Sender, error) {
 
 	paths := strings.Split(after, "/")
 	if len(paths) < 2 {
-		return nil, fmt.Errorf("invalid url")
+		return nil, fmt.Errorf("no chat id supplied")
 	}
 
 	return NewTelegram(paths[0], paths[1], paths[2:]...), nil
@@ -42,6 +41,7 @@ type Telegram struct {
 func (t Telegram) Send(ctx context.Context, msg Message) error {
 	body := core.First(msg.Body, msg.Title)
 
+	// Get images
 	var images []Attachment
 	for _, attachment := range msg.Attachments {
 		if attachment.IsImage() {
@@ -50,35 +50,34 @@ func (t Telegram) Send(ctx context.Context, msg Message) error {
 	}
 
 	var errs []error
-
-	pp.Println(t.chatIDs)
-
-	for _, chatID := range t.chatIDs {
-		// Send with 0 attachments
-		if len(images) == 0 {
+	if len(images) == 0 {
+		// Send message
+		for _, chatID := range t.chatIDs {
 			if err := t.sendMessage(ctx, body, chatID); err != nil {
 				errs = append(errs, err)
 			}
-			continue
 		}
-
-		// TODO: use sendMediaGroup when more than 1 attachment
-
-		// Send with 1 attachment
-		if err := t.sendPhoto(ctx, chatID, body, images[0].Name, images[0].Reader); err != nil {
-			errs = append(errs, err)
-			continue
+	} else {
+		// Send images
+		imagesLength := len(images)
+		if imagesLength > 10 {
+			imagesLength = 10
 		}
+		for _, chatID := range t.chatIDs {
+			// TODO: use sendMediaGroup when more than 1 attachment
 
-		// Send rest of attachments
-		length := len(images)
-		if length > 10 {
-			length = 10
-		}
-		for i := 1; i < length; i++ {
-			if err := t.sendPhoto(ctx, chatID, "", images[i].Name, images[i].Reader); err != nil {
+			// Send with 1 image
+			if err := t.sendPhoto(ctx, chatID, body, images[0].Name, images[0].Reader); err != nil {
 				errs = append(errs, err)
-				break
+				continue
+			}
+
+			// Send rest of images
+			for i := 1; i < imagesLength; i++ {
+				if err := t.sendPhoto(ctx, chatID, "", images[i].Name, images[i].Reader); err != nil {
+					errs = append(errs, err)
+					break
+				}
 			}
 		}
 	}
