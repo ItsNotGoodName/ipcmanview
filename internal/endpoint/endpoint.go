@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/url"
 	"strings"
 )
 
@@ -32,14 +31,15 @@ type Sender interface {
 	Send(ctx context.Context, msg Message) error
 }
 
-var Builders = map[string]func(urL *url.URL) (Sender, error){
-	"tgram": TelegramFromURL,
+var Builders = map[string]func(urL string) (Sender, error){
+	"tgram": BuildTelegram,
 }
 
-func SenderFromURL(urL *url.URL) (Sender, error) {
-	builder, ok := Builders[urL.Scheme]
+func Build(urL string) (Sender, error) {
+	scheme, _, _ := strings.Cut(urL, "://")
+	builder, ok := Builders[scheme]
 	if !ok {
-		return nil, fmt.Errorf("%w: %s", ErrBuilderNotFound, urL.Scheme)
+		return nil, fmt.Errorf("%w: %s", ErrBuilderNotFound, scheme)
 	}
 	return builder(urL)
 }

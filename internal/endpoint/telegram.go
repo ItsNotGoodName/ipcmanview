@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -12,25 +13,30 @@ import (
 	"strings"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
+	"github.com/k0kubun/pp/v3"
 )
 
-func TelegramFromURL(urL *url.URL) (Sender, error) {
-	token := urL.Hostname()
-	chatID, _ := strings.CutPrefix(urL.Path, "/")
+func BuildTelegram(urL string) (Sender, error) {
+	_, after, _ := strings.Cut(urL, "://")
 
-	return NewTelegram(token, chatID), nil
+	paths := strings.Split(after, "/")
+	if len(paths) < 2 {
+		return nil, fmt.Errorf("invalid url")
+	}
+
+	return NewTelegram(paths[0], paths[1], paths[2:]...), nil
 }
 
-func NewTelegram(token, chatID string) Telegram {
+func NewTelegram(token, chatID string, chatIDs ...string) Telegram {
 	return Telegram{
-		token:  token,
-		chatID: chatID,
+		token:   token,
+		chatIDs: append([]string{chatID}, chatIDs...),
 	}
 }
 
 type Telegram struct {
-	token  string
-	chatID string
+	token   string
+	chatIDs []string
 }
 
 func (t Telegram) Send(ctx context.Context, msg Message) error {
@@ -43,30 +49,41 @@ func (t Telegram) Send(ctx context.Context, msg Message) error {
 		}
 	}
 
-	// Send with 0 attachments
-	if len(images) == 0 {
-		return t.sendMessage(ctx, body)
-	}
+	var errs []error
 
-	// TODO: use sendMediaGroup when more than 1 attachment
+	pp.Println(t.chatIDs)
 
-	// Send with 1 attachment
-	if err := t.sendPhoto(ctx, body, images[0].Name, images[0].Reader); err != nil {
-		return err
-	}
+	for _, chatID := range t.chatIDs {
+		// Send with 0 attachments
+		if len(images) == 0 {
+			if err := t.sendMessage(ctx, body, chatID); err != nil {
+				errs = append(errs, err)
+			}
+			continue
+		}
 
-	// Send rest of attachments
-	length := len(images)
-	if length > 10 {
-		length = 10
-	}
-	for i := 1; i < length; i++ {
-		if err := t.sendPhoto(ctx, "", images[i].Name, images[i].Reader); err != nil {
-			return err
+		// TODO: use sendMediaGroup when more than 1 attachment
+
+		// Send with 1 attachment
+		if err := t.sendPhoto(ctx, chatID, body, images[0].Name, images[0].Reader); err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		// Send rest of attachments
+		length := len(images)
+		if length > 10 {
+			length = 10
+		}
+		for i := 1; i < length; i++ {
+			if err := t.sendPhoto(ctx, chatID, "", images[i].Name, images[i].Reader); err != nil {
+				errs = append(errs, err)
+				break
+			}
 		}
 	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 type telegramResponse struct {
@@ -74,7 +91,7 @@ type telegramResponse struct {
 	Description string `json:"description"`
 }
 
-func (t Telegram) sendMessage(ctx context.Context, text string) error {
+func (t Telegram) sendMessage(ctx context.Context, text string, chatID string) error {
 	if text == "" {
 		return nil
 	}
@@ -85,7 +102,7 @@ func (t Telegram) sendMessage(ctx context.Context, text string) error {
 	}
 
 	// Create request
-	values := url.Values{"chat_id": {t.chatID}, "text": {text}}
+	values := url.Values{"chat_id": {chatID}, "text": {text}}
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.telegram.org/bot"+t.token+"/sendMessage", strings.NewReader(values.Encode()))
 	if err != nil {
 		return err
@@ -112,7 +129,7 @@ func (t Telegram) sendMessage(ctx context.Context, text string) error {
 	return nil
 }
 
-func (t Telegram) sendPhoto(ctx context.Context, caption, name string, file io.Reader) error {
+func (t Telegram) sendPhoto(ctx context.Context, chatID string, caption, name string, file io.Reader) error {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
@@ -144,7 +161,7 @@ func (t Telegram) sendPhoto(ctx context.Context, caption, name string, file io.R
 	}
 
 	// Create request
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.telegram.org/bot"+t.token+"/sendPhoto?chat_id="+t.chatID, body)
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.telegram.org/bot"+t.token+"/sendPhoto?chat_id="+chatID, body)
 	if err != nil {
 		return err
 	}

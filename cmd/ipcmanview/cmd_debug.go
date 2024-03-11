@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net/url"
 	"os"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/endpoint"
@@ -12,13 +11,9 @@ type CmdDebug struct {
 }
 
 func (c *CmdDebug) Run(ctx *Context) error {
-	urlRaw, _ := os.LookupEnv("DEBUG_URL")
-	urL, err := url.Parse(urlRaw)
-	if err != nil {
-		return err
-	}
+	urL, _ := os.LookupEnv("SENDER_URL")
 
-	sender, err := endpoint.SenderFromURL(urL)
+	sender, err := endpoint.Build(urL)
 	if err != nil {
 		return err
 	}
