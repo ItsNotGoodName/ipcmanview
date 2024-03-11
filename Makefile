@@ -58,10 +58,17 @@ dev-proxy:
 # ---------- Gen
 
 # Generate code
-gen: gen-sqlc gen-pubsub gen-hub gen-proto gen-typescriptify gen-mediamtx
+gen: gen-sqlc gen-proto gen-mediamtx gen-pubsub gen-hub gen-typescriptify 
 
 gen-sqlc:
 	sqlc generate
+
+gen-proto:
+	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto
+	cd $(WEB_PATH) && mkdir -p ./src/twirp && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=$(shell readlink -f rpc) --ts_opt long_type_string rpc.proto
+
+gen-mediamtx:
+	oapi-codegen -package mediamtx ./internal/mediamtx/swagger.json > ./internal/mediamtx/mediamtx.gen.go
 
 gen-pubsub:
 	sh ./scripts/generate-pubsub-events.sh ./internal/bus/models.go
@@ -69,15 +76,8 @@ gen-pubsub:
 gen-hub:
 	go run ./scripts/generate-hub ./internal/bus/models.go
 
-gen-proto:
-	cd rpc && protoc --go_out=. --twirp_out=. rpc.proto
-	cd $(WEB_PATH) && mkdir -p ./src/twirp && pnpm exec protoc --ts_out=./src/twirp --ts_opt=generate_dependencies --proto_path=$(shell readlink -f rpc) --ts_opt long_type_string rpc.proto
-
 gen-typescriptify:
 	go run ./scripts/typescriptify $(WEB_PATH)/src/lib/models.gen.ts
-
-gen-mediamtx:
-	oapi-codegen -package mediamtx ./internal/mediamtx/swagger.json > ./internal/mediamtx/mediamtx.gen.go
 
 # ---------- Tooling
 
