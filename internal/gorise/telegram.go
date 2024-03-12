@@ -1,4 +1,4 @@
-package endpoint
+package gorise
 
 import (
 	"bytes"
@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -14,27 +15,28 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 )
 
-func BuildTelegram(urL string) (Sender, error) {
-	_, after, _ := strings.Cut(urL, "://")
-
-	paths := strings.Split(after, "/")
-	if len(paths) < 2 {
-		return nil, fmt.Errorf("no chat id supplied")
+func BuildTelegram(cfg Config) (Sender, error) {
+	paths := cfg.Paths()
+	if len(paths) > 2 {
+		return nil, fmt.Errorf("telegram: multiple chat ids are not supported")
+	}
+	if len(paths) != 2 {
+		return nil, fmt.Errorf("telegram: no chat id supplied")
 	}
 
-	return NewTelegram(paths[0], paths[1], paths[2:]...), nil
+	return NewTelegram(paths[0], paths[1]), nil
 }
 
-func NewTelegram(token, chatID string, chatIDs ...string) Telegram {
+func NewTelegram(token, chatID string) Telegram {
 	return Telegram{
-		token:   token,
-		chatIDs: append([]string{chatID}, chatIDs...),
+		token:  token,
+		chatID: chatID,
 	}
 }
 
 type Telegram struct {
-	token   string
-	chatIDs []string
+	token  string
+	chatID string
 }
 
 func (t Telegram) Send(ctx context.Context, msg Message) error {
@@ -48,13 +50,10 @@ func (t Telegram) Send(ctx context.Context, msg Message) error {
 		}
 	}
 
-	var errs []error
 	if len(images) == 0 {
 		// Send message
-		for _, chatID := range t.chatIDs {
-			if err := t.sendMessage(ctx, body, chatID); err != nil {
-				errs = append(errs, err)
-			}
+		if err := t.sendMessage(ctx, body); err != nil {
+			return err
 		}
 	} else {
 		// Send images
@@ -62,26 +61,22 @@ func (t Telegram) Send(ctx context.Context, msg Message) error {
 		if imagesLength > 10 {
 			imagesLength = 10
 		}
-		for _, chatID := range t.chatIDs {
-			// TODO: use sendMediaGroup when more than 1 attachment
+		// TODO: use sendMediaGroup when more than 1 attachment
 
-			// Send with 1 image
-			if err := t.sendPhoto(ctx, chatID, body, images[0].Name, images[0].Data); err != nil {
-				errs = append(errs, err)
-				continue
-			}
+		// Send with 1 image
+		if err := t.sendPhoto(ctx, body, images[0].Name, images[0].Reader); err != nil {
+			return err
+		}
 
-			// Send rest of images
-			for i := 1; i < imagesLength; i++ {
-				if err := t.sendPhoto(ctx, chatID, "", images[i].Name, images[i].Data); err != nil {
-					errs = append(errs, err)
-					break
-				}
+		// Send rest of images
+		for i := 1; i < imagesLength; i++ {
+			if err := t.sendPhoto(ctx, "", images[i].Name, images[i].Reader); err != nil {
+				return err
 			}
 		}
 	}
 
-	return errors.Join(errs...)
+	return nil
 }
 
 type telegramResponse struct {
@@ -89,7 +84,7 @@ type telegramResponse struct {
 	Description string `json:"description"`
 }
 
-func (t Telegram) sendMessage(ctx context.Context, text string, chatID string) error {
+func (t Telegram) sendMessage(ctx context.Context, text string) error {
 	if text == "" {
 		return nil
 	}
@@ -100,7 +95,7 @@ func (t Telegram) sendMessage(ctx context.Context, text string, chatID string) e
 	}
 
 	// Create request
-	values := url.Values{"chat_id": {chatID}, "text": {text}}
+	values := url.Values{"chat_id": {t.chatID}, "text": {text}}
 	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.telegram.org/bot"+t.token+"/sendMessage", strings.NewReader(values.Encode()))
 	if err != nil {
 		return err
@@ -127,7 +122,7 @@ func (t Telegram) sendMessage(ctx context.Context, text string, chatID string) e
 	return nil
 }
 
-func (t Telegram) sendPhoto(ctx context.Context, chatID string, caption, name string, data []byte) error {
+func (t Telegram) sendPhoto(ctx context.Context, caption, name string, data io.Reader) error {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
@@ -137,7 +132,7 @@ func (t Telegram) sendPhoto(ctx context.Context, chatID string, caption, name st
 		return err
 	}
 
-	if _, err := w.Write(data); err != nil {
+	if _, err := io.Copy(body, data); err != nil {
 		return err
 	}
 
@@ -159,7 +154,7 @@ func (t Telegram) sendPhoto(ctx context.Context, chatID string, caption, name st
 	}
 
 	// Create request
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.telegram.org/bot"+t.token+"/sendPhoto?chat_id="+chatID, body)
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.telegram.org/bot"+t.token+"/sendPhoto?chat_id="+t.chatID, body)
 	if err != nil {
 		return err
 	}

@@ -1,12 +1,11 @@
 package main
 
 import (
-	"io"
 	"os"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/endpoint"
+	"github.com/ItsNotGoodName/ipcmanview/internal/gorise"
 )
 
 type CmdDebug struct {
@@ -44,7 +43,7 @@ func (c *CmdDebug) Run(ctx *Context) error {
 
 	urL, _ := os.LookupEnv("SENDER_URL")
 
-	sender, err := endpoint.Build(urL)
+	sender, err := gorise.Build(urL)
 	if err != nil {
 		return err
 	}
@@ -55,19 +54,14 @@ func (c *CmdDebug) Run(ctx *Context) error {
 	}
 	defer f.Close()
 
-	data, err := io.ReadAll(f)
-	if err != nil {
-		return err
-	}
-
-	return sender.Send(ctx, endpoint.Message{
+	return sender.Send(ctx, gorise.Message{
 		Title: "Test title",
 		Body:  "Test body.",
-		Attachments: []endpoint.Attachment{
+		Attachments: []gorise.Attachment{
 			{
-				Name: "Test",
-				Mime: "image/jpeg",
-				Data: data,
+				Name:   "Test",
+				Mime:   "image/jpeg",
+				Reader: f,
 			},
 		},
 	})
