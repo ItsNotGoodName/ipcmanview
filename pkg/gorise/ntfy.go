@@ -69,8 +69,10 @@ type ntfyResponse struct {
 
 func (n Ntfy) Send(ctx context.Context, msg Message) error {
 	// Send text
-	text := msg.Text()
-	if text != "" {
+	if text := msg.Text(); text != "" {
+		if len(text) > 32768 {
+			text = text[:32768]
+		}
 		err := func() error {
 			req, err := http.NewRequestWithContext(ctx, "POST", n.url, strings.NewReader(text))
 			if err != nil {

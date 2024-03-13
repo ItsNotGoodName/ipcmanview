@@ -21,7 +21,7 @@ func message() Message {
 		Body:  "Test body.",
 		Attachments: []Attachment{
 			{
-				Name:   "Test name",
+				Name:   "test.jpg",
 				Mime:   "image/jpeg",
 				Reader: bytes.NewBuffer(attachment),
 			},
