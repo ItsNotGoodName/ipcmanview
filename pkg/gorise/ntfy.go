@@ -10,14 +10,14 @@ import (
 )
 
 func BuildNtfy(cfg Config) (Sender, error) {
-	return buildNtfy(false, cfg)
+	return buildNtfy(cfg, false)
 }
 
 func BuildNtfys(cfg Config) (Sender, error) {
-	return buildNtfy(true, cfg)
+	return buildNtfy(cfg, true)
 }
 
-func buildNtfy(https bool, cfg Config) (Sender, error) {
+func buildNtfy(cfg Config, https bool) (Sender, error) {
 	paths := cfg.Paths()
 	pathsLen := len(paths)
 	if pathsLen == 0 {
@@ -60,29 +60,44 @@ type Ntfy struct {
 	url string
 }
 
+type ntfyResponse struct {
+	Code  int    `json:"code"`
+	HTTP  int    `json:"http"`
+	Error string `json:"error"`
+	Link  string `json:"link"`
+}
+
 func (n Ntfy) Send(ctx context.Context, msg Message) error {
+	// Send text
 	text := msg.Text()
 	if text != "" {
-		req, err := http.NewRequestWithContext(ctx, "POST", n.url, strings.NewReader(text))
-		if err != nil {
-			return err
-		}
+		err := func() error {
+			req, err := http.NewRequestWithContext(ctx, "POST", n.url, strings.NewReader(text))
+			if err != nil {
+				return err
+			}
 
-		res, err := http.DefaultClient.Do(req)
+			res, err := http.DefaultClient.Do(req)
+			if err != nil {
+				return err
+			}
+			defer res.Body.Close()
+
+			if res.StatusCode != http.StatusOK {
+				b, _ := io.ReadAll(res.Body)
+				return errors.New(string(b))
+			}
+
+			return nil
+		}()
 		if err != nil {
 			return err
 		}
-		if res.StatusCode != http.StatusOK {
-			b, _ := io.ReadAll(res.Body)
-			res.Body.Close()
-			return errors.New(string(b))
-		}
-		res.Body.Close()
 	}
 
+	// Send attachments
 	for _, a := range msg.Attachments {
 		err := func() error {
-
 			req, err := http.NewRequestWithContext(ctx, "PUT", n.url, a.Reader)
 			if err != nil {
 				return err
