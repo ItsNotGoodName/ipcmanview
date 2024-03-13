@@ -23,6 +23,9 @@ tasks:
       - GOOS=linux GOARCH=arm64       go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Linux_arm64/{{.CMD_NAME}}        {{.PACKAGE}}
       - GOOS=darwin GOARCH=arm64      go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Darwin_arm64/{{.CMD_NAME}}       {{.PACKAGE}}
       - GOOS=windows GOARCH=amd64     go build -ldflags="{{.LDFLAGS}}" -o ./dist/{{.CMD_NAME}}_Windows_x86_64/{{.CMD_NAME}}.exe {{.PACKAGE}}
+      - mkdir -p ./dist/linux     && ln -rsf ./dist/ipcmanview_Linux_x86_64 ./dist/linux/amd64
+      - mkdir -p ./dist/linux/arm && ln -rsf ./dist/ipcmanview_Linux_armv7  ./dist/linux/arm/v7
+      - mkdir -p ./dist/linux     && ln -rsf ./dist/ipcmanview_Linux_arm64  ./dist/linux/arm64
     env:
       CGO_ENABLED: 0
     vars:
@@ -56,7 +59,6 @@ tasks:
 
   nightly:
     deps: [clean]
-    dir: dist
     cmds:
       - task: build-nightly
       - task: compile-artifacts

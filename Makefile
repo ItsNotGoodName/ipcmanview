@@ -84,6 +84,8 @@ gen-typescriptify:
 # Install tooling
 tooling: tooling-air tooling-task tooling-goose tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts tooling-oapi-codegen
 
+tooling-build: tooling-task tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts tooling-oapi-codegen
+
 tooling-air:
 	go install $(TOOL_AIR)
 
@@ -121,10 +123,3 @@ install-atlas:
 	curl -OL https://release.ariga.io/atlas/atlas-community-linux-amd64-latest
 	chmod +x atlas-community-linux-amd64-latest
 	mv atlas-community-linux-amd64-latest ~/.local/bin/atlas
-
-# ---------- Build
-
-build-tooling: tooling-task tooling-sqlc tooling-twirp tooling-protoc-gen-go tooling-protoc-gen-ts tooling-oapi-codegen
-
-build-nightly:
-	task nightly
