@@ -21,10 +21,10 @@ func buildNtfy(cfg Config, https bool) (Sender, error) {
 	paths := cfg.Paths()
 	pathsLen := len(paths)
 	if pathsLen == 0 {
-		return nil, fmt.Errorf("ntfy: no config")
+		return nil, fmt.Errorf("no config")
 	}
 	if pathsLen > 2 {
-		return nil, fmt.Errorf("ntfy: multiple topics are not supported")
+		return nil, fmt.Errorf("multiple topics are not supported")
 	}
 
 	protocol := "http://"

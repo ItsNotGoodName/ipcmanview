@@ -1,3 +1,4 @@
+// Package gorise is a minimal reimplementation of Apprise.
 package gorise
 
 import (
@@ -82,5 +83,11 @@ func Build(urL string) (Sender, error) {
 	if !ok {
 		return nil, fmt.Errorf("%w: %s", ErrBuilderNotFound, url.Scheme)
 	}
-	return builder(url.Config)
+
+	sender, err := builder(url.Config)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", url.Scheme, err)
+	}
+
+	return sender, nil
 }

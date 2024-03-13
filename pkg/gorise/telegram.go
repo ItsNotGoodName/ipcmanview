@@ -18,10 +18,10 @@ import (
 func BuildTelegram(cfg Config) (Sender, error) {
 	paths := cfg.Paths()
 	if len(paths) > 2 {
-		return nil, fmt.Errorf("telegram: multiple chat ids are not supported")
+		return nil, fmt.Errorf("multiple chat ids are not supported")
 	}
 	if len(paths) != 2 {
-		return nil, fmt.Errorf("telegram: no chat id supplied")
+		return nil, fmt.Errorf("no chat id supplied")
 	}
 
 	return NewTelegram(paths[0], paths[1]), nil
