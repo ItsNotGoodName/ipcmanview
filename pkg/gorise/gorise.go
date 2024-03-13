@@ -68,6 +68,8 @@ func (c Config) Paths() []string {
 var Builders = map[string]func(cfg Config) (Sender, error){
 	"console": BuildConsole,
 	"tgram":   BuildTelegram,
+	"ntfy":    BuildNtfy,
+	"ntfys":   BuildNtfys,
 }
 
 func Build(urL string) (Sender, error) {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
-	"github.com/ItsNotGoodName/ipcmanview/internal/gorise"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/gorise"
 )
 
 type CmdDebug struct {
