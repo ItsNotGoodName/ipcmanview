@@ -45,7 +45,7 @@ type Sender interface {
 func NewURL(urL string) (URL, error) {
 	scheme, data, ok := strings.Cut(urL, "://")
 	if !ok {
-		return URL{}, fmt.Errorf("invalid config url")
+		return URL{}, fmt.Errorf("invalid url")
 	}
 
 	return URL{
