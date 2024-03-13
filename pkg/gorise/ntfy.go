@@ -27,11 +27,6 @@ func buildNtfy(cfg Config, https bool) (Sender, error) {
 		return nil, fmt.Errorf("multiple topics are not supported")
 	}
 
-	protocol := "http://"
-	if https {
-		protocol = "https://"
-	}
-
 	var (
 		host  string
 		topic string
@@ -41,6 +36,15 @@ func buildNtfy(cfg Config, https bool) (Sender, error) {
 		topic = paths[1]
 	} else {
 		topic = paths[0]
+	}
+
+	protocol := ""
+	if host != "" {
+		if https {
+			protocol = "https://"
+		} else {
+			protocol = "http://"
+		}
 	}
 
 	return NewNtfy(protocol+host, topic), nil
