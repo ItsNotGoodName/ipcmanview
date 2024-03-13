@@ -34,6 +34,7 @@ func NewTelegram(token, chatID string) Telegram {
 	}
 }
 
+// https://github.com/caronc/apprise/wiki/Notify_telegram
 type Telegram struct {
 	token  string
 	chatID string

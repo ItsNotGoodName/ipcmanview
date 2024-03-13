@@ -59,6 +59,7 @@ func NewNtfy(url, topic string) Ntfy {
 	}
 }
 
+// https://github.com/caronc/apprise/wiki/Notify_ntfy
 type Ntfy struct {
 	// authorization string
 	url string
