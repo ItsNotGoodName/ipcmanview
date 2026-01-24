@@ -3,7 +3,6 @@ module github.com/ItsNotGoodName/ipcmanview
 go 1.22.3
 
 require (
-	github.com/ItsNotGoodName/dhapi-go v0.0.0-20250204192211-add599de9af1
 	github.com/Masterminds/squirrel v1.5.4
 	github.com/danielgtaylor/huma/v2 v2.27.0
 	github.com/emersion/go-sasl v0.0.0-20231106173351-e73c9f7bad43
@@ -11,6 +10,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.7.0
 	github.com/go-chi/chi/v5 v5.1.0
 	github.com/google/uuid v1.6.0
+	github.com/icholy/digest v1.0.1
 	github.com/jhillyerd/enmime v1.3.0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jmoiron/sqlx v1.4.0
@@ -27,6 +27,8 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
 	github.com/thejerf/suture/v4 v4.0.6
+	github.com/tidwall/gjson v1.17.3
+	github.com/tidwall/sjson v1.2.5
 	golang.org/x/crypto v0.28.0
 	modernc.org/sqlite v1.34.1
 )
@@ -39,7 +41,6 @@ require (
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/icholy/digest v1.0.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jaytaylor/html2text v0.0.0-20230321000545-74c2419ad056 // indirect
 	github.com/kr/fs v0.1.0 // indirect
@@ -58,10 +59,8 @@ require (
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ssor/bom v0.0.0-20170718123548-6386211fdfcf // indirect
-	github.com/tidwall/gjson v1.17.3 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
-	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.30.0 // indirect

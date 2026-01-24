@@ -11,9 +11,9 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/bus"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/dhapi-go/dahuacgi"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/ptz"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
 	"github.com/jmoiron/sqlx"
 )
 

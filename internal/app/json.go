@@ -8,7 +8,7 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/build"
 	"github.com/ItsNotGoodName/ipcmanview/internal/dahua"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/coaxialcontrolio"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
 	"github.com/ItsNotGoodName/ipcmanview/pkg/pagination"
 )
 

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/dhapi-go/dahuacgi"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuacgi"
 )
 
 type DeviceCreated struct {

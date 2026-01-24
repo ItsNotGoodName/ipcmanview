@@ -1,7 +1,5 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/ItsNotGoodName/dhapi-go v0.0.0-20250204192211-add599de9af1 h1:HhXBdqCZ32x47qUTH9bPP0GiN/e/EuQb2iRnshQFeWE=
-github.com/ItsNotGoodName/dhapi-go v0.0.0-20250204192211-add599de9af1/go.mod h1:4a1dixE21F1Zm3BuEV4Z5f9Y6OQ3JEZYLyH+XGSdspE=
 github.com/Masterminds/squirrel v1.5.4 h1:uUcX/aBc8O7Fg9kaISIUsHXdKuqehiXAMQTYX8afzqM=
 github.com/Masterminds/squirrel v1.5.4/go.mod h1:NNaOrjSoIDfDA40n7sr2tPNZRfjzjA400rg+riTZj10=
 github.com/cention-sany/utf7 v0.0.0-20170124080048-26cad61bd60a h1:MISbI8sU/PSK/ztvmWKFcI7UGb5/HQT7B+i3a2myKgI=

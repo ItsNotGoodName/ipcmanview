@@ -9,7 +9,7 @@ import (
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
 	"github.com/jlaffaye/ftp"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/sftp"

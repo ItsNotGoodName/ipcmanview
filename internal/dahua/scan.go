@@ -9,8 +9,8 @@ import (
 	"github.com/ItsNotGoodName/ipcmanview/internal/core"
 	"github.com/ItsNotGoodName/ipcmanview/internal/system"
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/mediafilefind"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/mediafilefind"
 	"github.com/jmoiron/sqlx"
 	"github.com/oklog/ulid/v2"
 )

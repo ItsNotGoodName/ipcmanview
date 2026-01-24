@@ -11,15 +11,15 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/types"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/coaxialcontrolio"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/intervideo"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/license"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/magicbox"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/peripheralchip"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/ptz"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/storage"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/usermanager"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/coaxialcontrolio"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/intervideo"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/license"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/magicbox"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/peripheralchip"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/ptz"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/storage"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/usermanager"
 )
 
 type Feature string

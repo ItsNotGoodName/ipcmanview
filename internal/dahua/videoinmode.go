@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/ItsNotGoodName/ipcmanview/internal/system"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/configmanager"
-	"github.com/ItsNotGoodName/dhapi-go/dahuarpc/modules/configmanager/config"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager"
+	"github.com/ItsNotGoodName/ipcmanview/pkg/dahuarpc/modules/configmanager/config"
 	"github.com/jmoiron/sqlx"
 	"github.com/nathan-osman/go-sunrise"
 )
